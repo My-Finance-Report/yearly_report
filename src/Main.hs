@@ -3,6 +3,7 @@ module Main where
 import qualified Data.Map as Map
 import qualified Data.Text.IO as TIO
 import Bank
+import CreditCard
 
 main :: IO ()
 main = do
