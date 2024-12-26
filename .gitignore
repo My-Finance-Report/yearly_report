@@ -3,4 +3,5 @@
 generated_code/*
 *.html
 .stack-work/*
+.stack-work/dist/*
 dist-newstyle/*

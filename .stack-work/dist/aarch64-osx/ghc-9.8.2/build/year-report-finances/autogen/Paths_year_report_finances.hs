@@ -46,12 +46,12 @@ getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: 
 
 
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
-bindir     = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/bin"
-libdir     = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/lib/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0-AW65YNawhqSIeOFKd3Sur2-year-report-finances"
-dynlibdir  = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/lib/aarch64-osx-ghc-9.8.2"
-datadir    = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/share/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0"
-libexecdir = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/libexec/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0"
-sysconfdir = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/68e93eb60f5bcc2966ce0ffbfcad9f96a625a3c0f54be9120ab47093e9c12652/9.8.2/etc"
+bindir     = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/bin"
+libdir     = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/lib/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0-ELpJK0Bkb8D5Z5edsyMnDe-year-report-finances"
+dynlibdir  = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/lib/aarch64-osx-ghc-9.8.2"
+datadir    = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/share/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0"
+libexecdir = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/libexec/aarch64-osx-ghc-9.8.2/year-report-finances-0.1.0.0"
+sysconfdir = "/Users/matt/Projects/year_report_finances/.stack-work/install/aarch64-osx/569b0f93a238218521334da9eb966abcb36d38ff2e5b8c71ca6a8c7c9a34238b/9.8.2/etc"
 
 getBinDir     = catchIO (getEnv "year_report_finances_bindir")     (\_ -> return bindir)
 getLibDir     = catchIO (getEnv "year_report_finances_libdir")     (\_ -> return libdir)

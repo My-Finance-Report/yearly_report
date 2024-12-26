@@ -5,7 +5,9 @@ module CreditCard
   , ingestTransactions
   , groupTransactionsByMonth
   , groupTransactionsByMerchant
-  , summarizeTransactions 
+  , summarizeTransactions
+  , parseCreditCardFile
+  , generateCreditCardHtml
   ) where
 
 import Data.Time (Day, parseTimeM, defaultTimeLocale, formatTime)
@@ -17,31 +19,40 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Maybe (fromMaybe, mapMaybe)
-
--- Data type for a single transaction
 data CreditCardTransaction = CreditCardTransaction
-  { transactionDate :: Day       
-  , merchantName :: Text         
-  , amount :: Double             
+  { transactionDate :: Day
+  , merchantName :: Text
+  , amount :: Double
   } deriving (Show, Eq, Ord)
 
--- Parse a single transaction line (CSV format: "date,merchant,amount")
+
+type CreditCardSummary = Map.Map Text Double
+
 parseTransaction :: Text -> Maybe CreditCardTransaction
 parseTransaction line =
   case split_line of
-    [dateStr, merchant, amountStr] -> do
-      date <- parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateStr)
-      amount <- readMaybe (T.unpack amountStr)
-      Just $ CreditCardTransaction date merchant (read amount)
+    (dateStr:_:merchant:amountStr:_) -> do
+      date <- parseTimeM True defaultTimeLocale "%b %d" (T.unpack dateStr)
+      amount <- readMaybe (T.unpack $ T.dropWhile (== '$') amountStr)
+      Just $ CreditCardTransaction date merchant amount
     _ -> Nothing
+  where
+    split_line = T.splitOn "," line
 
-    where split_line = T.splitOn "," line
+
 
 -- Read transactions from a file
 ingestTransactions :: FilePath -> IO [CreditCardTransaction]
 ingestTransactions filePath = do
   content <- TIO.readFile filePath
   return $ mapMaybe parseTransaction (T.lines content)
+
+
+parseCreditCardFile ::  FilePath -> IO [CreditCardTransaction]
+parseCreditCardFile filePath = do
+  content <- TIO.readFile filePath
+  let lines = T.lines content
+  return $ mapMaybe parseTransaction lines
 
 -- Helper to safely read a value
 readMaybe :: Read a => String -> Maybe a
@@ -52,6 +63,7 @@ readMaybe s = case reads s of
 -- Helper to format a date as "YYYY-MM"
 formatMonth :: Day -> Text
 formatMonth date = T.pack $ formatTime defaultTimeLocale "%Y-%m" date
+
 
 -- Group transactions by their month
 groupTransactionsByMonth :: [CreditCardTransaction] -> Map Text [CreditCardTransaction]
@@ -64,6 +76,16 @@ groupTransactionsByMerchant :: [CreditCardTransaction] -> Map Text [CreditCardTr
 groupTransactionsByMerchant transactions =
   Map.fromListWith (++) [(merchantName t, [t]) | t <- transactions]
 
+
 -- Summarize transactions by total amount
 summarizeTransactions :: Map Text [CreditCardTransaction] -> Map Text Double
 summarizeTransactions = Map.map (sum . map amount)
+
+
+generateCreditCardHtml :: CreditCardSummary -> Text
+generateCreditCardHtml summary =
+    let tableRows = Map.foldrWithKey (\category total acc ->
+            acc <> "<tr><td>" <> category <> "</td><td>" <> T.pack (show total) <> "</td></tr>\n"
+            ) "" summary
+    in "<table>\n" <> tableRows <> "</table>\n"
+

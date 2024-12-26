@@ -5,7 +5,7 @@ module Bank
   , BankRecord(..)
   , aggregateByCategory
   , categorize
-  , generateHTML
+  , generateBankHtml
   , parseLine
   , parseBankFile
   ) where
@@ -91,12 +91,11 @@ aggregateByCategory = foldl'
          Map.insertWith (+) category value acc)
     Map.empty
 
-generateHTML :: CategorySummary -> Text
-generateHTML summary =
-  let rows = Map.foldrWithKey (\category total acc ->
-                acc <> "<tr><td>" <> category <> "</td><td>" <> T.pack (show total) <> "</td></tr>\n"
-              ) "" summary
-  in "<!DOCTYPE html>\n<html>\n<head>\n<title>Expense Summary</title>\n</head>\n<body>\n" <>
-     "<h1>Expense Summary</h1>\n<table border='1'>\n<tr><th>Category</th><th>Total</th></tr>\n" <>
-     rows <>
-     "</table>\n</body>\n</html>"
+
+generateBankHtml :: CategorySummary -> Text
+generateBankHtml summary =
+    let tableRows = Map.foldrWithKey (\category total acc ->
+            acc <> "<tr><td>" <> category <> "</td><td>" <> T.pack (show total) <> "</td></tr>\n"
+            ) "" summary
+    in "<table>\n" <> tableRows <> "</table>\n"
+
