@@ -10,6 +10,7 @@ library
     CreditCard
     Database
     Categorizer
+    HtmlGenerators
   build-depends:
     base >= 4.7 && < 5,
     text >= 1.2 && < 2.2,
@@ -33,6 +34,7 @@ executable year-report-finances
     CreditCard
     Database
     Categorizer
+    HtmlGenerators
   build-depends:
     base >= 4.7 && < 5,
     text >= 1.2 && < 2.2,

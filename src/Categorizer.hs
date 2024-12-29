@@ -3,8 +3,8 @@
 
 module Categorizer (
     categorizeTransaction
+    , CategorizedCreditCardTransaction(..)
   ) where
-
 
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
@@ -19,6 +19,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Database
 import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
+import CreditCard (CreditCardTransaction)
 
 
 data ChatMessage = ChatMessage
@@ -53,10 +54,14 @@ instance FromJSON ChatChoice
 
 -- i probably want to learn more about newType vs data
 newtype CategorizationResponse
-  = CategorizationResponse {category :: Text}
+  = CategorizationResponse {responseCategory :: Text}
   deriving (Show, Generic)
 
 instance FromJSON CategorizationResponse
+
+data CategorizedCreditCardTransaction = CategorizedCreditCardTransaction
+   { transaction :: CreditCardTransaction
+   , category :: Text} deriving (Show, Eq, Ord)
 
 -- Function to classify transactions using the Chat API with response_format
 classifyTransactions :: Text -> IO (Maybe Text)
@@ -112,13 +117,14 @@ classifyTransactions inputPrompt = do
       decodeCategorizationResponse responseBodyContent
 
 
+
 decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
 decodeCategorizationResponse responseBodyContent =
   case decode responseBodyContent of
     Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } ->
       -- Parse the inner JSON from `content`
         case decode (BL.fromStrict (encodeUtf8  innerJson)) of
-        Just CategorizationResponse { category = c } -> return (Just c)
+        Just CategorizationResponse { responseCategory = c } -> return (Just c)
         Nothing -> do
           putStrLn "Failed to decode inner JSON."
           return Nothing
@@ -138,6 +144,7 @@ generatePrompt categories transactions =
       transactionList = "Assign each transaction to the most appropriate category:\n" <>
                         T.concat [T.pack (show i) <> ". \"" <> t <> "\"\n" | (i, t) <- zip [1 :: Int ..] transactions]
   in categoryList <> transactionList <> "\nReturn the category for each transaction."
+
 
 categorizeTransaction :: FilePath -> Text -> [Text] -> IO Text
 categorizeTransaction dbPath description categories = do

@@ -3,11 +3,7 @@
 module CreditCard
    ( CreditCardTransaction(..)
   , ingestTransactions
-  , groupTransactionsByMonth
-  , groupTransactionsByMerchant
-  , summarizeTransactions
   , parseCreditCardFile
-  , generateCreditCardHtml
   ) where
 
 import Data.Time (Day, parseTimeM, defaultTimeLocale, formatTime)
@@ -26,8 +22,6 @@ data CreditCardTransaction = CreditCardTransaction --  this is just convention t
   , amount :: Double
   } deriving (Show, Eq, Ord) -- basically to allow things like mapping (Ord), printing (show), etc
 
-
-type CreditCardSummary = Map.Map Text Double -- this is basically a type alias
 
 
 parseTransaction :: Text -> Maybe CreditCardTransaction
@@ -71,32 +65,4 @@ readMaybe s = case reads s of
   [(val, "")] -> Just val
   _           -> Nothing
 
--- Helper to format a date as "YYYY-MM"
-formatMonth :: Day -> Text
-formatMonth date = T.pack $ formatTime defaultTimeLocale "%Y-%m" date
-
-
--- Group transactions by their month
-groupTransactionsByMonth :: [CreditCardTransaction] -> Map Text [CreditCardTransaction]
-groupTransactionsByMonth transactions =
-  Map.fromListWith (++) [(formatMonth (transactionDate t), [t]) | t <- transactions]
-
-
--- Group transactions by merchant
-groupTransactionsByMerchant :: [CreditCardTransaction] -> Map Text [CreditCardTransaction]
-groupTransactionsByMerchant transactions =
-  Map.fromListWith (++) [(merchantName t, [t]) | t <- transactions]
-
-
--- Summarize transactions by total amount
-summarizeTransactions :: Map Text [CreditCardTransaction] -> Map Text Double
-summarizeTransactions = Map.map (sum . map amount)
-
-
-generateCreditCardHtml :: CreditCardSummary -> Text
-generateCreditCardHtml summary =
-    let tableRows = Map.foldrWithKey (\category total acc ->
-            acc <> "<tr><td>" <> category <> "</td><td>" <> T.pack (show total) <> "</td></tr>\n"
-            ) "" summary
-    in "<table>\n" <> tableRows <> "</table>\n"
 

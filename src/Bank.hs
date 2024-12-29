@@ -3,9 +3,9 @@
 module Bank
   ( TransactionType(..)
   , BankRecord(..)
+  , CategorySummary
   , aggregateByCategory
   , categorize
-  , generateBankHtml
   , parseLine
   , parseBankFile
   ) where
@@ -90,12 +90,4 @@ aggregateByCategory = foldl'
       in trace ("Aggregating: " ++ show (description record, value, category)) $
          Map.insertWith (+) category value acc)
     Map.empty
-
-
-generateBankHtml :: CategorySummary -> Text
-generateBankHtml summary =
-    let tableRows = Map.foldrWithKey (\category total acc ->
-            acc <> "<tr><td>" <> category <> "</td><td>" <> T.pack (show total) <> "</td></tr>\n"
-            ) "" summary
-    in "<table>\n" <> tableRows <> "</table>\n"
 

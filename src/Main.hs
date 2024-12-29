@@ -12,6 +12,8 @@ import CreditCard
 import Categorizer
 import Database
 
+import HtmlGenerators
+
 
 generateHTML :: Text -> Text -> Text
 generateHTML bank_summary credit_card_summary =
@@ -25,7 +27,10 @@ generateHTML bank_summary credit_card_summary =
      "</body>\n</html>"
 
 
-
+blah :: CreditCardTransaction -> FilePath -> [Text] -> IO CategorizedCreditCardTransaction
+blah creditCardTransaction dbPath categories = do
+    category <- categorizeTransaction dbPath (merchantName creditCardTransaction) categories
+    return CategorizedCreditCardTransaction { Categorizer.transaction=creditCardTransaction , category=category}
 
 main :: IO ()
 main = do
@@ -33,27 +38,24 @@ main = do
     let summary = aggregateByCategory records
         bankRows = generateBankHtml summary
 
-    ccRecords <- ingestTransactions "credit_card.csv"
-     -- likely superflous to group by transaction merchant
-    let ccSummary =  summarizeTransactions ( groupTransactionsByMerchant ccRecords )
-        creditCardRows = generateCreditCardHtml ccSummary
-
-
-    let fullSummary = generateHTML bankRows creditCardRows
-
-    print summary
-    print ccSummary
-    TIO.writeFile "expense_summary.html" fullSummary
-    putStrLn "Expense summary generated: expense_summary.html"
-
-
     let dbPath = "transactions.db"
     initializeDatabase dbPath
     let categories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
     transactions <- ingestTransactions "credit_card.csv"
 
-    categorizedTransactions <- mapM (\txn -> categorizeTransaction dbPath (merchantName txn) categories) transactions
+ -- Categorize transactions using mapM
+    categorizedTransactions <- mapM (\txn -> blah txn dbPath categories) transactions
 
-    mapM_ print (zip transactions categorizedTransactions)
+    -- Generate HTML rows for credit card transactions
+    let creditCardRows = generateCreditCardHtml categorizedTransactions
+
+
+    let fullSummary = generateHTML bankRows creditCardRows
+
+    TIO.writeFile "expense_summary.html" fullSummary
+    putStrLn "Expense summary generated: expense_summary.html"
+
+
+    
 
     
