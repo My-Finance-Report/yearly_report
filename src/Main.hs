@@ -15,7 +15,7 @@ import Database
 
 generateHTML :: Text -> Text -> Text
 generateHTML bank_summary credit_card_summary =
-  "<!DOCTYPE html>\n<html>\n<head>\n<title>Expense Summary</title>\n</head>\n<body>\n" <>
+  "<!DOCTYPE html>\n<html>\n<head>\n<title>Expense Summary</title>\n</head>\n<body>\n" <> -- <> is a syntax for string concat
      "<h1>Expense Summary</h1>\n" <>
      "<table border='1'>\n" <>
      "<tr><th>Category</th><th>Total</th></tr>\n" <>
@@ -25,6 +25,8 @@ generateHTML bank_summary credit_card_summary =
      "</body>\n</html>"
 
 
+
+
 main :: IO ()
 main = do
     records <- parseBankFile "bank_statement.csv"
@@ -32,6 +34,7 @@ main = do
         bankRows = generateBankHtml summary
 
     ccRecords <- ingestTransactions "credit_card.csv"
+     -- likely superflous to group by transaction merchant
     let ccSummary =  summarizeTransactions ( groupTransactionsByMerchant ccRecords )
         creditCardRows = generateCreditCardHtml ccSummary
 
@@ -53,3 +56,4 @@ main = do
 
     mapM_ print (zip transactions categorizedTransactions)
 
+    

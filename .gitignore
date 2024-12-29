@@ -1,5 +1,6 @@
 *.csv
 *.txt
+*.db
 generated_code/*
 *.html
 .stack-work/*

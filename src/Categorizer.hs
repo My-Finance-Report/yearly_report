@@ -13,49 +13,85 @@ import Network.HTTP.Types.Status
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.ByteString.Lazy as BL
 import GHC.Generics (Generic)
 import Data.Text.Encoding (encodeUtf8)
 import Database
 import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
 
-data OpenAIRequest = OpenAIRequest
+
+data ChatMessage = ChatMessage
+  { role :: Text
+  , content :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ChatMessage
+instance FromJSON ChatMessage
+
+data ChatRequest = ChatRequest
   { model :: Text
-  , prompt :: Text
+  , response_format :: Value 
+  , messages :: [ChatMessage]
   , max_tokens :: Int
   , temperature :: Double
   } deriving (Show, Generic)
 
-instance ToJSON OpenAIRequest
+instance ToJSON ChatRequest
 
-newtype OpenAIResponse
-  = OpenAIResponse {choices :: [Choice]}
+newtype ChatResponse
+  = ChatResponse {choices :: [ChatChoice]}
   deriving (Show, Generic)
 
-newtype Choice
-  = Choice {text :: Text}
+instance FromJSON ChatResponse
+
+newtype ChatChoice
+  = ChatChoice {message :: ChatMessage}
   deriving (Show, Generic)
 
-instance FromJSON OpenAIResponse
-instance FromJSON Choice
+instance FromJSON ChatChoice
 
+-- i probably want to learn more about newType vs data
+newtype CategorizationResponse
+  = CategorizationResponse {category :: Text}
+  deriving (Show, Generic)
 
-decodeResponse :: B.ByteString -> IO (Maybe Text)
-decodeResponse responseBodyContent =
-  case decode responseBodyContent of
-    Just OpenAIResponse { choices = (Choice { text = t } : _) } -> return (Just t)
-    _ -> return Nothing
+instance FromJSON CategorizationResponse
 
+-- Function to classify transactions using the Chat API with response_format
 classifyTransactions :: Text -> IO (Maybe Text)
 classifyTransactions inputPrompt = do
   manager <- newManager tlsManagerSettings
-  apiKey <- getEnv "OPENAI_API_KEY" 
-  let url = "https://api.openai.com/v1/completions"
-      requestBody = encode OpenAIRequest
-        { model = "text-davinci-003"
-        , prompt = inputPrompt
-        , max_tokens = 100
-        , temperature = 0.7
+  apiKey <- getEnv "OPENAI_API_KEY"
+  let url = "https://api.openai.com/v1/chat/completions"
+      messages = [ ChatMessage { role = "user", content = "categorize this expense:\n\n" <> inputPrompt } ]
+
+      schema = object
+                [ "type" .= ("json_schema" :: Text)
+                , "json_schema" .= object
+                [ "name" .= ("category_schema" :: Text)
+                , "strict" .= True
+                , "schema" .= object
+                    [ "type" .= ("object" :: Text)
+                    , "properties" .= object
+                    [ "category" .= object
+                        [ "type" .= ("string" :: Text)
+                        , "enum" .= (["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"] :: [Text])
+                        , "description" .= ("The category of the item." :: Text)
+                        ]
+                    ]
+                    , "required" .= (["category"] :: [Text])
+                    , "additionalProperties" .= False
+                    ]
+                ]
+                ]
+      
+      requestBody = encode ChatRequest
+        { model = "gpt-4o"
+        , messages = messages
+        , response_format = schema
+        , temperature = 1
+        , max_tokens = 2048
         }
   initialRequest <- parseRequest $ T.unpack url
   let request = initialRequest
@@ -72,12 +108,27 @@ classifyTransactions inputPrompt = do
       print err
       return Nothing
     Right res -> do
-      let status = responseStatus res
-      if statusCode status == 200 
-        then decodeResponse (responseBody res)
-        else do
-          putStrLn $ "Error: HTTP " ++ show (statusCode status)
+      let responseBodyContent = responseBody res
+      decodeCategorizationResponse responseBodyContent
+
+
+decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
+decodeCategorizationResponse responseBodyContent =
+  case decode responseBodyContent of
+    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } ->
+      -- Parse the inner JSON from `content`
+        case decode (BL.fromStrict (encodeUtf8  innerJson)) of
+        Just CategorizationResponse { category = c } -> return (Just c)
+        Nothing -> do
+          putStrLn "Failed to decode inner JSON."
           return Nothing
+    _ -> do
+      putStrLn "Failed to decode top-level JSON."
+      return Nothing
+
+
+
+
 
 
 
