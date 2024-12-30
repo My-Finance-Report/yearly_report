@@ -26,6 +26,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Scratch
 
-- make a module to parse the PDFs into CSV data with Open AI API
+- make a module to parse the PDFs with Open AI API
 - next add per month grouping and add summaries per month
  - will require some updates to the data model
