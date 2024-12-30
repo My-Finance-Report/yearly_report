@@ -3,8 +3,6 @@
 module Bank
   ( TransactionType(..)
   , BankRecord(..)
-  , CategorySummary
-  , aggregateByCategory
   , parseBankFile
   ) where
 
@@ -24,7 +22,6 @@ data TransactionType
   deriving (Show, Eq)
 
 
-
 -- Define a data structure for the parsed bank record
 data BankRecord = BankRecord
   { date :: Text
@@ -34,7 +31,6 @@ data BankRecord = BankRecord
   , balance :: Maybe Double
   } deriving (Show, Eq)
 
-type CategorySummary = Map.Map Text Double
 
 
 parseLine :: Text -> Maybe BankRecord  -- function  type
@@ -67,24 +63,3 @@ parseBankFile filePath = do
   content <- TIO.readFile filePath
   let lines = T.lines content
   return $ mapMaybe parseLine lines
-
-categorize :: Text -> Text
-categorize desc
-  | "Vanguard" `T.isInfixOf` desc = "Investments"
-  | "Payroll" `T.isInfixOf` desc = "Income"
-  | "Transfer" `T.isInfixOf` desc = "Transfers"
-  | "Capital One" `T.isInfixOf` desc = "Credit Card Payments"
-  | "State Farm" `T.isInfixOf` desc = "Insurance"
-  | otherwise = "Other"
-
-aggregateByCategory :: [BankRecord] -> CategorySummary
-aggregateByCategory = foldl'
-    (\acc record ->
-      let category = categorize (description record)
-          value = case transaction record of
-                    Deposit amount   -> amount
-                    Withdrawl amount -> amount
-      in trace ("Aggregating: " ++ show (description record, value, category)) $
-         Map.insertWith (+) category value acc)
-    Map.empty
-

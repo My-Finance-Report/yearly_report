@@ -5,6 +5,7 @@ module Categorizer (
     categorizeCreditCardTransaction
     , categorizeBankTransaction
     , CategorizedCreditCardTransaction(..)
+    , CategorizedBankTransaction(..)
     , CategorizedTransaction(..)
   ) where
 
