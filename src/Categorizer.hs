@@ -72,8 +72,9 @@ type CategorizedCreditCardTransaction = CategorizedTransaction CreditCardTransac
 type CategorizedBankTransaction = CategorizedTransaction BankRecord
 
 -- Function to classify transactions using the Chat API with response_format
-classifyTransactions :: Text -> IO (Maybe Text)
-classifyTransactions inputPrompt = do
+classifyTransactions :: [Text] ->Text -> IO (Maybe Text)
+classifyTransactions categories description = do
+  let inputPrompt = generatePrompt categories description
   manager <- newManager tlsManagerSettings
   apiKey <- getEnv "OPENAI_API_KEY"
   let url = "https://api.openai.com/v1/chat/completions"
@@ -87,13 +88,13 @@ classifyTransactions inputPrompt = do
                 , "schema" .= object
                     [ "type" .= ("object" :: Text)
                     , "properties" .= object
-                    [ "category" .= object
+                    [ "responseCategory" .= object
                         [ "type" .= ("string" :: Text)
-                        , "enum" .= (["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"] :: [Text])
+                        , "enum" .= categories
                         , "description" .= ("The category of the item." :: Text)
                         ]
                     ]
-                    , "required" .= (["category"] :: [Text])
+                    , "required" .= (["responseCategory"] :: [Text])
                     , "additionalProperties" .= False
                     ]
                 ]
@@ -124,28 +125,25 @@ classifyTransactions inputPrompt = do
       let responseBodyContent = responseBody res
       decodeCategorizationResponse responseBodyContent
 
-
 decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
 decodeCategorizationResponse responseBodyContent =
   case decode responseBodyContent of
-    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } ->
-      -- Parse the inner JSON from `content`
-        case decode (BL.fromStrict (encodeUtf8  innerJson)) of
-        Just CategorizationResponse { responseCategory = c } -> return (Just c)
-        Nothing -> do
-          putStrLn "Failed to decode inner JSON."
+    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } -> do
+      -- Step 1: Parse the escaped JSON from `content`
+      case eitherDecode (BL.fromStrict $ encodeUtf8 innerJson) of
+        Right CategorizationResponse { responseCategory = c } -> return (Just c)
+        Left err -> do
+          putStrLn $ "Failed to decode inner JSON: " <> err
           return Nothing
     _ -> do
       putStrLn "Failed to decode top-level JSON."
       return Nothing
 
 
-generatePrompt :: [Text] -> [Text] -> Text
-generatePrompt categories transactions =
+generatePrompt :: [Text] -> Text -> Text
+generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
-      transactionList = "Assign each transaction to the most appropriate category:\n" <>
-                        T.concat [T.pack (show i) <> ". \"" <> t <> "\"\n" | (i, t) <- zip [1 :: Int ..] transactions]
-  in categoryList <> transactionList <> "\nReturn the category for each transaction."
+  in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
 
 categorizeTransaction :: FilePath -> Text -> [Text] -> IO Text
@@ -156,8 +154,7 @@ categorizeTransaction dbPath description categories = do
         Just category -> return category -- Use cached result
         Nothing -> do
             -- Generate a prompt and get the category from OpenAI
-            let prompt = generatePrompt categories [description]
-            apiResponse <- classifyTransactions prompt
+            apiResponse <- classifyTransactions categories description 
             case apiResponse of
                 Just category -> do
                     -- Save the result to the database

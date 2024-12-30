@@ -25,7 +25,7 @@ aggregateByCategory = foldr insertTransaction Map.empty
     insertTransaction :: CategorizedTransaction t -> AggregatedTransactions t -> AggregatedTransactions t
     insertTransaction categorizedTransaction acc =
         let cat = category categorizedTransaction
-            txn = transaction categorizedTransaction
+            txn = Categorizer.transaction categorizedTransaction
         in Map.insertWith (++) cat [txn] acc
 
 
@@ -42,8 +42,9 @@ main = do
     creditCardTransations <- parseCreditCardFile "credit_card.csv"
 
 
-    categorizedBankTransactions <- mapM (\txn -> categorizeBankTransaction txn dbPath categories) bankTransactions 
+    categorizedBankTransactions <- mapM (\txn -> categorizeBankTransaction txn dbPath bankCategories) bankTransactions 
     categorizedCCTransactions <- mapM (\txn -> categorizeCreditCardTransaction txn dbPath categories) creditCardTransations
+
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
