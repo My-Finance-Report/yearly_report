@@ -64,7 +64,6 @@ parseRawTextToJson pdfContent = do
     let messages = [ ChatMessage { role = "user", content = inputPrompt } ]
 
     response <- makeChatRequest schema messages
-    print(response)
     case response of
         Left err -> do
             putStrLn $ "Error: " ++ err
@@ -87,7 +86,7 @@ extractTextFromPdf pdfPath = do
         Right output -> return $ Right (T.pack output)
 
 
-
+-- TODO, manually trim the credit card PDFs so that it doesn't require as much API useage
 extractTransactionsFromPdf :: FilePath -> IO (Either String [CreditCardTransaction])
 extractTransactionsFromPdf pdfPath = do
     rawTextResult <- extractTextFromPdf pdfPath
