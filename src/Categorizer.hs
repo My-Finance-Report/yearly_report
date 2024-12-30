@@ -4,15 +4,19 @@
 module Categorizer (
     categorizeCreditCardTransaction
     , categorizeBankTransaction
+    , aggregateByCategory
     , CategorizedCreditCardTransaction(..)
     , CategorizedBankTransaction(..)
     , CategorizedTransaction(..)
+    , AggregatedTransactions 
   ) where
 
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Data.Aeson
 import Network.HTTP.Types.Status
+
+import qualified Data.Map as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -70,6 +74,17 @@ data CategorizedTransaction a = CategorizedTransaction
 
 type CategorizedCreditCardTransaction = CategorizedTransaction CreditCardTransaction
 type CategorizedBankTransaction = CategorizedTransaction BankRecord
+type AggregatedTransactions a = Map.Map Text [CategorizedTransaction a]
+
+
+aggregateByCategory :: [CategorizedTransaction t] -> AggregatedTransactions t
+aggregateByCategory = foldr insertTransaction Map.empty
+  where
+    insertTransaction :: CategorizedTransaction t -> AggregatedTransactions t -> AggregatedTransactions t
+    insertTransaction categorizedTransaction acc =
+        let cat = category categorizedTransaction
+        in Map.insertWith (++) cat [categorizedTransaction] acc
+
 
 -- Function to classify transactions using the Chat API with response_format
 classifyTransactions :: [Text] ->Text -> IO (Maybe Text)
