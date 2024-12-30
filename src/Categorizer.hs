@@ -27,26 +27,9 @@ import Database
 import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
 import CreditCard
+import OpenAiUtils
 import Bank (BankRecord (description))
 
-
-data ChatMessage = ChatMessage
-  { role :: Text
-  , content :: Text
-  } deriving (Show, Generic)
-
-instance ToJSON ChatMessage
-instance FromJSON ChatMessage
-
-data ChatRequest = ChatRequest
-  { model :: Text
-  , response_format :: Value 
-  , messages :: [ChatMessage]
-  , max_tokens :: Int
-  , temperature :: Double
-  } deriving (Show, Generic)
-
-instance ToJSON ChatRequest
 
 newtype ChatResponse
   = ChatResponse {choices :: [ChatChoice]}
@@ -86,16 +69,36 @@ aggregateByCategory = foldr insertTransaction Map.empty
         in Map.insertWith (++) cat [categorizedTransaction] acc
 
 
--- Function to classify transactions using the Chat API with response_format
-classifyTransactions :: [Text] ->Text -> IO (Maybe Text)
+classifyTransactions :: [Text] -> Text -> IO (Maybe Text)
 classifyTransactions categories description = do
   let inputPrompt = generatePrompt categories description
-  manager <- newManager tlsManagerSettings
-  apiKey <- getEnv "OPENAI_API_KEY"
-  let url = "https://api.openai.com/v1/chat/completions"
-      messages = [ ChatMessage { role = "user", content = "categorize this expense:\n\n" <> inputPrompt } ]
+      schema = generateSchema categories
+      messages = [ChatMessage {role = "user", content = inputPrompt}]
+  response <- makeChatRequest schema messages
+  case response of
+    Left err -> do
+      putStrLn $ "Error: " ++ err
+      return Nothing
+    Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
 
-      schema = object
+
+decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
+decodeCategorizationResponse responseBodyContent =
+  case decode responseBodyContent of
+    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } -> do
+      case eitherDecode (BL.fromStrict $ encodeUtf8 innerJson) of
+        Right CategorizationResponse { responseCategory = c } -> return (Just c)
+        Left err -> do
+          putStrLn $ "Failed to decode inner JSON: " <> err
+          return Nothing
+    _ -> do
+      putStrLn "Failed to decode top-level JSON."
+      return Nothing
+
+
+generateSchema :: [Text] -> Value
+generateSchema categories = 
+      object
                 [ "type" .= ("json_schema" :: Text)
                 , "json_schema" .= object
                 [ "name" .= ("category_schema" :: Text)
@@ -114,46 +117,6 @@ classifyTransactions categories description = do
                     ]
                 ]
                 ]
-      
-      requestBody = encode ChatRequest
-        { model = "gpt-4o"
-        , messages = messages
-        , response_format = schema
-        , temperature = 1
-        , max_tokens = 2048
-        }
-  initialRequest <- parseRequest $ T.unpack url
-  let request = initialRequest
-        { method = "POST"
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> encodeUtf8 (T.pack apiKey))
-            ]
-        , requestBody = RequestBodyLBS requestBody
-        }
-  response <- try (httpLbs request manager) :: IO (Either SomeException (Response B.ByteString))
-  case response of
-    Left err -> do
-      print err
-      return Nothing
-    Right res -> do
-      let responseBodyContent = responseBody res
-      decodeCategorizationResponse responseBodyContent
-
-decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
-decodeCategorizationResponse responseBodyContent =
-  case decode responseBodyContent of
-    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } -> do
-      -- Step 1: Parse the escaped JSON from `content`
-      case eitherDecode (BL.fromStrict $ encodeUtf8 innerJson) of
-        Right CategorizationResponse { responseCategory = c } -> return (Just c)
-        Left err -> do
-          putStrLn $ "Failed to decode inner JSON: " <> err
-          return Nothing
-    _ -> do
-      putStrLn "Failed to decode top-level JSON."
-      return Nothing
-
 
 generatePrompt :: [Text] -> Text -> Text
 generatePrompt categories transaction =
@@ -163,19 +126,16 @@ generatePrompt categories transaction =
 
 categorizeTransaction :: FilePath -> Text -> [Text] -> IO Text
 categorizeTransaction dbPath description categories = do
-    -- Check if the category already exists in the DB
     existingCategory <- getCategory dbPath description
     case existingCategory of
-        Just category -> return category -- Use cached result
+        Just category -> return category 
         Nothing -> do
-            -- Generate a prompt and get the category from OpenAI
             apiResponse <- classifyTransactions categories description 
             case apiResponse of
                 Just category -> do
-                    -- Save the result to the database
                     insertTransaction dbPath description category
                     return category
-                Nothing -> return "Uncategorized" -- Handle API failure
+                Nothing -> return "Uncategorized" 
 
 
 categorizeCreditCardTransaction :: CreditCardTransaction -> FilePath -> [Text] -> IO CategorizedCreditCardTransaction
