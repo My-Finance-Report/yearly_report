@@ -12,6 +12,35 @@ import Database
 import HtmlGenerators
 import Parsers
 
+import Control.Exception (try, SomeException)
+import Data.Text (Text)
+import qualified Data.Text as T
+import System.FilePath (takeFileName)
+
+
+processPdfFile :: FilePath -> FilePath -> IO [CreditCardTransaction]
+processPdfFile dbPath pdfPath = do
+    let filename = takeFileName pdfPath
+
+    alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
+    if alreadyProcessed
+        then do
+            putStrLn $ "File '" ++ filename ++ "' has already been processed."
+            return [] 
+        else do
+            putStrLn $ "Processing file: " ++ filename
+            result <- try (extractTransactionsFromPdf pdfPath) :: IO (Either SomeException [CreditCardTransaction])
+            case result of
+                Left err -> do
+                    putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
+                    return [] 
+                Right transactions -> do
+                    markFileAsProcessed dbPath (T.pack filename)
+                    putStrLn $ "Extracted " ++ show (length transactions) ++ " transactions from '" ++ filename ++ "'."
+                    return transactions 
+
+
+
 getAmountFromBank:: CategorizedTransaction BankRecord -> Double
 getAmountFromBank txn =
         case Bank.transaction (Categorizer.transaction txn) of
@@ -23,16 +52,22 @@ main :: IO ()
 main = do
 
     let dbPath = "transactions.db"
+    let bankPath = "bank_statement.csv"
+    let pdfPath= "20241219-VentureOne card statement-3996.pdf"
     let categories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
     let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
 
     initializeDatabase dbPath
 
-    bankTransactions <- parseBankFile "bank_statement.csv"
-    creditCardTransations <- parseCreditCardFile "credit_card.csv"
 
-    categorizedBankTransactions <- mapM (\txn -> categorizeBankTransaction txn dbPath bankCategories) bankTransactions
-    categorizedCCTransactions <- mapM (\txn -> categorizeCreditCardTransaction txn dbPath categories) creditCardTransations
+    bankTransactions <- parseBankFile bankPath
+
+
+    ccPDFtransactions <-processPdfFile dbPath pdfPath
+
+
+    categorizedBankTransactions <- mapM (\txn -> categorizeBankTransaction txn dbPath bankCategories (T.pack bankPath)) bankTransactions
+    categorizedCCTransactions <- mapM (\txn -> categorizeCreditCardTransaction txn dbPath categories (T.pack pdfPath)) ccPDFtransactions
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
@@ -47,13 +82,5 @@ main = do
 
     TIO.writeFile "expense_summary.html" fullSummary
     putStrLn "Expense summary generated: expense_summary.html"
-
-
-    let pdfPath= "/Users/matt/Projects/year_report_finances/20241219-VentureOne card statement-3996.pdf"
-
-    blah <- extractTransactionsFromPdf pdfPath
-    print blah
-
-
 
 

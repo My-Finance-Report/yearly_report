@@ -19,8 +19,8 @@ import Data.Aeson (FromJSON)
 import GHC.Generics (Generic)
 
 data CreditCardTransaction = CreditCardTransaction --  this is just convention to name these the same
-  { transactionDate :: Day
-  , merchantName :: Text
+  { transactionDate :: Text
+  , description :: Text
   , amount :: Double
   } deriving (Show, Eq, Ord, Generic) -- basically to allow things like mapping (Ord), printing (show), etc
 
@@ -36,7 +36,7 @@ parseTransaction line =
   case split_line of
     -- this unpacks the list into a 5 member tuple (basically asserting a pattern)
     (dateStr:_:merchant:amountStr:_) -> do
-      date <- parseTimeM True defaultTimeLocale "%b %d" (T.unpack dateStr)
+      date <-   readMaybe ( T.unpack dateStr )
       amount <- readMaybe (T.unpack $ T.dropWhile (== '$') amountStr)
       Just $ CreditCardTransaction date merchant amount
     -- if we dont have five lines then we fall through to here,which return Nothing

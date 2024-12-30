@@ -21,7 +21,7 @@ generateCreditCardRow :: CategorizedCreditCardTransaction -> Text
 generateCreditCardRow categorizedTransaction =
     let txnCategory = category categorizedTransaction
         blahTransaction = Categorizer.transaction categorizedTransaction
-        merchant = merchantName blahTransaction
+        merchant = CreditCard.description blahTransaction
         amount = CreditCard.amount blahTransaction
     in "<tr><td>" <> txnCategory <> "</td><td>" <> merchant <> "</td><td>" <> pack (show amount) <> "</td></tr>\n"
 
@@ -29,7 +29,7 @@ generateBankRow :: CategorizedBankTransaction -> Text
 generateBankRow categorizedTransaction =
     let txnCategory = category categorizedTransaction
         blahTransaction = Categorizer.transaction categorizedTransaction
-        merchant = description blahTransaction
+        merchant = Bank.description blahTransaction
         value = case BankRecord.transaction (Categorizer.transaction categorizedTransaction) of
                     BankRecord.Deposit amount   -> amount
                     BankRecord.Withdrawl amount -> amount

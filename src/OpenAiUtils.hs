@@ -5,6 +5,8 @@ module OpenAiUtils
   ( makeChatRequest
   , ChatMessage(..)
   , ChatRequest(..)
+  , ChatChoice(..)
+  , ChatResponse(..)
   ) where
 
 import Network.HTTP.Client
@@ -37,12 +39,25 @@ instance ToJSON ChatMessage
 instance FromJSON ChatMessage
 
 
+newtype ChatResponse
+  = ChatResponse {choices :: [ChatChoice]}
+  deriving (Show, Generic)
+
+instance FromJSON ChatResponse
+
+newtype ChatChoice
+  = ChatChoice {message :: ChatMessage}
+  deriving (Show, Generic)
+
+instance FromJSON ChatChoice
+
 
 makeChatRequest ::  Value -> [ChatMessage] -> IO (Either String B.ByteString)
 makeChatRequest schema messages = do
 
   apiKey <- getEnv "OPENAI_API_KEY"
-  manager <- newManager tlsManagerSettings
+  let managerSettings = tlsManagerSettings { managerResponseTimeout = responseTimeoutMicro (60 * 1000000) } 
+  manager <- newManager managerSettings
   let url = "https://api.openai.com/v1/chat/completions"
       requestBody = encode ChatRequest
         { model = "gpt-4o"
@@ -64,3 +79,4 @@ makeChatRequest schema messages = do
   case response of
     Left err -> return $ Left (show err)
     Right res -> return $ Right (responseBody res)
+

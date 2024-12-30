@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Parsers (
     extractTextFromPdf
@@ -8,12 +9,28 @@ module Parsers (
 import Data.Text (Text)
 import CreditCard (CreditCardTransaction)
 import Data.Aeson 
-import OpenAiUtils (ChatMessage(..), makeChatRequest)
-import System.Environment (getEnv)
+import OpenAiUtils 
 import Control.Exception
 import System.Process (readProcess)
 import qualified Data.Text as T
 import Data.Aeson.KeyMap (mapMaybe)
+import GHC.Generics (Generic)
+import qualified Data.ByteString.Lazy as B
+import Data.Text.Encoding (encodeUtf8)
+
+
+data PdfParseException = PdfParseException Text deriving (Show)
+
+instance Exception PdfParseException
+
+data TransactionsWrapper = TransactionsWrapper
+  { transactions :: [CreditCardTransaction]
+  } deriving (Show, Generic)
+
+instance FromJSON TransactionsWrapper
+
+
+
 
 generatePdfParsingPrompt :: Text -> Text
 generatePdfParsingPrompt pdfContent =
@@ -22,6 +39,7 @@ generatePdfParsingPrompt pdfContent =
     pdfContent
 
 
+-- TODO really we want to unify this with the type that we are parsing into in the api call
 generateTransactionSchema :: Value
 generateTransactionSchema =
     object
@@ -40,7 +58,7 @@ generateTransactionSchema =
                                 [ "transactionDate" .= object [ "type" .= ("string" :: Text) ]
                                 , "postingDate" .= object [ "type" .= ("string" :: Text) ]
                                 , "description" .= object [ "type" .= ("string" :: Text) ]
-                                , "amount" .= object [ "type" .= ("string" :: Text) ]
+                                , "amount" .= object [ "type" .= ("number" :: Text) ]
                                 ]
                             , "required" .= (["transactionDate", "postingDate", "description", "amount"] :: [Text])
                             , "additionalProperties" .= False
@@ -53,47 +71,61 @@ generateTransactionSchema =
             ]
         ]
 
-
 parseRawTextToJson :: Text -> IO (Maybe [CreditCardTransaction])
 parseRawTextToJson pdfContent = do
     let inputPrompt = generatePdfParsingPrompt pdfContent
     let schema = generateTransactionSchema
 
-    apiKey <- getEnv "OPENAI_API_KEY"
-
-    let messages = [ ChatMessage { role = "user", content = inputPrompt } ]
+    let messages = [ChatMessage {role = "user", content = inputPrompt}]
 
     response <- makeChatRequest schema messages
     case response of
         Left err -> do
             putStrLn $ "Error: " ++ err
             return Nothing
-        Right responseBodyContent -> do
-            case decode responseBodyContent of
-                Just transactions -> return (Just transactions)
-                Nothing -> do
-                    putStrLn "Failed to decode JSON response."
-                    return Nothing
+        Right responseBodyContent -> decodeChatResponse responseBodyContent
 
 
-extractTextFromPdf :: FilePath -> IO (Either String Text)
+decodeChatResponse :: B.ByteString -> IO (Maybe [CreditCardTransaction])
+decodeChatResponse responseBodyContent =
+  case decode responseBodyContent of
+    Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } -> do
+      case eitherDecode (B.fromStrict $ encodeUtf8 innerJson) of
+        Right (TransactionsWrapper { transactions = parsedTransactions }) -> return (Just parsedTransactions)
+        Left err -> do
+          putStrLn $ "Failed to decode inner JSON: " <> err
+          print innerJson
+          return Nothing
+    _ -> do
+      putStrLn "Failed to decode top-level JSON."
+      print responseBodyContent
+      return Nothing
+
+
+
+-- Extract text from PDF, throwing an exception on failure
+extractTextFromPdf :: FilePath -> IO Text
 extractTextFromPdf pdfPath = do
     let command = "pdftotext"
         args = ["-layout", pdfPath, "-"]
     result <- try (readProcess command args "") :: IO (Either SomeException String)
     case result of
-        Left err -> return $ Left (show err)
-        Right output -> return $ Right (T.pack output)
+        Left err -> throwIO $ PdfParseException $ "Failed to extract text from PDF: " <> T.pack (show err)
+        Right output -> return $ T.pack output
 
+trimText :: Text -> Text
+trimText pdfText = 
+    let 
+        (_, afterTransactions) = T.breakOn "Trans Date   Post Date   Description" pdfText
+        -- todo remove this once we are parsing correctly
+        (beforeJunk, _) = T.breakOn "Nov 22       Nov 25      OAKHURST FOOD FUELOAKHURSTCA                                                                               $88.38" afterTransactions
+    in beforeJunk
 
--- TODO, manually trim the credit card PDFs so that it doesn't require as much API useage
-extractTransactionsFromPdf :: FilePath -> IO (Either String [CreditCardTransaction])
+extractTransactionsFromPdf :: FilePath -> IO [CreditCardTransaction]
 extractTransactionsFromPdf pdfPath = do
-    rawTextResult <- extractTextFromPdf pdfPath
-    case rawTextResult of
-        Left err -> return $ Left $ "Failed to extract text from PDF: " ++ err
-        Right rawText -> do
-            jsonResult <- parseRawTextToJson rawText
-            case jsonResult of
-                Nothing -> return $ Left "Failed to parse transactions from extracted text."
-                Just transactions -> return $ Right transactions
+    rawText <- extractTextFromPdf pdfPath
+    let trimmedText = trimText rawText
+    parsedTransactions <- parseRawTextToJson trimmedText
+    case parsedTransactions of
+        Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
+        Just transactions -> return transactions

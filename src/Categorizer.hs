@@ -30,19 +30,9 @@ import CreditCard
 import OpenAiUtils
 import Bank (BankRecord (description, BankRecord, date))
 import Data.Time (Day,  formatTime, defaultTimeLocale)
+import System.FilePath (takeFileName)
 
 
-newtype ChatResponse
-  = ChatResponse {choices :: [ChatChoice]}
-  deriving (Show, Generic)
-
-instance FromJSON ChatResponse
-
-newtype ChatChoice
-  = ChatChoice {message :: ChatMessage}
-  deriving (Show, Generic)
-
-instance FromJSON ChatChoice
 
 -- i probably want to learn more about newType vs data
 newtype CategorizationResponse
@@ -69,9 +59,6 @@ getCreditCardSource=
 getBankSource:: Text
 getBankSource= 
   "bank"
-
-dayToText :: Day -> Text
-dayToText day = T.pack $ formatTime defaultTimeLocale "%Y-%m-%d" day
 
 
 
@@ -141,8 +128,8 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
   in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-categorizeTransaction :: FilePath -> Text -> [Text] -> Text ->Text -> IO Text
-categorizeTransaction dbPath description categories day source = do
+categorizeTransaction :: FilePath -> Text -> [Text] -> Text ->Text -> Text-> IO Text
+categorizeTransaction dbPath description categories day source filename = do
     existingCategory <- getCategory dbPath description
     case existingCategory of
         Just category -> return category 
@@ -150,23 +137,23 @@ categorizeTransaction dbPath description categories day source = do
             apiResponse <- classifyTransactions categories description 
             case apiResponse of
                 Just category -> do
-                    insertTransaction dbPath description category day source
+                    insertTransaction dbPath description category day source filename
                     return category
                 Nothing -> return "Uncategorized" 
 
 
-categorizeCreditCardTransaction :: CreditCardTransaction -> FilePath -> [Text] -> IO CategorizedCreditCardTransaction
-categorizeCreditCardTransaction creditCardTransaction dbPath categories = do
-    category <- categorizeTransaction dbPath (merchantName creditCardTransaction) categories (dayToText (transactionDate creditCardTransaction)) getCreditCardSource
+categorizeCreditCardTransaction :: CreditCardTransaction -> FilePath -> [Text] -> Text-> IO CategorizedCreditCardTransaction
+categorizeCreditCardTransaction creditCardTransaction dbPath categories filename = do
+    category <- categorizeTransaction dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) getCreditCardSource filename
     return CategorizedTransaction 
         { Categorizer.transaction = creditCardTransaction
         , category = category
         }
 
 
-categorizeBankTransaction :: BankRecord -> FilePath -> [Text] -> IO CategorizedBankTransaction
-categorizeBankTransaction bankRecord dbPath categories = do
-    category <- categorizeTransaction dbPath (description bankRecord) categories (date bankRecord) getBankSource
+categorizeBankTransaction :: BankRecord -> FilePath -> [Text] -> Text-> IO CategorizedBankTransaction
+categorizeBankTransaction bankRecord dbPath categories filename = do
+    category <- categorizeTransaction dbPath (Bank.description bankRecord) categories (date bankRecord) getBankSource filename
     return CategorizedTransaction 
         { Categorizer.transaction = bankRecord
         , category = category
