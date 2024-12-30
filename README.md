@@ -5,11 +5,11 @@ make my yearly financial report using haskell
 # Features
 
 - parse bank statements and credit card statements
-- categorize expenses 
-- generate "report"
-- (potentially) try to serve the resulting report with haskell 
-- (potentially) allow for an interactive interface 
-- (potentially) allow uploading documents to generate "live" reports
+- (DONE) categorize expenses 
+- (WORKING) generate "report" 
+- (TODO) try to serve the resulting report with haskell 
+- (TODO) allow for an interactive interface 
+- (TODO) allow uploading documents to generate "live" reports
 
 # Tech
 
@@ -22,3 +22,10 @@ make my yearly financial report using haskell
 # Disclaimer 
 
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
+
+
+# Scratch
+
+- make a module to parse the PDFs into CSV data with Open AI API
+- next add per month grouping and add summaries per month
+ - will require some updates to the data model
