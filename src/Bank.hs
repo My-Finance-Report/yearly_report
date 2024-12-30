@@ -5,12 +5,11 @@ module Bank
   , BankRecord(..)
   , CategorySummary
   , aggregateByCategory
-  , categorize
-  , parseLine
   , parseBankFile
   ) where
 
 import qualified Data.Map as Map
+
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -52,8 +51,6 @@ parseLine line =  -- actual function definition
         Just ( BankRecord date check_number desc transaction the_balance ) -- now that we have types "determined", make the object. <$> is the infix for fmap 
       _ -> Nothing -- handle a split line that is less than 7 elements
     where broken_up_line = T.splitOn "," line -- not define the split line as splitting on ","
-
-
 
 
 -- Helper to parse an amount from text

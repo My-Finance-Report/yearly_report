@@ -2,8 +2,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Categorizer (
-    categorizeTransaction
+    categorizeCreditCardTransaction
+    , categorizeBankTransaction
     , CategorizedCreditCardTransaction(..)
+    , CategorizedTransaction(..)
   ) where
 
 import Network.HTTP.Client
@@ -19,7 +21,8 @@ import Data.Text.Encoding (encodeUtf8)
 import Database
 import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
-import CreditCard (CreditCardTransaction)
+import CreditCard
+import Bank (BankRecord (description))
 
 
 data ChatMessage = ChatMessage
@@ -59,9 +62,13 @@ newtype CategorizationResponse
 
 instance FromJSON CategorizationResponse
 
-data CategorizedCreditCardTransaction = CategorizedCreditCardTransaction
-   { transaction :: CreditCardTransaction
-   , category :: Text} deriving (Show, Eq, Ord)
+data CategorizedTransaction a = CategorizedTransaction
+   { transaction :: a
+   , category :: Text
+   } deriving (Show, Eq, Ord)
+
+type CategorizedCreditCardTransaction = CategorizedTransaction CreditCardTransaction
+type CategorizedBankTransaction = CategorizedTransaction BankRecord
 
 -- Function to classify transactions using the Chat API with response_format
 classifyTransactions :: Text -> IO (Maybe Text)
@@ -117,7 +124,6 @@ classifyTransactions inputPrompt = do
       decodeCategorizationResponse responseBodyContent
 
 
-
 decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
 decodeCategorizationResponse responseBodyContent =
   case decode responseBodyContent of
@@ -131,11 +137,6 @@ decodeCategorizationResponse responseBodyContent =
     _ -> do
       putStrLn "Failed to decode top-level JSON."
       return Nothing
-
-
-
-
-
 
 
 generatePrompt :: [Text] -> [Text] -> Text
@@ -162,3 +163,22 @@ categorizeTransaction dbPath description categories = do
                     insertTransaction dbPath description category
                     return category
                 Nothing -> return "Uncategorized" -- Handle API failure
+
+
+categorizeCreditCardTransaction :: CreditCardTransaction -> FilePath -> [Text] -> IO CategorizedCreditCardTransaction
+categorizeCreditCardTransaction creditCardTransaction dbPath categories = do
+    category <- categorizeTransaction dbPath (merchantName creditCardTransaction) categories
+    return CategorizedTransaction 
+        { Categorizer.transaction = creditCardTransaction
+        , category = category
+        }
+
+
+categorizeBankTransaction :: BankRecord -> FilePath -> [Text] -> IO CategorizedBankTransaction
+categorizeBankTransaction bankRecord dbPath categories = do
+    category <- categorizeTransaction dbPath (description bankRecord) categories
+    return CategorizedTransaction 
+        { Categorizer.transaction = bankRecord
+        , category = category
+        }
+

@@ -2,7 +2,6 @@
 
 module CreditCard
    ( CreditCardTransaction(..)
-  , ingestTransactions
   , parseCreditCardFile
   ) where
 
@@ -41,16 +40,6 @@ parseTransaction line =
   -- i think the where syntax is more "functional" then let .. in 
   where
     split_line = T.splitOn "," line
-
-
-
--- Read transactions from a file
-ingestTransactions :: FilePath -> IO [CreditCardTransaction]
-ingestTransactions filePath = do
-  content <- TIO.readFile filePath -- arrow for magic with IO
-
-  -- the $ here is like the "lowest precedence" operator, not sure why we need it, maybe so we eval the MapMaybe before we return?
-  return $ mapMaybe parseTransaction (T.lines content) -- map maybe drops the Nothings that come from parse
 
 
 parseCreditCardFile ::  FilePath -> IO [CreditCardTransaction]
