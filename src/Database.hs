@@ -9,12 +9,16 @@ module Database (
 import Database.SQLite.Simple
 import Data.Text (Text)
 
-
 initializeDatabase :: FilePath -> IO ()
 initializeDatabase dbPath = do
-    conn <- open dbPath  -- this syntax is "special" for IO actions. think of it like going out innto the world and coming back with a value
-    -- this makes the result "impure" since we cant be sure that the results of open are imndepotent (sp?)
-    execute_ conn "CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT UNIQUE NOT NULL, category TEXT NOT NULL)"
+    conn <- open dbPath
+    execute_ conn
+        "CREATE TABLE IF NOT EXISTS transactions (\
+        \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+        \ description TEXT UNIQUE NOT NULL, \
+        \ category TEXT, \
+        \ date_of_transaction TEXT NOT NULL, \
+        \ source TEXT NOT NULL)"
     close conn
 
 getCategory :: FilePath -> Text -> IO (Maybe Text)
@@ -28,9 +32,11 @@ getCategory dbPath description = do
         [Only category] -> Just category
         _ -> Nothing
 
-insertTransaction :: FilePath -> Text -> Text -> IO ()
-insertTransaction dbPath description category = do
-    -- perform io syntax
+insertTransaction :: FilePath -> Text -> Text -> Text -> Text -> IO ()
+insertTransaction dbPath description category dateOfTransaction source = do
     conn <- open dbPath
-    execute conn "INSERT OR IGNORE INTO transactions (description, category) VALUES (?, ?)" (description, category)
+    execute conn
+        "INSERT OR IGNORE INTO transactions (description, category, date_of_transaction, source) VALUES (?, ?, ?, ?)"
+        (description, category, dateOfTransaction, source)
     close conn
+

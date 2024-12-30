@@ -3,6 +3,7 @@
 *.db
 generated_code/*
 *.html
+*.pdf
 .stack-work/*
 .stack-work/dist/*
 dist-newstyle/*

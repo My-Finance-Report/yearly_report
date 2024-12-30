@@ -2,7 +2,6 @@
 
 module Main where
 
-
 import Data.Text (Text)
 import qualified Data.Text.IO as TIO
 
@@ -11,7 +10,6 @@ import CreditCard
 import Categorizer
 import Database
 import HtmlGenerators
-
 import Parsers
 
 getAmountFromBank:: CategorizedTransaction BankRecord -> Double
@@ -49,6 +47,12 @@ main = do
 
     TIO.writeFile "expense_summary.html" fullSummary
     putStrLn "Expense summary generated: expense_summary.html"
+
+
+    let pdfPath= "/Users/matt/Projects/year_report_finances/20241219-VentureOne card statement-3996.pdf"
+
+    blah <- extractTransactionsFromPdf pdfPath
+    print blah
 
 
 

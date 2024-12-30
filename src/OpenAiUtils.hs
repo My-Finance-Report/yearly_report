@@ -4,7 +4,7 @@
 module OpenAiUtils
   ( makeChatRequest
   , ChatMessage(..)
-  , ChatRequest
+  , ChatRequest(..)
   ) where
 
 import Network.HTTP.Client

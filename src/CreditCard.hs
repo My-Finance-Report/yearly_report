@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module CreditCard
    ( CreditCardTransaction(..)
@@ -14,13 +15,16 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data CreditCardTransaction = CreditCardTransaction --  this is just convention to name these the same
   { transactionDate :: Day
   , merchantName :: Text
   , amount :: Double
-  } deriving (Show, Eq, Ord) -- basically to allow things like mapping (Ord), printing (show), etc
+  } deriving (Show, Eq, Ord, Generic) -- basically to allow things like mapping (Ord), printing (show), etc
 
+instance FromJSON CreditCardTransaction
 
 
 parseTransaction :: Text -> Maybe CreditCardTransaction
