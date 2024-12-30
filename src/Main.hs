@@ -45,7 +45,6 @@ processPdfFile dbPath pdfPath = do
 
 main :: IO ()
 main = do
-
     let dbPath = "transactions.db"
     let bankPath = "bank_statement.csv"
     let pdfPath= "20241219-VentureOne card statement-3996.pdf"

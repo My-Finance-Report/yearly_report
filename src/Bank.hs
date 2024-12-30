@@ -15,7 +15,8 @@ import Data.List (foldl')
 import Data.Maybe (mapMaybe, fromMaybe)
 import Debug.Trace (trace)
 import CreditCard (Transaction (..))
-
+ 
+-- This whole file will be obsolte shortly in favor of parsing from PDF with AI
 
 parseLine :: Text -> Maybe Transaction
 parseLine line =
