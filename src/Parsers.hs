@@ -3,11 +3,12 @@
 
 module Parsers (
     extractTextFromPdf
-    , extractTransactionsFromPdf
+    , processPdfFile
 ) where
 
 import Data.Text (Text)
 import CreditCard (Transaction)
+import Database
 import Data.Aeson 
 import OpenAiUtils 
 import Control.Exception
@@ -17,6 +18,7 @@ import Data.Aeson.KeyMap (mapMaybe)
 import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as B
 import Data.Text.Encoding (encodeUtf8)
+import System.FilePath (takeFileName)
 
 
 data PdfParseException = PdfParseException Text deriving (Show)
@@ -128,3 +130,27 @@ extractTransactionsFromPdf pdfPath = do
     case parsedTransactions of
         Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
         Just transactions -> return transactions
+
+
+-- TODO extract the existing rows from the DB if they have already been processed
+processPdfFile :: FilePath -> FilePath -> IO [Transaction]
+processPdfFile dbPath pdfPath = do
+    let filename = takeFileName pdfPath
+
+    alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
+    if alreadyProcessed
+        then do
+            putStrLn $ "File '" ++ filename ++ "' has already been processed."
+            return [] 
+        else do
+            putStrLn $ "Processing file: " ++ filename
+            result <- try (extractTransactionsFromPdf pdfPath) :: IO (Either SomeException [Transaction])
+            case result of
+                Left err -> do
+                    putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
+                    return [] 
+                Right transactions -> do
+                    markFileAsProcessed dbPath (T.pack filename)
+                    putStrLn $ "Extracted " ++ show (length transactions) ++ " transactions from '" ++ filename ++ "'."
+                    return transactions 
+
