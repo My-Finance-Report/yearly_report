@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module CreditCard
-   ( CreditCardTransaction(..)
+   ( Transaction(..)
   , parseCreditCardFile
   ) where
 
@@ -18,27 +18,26 @@ import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Aeson (FromJSON)
 import GHC.Generics (Generic)
 
-data CreditCardTransaction = CreditCardTransaction --  this is just convention to name these the same
+data Transaction = Transaction
   { transactionDate :: Text
   , description :: Text
   , amount :: Double
   } deriving (Show, Eq, Ord, Generic) -- basically to allow things like mapping (Ord), printing (show), etc
 
-instance FromJSON CreditCardTransaction
+instance FromJSON Transaction
 
 
-parseTransaction :: Text -> Maybe CreditCardTransaction
+parseTransaction :: Text -> Maybe Transaction
 parseTransaction line =
   -- could also write as a let ... in, then remove the where
 
   --let split_line = T.splitOn "," line
-  --in 
   case split_line of
     -- this unpacks the list into a 5 member tuple (basically asserting a pattern)
     (dateStr:_:merchant:amountStr:_) -> do
       date <-   readMaybe ( T.unpack dateStr )
       amount <- readMaybe (T.unpack $ T.dropWhile (== '$') amountStr)
-      Just $ CreditCardTransaction date merchant amount
+      Just $ Transaction date merchant amount
     -- if we dont have five lines then we fall through to here,which return Nothing
     _ -> Nothing
   -- i think the where syntax is more "functional" then let .. in 
@@ -46,7 +45,7 @@ parseTransaction line =
     split_line = T.splitOn "," line
 
 
-parseCreditCardFile ::  FilePath -> IO [CreditCardTransaction]
+parseCreditCardFile ::  FilePath -> IO [Transaction]
 parseCreditCardFile filePath = do
   content <- TIO.readFile filePath -- IO syntax
   -- same $ for precendece as above

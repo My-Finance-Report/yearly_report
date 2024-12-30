@@ -37,6 +37,7 @@ getCategory dbPath description = do
         [Only category] -> Just category
         _ -> Nothing
 
+-- TODO take a transaction
 insertTransaction :: FilePath -> Text -> Text -> Text -> Text -> Text -> IO ()
 insertTransaction dbPath description category dateOfTransaction source filename = do
     conn <- open dbPath

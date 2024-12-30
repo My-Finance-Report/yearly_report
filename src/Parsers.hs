@@ -7,7 +7,7 @@ module Parsers (
 ) where
 
 import Data.Text (Text)
-import CreditCard (CreditCardTransaction)
+import CreditCard (Transaction)
 import Data.Aeson 
 import OpenAiUtils 
 import Control.Exception
@@ -24,11 +24,10 @@ data PdfParseException = PdfParseException Text deriving (Show)
 instance Exception PdfParseException
 
 data TransactionsWrapper = TransactionsWrapper
-  { transactions :: [CreditCardTransaction]
+  { transactions :: [Transaction]
   } deriving (Show, Generic)
 
 instance FromJSON TransactionsWrapper
-
 
 
 
@@ -71,7 +70,7 @@ generateTransactionSchema =
             ]
         ]
 
-parseRawTextToJson :: Text -> IO (Maybe [CreditCardTransaction])
+parseRawTextToJson :: Text -> IO (Maybe [Transaction])
 parseRawTextToJson pdfContent = do
     let inputPrompt = generatePdfParsingPrompt pdfContent
     let schema = generateTransactionSchema
@@ -86,7 +85,7 @@ parseRawTextToJson pdfContent = do
         Right responseBodyContent -> decodeChatResponse responseBodyContent
 
 
-decodeChatResponse :: B.ByteString -> IO (Maybe [CreditCardTransaction])
+decodeChatResponse :: B.ByteString -> IO (Maybe [Transaction])
 decodeChatResponse responseBodyContent =
   case decode responseBodyContent of
     Just ChatResponse { choices = (ChatChoice { message = ChatMessage { content = innerJson } } : _) } -> do
@@ -121,7 +120,7 @@ trimText pdfText =
         (beforeJunk, _) = T.breakOn "Nov 22       Nov 25      OAKHURST FOOD FUELOAKHURSTCA                                                                               $88.38" afterTransactions
     in beforeJunk
 
-extractTransactionsFromPdf :: FilePath -> IO [CreditCardTransaction]
+extractTransactionsFromPdf :: FilePath -> IO [Transaction]
 extractTransactionsFromPdf pdfPath = do
     rawText <- extractTextFromPdf pdfPath
     let trimmedText = trimText rawText

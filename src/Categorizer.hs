@@ -2,11 +2,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 module Categorizer (
-    categorizeCreditCardTransaction
-    , categorizeBankTransaction
+    categorizeTransaction
     , aggregateByCategory
-    , CategorizedCreditCardTransaction(..)
-    , CategorizedBankTransaction(..)
     , CategorizedTransaction(..)
     , AggregatedTransactions 
   ) where
@@ -28,7 +25,6 @@ import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
 import CreditCard
 import OpenAiUtils
-import Bank (BankRecord (description, BankRecord, date))
 import Data.Time (Day,  formatTime, defaultTimeLocale)
 import System.FilePath (takeFileName)
 
@@ -41,14 +37,12 @@ newtype CategorizationResponse
 
 instance FromJSON CategorizationResponse
 
-data CategorizedTransaction a = CategorizedTransaction
-   { transaction :: a
+data CategorizedTransaction  = CategorizedTransaction
+   { transaction :: Transaction
    , category :: Text
    } deriving (Show, Eq, Ord)
 
-type CategorizedCreditCardTransaction = CategorizedTransaction CreditCardTransaction
-type CategorizedBankTransaction = CategorizedTransaction BankRecord
-type AggregatedTransactions a = Map.Map Text [CategorizedTransaction a]
+type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
 
 
 
@@ -62,11 +56,10 @@ getBankSource=
 
 
 
-
-aggregateByCategory :: [CategorizedTransaction t] -> AggregatedTransactions t
+aggregateByCategory :: [CategorizedTransaction ] -> AggregatedTransactions
 aggregateByCategory = foldr insertTransaction Map.empty
   where
-    insertTransaction :: CategorizedTransaction t -> AggregatedTransactions t -> AggregatedTransactions t
+    insertTransaction :: CategorizedTransaction  -> AggregatedTransactions  -> AggregatedTransactions 
     insertTransaction categorizedTransaction acc =
         let cat = category categorizedTransaction
         in Map.insertWith (++) cat [categorizedTransaction] acc
@@ -128,8 +121,8 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
   in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-categorizeTransaction :: FilePath -> Text -> [Text] -> Text ->Text -> Text-> IO Text
-categorizeTransaction dbPath description categories day source filename = do
+categorizeTransactionInner :: FilePath -> Text -> [Text] -> Text ->Text -> Text-> IO Text
+categorizeTransactionInner dbPath description categories day source filename = do
     existingCategory <- getCategory dbPath description
     case existingCategory of
         Just category -> return category 
@@ -142,20 +135,10 @@ categorizeTransaction dbPath description categories day source filename = do
                 Nothing -> return "Uncategorized" 
 
 
-categorizeCreditCardTransaction :: CreditCardTransaction -> FilePath -> [Text] -> Text-> IO CategorizedCreditCardTransaction
-categorizeCreditCardTransaction creditCardTransaction dbPath categories filename = do
-    category <- categorizeTransaction dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) getCreditCardSource filename
+categorizeTransaction :: Transaction -> FilePath -> [Text] -> Text-> IO  CategorizedTransaction
+categorizeTransaction creditCardTransaction dbPath categories filename = do
+    category <- categorizeTransactionInner dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) getCreditCardSource filename
     return CategorizedTransaction 
         { Categorizer.transaction = creditCardTransaction
         , category = category
         }
-
-
-categorizeBankTransaction :: BankRecord -> FilePath -> [Text] -> Text-> IO CategorizedBankTransaction
-categorizeBankTransaction bankRecord dbPath categories filename = do
-    category <- categorizeTransaction dbPath (Bank.description bankRecord) categories (date bankRecord) getBankSource filename
-    return CategorizedTransaction 
-        { Categorizer.transaction = bankRecord
-        , category = category
-        }
-

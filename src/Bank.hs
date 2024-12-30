@@ -1,9 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Bank
-  ( TransactionType(..)
-  , BankRecord(..)
-  , parseBankFile
+  ( 
+   parseBankFile
   ) where
 
 import qualified Data.Map as Map
@@ -15,38 +14,30 @@ import qualified Data.Text.IO as TIO
 import Data.List (foldl')
 import Data.Maybe (mapMaybe, fromMaybe)
 import Debug.Trace (trace)
-
-data TransactionType
-  = Deposit Double
-  | Withdrawl Double
-  deriving (Show, Eq)
+import CreditCard (Transaction (..))
 
 
--- Define a data structure for the parsed bank record
-data BankRecord = BankRecord
-  { date :: Text
-  , check_number :: Text
-  , description :: Text
-  , transaction :: TransactionType
-  , balance :: Maybe Double
-  } deriving (Show, Eq)
+parseLine :: Text -> Maybe Transaction
+parseLine line =
+    case broken_up_line of
+      (date:check_number:desc:deposits:withdrawals:balance:_) -> do
+        let deposit     = parseAmount deposits   
+            withdraw    = parseAmount withdrawals
 
+        -- If there is a withdrawal, make it negative;
+        -- If there is a deposit, keep it positive.
+        -- If both or neither are present, fail with Nothing.
+        finalAmount <- case (withdraw, deposit) of
+                         (Just w, Nothing) -> Just (-w)
+                         (Nothing, Just d) -> Just d
+                         _                 -> Nothing
 
+        Just (Transaction date desc finalAmount)
 
-parseLine :: Text -> Maybe BankRecord  -- function  type
-parseLine line =  -- actual function definition
-    case broken_up_line of -- we start a case statement
-      (date:check_number:desc:deposites:withdrawls:balance:the_rest) -> do -- if the split line has >= 7 elements, hit this do statement
-        let deposit  = parseAmount deposites -- define 3 variables using a helper, these are either Double or Nothing
-            withdrawl = parseAmount withdrawls --aka Maybe Double
-            the_balance = parseAmount balance 
-        transaction <- case (withdrawl, deposit) of --start another case statement passing withdrawl and deposite
-            (Just w , Nothing) -> Just (Withdrawl w) -- match a withdrawl and no deposite, set w's "type" to be Withdrawl, why Just?
-            (Nothing, Just d) -> Just (Deposit d) -- same as above but with deposite
-            _ -> Nothing -- basically a catch all incase there is (Just w, Just d) or (Nothing, Nothing), which is invalid state
-        Just ( BankRecord date check_number desc transaction the_balance ) -- now that we have types "determined", make the object. <$> is the infix for fmap 
-      _ -> Nothing -- handle a split line that is less than 7 elements
-    where broken_up_line = T.splitOn "," line -- not define the split line as splitting on ","
+      -- If the line does not have at least 7 CSV parts, fail:
+      _ -> Nothing
+  where
+    broken_up_line = T.splitOn "," line
 
 
 -- Helper to parse an amount from text
@@ -58,7 +49,7 @@ parseAmount t =
         [(n, "")] -> Just n
         _         -> Nothing
 
-parseBankFile :: FilePath -> IO [BankRecord]
+parseBankFile :: FilePath -> IO [Transaction]
 parseBankFile filePath = do
   content <- TIO.readFile filePath
   let lines = T.lines content
