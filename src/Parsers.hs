@@ -8,7 +8,7 @@ module Parsers (
 ) where
 
 import Data.Text (Text)
-import CreditCard (Transaction)
+import CreditCard 
 import Database
 import Data.Aeson 
 import OpenAiUtils 

@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.Text (Text)
 import qualified Data.Text.IO as TIO
 
 import Bank
@@ -16,17 +15,6 @@ import Control.Exception (try, SomeException)
 import Data.Text (Text)
 import qualified Data.Text as T
 
-
-
-
--- TODO express this in types better
-getCreditCardSource:: Text
-getCreditCardSource= 
-  "credit_card"
-
-getBankSource:: Text
-getBankSource= 
-  "bank"
 
 
 
@@ -44,8 +32,8 @@ main = do
     bankTransactions <- parseBankFile bankPath 
     ccPDFtransactions <-processPdfFile dbPath pdfPath CreditCardKind
 
-    categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories  bankPath getBankSource) bankTransactions 
-    categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories  pdfPath getCreditCardSource) ccPDFtransactions
+    categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories  bankPath BankKind) bankTransactions 
+    categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories  pdfPath CreditCardKind) ccPDFtransactions
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
