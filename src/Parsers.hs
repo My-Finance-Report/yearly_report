@@ -20,6 +20,7 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as B
 import Data.Text.Encoding (encodeUtf8)
 import System.FilePath (takeFileName)
+import Categorizer (categorizeTransaction)
 
 
 data PdfParseException = PdfParseException Text deriving (Show)
@@ -149,19 +150,21 @@ extractTransactionsFromPdf pdfPath transactionKind = do
     parsedTransactions <- parseRawTextToJson trimmedText
     case parsedTransactions of
         Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
-        Just transactions -> return transactions
+        Just transactions -> return  transactions
+
+
 
 
 -- TODO extract the existing rows from the DB if they have already been processed
-processPdfFile :: FilePath -> FilePath -> TransactionKind -> IO [Transaction]
-processPdfFile dbPath pdfPath transactionKind = do
+processPdfFile :: FilePath -> FilePath -> TransactionKind -> [Text]-> IO [CategorizedTransaction]
+processPdfFile dbPath pdfPath transactionKind categories = do
     let filename = takeFileName pdfPath
 
     alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
     if alreadyProcessed
         then do
             putStrLn $ "File '" ++ filename ++ "' has already been processed."
-            return [] 
+            getAllTransactions dbPath filename
         else do
             putStrLn $ "Processing file: " ++ filename
             result <- try (extractTransactionsFromPdf pdfPath transactionKind) :: IO (Either SomeException [Transaction])
@@ -170,7 +173,8 @@ processPdfFile dbPath pdfPath transactionKind = do
                     putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
                     return [] 
                 Right transactions -> do
+                    categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath categories filename transactionKind) transactions
                     markFileAsProcessed dbPath (T.pack filename)
-                    putStrLn $ "Extracted " ++ show (length transactions) ++ " transactions from '" ++ filename ++ "'."
-                    return transactions 
+                    putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ filename ++ "'."
+                    return categorizedTransactions
 

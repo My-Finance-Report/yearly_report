@@ -3,6 +3,7 @@
 module Database (
     initializeDatabase
     ,getCategory
+    ,getAllTransactions
     ,insertTransaction
     ,isFileProcessed
     ,markFileAsProcessed
@@ -43,7 +44,7 @@ getCategory dbPath description = do
         _ -> Nothing
 
 
-getAllTransactions :: FilePath -> Text -> IO [CategorizedTransaction]
+getAllTransactions :: FilePath -> FilePath -> IO [CategorizedTransaction]
 getAllTransactions dbPath filename = do
     conn <- open dbPath
     results <- query conn 

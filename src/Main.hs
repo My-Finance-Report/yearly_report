@@ -15,25 +15,19 @@ import Control.Exception (try, SomeException)
 import Data.Text (Text)
 import qualified Data.Text as T
 
-
-
-
 main :: IO ()
 main = do
     let dbPath = "transactions.db"
-    let bankPath = "bank_statement.csv"
-    let pdfPath= "20241219-VentureOne card statement-3996.pdf"
+    let bankPdfPath = "Document.pdf"
+    let ccPdfPath= "20241219-VentureOne card statement-3996.pdf"
 
     let ccCategories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
     let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
 
     initializeDatabase dbPath
 
-    bankTransactions <- parseBankFile bankPath 
-    ccPDFtransactions <-processPdfFile dbPath pdfPath CreditCardKind
-
-    categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories  bankPath BankKind) bankTransactions 
-    categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories  pdfPath CreditCardKind) ccPDFtransactions
+    categorizedBankTransactions <- processPdfFile dbPath bankPdfPath BankKind bankCategories
+    categorizedCCTransactions <-processPdfFile dbPath ccPdfPath CreditCardKind ccCategories
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
