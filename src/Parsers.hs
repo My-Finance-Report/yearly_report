@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Parsers (
     extractTextFromPdf
@@ -8,7 +7,7 @@ module Parsers (
 ) where
 
 import Data.Text (Text)
-import CreditCard 
+import Types
 import Database
 import Data.Aeson 
 import OpenAiUtils 
@@ -21,17 +20,6 @@ import qualified Data.ByteString.Lazy as B
 import Data.Text.Encoding (encodeUtf8)
 import System.FilePath (takeFileName)
 import Categorizer (categorizeTransaction)
-
-
-data PdfParseException = PdfParseException Text deriving (Show)
-
-instance Exception PdfParseException
-
-data TransactionsWrapper = TransactionsWrapper
-  { transactions :: [Transaction]
-  } deriving (Show, Generic)
-
-instance FromJSON TransactionsWrapper
 
 
 generatePdfParsingPrompt :: Text -> Text

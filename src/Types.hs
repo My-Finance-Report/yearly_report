@@ -1,10 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module CreditCard
+module Types
    ( Transaction(..)
     , CategorizedTransaction(..)
     , AggregatedTransactions
     , TransactionKind(..)
+    , TransactionsWrapper(..)
+    , PdfParseException(..)
   ) where
 
 import Data.Time (Day, parseTimeM, defaultTimeLocale, formatTime)
@@ -18,11 +20,23 @@ import qualified Data.Text.IO as TIO
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Aeson (FromJSON)
 import GHC.Generics (Generic)
+import Control.Exception
+
+data PdfParseException = PdfParseException Text deriving (Show)
+
+instance Exception PdfParseException
+
+data TransactionsWrapper = TransactionsWrapper
+  { transactions :: [Transaction]
+  } deriving (Show, Generic)
+
+instance FromJSON TransactionsWrapper
+
+
 
 data TransactionKind = BankKind | CreditCardKind
     deriving (Eq, Show, Ord)
 
--- TODO this should be moved into its own module, ,not CC specific
 data Transaction = Transaction
   { transactionDate :: Text
   , description :: Text

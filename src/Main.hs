@@ -4,8 +4,7 @@ module Main where
 
 import qualified Data.Text.IO as TIO
 
-import Bank
-import CreditCard
+import Types
 import Categorizer
 import Database
 import HtmlGenerators

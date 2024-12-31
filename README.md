@@ -9,7 +9,7 @@ make my yearly financial report using haskell
 - (WORKING) generate "report" 
   -> (TODO) per month drill down 
   -> (DONE) summary -> per transaction drill down
-  -> (TODO) styling
+  -> (DONE) styling
 - (TODO) try to serve the resulting report with haskell 
 - (TODO) allow for an interactive interface 
 - (TODO) allow uploading documents to generate "live" reports

@@ -21,7 +21,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Database
 import System.Environment (getEnv)
 import Control.Exception (SomeException, try)
-import CreditCard
+import Types
 import OpenAiUtils
 import Data.Time (Day,  formatTime, defaultTimeLocale)
 import System.FilePath (takeFileName)
@@ -115,7 +115,7 @@ categorizeTransactionInner dbPath description categories day  = do
 
 categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionKind -> IO  CategorizedTransaction
 categorizeTransaction creditCardTransaction dbPath categories filename transactionKind = do
-    category <- categorizeTransactionInner dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) 
+    category <- categorizeTransactionInner dbPath (Types.description creditCardTransaction) categories (transactionDate creditCardTransaction) 
     let categorizedTransaction =  CategorizedTransaction { transaction = creditCardTransaction
         , category = category, transactionKind = transactionKind
         }

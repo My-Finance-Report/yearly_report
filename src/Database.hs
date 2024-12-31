@@ -11,7 +11,7 @@ module Database (
 
 import Database.SQLite.Simple
 import Data.Text (Text)
-import CreditCard (CategorizedTransaction(..), Transaction(..), TransactionKind(..))
+import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..))
 import Data.Maybe (mapMaybe)
 
 

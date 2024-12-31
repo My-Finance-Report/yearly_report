@@ -11,15 +11,15 @@ import qualified Data.Map as Map
 import Data.Text as T
 import Data.List (sortBy)
 import Data.Ord (comparing)
-import CreditCard
+import Types
 
 generateRow :: CategorizedTransaction -> Text
 generateRow categorizedTransaction =
     let txnCategory = category categorizedTransaction
         innerTransaction = transaction categorizedTransaction
         date = transactionDate innerTransaction
-        description = CreditCard.description innerTransaction
-        amount = CreditCard.amount innerTransaction
+        description = Types.description innerTransaction
+        amount = Types.amount innerTransaction
     in "<tr><td>" <> txnCategory <> "</td><td>" <> date <> "</td><td>" <> description <> "</td><td>" <> pack (show amount) <> "</td></tr>\n"
 
 
