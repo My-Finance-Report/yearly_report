@@ -13,20 +13,27 @@ import Parsers
 import Control.Exception (try, SomeException)
 import Data.Text (Text)
 import qualified Data.Text as T
+import System.Directory (listDirectory)
+import System.FilePath ((</>))
 
 main :: IO ()
 main = do
     let dbPath = "transactions.db"
-    let bankPdfPath = "Document.pdf"
-    let ccPdfPath= "20241219-VentureOne card statement-3996.pdf"
+
+
+    let bankDir = "bank_files"
+    let ccDir = "credit_card_files"
+
+    bankFiles <- map (bankDir </>) <$> listDirectory bankDir
+    ccFiles <- map (ccDir </>) <$> listDirectory ccDir
 
     let ccCategories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
     let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
 
     initializeDatabase dbPath
 
-    categorizedBankTransactions <- processPdfFile dbPath bankPdfPath BankKind bankCategories
-    categorizedCCTransactions <-processPdfFile dbPath ccPdfPath CreditCardKind ccCategories
+    categorizedBankTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file BankKind bankCategories) bankFiles
+    categorizedCCTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file CreditCardKind ccCategories) ccFiles
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions

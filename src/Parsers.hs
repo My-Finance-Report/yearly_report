@@ -25,6 +25,7 @@ import Categorizer (categorizeTransaction)
 generatePdfParsingPrompt :: Text -> Text
 generatePdfParsingPrompt pdfContent =
     "Parse the following PDF content into a JSON array of transactions. " <>
+    "structure the dates as MM/DD" <>
     "Each transaction should have the fields: 'transactionDate', 'postingDate', 'description', and 'amount'.\n\n" <>
     pdfContent
 
