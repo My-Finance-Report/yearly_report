@@ -10,7 +10,9 @@ module Database (
 
 import Database.SQLite.Simple
 import Data.Text (Text)
-import CreditCard (CategorizedTransaction(..), Transaction(..))
+import CreditCard (CategorizedTransaction(..), Transaction(..), TransactionKind(..))
+import Data.Maybe (mapMaybe)
+
 
 initializeDatabase :: FilePath -> IO ()
 initializeDatabase dbPath = do
@@ -21,6 +23,7 @@ initializeDatabase dbPath = do
         \ description TEXT UNIQUE NOT NULL, \
         \ category TEXT, \
         \ date_of_transaction TEXT NOT NULL, \
+        \ amount REAL NOT NULL, \
         \ source TEXT NOT NULL, \
         \ filename TEXT)"
     execute_ conn
@@ -28,6 +31,7 @@ initializeDatabase dbPath = do
         \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
         \ filename TEXT UNIQUE NOT NULL)"
     close conn
+
 
 getCategory :: FilePath -> Text -> IO (Maybe Text)
 getCategory dbPath description = do
@@ -38,14 +42,52 @@ getCategory dbPath description = do
         [Only category] -> Just category
         _ -> Nothing
 
-insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> Text->  IO ()
-insertTransaction dbPath categorizedTransaction sourceFile source = do
+
+getAllTransactions :: FilePath -> Text -> IO [CategorizedTransaction]
+getAllTransactions dbPath filename = do
+    conn <- open dbPath
+    results <- query conn 
+        "SELECT description, category, date_of_transaction, amount, source \
+        \FROM transactions WHERE filename = ?" 
+        (Only filename) :: IO [(Text, Text, Text, Double, Text)]
+    close conn
+    return $ mapMaybe parseResult results
+  where
+    parseResult :: (Text, Text, Text, Double, Text) -> Maybe CategorizedTransaction
+    parseResult (desc, cat, date, amt, src) = do
+        kind <- parseTransactionKind src
+        Just CategorizedTransaction
+            { transaction = Transaction 
+                { description = desc
+                , amount = amt
+                , transactionDate = date
+                }
+            , category = cat
+            , transactionKind = kind
+            }
+
+    parseTransactionKind :: Text -> Maybe TransactionKind
+    parseTransactionKind "BankKind" = Just BankKind
+    parseTransactionKind "CreditCardKind" = Just CreditCardKind
+    parseTransactionKind _ = Nothing
+
+
+
+insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> TransactionKind-> IO ()
+insertTransaction dbPath categorizedTransaction sourceFile transactionKind = do
     conn <- open dbPath
     execute conn
-        "INSERT OR IGNORE INTO transactions (description, category, date_of_transaction, source, filename) VALUES (?, ?, ?, ?, ?)"
-        (description innerTransaction, category categorizedTransaction, transactionDate innerTransaction , source, sourceFile)
+        "INSERT OR IGNORE INTO transactions (description, category, date_of_transaction, amount, source, filename) VALUES (?, ?, ?, ?, ?, ?)"
+        ( description innerTransaction
+        , category categorizedTransaction
+        , transactionDate innerTransaction
+        , amount innerTransaction
+        , show transactionKind
+        , sourceFile )
     close conn
-    where innerTransaction = transaction categorizedTransaction
+  where
+    innerTransaction = transaction categorizedTransaction
+
 
 isFileProcessed :: FilePath -> Text -> IO Bool
 isFileProcessed dbPath filename = do

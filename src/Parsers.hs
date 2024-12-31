@@ -4,6 +4,7 @@
 module Parsers (
     extractTextFromPdf
     , processPdfFile
+    , TransactionKind(..)
 ) where
 
 import Data.Text (Text)
@@ -30,7 +31,6 @@ data TransactionsWrapper = TransactionsWrapper
   } deriving (Show, Generic)
 
 instance FromJSON TransactionsWrapper
-
 
 
 generatePdfParsingPrompt :: Text -> Text
@@ -114,18 +114,38 @@ extractTextFromPdf pdfPath = do
         Left err -> throwIO $ PdfParseException $ "Failed to extract text from PDF: " <> T.pack (show err)
         Right output -> return $ T.pack output
 
-trimText :: Text -> Text
-trimText pdfText = 
+trimLeadingText :: Text -> Text -> Text
+trimLeadingText pdfText keyword = 
     let 
-        (_, afterTransactions) = T.breakOn "Trans Date   Post Date   Description" pdfText
-        -- todo remove this once we are parsing correctly
-        (beforeJunk, _) = T.breakOn "Nov 22       Nov 25      OAKHURST FOOD FUELOAKHURSTCA                                                                               $88.38" afterTransactions
-    in beforeJunk
+        (_, afterTransactions) = T.breakOn  pdfText keyword
+    in afterTransactions
 
-extractTransactionsFromPdf :: FilePath -> IO [Transaction]
-extractTransactionsFromPdf pdfPath = do
+trimTrailingText :: Text -> Text -> Text
+trimTrailingText pdfText keyword =
+    let 
+        (beforeTransactions, _) = T.breakOn  keyword pdfText
+    in beforeTransactions
+
+
+getKeywords :: TransactionKind -> (Text, Text)
+getKeywords BankKind = 
+    ( "Bank Trans Date   Post Date   Description"
+    , "Nov 22       Nov 25      BANK DESCRIPTION END KEYWORD"
+    )
+getKeywords CreditCardKind = 
+    ( "Trans Date   Post Date   Description"
+    , "Nov 22       Nov 25      OAKHURST FOOD FUELOAKHURSTCA                                                                               $"
+    )
+
+
+
+extractTransactionsFromPdf :: FilePath -> TransactionKind -> IO [Transaction]
+extractTransactionsFromPdf pdfPath transactionKind = do
+
+    let (startKeyword, endKeyword) = getKeywords transactionKind
+
     rawText <- extractTextFromPdf pdfPath
-    let trimmedText = trimText rawText
+    let trimmedText = trimTrailingText (trimLeadingText rawText startKeyword ) endKeyword
     parsedTransactions <- parseRawTextToJson trimmedText
     case parsedTransactions of
         Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
@@ -133,8 +153,8 @@ extractTransactionsFromPdf pdfPath = do
 
 
 -- TODO extract the existing rows from the DB if they have already been processed
-processPdfFile :: FilePath -> FilePath -> IO [Transaction]
-processPdfFile dbPath pdfPath = do
+processPdfFile :: FilePath -> FilePath -> TransactionKind -> IO [Transaction]
+processPdfFile dbPath pdfPath transactionKind = do
     let filename = takeFileName pdfPath
 
     alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
@@ -144,7 +164,7 @@ processPdfFile dbPath pdfPath = do
             return [] 
         else do
             putStrLn $ "Processing file: " ++ filename
-            result <- try (extractTransactionsFromPdf pdfPath) :: IO (Either SomeException [Transaction])
+            result <- try (extractTransactionsFromPdf pdfPath transactionKind) :: IO (Either SomeException [Transaction])
             case result of
                 Left err -> do
                     putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err

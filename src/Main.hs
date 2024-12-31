@@ -41,9 +41,8 @@ main = do
 
     initializeDatabase dbPath
 
-    bankTransactions <- parseBankFile bankPath
-    ccPDFtransactions <-processPdfFile dbPath pdfPath
-
+    bankTransactions <- parseBankFile bankPath 
+    ccPDFtransactions <-processPdfFile dbPath pdfPath CreditCardKind
 
     categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories  bankPath getBankSource) bankTransactions 
     categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories  pdfPath getCreditCardSource) ccPDFtransactions
