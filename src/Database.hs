@@ -10,6 +10,7 @@ module Database (
 
 import Database.SQLite.Simple
 import Data.Text (Text)
+import CreditCard (CategorizedTransaction(..), Transaction(..))
 
 initializeDatabase :: FilePath -> IO ()
 initializeDatabase dbPath = do
@@ -37,14 +38,14 @@ getCategory dbPath description = do
         [Only category] -> Just category
         _ -> Nothing
 
--- TODO take a transaction
-insertTransaction :: FilePath -> Text -> Text -> Text -> Text -> Text -> IO ()
-insertTransaction dbPath description category dateOfTransaction source filename = do
+insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> Text->  IO ()
+insertTransaction dbPath categorizedTransaction sourceFile source = do
     conn <- open dbPath
     execute conn
         "INSERT OR IGNORE INTO transactions (description, category, date_of_transaction, source, filename) VALUES (?, ?, ?, ?, ?)"
-        (description, category, dateOfTransaction, source, filename)
+        (description innerTransaction, category categorizedTransaction, transactionDate innerTransaction , source, sourceFile)
     close conn
+    where innerTransaction = transaction categorizedTransaction
 
 isFileProcessed :: FilePath -> Text -> IO Bool
 isFileProcessed dbPath filename = do

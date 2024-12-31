@@ -11,14 +11,13 @@ import qualified Data.Map as Map
 import Data.Text 
 import Data.List (sortBy)
 import Data.Ord (comparing)
-import Categorizer (AggregatedTransactions,CategorizedTransaction, CategorizedTransaction (transaction), category, transaction)
 import CreditCard
 
 -- TODO why is this called blah
 generateRow :: CategorizedTransaction -> Text
 generateRow categorizedTransaction =
     let txnCategory = category categorizedTransaction
-        blahTransaction = Categorizer.transaction categorizedTransaction
+        blahTransaction = transaction categorizedTransaction
         description = CreditCard.description blahTransaction
         amount = CreditCard.amount blahTransaction
     in "<tr><td>" <> txnCategory <> "</td><td>" <> description <> "</td><td>" <> pack (show amount) <> "</td></tr>\n"
@@ -43,7 +42,7 @@ generateAggregateRows :: AggregatedTransactions  -> Text
 generateAggregateRows aggregatedTransactions  =
     let tableRows = Map.foldrWithKey
                       (\category transactions acc ->
-                          let totalAmount = sum (Prelude.map (amount . Categorizer.transaction ) transactions)
+                          let totalAmount = sum (Prelude.map (amount . transaction ) transactions)
                           in generateAggregateRow category totalAmount <> acc
                       ) "" aggregatedTransactions
     in "<table>\n<tr><th>Category</th><th>Total Amount</th></tr>\n" <> tableRows <> "</table>\n"

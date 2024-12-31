@@ -4,8 +4,6 @@
 module Categorizer (
     categorizeTransaction
     , aggregateByCategory
-    , CategorizedTransaction(..)
-    , AggregatedTransactions 
   ) where
 
 import Network.HTTP.Client
@@ -37,22 +35,7 @@ newtype CategorizationResponse
 
 instance FromJSON CategorizationResponse
 
-data CategorizedTransaction  = CategorizedTransaction
-   { transaction :: Transaction
-   , category :: Text
-   } deriving (Show, Eq, Ord)
 
-type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
-
-
-
-getCreditCardSource:: Text
-getCreditCardSource= 
-  "credit_card"
-
-getBankSource:: Text
-getBankSource= 
-  "bank"
 
 
 
@@ -121,8 +104,8 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
   in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-categorizeTransactionInner :: FilePath -> Text -> [Text] -> Text ->Text -> Text-> IO Text
-categorizeTransactionInner dbPath description categories day source filename = do
+categorizeTransactionInner :: FilePath -> Text -> [Text] -> Text -> IO Text
+categorizeTransactionInner dbPath description categories day  = do
     existingCategory <- getCategory dbPath description
     case existingCategory of
         Just category -> return category 
@@ -130,15 +113,15 @@ categorizeTransactionInner dbPath description categories day source filename = d
             apiResponse <- classifyTransactions categories description 
             case apiResponse of
                 Just category -> do
-                    insertTransaction dbPath description category day source filename
                     return category
                 Nothing -> return "Uncategorized" 
 
 
-categorizeTransaction :: Transaction -> FilePath -> [Text] -> Text-> IO  CategorizedTransaction
-categorizeTransaction creditCardTransaction dbPath categories filename = do
-    category <- categorizeTransactionInner dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) getCreditCardSource filename
-    return CategorizedTransaction 
-        { Categorizer.transaction = creditCardTransaction
+categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> Text -> IO  CategorizedTransaction
+categorizeTransaction creditCardTransaction dbPath categories filename source = do
+    category <- categorizeTransactionInner dbPath (CreditCard.description creditCardTransaction) categories (transactionDate creditCardTransaction) 
+    let categorizedTransaction =  CategorizedTransaction { transaction = creditCardTransaction
         , category = category
         }
+    insertTransaction dbPath categorizedTransaction filename source
+    return categorizedTransaction

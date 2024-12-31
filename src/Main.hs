@@ -19,6 +19,16 @@ import qualified Data.Text as T
 
 
 
+-- TODO express this in types better
+getCreditCardSource:: Text
+getCreditCardSource= 
+  "credit_card"
+
+getBankSource:: Text
+getBankSource= 
+  "bank"
+
+
 
 main :: IO ()
 main = do
@@ -35,8 +45,8 @@ main = do
     ccPDFtransactions <-processPdfFile dbPath pdfPath
 
 
-    categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories (T.pack bankPath)) bankTransactions
-    categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories (T.pack pdfPath)) ccPDFtransactions
+    categorizedBankTransactions <- mapM (\txn -> categorizeTransaction txn dbPath bankCategories  bankPath getBankSource) bankTransactions 
+    categorizedCCTransactions <- mapM (\txn -> categorizeTransaction txn dbPath ccCategories  pdfPath getCreditCardSource) ccPDFtransactions
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions

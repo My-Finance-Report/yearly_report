@@ -2,6 +2,8 @@
 
 module CreditCard
    ( Transaction(..)
+    , CategorizedTransaction(..)
+    , AggregatedTransactions
   ) where
 
 import Data.Time (Day, parseTimeM, defaultTimeLocale, formatTime)
@@ -24,3 +26,10 @@ data Transaction = Transaction
   } deriving (Show, Eq, Ord, Generic) -- basically to allow things like mapping (Ord), printing (show), etc
 
 instance FromJSON Transaction
+
+data CategorizedTransaction  = CategorizedTransaction
+   { transaction :: Transaction
+   , category :: Text
+   } deriving (Show, Eq, Ord)
+
+type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
