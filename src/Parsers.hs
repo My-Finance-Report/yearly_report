@@ -118,7 +118,7 @@ extractTextFromPdf pdfPath = do
 trimLeadingText :: Text -> Text -> Text
 trimLeadingText pdfText keyword = 
     let 
-        (_, afterTransactions) = T.breakOn  pdfText keyword
+        (_, afterTransactions) = T.breakOn  keyword pdfText
     in afterTransactions
 
 trimTrailingText :: Text -> Text -> Text
@@ -145,7 +145,8 @@ extractTransactionsFromPdf pdfPath transactionKind = do
     let (startKeyword, endKeyword) = getKeywords transactionKind
 
     rawText <- extractTextFromPdf pdfPath
-    let trimmedText = trimTrailingText (trimLeadingText rawText startKeyword ) endKeyword
+    let trimmedText = trimTrailingText (trimLeadingText rawText startKeyword )  endKeyword
+    print trimmedText
     parsedTransactions <- parseRawTextToJson trimmedText
     case parsedTransactions of
         Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."

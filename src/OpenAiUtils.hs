@@ -63,7 +63,7 @@ makeChatRequest schema messages = do
         { model = "gpt-4o"
         , messages = messages
         , response_format = schema
-        , temperature = 1
+        , temperature = 0.0
         , max_tokens = 2048
         }
   initialRequest <- parseRequest $ T.unpack url
