@@ -130,14 +130,13 @@ trimTrailingText pdfText keyword =
 
 getKeywords :: TransactionKind -> (Text, Text)
 getKeywords BankKind = 
-    ( "Bank Trans Date   Post Date   Description"
-    , "Nov 22       Nov 25      BANK DESCRIPTION END KEYWORD"
+    ( "Transaction history"
+    , "Ending balance"
     )
 getKeywords CreditCardKind = 
-    ( "Trans Date   Post Date   Description"
-    , "Nov 22       Nov 25      OAKHURST FOOD FUELOAKHURSTCA                                                                               $"
+    ( "MATTHEW M CARROLL #3996: Transactions"
+    , "Total Transactions for This Period"
     )
-
 
 
 extractTransactionsFromPdf :: FilePath -> TransactionKind -> IO [Transaction]

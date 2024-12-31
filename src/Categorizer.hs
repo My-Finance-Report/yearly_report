@@ -36,9 +36,6 @@ newtype CategorizationResponse
 instance FromJSON CategorizationResponse
 
 
-
-
-
 aggregateByCategory :: [CategorizedTransaction ] -> AggregatedTransactions
 aggregateByCategory = foldr insertTransaction Map.empty
   where
@@ -96,7 +93,6 @@ generateSchema categories =
                     ]
                 ]
                 ]
-
 
 
 generatePrompt :: [Text] -> Text -> Text
