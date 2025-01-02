@@ -5,8 +5,7 @@ make my yearly financial report using haskell
 # Features
 
 - (DONE) parse PDF bank statements and credit card statements (see src/Parsers.hs)
- - (TODO) there is still some cleanup around in / out money -> summing deposits + withdrawls is weird
-    - probably requires adding  inbound / outbound to the expense
+ - (DONE) cleanup around in / out money -> summing deposits + withdrawls is weird
 - (DONE) categorize expenses  (see src/Categorizer.hs)
 - (WORKING) generate "report"  (see src/HtmlGenerators.hs)
   - (DONE) per month drill down 
@@ -31,6 +30,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Scratch
 
-- looks like duplicate keys get overwritten 
 - Ids are duplicated on backend for expansion of rows
 
