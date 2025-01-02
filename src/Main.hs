@@ -60,8 +60,8 @@ main = do
 
     initializeDatabase dbPath
 
-    categorizedBankTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file BankKind bankCategories) bankFiles
-    categorizedCCTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file CreditCardKind ccCategories) ccFiles
+    categorizedBankTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file BankSource bankCategories) bankFiles
+    categorizedCCTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file CreditCardSource ccCategories) ccFiles
 
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions

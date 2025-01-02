@@ -1,10 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types
    ( Transaction(..)
     , CategorizedTransaction(..)
     , AggregatedTransactions
     , TransactionKind(..)
+    , TransactionSource(..)
     , TransactionsWrapper(..)
     , PdfParseException(..)
     , CategorizationResponse(..)
@@ -42,21 +44,39 @@ newtype TransactionsWrapper
 
 instance FromJSON TransactionsWrapper
 
-data TransactionKind = BankKind | CreditCardKind
+data TransactionSource = BankSource | CreditCardSource
     deriving (Eq, Show, Ord)
+
+data TransactionKind = Withdrawal | Deposit
+    deriving (Eq, Show, Ord, Generic)
+  
+instance FromJSON TransactionKind
 
 data Transaction = Transaction
   { transactionDate :: Day
   , description :: Text
   , amount :: Double
+  , kind :: TransactionKind
   } deriving (Show, Eq, Ord, Generic)
 
-instance FromJSON Transaction
+instance FromJSON Transaction where
+    parseJSON = withObject "Transaction" $ \v -> do
+        dateText <- v .: "transactionDate"
+        let parsedDate = parseTimeM True defaultTimeLocale "%m/%d/%Y" (T.unpack dateText) :: Maybe Day
+        case parsedDate of
+            Just date -> Transaction
+                <$> pure date
+                <*> v .: "description"
+                <*> v .: "amount"
+                <*> v .: "kind"
+            Nothing -> fail $ "Could not parse transactionDate: " <> T.unpack dateText
+
+
 
 data CategorizedTransaction  = CategorizedTransaction
    { transaction :: Transaction
    , category :: Text
-   , transactionKind :: TransactionKind
+   , transactionSource :: TransactionSource
    } deriving (Show, Eq, Ord)
 
 type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
