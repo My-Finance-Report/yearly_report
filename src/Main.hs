@@ -34,10 +34,8 @@ generateSankeyData bankAggregated ccAggregated =
             Just ccTransactions -> sum $ Prelude.map (amount . transaction) ccTransactions
             Nothing -> 0
 
-        -- Add a single flow from Income to Credit Card Payments
-        incomeToCC = if creditCardPaymentsFromBank > 0
-                        then [("Income", "Credit Card Payments", creditCardPaymentsFromBank)]
-                        else []
+        incomeToCC =([("Income", "Credit Card Payments", creditCardPaymentsFromBank) |
+            creditCardPaymentsFromBank > 0])
 
         -- Split Credit Card Payments into individual credit card categories
         ccFlowsToCategories = Prelude.map (\(category, transactions) ->
