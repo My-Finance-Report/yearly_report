@@ -22,22 +22,31 @@ import qualified Data.Map as Map
 generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
 generateSankeyData bankAggregated ccAggregated =
     let 
+        calculateNetAmount :: [CategorizedTransaction] -> Double
+        calculateNetAmount transactions =
+            sum $ Prelude.map (\txn ->
+                let amt = amount (transaction txn)
+                    txnKind = kind (transaction txn)
+                in case txnKind of
+                    Deposit    -> amt
+                    Withdrawal -> -amt
+            ) transactions
+
         bankFlows = case Map.lookup "Income" bankAggregated of
             Just incomeTransactions ->
                 let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
-                    bankCategoryTotals = Map.map (sum . Prelude.map (amount . transaction)) otherBankCategories
+                    bankCategoryTotals = Map.map calculateNetAmount otherBankCategories
                 in Prelude.map (\(category, total) -> ("Income", category, total)) (Map.toList bankCategoryTotals)
             Nothing -> []
 
         creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
-            Just ccTransactions -> sum $ Prelude.map (amount . transaction) ccTransactions
+            Just ccTransactions -> calculateNetAmount ccTransactions
             Nothing -> 0
 
-        incomeToCC =([("Income", "Credit Card Payments", creditCardPaymentsFromBank) |
-            creditCardPaymentsFromBank > 0])
+        incomeToCC = [("Income", "Credit Card Payments", creditCardPaymentsFromBank) | creditCardPaymentsFromBank > 0]
 
         ccFlowsToCategories = Prelude.map (\(category, transactions) ->
-            ("Credit Card Payments", category, sum $ Prelude.map (amount . transaction) transactions))
+            ("Credit Card Payments", category, calculateNetAmount transactions))
             (Map.toList ccAggregated)
 
     in bankFlows ++ incomeToCC ++ ccFlowsToCategories

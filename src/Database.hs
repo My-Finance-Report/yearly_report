@@ -10,7 +10,7 @@ module Database (
 
 import Database.SQLite.Simple
 import Data.Text (Text)
-import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..), TransactionSource(..))
+import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..), TransactionSource(..), PdfParseException (PdfParseException))
 import Data.Maybe (mapMaybe)
 import Data.Time
 import qualified Data.Text as T
@@ -35,7 +35,6 @@ initializeDatabase dbPath = do
         \ filename TEXT UNIQUE NOT NULL)"
     close conn
 
-
 getAllTransactions :: FilePath -> FilePath -> IO [CategorizedTransaction]
 getAllTransactions dbPath filename = do
     conn <- open dbPath
@@ -44,15 +43,18 @@ getAllTransactions dbPath filename = do
         \FROM transactions WHERE filename = ?" 
         (Only filename) :: IO [(Text, Text, Text, Double, Text, Text)]
     close conn
-    return $ mapMaybe parseResult results
+    print results
+    print "results"
+    mapM parseResult results
   where
-    parseResult :: (Text, Text, Text, Double, Text, Text) -> Maybe CategorizedTransaction
+    parseResult :: (Text, Text, Text, Double, Text, Text) -> IO CategorizedTransaction
     parseResult (desc, cat, dateText, amt, src, kind) = do
         let source = parseTransactionSource src
         let parsedKind = parseTransactionKind kind
-        case parseTimeM True defaultTimeLocale "%m/%d/%Y" (T.unpack dateText) :: Maybe Day of
+        print desc
+        case parseTimeM True defaultTimeLocale "%m-%d-%Y" (T.unpack dateText) :: Maybe Day of
             Just parsedDate ->
-                Just CategorizedTransaction
+                return CategorizedTransaction
                     { transaction = Transaction 
                         { description = desc
                         , amount = amt
@@ -62,28 +64,34 @@ getAllTransactions dbPath filename = do
                     , category = cat
                     , transactionSource = source
                     }
-            Nothing -> Nothing  --skip entries with invalid dates
+            Nothing -> do
+                putStrLn $ "Failed to parse date: " <> T.unpack dateText
+                fail $ "Error parsing date: " <> T.unpack dateText
 
     parseTransactionSource :: Text -> TransactionSource
     parseTransactionSource "BankSource" = BankSource
     parseTransactionSource "CreditCardSource" = CreditCardSource
+    parseTransactionSource src = error $ "Invalid transaction source: " <> T.unpack src
 
     parseTransactionKind :: Text -> TransactionKind
-    parseTransactionKind "Withdrawl" = Withdrawal 
-    parseTransactionKind "CreditCardSource" = Deposit 
+    parseTransactionKind "Withdrawal" = Withdrawal
+    parseTransactionKind "Deposit" = Deposit
+    parseTransactionKind kind = error $ "Invalid transaction kind: " <> T.unpack kind
+ 
 
 
 insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> TransactionSource -> IO ()
 insertTransaction dbPath categorizedTransaction sourceFile transactionSource = do
     conn <- open dbPath
     execute conn
-        "INSERT OR IGNORE INTO transactions (description, category, date_of_transaction, amount, source, filename) VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO transactions (description, category, date_of_transaction, amount, source, filename, kind) VALUES (?, ?, ?, ?, ?, ?, ?)"
         ( description innerTransaction
         , category categorizedTransaction
         , transactionDate innerTransaction
         , amount innerTransaction
         , show transactionSource
-        , sourceFile )
+        , sourceFile 
+        , show $ kind innerTransaction)
     close conn
   where
     innerTransaction = transaction categorizedTransaction

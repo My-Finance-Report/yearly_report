@@ -27,8 +27,9 @@ generateRow categorizedTransaction =
         innerTransaction = transaction categorizedTransaction
         date = formatTime defaultTimeLocale "%B %Y" (transactionDate innerTransaction) 
         description = Types.description innerTransaction
+        txnKind = T.pack $ show $ Types.kind innerTransaction
         amount = truncateToTwoDecimals $ Types.amount innerTransaction
-    in "<tr><td>" <> txnCategory <> "</td><td>" <> pack date <> "</td><td>" <> description <> "</td><td>" <> pack (show amount) <> "</td></tr>\n"
+    in "<tr><td>" <> txnCategory <> "</td><td>"  <> txnKind <> "</td><td>" <> pack date <> "</td><td>" <> description <> "</td><td>" <> pack (show amount) <> "</td></tr>\n"
 
 
 generateTransactionTable :: [CategorizedTransaction] -> Text
@@ -36,7 +37,7 @@ generateTransactionTable categorizedTransactions =
     let
         sortedTransactions = sortBy (comparing category) categorizedTransactions
         tableRows = Prelude.foldr (\txn acc-> generateRow txn <> acc) "" sortedTransactions
-    in "<table>\n<tr><th>Category</th> <th>Date</th> <th>Transactions</th> <th>Amount</th></tr>\n" <> tableRows <> "</table>\n"
+    in "<table>\n<tr><th>Category</th> <th>Kind</th><th>Date</th> <th>Transactions</th> <th>Amount</th></tr>\n" <> tableRows <> "</table>\n"
 
 
 generateAggregateRow :: Text -> Double -> Text -> Text
@@ -60,13 +61,21 @@ generateAggregateRows :: AggregatedTransactions -> Text
 generateAggregateRows aggregatedTransactions =
     let tableRows = Map.foldrWithKey
                       (\category transactions acc ->
-                          let totalAmount =  truncateToTwoDecimals $ sum (Prelude.map (amount . transaction) transactions)
+                          let totalAmount = truncateToTwoDecimals $
+                                sum (Prelude.map (\txn -> 
+                                    let amt = amount (  transaction txn)
+                                        txnKind =  kind ( transaction  txn)
+                                    in case txnKind of
+                                        Deposit    -> amt
+                                        Withdrawal -> -amt
+                                    ) transactions)
                               sectionId = T.replace " " "-" category
                               categoryRow = generateAggregateRow category totalAmount sectionId
                               detailRows = generateDetailRows category transactions sectionId
                           in categoryRow <> detailRows <> acc
                       ) "" aggregatedTransactions
     in "<table>\n<tr><th>Category</th> <th>Total Amount</th></tr>\n" <> tableRows <> "</table>\n"
+
 
 
 generateHtml :: Text -> Text -> Text -> Text -> Text -> Text -> [(Text, Text, Double)] -> Text
