@@ -25,7 +25,7 @@ import Categorizer (categorizeTransaction)
 generatePdfParsingPrompt :: Text -> Text
 generatePdfParsingPrompt pdfContent =
     "Parse the following PDF content into a JSON array of transactions. " <>
-    "structure the dates as MM/DD" <>
+    "structure the dates as MM/DD/YYYY" <>
     "Each transaction should have the fields: 'transactionDate', 'postingDate', 'description', and 'amount'.\n\n" <>
     pdfContent
 
@@ -153,7 +153,10 @@ processPdfFile dbPath pdfPath transactionKind categories = do
     if alreadyProcessed
         then do
             putStrLn $ "File '" ++ filename ++ "' has already been processed."
-            getAllTransactions dbPath filename
+            trans <- getAllTransactions dbPath filename
+            print trans
+            return trans
+
         else do
             putStrLn $ "Processing file: " ++ filename
             result <- try (extractTransactionsFromPdf pdfPath transactionKind) :: IO (Either SomeException [Transaction])

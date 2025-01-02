@@ -4,6 +4,7 @@
 module Categorizer (
     categorizeTransaction
     , aggregateByCategory
+    , aggregateByMonth 
   ) where
 
 import Network.HTTP.Client
@@ -26,8 +27,6 @@ import OpenAiUtils
 import Data.Time (Day,  formatTime, defaultTimeLocale)
 import System.FilePath (takeFileName)
 
-
-
 -- i probably want to learn more about newType vs data
 newtype CategorizationResponse
   = CategorizationResponse {responseCategory :: Text}
@@ -35,9 +34,14 @@ newtype CategorizationResponse
 
 instance FromJSON CategorizationResponse
 
+aggregateByMonth :: [CategorizedTransaction] -> AggregatedTransactions
+aggregateByMonth transactions =
+    let toYearMonthText txn =
+            T.pack $ formatTime defaultTimeLocale "%B %Y" (transactionDate $ transaction txn)
+    in Map.fromListWith (++) [(toYearMonthText txn, [txn]) | txn <- transactions]
 
 aggregateByCategory :: [CategorizedTransaction ] -> AggregatedTransactions
-aggregateByCategory = foldr insertTransaction Map.empty
+aggregateByCategory = Prelude.foldr insertTransaction Map.empty
   where
     insertTransaction :: CategorizedTransaction  -> AggregatedTransactions  -> AggregatedTransactions 
     insertTransaction categorizedTransaction acc =
@@ -100,17 +104,13 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
   in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-categorizeTransactionInner :: FilePath -> Text -> [Text] -> Text -> IO Text
+categorizeTransactionInner :: FilePath -> Text -> [Text] -> Day -> IO Text
 categorizeTransactionInner dbPath description categories day  = do
-    existingCategory <- getCategory dbPath description
-    case existingCategory of
-        Just category -> return category 
-        Nothing -> do
-            apiResponse <- classifyTransactions categories description 
-            case apiResponse of
-                Just category -> do
-                    return category
-                Nothing -> return "Uncategorized" 
+  apiResponse <- classifyTransactions categories description 
+  case apiResponse of
+      Just category -> do
+          return category
+      Nothing -> return "Uncategorized" 
 
 
 categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionKind -> IO  CategorizedTransaction

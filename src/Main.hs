@@ -12,9 +12,41 @@ import Parsers
 
 import Control.Exception (try, SomeException)
 import Data.Text (Text)
+import Data.Map
 import qualified Data.Text as T
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
+import qualified Data.Map as Map
+
+
+generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
+generateSankeyData bankAggregated ccAggregated =
+    let -- Extract flows from Income to other bank categories, excluding Credit Card Payments
+        bankFlows = case Map.lookup "Income" bankAggregated of
+            Just incomeTransactions ->
+                let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
+                    bankCategoryTotals = Map.map (sum . Prelude.map (amount . transaction)) otherBankCategories
+                in Prelude.map (\(category, total) -> ("Income", category, total)) (Map.toList bankCategoryTotals)
+            Nothing -> []
+
+        -- Extract Credit Card Payments total from the bank data
+        creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
+            Just ccTransactions -> sum $ Prelude.map (amount . transaction) ccTransactions
+            Nothing -> 0
+
+        -- Add a single flow from Income to Credit Card Payments
+        incomeToCC = if creditCardPaymentsFromBank > 0
+                        then [("Income", "Credit Card Payments", creditCardPaymentsFromBank)]
+                        else []
+
+        -- Split Credit Card Payments into individual credit card categories
+        ccFlowsToCategories = Prelude.map (\(category, transactions) ->
+            ("Credit Card Payments", category, sum $ Prelude.map (amount . transaction) transactions))
+            (Map.toList ccAggregated)
+
+    in bankFlows ++ incomeToCC ++ ccFlowsToCategories
+
+
 
 main :: IO ()
 main = do
@@ -24,8 +56,8 @@ main = do
     let bankDir = "bank_files"
     let ccDir = "credit_card_files"
 
-    bankFiles <- map (bankDir </>) <$> listDirectory bankDir
-    ccFiles <- map (ccDir </>) <$> listDirectory ccDir
+    bankFiles <- Prelude.map (bankDir </>) <$> listDirectory bankDir
+    ccFiles <- Prelude.map (ccDir </>) <$> listDirectory ccDir
 
     let ccCategories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
     let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
@@ -38,12 +70,21 @@ main = do
     let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
     let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
 
+    let aggregatedBankTransactionsMonth = aggregateByMonth categorizedBankTransactions
+    let aggregatedCCTransactionsMonth = aggregateByMonth categorizedCCTransactions
+
     let bankSummaryRows = generateAggregateRows aggregatedBankTransactions   
     let ccSummaryRows = generateAggregateRows aggregatedCCTransactions  
 
+    let bankMonthRows = generateAggregateRows aggregatedBankTransactionsMonth
+    let ccMonthRows = generateAggregateRows aggregatedCCTransactionsMonth 
+
     let bankRows = generateTransactionTable categorizedBankTransactions
     let creditCardRows = generateTransactionTable categorizedCCTransactions
-    let fullSummary = generateHtml bankSummaryRows ccSummaryRows bankRows creditCardRows 
+
+    let sankeyData = generateSankeyData aggregatedBankTransactions aggregatedCCTransactions
+    print sankeyData
+    let fullSummary = generateHtml bankSummaryRows ccSummaryRows bankRows creditCardRows  bankMonthRows ccMonthRows  sankeyData
 
     TIO.writeFile "expense_summary.html" fullSummary
     putStrLn "Expense summary generated: expense_summary.html"

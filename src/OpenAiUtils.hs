@@ -64,7 +64,7 @@ makeChatRequest schema messages = do
         , messages = messages
         , response_format = schema
         , temperature = 0.0
-        , max_tokens = 2048
+        , max_tokens = 3000
         }
   initialRequest <- parseRequest $ T.unpack url
   let request = initialRequest

@@ -7,10 +7,10 @@ make my yearly financial report using haskell
 - (DONE) parse bank statements and credit card statements
 - (DONE) categorize expenses 
 - (WORKING) generate "report" 
-  - (TODO) per month drill down 
+  - (DONE) per month drill down 
   - (DONE) summary -> per transaction drill down
   - (DONE) styling
-  - (TODO) fix decimals
+  - (DONE) fix decimals
 - (TODO) try to serve the resulting report with haskell 
 - (TODO) allow for an interactive interface 
 - (TODO) allow uploading documents to generate "live" reports
@@ -30,6 +30,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Scratch
 
-- make a module to parse the PDFs with Open AI API
-- next add per month grouping and add summaries per month
- - will require some updates to the data model
+- looks like duplicate keys get overwritten 
+- Ids are duplicated on backend
+

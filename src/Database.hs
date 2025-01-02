@@ -2,7 +2,6 @@
 
 module Database (
     initializeDatabase
-    ,getCategory
     ,getAllTransactions
     ,insertTransaction
     ,isFileProcessed
@@ -13,6 +12,8 @@ import Database.SQLite.Simple
 import Data.Text (Text)
 import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..))
 import Data.Maybe (mapMaybe)
+import Data.Time
+import qualified Data.Text as T
 
 
 initializeDatabase :: FilePath -> IO ()
@@ -21,7 +22,7 @@ initializeDatabase dbPath = do
     execute_ conn
         "CREATE TABLE IF NOT EXISTS transactions (\
         \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
-        \ description TEXT UNIQUE NOT NULL, \
+        \ description TEXT NOT NULL, \
         \ category TEXT, \
         \ date_of_transaction TEXT NOT NULL, \
         \ amount REAL NOT NULL, \
@@ -32,16 +33,6 @@ initializeDatabase dbPath = do
         \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
         \ filename TEXT UNIQUE NOT NULL)"
     close conn
-
-
-getCategory :: FilePath -> Text -> IO (Maybe Text)
-getCategory dbPath description = do
-    conn <- open dbPath
-    results <- query conn "SELECT category FROM transactions WHERE description = ?" (Only description) :: IO [Only Text]
-    close conn
-    return $ case results of
-        [Only category] -> Just category
-        _ -> Nothing
 
 
 getAllTransactions :: FilePath -> FilePath -> IO [CategorizedTransaction]
@@ -55,23 +46,25 @@ getAllTransactions dbPath filename = do
     return $ mapMaybe parseResult results
   where
     parseResult :: (Text, Text, Text, Double, Text) -> Maybe CategorizedTransaction
-    parseResult (desc, cat, date, amt, src) = do
+    parseResult (desc, cat, dateText, amt, src) = do
         kind <- parseTransactionKind src
-        Just CategorizedTransaction
-            { transaction = Transaction 
-                { description = desc
-                , amount = amt
-                , transactionDate = date
-                }
-            , category = cat
-            , transactionKind = kind
-            }
+        case parseTimeM True defaultTimeLocale "%m/%d/%Y" (T.unpack dateText) :: Maybe Day of
+            Just parsedDate ->
+                Just CategorizedTransaction
+                    { transaction = Transaction 
+                        { description = desc
+                        , amount = amt
+                        , transactionDate = parsedDate
+                        }
+                    , category = cat
+                    , transactionKind = kind
+                    }
+            Nothing -> Nothing  -- Skip entries with invalid dates
 
     parseTransactionKind :: Text -> Maybe TransactionKind
     parseTransactionKind "BankKind" = Just BankKind
     parseTransactionKind "CreditCardKind" = Just CreditCardKind
     parseTransactionKind _ = Nothing
-
 
 
 insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> TransactionKind-> IO ()

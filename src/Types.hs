@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types
    ( Transaction(..)
@@ -18,30 +19,30 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Maybe (fromMaybe, mapMaybe)
-import Data.Aeson (FromJSON)
+import Data.Aeson (FromJSON (parseJSON), withObject, (.:))
 import GHC.Generics (Generic)
 import Control.Exception
 
-data PdfParseException = PdfParseException Text deriving (Show)
+newtype PdfParseException
+  = PdfParseException Text
+  deriving (Show)
 
 instance Exception PdfParseException
 
-data TransactionsWrapper = TransactionsWrapper
-  { transactions :: [Transaction]
-  } deriving (Show, Generic)
+newtype TransactionsWrapper
+  = TransactionsWrapper {transactions :: [Transaction]}
+  deriving (Show, Generic)
 
 instance FromJSON TransactionsWrapper
-
-
 
 data TransactionKind = BankKind | CreditCardKind
     deriving (Eq, Show, Ord)
 
 data Transaction = Transaction
-  { transactionDate :: Text
+  { transactionDate :: Day
   , description :: Text
   , amount :: Double
-  } deriving (Show, Eq, Ord, Generic) -- basically to allow things like mapping (Ord), printing (show), etc
+  } deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON Transaction
 
