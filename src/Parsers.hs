@@ -3,7 +3,6 @@
 module Parsers (
     extractTextFromPdf
     , processPdfFile
-    , TransactionKind(..)
 ) where
 
 import Data.Text (Text)
@@ -26,7 +25,7 @@ generatePdfParsingPrompt :: Text -> Text
 generatePdfParsingPrompt pdfContent =
     "Parse the following PDF content into a JSON array of transactions. " <>
     "structure the dates as MM/DD/YYYY" <>
-    "Each transaction should have the fields: 'transactionDate', 'postingDate', 'description', and 'amount'.\n\n" <>
+    "Each transaction should have the fields: 'transactionDate', 'description', and 'amount'.\n\n" <>
     pdfContent
 
 
@@ -36,7 +35,7 @@ generateTransactionSchema =
     object
         [ "type" .= ("json_schema" :: Text)
         , "json_schema" .= object
-            [ "name" .= ("cc_transaction_schema" :: Text)
+            [ "name" .= ("transaction_schema" :: Text)
             , "strict" .= True
             , "schema" .= object
                 [ "type" .= ("object" :: Text)
@@ -47,11 +46,14 @@ generateTransactionSchema =
                             [ "type" .= ("object" :: Text)
                             , "properties" .= object
                                 [ "transactionDate" .= object [ "type" .= ("string" :: Text) ]
-                                , "postingDate" .= object [ "type" .= ("string" :: Text) ]
                                 , "description" .= object [ "type" .= ("string" :: Text) ]
+                                , "kind" .= object 
+                                    [ "type" .= ("string" :: Text)
+                                    , "enum" .= (["Withdrawal", "Deposit"] :: [Text])
+                                    ]
                                 , "amount" .= object [ "type" .= ("number" :: Text) ]
                                 ]
-                            , "required" .= (["transactionDate", "postingDate", "description", "amount"] :: [Text])
+                            , "required" .= (["transactionDate", "description", "amount", "kind"] :: [Text])
                             , "additionalProperties" .= False
                             ]
                         ]
@@ -93,7 +95,6 @@ decodeChatResponse responseBodyContent =
       return Nothing
 
 
-
 -- Extract text from PDF, throwing an exception on failure
 extractTextFromPdf :: FilePath -> IO Text
 extractTextFromPdf pdfPath = do
@@ -117,21 +118,21 @@ trimTrailingText pdfText keyword =
     in beforeTransactions
 
 
-getKeywords :: TransactionKind -> (Text, Text)
-getKeywords BankKind = 
+getKeywords :: TransactionSource -> (Text, Text)
+getKeywords BankSource = 
     ( "Transaction history"
     , "Ending balance"
     )
-getKeywords CreditCardKind = 
+getKeywords CreditCardSource = 
     ( "MATTHEW M CARROLL #3996: Transactions"
     , "Total Transactions for This Period"
     )
 
 
-extractTransactionsFromPdf :: FilePath -> TransactionKind -> IO [Transaction]
-extractTransactionsFromPdf pdfPath transactionKind = do
+extractTransactionsFromPdf :: FilePath -> TransactionSource -> IO [Transaction]
+extractTransactionsFromPdf pdfPath transactionSource = do
 
-    let (startKeyword, endKeyword) = getKeywords transactionKind
+    let (startKeyword, endKeyword) = getKeywords transactionSource
 
     rawText <- extractTextFromPdf pdfPath
     let trimmedText = trimTrailingText (trimLeadingText rawText startKeyword )  endKeyword
@@ -143,10 +144,8 @@ extractTransactionsFromPdf pdfPath transactionKind = do
 
 
 
-
--- TODO extract the existing rows from the DB if they have already been processed
-processPdfFile :: FilePath -> FilePath -> TransactionKind -> [Text]-> IO [CategorizedTransaction]
-processPdfFile dbPath pdfPath transactionKind categories = do
+processPdfFile :: FilePath -> FilePath -> TransactionSource -> [Text]-> IO [CategorizedTransaction]
+processPdfFile dbPath pdfPath transactionSource categories = do
     let filename = takeFileName pdfPath
 
     alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
@@ -159,13 +158,13 @@ processPdfFile dbPath pdfPath transactionKind categories = do
 
         else do
             putStrLn $ "Processing file: " ++ filename
-            result <- try (extractTransactionsFromPdf pdfPath transactionKind) :: IO (Either SomeException [Transaction])
+            result <- try (extractTransactionsFromPdf pdfPath transactionSource) :: IO (Either SomeException [Transaction])
             case result of
                 Left err -> do
                     putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
                     return [] 
                 Right transactions -> do
-                    categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath categories filename transactionKind) transactions
+                    categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath categories filename transactionSource) transactions
                     markFileAsProcessed dbPath (T.pack filename)
                     putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ filename ++ "'."
                     return categorizedTransactions

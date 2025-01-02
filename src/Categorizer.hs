@@ -106,11 +106,11 @@ categorizeTransactionInner dbPath description categories day  = do
       Nothing -> return "Uncategorized" 
 
 
-categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionKind -> IO  CategorizedTransaction
-categorizeTransaction creditCardTransaction dbPath categories filename transactionKind = do
+categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionSource -> IO  CategorizedTransaction
+categorizeTransaction creditCardTransaction dbPath categories filename transactionSource = do
     category <- categorizeTransactionInner dbPath (Types.description creditCardTransaction) categories (transactionDate creditCardTransaction) 
     let categorizedTransaction =  CategorizedTransaction { transaction = creditCardTransaction
-        , category = category, transactionKind = transactionKind
+        , category = category, transactionSource = transactionSource
         }
-    insertTransaction dbPath categorizedTransaction filename transactionKind
+    insertTransaction dbPath categorizedTransaction filename transactionSource
     return categorizedTransaction
