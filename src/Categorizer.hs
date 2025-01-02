@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Categorizer (
     categorizeTransaction
@@ -27,12 +26,6 @@ import OpenAiUtils
 import Data.Time (Day,  formatTime, defaultTimeLocale)
 import System.FilePath (takeFileName)
 
--- i probably want to learn more about newType vs data
-newtype CategorizationResponse
-  = CategorizationResponse {responseCategory :: Text}
-  deriving (Show, Generic)
-
-instance FromJSON CategorizationResponse
 
 aggregateByMonth :: [CategorizedTransaction] -> AggregatedTransactions
 aggregateByMonth transactions =

@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Types
    ( Transaction(..)
@@ -8,6 +7,7 @@ module Types
     , TransactionKind(..)
     , TransactionsWrapper(..)
     , PdfParseException(..)
+    , CategorizationResponse(..)
   ) where
 
 import Data.Time (Day, parseTimeM, defaultTimeLocale, formatTime)
@@ -22,6 +22,13 @@ import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Aeson (FromJSON (parseJSON), withObject, (.:))
 import GHC.Generics (Generic)
 import Control.Exception
+
+
+newtype CategorizationResponse
+  = CategorizationResponse {responseCategory :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON CategorizationResponse
 
 newtype PdfParseException
   = PdfParseException Text
