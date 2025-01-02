@@ -21,7 +21,7 @@ import qualified Data.Map as Map
 
 generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
 generateSankeyData bankAggregated ccAggregated =
-    let -- Extract flows from Income to other bank categories, excluding Credit Card Payments
+    let 
         bankFlows = case Map.lookup "Income" bankAggregated of
             Just incomeTransactions ->
                 let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
@@ -29,7 +29,6 @@ generateSankeyData bankAggregated ccAggregated =
                 in Prelude.map (\(category, total) -> ("Income", category, total)) (Map.toList bankCategoryTotals)
             Nothing -> []
 
-        -- Extract Credit Card Payments total from the bank data
         creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
             Just ccTransactions -> sum $ Prelude.map (amount . transaction) ccTransactions
             Nothing -> 0
@@ -37,7 +36,6 @@ generateSankeyData bankAggregated ccAggregated =
         incomeToCC =([("Income", "Credit Card Payments", creditCardPaymentsFromBank) |
             creditCardPaymentsFromBank > 0])
 
-        -- Split Credit Card Payments into individual credit card categories
         ccFlowsToCategories = Prelude.map (\(category, transactions) ->
             ("Credit Card Payments", category, sum $ Prelude.map (amount . transaction) transactions))
             (Map.toList ccAggregated)

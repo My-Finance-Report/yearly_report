@@ -5,6 +5,8 @@ make my yearly financial report using haskell
 # Features
 
 - (DONE) parse bank statements and credit card statements
+ - (TODO) there is still some cleanup around in / out money -> summing deposits + withdrawls is weird
+    - probably requires adding  inbound / outbound to the expense
 - (DONE) categorize expenses 
 - (WORKING) generate "report" 
   - (DONE) per month drill down 
@@ -14,6 +16,7 @@ make my yearly financial report using haskell
 - (TODO) try to serve the resulting report with haskell 
 - (TODO) allow for an interactive interface 
 - (TODO) allow uploading documents to generate "live" reports
+- (TODO) allow for manually update transactions from a ui 
 
 # Tech
 
