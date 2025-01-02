@@ -22,34 +22,33 @@ import qualified Data.Map as Map
 generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
 generateSankeyData bankAggregated ccAggregated =
     let 
-        calculateNetAmount :: [CategorizedTransaction] -> Double
-        calculateNetAmount transactions =
-            sum $ Prelude.map (\txn ->
-                let amt = amount (transaction txn)
-                    txnKind = kind (transaction txn)
-                in case txnKind of
-                    Deposit    -> amt
-                    Withdrawal -> -amt
-            ) transactions
-
+        -- Compute bank flows (Income to other bank categories excluding Credit Card Payments)
         bankFlows = case Map.lookup "Income" bankAggregated of
             Just incomeTransactions ->
                 let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
-                    bankCategoryTotals = Map.map calculateNetAmount otherBankCategories
-                in Prelude.map (\(category, total) -> ("Income", category, total)) (Map.toList bankCategoryTotals)
+                    bankCategoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) otherBankCategories
+                in Prelude.map (\(category, total) -> ("Income", category, abs total)) (Map.toList bankCategoryTotals)
             Nothing -> []
 
+        -- Compute the total flow from Income to Credit Card Payments
         creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
-            Just ccTransactions -> calculateNetAmount ccTransactions
+            Just ccTransactions -> sum $ Prelude.map (signedAmount . transaction) ccTransactions
             Nothing -> 0
 
-        incomeToCC = [("Income", "Credit Card Payments", creditCardPaymentsFromBank) | creditCardPaymentsFromBank > 0]
+        incomeToCC = [("Income", "Credit Card Payments", abs creditCardPaymentsFromBank) | creditCardPaymentsFromBank /= 0]
 
+        -- Compute flows from Credit Card Payments to individual credit card categories
         ccFlowsToCategories = Prelude.map (\(category, transactions) ->
-            ("Credit Card Payments", category, calculateNetAmount transactions))
+            ("Credit Card Payments", category, abs $ sum $ Prelude.map (signedAmount . transaction) transactions))
             (Map.toList ccAggregated)
 
     in bankFlows ++ incomeToCC ++ ccFlowsToCategories
+
+-- Utility function to calculate signed amounts
+signedAmount :: Transaction -> Double
+signedAmount txn = case kind txn of
+    Deposit    -> amount txn
+    Withdrawal -> negate (amount txn)
 
 
 

@@ -52,7 +52,7 @@ getAllTransactions dbPath filename = do
         let source = parseTransactionSource src
         let parsedKind = parseTransactionKind kind
         print desc
-        case parseTimeM True defaultTimeLocale "%m-%d-%Y" (T.unpack dateText) :: Maybe Day of
+        case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) :: Maybe Day of
             Just parsedDate ->
                 return CategorizedTransaction
                     { transaction = Transaction 
