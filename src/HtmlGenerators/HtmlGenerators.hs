@@ -1,27 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HtmlGenerators.HtmlGenerators (
-    renderTransactionsPage
-    , renderUploadPage
-    , renderPdfResultPage
-    )
-    where
+module HtmlGenerators.HtmlGenerators
+  ( renderTransactionsPage,
+    renderUploadPage,
+    renderPdfResultPage,
+  )
+where
 
-
-import qualified Data.Map as Map hiding ((!))
-import Data.Text as T ( Text, intercalate, pack )
-import qualified Data.Text.Lazy as TL
+import Control.Monad (forM_)
 import Data.List (sortBy)
-import Data.Ord (comparing)
-import Types
 import Data.Map hiding ((!))
+import qualified Data.Map as Map hiding ((!))
+import Data.Ord (comparing)
+import Data.Text as T (Text, intercalate, pack)
+import qualified Data.Text.Lazy as TL
 import Data.Time
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
-import Control.Monad (forM_)
-
+import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes as A
+import Types
 
 renderUploadPage :: TL.Text
 renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
@@ -29,13 +27,16 @@ renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
     H.title "Upload PDF"
   H.body $ do
     H.h1 "Upload a PDF"
-    H.form H.! A.method "post" H.! A.action "/upload" 
-           H.! A.enctype "multipart/form-data" $ do
-      H.label "Choose PDF to upload:"
-      H.br
-      H.input H.! A.type_ "file" H.! A.name "pdfFile" 
-      H.br
-      H.input H.! A.type_ "submit" H.! A.value "Upload"
+    H.form
+      H.! A.method "post"
+      H.! A.action "/upload"
+      H.! A.enctype "multipart/form-data"
+      $ do
+        H.label "Choose PDF to upload:"
+        H.br
+        H.input H.! A.type_ "file" H.! A.name "pdfFile"
+        H.br
+        H.input H.! A.type_ "submit" H.! A.value "Upload"
 
 renderPdfResultPage :: Text -> Text -> TL.Text
 renderPdfResultPage filename rawText =
@@ -49,7 +50,6 @@ renderPdfResultPage filename rawText =
         H.b (toHtml filename)
       H.h2 "Extracted Text"
       H.pre (toHtml rawText)
-
 
 renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> TL.Text
 renderTransactionsPage filename txs =
@@ -69,16 +69,15 @@ renderTransactionsPage filename txs =
           H.th "Override"
         mapM_ (renderTransactionRow filename) txs
 
-
 renderTransactionRow :: T.Text -> CategorizedTransaction -> Html
-renderTransactionRow filename tx = 
+renderTransactionRow filename tx =
   case transactionId tx of
     Nothing -> error "No transactionId in record—cannot render row!"
     Just tid -> do
-      let desc    = description (transaction tx)
+      let desc = description (transaction tx)
           dateTxt = T.pack $ show (transactionDate (transaction tx))
-          amt     = amount (transaction tx)
-          cat     = category tx
+          amt = amount (transaction tx)
+          cat = category tx
 
       H.tr $ do
         H.td (toHtml tid)
@@ -87,11 +86,10 @@ renderTransactionRow filename tx =
         H.td (toHtml amt)
         H.td (toHtml cat)
         H.td $ H.form H.! A.method "post" H.! A.action "/update-category" $ do
-            H.input H.! A.type_ "hidden" H.! A.name "transactionId" H.! A.value (toValue tid)
-            H.input H.! A.type_ "hidden" H.! A.name "filename"      H.! A.value (toValue filename)
-            H.input H.! A.type_ "text"   H.! A.name "newCategory"
-            H.input H.! A.type_ "submit" H.! A.value "Update"
+          H.input H.! A.type_ "hidden" H.! A.name "transactionId" H.! A.value (toValue tid)
+          H.input H.! A.type_ "hidden" H.! A.name "filename" H.! A.value (toValue filename)
+          H.input H.! A.type_ "text" H.! A.name "newCategory"
+          H.input H.! A.type_ "submit" H.! A.value "Update"
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml
-
