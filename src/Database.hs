@@ -3,17 +3,20 @@
 module Database (
     initializeDatabase
     ,getAllTransactions
+    ,updateTransactionCategory
     ,insertTransaction
     ,isFileProcessed
     ,markFileAsProcessed
+    ,getAllFilenames
 ) where
 
 import Database.SQLite.Simple
 import Data.Text (Text)
-import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..), TransactionSource(..), PdfParseException (PdfParseException))
+import Types (CategorizedTransaction(..), Transaction(..), TransactionKind(..), TransactionSource(..), PdfParseException (PdfParseException), CategorizationResponse (CategorizationResponse))
 import Data.Maybe (mapMaybe)
 import Data.Time
 import qualified Data.Text as T
+import Control.Monad (forM_)
 
 
 initializeDatabase :: FilePath -> IO ()
@@ -35,20 +38,42 @@ initializeDatabase dbPath = do
         \ filename TEXT UNIQUE NOT NULL)"
     close conn
 
+updateTransactionCategory :: FilePath -> Int -> T.Text -> IO ()
+updateTransactionCategory dbPath tId newCat = do
+  conn <- open dbPath
+  execute conn
+    "UPDATE transactions \
+    \SET category = ? \
+    \WHERE id = ?"
+    (newCat, tId)
+  close conn
+
+getAllFilenames :: FilePath -> IO [T.Text]
+getAllFilenames dbPath = do
+    conn <- open dbPath
+    results <- query_ conn "SELECT DISTINCT filename FROM transactions" 
+                  :: IO [Only T.Text]
+    close conn
+
+    forM_ results print
+
+    return (map fromOnly results)
+
+
 getAllTransactions :: FilePath -> FilePath -> IO [CategorizedTransaction]
 getAllTransactions dbPath filename = do
     conn <- open dbPath
     results <- query conn 
-        "SELECT description, category, date_of_transaction, amount, source, kind \
-        \FROM transactions WHERE filename = ?" 
-        (Only filename) :: IO [(Text, Text, Text, Double, Text, Text)]
+        "SELECT  id, description, category, date_of_transaction, amount, source, kind \
+        \FROM transactions WHERE lower(filename) = lower(?)" 
+        (Only filename) :: IO [(Int,Text, Text, Text, Double, Text, Text)]
     close conn
     print results
     print "results"
     mapM parseResult results
   where
-    parseResult :: (Text, Text, Text, Double, Text, Text) -> IO CategorizedTransaction
-    parseResult (desc, cat, dateText, amt, src, kind) = do
+    parseResult :: (Int,Text, Text, Text, Double, Text, Text) -> IO CategorizedTransaction
+    parseResult (id, desc, cat, dateText, amt, src, kind) = do
         let source = parseTransactionSource src
         let parsedKind = parseTransactionKind kind
         print desc
@@ -62,6 +87,7 @@ getAllTransactions dbPath filename = do
                         , kind = parsedKind
                         }
                     , category = cat
+                    , transactionId = id
                     , transactionSource = source
                     }
             Nothing -> do

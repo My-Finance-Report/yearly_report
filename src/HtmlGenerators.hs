@@ -3,17 +3,24 @@
 module HtmlGenerators (
     generateTransactionTable
     , generateAggregateRows
+    , renderAllFilesPage
+    , renderTransactionsPage
     , generateHtml)
     where
 
 
 import qualified Data.Map as Map
 import Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Types
 import Data.Map
 import Data.Time
+import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html (Html)
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 
 truncateToTwoDecimals :: Double -> Double
 truncateToTwoDecimals x = fromIntegral (truncate (x * 100)) / 100
@@ -140,3 +147,66 @@ formatSankeyRow :: (Text, Text, Double) -> Text
 formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
+
+
+renderAllFilesPage :: [T.Text] -> TL.Text
+renderAllFilesPage filenames =
+  renderHtmlT $ docTypeHtml $ do
+    H.head $ do
+      H.title "All Files"
+    H.body $ do
+      H.h1 "All Files"
+      H.ul $ do
+        mapM_ (filenameListItem "/transactions/") filenames
+
+filenameListItem :: T.Text -> T.Text -> Html
+filenameListItem baseUrl filename = H.li $ do
+  let linkUrl = baseUrl <> filename
+  H.a H.! A.href (toValue linkUrl) $ toHtml filename
+
+
+
+renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> TL.Text
+renderTransactionsPage filename txs =
+  renderHtmlT $ docTypeHtml $ do
+    H.head $ do
+      H.title "Transactions"
+      -- minimal styling
+      H.style "table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px }"
+    H.body $ do
+      H.h1 $ toHtml $ "Transactions for " <> filename
+      H.table $ do
+        H.tr $ do
+          H.th "Id"
+          H.th "Description"
+          H.th "Date"
+          H.th "Amount"
+          H.th "Category"
+          H.th "Override"
+        mapM_ (renderTransactionRow filename) txs
+
+renderTransactionRow :: T.Text -> CategorizedTransaction -> Html
+renderTransactionRow filename tx = do
+  -- Extract fields without lens:
+  let 
+      id  = transactionId tx
+      desc    = description    (transaction tx)
+      dateTxt = T.pack $ show (transactionDate (transaction tx))
+      amt     = amount         (transaction tx)
+      cat     = category tx
+  H.tr $ do
+
+    H.td (toHtml id)
+    H.td (toHtml desc)
+    H.td (toHtml dateTxt)
+    H.td (toHtml amt)
+    H.td (toHtml cat)
+    -- A simple override form: 
+    H.td $ H.form H.! A.method "post" H.! A.action "/update-category" $ do
+      H.input H.! A.type_ "hidden" H.! A.name "transactionId" H.! A.value (toValue id)
+      H.input H.! A.type_ "hidden" H.! A.name "filename"      H.! A.value (toValue filename)
+      H.input H.! A.type_ "text"   H.! A.name "newCategory"
+      H.input H.! A.type_ "submit" H.! A.value "Update"
+
+renderHtmlT :: Html -> TL.Text
+renderHtmlT = renderHtml

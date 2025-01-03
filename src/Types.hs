@@ -75,8 +75,10 @@ instance FromJSON Transaction where
 
 data CategorizedTransaction  = CategorizedTransaction
    { transaction :: Transaction
+   , transactionId :: Int
    , category :: Text
    , transactionSource :: TransactionSource
    } deriving (Show, Eq, Ord)
 
 type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
+

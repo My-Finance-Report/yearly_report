@@ -21,11 +21,17 @@ import qualified Data.Map as Map
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Control.Monad.IO.Class (liftIO)
+import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html (Html)
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import qualified Web.Scotty as Web
+import Network.HTTP.Client (Request(redactHeaders))
 
 
 generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
 generateSankeyData bankAggregated ccAggregated =
-    let 
+    let
         -- Compute bank flows (Income to other bank categories excluding Credit Card Payments)
         bankFlows = case Map.lookup "Income" bankAggregated of
             Just incomeTransactions ->
@@ -79,11 +85,11 @@ mainInner = do
     let aggregatedBankTransactionsMonth = aggregateByMonth categorizedBankTransactions
     let aggregatedCCTransactionsMonth = aggregateByMonth categorizedCCTransactions
 
-    let bankSummaryRows = generateAggregateRows aggregatedBankTransactions   
-    let ccSummaryRows = generateAggregateRows aggregatedCCTransactions  
+    let bankSummaryRows = generateAggregateRows aggregatedBankTransactions
+    let ccSummaryRows = generateAggregateRows aggregatedCCTransactions
 
     let bankMonthRows = generateAggregateRows aggregatedBankTransactionsMonth
-    let ccMonthRows = generateAggregateRows aggregatedCCTransactionsMonth 
+    let ccMonthRows = generateAggregateRows aggregatedCCTransactionsMonth
 
     let bankRows = generateTransactionTable categorizedBankTransactions
     let creditCardRows = generateTransactionTable categorizedCCTransactions
@@ -101,8 +107,29 @@ main = scotty 3000 $ do
 
     get "/" $ do
         content <- liftIO mainInner
-        html content
+        Web.html content
 
     post "/upload" $ do
         liftIO $ putStrLn "Received a POST to /upload"
-        text "Thanks for uploading!"
+        Web.text "Thanks for uploading!"
+
+    get "/transactions" $ do
+        let dbPath = "transactions.db"
+        filenames <- liftIO $ getAllFilenames dbPath
+        Web.html $ renderAllFilesPage filenames
+
+    get "/transactions/:filename" $ do
+
+      let dbPath = "transactions.db"
+      filename <- Web.Scotty.pathParam "filename"
+      liftIO $ initializeDatabase dbPath  
+      transactions <- liftIO $ getAllTransactions dbPath filename
+      Web.html $ renderTransactionsPage (T.pack filename) transactions
+
+    post "/update-category" $ do
+      let dbPath = "transactions.db"
+      tId     <- Web.Scotty.formParam "transactionId"   :: ActionM T.Text
+      newCat  <- Web.Scotty.formParam "newCategory"     :: ActionM T.Text
+      fileArg <- Web.Scotty.formParam "filename"        :: ActionM T.Text
+      liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
+      redirect $ TL.fromStrict ("/transactions/" <> fileArg)
