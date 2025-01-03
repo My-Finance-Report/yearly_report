@@ -104,8 +104,5 @@ main = scotty 3000 $ do
         html content
 
     post "/upload" $ do
-        -- If you're using form-data, you can parse the fields/files here.
-        -- Example: reading a field named 'myfile'
-        -- let fileContent = ??? 
         liftIO $ putStrLn "Received a POST to /upload"
         text "Thanks for uploading!"
