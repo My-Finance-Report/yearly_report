@@ -5,46 +5,29 @@ module HtmlGenerators.HomePage (
 ) where
 
 
-import qualified Data.Map as Map hiding ((!))
+import qualified Data.Map as Map
 import Data.Text as T
 import Data.List (sortBy)
 import Data.Ord (comparing)
-import Data.Map hiding ((!))
 import Data.Time
 import Control.Monad (forM_)
-import qualified Data.Text.IO as TIO
-
 import Categorizer
 import Database
 import HtmlGenerators.HtmlGenerators
 import Parsers
-import Network.Wai.Middleware.Static (staticPolicy, addBase)
-import Control.Exception (try, SomeException)
+import Types
 import qualified Data.Text.Lazy as TL
-import Data.Text (Text)
-import qualified Data.Text as T
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
-import qualified Data.Map as Map
-import Web.Scotty
-import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Network.Wai.Parse (FileInfo(..), tempFileBackEnd)
-import Control.Monad.IO.Class (liftIO)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
-import qualified Web.Scotty as Web
-import Network.HTTP.Client (Request(redactHeaders))
-import qualified Data.ByteString.Lazy as B
-import Data.Text.Encoding (decodeUtf8)
-import Types
 
 
 
 
-renderHtmlT :: Html -> TL.Text
-renderHtmlT = renderHtml
+
 
 truncateToTwoDecimals :: Double -> Double
 truncateToTwoDecimals x = fromIntegral (truncate (x * 100)) / 100
@@ -186,7 +169,7 @@ generateHtmlBlaze
   -> [(T.Text, T.Text, Double)]    
   -> TL.Text                       
 generateHtmlBlaze bankSummary creditCardSummary bankExpanded creditCardExpanded bankMonth creditCardMonth sankeyData =
-  renderHtmlT $ do
+  renderHtml $ do
     H.docTypeHtml $ do
       H.head $ do
         H.title "Expense Summary"

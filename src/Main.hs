@@ -8,6 +8,8 @@ import Categorizer
 import Database
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.HomePage
+import HtmlGenerators.AllFilesPage
+import HtmlGenerators.RefineSelectionPage
 import Parsers
 import Network.Wai.Middleware.Static (staticPolicy, addBase)
 import Control.Exception (try, SomeException)
@@ -73,27 +75,15 @@ main = scotty 3000 $ do
                     Right rawText -> do
                         liftIO $ insertPdfRecord "transactions.db"  originalName rawText
                         newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
-                        let pageHtml = renderPdfResultPage originalName rawText
                         redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
-                        Web.html pageHtml
 
 
     get "/adjust-transactions/:pdfId" $ do
         let dbPath = "transactions.db"
         pdfId <- pathParam "pdfId"
         (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId  
-        let guessedSegments = guessTransactions rawText        -- e.g. [TransactionLine], or [[Text]]
-        -- Render a page with a form that lets user edit these lines or segmentation
+        let guessedSegments = guessTransactions rawText        
         Web.html $ renderSliderPage pdfId fileName guessedSegments
-
-
-    post "/confirm-transactions/:pdfId" $ do
-        pdfId <- pathParam "pdfId" :: ActionM Int
-        finalText <- formParam "finalText"   -- The entire text from the textarea
-        let linesUser = T.splitOn "\n" finalText  -- or parse further
-
-        --TODO storeParsedTransactions "transactions.db" pdfId linesUser
-        Web.html "<h1>Transactions have been stored. Thank you!</h1>"
 
 
     get "/transactions" $ do

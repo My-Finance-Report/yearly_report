@@ -11,6 +11,8 @@ library
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.HomePage
+    HtmlGenerators.AllFilesPage
+    HtmlGenerators.RefineSelectionPage
     Parsers
     OpenAiUtils
   build-depends:
@@ -42,6 +44,8 @@ executable year-report-finances
       Categorizer
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
+      HtmlGenerators.AllFilesPage
+      HtmlGenerators.RefineSelectionPage
       Parsers
       OpenAiUtils
   build-depends:
