@@ -11,12 +11,16 @@ import HtmlGenerators
 import Parsers
 
 import Control.Exception (try, SomeException)
+import qualified Data.Text.Lazy as TL
 import Data.Text (Text)
 import Data.Map
 import qualified Data.Text as T
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import qualified Data.Map as Map
+import Web.Scotty
+import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Control.Monad.IO.Class (liftIO)
 
 
 generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
@@ -50,10 +54,8 @@ signedAmount txn = case kind txn of
     Deposit    -> amount txn
     Withdrawal -> negate (amount txn)
 
-
-
-main :: IO ()
-main = do
+mainInner::  IO TL.LazyText
+mainInner = do
     let dbPath = "transactions.db"
 
 
@@ -88,9 +90,22 @@ main = do
 
     let sankeyData = generateSankeyData aggregatedBankTransactions aggregatedCCTransactions
     print sankeyData
-    let fullSummary = generateHtml bankSummaryRows ccSummaryRows bankRows creditCardRows  bankMonthRows ccMonthRows  sankeyData
-
-    TIO.writeFile "expense_summary.html" fullSummary
-    putStrLn "Expense summary generated: expense_summary.html"
+    let strictText = generateHtml bankSummaryRows ccSummaryRows bankRows creditCardRows  bankMonthRows ccMonthRows  sankeyData
+    return  $ TL.fromStrict strictText
 
 
+
+main :: IO ()
+main = scotty 3000 $ do
+    middleware logStdoutDev
+
+    get "/" $ do
+        content <- liftIO mainInner
+        html content
+
+    post "/upload" $ do
+        -- If you're using form-data, you can parse the fields/files here.
+        -- Example: reading a field named 'myfile'
+        -- let fileContent = ??? 
+        liftIO $ putStrLn "Received a POST to /upload"
+        text "Thanks for uploading!"
