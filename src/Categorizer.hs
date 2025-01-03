@@ -42,19 +42,6 @@ aggregateByCategory = Prelude.foldr insertTransaction Map.empty
         in Map.insertWith (++) cat [categorizedTransaction] acc
 
 
-classifyTransactions :: [Text] -> Text -> IO (Maybe Text)
-classifyTransactions categories description = do
-  let inputPrompt = generatePrompt categories description
-      schema = generateSchema categories
-      messages = [ChatMessage {role = "user", content = inputPrompt}]
-  response <- makeChatRequest schema messages
-  case response of
-    Left err -> do
-      putStrLn $ "Error: " ++ err
-      return Nothing
-    Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
-
-
 decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
 decodeCategorizationResponse responseBodyContent =
   case decode responseBodyContent of
@@ -97,6 +84,20 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
   in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
+
+classifyTransactions :: [Text] -> Text -> IO (Maybe Text)
+classifyTransactions categories description = do
+  let inputPrompt = generatePrompt categories description
+      schema = generateSchema categories
+      messages = [ChatMessage {role = "user", content = inputPrompt}]
+  response <- makeChatRequest schema messages
+  case response of
+    Left err -> do
+      putStrLn $ "Error: " ++ err
+      return Nothing
+    Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
+
+
 categorizeTransactionInner :: FilePath -> Text -> [Text] -> Day -> IO Text
 categorizeTransactionInner dbPath description categories day  = do
   apiResponse <- classifyTransactions categories description 
@@ -106,11 +107,22 @@ categorizeTransactionInner dbPath description categories day  = do
       Nothing -> return "Uncategorized" 
 
 
-categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionSource -> IO  CategorizedTransaction
+categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionSource -> IO CategorizedTransaction
 categorizeTransaction creditCardTransaction dbPath categories filename transactionSource = do
-    category <- categorizeTransactionInner dbPath (Types.description creditCardTransaction) categories (transactionDate creditCardTransaction) 
-    let categorizedTransaction =  CategorizedTransaction { transaction = creditCardTransaction
-        , category = category, transactionSource = transactionSource
-        }
-    insertTransaction dbPath categorizedTransaction filename transactionSource
-    return categorizedTransaction
+    cat <- categorizeTransactionInner
+             dbPath
+             (description creditCardTransaction)
+             categories
+             (transactionDate creditCardTransaction)
+
+    let partialTx = CategorizedTransaction
+          { transactionId     = Nothing
+          , transaction       = creditCardTransaction
+          , category          = cat
+          , transactionSource = transactionSource
+          }
+
+    newId <- insertTransaction dbPath partialTx filename transactionSource
+
+    let finalizedTx = partialTx { transactionId = Just newId }
+    return finalizedTx

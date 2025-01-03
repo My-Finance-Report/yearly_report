@@ -75,7 +75,7 @@ instance FromJSON Transaction where
 
 data CategorizedTransaction  = CategorizedTransaction
    { transaction :: Transaction
-   , transactionId :: Int
+   , transactionId :: Maybe Int
    , category :: Text
    , transactionSource :: TransactionSource
    } deriving (Show, Eq, Ord)

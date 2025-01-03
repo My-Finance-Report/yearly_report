@@ -170,6 +170,10 @@ extra-deps:
   - unix-compat-0.7.3@sha256:b23220ab66f6ab2bedeec964152fef48c1f00f33dc911a59dde842d1d8fd2e05,3244
   - utf8-string-1.0.2@sha256:79416292186feeaf1f60e49ac5a1ffae9bf1b120e040a74bf0e81ca7f1d31d3f,1538
   - psqueues-0.2.8.0@sha256:c6b7444f413f451749ad971dcd647779f3222ddb1583385ffbec813a1d8ae07a,5063
+  - wai-middleware-static-0.9.2@sha256:b524741e5b6178341b6758ac0b31922c3633955713625c7fa3d7bd7623b83b15,3153
+  - cryptohash-sha1-0.11.101.0@sha256:fa87bda570450a0abb27f8828058ee4a43075470140eac8c90d1a085574212a8,3072
+  - expiring-cache-map-0.0.6.1@sha256:94f91c9312bf1df6900816c13d5b2423c3d958bbd3bc604a1ab171134b46e3d1,3403
+  - semigroups-0.20@sha256:925341e6f7eb104cb490bef06eab93bb7995c7c67c51ee938185a2ddefa7aaf2,6333
 
 # Override default flag values for project packages and extra-deps
 # flags: {}

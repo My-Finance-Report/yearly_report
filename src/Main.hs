@@ -4,12 +4,12 @@ module Main where
 
 import qualified Data.Text.IO as TIO
 
-import Types
 import Categorizer
 import Database
-import HtmlGenerators
+import HtmlGenerators.HtmlGenerators
+import HtmlGenerators.HomePage
 import Parsers
-
+import Network.Wai.Middleware.Static (staticPolicy, addBase)
 import Control.Exception (try, SomeException)
 import qualified Data.Text.Lazy as TL
 import Data.Text (Text)
@@ -20,6 +20,7 @@ import System.FilePath ((</>))
 import qualified Data.Map as Map
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Network.Wai.Parse (FileInfo(..), tempFileBackEnd)
 import Control.Monad.IO.Class (liftIO)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
@@ -27,91 +28,73 @@ import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Web.Scotty as Web
 import Network.HTTP.Client (Request(redactHeaders))
+import qualified Data.ByteString.Lazy as B
+import Data.Text.Encoding (decodeUtf8)
+import Types
 
 
-generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
-generateSankeyData bankAggregated ccAggregated =
-    let
-        -- Compute bank flows (Income to other bank categories excluding Credit Card Payments)
-        bankFlows = case Map.lookup "Income" bankAggregated of
-            Just incomeTransactions ->
-                let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
-                    bankCategoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) otherBankCategories
-                in Prelude.map (\(category, total) -> ("Income", category, abs total)) (Map.toList bankCategoryTotals)
-            Nothing -> []
-
-        -- Compute the total flow from Income to Credit Card Payments
-        creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
-            Just ccTransactions -> sum $ Prelude.map (signedAmount . transaction) ccTransactions
-            Nothing -> 0
-
-        incomeToCC = [("Income", "Credit Card Payments", abs creditCardPaymentsFromBank) | creditCardPaymentsFromBank /= 0]
-
-        -- Compute flows from Credit Card Payments to individual credit card categories
-        ccFlowsToCategories = Prelude.map (\(category, transactions) ->
-            ("Credit Card Payments", category, abs $ sum $ Prelude.map (signedAmount . transaction) transactions))
-            (Map.toList ccAggregated)
-
-    in bankFlows ++ incomeToCC ++ ccFlowsToCategories
-
--- Utility function to calculate signed amounts
-signedAmount :: Transaction -> Double
-signedAmount txn = case kind txn of
-    Deposit    -> amount txn
-    Withdrawal -> negate (amount txn)
-
-mainInner::  IO TL.LazyText
-mainInner = do
-    let dbPath = "transactions.db"
 
 
-    let bankDir = "bank_files"
-    let ccDir = "credit_card_files"
-
-    bankFiles <- Prelude.map (bankDir </>) <$> listDirectory bankDir
-    ccFiles <- Prelude.map (ccDir </>) <$> listDirectory ccDir
-
-    let ccCategories = ["Groceries", "Travel","Gas", "Misc", "Subscriptions", "Food"]
-    let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
-
-    initializeDatabase dbPath
-
-    categorizedBankTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file BankSource bankCategories) bankFiles
-    categorizedCCTransactions <- concat <$> mapM (\file -> processPdfFile dbPath file CreditCardSource ccCategories) ccFiles
-
-    let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
-    let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
-
-    let aggregatedBankTransactionsMonth = aggregateByMonth categorizedBankTransactions
-    let aggregatedCCTransactionsMonth = aggregateByMonth categorizedCCTransactions
-
-    let bankSummaryRows = generateAggregateRows aggregatedBankTransactions
-    let ccSummaryRows = generateAggregateRows aggregatedCCTransactions
-
-    let bankMonthRows = generateAggregateRows aggregatedBankTransactionsMonth
-    let ccMonthRows = generateAggregateRows aggregatedCCTransactionsMonth
-
-    let bankRows = generateTransactionTable categorizedBankTransactions
-    let creditCardRows = generateTransactionTable categorizedCCTransactions
-
-    let sankeyData = generateSankeyData aggregatedBankTransactions aggregatedCCTransactions
-    print sankeyData
-    let strictText = generateHtml bankSummaryRows ccSummaryRows bankRows creditCardRows  bankMonthRows ccMonthRows  sankeyData
-    return  $ TL.fromStrict strictText
-
-
+guessTransactions :: Text -> [Text]
+guessTransactions txt =
+    -- e.g. split on newlines, then filter or group:
+    let linesAll = T.splitOn "\n" txt
+    in linesAll  -- Or do something more advanced
 
 main :: IO ()
 main = scotty 3000 $ do
     middleware logStdoutDev
+    middleware $ staticPolicy (addBase "static")
 
     get "/" $ do
-        content <- liftIO mainInner
+        content <- liftIO renderHomePage
         Web.html content
 
+    get "/upload" $ do
+        Web.html renderUploadPage
+
     post "/upload" $ do
-        liftIO $ putStrLn "Received a POST to /upload"
-        Web.text "Thanks for uploading!"
+        allFiles <- Web.Scotty.files
+        case Prelude.lookup "pdfFile" allFiles of
+            Nothing -> do
+                Web.text "No file with field name 'pdfFile' was uploaded!"
+            Just fileInfo -> do
+                let uploadedBytes = fileContent fileInfo     
+                let originalName  = decodeUtf8 $ fileName fileInfo        
+
+                let tempFilePath = "/tmp/" <>  originalName
+                liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+                extractedTextOrError <- liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) 
+                                        :: ActionM (Either SomeException Text)
+                case extractedTextOrError of
+                    Left err -> do
+                        Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
+                    Right rawText -> do
+                        liftIO $ insertPdfRecord "transactions.db"  originalName rawText
+                        newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
+                        let pageHtml = renderPdfResultPage originalName rawText
+                        redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
+                        Web.html pageHtml
+
+
+    get "/adjust-transactions/:pdfId" $ do
+        let dbPath = "transactions.db"
+        pdfId <- pathParam "pdfId"
+        (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId  
+        let guessedSegments = guessTransactions rawText        -- e.g. [TransactionLine], or [[Text]]
+        -- Render a page with a form that lets user edit these lines or segmentation
+        Web.html $ renderSliderPage pdfId fileName guessedSegments
+
+
+    post "/confirm-transactions/:pdfId" $ do
+        pdfId <- pathParam "pdfId" :: ActionM Int
+        finalText <- formParam "finalText"   -- The entire text from the textarea
+        let linesUser = T.splitOn "\n" finalText  -- or parse further
+
+        --TODO storeParsedTransactions "transactions.db" pdfId linesUser
+        Web.html "<h1>Transactions have been stored. Thank you!</h1>"
+
 
     get "/transactions" $ do
         let dbPath = "transactions.db"

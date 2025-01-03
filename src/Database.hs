@@ -6,8 +6,10 @@ module Database (
     ,updateTransactionCategory
     ,insertTransaction
     ,isFileProcessed
+    ,fetchPdfRecord
     ,markFileAsProcessed
     ,getAllFilenames
+    ,insertPdfRecord
 ) where
 
 import Database.SQLite.Simple
@@ -17,7 +19,6 @@ import Data.Maybe (mapMaybe)
 import Data.Time
 import qualified Data.Text as T
 import Control.Monad (forM_)
-
 
 initializeDatabase :: FilePath -> IO ()
 initializeDatabase dbPath = do
@@ -36,6 +37,12 @@ initializeDatabase dbPath = do
         "CREATE TABLE IF NOT EXISTS processed_files (\
         \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
         \ filename TEXT UNIQUE NOT NULL)"
+    execute_ conn
+        "CREATE TABLE IF NOT EXISTS uploaded_pdfs (\
+        \ id INTEGER PRIMARY KEY AUTOINCREMENT,\
+        \ filename TEXT NOT NULL,\
+        \ raw_content TEXT NOT NULL,\
+        \ upload_time TEXT NOT NULL);"
     close conn
 
 updateTransactionCategory :: FilePath -> Int -> T.Text -> IO ()
@@ -66,13 +73,13 @@ getAllTransactions dbPath filename = do
     results <- query conn 
         "SELECT  id, description, category, date_of_transaction, amount, source, kind \
         \FROM transactions WHERE lower(filename) = lower(?)" 
-        (Only filename) :: IO [(Int,Text, Text, Text, Double, Text, Text)]
+        (Only filename) :: IO [(Maybe Int,Text, Text, Text, Double, Text, Text)]
     close conn
     print results
     print "results"
     mapM parseResult results
   where
-    parseResult :: (Int,Text, Text, Text, Double, Text, Text) -> IO CategorizedTransaction
+    parseResult :: (Maybe Int,Text, Text, Text, Double, Text, Text) -> IO CategorizedTransaction
     parseResult (id, desc, cat, dateText, amt, src, kind) = do
         let source = parseTransactionSource src
         let parsedKind = parseTransactionKind kind
@@ -104,23 +111,59 @@ getAllTransactions dbPath filename = do
     parseTransactionKind "Deposit" = Deposit
     parseTransactionKind kind = error $ "Invalid transaction kind: " <> T.unpack kind
  
-
-
-insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> TransactionSource -> IO ()
-insertTransaction dbPath categorizedTransaction sourceFile transactionSource = do
+insertPdfRecord :: FilePath -> Text -> Text -> IO (Int)
+insertPdfRecord dbPath filename rawContent = do
+    now <- getCurrentTime
+    let timeString = T.pack $ formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" now
     conn <- open dbPath
     execute conn
-        "INSERT INTO transactions (description, category, date_of_transaction, amount, source, filename, kind) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        ( description innerTransaction
-        , category categorizedTransaction
-        , transactionDate innerTransaction
-        , amount innerTransaction
-        , show transactionSource
-        , sourceFile 
-        , show $ kind innerTransaction)
+      "INSERT INTO uploaded_pdfs (filename, raw_content, upload_time) VALUES (?, ?, ?)"
+      (filename, rawContent, timeString)
+
+    rowId <- lastInsertRowId conn
+
     close conn
-  where
-    innerTransaction = transaction categorizedTransaction
+
+    pure (fromIntegral rowId)
+
+
+fetchPdfRecord :: FilePath         
+               -> Int              
+               -> IO (T.Text, T.Text)
+fetchPdfRecord dbPath pdfId = do
+    conn <- open dbPath
+    rows <- query conn
+       "SELECT filename, raw_content \
+       \ FROM uploaded_pdfs \
+       \ WHERE id = ?"
+       (Only pdfId) :: IO [(T.Text, T.Text)]
+    close conn
+    case rows of
+      [] -> fail $ "No PDF found with id=" ++ show pdfId
+      (x:_) -> return x
+
+insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> TransactionSource -> IO Int
+insertTransaction dbPath categorizedTransaction sourceFile transactionSrc = do
+    conn <- open dbPath
+
+    let tx = transaction categorizedTransaction
+    execute conn
+      "INSERT INTO transactions \
+      \ (description, category, date_of_transaction, amount, source, filename, kind) \
+      \ VALUES (?, ?, ?, ?, ?, ?, ?)"
+      ( description tx
+      , category categorizedTransaction
+      , transactionDate tx
+      , amount tx
+      , show transactionSrc
+      , sourceFile 
+      , show $ kind tx
+      )
+
+    rowId <- lastInsertRowId conn
+
+    close conn
+    pure (fromIntegral rowId)
 
 
 isFileProcessed :: FilePath -> Text -> IO Bool

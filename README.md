@@ -33,4 +33,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Ids are duplicated on backend for expansion of rows in subsequent sections
+- Batch calls to open ai to make less likely to error out
 

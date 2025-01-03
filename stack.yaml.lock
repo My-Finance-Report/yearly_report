@@ -900,4 +900,32 @@ packages:
       size: 1608
   original:
     hackage: psqueues-0.2.8.0@sha256:c6b7444f413f451749ad971dcd647779f3222ddb1583385ffbec813a1d8ae07a,5063
+- completed:
+    hackage: wai-middleware-static-0.9.2@sha256:b524741e5b6178341b6758ac0b31922c3633955713625c7fa3d7bd7623b83b15,3153
+    pantry-tree:
+      sha256: 9fc1bc2734d876224ab43eb74c2de03d8c50172b1309ef31d4eeca5a3ec5fd9e
+      size: 473
+  original:
+    hackage: wai-middleware-static-0.9.2@sha256:b524741e5b6178341b6758ac0b31922c3633955713625c7fa3d7bd7623b83b15,3153
+- completed:
+    hackage: cryptohash-sha1-0.11.101.0@sha256:fa87bda570450a0abb27f8828058ee4a43075470140eac8c90d1a085574212a8,3072
+    pantry-tree:
+      sha256: 70d625fa3a55e12458d70e1f7a7871ec2c204977ce0d091392acb4ff5632df20
+      size: 577
+  original:
+    hackage: cryptohash-sha1-0.11.101.0@sha256:fa87bda570450a0abb27f8828058ee4a43075470140eac8c90d1a085574212a8,3072
+- completed:
+    hackage: expiring-cache-map-0.0.6.1@sha256:94f91c9312bf1df6900816c13d5b2423c3d958bbd3bc604a1ab171134b46e3d1,3403
+    pantry-tree:
+      sha256: 1d8dc0f2ca298b83579adff750ebd67517f5c3938fb667cfdc60880432f26cf0
+      size: 2285
+  original:
+    hackage: expiring-cache-map-0.0.6.1@sha256:94f91c9312bf1df6900816c13d5b2423c3d958bbd3bc604a1ab171134b46e3d1,3403
+- completed:
+    hackage: semigroups-0.20@sha256:925341e6f7eb104cb490bef06eab93bb7995c7c67c51ee938185a2ddefa7aaf2,6333
+    pantry-tree:
+      sha256: d4d3f0b32a68cf8808fcb8d2de117ab9ec09dbfec93a297aa3d386ca79a0fe05
+      size: 481
+  original:
+    hackage: semigroups-0.20@sha256:925341e6f7eb104cb490bef06eab93bb7995c7c67c51ee938185a2ddefa7aaf2,6333
 snapshots: []

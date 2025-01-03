@@ -1,0 +1,58 @@
+/* static/style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  #slidersContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+  
+  #linesContainer {
+    padding: 140px 20px 20px 20px; /* Top padding accounts for the fixed sliders */
+    background-color: #fff;
+    width: 80%;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    overflow: auto;
+    max-height: calc(100vh - 160px); /* Optional: limit height for scrolling */
+  }
+  
+  span {
+    display: block; /* Ensure each line starts on a new line within <pre> */
+  }
+  
+  #slidersContainer input[type=range] {
+    width: 300px;
+    margin-right: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    #slidersContainer {
+      padding: 10px;
+    }
+    #slidersContainer input[type=range] {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    #linesContainer {
+      width: 95%;
+      padding: 160px 10px 10px 10px;
+    }
+  }
+  

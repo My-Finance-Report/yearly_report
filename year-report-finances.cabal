@@ -9,7 +9,8 @@ library
     Types
     Database
     Categorizer
-    HtmlGenerators
+    HtmlGenerators.HtmlGenerators
+    HtmlGenerators.HomePage
     Parsers
     OpenAiUtils
   build-depends:
@@ -19,6 +20,7 @@ library
       time,
       process,
       wai-extra,
+      wai-middleware-static,
       aeson >= 1.5,
       http-client >= 0.7,
       http-types,
@@ -38,7 +40,8 @@ executable year-report-finances
       Types
       Database
       Categorizer
-      HtmlGenerators
+      HtmlGenerators.HtmlGenerators
+      HtmlGenerators.HomePage
       Parsers
       OpenAiUtils
   build-depends:
@@ -48,6 +51,7 @@ executable year-report-finances
       time,
       process,
       wai-extra,
+      wai-middleware-static,
       aeson >= 1.5,
       http-client >= 0.7,
       http-types,
