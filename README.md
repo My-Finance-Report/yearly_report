@@ -10,10 +10,12 @@ make my yearly financial report using haskell
 - (WORKING) generate "report"  (see src/HtmlGenerators.hs)
   - (DONE) per month drill down 
   - (DONE) summary -> per transaction drill down
-- (TODO) try to serve the resulting report with haskell 
-- (DONE) allow for an interactive interface 
+  - (DONE) allow for an interactive interface 
+- (DONE) try to serve the resulting report with haskell 
+  - minimally implimented with Scotty 
 - (TODO) allow uploading documents to generate "live" reports
 - (TODO) allow for manually update transactions from a ui 
+  - this is probably a whole project in and of itself. basically a ui to memoize and "overrule" an llm's response
 
 # Tech
 
@@ -28,7 +30,7 @@ make my yearly financial report using haskell
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 
-# Scratch
+# Bugs
 
-- Ids are duplicated on backend for expansion of rows
+- Ids are duplicated on backend for expansion of rows in subsequent sections
 
