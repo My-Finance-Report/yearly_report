@@ -4,7 +4,6 @@ module HtmlGenerators.HtmlGenerators (
     renderTransactionsPage
     , renderUploadPage
     , renderPdfResultPage
-    , renderAdjustPage
     )
     where
 
@@ -52,10 +51,6 @@ renderPdfResultPage filename rawText =
       H.pre (toHtml rawText)
 
 
-
-
-
-
 renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> TL.Text
 renderTransactionsPage filename txs =
   renderHtmlT $ docTypeHtml $ do
@@ -99,21 +94,4 @@ renderTransactionRow filename tx =
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml
-
-
-renderAdjustPage :: Int -> Text -> [Text] -> TL.Text
-renderAdjustPage pdfId filename guessed = 
-  renderHtmlT $ H.docTypeHtml $ do
-    H.head $ do
-      H.title "Adjust Transactions"
-    H.body $ do
-      H.h1 "Adjust Guessed Transactions"
-      H.p $ toHtml $ "File: " <> filename
-
-      -- A form that will POST the final lines to /confirm-transactions
-      H.form ! A.method "post" ! A.action (H.toValue $ "/confirm-transactions/" <> show pdfId) $ do
-        H.textarea ! A.rows "20" ! A.cols "80" ! A.name "finalText" $
-          toHtml (T.intercalate "\n" guessed)
-        H.br
-        H.input ! A.type_ "submit" ! A.value "Submit"
 
