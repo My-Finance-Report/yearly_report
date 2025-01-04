@@ -5,7 +5,7 @@ module Categorizer
   )
 where
 
-import Control.Exception (SomeException, try)
+import Control.Exception (SomeException, throwIO, try)
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -68,9 +68,10 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
    in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-classifyTransactions :: [Text] -> Text -> IO (Maybe Category)
-classifyTransactions categories description = do
-  let inputPrompt = generatePrompt categories description
+classifyTransactions :: Map.Map Text Category -> Text -> IO (Maybe Category)
+classifyTransactions categoryMap description = do
+  let categories = Map.keys categoryMap
+      inputPrompt = generatePrompt categories description
       schema = generateSchema categories
       messages = [ChatMessage {role = "user", content = inputPrompt}]
   response <- makeChatRequest schema messages
@@ -78,16 +79,27 @@ classifyTransactions categories description = do
     Left err -> do
       putStrLn $ "Error: " ++ err
       return Nothing
-    Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
+    Right responseBodyContent -> do
+      categoryName <- decodeCategorizationResponse responseBodyContent
+      case categoryName of
+        Just categoryName ->
+          case Map.lookup categoryName categoryMap of
+            Just category -> return $ Just category
+            Nothing -> do
+              putStrLn $ "Error: API returned unknown category: " ++ T.unpack categoryName
+              return Nothing
+        Nothing -> do
+          putStrLn "Error: API returned unknown category "
+          return Nothing
 
 categorizeTransactionInner :: FilePath -> Text -> Day -> Int -> IO Category
-categorizeTransactionInner dbPath description day transactionId = do
-  categories <- getCategoriesBySource dbPath transactionId
-  apiResponse <- classifyTransactions (Prelude.map categoryName categories) description
+categorizeTransactionInner dbPath description day transactionSourceId = do
+  categories <- getCategoriesBySource dbPath transactionSourceId
+  let categoryMap = Map.fromList [(categoryName cat, cat) | cat <- categories]
+  apiResponse <- classifyTransactions categoryMap description
   case apiResponse of
-    Just category -> do
-      return category
-    Nothing -> return "Uncategorized"
+    Just category -> return category
+    Nothing -> throwIO $ PdfParseException "Unable to properly categorize"
 
 categorizeTransaction :: Transaction -> FilePath -> FilePath -> TransactionSource -> IO CategorizedTransaction
 categorizeTransaction creditCardTransaction dbPath filename transactionSource = do

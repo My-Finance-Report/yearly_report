@@ -12,6 +12,7 @@ module Database
     insertPdfRecord,
     getCategoriesBySource,
     getTransactionSource,
+    getTransactionSourceText,
     getAllTransactionSources,
     getTransactionsByFilename,
     insertTransactionSource,
@@ -114,6 +115,16 @@ getTransactionSource dbPath txnId = do
     [(sourceId, sourceName)] -> return $ TransactionSource sourceId sourceName
     [] -> error $ "No transaction source found with ID: " ++ show txnId
     _ -> error $ "Multiple transaction sources found with ID: " ++ show txnId
+
+getTransactionSourceText :: FilePath -> Text -> IO TransactionSource
+getTransactionSourceText dbPath txnName = do
+  conn <- open dbPath
+  rows <- query conn "SELECT id, name FROM transaction_sources WHERE name = ?" (Only txnName) :: IO [(Int, Text)]
+  close conn
+  case rows of
+    [(sourceId, sourceName)] -> return $ TransactionSource sourceId sourceName
+    [] -> error $ "No transaction source found with ID: " ++ show txnName
+    _ -> error $ "Multiple transaction sources found with ID: " ++ show txnName
 
 -- Fetch all transaction sources
 getAllTransactionSources :: FilePath -> IO [TransactionSource]

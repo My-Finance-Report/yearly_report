@@ -8,10 +8,12 @@ where
 
 import Categorizer
 import Control.Monad (forM, forM_)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.List (sortBy)
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe)
 import Data.Ord (comparing)
-import Data.Text as T
+import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database
@@ -45,7 +47,7 @@ generateRow categorizedTransaction =
       txnKind = T.pack (show (kind innerTransaction))
       amt = truncateToTwoDecimals (amount innerTransaction)
    in H.tr $ do
-        H.td (toHtml txnCategory)
+        H.td (toHtml (categoryName txnCategory))
         H.td (toHtml txnKind)
         H.td (toHtml dateStr)
         H.td (toHtml desc)
@@ -118,44 +120,50 @@ generateAggregateRows aggregatedTransactions =
       aggregatedTransactions
 
 data SankeyConfig = SankeyConfig
-  { sourceKey :: TransactionSource, -- The key for the source node
-    targetKey :: TransactionSource, -- The key for the target node
-    excludeKeys :: [Text], -- Categories to exclude from processing
-    mapKeyFunction :: Text -> Text -- Function to map node names (if needed)
+  { inputs :: [(TransactionSource, Text)], -- [(Source, Category)]
+    linkages :: (TransactionSource, Text, TransactionSource), -- (Source, Category) -> Target Source
+    mapKeyFunction :: TransactionSource -> Text -- Mapping for display names
   }
 
+buildSankeyLinks ::
+  (TransactionSource, Text, TransactionSource) ->
+  Map.Map TransactionSource AggregatedTransactions ->
+  [(Text, Text, Double)]
+buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
+  case Map.lookup targetSource aggregatedTransactions of
+    Just targetTransactions ->
+      -- Sum the amounts for each key in the map
+      let categoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) targetTransactions
+          -- Generate Sankey data: [sourceCategory, key, value]
+          sankeyLinks =
+            Prelude.map
+              (\(category, total) -> (sourceCategory, category, total))
+              (Map.toList categoryTotals)
+       in sankeyLinks
+    Nothing -> []
+
+-- we can make this easier by summing ahead of time
 generateSankeyData ::
   Map.Map TransactionSource AggregatedTransactions ->
   SankeyConfig ->
   [(Text, Text, Double)]
 generateSankeyData aggregatedTransactions config =
-  let SankeyConfig {sourceKey, targetKey, excludeKeys, mapKeyFunction} = config
+  let SankeyConfig {inputs, linkages, mapKeyFunction} = config
 
-      -- Fetch and process flows from the sourceKey
-      flowsFromSource = case Map.lookup sourceKey aggregatedTransactions of
-        Just sourceAggregated ->
-          let filteredCategories =
-                Map.filterWithKey
-                  (\k _ -> notElem k excludeKeys)
-                  sourceAggregated
-              categoryTotals =
-                Map.map (sum . Prelude.map (signedAmount . transaction)) filteredCategories
-           in Prelude.map (\(category, total) -> (mapKeyFunction (sourceName sourceKey), category, abs total)) (Map.toList categoryTotals)
-        Nothing -> []
+      -- Generate flows from inputs
+      inputFlows = concatMap processInput inputs
+        where
+          processInput (source, category) =
+            case Map.lookup source aggregatedTransactions >>= Map.lookup category of
+              Just transactions ->
+                let subCategoryFlows =
+                      Map.toList (Map.filterWithKey (\k _ -> k /= category) (fromMaybe Map.empty (Map.lookup source aggregatedTransactions)))
+                 in Prelude.map (\(cat, txns) -> (category, cat, sum $ Prelude.map (sankeyAmount . transaction) txns)) subCategoryFlows
+              Nothing -> []
+   in inputFlows ++ (buildSankeyLinks linkages aggregatedTransactions)
 
-      -- Fetch and process flows to the targetKey
-      flowsToTarget = case Map.lookup targetKey aggregatedTransactions of
-        Just targetAggregated ->
-          let totalAmount =
-                sum $
-                  Map.elems targetAggregated >>= \transactions ->
-                    Prelude.map (signedAmount . transaction) transactions
-           in [(mapKeyFunction (sourceName sourceKey), mapKeyFunction (sourceName targetKey), abs totalAmount) | totalAmount /= 0]
-        Nothing -> []
-
-      -- Combine all flows
-      allFlows = flowsFromSource ++ flowsToTarget
-   in allFlows
+sankeyAmount :: Transaction -> Double
+sankeyAmount txn = abs $ signedAmount txn
 
 signedAmount :: Transaction -> Double
 signedAmount txn = case kind txn of
@@ -173,10 +181,10 @@ aggregateByCategory = Prelude.foldr insertTransaction Map.empty
   where
     insertTransaction :: CategorizedTransaction -> Map.Map TransactionSource AggregatedTransactions -> Map.Map TransactionSource AggregatedTransactions
     insertTransaction categorizedTransaction acc =
-      let source = transactionSource categorizedTransaction
+      let source = transactionSource (category categorizedTransaction)
           cat = category categorizedTransaction
           -- Find the existing AggregatedTransactions for the source, or initialize an empty Map
-          updatedAggregated = Map.insertWith (++) cat [categorizedTransaction] (Map.findWithDefault Map.empty source acc)
+          updatedAggregated = Map.insertWith (++) (categoryName cat) [categorizedTransaction] (Map.findWithDefault Map.empty source acc)
        in Map.insert source updatedAggregated acc
 
 generateHtmlBlaze ::
@@ -244,18 +252,21 @@ renderHomePage = do
   -- Aggregate transactions
   let aggregatedTransactions = aggregateByCategory categorizedTransactions
 
-  let bankConfig =
+  bankSource <- getTransactionSourceText dbPath "Bank"
+  creditCardSource <- getTransactionSourceText dbPath "CreditCard"
+
+  let sankeyConfig =
         SankeyConfig
-          { sourceKey = TransactionSource {sourceName = "Bank"},
-            targetKey = TransactionSource {sourceName = "CreditCard"},
-            excludeKeys = ["Income", "Credit Card Payments"],
-            mapKeyFunction = Prelude.id -- No transformation of node names
+          { inputs = [(bankSource, "Income")],
+            linkages =
+              (bankSource, "Credit Card Payments", creditCardSource),
+            mapKeyFunction = sourceName
           }
 
   -- Generate Sankey data using the modular function
-  print aggregatedTransactions
-  print categorizedTransactions
-  let sankeyData = generateSankeyData aggregatedTransactions bankConfig
+  let sankeyData = generateSankeyData aggregatedTransactions sankeyConfig
+
+  print sankeyData
 
   -- Generate and return HTML
   let strictText = generateHtmlBlaze sankeyData
