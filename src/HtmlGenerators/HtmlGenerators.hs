@@ -77,7 +77,7 @@ renderTransactionRow filename tx =
       let desc = description (transaction tx)
           dateTxt = T.pack $ show (transactionDate (transaction tx))
           amt = amount (transaction tx)
-          cat = category tx
+          cat = categoryName (category tx)
 
       H.tr $ do
         H.td (toHtml tid)

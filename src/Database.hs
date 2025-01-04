@@ -138,17 +138,17 @@ getAllTransactions dbPath = do
   results <-
     query
       conn
-      "SELECT t.id, t.description, c.id, t.date_of_transaction, \
+      "SELECT t.id, t.description, c.id, c.name, t.date_of_transaction, \
       \ t.amount, ts.id, ts.name, t.kind \
       \FROM transactions t \
       \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
       \INNER JOIN categories c ON t.category_id = c.id"
       () ::
-      IO [(Maybe Int, Text, Int, Text, Double, Int, Text, Text)]
+      IO [(Maybe Int, Text, Int, Text, Text, Double, Int, Text, Text)]
   close conn
   mapM parseResult results
   where
-    parseResult (id, desc, catId, dateText, amt, sourceId, sourceName, kind) = do
+    parseResult (id, desc, catId, catName, dateText, amt, sourceId, sourceName, kind) = do
       let transactionSource = TransactionSource sourceId sourceName
           parsedKind = parseTransactionKind kind
       case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
@@ -162,9 +162,8 @@ getAllTransactions dbPath = do
                       transactionDate = parsedDate,
                       kind = parsedKind
                     },
-                category = T.pack (show catId), -- Convert category_id to Text
-                transactionId = id,
-                transactionSource = transactionSource
+                category = Category {categoryId = catId, categoryName = catName, transactionSource = transactionSource},
+                transactionId = id
               }
         Nothing -> fail $ "Error parsing date: " <> T.unpack dateText
 
@@ -174,18 +173,18 @@ getTransactionsByFilename dbPath filename = do
   results <-
     query
       conn
-      "SELECT t.id, t.description, c.id, t.date_of_transaction, \
+      "SELECT t.id, t.description, c.id, c.name, t.date_of_transaction, \
       \ t.amount, ts.id, ts.name, t.kind \
       \FROM transactions t \
       \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
       \INNER JOIN categories c ON t.category_id = c.id \
       \WHERE lower(t.filename) = lower(?)"
       (Only filename) ::
-      IO [(Maybe Int, Text, Int, Text, Double, Int, Text, Text)]
+      IO [(Maybe Int, Text, Int, Text, Text, Double, Int, Text, Text)]
   close conn
   mapM parseResult results
   where
-    parseResult (id, desc, catId, dateText, amt, sourceId, sourceName, kind) = do
+    parseResult (id, desc, catId, catName, dateText, amt, sourceId, sourceName, kind) = do
       let transactionSource = TransactionSource sourceId sourceName
           parsedKind = parseTransactionKind kind
       case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
@@ -199,9 +198,8 @@ getTransactionsByFilename dbPath filename = do
                       transactionDate = parsedDate,
                       kind = parsedKind
                     },
-                category = T.pack (show catId), -- Convert category_id to Text
-                transactionId = id,
-                transactionSource = transactionSource
+                category = Category {categoryId = catId, categoryName = catName, transactionSource = transactionSource},
+                transactionId = id
               }
         Nothing -> fail $ "Error parsing date: " <> T.unpack dateText
 
@@ -214,15 +212,15 @@ insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> IO Int
 insertTransaction dbPath categorizedTransaction sourceFile = do
   conn <- open dbPath
   let tx = transaction categorizedTransaction
-      src = transactionSource categorizedTransaction
-      categoryId = category categorizedTransaction -- Assume category is now the ID
+      src = transactionSource (category categorizedTransaction)
+      catId = categoryId (category categorizedTransaction)
   execute
     conn
     "INSERT INTO transactions \
     \ (description, category_id, date_of_transaction, amount, transaction_source_id, filename, kind) \
     \ VALUES (?, ?, ?, ?, ?, ?, ?)"
     ( description tx,
-      categoryId,
+      catId,
       transactionDate tx,
       amount tx,
       sourceId src,
@@ -258,7 +256,7 @@ insertPdfRecord dbPath filename rawContent = do
 isFileProcessed :: FilePath -> Int -> IO Bool
 isFileProcessed dbPath id = do
   conn <- open dbPath
-  results <- query conn "SELECT 1 FROM uploaded_pdfs WHERE id = ?" (Only id) :: IO [Only Int]
+  results <- query conn "SELECT 1 FROM processed_files WHERE id = ?" (Only id) :: IO [Only Int]
   close conn
   return $ not (null results)
 
@@ -291,11 +289,11 @@ insertCategory dbPath categoryName sourceId = do
 getCategoriesBySource :: FilePath -> Int -> IO [Category]
 getCategoriesBySource dbPath sourceId = do
   conn <- open dbPath
-  rows <-
-    query
-      conn
-      "SELECT id, name, source_id FROM categories WHERE source_id = ?"
-      (Only sourceId) ::
-      IO [(Int, Text, Int)]
+  let sql =
+        "SELECT c.id, c.name, s.id, s.name \
+        \FROM categories c \
+        \JOIN transaction_sources s ON c.source_id = s.id \
+        \WHERE c.source_id = ?"
+  categories <- query conn sql (Only sourceId) :: IO [Category]
   close conn
-  return $ map (\(catId, name, srcId) -> Category catId name srcId) rows
+  return categories

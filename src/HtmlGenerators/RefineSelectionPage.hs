@@ -9,7 +9,7 @@ import qualified Data.Text.Lazy as TL
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Types (Category (transactionSourceId), TransactionSource (..))
+import Types (Category (..), TransactionSource (..))
 
 renderSliderPage ::
   Int ->

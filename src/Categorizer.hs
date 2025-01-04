@@ -68,7 +68,7 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
    in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-classifyTransactions :: [Text] -> Text -> IO (Maybe Text)
+classifyTransactions :: [Text] -> Text -> IO (Maybe Category)
 classifyTransactions categories description = do
   let inputPrompt = generatePrompt categories description
       schema = generateSchema categories
@@ -80,7 +80,7 @@ classifyTransactions categories description = do
       return Nothing
     Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
 
-categorizeTransactionInner :: FilePath -> Text -> Day -> Int -> IO Text
+categorizeTransactionInner :: FilePath -> Text -> Day -> Int -> IO Category
 categorizeTransactionInner dbPath description day transactionId = do
   categories <- getCategoriesBySource dbPath transactionId
   apiResponse <- classifyTransactions (Prelude.map categoryName categories) description
@@ -102,8 +102,7 @@ categorizeTransaction creditCardTransaction dbPath filename transactionSource = 
         CategorizedTransaction
           { transactionId = Nothing,
             transaction = creditCardTransaction,
-            category = cat,
-            transactionSource = transactionSource
+            category = cat
           }
 
   newId <- insertTransaction dbPath partialTx filename

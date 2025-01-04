@@ -25,6 +25,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Time (Day, defaultTimeLocale, formatTime, parseTimeM)
+import Database.SQLite.Simple.FromRow
 import GHC.Generics (Generic)
 
 newtype CategorizationResponse
@@ -61,7 +62,7 @@ instance FromJSON TransactionKind
 data Category = Category
   { categoryId :: Int,
     categoryName :: Text,
-    transactionSourceId :: Int
+    transactionSource :: TransactionSource
   }
   deriving (Eq, Show, Ord, Generic)
 
@@ -91,9 +92,19 @@ instance FromJSON Transaction where
 data CategorizedTransaction = CategorizedTransaction
   { transaction :: Transaction,
     transactionId :: Maybe Int,
-    category :: Text,
-    transactionSource :: TransactionSource
+    category :: Category
   }
   deriving (Show, Eq, Ord)
 
 type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
+
+-- FromRow Instances
+instance FromRow TransactionSource where
+  fromRow = TransactionSource <$> field <*> field
+
+instance FromRow Category where
+  fromRow =
+    Category
+      <$> field
+      <*> field
+      <*> (TransactionSource <$> field <*> field)

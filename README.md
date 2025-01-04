@@ -16,7 +16,7 @@ make my yearly financial report using haskell
 - (TODO) allow uploading documents to generate "live" reports
   -this is partially done, but need to complete the flow
 - (TODO) allow sankey nodes to be configurable
-  -remove internal notion of bank vs CC statement
+  -(DONE)remove internal notion of bank vs CC statement
 - (DONE) allow for manually update transactions from a ui
   - this is probably a whole project in and of itself. basically a ui to memoize and "overrule" an llm's response
   - need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
@@ -37,3 +37,4 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 - Ids are duplicated on backend for expansion of rows in subsequent sections
 - Batch calls to open ai to make less likely to error out
+- Make calls to open ai async

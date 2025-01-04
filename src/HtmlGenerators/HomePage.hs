@@ -253,6 +253,8 @@ renderHomePage = do
           }
 
   -- Generate Sankey data using the modular function
+  print aggregatedTransactions
+  print categorizedTransactions
   let sankeyData = generateSankeyData aggregatedTransactions bankConfig
 
   -- Generate and return HTML
