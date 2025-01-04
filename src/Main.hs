@@ -3,9 +3,11 @@
 module Main where
 
 import Categorizer
+import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy as B
+import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.Map
 import qualified Data.Map as Map
 import Data.Text (Text)
@@ -43,13 +45,17 @@ main :: IO ()
 main = do
   let dbPath = "transactions.db"
 
+  activeJobs <- newIORef 0
   initializeDatabase dbPath
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     get "/" $ do
-      content <- liftIO renderHomePage
+      activeJobs <- liftIO $ readIORef activeJobs
+      let banner = if activeJobs > 0 then Just "Job Running" else Nothing
+      liftIO $ print banner
+      content <- liftIO $ renderHomePage banner
       Web.html content
 
     get "/upload" $ do
@@ -88,7 +94,6 @@ main = do
       Web.html $ renderSliderPage pdfId fileName guessedSegments transactionSources
 
     post "/confirm-boundaries/:pdfId" $ do
-      -- Retrieve parameters from the form submission
       pdfId <- Web.Scotty.pathParam "pdfId"
       finalStart <- Web.Scotty.formParam "finalStart" :: ActionM T.Text
       finalEnd <- Web.Scotty.formParam "finalEnd" :: ActionM T.Text
@@ -96,17 +101,17 @@ main = do
 
       let dbPath = "transactions.db"
 
-      -- Fetch the raw text of the PDF
       (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-
       theTransactionSource <- liftIO $ getTransactionSource dbPath txnSourceId
 
-      -- Process the selected text
-      -- TODO use the indexes
+      activeJobs <- liftIO $ newIORef 0 -- Pass the reference to the jobs count
+      liftIO $ do
+        modifyIORef activeJobs (+ 1) -- Increment job count
+        _ <- Control.Concurrent.Async.async $ do
+          processPdfFile dbPath pdfId theTransactionSource rawText
+          modifyIORef activeJobs (subtract 1) -- Decrement job count
+        return ()
 
-      liftIO $ processPdfFile dbPath pdfId theTransactionSource rawText
-
-      -- Redirect to the homepage
       redirect "/"
 
     get "/transactions" $ do
