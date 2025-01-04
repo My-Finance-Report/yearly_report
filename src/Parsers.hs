@@ -8,6 +8,7 @@ where
 
 import Categorizer (categorizeTransaction)
 import Control.Exception
+import Control.Monad (forM_)
 import Data.Aeson
 import Data.Aeson.KeyMap (mapMaybe)
 import qualified Data.ByteString.Lazy as B
@@ -126,39 +127,36 @@ getKeywords transaction =
     "Ending balance"
   )
 
-extractTransactionsFromPdf :: FilePath -> TransactionSource -> IO [Transaction]
-extractTransactionsFromPdf pdfPath transactionSource = do
-  let (startKeyword, endKeyword) = getKeywords transactionSource
-
-  rawText <- extractTextFromPdf pdfPath
-  let trimmedText = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
-  print trimmedText
-  parsedTransactions <- parseRawTextToJson trimmedText
+extractTransactionsFromLines :: Text -> TransactionSource -> IO [Transaction]
+extractTransactionsFromLines rawText transactionSource = do
+  parsedTransactions <- parseRawTextToJson rawText
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: FilePath -> FilePath -> TransactionSource -> IO [CategorizedTransaction]
-processPdfFile dbPath pdfPath transactionSource = do
-  let filename = takeFileName pdfPath
+processPdfFile :: FilePath -> Int -> TransactionSource -> Text -> IO [CategorizedTransaction]
+processPdfFile dbPath pdfId transactionSource rawText = do
+  (filename, _) <- fetchPdfRecord dbPath pdfId
+  alreadyProcessed <- isFileProcessed dbPath pdfId
 
-  alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
+  let rawFilename = T.unpack filename
 
   if alreadyProcessed
     then do
-      putStrLn $ "File '" ++ filename ++ "' has already been processed."
-      trans <- getAllTransactions dbPath filename
-      print trans
-      return trans
+      putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
+      getTransactionsByFilename dbPath rawFilename
     else do
-      putStrLn $ "Processing file: " ++ filename
-      result <- try (extractTransactionsFromPdf pdfPath transactionSource) :: IO (Either SomeException [Transaction])
+      putStrLn $ "Processing file: " ++ rawFilename
+      -- Extract transactions from PDF
+      result <- try (extractTransactionsFromLines rawText transactionSource) :: IO (Either SomeException [Transaction])
       case result of
         Left err -> do
-          putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
+          let errorMsg = "Error processing file '" ++ rawFilename ++ "': " ++ show err
+          putStrLn errorMsg
           return []
         Right transactions -> do
-          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath filename transactionSource) transactions
-          markFileAsProcessed dbPath (T.pack filename)
-          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ filename ++ "'."
+          -- Categorize and store transactions
+          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath rawFilename transactionSource) transactions
+          markFileAsProcessed dbPath filename
+          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ rawFilename ++ "'."
           return categorizedTransactions

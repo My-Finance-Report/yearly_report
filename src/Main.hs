@@ -40,63 +40,91 @@ guessTransactions txt =
    in linesAll -- Or do something more advanced
 
 main :: IO ()
-main = scotty 3000 $ do
-  middleware logStdoutDev
-  middleware $ staticPolicy (addBase "static")
+main = do
+  let dbPath = "transactions.db"
 
-  get "/" $ do
-    content <- liftIO renderHomePage
-    Web.html content
+  initializeDatabase dbPath
+  scotty 3000 $ do
+    middleware logStdoutDev
+    middleware $ staticPolicy (addBase "static")
 
-  get "/upload" $ do
-    Web.html renderUploadPage
+    get "/" $ do
+      content <- liftIO renderHomePage
+      Web.html content
 
-  post "/upload" $ do
-    allFiles <- Web.Scotty.files
-    case Prelude.lookup "pdfFile" allFiles of
-      Nothing -> do
-        Web.text "No file with field name 'pdfFile' was uploaded!"
-      Just fileInfo -> do
-        let uploadedBytes = fileContent fileInfo
-        let originalName = decodeUtf8 $ fileName fileInfo
+    get "/upload" $ do
+      Web.html renderUploadPage
 
-        let tempFilePath = "/tmp/" <> originalName
-        liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+    post "/upload" $ do
+      allFiles <- Web.Scotty.files
+      case Prelude.lookup "pdfFile" allFiles of
+        Nothing -> do
+          Web.text "No file with field name 'pdfFile' was uploaded!"
+        Just fileInfo -> do
+          let uploadedBytes = fileContent fileInfo
+          let originalName = decodeUtf8 $ fileName fileInfo
 
-        extractedTextOrError <-
-          liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
-            ActionM (Either SomeException Text)
-        case extractedTextOrError of
-          Left err -> do
-            Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
-          Right rawText -> do
-            liftIO $ insertPdfRecord "transactions.db" originalName rawText
-            newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
-            redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
+          let tempFilePath = "/tmp/" <> originalName
+          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
 
-  get "/adjust-transactions/:pdfId" $ do
-    let dbPath = "transactions.db"
-    pdfId <- pathParam "pdfId"
-    (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-    let guessedSegments = guessTransactions rawText
-    Web.html $ renderSliderPage pdfId fileName guessedSegments
+          extractedTextOrError <-
+            liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
+              ActionM (Either SomeException Text)
+          case extractedTextOrError of
+            Left err -> do
+              Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
+            Right rawText -> do
+              liftIO $ insertPdfRecord "transactions.db" originalName rawText
+              newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
+              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
 
-  get "/transactions" $ do
-    let dbPath = "transactions.db"
-    filenames <- liftIO $ getAllFilenames dbPath
-    Web.html $ renderAllFilesPage filenames
+    get "/adjust-transactions/:pdfId" $ do
+      let dbPath = "transactions.db"
+      pdfId <- pathParam "pdfId"
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
+      let guessedSegments = guessTransactions rawText
 
-  get "/transactions/:filename" $ do
-    let dbPath = "transactions.db"
-    filename <- Web.Scotty.pathParam "filename"
-    liftIO $ initializeDatabase dbPath
-    transactions <- liftIO $ getAllTransactions dbPath filename
-    Web.html $ renderTransactionsPage (T.pack filename) transactions
+      Web.html $ renderSliderPage pdfId fileName guessedSegments transactionSources
 
-  post "/update-category" $ do
-    let dbPath = "transactions.db"
-    tId <- Web.Scotty.formParam "transactionId" :: ActionM T.Text
-    newCat <- Web.Scotty.formParam "newCategory" :: ActionM T.Text
-    fileArg <- Web.Scotty.formParam "filename" :: ActionM T.Text
-    liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
-    redirect $ TL.fromStrict ("/transactions/" <> fileArg)
+    post "/confirm-boundaries/:pdfId" $ do
+      -- Retrieve parameters from the form submission
+      pdfId <- Web.Scotty.pathParam "pdfId"
+      finalStart <- Web.Scotty.formParam "finalStart" :: ActionM T.Text
+      finalEnd <- Web.Scotty.formParam "finalEnd" :: ActionM T.Text
+      txnSourceId <- Web.Scotty.formParam "transactionSourceId"
+
+      let dbPath = "transactions.db"
+
+      -- Fetch the raw text of the PDF
+      (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
+
+      theTransactionSource <- liftIO $ getTransactionSource dbPath txnSourceId
+
+      -- Process the selected text
+      -- TODO use the indexes
+
+      liftIO $ processPdfFile dbPath pdfId theTransactionSource rawText
+
+      -- Redirect to the homepage
+      redirect "/"
+
+    get "/transactions" $ do
+      let dbPath = "transactions.db"
+      filenames <- liftIO $ getAllFilenames dbPath
+      Web.html $ renderAllFilesPage filenames
+
+    get "/transactions/:filename" $ do
+      let dbPath = "transactions.db"
+      filename <- Web.Scotty.pathParam "filename"
+      liftIO $ initializeDatabase dbPath
+      transactions <- liftIO $ getTransactionsByFilename dbPath filename
+      Web.html $ renderTransactionsPage (T.pack filename) transactions
+
+    post "/update-category" $ do
+      let dbPath = "transactions.db"
+      tId <- Web.Scotty.formParam "transactionId" :: ActionM T.Text
+      newCat <- Web.Scotty.formParam "newCategory" :: ActionM T.Text
+      fileArg <- Web.Scotty.formParam "filename" :: ActionM T.Text
+      liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
+      redirect $ TL.fromStrict ("/transactions/" <> fileArg)

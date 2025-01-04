@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.RefineSelectionPage (renderSliderPage) where
@@ -8,13 +9,15 @@ import qualified Data.Text.Lazy as TL
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
+import Types (Category (transactionSourceId), TransactionSource (..))
 
 renderSliderPage ::
   Int ->
   T.Text ->
   [T.Text] ->
+  [TransactionSource] ->
   TL.Text
-renderSliderPage pdfId filename linesGuessed =
+renderSliderPage pdfId filename linesGuessed transactionSources =
   renderHtml $ docTypeHtml $ do
     H.head $ do
       H.title "Select Start/End with Sliders"
@@ -56,11 +59,22 @@ renderSliderPage pdfId filename linesGuessed =
           ! A.value (toValue (Prelude.length linesGuessed - 1))
           ! A.oninput "updateRange()"
 
+        H.br
+
         H.form
           ! A.method "post"
           ! A.action (toValue ("/confirm-boundaries/" <> show pdfId))
           $ do
-            -- Hidden inputs to store chosen lines
+            H.label ! A.for "transactionSource" $ "Transaction Source: "
+            H.select
+              ! A.name "transactionSourceId"
+              ! A.id "transactionSourceId"
+              $ do
+                forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
+                  H.option
+                    ! A.value (toValue sourceId)
+                    $ toHtml sourceName
+
             H.input ! A.type_ "hidden" ! A.name "finalStart" ! A.id "finalStartId"
             H.input ! A.type_ "hidden" ! A.name "finalEnd" ! A.id "finalEndId"
             H.br

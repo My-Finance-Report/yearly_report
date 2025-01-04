@@ -2,8 +2,6 @@
 
 module Categorizer
   ( categorizeTransaction,
-    aggregateByCategory,
-    aggregateByMonth,
   )
 where
 
@@ -25,20 +23,6 @@ import OpenAiUtils
 import System.Environment (getEnv)
 import System.FilePath (takeFileName)
 import Types
-
-aggregateByMonth :: [CategorizedTransaction] -> AggregatedTransactions
-aggregateByMonth transactions =
-  let toYearMonthText txn =
-        T.pack $ formatTime defaultTimeLocale "%B %Y" (transactionDate $ transaction txn)
-   in Map.fromListWith (++) [(toYearMonthText txn, [txn]) | txn <- transactions]
-
-aggregateByCategory :: [CategorizedTransaction] -> AggregatedTransactions
-aggregateByCategory = Prelude.foldr insertTransaction Map.empty
-  where
-    insertTransaction :: CategorizedTransaction -> AggregatedTransactions -> AggregatedTransactions
-    insertTransaction categorizedTransaction acc =
-      let cat = category categorizedTransaction
-       in Map.insertWith (++) cat [categorizedTransaction] acc
 
 decodeCategorizationResponse :: B.ByteString -> IO (Maybe Text)
 decodeCategorizationResponse responseBodyContent =

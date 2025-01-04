@@ -11,7 +11,9 @@ module Database
     getAllFilenames,
     insertPdfRecord,
     getCategoriesBySource,
+    getTransactionSource,
     getAllTransactionSources,
+    getTransactionsByFilename,
     insertTransactionSource,
     insertCategory,
   )
@@ -24,6 +26,7 @@ import Data.Time
 import Database.SQLite.Simple
 import Types
 
+-- TODO this needs to be indepodent
 initializeSourcesAndCategories :: FilePath -> IO ()
 initializeSourcesAndCategories dbPath = do
   bankSource <- insertTransactionSource dbPath "Bank"
@@ -39,7 +42,6 @@ initializeSourcesAndCategories dbPath = do
     (insertCategory dbPath `flip` sourceId ccSource)
     ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]
 
--- Initialize the database schema
 initializeDatabase :: FilePath -> IO ()
 initializeDatabase dbPath = do
   conn <- open dbPath
@@ -51,18 +53,29 @@ initializeDatabase dbPath = do
     \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
     \ name TEXT NOT NULL UNIQUE)"
 
+  -- Create categories table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS categories (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ name TEXT NOT NULL, \
+    \ source_id INTEGER NOT NULL, \
+    \ FOREIGN KEY (source_id) REFERENCES transaction_sources (id), \
+    \ UNIQUE (name, source_id))"
+
   -- Create transactions table
   execute_
     conn
     "CREATE TABLE IF NOT EXISTS transactions (\
     \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
     \ description TEXT NOT NULL, \
-    \ category TEXT, \
+    \ category_id INTEGER NOT NULL, \
     \ date_of_transaction TEXT NOT NULL, \
     \ amount REAL NOT NULL, \
     \ transaction_source_id INTEGER NOT NULL, \
     \ kind TEXT NOT NULL, \
     \ filename TEXT, \
+    \ FOREIGN KEY (category_id) REFERENCES categories (id), \
     \ FOREIGN KEY (transaction_source_id) REFERENCES transaction_sources (id))"
 
   -- Create processed_files table
@@ -81,17 +94,7 @@ initializeDatabase dbPath = do
     \ raw_content TEXT NOT NULL, \
     \ upload_time TEXT NOT NULL)"
 
-  -- Create categories table
-  execute_
-    conn
-    "CREATE TABLE IF NOT EXISTS categories (\
-    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
-    \ name TEXT NOT NULL, \
-    \ source_id INTEGER NOT NULL, \
-    \ FOREIGN KEY (source_id) REFERENCES transaction_sources (id), \
-    \ UNIQUE (name, source_id))" -- Ensure unique categories per source
   close conn
-
   initializeSourcesAndCategories dbPath
 
 -- Fetch all filenames from transactions
@@ -101,6 +104,16 @@ getAllFilenames dbPath = do
   results <- query_ conn "SELECT DISTINCT filename FROM transactions" :: IO [Only Text]
   close conn
   return $ map fromOnly results
+
+getTransactionSource :: FilePath -> Int -> IO TransactionSource
+getTransactionSource dbPath txnId = do
+  conn <- open dbPath
+  rows <- query conn "SELECT id, name FROM transaction_sources WHERE id = ?" (Only txnId) :: IO [(Int, Text)]
+  close conn
+  case rows of
+    [(sourceId, sourceName)] -> return $ TransactionSource sourceId sourceName
+    [] -> error $ "No transaction source found with ID: " ++ show txnId
+    _ -> error $ "Multiple transaction sources found with ID: " ++ show txnId
 
 -- Fetch all transaction sources
 getAllTransactionSources :: FilePath -> IO [TransactionSource]
@@ -114,29 +127,28 @@ getAllTransactionSources dbPath = do
 insertTransactionSource :: FilePath -> Text -> IO TransactionSource
 insertTransactionSource dbPath sourceName = do
   conn <- open dbPath
-  execute conn "INSERT INTO transaction_sources (name) VALUES (?)" (Only sourceName)
+  execute conn "INSERT OR IGNORE INTO transaction_sources (name) VALUES (?)" (Only sourceName)
   rowId <- lastInsertRowId conn
   close conn
   return $ TransactionSource {sourceId = fromIntegral rowId, sourceName = sourceName}
 
-getAllTransactions :: FilePath -> FilePath -> IO [CategorizedTransaction]
-getAllTransactions dbPath filename = do
+getAllTransactions :: FilePath -> IO [CategorizedTransaction]
+getAllTransactions dbPath = do
   conn <- open dbPath
   results <-
     query
       conn
-      "SELECT t.id, t.description, c.name, t.date_of_transaction, \
+      "SELECT t.id, t.description, c.id, t.date_of_transaction, \
       \ t.amount, ts.id, ts.name, t.kind \
       \FROM transactions t \
       \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
-      \INNER JOIN categories c ON t.category_id = c.id \
-      \WHERE lower(t.filename) = lower(?)"
-      (Only filename) ::
-      IO [(Maybe Int, Text, Text, Text, Double, Int, Text, Text)]
+      \INNER JOIN categories c ON t.category_id = c.id"
+      () ::
+      IO [(Maybe Int, Text, Int, Text, Double, Int, Text, Text)]
   close conn
   mapM parseResult results
   where
-    parseResult (id, desc, cat, dateText, amt, sourceId, sourceName, kind) = do
+    parseResult (id, desc, catId, dateText, amt, sourceId, sourceName, kind) = do
       let transactionSource = TransactionSource sourceId sourceName
           parsedKind = parseTransactionKind kind
       case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
@@ -150,7 +162,44 @@ getAllTransactions dbPath filename = do
                       transactionDate = parsedDate,
                       kind = parsedKind
                     },
-                category = cat,
+                category = T.pack (show catId), -- Convert category_id to Text
+                transactionId = id,
+                transactionSource = transactionSource
+              }
+        Nothing -> fail $ "Error parsing date: " <> T.unpack dateText
+
+getTransactionsByFilename :: FilePath -> FilePath -> IO [CategorizedTransaction]
+getTransactionsByFilename dbPath filename = do
+  conn <- open dbPath
+  results <-
+    query
+      conn
+      "SELECT t.id, t.description, c.id, t.date_of_transaction, \
+      \ t.amount, ts.id, ts.name, t.kind \
+      \FROM transactions t \
+      \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
+      \INNER JOIN categories c ON t.category_id = c.id \
+      \WHERE lower(t.filename) = lower(?)"
+      (Only filename) ::
+      IO [(Maybe Int, Text, Int, Text, Double, Int, Text, Text)]
+  close conn
+  mapM parseResult results
+  where
+    parseResult (id, desc, catId, dateText, amt, sourceId, sourceName, kind) = do
+      let transactionSource = TransactionSource sourceId sourceName
+          parsedKind = parseTransactionKind kind
+      case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
+        Just parsedDate ->
+          return
+            CategorizedTransaction
+              { transaction =
+                  Transaction
+                    { description = desc,
+                      amount = amt,
+                      transactionDate = parsedDate,
+                      kind = parsedKind
+                    },
+                category = T.pack (show catId), -- Convert category_id to Text
                 transactionId = id,
                 transactionSource = transactionSource
               }
@@ -161,19 +210,19 @@ parseTransactionKind "Withdrawal" = Withdrawal
 parseTransactionKind "Deposit" = Deposit
 parseTransactionKind _ = error "Invalid transaction kind"
 
--- Insert a transaction into the database
 insertTransaction :: FilePath -> CategorizedTransaction -> FilePath -> IO Int
 insertTransaction dbPath categorizedTransaction sourceFile = do
   conn <- open dbPath
   let tx = transaction categorizedTransaction
       src = transactionSource categorizedTransaction
+      categoryId = category categorizedTransaction -- Assume category is now the ID
   execute
     conn
     "INSERT INTO transactions \
-    \ (description, category, date_of_transaction, amount, transaction_source_id, filename, kind) \
+    \ (description, category_id, date_of_transaction, amount, transaction_source_id, filename, kind) \
     \ VALUES (?, ?, ?, ?, ?, ?, ?)"
     ( description tx,
-      category categorizedTransaction,
+      categoryId,
       transactionDate tx,
       amount tx,
       sourceId src,
@@ -206,10 +255,10 @@ insertPdfRecord dbPath filename rawContent = do
   return $ fromIntegral rowId
 
 -- Check if a file has already been processed
-isFileProcessed :: FilePath -> Text -> IO Bool
-isFileProcessed dbPath filename = do
+isFileProcessed :: FilePath -> Int -> IO Bool
+isFileProcessed dbPath id = do
   conn <- open dbPath
-  results <- query conn "SELECT 1 FROM processed_files WHERE filename = ?" (Only filename) :: IO [Only Int]
+  results <- query conn "SELECT 1 FROM uploaded_pdfs WHERE id = ?" (Only id) :: IO [Only Int]
   close conn
   return $ not (null results)
 
@@ -233,7 +282,7 @@ insertCategory dbPath categoryName sourceId = do
   conn <- open dbPath
   execute
     conn
-    "INSERT INTO categories (name, source_id) VALUES (?, ?)"
+    "INSERT OR IGNORE INTO categories (name, source_id) VALUES (?, ?)"
     (categoryName, sourceId)
   rowId <- lastInsertRowId conn
   close conn

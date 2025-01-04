@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.HomePage
@@ -14,6 +15,7 @@ import Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database
+import GHC.RTS.Flags (TraceFlags)
 import HtmlGenerators.HtmlGenerators
 import Parsers
 import System.Directory (listDirectory)
@@ -115,44 +117,72 @@ generateAggregateRows aggregatedTransactions =
       (return ()) -- starting "Html" is 'return ()'
       aggregatedTransactions
 
-generateSankeyData :: AggregatedTransactions -> AggregatedTransactions -> [(Text, Text, Double)]
-generateSankeyData bankAggregated ccAggregated =
-  let bankFlows = case Map.lookup "Income" bankAggregated of
-        Just incomeTransactions ->
-          let otherBankCategories = Map.filterWithKey (\k _ -> k /= "Income" && k /= "Credit Card Payments") bankAggregated
-              bankCategoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) otherBankCategories
-           in Prelude.map (\(category, total) -> ("Income", category, abs total)) (Map.toList bankCategoryTotals)
+data SankeyConfig = SankeyConfig
+  { sourceKey :: TransactionSource, -- The key for the source node
+    targetKey :: TransactionSource, -- The key for the target node
+    excludeKeys :: [Text], -- Categories to exclude from processing
+    mapKeyFunction :: Text -> Text -- Function to map node names (if needed)
+  }
+
+generateSankeyData ::
+  Map.Map TransactionSource AggregatedTransactions ->
+  SankeyConfig ->
+  [(Text, Text, Double)]
+generateSankeyData aggregatedTransactions config =
+  let SankeyConfig {sourceKey, targetKey, excludeKeys, mapKeyFunction} = config
+
+      -- Fetch and process flows from the sourceKey
+      flowsFromSource = case Map.lookup sourceKey aggregatedTransactions of
+        Just sourceAggregated ->
+          let filteredCategories =
+                Map.filterWithKey
+                  (\k _ -> notElem k excludeKeys)
+                  sourceAggregated
+              categoryTotals =
+                Map.map (sum . Prelude.map (signedAmount . transaction)) filteredCategories
+           in Prelude.map (\(category, total) -> (mapKeyFunction (sourceName sourceKey), category, abs total)) (Map.toList categoryTotals)
         Nothing -> []
 
-      creditCardPaymentsFromBank = case Map.lookup "Credit Card Payments" bankAggregated of
-        Just ccTransactions -> sum $ Prelude.map (signedAmount . transaction) ccTransactions
-        Nothing -> 0
+      -- Fetch and process flows to the targetKey
+      flowsToTarget = case Map.lookup targetKey aggregatedTransactions of
+        Just targetAggregated ->
+          let totalAmount =
+                sum $
+                  Map.elems targetAggregated >>= \transactions ->
+                    Prelude.map (signedAmount . transaction) transactions
+           in [(mapKeyFunction (sourceName sourceKey), mapKeyFunction (sourceName targetKey), abs totalAmount) | totalAmount /= 0]
+        Nothing -> []
 
-      incomeToCC = [("Income", "Credit Card Payments", abs creditCardPaymentsFromBank) | creditCardPaymentsFromBank /= 0]
-
-      ccFlowsToCategories =
-        Prelude.map
-          ( \(category, transactions) ->
-              ("Credit Card Payments", category, abs $ sum $ Prelude.map (signedAmount . transaction) transactions)
-          )
-          (Map.toList ccAggregated)
-   in bankFlows ++ incomeToCC ++ ccFlowsToCategories
+      -- Combine all flows
+      allFlows = flowsFromSource ++ flowsToTarget
+   in allFlows
 
 signedAmount :: Transaction -> Double
 signedAmount txn = case kind txn of
   Deposit -> amount txn
   Withdrawal -> negate (amount txn)
 
+aggregateByMonth :: [CategorizedTransaction] -> AggregatedTransactions
+aggregateByMonth transactions =
+  let toYearMonthText txn =
+        T.pack $ formatTime defaultTimeLocale "%B %Y" (transactionDate $ transaction txn)
+   in Map.fromListWith (++) [(toYearMonthText txn, [txn]) | txn <- transactions]
+
+aggregateByCategory :: [CategorizedTransaction] -> Map.Map TransactionSource AggregatedTransactions
+aggregateByCategory = Prelude.foldr insertTransaction Map.empty
+  where
+    insertTransaction :: CategorizedTransaction -> Map.Map TransactionSource AggregatedTransactions -> Map.Map TransactionSource AggregatedTransactions
+    insertTransaction categorizedTransaction acc =
+      let source = transactionSource categorizedTransaction
+          cat = category categorizedTransaction
+          -- Find the existing AggregatedTransactions for the source, or initialize an empty Map
+          updatedAggregated = Map.insertWith (++) cat [categorizedTransaction] (Map.findWithDefault Map.empty source acc)
+       in Map.insert source updatedAggregated acc
+
 generateHtmlBlaze ::
-  Html ->
-  Html ->
-  Html ->
-  Html ->
-  Html ->
-  Html ->
   [(T.Text, T.Text, Double)] ->
   TL.Text
-generateHtmlBlaze bankSummary creditCardSummary bankExpanded creditCardExpanded bankMonth creditCardMonth sankeyData =
+generateHtmlBlaze sankeyData =
   renderHtml $ do
     H.docTypeHtml $ do
       H.head $ do
@@ -198,56 +228,33 @@ generateHtmlBlaze bankSummary creditCardSummary bankExpanded creditCardExpanded 
               ]
       H.body $ do
         H.h1 "Bank Summary"
-        -- If bankSummary is already HTML, use "preEscapedToHtml" (be careful!)
-        H.preEscapedToHtml bankSummary
 
         H.h1 "Flow Diagram"
         H.div ! A.id "sankey_chart" $ mempty
 
-        H.h1 "Credit Card Summary"
-        H.preEscapedToHtml creditCardSummary
-
-        H.h1 "Bank By Month"
-        H.preEscapedToHtml bankMonth
-
-        H.h1 "Credit Card By Month"
-        H.preEscapedToHtml creditCardMonth
-
-        H.h1 "Bank Expanded"
-        H.preEscapedToHtml bankExpanded
-
-        H.h1 "Credit Card Expanded"
-        H.preEscapedToHtml creditCardExpanded
-
 renderHomePage :: IO TL.LazyText
 renderHomePage = do
   let dbPath = "transactions.db"
-  initializeDatabase dbPath
 
   -- Fetch all transaction sources
   transactionSources <- getAllTransactionSources dbPath
 
-  -- Process files for each source
-  categorizedTransactions <- fmap Prelude.concat $
-    forM transactionSources $ \source -> do
-      let txnSourceName = sourceName source
-          txnSourceId = sourceId source
-          sourceDir = T.unpack txnSourceName ++ "_files" -- Assume directory matches source name
-      sourceFiles <- Prelude.map (sourceDir </>) <$> listDirectory sourceDir
-      mapM (\file -> processPdfFile dbPath file source) sourceFiles
+  categorizedTransactions <- getAllTransactions dbPath
 
   -- Aggregate transactions
   let aggregatedTransactions = aggregateByCategory categorizedTransactions
-  let aggregatedTransactionsByMonth = aggregateByMonth categorizedTransactions
 
-  -- Generate rows for HTML
-  let summaryRows = generateAggregateRows aggregatedTransactions
-  let monthRows = generateAggregateRows aggregatedTransactionsByMonth
-  let transactionTable = generateTransactionTable categorizedTransactions
+  let bankConfig =
+        SankeyConfig
+          { sourceKey = TransactionSource {sourceName = "Bank"},
+            targetKey = TransactionSource {sourceName = "CreditCard"},
+            excludeKeys = ["Income", "Credit Card Payments"],
+            mapKeyFunction = Prelude.id -- No transformation of node names
+          }
 
-  -- Placeholder Sankey data
-  let sankeyData = generateSankeyData aggregatedTransactions Map.empty
+  -- Generate Sankey data using the modular function
+  let sankeyData = generateSankeyData aggregatedTransactions bankConfig
 
   -- Generate and return HTML
-  let strictText = generateHtmlBlaze summaryRows mempty transactionTable mempty monthRows mempty sankeyData
+  let strictText = generateHtmlBlaze sankeyData
   return strictText
