@@ -119,14 +119,11 @@ trimTrailingText pdfText keyword =
   let (beforeTransactions, _) = T.breakOn keyword pdfText
    in beforeTransactions
 
+-- TODO these come from the DB
 getKeywords :: TransactionSource -> (Text, Text)
-getKeywords BankSource =
+getKeywords transaction =
   ( "Transaction history",
     "Ending balance"
-  )
-getKeywords CreditCardSource =
-  ( "MATTHEW M CARROLL #3996: Transactions",
-    "Total Transactions for This Period"
   )
 
 extractTransactionsFromPdf :: FilePath -> TransactionSource -> IO [Transaction]
@@ -141,11 +138,12 @@ extractTransactionsFromPdf pdfPath transactionSource = do
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: FilePath -> FilePath -> TransactionSource -> [Text] -> IO [CategorizedTransaction]
-processPdfFile dbPath pdfPath transactionSource categories = do
+processPdfFile :: FilePath -> FilePath -> TransactionSource -> IO [CategorizedTransaction]
+processPdfFile dbPath pdfPath transactionSource = do
   let filename = takeFileName pdfPath
 
   alreadyProcessed <- isFileProcessed dbPath (T.pack filename)
+
   if alreadyProcessed
     then do
       putStrLn $ "File '" ++ filename ++ "' has already been processed."
@@ -160,7 +158,7 @@ processPdfFile dbPath pdfPath transactionSource categories = do
           putStrLn $ "Error processing file '" ++ filename ++ "': " ++ show err
           return []
         Right transactions -> do
-          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath categories filename transactionSource) transactions
+          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath filename transactionSource) transactions
           markFileAsProcessed dbPath (T.pack filename)
           putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ filename ++ "'."
           return categorizedTransactions

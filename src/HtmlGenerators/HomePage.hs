@@ -6,7 +6,7 @@ module HtmlGenerators.HomePage
 where
 
 import Categorizer
-import Control.Monad (forM_)
+import Control.Monad (forM, forM_)
 import Data.List (sortBy)
 import qualified Data.Map as Map
 import Data.Ord (comparing)
@@ -222,37 +222,32 @@ generateHtmlBlaze bankSummary creditCardSummary bankExpanded creditCardExpanded 
 renderHomePage :: IO TL.LazyText
 renderHomePage = do
   let dbPath = "transactions.db"
-
-  let bankDir = "bank_files"
-  let ccDir = "credit_card_files"
-
-  bankFiles <- Prelude.map (bankDir </>) <$> listDirectory bankDir
-  ccFiles <- Prelude.map (ccDir </>) <$> listDirectory ccDir
-
-  let ccCategories = ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]
-  let bankCategories = ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
-
   initializeDatabase dbPath
 
-  categorizedBankTransactions <- Prelude.concat <$> mapM (\file -> processPdfFile dbPath file BankSource bankCategories) bankFiles
-  categorizedCCTransactions <- Prelude.concat <$> mapM (\file -> processPdfFile dbPath file CreditCardSource ccCategories) ccFiles
+  -- Fetch all transaction sources
+  transactionSources <- getAllTransactionSources dbPath
 
-  let aggregatedBankTransactions = aggregateByCategory categorizedBankTransactions
-  let aggregatedCCTransactions = aggregateByCategory categorizedCCTransactions
+  -- Process files for each source
+  categorizedTransactions <- fmap Prelude.concat $
+    forM transactionSources $ \source -> do
+      let txnSourceName = sourceName source
+          txnSourceId = sourceId source
+          sourceDir = T.unpack txnSourceName ++ "_files" -- Assume directory matches source name
+      sourceFiles <- Prelude.map (sourceDir </>) <$> listDirectory sourceDir
+      mapM (\file -> processPdfFile dbPath file source) sourceFiles
 
-  let aggregatedBankTransactionsMonth = aggregateByMonth categorizedBankTransactions
-  let aggregatedCCTransactionsMonth = aggregateByMonth categorizedCCTransactions
+  -- Aggregate transactions
+  let aggregatedTransactions = aggregateByCategory categorizedTransactions
+  let aggregatedTransactionsByMonth = aggregateByMonth categorizedTransactions
 
-  let bankSummaryRows = generateAggregateRows aggregatedBankTransactions
-  let ccSummaryRows = generateAggregateRows aggregatedCCTransactions
+  -- Generate rows for HTML
+  let summaryRows = generateAggregateRows aggregatedTransactions
+  let monthRows = generateAggregateRows aggregatedTransactionsByMonth
+  let transactionTable = generateTransactionTable categorizedTransactions
 
-  let bankMonthRows = generateAggregateRows aggregatedBankTransactionsMonth
-  let ccMonthRows = generateAggregateRows aggregatedCCTransactionsMonth
+  -- Placeholder Sankey data
+  let sankeyData = generateSankeyData aggregatedTransactions Map.empty
 
-  let bankRows = generateTransactionTable categorizedBankTransactions
-  let creditCardRows = generateTransactionTable categorizedCCTransactions
-
-  let sankeyData = generateSankeyData aggregatedBankTransactions aggregatedCCTransactions
-
-  let strictText = generateHtmlBlaze bankSummaryRows ccSummaryRows bankRows creditCardRows bankMonthRows ccMonthRows sankeyData
+  -- Generate and return HTML
+  let strictText = generateHtmlBlaze summaryRows mempty transactionTable mempty monthRows mempty sankeyData
   return strictText

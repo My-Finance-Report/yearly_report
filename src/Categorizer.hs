@@ -96,22 +96,23 @@ classifyTransactions categories description = do
       return Nothing
     Right responseBodyContent -> decodeCategorizationResponse responseBodyContent
 
-categorizeTransactionInner :: FilePath -> Text -> [Text] -> Day -> IO Text
-categorizeTransactionInner dbPath description categories day = do
-  apiResponse <- classifyTransactions categories description
+categorizeTransactionInner :: FilePath -> Text -> Day -> Int -> IO Text
+categorizeTransactionInner dbPath description day transactionId = do
+  categories <- getCategoriesBySource dbPath transactionId
+  apiResponse <- classifyTransactions (Prelude.map categoryName categories) description
   case apiResponse of
     Just category -> do
       return category
     Nothing -> return "Uncategorized"
 
-categorizeTransaction :: Transaction -> FilePath -> [Text] -> FilePath -> TransactionSource -> IO CategorizedTransaction
-categorizeTransaction creditCardTransaction dbPath categories filename transactionSource = do
+categorizeTransaction :: Transaction -> FilePath -> FilePath -> TransactionSource -> IO CategorizedTransaction
+categorizeTransaction creditCardTransaction dbPath filename transactionSource = do
   cat <-
     categorizeTransactionInner
       dbPath
       (description creditCardTransaction)
-      categories
       (transactionDate creditCardTransaction)
+      (sourceId transactionSource)
 
   let partialTx =
         CategorizedTransaction
@@ -121,7 +122,7 @@ categorizeTransaction creditCardTransaction dbPath categories filename transacti
             transactionSource = transactionSource
           }
 
-  newId <- insertTransaction dbPath partialTx filename transactionSource
+  newId <- insertTransaction dbPath partialTx filename
 
   let finalizedTx = partialTx {transactionId = Just newId}
   return finalizedTx

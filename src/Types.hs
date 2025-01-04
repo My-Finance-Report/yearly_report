@@ -4,6 +4,7 @@
 module Types
   ( Transaction (..),
     CategorizedTransaction (..),
+    Category (..),
     AggregatedTransactions,
     TransactionKind (..),
     TransactionSource (..),
@@ -44,13 +45,27 @@ newtype TransactionsWrapper
 
 instance FromJSON TransactionsWrapper
 
-data TransactionSource = BankSource | CreditCardSource
-  deriving (Eq, Show, Ord)
+data TransactionSource = TransactionSource
+  { sourceId :: Int,
+    sourceName :: Text
+  }
+  deriving (Eq, Show, Ord, Generic)
+
+instance FromJSON TransactionSource
 
 data TransactionKind = Withdrawal | Deposit
   deriving (Eq, Show, Ord, Generic)
 
 instance FromJSON TransactionKind
+
+data Category = Category
+  { categoryId :: Int,
+    categoryName :: Text,
+    transactionSourceId :: Int
+  }
+  deriving (Eq, Show, Ord, Generic)
+
+instance FromJSON Category
 
 data Transaction = Transaction
   { transactionDate :: Day,
