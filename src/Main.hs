@@ -53,14 +53,6 @@ main = do
       content <- liftIO $ renderHomePage banner
       Web.html content
 
-    get "/upload" $ do
-      Web.html renderUploadPage
-
-    get "/setup-upload" $ do
-      let dbPath = "transactions.db"
-      transactionSources <- liftIO $ getAllTransactionSources dbPath
-      Web.html $ renderSetupUploadPage transactionSources
-
     post "/setup-upload" $ do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
       endKeyword <- Web.Scotty.formParam "endKeyword" :: ActionM T.Text
