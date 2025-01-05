@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -55,8 +56,44 @@ main = do
     get "/upload" $ do
       Web.html renderUploadPage
 
+    get "/setup-upload" $ do
+      let dbPath = "transactions.db"
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      Web.html $ renderSetupUploadPage transactionSources
 
-      
+    post "/setup-upload" $ do
+      startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
+      endKeyword <- Web.Scotty.formParam "endKeyword" :: ActionM T.Text
+      filenamePattern <- Web.Scotty.formParam "filenamePattern" :: ActionM T.Text
+      sourceId <- Web.Scotty.formParam "transactionSourceId" :: ActionM Int
+
+      let dbPath = "transactions.db"
+      liftIO $ persistUploadConfiguration dbPath startKeyword endKeyword sourceId filenamePattern
+
+      redirect "/"
+
+    post "/upload-template" $ do
+      allFiles <- Web.Scotty.files
+      case Prelude.lookup "pdfFile" allFiles of
+        Nothing -> do
+          Web.text "No file with field name 'pdfFile' was uploaded!"
+        Just fileInfo -> do
+          let uploadedBytes = fileContent fileInfo
+          let originalName = decodeUtf8 $ fileName fileInfo
+
+          let tempFilePath = "/tmp/" <> originalName
+          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+          extractedTextOrError <-
+            liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
+              ActionM (Either SomeException Text)
+          case extractedTextOrError of
+            Left err -> do
+              Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
+            Right rawText -> do
+              let dbPath = "transactions.db"
+              newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
 
     post "/upload" $ do
       allFiles <- Web.Scotty.files
@@ -77,9 +114,27 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              liftIO $ insertPdfRecord "transactions.db" originalName rawText
-              newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
-              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
+              let dbPath = "transactions.db"
+
+              -- Try to get upload configuration
+              maybeConfig <- liftIO $ getUploadConfiguration dbPath (T.unpack originalName)
+
+              case maybeConfig of
+                Just UploadConfiguration {startKeyword, endKeyword, transactionSourceId, filenameRegex} -> do
+                  newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+
+                  liftIO $ do
+                    modifyIORef activeJobs (+ 1)
+                    _ <- Control.Concurrent.Async.async $ do
+                      let config = UploadConfiguration {transactionSourceId = transactionSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword}
+                      processPdfFile dbPath newPdfId config
+                      modifyIORef activeJobs (subtract 1)
+                    return ()
+
+                  redirect "/"
+                Nothing -> do
+                  newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
 
     get "/adjust-transactions/:pdfId" $ do
       let dbPath = "transactions.db"
@@ -89,37 +144,6 @@ main = do
       let segments = T.splitOn "\n" rawText
 
       Web.html $ renderSliderPage pdfId fileName segments transactionSources
-
-    post "/confirm-boundaries/:pdfId" $ do
-      pdfId <- Web.Scotty.pathParam "pdfId"
-      finalStart <- Web.Scotty.formParam "finalStart" :: ActionM T.Text
-      finalEnd <- Web.Scotty.formParam "finalEnd" :: ActionM T.Text
-      txnSourceId <- Web.Scotty.formParam "transactionSourceId"
-
-      let dbPath = "transactions.db"
-
-      (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-      let allLines = T.lines rawText
-      let startIdx = read $ T.unpack finalStart
-      let endIdx = read $ T.unpack finalEnd
-      let filenameRegex = read $ T.unpack filenameRegex
-
-      let startKeyword = allLines !! startIdx
-      let endKeyword = allLines !! endIdx
-
-      theTransactionSource <- liftIO $ getTransactionSource dbPath txnSourceId
-
-      activeJobs <- liftIO $ newIORef 0
-      liftIO $ do
-        modifyIORef activeJobs (+ 1)
-        persistUploadConfiguration dbPath pdfId startKeyword endKeyword txnSourceId filenameRegex
-        let config = UploadConfiguration {transactionSourceId = txnSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword} {startKeyword = startKeyword, endKeyword = endKeyword, filenameRegex = filenameRegex, transactionSourceId = txnSourceId}
-        _ <- Control.Concurrent.Async.async $ do
-          processPdfFile dbPath pdfId config
-          modifyIORef activeJobs (subtract 1)
-        return ()
-
-      redirect "/"
 
     get "/transactions" $ do
       let dbPath = "transactions.db"

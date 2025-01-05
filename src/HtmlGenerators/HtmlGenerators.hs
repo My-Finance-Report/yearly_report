@@ -1,8 +1,10 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.HtmlGenerators
   ( renderTransactionsPage,
     renderUploadPage,
+    renderSetupUploadPage,
     renderPdfResultPage,
   )
 where
@@ -20,6 +22,66 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types
+
+renderSetupUploadPage :: [TransactionSource] -> TL.Text
+renderSetupUploadPage transactionSources =
+  renderHtml $ docTypeHtml $ do
+    H.head $ do
+      H.title "Setup Upload Configuration"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/style.css"
+    H.body $ do
+      H.h1 "Setup Upload Configuration"
+      H.form
+        ! A.method "post"
+        ! A.action "/setup-upload"
+        $ do
+          -- Start Keyword
+          H.label ! A.for "startKeyword" $ "Start Keyword:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "startKeyword"
+            ! A.id "startKeyword"
+            ! A.placeholder "Enter start keyword"
+          H.br
+
+          -- End Keyword
+          H.label ! A.for "endKeyword" $ "End Keyword:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "endKeyword"
+            ! A.id "endKeyword"
+            ! A.placeholder "Enter end keyword"
+          H.br
+
+          -- Filename Pattern
+          H.label ! A.for "filenamePattern" $ "Filename Pattern:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "filenamePattern"
+            ! A.id "filenamePattern"
+            ! A.placeholder "Enter filename pattern"
+          H.br
+
+          -- Transaction Source
+          H.label ! A.for "transactionSourceId" $ "Transaction Source:"
+          H.select
+            ! A.name "transactionSourceId"
+            ! A.id "transactionSourceId"
+            $ do
+              forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
+                H.option
+                  ! A.value (toValue sourceId)
+                  $ toHtml sourceName
+          H.br
+
+          -- Submit Button
+          H.input ! A.type_ "submit" ! A.value "Save Configuration"
+
+
+
 
 renderUploadPage :: TL.Text
 renderUploadPage = renderHtmlT $ H.docTypeHtml $ do

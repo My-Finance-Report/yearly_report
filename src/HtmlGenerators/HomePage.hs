@@ -80,17 +80,20 @@ generateHtmlBlaze sankeyData banner tabs =
           Nothing -> return ()
 
         H.div ! A.class_ "upload-section" $ do
-          H.h2 "Upload a PDF"
           H.form
             ! A.method "post"
             ! A.action "/upload"
             ! A.enctype "multipart/form-data"
             $ do
-              H.label "Choose PDF to upload:"
+              H.label "Select File"
               H.br
               H.input ! A.type_ "file" ! A.name "pdfFile"
               H.br
-              H.input ! A.type_ "submit" ! A.value "Upload"
+              H.button
+                ! A.type_ "submit"
+                ! A.value "Upload"
+                ! A.class_ "setup-upload-button"
+                $ "Create Upload"
 
         H.div ! A.id "sankey_chart" $ mempty
         tabs

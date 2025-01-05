@@ -22,6 +22,8 @@ module Database
   )
 where
 
+import Control.Exception (SomeException (SomeException))
+import Control.Exception.Base (try)
 import Control.Monad (forM_)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
@@ -103,11 +105,10 @@ initializeDatabase dbPath = do
     conn
     "CREATE TABLE IF NOT EXISTS upload_configuration (\
     \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
-    \ start_keyword TEXT NOT NULL, \
-    \ end_keyword TEXT NOT NULL, \
     \ filename_regex TEXT, \
     \ transaction_source_id INTEGER NOT NULL, \
-    \ FOREIGN KEY (transaction_source_id) REFERENCES transaction_sources (id))"
+    \ FOREIGN KEY (transaction_source_id) REFERENCES transaction_sources (id), \
+    \ UNIQUE (transaction_source_id))"
 
   close conn
   initializeSourcesAndCategories dbPath
@@ -323,18 +324,18 @@ getCategoriesBySource dbPath sourceId = do
   close conn
   return categories
 
-persistUploadConfiguration :: FilePath -> Int -> T.Text -> T.Text -> Int -> T.Text -> IO ()
-persistUploadConfiguration dbPath pdfId startKeyword endKeyword txnSourceId filenameRegex = do
+persistUploadConfiguration :: FilePath -> T.Text -> T.Text -> Int -> T.Text -> IO ()
+persistUploadConfiguration dbPath startKeyword endKeyword txnSourceId filenameRegex = do
   conn <- open dbPath
+
   execute
     conn
-    "INSERT INTO upload_configuration (start_keyword, end_keyword, transaction_source_id, filename_regex) \
-    \VALUES (?, ?, ?, ?) ON CONFLICT (transaction_source_id) DO UPDATE SET \
-    \start_keyword = excluded.start_keyword, \
-    \end_keyword = excluded.end_keyword, \
-    \filename_regex = excluded.filename_regex"
+    "INSERT OR IGNORE INTO upload_configuration (start_keyword, end_keyword, transaction_source_id, filename_regex) \
+    \VALUES (?, ?, ?, ?);"
     (startKeyword, endKeyword, txnSourceId, filenameRegex)
+
   close conn
+  putStrLn "Connection closed."
 
 getUploadConfiguration :: FilePath -> FilePath -> IO (Maybe UploadConfiguration)
 getUploadConfiguration dbPath filename = do

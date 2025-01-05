@@ -163,3 +163,17 @@ tr:hover {
     padding: 5px; /* Reduce padding */
   }
 }
+
+.setup-upload-button {
+  background-color: #4CAF50; /* Green background */
+  color: white; /* White text */
+  padding: 10px 20px; /* Button padding */
+  font-size: 16px; /* Font size */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.setup-upload-button:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
