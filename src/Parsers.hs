@@ -120,26 +120,22 @@ trimTrailingText pdfText keyword =
   let (beforeTransactions, _) = T.breakOn keyword pdfText
    in beforeTransactions
 
--- TODO these come from the DB
-getKeywords :: TransactionSource -> (Text, Text)
-getKeywords transaction =
-  ( "Transaction history",
-    "Ending balance"
-  )
+extractTransactionsFromLines :: Text -> TransactionSource -> Text -> Text -> IO [Transaction]
+extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
+  let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
-extractTransactionsFromLines :: Text -> TransactionSource -> IO [Transaction]
-extractTransactionsFromLines rawText transactionSource = do
-  parsedTransactions <- parseRawTextToJson rawText
+  parsedTransactions <- parseRawTextToJson trimmedLines
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: FilePath -> Int -> TransactionSource -> Text -> IO [CategorizedTransaction]
-processPdfFile dbPath pdfId transactionSource rawText = do
-  (filename, _) <- fetchPdfRecord dbPath pdfId
+processPdfFile :: FilePath -> Int -> UploadConfiguration -> IO [CategorizedTransaction]
+processPdfFile dbPath pdfId config = do
+  (filename, rawText) <- fetchPdfRecord dbPath pdfId
+  let rawFilename = T.unpack filename
   alreadyProcessed <- isFileProcessed dbPath pdfId
 
-  let rawFilename = T.unpack filename
+  transactionSource <- getTransactionSource dbPath (transactionSourceId config)
 
   if alreadyProcessed
     then do
@@ -147,8 +143,8 @@ processPdfFile dbPath pdfId transactionSource rawText = do
       getTransactionsByFilename dbPath rawFilename
     else do
       putStrLn $ "Processing file: " ++ rawFilename
-      -- Extract transactions from PDF
-      result <- try (extractTransactionsFromLines rawText transactionSource) :: IO (Either SomeException [Transaction])
+
+      result <- try (extractTransactionsFromLines rawText transactionSource (startKeyword config) (endKeyword config)) :: IO (Either SomeException [Transaction])
       case result of
         Left err -> do
           let errorMsg = "Error processing file '" ++ rawFilename ++ "': " ++ show err

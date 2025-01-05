@@ -35,12 +35,6 @@ import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
 
-guessTransactions :: Text -> [Text]
-guessTransactions txt =
-  -- e.g. split on newlines, then filter or group:
-  let linesAll = T.splitOn "\n" txt
-   in linesAll -- Or do something more advanced
-
 main :: IO ()
 main = do
   let dbPath = "transactions.db"
@@ -60,6 +54,9 @@ main = do
 
     get "/upload" $ do
       Web.html renderUploadPage
+
+
+      
 
     post "/upload" $ do
       allFiles <- Web.Scotty.files
@@ -89,9 +86,9 @@ main = do
       pdfId <- pathParam "pdfId"
       transactionSources <- liftIO $ getAllTransactionSources dbPath
       (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-      let guessedSegments = guessTransactions rawText
+      let segments = T.splitOn "\n" rawText
 
-      Web.html $ renderSliderPage pdfId fileName guessedSegments transactionSources
+      Web.html $ renderSliderPage pdfId fileName segments transactionSources
 
     post "/confirm-boundaries/:pdfId" $ do
       pdfId <- Web.Scotty.pathParam "pdfId"
@@ -102,14 +99,24 @@ main = do
       let dbPath = "transactions.db"
 
       (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
+      let allLines = T.lines rawText
+      let startIdx = read $ T.unpack finalStart
+      let endIdx = read $ T.unpack finalEnd
+      let filenameRegex = read $ T.unpack filenameRegex
+
+      let startKeyword = allLines !! startIdx
+      let endKeyword = allLines !! endIdx
+
       theTransactionSource <- liftIO $ getTransactionSource dbPath txnSourceId
 
-      activeJobs <- liftIO $ newIORef 0 -- Pass the reference to the jobs count
+      activeJobs <- liftIO $ newIORef 0
       liftIO $ do
-        modifyIORef activeJobs (+ 1) -- Increment job count
+        modifyIORef activeJobs (+ 1)
+        persistUploadConfiguration dbPath pdfId startKeyword endKeyword txnSourceId filenameRegex
+        let config = UploadConfiguration {transactionSourceId = txnSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword} {startKeyword = startKeyword, endKeyword = endKeyword, filenameRegex = filenameRegex, transactionSourceId = txnSourceId}
         _ <- Control.Concurrent.Async.async $ do
-          processPdfFile dbPath pdfId theTransactionSource rawText
-          modifyIORef activeJobs (subtract 1) -- Decrement job count
+          processPdfFile dbPath pdfId config
+          modifyIORef activeJobs (subtract 1)
         return ()
 
       redirect "/"

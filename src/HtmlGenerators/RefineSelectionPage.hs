@@ -75,6 +75,13 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
                     ! A.value (toValue sourceId)
                     $ toHtml sourceName
 
+            H.label ! A.for "filenameRegex" $ "Filename Pattern: "
+            H.input
+              ! A.type_ "text"
+              ! A.name "filenameRegex"
+              ! A.id "filenameRegexId"
+              ! A.placeholder "Enter filename regex"
+
             H.input ! A.type_ "hidden" ! A.name "finalStart" ! A.id "finalStartId"
             H.input ! A.type_ "hidden" ! A.name "finalEnd" ! A.id "finalEndId"
             H.br

@@ -17,17 +17,20 @@ module Database
     getTransactionsByFilename,
     insertTransactionSource,
     insertCategory,
+    persistUploadConfiguration,
+    getUploadConfiguration,
   )
 where
 
 import Control.Monad (forM_)
+import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Database.SQLite.Simple
+import Database.SQLite.Simple.FromRow
 import Types
 
--- TODO this needs to be indepodent
 initializeSourcesAndCategories :: FilePath -> IO ()
 initializeSourcesAndCategories dbPath = do
   bankSource <- insertTransactionSource dbPath "Bank"
@@ -94,6 +97,17 @@ initializeDatabase dbPath = do
     \ filename TEXT NOT NULL, \
     \ raw_content TEXT NOT NULL, \
     \ upload_time TEXT NOT NULL)"
+
+  -- Create upload_configuration table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS upload_configuration (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ start_keyword TEXT NOT NULL, \
+    \ end_keyword TEXT NOT NULL, \
+    \ filename_regex TEXT, \
+    \ transaction_source_id INTEGER NOT NULL, \
+    \ FOREIGN KEY (transaction_source_id) REFERENCES transaction_sources (id))"
 
   close conn
   initializeSourcesAndCategories dbPath
@@ -308,3 +322,30 @@ getCategoriesBySource dbPath sourceId = do
   categories <- query conn sql (Only sourceId) :: IO [Category]
   close conn
   return categories
+
+persistUploadConfiguration :: FilePath -> Int -> T.Text -> T.Text -> Int -> T.Text -> IO ()
+persistUploadConfiguration dbPath pdfId startKeyword endKeyword txnSourceId filenameRegex = do
+  conn <- open dbPath
+  execute
+    conn
+    "INSERT INTO upload_configuration (start_keyword, end_keyword, transaction_source_id, filename_regex) \
+    \VALUES (?, ?, ?, ?) ON CONFLICT (transaction_source_id) DO UPDATE SET \
+    \start_keyword = excluded.start_keyword, \
+    \end_keyword = excluded.end_keyword, \
+    \filename_regex = excluded.filename_regex"
+    (startKeyword, endKeyword, txnSourceId, filenameRegex)
+  close conn
+
+getUploadConfiguration :: FilePath -> FilePath -> IO (Maybe UploadConfiguration)
+getUploadConfiguration dbPath filename = do
+  conn <- open dbPath
+  rows <-
+    query
+      conn
+      "SELECT start_keyword, end_keyword, transaction_source_id, filename_regex \
+      \FROM upload_configuration \
+      \WHERE LOWER(?) LIKE '%' || LOWER(filename_regex) || '%'"
+      (Only filename) ::
+      IO [UploadConfiguration]
+  close conn
+  return $ listToMaybe rows

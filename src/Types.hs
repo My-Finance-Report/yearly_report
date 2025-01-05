@@ -11,6 +11,7 @@ module Types
     TransactionsWrapper (..),
     PdfParseException (..),
     CategorizationResponse (..),
+    UploadConfiguration (..),
     groupByBlah,
     groupByBlahForAll,
   )
@@ -122,3 +123,13 @@ instance FromRow Category where
       <$> field
       <*> field
       <*> (TransactionSource <$> field <*> field)
+
+data UploadConfiguration = UploadConfiguration
+  { startKeyword :: Text,
+    endKeyword :: Text,
+    transactionSourceId :: Int,
+    filenameRegex :: Text
+  }
+
+instance FromRow UploadConfiguration where
+  fromRow = UploadConfiguration <$> field <*> field <*> field <*> field
