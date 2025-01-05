@@ -11,6 +11,8 @@ module Types
     TransactionsWrapper (..),
     PdfParseException (..),
     CategorizationResponse (..),
+    groupByBlah,
+    groupByBlahForAll,
   )
 where
 
@@ -75,6 +77,18 @@ data Transaction = Transaction
     kind :: TransactionKind
   }
   deriving (Show, Eq, Ord, Generic)
+
+groupByBlah :: (Ord t) => (CategorizedTransaction -> t) -> [CategorizedTransaction] -> Map.Map t [CategorizedTransaction]
+groupByBlah groupingFunc transactions =
+  Map.fromListWith (++) [(groupingFunc txn, [txn]) | txn <- transactions]
+
+groupByBlahForAll ::
+  (Ord t) =>
+  Map.Map TransactionSource [CategorizedTransaction] ->
+  (CategorizedTransaction -> t) ->
+  Map.Map TransactionSource (Map.Map t [CategorizedTransaction])
+groupByBlahForAll groupedBySource groupingFunc =
+  Map.map (groupingFunc `groupByBlah`) groupedBySource
 
 instance FromJSON Transaction where
   parseJSON = withObject "Transaction" $ \v -> do
