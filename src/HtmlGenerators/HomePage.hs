@@ -120,12 +120,11 @@ generateDetailRows cat txs sectionId =
         H.td (toHtml (prettyFormat (transactionDate t)))
         H.td (toHtml (show (truncateToTwoDecimals (amount t))))
 
--- Generate aggregated rows
-generateAggregatedRows :: (Ord k, Show k) => Map.Map k [CategorizedTransaction] -> Html
-generateAggregatedRows aggregated =
+generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
+generateAggregatedRows header aggregated =
   H.table $ do
     H.tr $ do
-      H.th "Key"
+      H.th header
       H.th "Total Amount"
     Map.foldrWithKey
       ( \key txns accHtml ->
@@ -139,30 +138,37 @@ generateAggregatedRows aggregated =
                     ]
            in do
                 H.tr $ do
-                  H.td (toHtml (show key))
+                  H.td (toHtml key)
                   H.td (toHtml (show totalAmount))
                 accHtml
       )
       (return ())
       aggregated
 
+type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]
+
+subtabMappings :: [(Text, GroupingFunction)]
+subtabMappings =
+  [ ("Category", groupByBlah (categoryName . category)),
+    ("Month", groupByBlah (T.pack . formatTime defaultTimeLocale "%B %Y" . transactionDate . transaction))
+  ]
+
 generateSubTabContent :: Int -> Map.Map TransactionSource [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
-  let blahs = ["Category", "Month"] :: [Text]
-   in H.div ! A.class_ "subtab-content-container" $ do
-        H.ul ! A.class_ "tabs" $ do
-          forM_ (Prelude.zip [0 ..] blahs) $ \(idx, source) -> do
-            H.li
-              ! A.class_ "tab"
-              ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
-              $ toHtml source
-        H.div ! A.class_ "subtab-content" $ do
-          H.h2 "By Category"
-          generateAggregatedRows (groupByBlah (categoryName . category) $ concatMap snd $ Map.toList aggregatedBySource)
+  H.div ! A.class_ "subtab-content-container" $ do
+    H.ul ! A.class_ "tabs" $ do
+      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
+        H.li
+          ! A.class_ (if idx == 0 then "tab active" else "tab")
+          ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
+          $ toHtml name
 
-        H.div ! A.class_ "subtab-content" $ do
-          H.h2 "By Month"
-          generateAggregatedRows (groupByBlah (T.pack . formatTime defaultTimeLocale "%B %Y" . transactionDate . transaction) $ concatMap snd $ Map.toList aggregatedBySource)
+    forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
+      H.div
+        ! A.class_ "subtab-content"
+        ! A.style (if idx == 0 then "display: block;" else "display: none;")
+        $ do
+          generateAggregatedRows (toHtml subname) (groupingFunc $ concatMap snd $ Map.toList aggregatedBySource)
 
 generateTabsWithSubTabs :: [TransactionSource] -> Map.Map TransactionSource [CategorizedTransaction] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource =
@@ -170,7 +176,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
     H.ul ! A.class_ "tabs" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
         H.li
-          ! A.class_ "tab"
+          ! A.class_ (if idx == 0 then "tab active" else "tab")
           ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
           $ toHtml (sourceName source)
 
