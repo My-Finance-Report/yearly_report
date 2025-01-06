@@ -15,6 +15,7 @@ library
     HtmlGenerators.RefineSelectionPage
     HtmlGenerators.Configuration
     Sankey
+    Models
     Parsers
     OpenAiUtils
   build-depends:
@@ -28,6 +29,7 @@ library
       aeson >= 1.5,
       http-client >= 0.7,
       http-types,
+      monad-logger,
       async,
       persistent,
       persistent-postgresql,
@@ -54,6 +56,7 @@ executable year-report-finances
       HtmlGenerators.RefineSelectionPage
       HtmlGenerators.Configuration
       Sankey
+      Models
       Parsers
       OpenAiUtils
   build-depends:
@@ -62,6 +65,7 @@ executable year-report-finances
       containers,
       time,
       process,
+      monad-logger,
       wai-extra,
       wai-middleware-static,
       aeson >= 1.5,

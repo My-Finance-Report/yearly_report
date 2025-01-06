@@ -17,6 +17,7 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
 import Database
+import Database.Persist.Postgresql hiding (get)
 import Database.SQLite.Simple (Only (Only), close, execute, open, query)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.Configuration (renderConfigurationPage)
@@ -27,7 +28,7 @@ import Network.HTTP.Client (Request (redactHeaders))
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import Parsers
+import Parsers ( extractTextFromPdf, processPdfFile )
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
@@ -37,6 +38,16 @@ import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
+import Models
+import Control.Monad.Logger (runStderrLoggingT)
+
+postgresConnString :: ConnectionString
+postgresConnString =
+  "host=localhost port=5433 user=persistent_user password=persistent_pass dbname=persistent_db"
+
+migratePostgres :: IO ()
+migratePostgres = runStderrLoggingT $ withPostgresqlConn postgresConnString $ \backend ->
+  runSqlConn (runMigration migrateAll) backend
 
 addUploadConfig :: FilePath -> Web.Scotty.ActionM ()
 addUploadConfig dbPath = do
@@ -96,6 +107,10 @@ main = do
   let dbPath = "transactions.db"
 
   activeJobs <- newIORef 0
+
+  migratePostgres
+
+  -- todo remove sqlite
   initializeDatabase dbPath
   scotty 3000 $ do
     middleware logStdoutDev
@@ -167,13 +182,13 @@ main = do
               maybeConfig <- liftIO $ getUploadConfiguration dbPath (T.unpack originalName)
 
               case maybeConfig of
-                Just UploadConfiguration {startKeyword, endKeyword, transactionSourceId, filenameRegex} -> do
+                Just Types.UploadConfiguration {startKeyword, endKeyword, transactionSourceId, filenameRegex} -> do
                   newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
 
                   liftIO $ do
                     modifyIORef activeJobs (+ 1)
                     _ <- Control.Concurrent.Async.async $ do
-                      let config = UploadConfiguration {transactionSourceId = transactionSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword}
+                      let config = Types.UploadConfiguration {transactionSourceId = transactionSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword}
                       processPdfFile dbPath newPdfId config
                       modifyIORef activeJobs (subtract 1)
                     return ()
@@ -235,7 +250,7 @@ main = do
 
       let inputs = zip inputTransactionSources inputCategories
           linkages = (linkageSource, linkageCategory, linkageTarget)
-          newConfig = SankeyConfig {configName, inputs, linkages, mapKeyFunction = sourceName}
+          newConfig = Types.SankeyConfig {configName, inputs, linkages, mapKeyFunction = sourceName}
 
       liftIO $ saveSankeyConfig dbPath newConfig
       redirect "/"
