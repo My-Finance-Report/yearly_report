@@ -6,6 +6,7 @@ module HtmlGenerators.HtmlGenerators
     renderUploadPage,
     renderPdfResultPage,
     renderEditSankeyConfigPage,
+    renderUploadConfigurationsPage,
   )
 where
 
@@ -257,3 +258,84 @@ addInputScript =
       "  fieldset.appendChild(newRow);",
       "}"
     ]
+
+renderUploadConfigurationsPage :: [(Int, Text, Text, Text, TransactionSource)] -> [TransactionSource] -> TL.Text
+renderUploadConfigurationsPage configurations transactionSources =
+  renderHtml $ docTypeHtml $ do
+    H.head $ do
+      H.title "Manage Upload Configurations"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/style.css"
+    H.body $ do
+      H.h1 "Upload Configurations"
+      H.table ! A.class_ "upload-configurations" $ do
+        H.tr $ do
+          H.th "Filename Pattern"
+          H.th "Start Keyword"
+          H.th "End Keyword"
+          H.th "Transaction Source"
+          H.th "Actions"
+        forM_ configurations $ \(configId, filenameRegex, startKeyword, endKeyword, TransactionSource {sourceId, sourceName}) -> do
+          H.tr $ do
+            H.form
+              ! A.method "post"
+              ! A.action (toValue $ "/edit-upload-config/" <> show configId)
+              $ do
+                H.td $ H.input ! A.type_ "text" ! A.name "filenameRegex" ! A.value (toValue filenameRegex)
+                H.td $ H.input ! A.type_ "text" ! A.name "startKeyword" ! A.value (toValue startKeyword)
+                H.td $ H.input ! A.type_ "text" ! A.name "endKeyword" ! A.value (toValue endKeyword)
+                H.td
+                  $ H.select
+                    ! A.name "transactionSourceId"
+                  $ do
+                    forM_ transactionSources $ \TransactionSource {sourceId = tsId, sourceName} -> do
+                      H.option
+                        ! A.value (toValue tsId)
+                        !? (tsId == sourceId, A.selected "selected")
+                        $ toHtml sourceName
+                H.td $ do
+                  H.input ! A.type_ "hidden" ! A.name "id" ! A.value (toValue configId)
+                  H.input ! A.type_ "submit" ! A.value "Save"
+                  H.form
+                    ! A.method "post"
+                    ! A.action (toValue $ "/delete-upload-config/" <> show configId)
+                    $ H.input ! A.type_ "submit" ! A.value "Delete"
+
+      H.h2 "Add New Upload Configuration"
+      H.form
+        ! A.method "post"
+        ! A.action "/add-upload-config"
+        $ do
+          H.label ! A.for "filenameRegex" $ "Filename Pattern:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "filenameRegex"
+            ! A.id "filenameRegex"
+            ! A.placeholder "Enter filename pattern"
+          H.br
+
+          H.label ! A.for "startKeyword" $ "Start Keyword:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "startKeyword"
+            ! A.id "startKeyword"
+            ! A.placeholder "Enter start keyword"
+          H.br
+
+          H.label ! A.for "endKeyword" $ "End Keyword:"
+          H.input
+            ! A.type_ "text"
+            ! A.name "endKeyword"
+            ! A.id "endKeyword"
+            ! A.placeholder "Enter end keyword"
+          H.br
+
+          H.label ! A.for "transactionSourceId" $ "Transaction Source:"
+          H.select ! A.name "transactionSourceId" $ do
+            forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
+              H.option ! A.value (toValue sourceId) $ toHtml sourceName
+          H.br
+
+          H.input ! A.type_ "submit" ! A.value "Add Configuration"

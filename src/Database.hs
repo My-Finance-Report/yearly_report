@@ -23,6 +23,7 @@ module Database
     loadSankeyConfig,
     saveSankeyConfig,
     getCategory,
+    getUploadConfigurations,
   )
 where
 
@@ -521,3 +522,19 @@ loadSankeyConfig dbPath configId = do
                 )
 
           return $ Just SankeyConfig {inputs = inputsSources, linkages = linkageSources, mapKeyFunction = Types.sourceName, configName = configName}
+
+getUploadConfigurations :: FilePath -> IO [(Int, Text, Text, Text, TransactionSource)]
+getUploadConfigurations dbPath = do
+  conn <- open dbPath
+  rows <-
+    query_
+      conn
+      "SELECT uc.id, uc.filename_regex, uc.start_keyword, uc.end_keyword, ts.id, ts.name \
+      \FROM upload_configuration uc \
+      \JOIN transaction_sources ts ON uc.transaction_source_id = ts.id" ::
+      IO [(Int, Text, Text, Text, Int, Text)]
+  close conn
+  return
+    [ (id, filenameRegex, startKeyword, endKeyword, TransactionSource sourceId sourceName)
+      | (id, filenameRegex, startKeyword, endKeyword, sourceId, sourceName) <- rows
+    ]

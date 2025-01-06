@@ -67,10 +67,20 @@ generateProcessedFilesComponent processedFiles = do
         H.tr $ do
           H.th "Transaction Source"
           H.th "Filenames"
+          H.th "Actions"
         forM_ (Map.toList processedFiles) $ \(transactionSource, filenames) -> do
-          H.tr $ do
-            H.td (toHtml (sourceName transactionSource))
-            H.td $ H.ul $ forM_ filenames $ \filename -> H.li (toHtml filename)
+          forM_ filenames $ \filename -> do
+            H.tr $ do
+              H.td (toHtml (sourceName transactionSource))
+              H.td (toHtml filename)
+              H.td $ do
+                H.form
+                  ! A.method "post"
+                  ! A.action (toValue $ "/delete-processed-file?filename=" <> T.unpack filename)
+                  $ do
+                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ sourceId transactionSource)
+                    H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
+                    H.input ! A.type_ "submit" ! A.value "Delete"
 
 generateHeader :: Maybe [(T.Text, T.Text, Double)] -> Html
 generateHeader sankeyData =
