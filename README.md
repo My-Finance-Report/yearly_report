@@ -21,10 +21,14 @@ make my yearly financial report using haskell
   -(DONE) put it into the ui for processing
 - (DONE) allow for manually update transactions from a ui
   - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
+- (TODO) deploy in some capacity so i can run that app and let users try it
+  - (TODO) likely need some auth and user notion. 
+  - (TODO) probably should switch to postgres before we deploy
+  
 
 # Tech
 
-- haskell for "backend"
+- haskell for backend and webserver
 - html for report
 - sqlite to persist data
 - LLM for PDF parsing (using structured outputs)
@@ -38,4 +42,3 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 - Batch calls to open ai to make less likely to error out
 - Clean up the visuals and ergnomics
-- Ability to add sources and categories
