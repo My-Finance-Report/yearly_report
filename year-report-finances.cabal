@@ -13,6 +13,7 @@ library
     HtmlGenerators.HomePage
     HtmlGenerators.AllFilesPage
     HtmlGenerators.RefineSelectionPage
+    Sankey
     Parsers
     OpenAiUtils
   build-depends:
@@ -26,6 +27,7 @@ library
       aeson >= 1.5,
       http-client >= 0.7,
       http-types,
+      async,
       http-client-tls >= 0.3,
       sqlite-simple >= 0.4,
       bytestring >= 0.10,
@@ -46,6 +48,7 @@ executable year-report-finances
       HtmlGenerators.HomePage
       HtmlGenerators.AllFilesPage
       HtmlGenerators.RefineSelectionPage
+      Sankey
       Parsers
       OpenAiUtils
   build-depends:
@@ -57,6 +60,7 @@ executable year-report-finances
       wai-extra,
       wai-middleware-static,
       aeson >= 1.5,
+      async,
       http-client >= 0.7,
       http-types,
       http-client-tls >= 0.3,

@@ -1,11 +1,14 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
 import Categorizer
+import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy as B
+import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.Map
 import qualified Data.Map as Map
 import Data.Text (Text)
@@ -28,32 +31,61 @@ import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
-
-guessTransactions :: Text -> [Text]
-guessTransactions txt =
-  -- e.g. split on newlines, then filter or group:
-  let linesAll = T.splitOn "\n" txt
-   in linesAll -- Or do something more advanced
 
 main :: IO ()
 main = do
   let dbPath = "transactions.db"
 
+  activeJobs <- newIORef 0
   initializeDatabase dbPath
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     get "/" $ do
-      content <- liftIO renderHomePage
+      activeJobs <- liftIO $ readIORef activeJobs
+      let banner = if activeJobs > 0 then Just "Job Running" else Nothing
+      liftIO $ print banner
+      content <- liftIO $ renderHomePage banner
       Web.html content
 
-    get "/upload" $ do
-      Web.html renderUploadPage
+    post "/setup-upload" $ do
+      startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
+      endKeyword <- Web.Scotty.formParam "endKeyword" :: ActionM T.Text
+      filenamePattern <- Web.Scotty.formParam "filenamePattern" :: ActionM T.Text
+      sourceId <- Web.Scotty.formParam "transactionSourceId" :: ActionM Int
+
+      let dbPath = "transactions.db"
+      liftIO $ persistUploadConfiguration dbPath startKeyword endKeyword sourceId filenamePattern
+
+      redirect "/"
+
+    post "/upload-template" $ do
+      allFiles <- Web.Scotty.files
+      case Prelude.lookup "pdfFile" allFiles of
+        Nothing -> do
+          Web.text "No file with field name 'pdfFile' was uploaded!"
+        Just fileInfo -> do
+          let uploadedBytes = fileContent fileInfo
+          let originalName = decodeUtf8 $ fileName fileInfo
+
+          let tempFilePath = "/tmp/" <> originalName
+          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+          extractedTextOrError <-
+            liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
+              ActionM (Either SomeException Text)
+          case extractedTextOrError of
+            Left err -> do
+              Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
+            Right rawText -> do
+              let dbPath = "transactions.db"
+              newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
 
     post "/upload" $ do
       allFiles <- Web.Scotty.files
@@ -74,40 +106,36 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              liftIO $ insertPdfRecord "transactions.db" originalName rawText
-              newPdfId <- liftIO $ insertPdfRecord "transactions.db" originalName rawText
-              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
+              let dbPath = "transactions.db"
+
+              -- Try to get upload configuration
+              maybeConfig <- liftIO $ getUploadConfiguration dbPath (T.unpack originalName)
+
+              case maybeConfig of
+                Just UploadConfiguration {startKeyword, endKeyword, transactionSourceId, filenameRegex} -> do
+                  newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+
+                  liftIO $ do
+                    modifyIORef activeJobs (+ 1)
+                    _ <- Control.Concurrent.Async.async $ do
+                      let config = UploadConfiguration {transactionSourceId = transactionSourceId, filenameRegex = filenameRegex, endKeyword = endKeyword, startKeyword = startKeyword}
+                      processPdfFile dbPath newPdfId config
+                      modifyIORef activeJobs (subtract 1)
+                    return ()
+
+                  redirect "/"
+                Nothing -> do
+                  newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
 
     get "/adjust-transactions/:pdfId" $ do
       let dbPath = "transactions.db"
       pdfId <- pathParam "pdfId"
       transactionSources <- liftIO $ getAllTransactionSources dbPath
       (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-      let guessedSegments = guessTransactions rawText
+      let segments = T.splitOn "\n" rawText
 
-      Web.html $ renderSliderPage pdfId fileName guessedSegments transactionSources
-
-    post "/confirm-boundaries/:pdfId" $ do
-      -- Retrieve parameters from the form submission
-      pdfId <- Web.Scotty.pathParam "pdfId"
-      finalStart <- Web.Scotty.formParam "finalStart" :: ActionM T.Text
-      finalEnd <- Web.Scotty.formParam "finalEnd" :: ActionM T.Text
-      txnSourceId <- Web.Scotty.formParam "transactionSourceId"
-
-      let dbPath = "transactions.db"
-
-      -- Fetch the raw text of the PDF
-      (fileName, rawText) <- liftIO $ fetchPdfRecord dbPath pdfId
-
-      theTransactionSource <- liftIO $ getTransactionSource dbPath txnSourceId
-
-      -- Process the selected text
-      -- TODO use the indexes
-
-      liftIO $ processPdfFile dbPath pdfId theTransactionSource rawText
-
-      -- Redirect to the homepage
-      redirect "/"
+      Web.html $ renderSliderPage pdfId fileName segments transactionSources
 
     get "/transactions" $ do
       let dbPath = "transactions.db"
@@ -128,3 +156,41 @@ main = do
       fileArg <- Web.Scotty.formParam "filename" :: ActionM T.Text
       liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
+
+    get "/edit-sankey-config" $ do
+      let dbPath = "transactions.db"
+      config <- liftIO $ loadSankeyConfig dbPath 1
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource dbPath . sourceId) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      Web.Scotty.html $ renderEditSankeyConfigPage config categoriesBySource
+
+    post "/update-sankey-config" $ do
+      configName <- Web.Scotty.formParam "configName"
+
+      allParams <- Web.Scotty.formParams
+
+      let inputSourceIds = [read $ T.unpack value | (key, value) <- allParams, key == "inputSourceId[]"]
+          inputCategoryIds = [read $ T.unpack value | (key, value) <- allParams, key == "inputCategoryId[]"]
+
+      linkageSourceId <- Web.Scotty.formParam "linkageSourceId"
+      linkageCategoryId <- Web.Scotty.formParam "linkageCategoryId"
+      linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
+
+      let dbPath = "transactions.db"
+
+      inputTransactionSources <- liftIO $ mapM (getTransactionSource dbPath) inputSourceIds
+      inputCategories <- liftIO $ mapM (getCategory dbPath) inputCategoryIds
+
+      linkageSource <- liftIO $ getTransactionSource dbPath linkageSourceId
+      linkageCategory <- liftIO $ getCategory dbPath linkageCategoryId
+      linkageTarget <- liftIO $ getTransactionSource dbPath linkageTargetId
+
+      let inputs = zip inputTransactionSources inputCategories
+          linkages = (linkageSource, linkageCategory, linkageTarget)
+          newConfig = SankeyConfig {configName, inputs, linkages, mapKeyFunction = sourceName}
+
+      liftIO $ saveSankeyConfig dbPath newConfig
+      redirect "/"

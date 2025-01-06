@@ -1,64 +1,111 @@
-/* static/style.css */
-
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
-    padding: 0;
+    padding: 20px; /* Add padding to the page */
     background-color: #f4f4f9;
-  }
-  
-  h1 {
+}
+
+.container {
+    max-width: 1200px; /* Limit the width of the content */
+    margin: 0 auto; /* Center the content */
+    padding: 20px; /* Add padding inside the container */
+    background-color: #fff; /* Optional: White background for content */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Light shadow around the container */
+    border-radius: 5px; /* Optional: Rounded corners */
+}
+
+.tabs-container {
+    margin-top: 20px;
+}
+
+.tabs {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+    border-bottom: 2px solid #ddd;
+}
+
+.tabs .tab {
+    margin-right: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    background-color: #f9f9f9;
     color: #333;
-  }
-  .hidden {
+    border-radius: 5px 5px 0 0;
+}
+
+.tabs .tab.active {
+    background-color: #fff;
+    border-color: #4CAF50;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.tab-content-container {
+    border: 1px solid #ddd;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.tab-content {
     display: none;
-  }
-  
-  #slidersContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: #fff;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 1000;
-  }
-  
-  #linesContainer {
-    padding: 140px 20px 20px 20px; /* Top padding accounts for the fixed sliders */
-    background-color: #fff;
-    width: 80%;
-    margin: 0 auto;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    overflow: auto;
-    max-height: calc(100vh - 160px); /* Optional: limit height for scrolling */
-  }
-  
-  span {
-    display: block; /* Ensure each line starts on a new line within <pre> */
-  }
-  
-  #slidersContainer input[type=range] {
-    width: 300px;
-    margin-right: 20px;
-  }
-  
-  @media (max-width: 768px) {
-    #slidersContainer {
-      padding: 10px;
-    }
-    #slidersContainer input[type=range] {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    #linesContainer {
-      width: 95%;
-      padding: 160px 10px 10px 10px;
-    }
-  }
-  
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.upload-section {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.upload-section h2 {
+    margin-top: 0;
+}
+
+.upload-section input[type="file"] {
+    margin-bottom: 10px;
+}
+
+.upload-section input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.upload-section input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+h1 {
+    color: #333;
+}
+
+.hidden {
+    display: none;
+}
+
+.banner {
+    background-color: yellow;
+    color: black;
+    text-align: center;
+    padding: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
 /* Style for the entire table */
 table {
   width: 100%; /* Full width */
@@ -115,4 +162,18 @@ tr:hover {
   th, td {
     padding: 5px; /* Reduce padding */
   }
+}
+
+.setup-upload-button {
+  background-color: #4CAF50; /* Green background */
+  color: white; /* White text */
+  padding: 10px 20px; /* Button padding */
+  font-size: 16px; /* Font size */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.setup-upload-button:hover {
+  background-color: #45a049; /* Darker green on hover */
 }

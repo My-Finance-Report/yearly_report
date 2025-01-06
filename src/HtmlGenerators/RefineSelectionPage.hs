@@ -20,7 +20,7 @@ renderSliderPage ::
 renderSliderPage pdfId filename linesGuessed transactionSources =
   renderHtml $ docTypeHtml $ do
     H.head $ do
-      H.title "Select Start/End with Sliders"
+      H.title "Select Start/End Keywords"
 
       H.link
         ! A.rel "stylesheet"
@@ -29,41 +29,17 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
 
       H.script
         ! A.type_ "text/javascript"
-        ! A.src "/slider.js"
+        ! A.src "/updateKeywords.js"
         $ mempty
 
     H.body $ do
-      H.div ! A.id "slidersContainer" $ do
+      H.div ! A.id "selectionContainer" $ do
         H.h1 "Select Transaction Boundaries"
         H.p $ toHtml ("File: " <> filename)
 
-        H.label ! A.for "startLine" $ "Start line: "
-        H.input
-          ! A.type_ "range"
-          ! A.id "startLine"
-          ! A.name "startLine"
-          ! A.min "0"
-          ! A.max (toValue (Prelude.length linesGuessed - 1))
-          ! A.value "0"
-          ! A.oninput "updateRange()"
-
-        H.br
-
-        H.label ! A.for "endLine" $ "End line: "
-        H.input
-          ! A.type_ "range"
-          ! A.id "endLine"
-          ! A.name "endLine"
-          ! A.min "0"
-          ! A.max (toValue (Prelude.length linesGuessed - 1))
-          ! A.value (toValue (Prelude.length linesGuessed - 1))
-          ! A.oninput "updateRange()"
-
-        H.br
-
         H.form
           ! A.method "post"
-          ! A.action (toValue ("/confirm-boundaries/" <> show pdfId))
+          ! A.action "/setup-upload/"
           $ do
             H.label ! A.for "transactionSource" $ "Transaction Source: "
             H.select
@@ -75,13 +51,43 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
                     ! A.value (toValue sourceId)
                     $ toHtml sourceName
 
-            H.input ! A.type_ "hidden" ! A.name "finalStart" ! A.id "finalStartId"
-            H.input ! A.type_ "hidden" ! A.name "finalEnd" ! A.id "finalEndId"
+            H.br
+
+            H.label ! A.for "startKeyword" $ "Start Keyword: "
+            H.input
+              ! A.type_ "text"
+              ! A.name "startKeyword"
+              ! A.id "startKeyword"
+              ! A.placeholder "Enter start keyword"
+              ! A.oninput "updatePreview()"
+
+            H.br
+
+            H.label ! A.for "endKeyword" $ "End Keyword: "
+            H.input
+              ! A.type_ "text"
+              ! A.name "endKeyword"
+              ! A.id "endKeyword"
+              ! A.placeholder "Enter end keyword"
+              ! A.oninput "updatePreview()"
+
+            H.br
+
+            H.label ! A.for "filenameRegex" $ "Filename Pattern: "
+            H.input
+              ! A.type_ "text"
+              ! A.name "filenamePattern"
+              ! A.id "filenamePattern"
+              ! A.placeholder "Enter filename pattern"
+
             H.br
             H.input ! A.type_ "submit" ! A.value "Submit"
 
-      H.br
-      H.br
+        H.br
+        H.br
+
+        H.h2 "Selected Text Preview"
+        H.div ! A.id "previewContainer" $ ""
 
       H.pre
         ! A.id "linesContainer"

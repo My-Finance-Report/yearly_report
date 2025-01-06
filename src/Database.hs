@@ -17,17 +17,27 @@ module Database
     getTransactionsByFilename,
     insertTransactionSource,
     insertCategory,
+    persistUploadConfiguration,
+    getUploadConfiguration,
+    getTransactionSourceFiles,
+    loadSankeyConfig,
+    saveSankeyConfig,
+    getCategory,
   )
 where
 
+import Control.Exception (SomeException (SomeException))
+import Control.Exception.Base (try)
 import Control.Monad (forM_)
+import qualified Data.Map as Map
+import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Database.SQLite.Simple
+import Database.SQLite.Simple.FromRow
 import Types
 
--- TODO this needs to be indepodent
 initializeSourcesAndCategories :: FilePath -> IO ()
 initializeSourcesAndCategories dbPath = do
   bankSource <- insertTransactionSource dbPath "Bank"
@@ -94,6 +104,51 @@ initializeDatabase dbPath = do
     \ filename TEXT NOT NULL, \
     \ raw_content TEXT NOT NULL, \
     \ upload_time TEXT NOT NULL)"
+
+  -- Create upload_configuration table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS upload_configuration (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ filename_regex TEXT, \
+    \ start_keyword TEXT, \
+    \ end_keyword TEXT, \
+    \ transaction_source_id INTEGER NOT NULL, \
+    \ FOREIGN KEY (transaction_source_id) REFERENCES transaction_sources (id), \
+    \ UNIQUE (transaction_source_id))"
+
+  -- Create sankey_config table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS sankey_config (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ name TEXT NOT NULL UNIQUE)"
+
+  -- Create sankey_inputs table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS sankey_inputs (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ config_id INTEGER NOT NULL, \
+    \ source_id INTEGER NOT NULL, \
+    \ category_id INTEGER NOT NULL, \
+    \ FOREIGN KEY (config_id) REFERENCES sankey_config (id), \
+    \ FOREIGN KEY (category_id) REFERENCES categories (id), \
+    \ FOREIGN KEY (source_id) REFERENCES transaction_sources (id))"
+
+  -- Create sankey_linkages table
+  execute_
+    conn
+    "CREATE TABLE IF NOT EXISTS sankey_linkages (\
+    \ id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ config_id INTEGER NOT NULL, \
+    \ source_id INTEGER NOT NULL, \
+    \ category_id INTEGER NOT NULL, \
+    \ target_source_id INTEGER NOT NULL, \
+    \ FOREIGN KEY (config_id) REFERENCES sankey_config (id), \
+    \ FOREIGN KEY (source_id) REFERENCES transaction_sources (id), \
+    \ FOREIGN KEY (category_id) REFERENCES categories (id), \
+    \ FOREIGN KEY (target_source_id) REFERENCES transaction_sources (id))"
 
   close conn
   initializeSourcesAndCategories dbPath
@@ -308,3 +363,161 @@ getCategoriesBySource dbPath sourceId = do
   categories <- query conn sql (Only sourceId) :: IO [Category]
   close conn
   return categories
+
+getCategory :: FilePath -> Int -> IO Category
+getCategory dbPath catId = do
+  conn <- open dbPath
+  let sql =
+        "SELECT c.id, c.name, s.id, s.name \
+        \FROM categories c \
+        \JOIN transaction_sources s ON c.source_id = s.id \
+        \WHERE c.id = ?"
+  rows <- query conn sql (Only catId) :: IO [Category]
+  close conn
+  case rows of
+    [] -> fail $ "No category found with id=" ++ show catId
+    (x : _) -> return x
+
+persistUploadConfiguration :: FilePath -> T.Text -> T.Text -> Int -> T.Text -> IO ()
+persistUploadConfiguration dbPath startKeyword endKeyword txnSourceId filenameRegex = do
+  conn <- open dbPath
+
+  execute
+    conn
+    "INSERT OR IGNORE INTO upload_configuration (start_keyword, end_keyword, transaction_source_id, filename_regex) \
+    \VALUES (?, ?, ?, ?);"
+    (startKeyword, endKeyword, txnSourceId, filenameRegex)
+
+  close conn
+  putStrLn "Connection closed."
+
+getUploadConfiguration :: FilePath -> FilePath -> IO (Maybe UploadConfiguration)
+getUploadConfiguration dbPath filename = do
+  conn <- open dbPath
+  rows <-
+    query
+      conn
+      "SELECT start_keyword, end_keyword, transaction_source_id, filename_regex \
+      \FROM upload_configuration \
+      \WHERE LOWER(?) LIKE '%' || LOWER(filename_regex) || '%'"
+      (Only filename) ::
+      IO [UploadConfiguration]
+  close conn
+  return $ listToMaybe rows
+
+getTransactionSourceFiles ::
+  FilePath ->
+  IO (Map.Map TransactionSource [Text])
+getTransactionSourceFiles dbPath = do
+  conn <- open dbPath
+  rows <-
+    query_
+      conn
+      "SELECT DISTINCT ts.id, ts.name, t.filename \
+      \FROM transaction_sources ts \
+      \JOIN transactions t ON ts.id = t.transaction_source_id \
+      \WHERE t.filename IS NOT NULL" ::
+      IO [(Int, Text, Text)]
+  close conn
+  let grouped =
+        Map.fromListWith (++) $
+          [ (TransactionSource sourceId sourceName, [filename])
+            | (sourceId, sourceName, filename) <- rows
+          ]
+  return grouped
+
+saveSankeyConfig :: FilePath -> SankeyConfig -> IO Int
+saveSankeyConfig dbPath config = do
+  conn <- open dbPath
+
+  -- Upsert into sankey_config
+  execute
+    conn
+    "INSERT INTO sankey_config (name) VALUES (?) \
+    \ON CONFLICT(name) DO UPDATE SET name = excluded.name"
+    (Only $ configName config)
+
+  [Only configId] <-
+    query
+      conn
+      "SELECT id FROM sankey_config WHERE name = ?"
+      (Only $ configName config) ::
+      IO [Only Int]
+
+  execute conn "DELETE FROM sankey_inputs WHERE config_id = ?" (Only configId)
+  execute conn "DELETE FROM sankey_linkages WHERE config_id = ?" (Only configId)
+
+  forM_ (inputs config) $ \(TransactionSource sourceId _, Category categoryId _ _) ->
+    execute
+      conn
+      "INSERT INTO sankey_inputs (config_id, source_id, category_id) VALUES (?, ?, ?)"
+      (configId, sourceId, categoryId)
+
+  let (TransactionSource sourceId _, Category categoryId _ _, TransactionSource targetSourceId _) = linkages config
+  execute
+    conn
+    "INSERT INTO sankey_linkages (config_id, source_id, category_id, target_source_id) VALUES (?, ?, ?, ?)"
+    (configId, sourceId, categoryId, targetSourceId)
+
+  close conn
+  return configId
+
+loadSankeyConfig :: FilePath -> Int -> IO (Maybe SankeyConfig)
+loadSankeyConfig dbPath configId = do
+  conn <- open dbPath
+
+  -- Load the configuration name
+  configNameRows <-
+    query
+      conn
+      "SELECT name FROM sankey_config WHERE id = ?"
+      (Only configId) ::
+      IO [Only Text]
+
+  case configNameRows of
+    [] -> do
+      close conn
+      return Nothing -- No configuration found
+    [Only configName] -> do
+      -- Load inputs
+      inputs <-
+        query
+          conn
+          "SELECT ts.id, ts.name, c.id, c.name FROM sankey_inputs si \
+          \JOIN transaction_sources ts ON si.source_id = ts.id \
+          \JOIN categories c ON si.category_id = c.id \
+          \WHERE si.config_id = ?"
+          (Only configId) ::
+          IO [(Int, Text, Int, Text)]
+
+      -- Load linkages
+      linkagesRows <-
+        query
+          conn
+          "SELECT ts.id, ts.name, c.id, c.name, tts.id, tts.name \
+          \FROM sankey_linkages sl \
+          \JOIN transaction_sources ts ON sl.source_id = ts.id \
+          \JOIN categories c ON sl.category_id = c.id \
+          \JOIN transaction_sources tts ON sl.target_source_id = tts.id \
+          \WHERE sl.config_id = ?"
+          (Only configId) ::
+          IO [(Int, Text, Int, Text, Int, Text)]
+
+      close conn
+
+      case linkagesRows of
+        [] -> return Nothing -- No linkages found
+        [(sourceId, sourceName, categoryId, categoryName, targetSourceId, targetSourceName)] -> do
+          let inputsSources =
+                [ ( TransactionSource sourceId sourceName,
+                    Category categoryId categoryName (TransactionSource sourceId sourceName)
+                  )
+                  | (sourceId, sourceName, categoryId, categoryName) <- inputs
+                ]
+          let linkageSources =
+                ( TransactionSource sourceId sourceName,
+                  Category categoryId categoryName (TransactionSource sourceId sourceName),
+                  TransactionSource targetSourceId targetSourceName
+                )
+
+          return $ Just SankeyConfig {inputs = inputsSources, linkages = linkageSources, mapKeyFunction = Types.sourceName, configName = configName}

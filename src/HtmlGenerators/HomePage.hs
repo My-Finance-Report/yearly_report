@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.HomePage
@@ -12,14 +11,14 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.List (sortBy)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
-import Data.Ord (comparing)
+import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database
-import GHC.RTS.Flags (TraceFlags)
 import HtmlGenerators.HtmlGenerators
 import Parsers
+import Sankey
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
@@ -38,32 +37,102 @@ formatSankeyRow :: (Text, Text, Double) -> Text
 formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
-generateRow :: CategorizedTransaction -> Html
-generateRow categorizedTransaction =
-  let txnCategory = category categorizedTransaction
-      innerTransaction = transaction categorizedTransaction
-      dateStr = formatTime defaultTimeLocale "%B %Y" (transactionDate innerTransaction)
-      desc = description innerTransaction
-      txnKind = T.pack (show (kind innerTransaction))
-      amt = truncateToTwoDecimals (amount innerTransaction)
-   in H.tr $ do
-        H.td (toHtml (categoryName txnCategory))
-        H.td (toHtml txnKind)
-        H.td (toHtml dateStr)
-        H.td (toHtml desc)
-        H.td (toHtml (show amt))
+generateHomapageHtml ::
+  Maybe [(T.Text, T.Text, Double)] ->
+  Maybe Text ->
+  Html ->
+  Map.Map TransactionSource [Text] ->
+  TL.Text
+generateHomapageHtml sankeyData banner tabs files =
+  renderHtml $ do
+    generateHeader sankeyData
+    case banner of
+      Just bannerText ->
+        H.div ! A.class_ "banner" $ toHtml bannerText
+      Nothing -> return ()
 
-generateTransactionTable :: [CategorizedTransaction] -> Html
-generateTransactionTable categorizedTransactions =
-  let sortedTransactions = sortBy (comparing category) categorizedTransactions
-   in H.table $ do
+    H.body $ do
+      generateProcessedFilesComponent files
+      generateUpload
+      generateSankeyDiv
+      tabs
+
+generateProcessedFilesComponent :: Map.Map TransactionSource [Text] -> Html
+generateProcessedFilesComponent processedFiles = do
+  H.div ! A.class_ "processed-files-section" $ do
+    H.h2 "Processed Files"
+    if Map.null processedFiles
+      then H.p "No files have been processed yet."
+      else H.table $ do
         H.tr $ do
-          H.th "Category"
-          H.th "Kind"
-          H.th "Date"
-          H.th "Transactions"
-          H.th "Amount"
-        mapM_ generateRow sortedTransactions
+          H.th "Transaction Source"
+          H.th "Filenames"
+        forM_ (Map.toList processedFiles) $ \(transactionSource, filenames) -> do
+          H.tr $ do
+            H.td (toHtml (sourceName transactionSource))
+            H.td $ H.ul $ forM_ filenames $ \filename -> H.li (toHtml filename)
+
+generateHeader :: Maybe [(T.Text, T.Text, Double)] -> Html
+generateHeader sankeyData =
+  H.docTypeHtml $ do
+    H.head $ do
+      H.title "Expense Summary"
+
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/style.css"
+
+      H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
+      generateSankeyScript sankeyData
+
+generateSankeyScript :: Maybe [(T.Text, T.Text, Double)] -> Html
+generateSankeyScript sankeyData =
+  case sankeyData of
+    Just rows -> do
+      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
+      H.script
+        ! A.type_ "text/javascript"
+        $ H.toHtml
+        $ T.concat
+          [ "google.charts.load('current', {packages:['sankey']});\n",
+            "google.charts.setOnLoadCallback(drawChart);\n",
+            "function drawChart() {\n",
+            "  const data = new google.visualization.DataTable();\n",
+            "  data.addColumn('string', 'From');\n",
+            "  data.addColumn('string', 'To');\n",
+            "  data.addColumn('number', 'Weight');\n",
+            "  data.addRows([\n",
+            T.concat (Prelude.map formatSankeyRow rows),
+            "  ]);\n",
+            "  const options = { width: 800, height: 600 };\n",
+            "  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));\n",
+            "  chart.draw(data, options);\n",
+            "}\n"
+          ]
+    Nothing -> ""
+
+generateSankeyDiv :: Html
+generateSankeyDiv =
+  H.div ! A.id "sankey_chart" $ mempty
+
+generateUpload :: Html
+generateUpload =
+  H.div ! A.class_ "upload-section" $ do
+    H.form
+      ! A.method "post"
+      ! A.action "/upload"
+      ! A.enctype "multipart/form-data"
+      $ do
+        H.label "Select File"
+        H.br
+        H.input ! A.type_ "file" ! A.name "pdfFile"
+        H.br
+        H.button
+          ! A.type_ "submit"
+          ! A.value "Upload"
+          ! A.class_ "setup-upload-button"
+          $ "Create Upload"
 
 generateAggregateRow :: T.Text -> Double -> T.Text -> Html
 generateAggregateRow cat totalAmt sectionId =
@@ -90,184 +159,104 @@ generateDetailRows cat txs sectionId =
         H.td (toHtml (prettyFormat (transactionDate t)))
         H.td (toHtml (show (truncateToTwoDecimals (amount t))))
 
-generateAggregateRows :: AggregatedTransactions -> Html
-generateAggregateRows aggregatedTransactions =
+generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
+generateAggregatedRows header aggregated =
   H.table $ do
     H.tr $ do
-      H.th "Category"
+      H.th header
       H.th "Total Amount"
-    -- fold over the Map
     Map.foldrWithKey
-      ( \cat txs accHtml ->
+      ( \key txns accHtml ->
           let totalAmount =
                 truncateToTwoDecimals $
                   sum
-                    ( Prelude.map
-                        ( \txn ->
-                            case kind (transaction txn) of
-                              Deposit -> amount (transaction txn)
-                              Withdrawal -> -amount (transaction txn)
-                        )
-                        txs
-                    )
-              sectionId = T.replace " " "-" cat
+                    [ case kind (transaction txn) of
+                        Deposit -> amount (transaction txn)
+                        Withdrawal -> -amount (transaction txn)
+                      | txn <- txns
+                    ]
            in do
-                generateAggregateRow cat totalAmount sectionId
-                generateDetailRows cat txs sectionId
+                H.tr $ do
+                  H.td (toHtml key)
+                  H.td (toHtml (show totalAmount))
                 accHtml
       )
-      (return ()) -- starting "Html" is 'return ()'
-      aggregatedTransactions
+      (return ())
+      aggregated
 
-data SankeyConfig = SankeyConfig
-  { inputs :: [(TransactionSource, Text)], -- [(Source, Category)]
-    linkages :: (TransactionSource, Text, TransactionSource), -- (Source, Category) -> Target Source
-    mapKeyFunction :: TransactionSource -> Text -- Mapping for display names
-  }
+type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]
 
-buildSankeyLinks ::
-  (TransactionSource, Text, TransactionSource) ->
-  Map.Map TransactionSource AggregatedTransactions ->
-  [(Text, Text, Double)]
-buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
-  case Map.lookup targetSource aggregatedTransactions of
-    Just targetTransactions ->
-      -- Sum the amounts for each key in the map
-      let categoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) targetTransactions
-          -- Generate Sankey data: [sourceCategory, key, value]
-          sankeyLinks =
-            Prelude.map
-              (\(category, total) -> (sourceCategory, category, total))
-              (Map.toList categoryTotals)
-       in sankeyLinks
-    Nothing -> []
+subtabMappings :: [(Text, GroupingFunction)]
+subtabMappings =
+  [ ("Category", groupByBlah (categoryName . category)),
+    ("Month", groupByBlah (T.pack . formatTime defaultTimeLocale "%B %Y" . transactionDate . transaction))
+  ]
 
--- we can make this easier by summing ahead of time
-generateSankeyData ::
-  Map.Map TransactionSource AggregatedTransactions ->
-  SankeyConfig ->
-  [(Text, Text, Double)]
-generateSankeyData aggregatedTransactions config =
-  let SankeyConfig {inputs, linkages, mapKeyFunction} = config
+generateSubTabContent :: Int -> Map.Map TransactionSource [CategorizedTransaction] -> Html
+generateSubTabContent index aggregatedBySource =
+  H.div ! A.class_ "subtab-content-container" $ do
+    H.ul ! A.class_ "tabs" $ do
+      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
+        H.li
+          ! A.class_ (if idx == 0 then "tab active" else "tab")
+          ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
+          $ toHtml name
 
-      -- Generate flows from inputs
-      inputFlows = concatMap processInput inputs
-        where
-          processInput (source, category) =
-            case Map.lookup source aggregatedTransactions >>= Map.lookup category of
-              Just transactions ->
-                let subCategoryFlows =
-                      Map.toList (Map.filterWithKey (\k _ -> k /= category) (fromMaybe Map.empty (Map.lookup source aggregatedTransactions)))
-                 in Prelude.map (\(cat, txns) -> (category, cat, sum $ Prelude.map (sankeyAmount . transaction) txns)) subCategoryFlows
-              Nothing -> []
-   in inputFlows ++ (buildSankeyLinks linkages aggregatedTransactions)
+    forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
+      H.div
+        ! A.class_ "subtab-content"
+        ! A.style (if idx == 0 then "display: block;" else "display: none;")
+        $ do
+          generateAggregatedRows (toHtml subname) (groupingFunc $ concatMap snd $ Map.toList aggregatedBySource)
 
-sankeyAmount :: Transaction -> Double
-sankeyAmount txn = abs $ signedAmount txn
+generateTabsWithSubTabs :: [TransactionSource] -> Map.Map TransactionSource [CategorizedTransaction] -> Html
+generateTabsWithSubTabs transactionSources aggregatedBySource =
+  H.div ! A.class_ "tabs-container" $ do
+    H.ul ! A.class_ "tabs" $ do
+      forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
+        H.li
+          ! A.class_ (if idx == 0 then "tab active" else "tab")
+          ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
+          $ toHtml (sourceName source)
 
-signedAmount :: Transaction -> Double
-signedAmount txn = case kind txn of
-  Deposit -> amount txn
-  Withdrawal -> negate (amount txn)
+    H.div ! A.class_ "tab-content-container" $ do
+      forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
+        H.div
+          ! A.class_ "tab-content"
+          ! A.id (toValue $ "tab-content-" <> show idx)
+          ! A.style (if idx == 0 then "display: block;" else "display: none;")
+          $ do
+            generateSubTabContent idx $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
 
-aggregateByMonth :: [CategorizedTransaction] -> AggregatedTransactions
-aggregateByMonth transactions =
-  let toYearMonthText txn =
-        T.pack $ formatTime defaultTimeLocale "%B %Y" (transactionDate $ transaction txn)
-   in Map.fromListWith (++) [(toYearMonthText txn, [txn]) | txn <- transactions]
-
-aggregateByCategory :: [CategorizedTransaction] -> Map.Map TransactionSource AggregatedTransactions
-aggregateByCategory = Prelude.foldr insertTransaction Map.empty
-  where
-    insertTransaction :: CategorizedTransaction -> Map.Map TransactionSource AggregatedTransactions -> Map.Map TransactionSource AggregatedTransactions
-    insertTransaction categorizedTransaction acc =
-      let source = transactionSource (category categorizedTransaction)
-          cat = category categorizedTransaction
-          -- Find the existing AggregatedTransactions for the source, or initialize an empty Map
-          updatedAggregated = Map.insertWith (++) (categoryName cat) [categorizedTransaction] (Map.findWithDefault Map.empty source acc)
-       in Map.insert source updatedAggregated acc
-
-generateHtmlBlaze ::
-  [(T.Text, T.Text, Double)] ->
-  TL.Text
-generateHtmlBlaze sankeyData =
-  renderHtml $ do
-    H.docTypeHtml $ do
-      H.head $ do
-        H.title "Expense Summary"
-
-        H.link
-          ! A.rel "stylesheet"
-          ! A.type_ "text/css"
-          ! A.href "/style.css"
-
-        H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
-        -- Inline script for Sankey
-        H.script ! A.type_ "text/javascript" $
-          H.toHtml $
-            T.concat
-              [ "google.charts.load('current', {packages:['sankey']});\n",
-                "google.charts.setOnLoadCallback(drawChart);\n",
-                "function drawChart() {\n",
-                "  const data = new google.visualization.DataTable();\n",
-                "  data.addColumn('string', 'From');\n",
-                "  data.addColumn('string', 'To');\n",
-                "  data.addColumn('number', 'Weight');\n",
-                "  data.addRows([\n",
-                T.concat (Prelude.map formatSankeyRow sankeyData),
-                "  ]);\n",
-                "  const options = { width: 800, height: 600 };\n",
-                "  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));\n",
-                "  chart.draw(data, options);\n",
-                "}\n"
-              ]
-        -- Inline script for toggling details
-        H.script $
-          H.toHtml $
-            T.concat
-              [ "function toggleDetails(id) {\n",
-                "  var element = document.getElementById(id);\n",
-                "  if (element.classList.contains('hidden')) {\n",
-                "    element.classList.remove('hidden');\n",
-                "  } else {\n",
-                "    element.classList.add('hidden');\n",
-                "  }\n",
-                "}\n"
-              ]
-      H.body $ do
-        H.h1 "Bank Summary"
-
-        H.h1 "Flow Diagram"
-        H.div ! A.id "sankey_chart" $ mempty
-
-renderHomePage :: IO TL.LazyText
-renderHomePage = do
+renderHomePage :: Maybe Text -> IO TL.LazyText
+renderHomePage banner = do
   let dbPath = "transactions.db"
 
-  -- Fetch all transaction sources
   transactionSources <- getAllTransactionSources dbPath
-
   categorizedTransactions <- getAllTransactions dbPath
 
-  -- Aggregate transactions
-  let aggregatedTransactions = aggregateByCategory categorizedTransactions
+  let groupedBySource = groupByBlah (transactionSource . category) categorizedTransactions
 
   bankSource <- getTransactionSourceText dbPath "Bank"
   creditCardSource <- getTransactionSourceText dbPath "CreditCard"
 
-  let sankeyConfig =
-        SankeyConfig
-          { inputs = [(bankSource, "Income")],
-            linkages =
-              (bankSource, "Credit Card Payments", creditCardSource),
-            mapKeyFunction = sourceName
-          }
+  {-   let sankeyConfig =
+          SankeyConfig
+            { inputs = [(bankSource, "Income")],
+              linkages =
+                (bankSource, "Credit Card Payments", creditCardSource),
+              mapKeyFunction = sourceName
+            } -}
 
-  -- Generate Sankey data using the modular function
-  let sankeyData = generateSankeyData aggregatedTransactions sankeyConfig
+  -- todo add selector for all of them
+  sankeyConfig <- loadSankeyConfig dbPath 1
+  let sankeyData = case sankeyConfig of
+        Just config -> Just (generateSankeyData groupedBySource config)
+        Nothing -> Nothing
 
-  print sankeyData
+  let tabs = generateTabsWithSubTabs transactionSources groupedBySource
 
-  -- Generate and return HTML
-  let strictText = generateHtmlBlaze sankeyData
+  files <- getTransactionSourceFiles dbPath
+
+  let strictText = generateHomapageHtml sankeyData banner tabs files
   return strictText

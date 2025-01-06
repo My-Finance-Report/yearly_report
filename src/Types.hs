@@ -9,8 +9,12 @@ module Types
     TransactionKind (..),
     TransactionSource (..),
     TransactionsWrapper (..),
+    SankeyConfig (..),
     PdfParseException (..),
     CategorizationResponse (..),
+    UploadConfiguration (..),
+    groupByBlah,
+    groupByBlahForAll,
   )
 where
 
@@ -76,6 +80,18 @@ data Transaction = Transaction
   }
   deriving (Show, Eq, Ord, Generic)
 
+groupByBlah :: (Ord t) => (CategorizedTransaction -> t) -> [CategorizedTransaction] -> Map.Map t [CategorizedTransaction]
+groupByBlah groupingFunc transactions =
+  Map.fromListWith (++) [(groupingFunc txn, [txn]) | txn <- transactions]
+
+groupByBlahForAll ::
+  (Ord t) =>
+  Map.Map TransactionSource [CategorizedTransaction] ->
+  (CategorizedTransaction -> t) ->
+  Map.Map TransactionSource (Map.Map t [CategorizedTransaction])
+groupByBlahForAll groupedBySource groupingFunc =
+  Map.map (groupingFunc `groupByBlah`) groupedBySource
+
 instance FromJSON Transaction where
   parseJSON = withObject "Transaction" $ \v -> do
     dateText <- v .: "transactionDate"
@@ -108,3 +124,20 @@ instance FromRow Category where
       <$> field
       <*> field
       <*> (TransactionSource <$> field <*> field)
+
+data UploadConfiguration = UploadConfiguration
+  { startKeyword :: Text,
+    endKeyword :: Text,
+    transactionSourceId :: Int,
+    filenameRegex :: Text
+  }
+
+instance FromRow UploadConfiguration where
+  fromRow = UploadConfiguration <$> field <*> field <*> field <*> field
+
+data SankeyConfig = SankeyConfig
+  { inputs :: [(TransactionSource, Category)],
+    linkages :: (TransactionSource, Category, TransactionSource),
+    mapKeyFunction :: TransactionSource -> Text,
+    configName :: Text
+  }
