@@ -317,10 +317,6 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
                     ! A.name "sourceName"
                     ! A.value (toValue sourceName)
                   H.input ! A.type_ "submit" ! A.value "Rename"
-              H.form
-                ! A.method "post"
-                ! A.action (toValue $ "/delete-transaction-source/" <> show sourceId)
-                $ H.input ! A.type_ "submit" ! A.value "Delete"
 
       -- Categories Section
       H.div ! A.class_ "config-section" $ do
@@ -339,10 +335,6 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
                       ! A.name "categoryName"
                       ! A.value (toValue categoryName)
                     H.input ! A.type_ "submit" ! A.value "Rename"
-                H.form
-                  ! A.method "post"
-                  ! A.action (toValue $ "/delete-category/" <> show categoryId)
-                  $ H.input ! A.type_ "submit" ! A.value "Delete"
           H.form
             ! A.method "post"
             ! A.action (toValue $ "/add-category/" <> show sourceId)
@@ -353,4 +345,3 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
                 ! A.name "newCategory"
                 ! A.id "newCategory"
               H.input ! A.type_ "submit" ! A.value "Add Category"
-

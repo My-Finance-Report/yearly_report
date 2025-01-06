@@ -33,3 +33,17 @@ function showSubTab(tabIndex, subTabIndex) {
     subTabContents[i].style.display = (i === subTabIndex) ? 'block' : 'none';
   }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const fileInput = document.getElementById("pdfFile");
+  const fileLabel = document.querySelector(".custom-file-label");
+
+  if (fileInput && fileLabel) {
+    fileInput.addEventListener("change", function () {
+      const fileName = this.files[0]?.name || "Choose File";
+      fileLabel.textContent = fileName;
+    });
+  } else {
+    console.error("File input or label element not found");
+  }
+});

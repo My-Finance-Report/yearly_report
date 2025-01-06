@@ -129,20 +129,24 @@ generateSankeyDiv =
 generateUpload :: Html
 generateUpload =
   H.div ! A.class_ "upload-section" $ do
+    H.h2 "Upload a PDF File"
     H.form
       ! A.method "post"
       ! A.action "/upload"
       ! A.enctype "multipart/form-data"
       $ do
-        H.label "Select File"
-        H.br
-        H.input ! A.type_ "file" ! A.name "pdfFile"
-        H.br
-        H.button
-          ! A.type_ "submit"
-          ! A.value "Upload"
-          ! A.class_ "setup-upload-button"
-          $ "Create Upload"
+        H.div ! A.class_ "form-group file-upload-wrapper" $ do
+          H.label ! A.for "pdfFile" ! A.class_ "custom-file-label" $ "Choose File"
+          H.input
+            ! A.type_ "file"
+            ! A.name "pdfFile"
+            ! A.id "pdfFile"
+            ! A.class_ "custom-file-input"
+        H.div ! A.class_ "form-group" $ do
+          H.button
+            ! A.type_ "submit"
+            ! A.class_ "btn upload-btn"
+            $ "Upload"
 
 generateAggregateRow :: T.Text -> Double -> T.Text -> Html
 generateAggregateRow cat totalAmt sectionId =
@@ -249,14 +253,6 @@ renderHomePage banner = do
 
   bankSource <- getTransactionSourceText dbPath "Bank"
   creditCardSource <- getTransactionSourceText dbPath "CreditCard"
-
-  {-   let sankeyConfig =
-          SankeyConfig
-            { inputs = [(bankSource, "Income")],
-              linkages =
-                (bankSource, "Credit Card Payments", creditCardSource),
-              mapKeyFunction = sourceName
-            } -}
 
   -- todo add selector for all of them
   sankeyConfig <- loadSankeyConfig dbPath 1

@@ -164,16 +164,77 @@ tr:hover {
   }
 }
 
-.setup-upload-button {
-  background-color: #4CAF50; /* Green background */
-  color: white; /* White text */
-  padding: 10px 20px; /* Button padding */
-  font-size: 16px; /* Font size */
-  border: none; /* No border */
-  border-radius: 5px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor on hover */
+
+/* General styling for the upload section */
+.upload-section {
+    margin-top: 20px;
+    padding: 20px;
+    max-width: 500px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.setup-upload-button:hover {
-  background-color: #45a049; /* Darker green on hover */
+/* Header styling */
+.upload-section h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+/* File upload wrapper */
+.file-upload-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Custom file input styling */
+.custom-file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Hide the actual input */
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* Custom label styling */
+.custom-file-label {
+    display: block;
+    padding: 10px 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.custom-file-label:hover {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Upload button styling */
+.upload-section .btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.upload-section .btn.upload-btn:hover {
+    background-color: #45a049;
 }
