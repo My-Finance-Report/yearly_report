@@ -31,7 +31,7 @@ import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
@@ -156,3 +156,41 @@ main = do
       fileArg <- Web.Scotty.formParam "filename" :: ActionM T.Text
       liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
+
+    get "/edit-sankey-config" $ do
+      let dbPath = "transactions.db"
+      config <- liftIO $ loadSankeyConfig dbPath 1
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource dbPath . sourceId) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      Web.Scotty.html $ renderEditSankeyConfigPage config categoriesBySource
+
+    post "/update-sankey-config" $ do
+      configName <- Web.Scotty.formParam "configName"
+
+      allParams <- Web.Scotty.formParams
+
+      let inputSourceIds = [read $ T.unpack value | (key, value) <- allParams, key == "inputSourceId[]"]
+          inputCategoryIds = [read $ T.unpack value | (key, value) <- allParams, key == "inputCategoryId[]"]
+
+      linkageSourceId <- Web.Scotty.formParam "linkageSourceId"
+      linkageCategoryId <- Web.Scotty.formParam "linkageCategoryId"
+      linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
+
+      let dbPath = "transactions.db"
+
+      inputTransactionSources <- liftIO $ mapM (getTransactionSource dbPath) inputSourceIds
+      inputCategories <- liftIO $ mapM (getCategory dbPath) inputCategoryIds
+
+      linkageSource <- liftIO $ getTransactionSource dbPath linkageSourceId
+      linkageCategory <- liftIO $ getCategory dbPath linkageCategoryId
+      linkageTarget <- liftIO $ getTransactionSource dbPath linkageTargetId
+
+      let inputs = zip inputTransactionSources inputCategories
+          linkages = (linkageSource, linkageCategory, linkageTarget)
+          newConfig = SankeyConfig {configName, inputs, linkages, mapKeyFunction = sourceName}
+
+      liftIO $ saveSankeyConfig dbPath newConfig
+      redirect "/"

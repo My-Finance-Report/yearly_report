@@ -14,11 +14,11 @@ make my yearly financial report using haskell
 - (DONE) try to serve the resulting report with haskell
   - minimally implimented with Scotty
 - (DONE) allow uploading documents to generate "live" reports
-  - create a minimal "upload" configuration that is tied to a source and allows saving upload config
-- (TODO) allow sankey nodes to be configurable
+  - (DONE) create a minimal "upload" configuration that is tied to a source and allows saving upload config
+- (DONE) allow sankey nodes to be configurable
   -(DONE) remove internal notion of bank vs CC statement
-  -(TODO) create a configurable object to make sankeys
-  -(TODO) put it into the ui for processing
+  -(DONE) create a configurable object to make sankeys
+  -(DONE) put it into the ui for processing
 - (DONE) allow for manually update transactions from a ui
   - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
 
@@ -37,3 +37,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
+- ability to delete a file and its transactions
+- ability to edit the "uploaders"

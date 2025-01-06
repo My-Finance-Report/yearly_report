@@ -9,6 +9,7 @@ module Types
     TransactionKind (..),
     TransactionSource (..),
     TransactionsWrapper (..),
+    SankeyConfig (..),
     PdfParseException (..),
     CategorizationResponse (..),
     UploadConfiguration (..),
@@ -133,3 +134,10 @@ data UploadConfiguration = UploadConfiguration
 
 instance FromRow UploadConfiguration where
   fromRow = UploadConfiguration <$> field <*> field <*> field <*> field
+
+data SankeyConfig = SankeyConfig
+  { inputs :: [(TransactionSource, Category)],
+    linkages :: (TransactionSource, Category, TransactionSource),
+    mapKeyFunction :: TransactionSource -> Text,
+    configName :: Text
+  }

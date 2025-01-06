@@ -4,19 +4,14 @@ module Sankey where
 
 import Data.List (sortBy)
 import Data.Map
+import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import Types
 
-data SankeyConfig = SankeyConfig
-  { inputs :: [(TransactionSource, Text)], -- [(Source, Category)]
-    linkages :: (TransactionSource, Text, TransactionSource), -- (Source, Category) -> Target Source
-    mapKeyFunction :: TransactionSource -> Text -- Mapping for display names
-  }
-
 buildSankeyLinks ::
-  (TransactionSource, Text, TransactionSource) ->
+  (TransactionSource, Category, TransactionSource) ->
   Map TransactionSource AggregatedTransactions ->
   [(Text, Text, Double)]
 buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
@@ -27,7 +22,7 @@ buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransact
           -- Generate Sankey data: [sourceCategory, key, value]
           sankeyLinks =
             Prelude.map
-              (\(category, total) -> (sourceCategory, category, total))
+              (\(category, total) -> (categoryName sourceCategory, category, total))
               (Data.Map.toList categoryTotals)
        in sankeyLinks
     Nothing -> []
@@ -37,21 +32,40 @@ generateSankeyData ::
   SankeyConfig ->
   [(Text, Text, Double)]
 generateSankeyData transactions config =
-  let aggregatedTransactions = groupByBlahForAll transactions (categoryName . category)
+  let -- Group transactions by category name
+      aggregatedTransactions = groupByBlahForAll transactions (categoryName . category)
+
       SankeyConfig {inputs, linkages, mapKeyFunction} = config
 
+      -- Process input flows
       inputFlows = concatMap processInput inputs
         where
+          processInput :: (TransactionSource, Category) -> [(Text, Text, Double)]
           processInput (source, category) =
-            case Data.Map.lookup source aggregatedTransactions >>= Data.Map.lookup category of
-              Just transactions ->
-                let subCategoryFlows =
-                      Data.Map.toList (Data.Map.filterWithKey (\k _ -> k /= category) (fromMaybe Data.Map.empty (Data.Map.lookup source aggregatedTransactions)))
-                 in Prelude.map (\(cat, txns) -> (category, cat, sum $ Prelude.map (sankeyAmount . transaction) txns)) subCategoryFlows
+            case Map.lookup source aggregatedTransactions of
+              Just categorizedByCategory ->
+                case Map.lookup (categoryName category) categorizedByCategory of
+                  Just transactionsForCategory ->
+                    let subCategoryFlows =
+                          Map.toList $
+                            Map.filterWithKey
+                              (\catName _ -> catName /= categoryName category)
+                              categorizedByCategory
+                     in Prelude.map
+                          ( \(subCatName, txns) ->
+                              ( categoryName category,
+                                subCatName,
+                                sum $ Prelude.map (sankeyAmount . transaction) txns
+                              )
+                          )
+                          subCategoryFlows
+                  Nothing -> []
               Nothing -> []
 
+      -- Build the Sankey links
       combinedFlows = inputFlows ++ buildSankeyLinks linkages aggregatedTransactions
 
+      -- Sort the flows by the third element (weight) in descending order
       sortedFlows = sortBy (comparing (Down . third)) combinedFlows
    in sortedFlows
   where

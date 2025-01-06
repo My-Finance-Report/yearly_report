@@ -37,66 +37,102 @@ formatSankeyRow :: (Text, Text, Double) -> Text
 formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
-generateHtmlBlaze ::
-  [(T.Text, T.Text, Double)] ->
+generateHomapageHtml ::
+  Maybe [(T.Text, T.Text, Double)] ->
   Maybe Text ->
   Html ->
+  Map.Map TransactionSource [Text] ->
   TL.Text
-generateHtmlBlaze sankeyData banner tabs =
+generateHomapageHtml sankeyData banner tabs files =
   renderHtml $ do
-    H.docTypeHtml $ do
-      H.head $ do
-        H.title "Expense Summary"
+    generateHeader sankeyData
+    case banner of
+      Just bannerText ->
+        H.div ! A.class_ "banner" $ toHtml bannerText
+      Nothing -> return ()
 
-        H.link
-          ! A.rel "stylesheet"
-          ! A.type_ "text/css"
-          ! A.href "/style.css"
+    H.body $ do
+      generateProcessedFilesComponent files
+      generateUpload
+      generateSankeyDiv
+      tabs
 
-        H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
-        H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
-        H.script ! A.type_ "text/javascript" $
-          H.toHtml $
-            T.concat
-              [ "google.charts.load('current', {packages:['sankey']});\n",
-                "google.charts.setOnLoadCallback(drawChart);\n",
-                "function drawChart() {\n",
-                "  const data = new google.visualization.DataTable();\n",
-                "  data.addColumn('string', 'From');\n",
-                "  data.addColumn('string', 'To');\n",
-                "  data.addColumn('number', 'Weight');\n",
-                "  data.addRows([\n",
-                T.concat (Prelude.map formatSankeyRow sankeyData),
-                "  ]);\n",
-                "  const options = { width: 800, height: 600 };\n",
-                "  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));\n",
-                "  chart.draw(data, options);\n",
-                "}\n"
-              ]
-      H.body $ do
-        case banner of
-          Just bannerText ->
-            H.div ! A.class_ "banner" $ toHtml bannerText
-          Nothing -> return ()
+generateProcessedFilesComponent :: Map.Map TransactionSource [Text] -> Html
+generateProcessedFilesComponent processedFiles = do
+  H.div ! A.class_ "processed-files-section" $ do
+    H.h2 "Processed Files"
+    if Map.null processedFiles
+      then H.p "No files have been processed yet."
+      else H.table $ do
+        H.tr $ do
+          H.th "Transaction Source"
+          H.th "Filenames"
+        forM_ (Map.toList processedFiles) $ \(transactionSource, filenames) -> do
+          H.tr $ do
+            H.td (toHtml (sourceName transactionSource))
+            H.td $ H.ul $ forM_ filenames $ \filename -> H.li (toHtml filename)
 
-        H.div ! A.class_ "upload-section" $ do
-          H.form
-            ! A.method "post"
-            ! A.action "/upload"
-            ! A.enctype "multipart/form-data"
-            $ do
-              H.label "Select File"
-              H.br
-              H.input ! A.type_ "file" ! A.name "pdfFile"
-              H.br
-              H.button
-                ! A.type_ "submit"
-                ! A.value "Upload"
-                ! A.class_ "setup-upload-button"
-                $ "Create Upload"
+generateHeader :: Maybe [(T.Text, T.Text, Double)] -> Html
+generateHeader sankeyData =
+  H.docTypeHtml $ do
+    H.head $ do
+      H.title "Expense Summary"
 
-        H.div ! A.id "sankey_chart" $ mempty
-        tabs
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/style.css"
+
+      H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
+      generateSankeyScript sankeyData
+
+generateSankeyScript :: Maybe [(T.Text, T.Text, Double)] -> Html
+generateSankeyScript sankeyData =
+  case sankeyData of
+    Just rows -> do
+      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
+      H.script
+        ! A.type_ "text/javascript"
+        $ H.toHtml
+        $ T.concat
+          [ "google.charts.load('current', {packages:['sankey']});\n",
+            "google.charts.setOnLoadCallback(drawChart);\n",
+            "function drawChart() {\n",
+            "  const data = new google.visualization.DataTable();\n",
+            "  data.addColumn('string', 'From');\n",
+            "  data.addColumn('string', 'To');\n",
+            "  data.addColumn('number', 'Weight');\n",
+            "  data.addRows([\n",
+            T.concat (Prelude.map formatSankeyRow rows),
+            "  ]);\n",
+            "  const options = { width: 800, height: 600 };\n",
+            "  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));\n",
+            "  chart.draw(data, options);\n",
+            "}\n"
+          ]
+    Nothing -> ""
+
+generateSankeyDiv :: Html
+generateSankeyDiv =
+  H.div ! A.id "sankey_chart" $ mempty
+
+generateUpload :: Html
+generateUpload =
+  H.div ! A.class_ "upload-section" $ do
+    H.form
+      ! A.method "post"
+      ! A.action "/upload"
+      ! A.enctype "multipart/form-data"
+      $ do
+        H.label "Select File"
+        H.br
+        H.input ! A.type_ "file" ! A.name "pdfFile"
+        H.br
+        H.button
+          ! A.type_ "submit"
+          ! A.value "Upload"
+          ! A.class_ "setup-upload-button"
+          $ "Create Upload"
 
 generateAggregateRow :: T.Text -> Double -> T.Text -> Html
 generateAggregateRow cat totalAmt sectionId =
@@ -204,17 +240,23 @@ renderHomePage banner = do
   bankSource <- getTransactionSourceText dbPath "Bank"
   creditCardSource <- getTransactionSourceText dbPath "CreditCard"
 
-  let sankeyConfig =
-        SankeyConfig
-          { inputs = [(bankSource, "Income")],
-            linkages =
-              (bankSource, "Credit Card Payments", creditCardSource),
-            mapKeyFunction = sourceName
-          }
+  {-   let sankeyConfig =
+          SankeyConfig
+            { inputs = [(bankSource, "Income")],
+              linkages =
+                (bankSource, "Credit Card Payments", creditCardSource),
+              mapKeyFunction = sourceName
+            } -}
 
-  let sankeyData = generateSankeyData groupedBySource sankeyConfig
+  -- todo add selector for all of them
+  sankeyConfig <- loadSankeyConfig dbPath 1
+  let sankeyData = case sankeyConfig of
+        Just config -> Just (generateSankeyData groupedBySource config)
+        Nothing -> Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource
 
-  let strictText = generateHtmlBlaze sankeyData banner tabs
+  files <- getTransactionSourceFiles dbPath
+
+  let strictText = generateHomapageHtml sankeyData banner tabs files
   return strictText
