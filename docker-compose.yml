@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: persistent_postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: persistent_user
+      POSTGRES_PASSWORD: persistent_pass
+      POSTGRES_DB: persistent_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
