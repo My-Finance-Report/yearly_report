@@ -19,6 +19,7 @@ import qualified Data.Text.Lazy as TL
 import Database
 import Database.SQLite.Simple (Only (Only), close, execute, open, query)
 import HtmlGenerators.AllFilesPage
+import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.RefineSelectionPage
@@ -211,16 +212,6 @@ main = do
       liftIO $ updateTransactionCategory dbPath (read $ T.unpack tId) newCat
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
-    get "/edit-sankey-config" $ do
-      let dbPath = "transactions.db"
-      config <- liftIO $ loadSankeyConfig dbPath 1
-      transactionSources <- liftIO $ getAllTransactionSources dbPath
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource dbPath . sourceId) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      Web.Scotty.html $ renderEditSankeyConfigPage config categoriesBySource
-
     post "/update-sankey-config" $ do
       configName <- Web.Scotty.formParam "configName"
 
@@ -249,11 +240,6 @@ main = do
       liftIO $ saveSankeyConfig dbPath newConfig
       redirect "/"
 
-    get "/manage-upload-config" $ do
-      configurations <- liftIO $ getUploadConfigurations dbPath
-      transactionSources <- liftIO $ getAllTransactionSources dbPath
-      Web.Scotty.html $ renderUploadConfigurationsPage configurations transactionSources
-
     post "/add-upload-config" $ addUploadConfig dbPath
     post "/delete-upload-config/:id" $ deleteUploadConfig dbPath
     post "/edit-upload-config/:id" $ editUploadConfig dbPath
@@ -263,3 +249,38 @@ main = do
       transactionSourceId <- Web.Scotty.formParam "transactionSourceId" :: Web.Scotty.ActionM Int
       liftIO $ deleteProcessedFile dbPath transactionSourceId filename
       Web.Scotty.redirect "/manage-processed-files"
+
+    get "/configuration" $ do
+      let dbPath = "transactions.db"
+      uploaderConfigs <- liftIO $ getUploadConfigurations dbPath
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      sankeyConfig <- liftIO $ loadSankeyConfig dbPath 1
+      transactionSources <- liftIO $ getAllTransactionSources dbPath
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource dbPath . sourceId) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      Web.Scotty.html $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
+
+    post "/add-transaction-source" $ do
+      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
+      liftIO $ insertTransactionSource dbPath newSource
+      Web.Scotty.redirect "/configuration"
+
+    post "/edit-transaction-source/:id" $ do
+      sourceId <- Web.Scotty.param "id" :: Web.Scotty.ActionM Int
+      sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
+      liftIO $ updateTransactionSource dbPath sourceId sourceName
+      Web.Scotty.redirect "/configuration"
+
+    post "/add-category/:sourceId" $ do
+      sourceId <- Web.Scotty.param "sourceId" :: Web.Scotty.ActionM Int
+      newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
+      liftIO $ insertCategory dbPath newCategory sourceId
+      Web.Scotty.redirect "/configuration"
+
+    post "/edit-category/:id" $ do
+      categoryId <- Web.Scotty.param "id" :: Web.Scotty.ActionM Int
+      categoryName <- Web.Scotty.formParam "categoryName" :: Web.Scotty.ActionM Text
+      liftIO $ updateCategory dbPath categoryId categoryName
+      Web.Scotty.redirect "/configuration"

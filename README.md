@@ -37,5 +37,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
-- ability to delete a file and its transactions
-- ability to edit the "uploaders"
+- Clean up the visuals and ergnomics
+- Ability to add sources and categories

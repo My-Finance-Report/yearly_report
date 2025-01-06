@@ -24,6 +24,8 @@ module Database
     saveSankeyConfig,
     getCategory,
     getUploadConfigurations,
+    updateTransactionSource,
+    updateCategory,
   )
 where
 
@@ -538,3 +540,27 @@ getUploadConfigurations dbPath = do
     [ (id, filenameRegex, startKeyword, endKeyword, TransactionSource sourceId sourceName)
       | (id, filenameRegex, startKeyword, endKeyword, sourceId, sourceName) <- rows
     ]
+
+updateTransactionSource :: FilePath -> Int -> Text -> IO ()
+updateTransactionSource dbPath sourceId sourceName = do
+  conn <- open dbPath
+  execute conn "UPDATE transaction_sources SET name = ? WHERE id = ?" (sourceName, sourceId)
+  close conn
+
+addCategory :: FilePath -> Int -> Text -> IO ()
+addCategory dbPath sourceId newCategory = do
+  conn <- open dbPath
+  execute
+    conn
+    "INSERT INTO categories (name, source_id) VALUES (?, ?)"
+    (newCategory, sourceId)
+  close conn
+
+updateCategory :: FilePath -> Int -> Text -> IO ()
+updateCategory dbPath categoryId categoryName = do
+  conn <- open dbPath
+  execute
+    conn
+    "UPDATE categories SET name = ? WHERE id = ?"
+    (categoryName, categoryId)
+  close conn

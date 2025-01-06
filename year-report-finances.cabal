@@ -13,6 +13,7 @@ library
     HtmlGenerators.HomePage
     HtmlGenerators.AllFilesPage
     HtmlGenerators.RefineSelectionPage
+    HtmlGenerators.Configuration
     Sankey
     Parsers
     OpenAiUtils
@@ -48,6 +49,7 @@ executable year-report-finances
       HtmlGenerators.HomePage
       HtmlGenerators.AllFilesPage
       HtmlGenerators.RefineSelectionPage
+      HtmlGenerators.Configuration
       Sankey
       Parsers
       OpenAiUtils
