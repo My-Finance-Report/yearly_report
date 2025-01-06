@@ -7,6 +7,7 @@ import Categorizer
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (runStderrLoggingT)
 import qualified Data.ByteString.Lazy as B
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.Map
@@ -17,6 +18,8 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
 import Database
+import NewDatabase
+import ConnectionPool
 import Database.Persist.Postgresql hiding (get)
 import Database.SQLite.Simple (Only (Only), close, execute, open, query)
 import HtmlGenerators.AllFilesPage
@@ -24,11 +27,12 @@ import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.RefineSelectionPage
+import Models
 import Network.HTTP.Client (Request (redactHeaders))
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import Parsers ( extractTextFromPdf, processPdfFile )
+import Parsers (extractTextFromPdf, processPdfFile)
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
@@ -38,16 +42,7 @@ import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
-import Models
-import Control.Monad.Logger (runStderrLoggingT)
 
-postgresConnString :: ConnectionString
-postgresConnString =
-  "host=localhost port=5433 user=persistent_user password=persistent_pass dbname=persistent_db"
-
-migratePostgres :: IO ()
-migratePostgres = runStderrLoggingT $ withPostgresqlConn postgresConnString $ \backend ->
-  runSqlConn (runMigration migrateAll) backend
 
 addUploadConfig :: FilePath -> Web.Scotty.ActionM ()
 addUploadConfig dbPath = do
@@ -111,7 +106,8 @@ main = do
   migratePostgres
 
   -- todo remove sqlite
-  initializeDatabase dbPath
+  ConnectionPool.initializeDatabase
+  Database.initializeDatabase dbPath
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
@@ -215,7 +211,6 @@ main = do
     get "/transactions/:filename" $ do
       let dbPath = "transactions.db"
       filename <- Web.Scotty.pathParam "filename"
-      liftIO $ initializeDatabase dbPath
       transactions <- liftIO $ getTransactionsByFilename dbPath filename
       Web.html $ renderTransactionsPage (T.pack filename) transactions
 
@@ -279,7 +274,7 @@ main = do
 
     post "/add-transaction-source" $ do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ insertTransactionSource dbPath newSource
+      liftIO $ addTransactionSource  newSource
       Web.Scotty.redirect "/configuration"
 
     post "/edit-transaction-source/:id" $ do

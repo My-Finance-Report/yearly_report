@@ -8,6 +8,8 @@ library
   exposed-modules: 
     Types
     Database
+    NewDatabase
+    ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.HomePage
@@ -49,7 +51,9 @@ executable year-report-finances
   other-modules:
       Types
       Database
+      NewDatabase
       Categorizer
+      ConnectionPool
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
       HtmlGenerators.AllFilesPage
