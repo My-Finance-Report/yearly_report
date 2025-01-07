@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -19,7 +18,6 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
 import Database.Persist.Postgresql hiding (get)
-import Database.SQLite.Simple (Only (Only), close, execute, open, query)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
@@ -41,59 +39,6 @@ import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
-
-addUploadConfig :: FilePath -> Web.Scotty.ActionM ()
-addUploadConfig dbPath = do
-  filenameRegex <- Web.Scotty.formParam "filenameRegex" :: Web.Scotty.ActionM Text
-  startKeyword <- Web.Scotty.formParam "startKeyword" :: Web.Scotty.ActionM Text
-  endKeyword <- Web.Scotty.formParam "endKeyword" :: Web.Scotty.ActionM Text
-  transactionSourceId <- Web.Scotty.formParam "transactionSourceId" :: Web.Scotty.ActionM Int
-  liftIO $ do
-    conn <- open dbPath
-    execute
-      conn
-      "INSERT INTO upload_configuration (filename_regex, start_keyword, end_keyword, transaction_source_id) VALUES (?, ?, ?, ?)"
-      (filenameRegex, startKeyword, endKeyword, transactionSourceId)
-    close conn
-  Web.Scotty.redirect "/manage-upload-config"
-
-deleteUploadConfig :: FilePath -> Web.Scotty.ActionM ()
-deleteUploadConfig dbPath = do
-  configId <- Web.Scotty.param "id" :: Web.Scotty.ActionM Int
-  liftIO $ do
-    conn <- open dbPath
-    execute conn "DELETE FROM upload_configuration WHERE id = ?" (Only configId)
-    close conn
-  Web.Scotty.redirect "/manage-upload-config"
-
-editUploadConfig :: FilePath -> Web.Scotty.ActionM ()
-editUploadConfig dbPath = do
-  configId <- Web.Scotty.param "id" :: Web.Scotty.ActionM Int
-  filenameRegex <- Web.Scotty.formParam "filenameRegex" :: Web.Scotty.ActionM Text
-  startKeyword <- Web.Scotty.formParam "startKeyword" :: Web.Scotty.ActionM Text
-  endKeyword <- Web.Scotty.formParam "endKeyword" :: Web.Scotty.ActionM Text
-  transactionSourceId <- Web.Scotty.formParam "transactionSourceId" :: Web.Scotty.ActionM Int
-  liftIO $ do
-    conn <- open dbPath
-    execute
-      conn
-      "UPDATE upload_configuration SET filename_regex = ?, start_keyword = ?, end_keyword = ?, transaction_source_id = ? WHERE id = ?"
-      (filenameRegex, startKeyword, endKeyword, transactionSourceId, configId)
-    close conn
-  Web.Scotty.redirect "/manage-upload-config"
-
-deleteProcessedFile :: FilePath -> Int -> Text -> IO ()
-deleteProcessedFile dbPath transactionSourceId filename = do
-  conn <- open dbPath
-  execute
-    conn
-    "DELETE FROM transactions WHERE transaction_source_id = ? AND filename = ?"
-    (transactionSourceId, filename)
-  execute
-    conn
-    "DELETE FROM processed_files WHERE filename = ?"
-    (Only filename)
-  close conn
 
 main :: IO ()
 main = do
@@ -254,14 +199,15 @@ main = do
       liftIO $ saveSankeyConfig newConfig
       redirect "/"
 
-    post "/add-upload-config" $ addUploadConfig dbPath
-    post "/delete-upload-config/:id" $ deleteUploadConfig dbPath
-    post "/edit-upload-config/:id" $ editUploadConfig dbPath
+    -- post "/add-upload-config" $ addUploadConfig dbPath
+    -- post "/delete-upload-config/:id" $ deleteUploadConfig dbPath
+    -- post "/edit-upload-config/:id" $ editUploadConfig dbPath
 
     post "/delete-processed-file" $ do
-      filename <- Web.Scotty.formParam "filename"
+      filename <- Web.Scotty.formParam "filename" :: Web.Scotty.ActionM Int
       transactionSourceId <- Web.Scotty.formParam "transactionSourceId" :: Web.Scotty.ActionM Int
-      liftIO $ deleteProcessedFile dbPath transactionSourceId filename
+      -- TODO
+      -- liftIO $ deleteProcessedFile dbPath transactionSourceId filename
       Web.Scotty.redirect "/manage-processed-files"
 
     get "/configuration" $ do
