@@ -112,22 +112,30 @@ categorizeTransactionInner description day transactionSourceId = do
 
 categorizeTransaction ::
   (MonadIO m) =>
-  Transaction ->
+  PartialTransaction ->
   Key UploadedPdf ->
   Key TransactionSource ->
   m CategorizedTransaction
 categorizeTransaction transaction uploadedPdfKey transactionSourceId = do
   -- Categorize the transaction
-  categoryEntity <-
-    categorizeTransactionInner
-      (transactionDescription transaction)
-      (transactionDateOfTransaction transaction)
-      transactionSourceId
+  let txnDsc = partialTransactionDescription transaction
+  let dateOfTransaction = partialTransactionDateOfTransaction transaction
+
+  categoryEntity <- categorizeTransactionInner txnDsc dateOfTransaction transactionSourceId
 
   let categorizedTransaction =
         CategorizedTransaction
           { transactionId = Nothing,
-            transaction = transaction,
+            transaction =
+              Transaction
+                { transactionDescription = txnDsc,
+                  transactionAmount = partialTransactionAmount transaction,
+                  transactionKind = parseTransactionKind $ partialTransactionKind transaction,
+                  transactionDateOfTransaction = dateOfTransaction,
+                  transactionUploadedPdfId = Just uploadedPdfKey,
+                  transactionCategoryId = entityKey categoryEntity,
+                  transactionTransactionSourceId = transactionSourceId
+                },
             category = entityVal categoryEntity
           }
 

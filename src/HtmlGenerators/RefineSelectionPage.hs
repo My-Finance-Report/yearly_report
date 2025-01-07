@@ -7,6 +7,7 @@ import Control.Monad (forM_)
 import Data.Text as T (Text)
 import qualified Data.Text.Lazy as TL
 import Database.Persist
+import Database.Persist.Postgresql (fromSqlKey)
 import Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -50,7 +51,7 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
                 forM_ transactionSources $ \entity -> do
                   let TransactionSource {transactionSourceName} = entityVal entity
                   H.option
-                    ! A.value (toValue $ show $ entityKey entity)
+                    ! A.value (toValue $ show $ fromSqlKey $ entityKey entity)
                     $ toHtml transactionSourceName
 
             H.br

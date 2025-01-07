@@ -88,6 +88,7 @@ renderInputRow sourceCategories tsId catId catName = do
           $ transactionSourceName source
     -- Category Dropdown
     H.select ! A.name "inputCategoryId[]" $ do
+      -- TODO idk what this is
       let relevantCategories = Map.findWithDefault [] (Entity tsId undefined) sourceCategories
       forM_ relevantCategories $ \(Entity categoryId category) -> do
         H.option

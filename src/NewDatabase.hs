@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module NewDatabase (initializeDatabase, updateCategory, addTransactionSource, seedDatabase, getAllFilenames, getTransactionSource, getAllTransactionSources, getTransactionsByFileId, getAllUploadConfigs, getUploadConfiguration, getCategoriesBySource, insertTransaction, getFirstSankeyConfig, fetchPdfRecord, isFileProcessed, markFileAsProcessed, getAllTransactions, groupTransactionsBySource, getCategory, saveSankeyConfig, addCategory, updateTransactionSource, persistUploadConfiguration, insertPdfRecord, updateTransactionCategory) where
+module NewDatabase (initializeDatabase, updateCategory, addTransactionSource, seedDatabase, getAllFilenames, getTransactionSource, getAllTransactionSources, getTransactionsByFileId, getAllUploadConfigs, getUploadConfiguration, getCategoriesBySource, insertTransaction, getFirstSankeyConfig, fetchPdfRecord, isFileProcessed, markFileAsProcessed, getAllTransactions, groupTransactionsBySource, getCategory, saveSankeyConfig, addCategory, updateTransactionSource, persistUploadConfiguration, insertPdfRecord, updateTransactionCategory, parseTransactionKind) where
 
 import ConnectionPool
 import Control.Monad (forM, forM_)
@@ -135,13 +135,9 @@ getUploadConfiguration filename = do
   where
     queryUploadConfiguration = do
       results <-
-        selectList
-          [ Filter
-              UploadConfigurationFilenameRegex
-              (FilterValue $ Just $ "%" <> filename <> "%")
-              (BackendSpecificFilter "LIKE")
-          ]
-          []
+        rawSql
+          "SELECT ?? FROM upload_configuration WHERE ? ~ filename_regex"
+          [toPersistValue filename]
       return $ listToMaybe results
 
 getAllFilenames :: (MonadUnliftIO m) => m [Text]
@@ -162,9 +158,9 @@ getTransactionsByFileId fileId = do
       results <-
         rawSql
           "SELECT ??, ??, ?? \
-          \FROM transactions t \
-          \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
-          \INNER JOIN categories c ON t.category_id = c.id \
+          \FROM \"transaction\" t \
+          \INNER JOIN \"transaction_source\" ts ON t.transaction_source_id = ts.id \
+          \INNER JOIN \"category\" c ON t.category_id = c.id \
           \WHERE t.uploaded_pdf_id = ?"
           [toPersistValue fileId]
 
@@ -326,15 +322,24 @@ getAllTransactions = do
   runSqlPool queryAllTransactions pool
   where
     queryAllTransactions = do
-      results <-
-        rawSql
-          "SELECT ??, ??, ?? \
-          \FROM transactions t \
-          \INNER JOIN transaction_sources ts ON t.transaction_source_id = ts.id \
-          \INNER JOIN categories c ON t.category_id = c.id"
-          []
+      -- Fetch all transactions
+      transactions <- selectList [] []
 
-      forM results $ \(Entity txnId txn, Entity sourceId source, Entity catId cat) -> do
+      -- For each transaction, fetch its associated TransactionSource and Category
+      forM transactions $ \(Entity txnId txn) -> do
+        -- Get the associated TransactionSource
+        maybeSource <- get (transactionTransactionSourceId txn)
+        source <- case maybeSource of
+          Just s -> return s
+          Nothing -> error $ "TransactionSource not found for ID: " ++ show (transactionTransactionSourceId txn)
+
+        -- Get the associated Category
+        maybeCategory <- get (transactionCategoryId txn)
+        category <- case maybeCategory of
+          Just c -> return c
+          Nothing -> error $ "Category not found for ID: " ++ show (transactionCategoryId txn)
+
+        -- Map the results to CategorizedTransaction
         return
           CategorizedTransaction
             { transaction =
@@ -344,27 +349,27 @@ getAllTransactions = do
                     transactionDateOfTransaction = transactionDateOfTransaction txn,
                     transactionKind = transactionKind txn,
                     transactionUploadedPdfId = transactionUploadedPdfId txn,
-                    transactionCategoryId = catId,
-                    transactionTransactionSourceId = sourceId
+                    transactionCategoryId = transactionCategoryId txn,
+                    transactionTransactionSourceId = transactionTransactionSourceId txn
                   },
               category =
                 Category
-                  { categoryName = categoryName cat,
-                    categorySourceId = sourceId
+                  { categoryName = categoryName category,
+                    categorySourceId = transactionTransactionSourceId txn
                   },
               transactionId = Just txnId
             }
 
-    parseTransactionDate :: Text -> Day
-    parseTransactionDate dateText =
-      case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
-        Just parsedDate -> parsedDate
-        Nothing -> error $ "Error parsing date: " <> T.unpack dateText
+parseTransactionDate :: Text -> Day
+parseTransactionDate dateText =
+  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
+    Just parsedDate -> parsedDate
+    Nothing -> error $ "Error parsing date: " <> T.unpack dateText
 
-    parseTransactionKind :: Text -> TransactionKind
-    parseTransactionKind "Withdrawal" = Withdrawal
-    parseTransactionKind "Deposit" = Deposit
-    parseTransactionKind _ = error "Invalid transaction kind"
+parseTransactionKind :: Text -> TransactionKind
+parseTransactionKind "Withdrawal" = Withdrawal
+parseTransactionKind "Deposit" = Deposit
+parseTransactionKind _ = error "Invalid transaction kind"
 
 groupTransactionsBySource ::
   (MonadUnliftIO m) =>

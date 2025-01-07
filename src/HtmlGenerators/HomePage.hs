@@ -247,8 +247,6 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
 
 renderHomePage :: Maybe Text -> IO TL.LazyText
 renderHomePage banner = do
-  let dbPath = "transactions.db"
-
   transactionSources <- getAllTransactionSources
   categorizedTransactions <- getAllTransactions
 

@@ -42,8 +42,6 @@ import qualified Web.Scotty as Web
 
 main :: IO ()
 main = do
-  let dbPath = "transactions.db"
-
   activeJobs <- newIORef 0
 
   -- todo remove sqlite
@@ -72,29 +70,6 @@ main = do
 
       redirect "/"
 
-    post "/upload-template" $ do
-      allFiles <- Web.Scotty.files
-      case Prelude.lookup "pdfFile" allFiles of
-        Nothing -> do
-          Web.text "No file with field name 'pdfFile' was uploaded!"
-        Just fileInfo -> do
-          let uploadedBytes = fileContent fileInfo
-          let originalName = decodeUtf8 $ fileName fileInfo
-
-          let tempFilePath = "/tmp/" <> originalName
-          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
-
-          extractedTextOrError <-
-            liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
-              ActionM (Either SomeException Text)
-          case extractedTextOrError of
-            Left err -> do
-              Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
-            Right rawText -> do
-              let dbPath = "transactions.db"
-              newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
-              redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
-
     post "/upload" $ do
       allFiles <- Web.Scotty.files
       case Prelude.lookup "pdfFile" allFiles of
@@ -114,13 +89,13 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              let dbPath = "transactions.db"
-
               maybeConfig <- liftIO $ getUploadConfiguration originalName
+
+              liftIO $ print $ show maybeConfig
 
               case maybeConfig of
                 Just config -> do
-                  newPdfId <- liftIO $ insertPdfRecord dbPath originalName rawText
+                  newPdfId <- liftIO $ insertPdfRecord originalName rawText "TODO"
 
                   liftIO $ do
                     modifyIORef activeJobs (+ 1)
@@ -132,13 +107,20 @@ main = do
                   redirect "/"
                 Nothing -> do
                   newPdfId <- liftIO $ insertPdfRecord originalName rawText "TODO"
-                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show newPdfId))
+                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
 
     get "/adjust-transactions/:pdfId" $ do
-      pdfIdText <- Web.Scotty.param "pdfId" -- Parse as Text
-      let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf -- Convert to Key
+      pdfIdText <- Web.Scotty.param "pdfId"
+      liftIO $ print "here"
+
+      let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
+
+      liftIO $ print "there"
       transactionSources <- liftIO getAllTransactionSources
+
+      liftIO $ print "there2"
       uploadedPdf <- liftIO $ fetchPdfRecord pdfId
+      liftIO $ print "there3"
 
       let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
 
@@ -211,7 +193,6 @@ main = do
       Web.Scotty.redirect "/manage-processed-files"
 
     get "/configuration" $ do
-      let dbPath = "transactions.db"
       uploaderConfigs <- liftIO getAllUploadConfigs
       transactionSources <- liftIO getAllTransactionSources
       sankeyConfig <- liftIO getFirstSankeyConfig

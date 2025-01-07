@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Parsers
@@ -54,16 +55,16 @@ generateTransactionSchema =
                                   [ "type" .= ("object" :: Text),
                                     "properties"
                                       .= object
-                                        [ "transactionDate" .= object ["type" .= ("string" :: Text)],
-                                          "description" .= object ["type" .= ("string" :: Text)],
-                                          "kind"
+                                        [ "partialTransactionDateOfTransaction" .= object ["type" .= ("string" :: Text)],
+                                          "partialTransactionDescription" .= object ["type" .= ("string" :: Text)],
+                                          "partialTransactionKind"
                                             .= object
                                               [ "type" .= ("string" :: Text),
                                                 "enum" .= (["Withdrawal", "Deposit"] :: [Text])
                                               ],
-                                          "amount" .= object ["type" .= ("number" :: Text)]
+                                          "partialTransactionAmount" .= object ["type" .= ("number" :: Text)]
                                         ],
-                                    "required" .= (["transactionDate", "description", "amount", "kind"] :: [Text]),
+                                    "required" .= (["partialTransactionDateOfTransaction", "partialTransactionDescription", "partialTransactionAmount", "partialTransactionKind"] :: [Text]),
                                     "additionalProperties" .= False
                                   ]
                             ]
@@ -74,7 +75,7 @@ generateTransactionSchema =
           ]
     ]
 
-parseRawTextToJson :: Text -> IO (Maybe [Transaction])
+parseRawTextToJson :: Text -> IO (Maybe [PartialTransaction])
 parseRawTextToJson pdfContent = do
   let inputPrompt = generatePdfParsingPrompt pdfContent
   let schema = generateTransactionSchema
@@ -88,7 +89,7 @@ parseRawTextToJson pdfContent = do
       return Nothing
     Right responseBodyContent -> decodeChatResponse responseBodyContent
 
-decodeChatResponse :: B.ByteString -> IO (Maybe [Transaction])
+decodeChatResponse :: B.ByteString -> IO (Maybe [PartialTransaction])
 decodeChatResponse responseBodyContent =
   case decode responseBodyContent of
     Just ChatResponse {choices = (ChatChoice {message = ChatMessage {content = innerJson}} : _)} -> do
@@ -129,7 +130,7 @@ trimTrailingText pdfText keyword =
        in beforeTransactions
     Nothing -> pdfText -- If no keyword, return the original text
 
-extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [Transaction]
+extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
 extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
   let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
@@ -153,7 +154,7 @@ processPdfFile pdfId config = do
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
-      result <- try (extractTransactionsFromLines (uploadedPdfRawContent uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [Transaction])
+      result <- try (extractTransactionsFromLines (uploadedPdfRawContent uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
       case result of
         Left err -> do
           let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err

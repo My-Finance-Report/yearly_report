@@ -8,7 +8,7 @@ module Types
     FullSankeyConfig (..),
     PdfParseException (..),
     CategorizationResponse (..),
-    UploadConfiguration (..),
+    PartialTransaction (..),
     groupByBlah,
     groupByBlahForAll,
   )
@@ -42,8 +42,18 @@ newtype PdfParseException
 
 instance Exception PdfParseException
 
+data PartialTransaction = PartialTransaction
+  { partialTransactionAmount :: Double,
+    partialTransactionDateOfTransaction :: Text,
+    partialTransactionDescription :: Text,
+    partialTransactionKind :: Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON PartialTransaction
+
 newtype TransactionsWrapper
-  = TransactionsWrapper {transactions :: [Transaction]}
+  = TransactionsWrapper {transactions :: [PartialTransaction]}
   deriving (Show, Generic)
 
 instance FromJSON TransactionKind
