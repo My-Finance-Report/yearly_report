@@ -6,7 +6,8 @@ module Categorizer
 where
 
 import Control.Exception (SomeException, throwIO, try)
-import Data.Aeson
+import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
+import Data.Aeson hiding (Key)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as Map
@@ -14,11 +15,14 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (Day, defaultTimeLocale, formatTime)
-import Database
+import Database.Persist
+import Database.Persist.Postgresql (fromSqlKey)
 import GHC.Generics (Generic)
+import Models
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Status
+import NewDatabase
 import OpenAiUtils
 import System.Environment (getEnv)
 import System.FilePath (takeFileName)
@@ -68,7 +72,7 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
    in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-classifyTransactions :: Map.Map Text Category -> Text -> IO (Maybe Category)
+classifyTransactions :: Map.Map Text (Entity Category) -> Text -> IO (Maybe (Entity Models.Category))
 classifyTransactions categoryMap description = do
   let categories = Map.keys categoryMap
       inputPrompt = generatePrompt categories description
@@ -92,32 +96,46 @@ classifyTransactions categoryMap description = do
           putStrLn "Error: API returned unknown category "
           return Nothing
 
-categorizeTransactionInner :: FilePath -> Text -> Day -> Int -> IO Category
-categorizeTransactionInner dbPath description day transactionSourceId = do
-  categories <- getCategoriesBySource dbPath transactionSourceId
-  let categoryMap = Map.fromList [(categoryName cat, cat) | cat <- categories]
-  apiResponse <- classifyTransactions categoryMap description
+categorizeTransactionInner ::
+  (MonadIO m) =>
+  Text ->
+  Text ->
+  Key TransactionSource ->
+  m (Entity Category)
+categorizeTransactionInner description day transactionSourceId = do
+  categories <- liftIO $ getCategoriesBySource transactionSourceId
+  let categoryMap = Map.fromList [(categoryName (entityVal cat), cat) | cat <- categories]
+  apiResponse <- liftIO $ classifyTransactions categoryMap description
   case apiResponse of
     Just category -> return category
-    Nothing -> throwIO $ PdfParseException "Unable to properly categorize"
+    Nothing -> liftIO $ throwIO $ PdfParseException "Unable to properly categorize"
 
-categorizeTransaction :: Transaction -> FilePath -> FilePath -> TransactionSource -> IO CategorizedTransaction
-categorizeTransaction creditCardTransaction dbPath filename transactionSource = do
-  cat <-
+categorizeTransaction ::
+  (MonadIO m) =>
+  Transaction ->
+  Key UploadedPdf ->
+  Key TransactionSource ->
+  m CategorizedTransaction
+categorizeTransaction transaction uploadedPdfKey transactionSourceId = do
+  -- Categorize the transaction
+  categoryEntity <-
     categorizeTransactionInner
-      dbPath
-      (description creditCardTransaction)
-      (transactionDate creditCardTransaction)
-      (sourceId transactionSource)
+      (transactionDescription transaction)
+      (transactionDateOfTransaction transaction)
+      transactionSourceId
 
-  let partialTx =
+  let categorizedTransaction =
         CategorizedTransaction
           { transactionId = Nothing,
-            transaction = creditCardTransaction,
-            category = cat
+            transaction = transaction,
+            category = entityVal categoryEntity
           }
 
-  newId <- insertTransaction dbPath partialTx filename
+  -- Insert the transaction and get the new ID
+  newId <- liftIO $ insertTransaction categorizedTransaction uploadedPdfKey
 
-  let finalizedTx = partialTx {transactionId = Just newId}
-  return finalizedTx
+  -- Return the updated CategorizedTransaction with the assigned ID
+  return $
+    categorizedTransaction
+      { transactionId = Just newId
+      }

@@ -1,9 +1,11 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -11,10 +13,27 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- module Models (TransactionKind (..), TransactionSource (..), Category (..), Transaction (..), UploadConfiguration (..)) where
 module Models where
 
 import Data.Text (Text)
+import Database.Persist.Postgresql
 import Database.Persist.TH
+import GHC.Generics
+
+data TransactionKind = Withdrawal | Deposit
+  deriving (Show, Eq, Ord, Generic)
+
+instance PersistField TransactionKind where
+  toPersistValue Withdrawal = PersistText "Withdrawal"
+  toPersistValue Deposit = PersistText "Deposit"
+
+  fromPersistValue (PersistText "Withdrawal") = Right Withdrawal
+  fromPersistValue (PersistText "Deposit") = Right Deposit
+  fromPersistValue _ = Left "Invalid TransactionKind"
+
+instance PersistFieldSql TransactionKind where
+  sqlType _ = SqlString
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -22,13 +41,13 @@ share
 
 TransactionSource
     name Text
-    deriving Show Eq
+    deriving Show Eq Ord
 
 Category
     name Text
     sourceId TransactionSourceId
     UniqueCategory name sourceId
-    deriving Show Eq
+    deriving Show Eq Ord
 
 Transaction
     description Text
@@ -36,9 +55,10 @@ Transaction
     dateOfTransaction Text
     amount Double
     transactionSourceId TransactionSourceId
-    kind Text
-    filename Text Maybe
-    deriving Show Eq
+    kind TransactionKind
+    uploadedPdfId UploadedPdfId Maybe 
+    deriving Show Eq Generic Ord
+
 
 ProcessedFile
     filename Text

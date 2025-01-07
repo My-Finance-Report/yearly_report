@@ -9,14 +9,17 @@ where
 import Categorizer (categorizeTransaction)
 import Control.Exception
 import Control.Monad (forM_)
-import Data.Aeson
+import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.Aeson hiding (Key)
 import Data.Aeson.KeyMap (mapMaybe)
 import qualified Data.ByteString.Lazy as B
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Database
+import Database.Persist
 import GHC.Generics (Generic)
+import Models
+import NewDatabase
 import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)
@@ -110,17 +113,23 @@ extractTextFromPdf pdfPath = do
     Left err -> throwIO $ PdfParseException $ "Failed to extract text from PDF: " <> T.pack (show err)
     Right output -> return $ T.pack output
 
-trimLeadingText :: Text -> Text -> Text
+trimLeadingText :: Text -> Maybe Text -> Text
 trimLeadingText pdfText keyword =
-  let (_, afterTransactions) = T.breakOn keyword pdfText
-   in afterTransactions
+  case keyword of
+    Just key ->
+      let (_, afterTransactions) = T.breakOn key pdfText
+       in T.drop (T.length key) afterTransactions -- Drop the keyword itself
+    Nothing -> pdfText -- If no keyword, return the original text
 
-trimTrailingText :: Text -> Text -> Text
+trimTrailingText :: Text -> Maybe Text -> Text
 trimTrailingText pdfText keyword =
-  let (beforeTransactions, _) = T.breakOn keyword pdfText
-   in beforeTransactions
+  case keyword of
+    Just key ->
+      let (beforeTransactions, _) = T.breakOn key pdfText
+       in beforeTransactions
+    Nothing -> pdfText -- If no keyword, return the original text
 
-extractTransactionsFromLines :: Text -> TransactionSource -> Text -> Text -> IO [Transaction]
+extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [Transaction]
 extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
   let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
@@ -129,30 +138,30 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: FilePath -> Int -> UploadConfiguration -> IO [CategorizedTransaction]
-processPdfFile dbPath pdfId config = do
-  (filename, rawText) <- fetchPdfRecord dbPath pdfId
-  let rawFilename = T.unpack filename
-  alreadyProcessed <- isFileProcessed dbPath pdfId
+processPdfFile :: Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
+processPdfFile pdfId config = do
+  uploadedFile <- liftIO $ fetchPdfRecord pdfId
+  let filename = uploadedPdfFilename uploadedFile
+  alreadyProcessed <- liftIO $ isFileProcessed filename
 
-  transactionSource <- getTransactionSource dbPath (transactionSourceId config)
+  transactionSource <- getTransactionSource (uploadConfigurationTransactionSourceId $ entityVal config)
 
   if alreadyProcessed
     then do
       putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
-      getTransactionsByFilename dbPath rawFilename
+      getTransactionsByFileId pdfId
     else do
-      putStrLn $ "Processing file: " ++ rawFilename
+      putStrLn $ "Processing file: " ++ T.unpack filename
 
-      result <- try (extractTransactionsFromLines rawText transactionSource (startKeyword config) (endKeyword config)) :: IO (Either SomeException [Transaction])
+      result <- try (extractTransactionsFromLines (uploadedPdfRawContent uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [Transaction])
       case result of
         Left err -> do
-          let errorMsg = "Error processing file '" ++ rawFilename ++ "': " ++ show err
+          let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
           putStrLn errorMsg
           return []
         Right transactions -> do
           -- Categorize and store transactions
-          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn dbPath rawFilename transactionSource) transactions
-          markFileAsProcessed dbPath filename
-          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ rawFilename ++ "'."
+          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn pdfId (entityKey transactionSource)) transactions
+          markFileAsProcessed filename
+          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
           return categorizedTransactions

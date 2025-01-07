@@ -15,8 +15,11 @@ import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import Database
+import Database.Persist
+import Database.Persist.Postgresql (toSqlKey)
 import HtmlGenerators.HtmlGenerators
+import Models
+import NewDatabase
 import Parsers
 import Sankey
 import System.Directory (listDirectory)
@@ -41,7 +44,7 @@ generateHomapageHtml ::
   Maybe [(T.Text, T.Text, Double)] ->
   Maybe Text ->
   Html ->
-  Map.Map TransactionSource [Text] ->
+  Map.Map (Entity TransactionSource) [Text] ->
   TL.Text
 generateHomapageHtml sankeyData banner tabs files =
   renderHtml $ do
@@ -57,7 +60,7 @@ generateHomapageHtml sankeyData banner tabs files =
       generateSankeyDiv
       tabs
 
-generateProcessedFilesComponent :: Map.Map TransactionSource [Text] -> Html
+generateProcessedFilesComponent :: Map.Map (Entity TransactionSource) [Text] -> Html
 generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "processed-files-section" $ do
     H.h2 "Processed Files"
@@ -71,14 +74,14 @@ generateProcessedFilesComponent processedFiles = do
         forM_ (Map.toList processedFiles) $ \(transactionSource, filenames) -> do
           forM_ filenames $ \filename -> do
             H.tr $ do
-              H.td (toHtml (sourceName transactionSource))
+              H.td (toHtml (transactionSourceName $ entityVal transactionSource))
               H.td (toHtml filename)
               H.td $ do
                 H.form
                   ! A.method "post"
                   ! A.action (toValue $ "/delete-processed-file?filename=" <> T.unpack filename)
                   $ do
-                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ sourceId transactionSource)
+                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ show $ entityKey transactionSource)
                     H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
                     H.input ! A.type_ "submit" ! A.value "Delete"
 
@@ -169,9 +172,9 @@ generateDetailRows cat txs sectionId =
     detailRow :: Transaction -> Html
     detailRow t =
       H.tr $ do
-        H.td (toHtml (description t))
-        H.td (toHtml (prettyFormat (transactionDate t)))
-        H.td (toHtml (show (truncateToTwoDecimals (amount t))))
+        H.td (toHtml (transactionDescription t))
+        H.td (toHtml (transactionDateOfTransaction t))
+        H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
 
 generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
 generateAggregatedRows header aggregated =
@@ -184,9 +187,9 @@ generateAggregatedRows header aggregated =
           let totalAmount =
                 truncateToTwoDecimals $
                   sum
-                    [ case kind (transaction txn) of
-                        Deposit -> amount (transaction txn)
-                        Withdrawal -> -amount (transaction txn)
+                    [ case transactionKind (transaction txn) of
+                        Deposit -> transactionAmount (transaction txn)
+                        Withdrawal -> -transactionAmount (transaction txn)
                       | txn <- txns
                     ]
            in do
@@ -203,10 +206,10 @@ type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTra
 subtabMappings :: [(Text, GroupingFunction)]
 subtabMappings =
   [ ("Category", groupByBlah (categoryName . category)),
-    ("Month", groupByBlah (T.pack . formatTime defaultTimeLocale "%B %Y" . transactionDate . transaction))
+    ("Month", groupByBlah (transactionDateOfTransaction . transaction))
   ]
 
-generateSubTabContent :: Int -> Map.Map TransactionSource [CategorizedTransaction] -> Html
+generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
   H.div ! A.class_ "subtab-content-container" $ do
     H.ul ! A.class_ "tabs" $ do
@@ -223,7 +226,7 @@ generateSubTabContent index aggregatedBySource =
         $ do
           generateAggregatedRows (toHtml subname) (groupingFunc $ concatMap snd $ Map.toList aggregatedBySource)
 
-generateTabsWithSubTabs :: [TransactionSource] -> Map.Map TransactionSource [CategorizedTransaction] -> Html
+generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource =
   H.div ! A.class_ "tabs-container" $ do
     H.ul ! A.class_ "tabs" $ do
@@ -231,7 +234,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
         H.li
           ! A.class_ (if idx == 0 then "tab active" else "tab")
           ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
-          $ toHtml (sourceName source)
+          $ toHtml (transactionSourceName $ entityVal source)
 
     H.div ! A.class_ "tab-content-container" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
@@ -246,23 +249,21 @@ renderHomePage :: Maybe Text -> IO TL.LazyText
 renderHomePage banner = do
   let dbPath = "transactions.db"
 
-  transactionSources <- getAllTransactionSources dbPath
-  categorizedTransactions <- getAllTransactions dbPath
+  transactionSources <- getAllTransactionSources
+  categorizedTransactions <- getAllTransactions
 
-  let groupedBySource = groupByBlah (transactionSource . category) categorizedTransactions
+  groupedBySource <- groupTransactionsBySource categorizedTransactions
 
-  bankSource <- getTransactionSourceText dbPath "Bank"
-  creditCardSource <- getTransactionSourceText dbPath "CreditCard"
-
-  -- todo add selector for all of them
-  sankeyConfig <- loadSankeyConfig dbPath 1
+  sankeyConfig <- getFirstSankeyConfig
   let sankeyData = case sankeyConfig of
         Just config -> Just (generateSankeyData groupedBySource config)
         Nothing -> Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource
 
-  files <- getTransactionSourceFiles dbPath
+  -- TODO
+  -- files <- getTransactionSourceFiles dbPath
+  let files = Map.empty
 
   let strictText = generateHomapageHtml sankeyData banner tabs files
   return strictText
