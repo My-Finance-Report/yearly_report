@@ -16,11 +16,12 @@ import Data.Ord (comparing)
 import Data.Text as T (Text, intercalate, pack, unlines)
 import qualified Data.Text.Lazy as TL
 import Data.Time
+import Models
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Types
+import Types (CategorizedTransaction (transaction, transactionId), category)
 
 renderUploadPage :: TL.Text
 renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
@@ -74,7 +75,7 @@ renderTransactionsPage filename txs =
 -- TODO this should be removed
 renderEditableTransactionRow :: T.Text -> CategorizedTransaction -> Html
 renderEditableTransactionRow filename tx = do
-  let Transaction {description, transactionDate, amount} = transaction tx
+  let Transaction {transactionDescription, transactionDateOfTransaction, transactionAmount} = transaction tx
       Category {categoryName} = category tx
       txId = transactionId tx
   H.tr $ do
@@ -89,20 +90,20 @@ renderEditableTransactionRow filename tx = do
         H.input
           ! A.type_ "text"
           ! A.name "description"
-          ! A.value (toValue description)
+          ! A.value (toValue transactionDescription)
     -- Date (editable)
     H.td $
       H.input
         ! A.type_ "date"
         ! A.name "transactionDate"
-        ! A.value (toValue $ show transactionDate)
+        ! A.value (toValue $ show transactionDateOfTransaction)
     -- Amount (editable)
     H.td $
       H.input
         ! A.type_ "number"
         ! A.step "0.01"
         ! A.name "amount"
-        ! A.value (toValue $ show amount)
+        ! A.value (toValue $ show transactionAmount)
     -- Category (editable dropdown)
     H.td $
       H.select ! A.name "category" $ do

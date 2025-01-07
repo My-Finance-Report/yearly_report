@@ -6,17 +6,21 @@ module HtmlGenerators.Configuration (renderConfigurationPage) where
 import Control.Monad (forM_)
 import Data.Map hiding ((!), (!?))
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe)
 import Data.Text
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
+import Database.Persist
+import Database.Persist.Postgresql (fromSqlKey)
+import Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types
 
 renderEditSankeyConfigPage ::
-  Maybe SankeyConfig ->
-  Map TransactionSource [Category] ->
+  Maybe FullSankeyConfig ->
+  Map (Entity TransactionSource) [Entity Category] ->
   Html
 renderEditSankeyConfigPage maybeConfig sourceCategories =
   H.div $ do
@@ -39,49 +43,15 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
         H.fieldset $ do
           H.legend "Inputs"
           case maybeConfig of
-            Just config -> forM_ (inputs config) $ \(TransactionSource {sourceId}, category) -> do
-              H.div $ do
-                H.select
-                  ! A.name "inputSourceId[]"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        !? (sourceId == tsId, A.selected "selected")
-                        $ toHtml sourceName
-                H.select
-                  ! A.name "inputCategoryId[]"
-                  $ do
-                    let relevantCategories = Map.findWithDefault [] (TransactionSource sourceId "") sourceCategories
-                    forM_ relevantCategories $ \Category {categoryId = catId, categoryName} -> do
-                      H.option
-                        ! A.value (toValue catId)
-                        !? (catId == categoryId category, A.selected "selected")
-                        $ toHtml categoryName
-              H.br
-            Nothing -> do
-              H.div $ do
-                H.select
-                  ! A.name "inputSourceId[]"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        $ toHtml sourceName
-                H.select
-                  ! A.name "inputCategoryId[]"
-                  $ do
-                    forM_ (Prelude.concat $ Map.elems sourceCategories) $ \Category {categoryId = catId, categoryName} -> do
-                      H.option
-                        ! A.value (toValue catId)
-                        $ toHtml categoryName
-              H.br
-
-        -- Add New Input Button
-        H.button
-          ! A.type_ "button"
-          ! A.onclick "addInputRow()"
-          $ "Add New Input"
+            Just FullSankeyConfig {inputs} ->
+              forM_ inputs $ \(source, category) ->
+                renderInputRow sourceCategories (entityKey source) (entityKey category) (categoryName $ entityVal category)
+            Nothing -> renderEmptyInputRow sourceCategories
+          -- Add New Input Button
+          H.button
+            ! A.type_ "button"
+            ! A.onclick "addInputRow()"
+            $ "Add New Input"
 
         H.br
 
@@ -89,67 +59,9 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
         H.fieldset $ do
           H.legend "Linkages"
           case maybeConfig of
-            Just config -> do
-              let (TransactionSource {sourceId = srcId}, linkCategory, TransactionSource {sourceId = tgtId}) = linkages config
-              H.div $ do
-                H.label "Source:"
-                H.select
-                  ! A.name "linkageSourceId"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        !? (srcId == tsId, A.selected "selected")
-                        $ toHtml sourceName
-                H.br
-                H.label "Category:"
-                H.select
-                  ! A.name "linkageCategoryId"
-                  $ do
-                    let relevantCategories = Map.findWithDefault [] (TransactionSource srcId "") sourceCategories
-                    forM_ relevantCategories $ \Category {categoryId = catId, categoryName} -> do
-                      H.option
-                        ! A.value (toValue catId)
-                        !? (catId == categoryId linkCategory, A.selected "selected")
-                        $ toHtml categoryName
-                H.br
-                H.label "Target:"
-                H.select
-                  ! A.name "linkageTargetId"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        !? (tgtId == tsId, A.selected "selected")
-                        $ toHtml sourceName
-            Nothing -> do
-              H.div $ do
-                H.label "Source:"
-                H.select
-                  ! A.name "linkageSourceId"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        $ toHtml sourceName
-                H.br
-                H.label "Category:"
-                H.select
-                  ! A.name "linkageCategoryId"
-                  $ do
-                    forM_ (Prelude.concat $ Map.elems sourceCategories) $ \Category {categoryId = catId, categoryName} -> do
-                      H.option
-                        ! A.value (toValue catId)
-                        $ toHtml categoryName
-                H.br
-                H.label "Target:"
-                H.select
-                  ! A.name "linkageTargetId"
-                  $ do
-                    forM_ (Map.keys sourceCategories) $ \TransactionSource {sourceId = tsId, sourceName} -> do
-                      H.option
-                        ! A.value (toValue tsId)
-                        $ toHtml sourceName
+            Just FullSankeyConfig {linkages = (source, category, target)} ->
+              renderLinkageRow sourceCategories (entityKey source) (entityKey category) (entityKey target)
+            Nothing -> renderEmptyLinkageRow sourceCategories
 
         H.br
         -- Submit Button
@@ -158,7 +70,115 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
     -- JavaScript for Adding Inputs Dynamically
     H.script ! A.type_ "text/javascript" $ H.toHtml addInputScript
 
--- JavaScript to dynamically add new input rows
+renderInputRow ::
+  Map (Entity TransactionSource) [Entity Category] ->
+  Key TransactionSource ->
+  Key Category ->
+  Text ->
+  Html
+renderInputRow sourceCategories tsId catId catName = do
+  H.div $ do
+    -- Source Dropdown
+    H.select ! A.name "inputSourceId[]" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          !? (sourceId == tsId, A.selected "selected")
+          $ toHtml
+          $ transactionSourceName source
+    -- Category Dropdown
+    H.select ! A.name "inputCategoryId[]" $ do
+      let relevantCategories = Map.findWithDefault [] (Entity tsId undefined) sourceCategories
+      forM_ relevantCategories $ \(Entity categoryId category) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey categoryId)
+          !? (catId == categoryId, A.selected "selected")
+          $ toHtml (categoryName category)
+
+-- Render empty input row
+renderEmptyInputRow ::
+  Map (Entity TransactionSource) [Entity Category] ->
+  Html
+renderEmptyInputRow sourceCategories = do
+  H.div $ do
+    -- Source Dropdown
+    H.select ! A.name "inputSourceId[]" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          $ toHtml
+          $ transactionSourceName source
+    -- Category Dropdown
+    H.select ! A.name "inputCategoryId[]" $ do
+      forM_ (Prelude.concat $ Map.elems sourceCategories) $ \(Entity catId category) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey catId)
+          $ toHtml
+          $ categoryName category
+
+renderLinkageRow ::
+  Map (Entity TransactionSource) [Entity Category] ->
+  Key TransactionSource ->
+  Key Category ->
+  Key TransactionSource ->
+  Html
+renderLinkageRow sourceCategories srcId catId tgtId = do
+  H.div $ do
+    -- Source Dropdown
+    H.select ! A.name "linkageSourceId" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          !? (sourceId == srcId, A.selected "selected")
+          $ toHtml
+          $ transactionSourceName source
+    -- Category Dropdown
+    H.select ! A.name "linkageCategoryId" $ do
+      let relevantCategories = Map.findWithDefault [] (Entity srcId undefined) sourceCategories
+      forM_ relevantCategories $ \(Entity categoryId category) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey categoryId)
+          !? (catId == categoryId, A.selected "selected")
+          $ toHtml
+          $ categoryName category
+    -- Target Dropdown
+    H.select ! A.name "linkageTargetId" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          !? (sourceId == tgtId, A.selected "selected")
+          $ toHtml
+          $ transactionSourceName source
+
+-- Render empty linkage row
+renderEmptyLinkageRow ::
+  Map (Entity TransactionSource) [Entity Category] ->
+  Html
+renderEmptyLinkageRow sourceCategories = do
+  H.div $ do
+    -- Source Dropdown
+    H.select ! A.name "linkageSourceId" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          $ toHtml
+          $ transactionSourceName source
+    -- Category Dropdown
+    H.select ! A.name "linkageCategoryId" $ do
+      forM_ (Prelude.concat $ Map.elems sourceCategories) $ \(Entity catId category) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey catId)
+          $ toHtml
+          $ categoryName category
+    -- Target Dropdown
+    H.select ! A.name "linkageTargetId" $ do
+      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        H.option
+          ! A.value (toValue $ fromSqlKey sourceId)
+          $ toHtml
+          $ transactionSourceName source
+
+-- JavaScript for dynamically adding input rows
 addInputScript :: Text
 addInputScript =
   T.unlines
@@ -169,8 +189,7 @@ addInputScript =
       "}"
     ]
 
--- TODO update this type
-renderUploadConfigurationsPage :: [(Int, Text, Text, Text, TransactionSource)] -> [TransactionSource] -> Html
+renderUploadConfigurationsPage :: [Entity UploadConfiguration] -> [Entity TransactionSource] -> Html
 renderUploadConfigurationsPage configurations transactionSources =
   H.div $ do
     H.h1 "Upload Configurations"
@@ -181,30 +200,30 @@ renderUploadConfigurationsPage configurations transactionSources =
         H.th "End Keyword"
         H.th "Transaction Source"
         H.th "Actions"
-      forM_ configurations $ \(configId, filenameRegex, startKeyword, endKeyword, TransactionSource {sourceId, sourceName}) -> do
+      forM_ configurations $ \(Entity configId config) -> do
         H.tr $ do
           H.form
             ! A.method "post"
-            ! A.action (toValue $ "/edit-upload-config/" <> show configId)
+            ! A.action (toValue $ "/edit-upload-config/" <> show (fromSqlKey configId))
             $ do
-              H.td $ H.input ! A.type_ "text" ! A.name "filenameRegex" ! A.value (toValue filenameRegex)
-              H.td $ H.input ! A.type_ "text" ! A.name "startKeyword" ! A.value (toValue startKeyword)
-              H.td $ H.input ! A.type_ "text" ! A.name "endKeyword" ! A.value (toValue endKeyword)
+              H.td $ H.input ! A.type_ "text" ! A.name "filenameRegex" ! A.value (toValue $ fromMaybe "" (uploadConfigurationFilenameRegex config))
+              H.td $ H.input ! A.type_ "text" ! A.name "startKeyword" ! A.value (toValue $ fromMaybe "" (uploadConfigurationStartKeyword config))
+              H.td $ H.input ! A.type_ "text" ! A.name "endKeyword" ! A.value (toValue $ fromMaybe "" (uploadConfigurationEndKeyword config))
               H.td
                 $ H.select
                   ! A.name "transactionSourceId"
                 $ do
-                  forM_ transactionSources $ \TransactionSource {sourceId = tsId, sourceName} -> do
+                  forM_ transactionSources $ \(Entity tsId ts) -> do
                     H.option
-                      ! A.value (toValue tsId)
-                      !? (tsId == sourceId, A.selected "selected")
-                      $ toHtml sourceName
+                      ! A.value (toValue $ fromSqlKey tsId)
+                      !? (uploadConfigurationTransactionSourceId config == tsId, A.selected "selected")
+                      $ toHtml (transactionSourceName ts)
               H.td $ do
-                H.input ! A.type_ "hidden" ! A.name "id" ! A.value (toValue configId)
+                H.input ! A.type_ "hidden" ! A.name "id" ! A.value (toValue $ fromSqlKey configId)
                 H.input ! A.type_ "submit" ! A.value "Save"
                 H.form
                   ! A.method "post"
-                  ! A.action (toValue $ "/delete-upload-config/" <> show configId)
+                  ! A.action (toValue $ "/delete-upload-config/" <> show (fromSqlKey configId))
                   $ H.input ! A.type_ "submit" ! A.value "Delete"
 
     H.h2 "Add New Upload Configuration"
@@ -238,18 +257,17 @@ renderUploadConfigurationsPage configurations transactionSources =
 
         H.label ! A.for "transactionSourceId" $ "Transaction Source:"
         H.select ! A.name "transactionSourceId" $ do
-          forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
-            H.option ! A.value (toValue sourceId) $ toHtml sourceName
+          forM_ transactionSources $ \(Entity tsId ts) -> do
+            H.option ! A.value (toValue $ fromSqlKey tsId) $ toHtml (transactionSourceName ts)
         H.br
 
         H.input ! A.type_ "submit" ! A.value "Add Configuration"
 
--- Render the configuration page
 renderConfigurationPage ::
-  Maybe SankeyConfig ->
-  Map TransactionSource [Category] ->
-  [(Int, Text, Text, Text, TransactionSource)] ->
-  [TransactionSource] ->
+  Maybe FullSankeyConfig ->
+  Map (Entity TransactionSource) [Entity Category] ->
+  [Entity UploadConfiguration] ->
+  [Entity TransactionSource] ->
   TL.Text
 renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSources =
   renderHtml $ docTypeHtml $ do
@@ -306,38 +324,38 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
             H.br
             H.input ! A.type_ "submit" ! A.value "Add Source"
         H.ul $ do
-          forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
+          forM_ transactionSources $ \(Entity sourceId source) -> do
             H.li $ do
               H.form
                 ! A.method "post"
-                ! A.action (toValue $ "/edit-transaction-source/" <> show sourceId)
+                ! A.action (toValue $ "/edit-transaction-source/" <> show (fromSqlKey sourceId))
                 $ do
                   H.input
                     ! A.type_ "text"
                     ! A.name "sourceName"
-                    ! A.value (toValue sourceName)
+                    ! A.value (toValue $ transactionSourceName source)
                   H.input ! A.type_ "submit" ! A.value "Rename"
 
       -- Categories Section
       H.div ! A.class_ "config-section" $ do
         H.h2 "Manage Categories"
-        forM_ (Map.toList transactions) $ \(TransactionSource {sourceId, sourceName}, categories) -> do
-          H.h3 $ toHtml $ "Categories for " <> sourceName
+        forM_ (Map.toList transactions) $ \(Entity sourceId source, categories) -> do
+          H.h3 $ toHtml $ "Categories for " <> transactionSourceName source
           H.ul $ do
-            forM_ categories $ \Category {categoryId, categoryName} -> do
+            forM_ categories $ \(Entity catId cat) -> do
               H.li $ do
                 H.form
                   ! A.method "post"
-                  ! A.action (toValue $ "/edit-category/" <> show categoryId)
+                  ! A.action (toValue $ "/edit-category/" <> show (fromSqlKey catId))
                   $ do
                     H.input
                       ! A.type_ "text"
                       ! A.name "categoryName"
-                      ! A.value (toValue categoryName)
+                      ! A.value (toValue $ categoryName cat)
                     H.input ! A.type_ "submit" ! A.value "Rename"
           H.form
             ! A.method "post"
-            ! A.action (toValue $ "/add-category/" <> show sourceId)
+            ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
             $ do
               H.label ! A.for "newCategory" $ "New Category Name:"
               H.input

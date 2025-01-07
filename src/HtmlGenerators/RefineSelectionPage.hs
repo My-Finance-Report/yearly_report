@@ -6,16 +6,17 @@ module HtmlGenerators.RefineSelectionPage (renderSliderPage) where
 import Control.Monad (forM_)
 import Data.Text as T (Text)
 import qualified Data.Text.Lazy as TL
+import Database.Persist
+import Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Types (Category (..), TransactionSource (..))
 
 renderSliderPage ::
-  Int ->
+  Key UploadedPdf ->
   T.Text ->
   [T.Text] ->
-  [TransactionSource] ->
+  [Entity TransactionSource] ->
   TL.Text
 renderSliderPage pdfId filename linesGuessed transactionSources =
   renderHtml $ docTypeHtml $ do
@@ -46,10 +47,11 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
               ! A.name "transactionSourceId"
               ! A.id "transactionSourceId"
               $ do
-                forM_ transactionSources $ \TransactionSource {sourceId, sourceName} -> do
+                forM_ transactionSources $ \entity -> do
+                  let TransactionSource {transactionSourceName} = entityVal entity
                   H.option
-                    ! A.value (toValue sourceId)
-                    $ toHtml sourceName
+                    ! A.value (toValue $ show $ entityKey entity)
+                    $ toHtml transactionSourceName
 
             H.br
 

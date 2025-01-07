@@ -8,52 +8,51 @@ import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
+import Database.Persist
+import Models
 import Types
 
 buildSankeyLinks ::
-  (TransactionSource, Category, TransactionSource) ->
-  Map TransactionSource AggregatedTransactions ->
+  (Entity TransactionSource, Entity Category, Entity TransactionSource) ->
+  Map (Entity TransactionSource) AggregatedTransactions ->
   [(Text, Text, Double)]
 buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
-  case Data.Map.lookup targetSource aggregatedTransactions of
+  case Map.lookup targetSource aggregatedTransactions of
     Just targetTransactions ->
-      -- Sum the amounts for each key in the map
-      let categoryTotals = Data.Map.map (sum . Prelude.map (signedAmount . transaction)) targetTransactions
-          -- Generate Sankey data: [sourceCategory, key, value]
+      let categoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) targetTransactions
           sankeyLinks =
             Prelude.map
-              (\(category, total) -> (categoryName sourceCategory, category, total))
-              (Data.Map.toList categoryTotals)
+              (\(category, total) -> (categoryName (entityVal sourceCategory), category, total))
+              (Map.toList categoryTotals)
        in sankeyLinks
     Nothing -> []
 
 generateSankeyData ::
-  Map TransactionSource [CategorizedTransaction] ->
-  SankeyConfig ->
+  Map (Entity TransactionSource) [CategorizedTransaction] ->
+  FullSankeyConfig ->
   [(Text, Text, Double)]
 generateSankeyData transactions config =
-  let -- Group transactions by category name
-      aggregatedTransactions = groupByBlahForAll transactions (categoryName . category)
+  let aggregatedTransactions = groupByBlahForAll transactions (categoryName . category)
 
-      SankeyConfig {inputs, linkages, mapKeyFunction} = config
+      FullSankeyConfig {inputs, linkages, mapKeyFunction} = config
 
       -- Process input flows
       inputFlows = concatMap processInput inputs
         where
-          processInput :: (TransactionSource, Category) -> [(Text, Text, Double)]
+          processInput :: (Entity TransactionSource, Entity Category) -> [(Text, Text, Double)]
           processInput (source, category) =
             case Map.lookup source aggregatedTransactions of
               Just categorizedByCategory ->
-                case Map.lookup (categoryName category) categorizedByCategory of
+                case Map.lookup (categoryName (entityVal category)) categorizedByCategory of
                   Just transactionsForCategory ->
                     let subCategoryFlows =
                           Map.toList $
                             Map.filterWithKey
-                              (\catName _ -> catName /= categoryName category)
+                              (\catName _ -> catName /= categoryName (entityVal category))
                               categorizedByCategory
                      in Prelude.map
                           ( \(subCatName, txns) ->
-                              ( categoryName category,
+                              ( categoryName (entityVal category),
                                 subCatName,
                                 sum $ Prelude.map (sankeyAmount . transaction) txns
                               )
@@ -75,6 +74,6 @@ sankeyAmount :: Transaction -> Double
 sankeyAmount txn = abs $ signedAmount txn
 
 signedAmount :: Transaction -> Double
-signedAmount txn = case kind txn of
-  Deposit -> amount txn
-  Withdrawal -> negate (amount txn)
+signedAmount txn = case transactionKind txn of
+  Deposit -> transactionAmount txn
+  Withdrawal -> negate (transactionAmount txn)

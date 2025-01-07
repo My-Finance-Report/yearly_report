@@ -7,7 +7,8 @@ library
   hs-source-dirs: src
   exposed-modules: 
     Types
-    Database
+    NewDatabase
+    ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.HomePage
@@ -26,6 +27,8 @@ library
       process,
       wai-extra,
       wai-middleware-static,
+      transformers,
+      unliftio-core,
       aeson >= 1.5,
       http-client >= 0.7,
       http-types,
@@ -48,8 +51,9 @@ executable year-report-finances
   hs-source-dirs: src
   other-modules:
       Types
-      Database
+      NewDatabase
       Categorizer
+      ConnectionPool
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
       HtmlGenerators.AllFilesPage
@@ -64,6 +68,8 @@ executable year-report-finances
       text >= 1.2 && < 2.2,
       containers,
       time,
+      transformers,
+      unliftio-core,
       process,
       monad-logger,
       wai-extra,
