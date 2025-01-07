@@ -4,7 +4,36 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module NewDatabase (initializeDatabase, updateCategory, addTransactionSource, seedDatabase, getAllFilenames, getTransactionSource, getAllTransactionSources, getTransactionsByFileId, getAllUploadConfigs, getUploadConfiguration, getCategoriesBySource, insertTransaction, getFirstSankeyConfig, fetchPdfRecord, isFileProcessed, markFileAsProcessed, getAllTransactions, groupTransactionsBySource, getCategory, saveSankeyConfig, addCategory, updateTransactionSource, persistUploadConfiguration, insertPdfRecord, updateTransactionCategory, parseTransactionKind) where
+module Database
+  ( initializeDatabase,
+    updateCategory,
+    addTransactionSource,
+    seedDatabase,
+    getAllFilenames,
+    getTransactionSource,
+    getAllTransactionSources,
+    getTransactionsByFileId,
+    getAllUploadConfigs,
+    getUploadConfiguration,
+    getCategoriesBySource,
+    insertTransaction,
+    getFirstSankeyConfig,
+    fetchPdfRecord,
+    isFileProcessed,
+    markFileAsProcessed,
+    getAllTransactions,
+    groupTransactionsBySource,
+    getCategory,
+    saveSankeyConfig,
+    addCategory,
+    updateTransactionSource,
+    persistUploadConfiguration,
+    insertPdfRecord,
+    updateTransactionCategory,
+    parseTransactionKind,
+    getSourceFileMappings,
+  )
+where
 
 import ConnectionPool
 import Control.Monad (forM, forM_)
@@ -15,7 +44,10 @@ import Control.Monad.Trans.Reader (ReaderT)
 import Data.ByteString (ByteString)
 import Data.List (nub)
 import Data.Map hiding (insert, update)
+import qualified Data.Map as Map
 import Data.Maybe (catMaybes, isJust, listToMaybe)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
@@ -462,3 +494,36 @@ persistUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex = d
       case result of
         Just _ -> return () -- Successfully inserted
         Nothing -> liftIO $ putStrLn "UploadConfiguration already exists" -- Log if already exists
+
+getSourceFileMappings :: (MonadUnliftIO m) => m [SourceFileMapping]
+getSourceFileMappings = do
+  pool <- liftIO getConnectionPool
+  runSqlPool querySourceFileMappings pool
+  where
+    querySourceFileMappings = do
+      -- Fetch all transaction sources, transactions, and uploaded PDFs
+      sources <- selectList [] []
+      transactions <- selectList [] []
+      pdfs <- selectList [] []
+
+      -- Convert PDFs to a Map for efficient lookups
+      let pdfMap = Map.fromList [(entityKey pdf, entityVal pdf) | pdf <- pdfs]
+
+      -- Group transactions by source with unique filenames
+      let sourceToFiles =
+            Map.fromListWith
+              Set.union
+              [ (transactionTransactionSourceId txn, Set.singleton (uploadedPdfFilename pdf))
+                | Entity _ txn <- transactions,
+                  Just pdfId <- [transactionUploadedPdfId txn],
+                  Just pdf <- [Map.lookup pdfId pdfMap]
+              ]
+
+      -- Convert the Set of filenames back to a list for `handledFiles`
+      return
+        [ SourceFileMapping
+            { source = source,
+              handledFiles = Set.toList $ Map.findWithDefault Set.empty (entityKey source) sourceToFiles
+            }
+          | source <- sources
+        ]

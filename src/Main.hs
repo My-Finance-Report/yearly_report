@@ -17,6 +17,7 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
+import Database
 import Database.Persist.Postgresql hiding (get)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.Configuration (renderConfigurationPage)
@@ -28,7 +29,6 @@ import Network.HTTP.Client (Request (redactHeaders))
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import NewDatabase
 import Parsers (extractTextFromPdf, processPdfFile)
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
@@ -44,9 +44,8 @@ main :: IO ()
 main = do
   activeJobs <- newIORef 0
 
-  -- todo remove sqlite
   ConnectionPool.initializeDatabase
-  NewDatabase.seedDatabase
+  Database.seedDatabase
   migratePostgres
   scotty 3000 $ do
     middleware logStdoutDev

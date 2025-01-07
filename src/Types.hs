@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types
   ( CategorizedTransaction (..),
@@ -11,6 +12,7 @@ module Types
     PartialTransaction (..),
     groupByBlah,
     groupByBlahForAll,
+    SourceFileMapping (..),
   )
 where
 
@@ -24,7 +26,7 @@ import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Time (Day, defaultTimeLocale, formatTime, parseTimeM)
+import Data.Time (Day, UTCTime, defaultTimeLocale, formatTime, parseTimeM)
 import Database.Persist
 import Database.SQLite.Simple.FromRow
 import GHC.Generics (Generic)
@@ -42,15 +44,30 @@ newtype PdfParseException
 
 instance Exception PdfParseException
 
+data SourceFileMapping = SourceFileMapping
+  { source :: Entity TransactionSource,
+    handledFiles :: [Text]
+  }
+  deriving (Show, Eq)
+
 data PartialTransaction = PartialTransaction
   { partialTransactionAmount :: Double,
-    partialTransactionDateOfTransaction :: Text,
+    partialTransactionDateOfTransaction :: UTCTime,
     partialTransactionDescription :: Text,
     partialTransactionKind :: Text
   }
   deriving (Show, Generic)
 
-instance FromJSON PartialTransaction
+instance FromJSON PartialTransaction where
+  parseJSON = withObject "PartialTransaction" $ \v -> do
+    amount <- v .: "partialTransactionAmount"
+    dateText <- v .: "partialTransactionDateOfTransaction"
+    description <- v .: "partialTransactionDescription"
+    kind <- v .: "partialTransactionKind"
+    parsedDate <- case parseTimeM True defaultTimeLocale "%m/%d/%Y" (T.unpack dateText) of
+      Just d -> return d
+      Nothing -> fail $ "Could not parse date: " <> T.unpack dateText
+    return $ PartialTransaction amount parsedDate description kind
 
 newtype TransactionsWrapper
   = TransactionsWrapper {transactions :: [PartialTransaction]}

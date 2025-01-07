@@ -15,6 +15,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (Day, defaultTimeLocale, formatTime)
+import Data.Time.Clock (UTCTime)
+import Database
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
 import GHC.Generics (Generic)
@@ -22,7 +24,6 @@ import Models
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Status
-import NewDatabase
 import OpenAiUtils
 import System.Environment (getEnv)
 import System.FilePath (takeFileName)
@@ -99,7 +100,7 @@ classifyTransactions categoryMap description = do
 categorizeTransactionInner ::
   (MonadIO m) =>
   Text ->
-  Text ->
+  UTCTime ->
   Key TransactionSource ->
   m (Entity Category)
 categorizeTransactionInner description day transactionSourceId = do

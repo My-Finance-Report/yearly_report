@@ -17,6 +17,7 @@
 module Models where
 
 import Data.Text (Text)
+import Data.Time (UTCTime)
 import Database.Persist.Postgresql
 import Database.Persist.TH
 import GHC.Generics
@@ -52,7 +53,7 @@ Category
 Transaction
     description Text
     categoryId CategoryId
-    dateOfTransaction Text
+    dateOfTransaction UTCTime
     amount Double
     transactionSourceId TransactionSourceId
     kind TransactionKind

@@ -17,10 +17,10 @@ import qualified Data.ByteString.Lazy as B
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
+import Database
 import Database.Persist
 import GHC.Generics (Generic)
 import Models
-import NewDatabase
 import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)

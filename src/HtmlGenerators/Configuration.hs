@@ -45,7 +45,7 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
           case maybeConfig of
             Just FullSankeyConfig {inputs} ->
               forM_ inputs $ \(source, category) ->
-                renderInputRow sourceCategories (entityKey source) (entityKey category) (categoryName $ entityVal category)
+                renderInputRow sourceCategories source (entityKey category) (categoryName $ entityVal category)
             Nothing -> renderEmptyInputRow sourceCategories
           -- Add New Input Button
           H.button
@@ -60,7 +60,7 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
           H.legend "Linkages"
           case maybeConfig of
             Just FullSankeyConfig {linkages = (source, category, target)} ->
-              renderLinkageRow sourceCategories (entityKey source) (entityKey category) (entityKey target)
+              renderLinkageRow sourceCategories source (entityKey category) (entityKey target)
             Nothing -> renderEmptyLinkageRow sourceCategories
 
         H.br
@@ -72,24 +72,23 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
 
 renderInputRow ::
   Map (Entity TransactionSource) [Entity Category] ->
-  Key TransactionSource ->
+  Entity TransactionSource ->
   Key Category ->
   Text ->
   Html
-renderInputRow sourceCategories tsId catId catName = do
+renderInputRow sourceCategories ts catId catName = do
   H.div $ do
     -- Source Dropdown
     H.select ! A.name "inputSourceId[]" $ do
       forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
         H.option
           ! A.value (toValue $ fromSqlKey sourceId)
-          !? (sourceId == tsId, A.selected "selected")
+          !? (sourceId == entityKey ts, A.selected "selected")
           $ toHtml
           $ transactionSourceName source
     -- Category Dropdown
     H.select ! A.name "inputCategoryId[]" $ do
-      -- TODO idk what this is
-      let relevantCategories = Map.findWithDefault [] (Entity tsId undefined) sourceCategories
+      let relevantCategories = Map.findWithDefault [] ts sourceCategories
       forM_ relevantCategories $ \(Entity categoryId category) -> do
         H.option
           ! A.value (toValue $ fromSqlKey categoryId)
@@ -119,23 +118,23 @@ renderEmptyInputRow sourceCategories = do
 
 renderLinkageRow ::
   Map (Entity TransactionSource) [Entity Category] ->
-  Key TransactionSource ->
+  Entity TransactionSource ->
   Key Category ->
   Key TransactionSource ->
   Html
-renderLinkageRow sourceCategories srcId catId tgtId = do
+renderLinkageRow sourceCategories src catId tgtId = do
   H.div $ do
     -- Source Dropdown
     H.select ! A.name "linkageSourceId" $ do
       forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
         H.option
           ! A.value (toValue $ fromSqlKey sourceId)
-          !? (sourceId == srcId, A.selected "selected")
+          !? (sourceId == entityKey src, A.selected "selected")
           $ toHtml
           $ transactionSourceName source
     -- Category Dropdown
     H.select ! A.name "linkageCategoryId" $ do
-      let relevantCategories = Map.findWithDefault [] (Entity srcId undefined) sourceCategories
+      let relevantCategories = Map.findWithDefault [] src sourceCategories
       forM_ relevantCategories $ \(Entity categoryId category) -> do
         H.option
           ! A.value (toValue $ fromSqlKey categoryId)

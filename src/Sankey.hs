@@ -19,7 +19,7 @@ buildSankeyLinks ::
 buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
   case Map.lookup targetSource aggregatedTransactions of
     Just targetTransactions ->
-      let categoryTotals = Map.map (sum . Prelude.map (signedAmount . transaction)) targetTransactions
+      let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . transaction)) targetTransactions
           sankeyLinks =
             Prelude.map
               (\(category, total) -> (categoryName (entityVal sourceCategory), category, total))

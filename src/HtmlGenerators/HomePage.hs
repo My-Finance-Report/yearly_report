@@ -8,18 +8,18 @@ where
 import Categorizer
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Data.List (sortBy)
+import Data.List (null, sortBy)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
+import Database
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
 import HtmlGenerators.HtmlGenerators
 import Models
-import NewDatabase
 import Parsers
 import Sankey
 import System.Directory (listDirectory)
@@ -29,6 +29,7 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types
+import Types (SourceFileMapping (handledFiles))
 
 truncateToTwoDecimals :: Double -> Double
 truncateToTwoDecimals x = fromIntegral (truncate (x * 100)) / 100
@@ -44,7 +45,7 @@ generateHomapageHtml ::
   Maybe [(T.Text, T.Text, Double)] ->
   Maybe Text ->
   Html ->
-  Map.Map (Entity TransactionSource) [Text] ->
+  [SourceFileMapping] ->
   TL.Text
 generateHomapageHtml sankeyData banner tabs files =
   renderHtml $ do
@@ -60,30 +61,38 @@ generateHomapageHtml sankeyData banner tabs files =
       generateSankeyDiv
       tabs
 
-generateProcessedFilesComponent :: Map.Map (Entity TransactionSource) [Text] -> Html
+generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "processed-files-section" $ do
     H.h2 "Processed Files"
-    if Map.null processedFiles
+    if Data.List.null processedFiles
       then H.p "No files have been processed yet."
       else H.table $ do
         H.tr $ do
           H.th "Transaction Source"
           H.th "Filenames"
           H.th "Actions"
-        forM_ (Map.toList processedFiles) $ \(transactionSource, filenames) -> do
-          forM_ filenames $ \filename -> do
+        forM_ processedFiles $ \mapping -> do
+          forM_ (handledFiles mapping) $ \filename -> do
             H.tr $ do
-              H.td (toHtml (transactionSourceName $ entityVal transactionSource))
+              H.td (toHtml (transactionSourceName $ entityVal (Types.source mapping)))
               H.td (toHtml filename)
               H.td $ do
                 H.form
                   ! A.method "post"
                   ! A.action (toValue $ "/delete-processed-file?filename=" <> T.unpack filename)
                   $ do
-                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ show $ entityKey transactionSource)
+                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ show $ entityKey (Types.source mapping))
                     H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
                     H.input ! A.type_ "submit" ! A.value "Delete"
+
+-- Format each row of the histogram data
+formatHistogramRow :: (T.Text, Double) -> T.Text
+formatHistogramRow (group, count) = T.concat ["['", group, "', ", T.pack (show count), "],"]
+
+generateHistogramDiv :: Html
+generateHistogramDiv =
+  H.div ! A.id "histogram_chart" $ mempty
 
 generateHeader :: Maybe [(T.Text, T.Text, Double)] -> Html
 generateHeader sankeyData =
@@ -98,6 +107,52 @@ generateHeader sankeyData =
 
       H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
       generateSankeyScript sankeyData
+
+generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
+generateSubTabContent index aggregatedBySource =
+  H.div ! A.class_ "subtab-content-container" $ do
+    H.ul ! A.class_ "tabs" $ do
+      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
+        H.li
+          ! A.class_ (if idx == 0 then "tab active" else "tab")
+          ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
+          $ toHtml name
+
+    forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
+      let groupedData = groupingFunc $ concatMap snd $ Map.toList aggregatedBySource
+      let histogramData = Map.toList $ fmap (fromIntegral . Prelude.length) groupedData
+      H.div
+        ! A.class_ "subtab-content"
+        ! A.style (if idx == 0 then "display: block;" else "display: none;")
+        $ do
+          generateAggregatedRows (toHtml subname) groupedData
+          generateHistogramScript (Just histogramData)
+          generateHistogramDiv
+
+generateHistogramScript :: Maybe [(T.Text, Double)] -> Html
+generateHistogramScript histogramData =
+  case histogramData of
+    Just rows -> do
+      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
+      H.script
+        ! A.type_ "text/javascript"
+        $ H.toHtml
+        $ T.concat
+          [ "google.charts.load('current', {packages:['corechart']});\n",
+            "google.charts.setOnLoadCallback(drawHistogram);\n",
+            "function drawHistogram() {\n",
+            "  const histdata = new google.visualization.DataTable();\n",
+            "  histdata.addColumn('string', 'Group');\n",
+            "  histdata.addColumn('number', 'Count');\n",
+            "  histdata.addRows([\n",
+            T.concat (Prelude.map formatHistogramRow rows),
+            "  ]);\n",
+            "  const options = { width: 800, height: 600, legend: { position: 'none' } };\n",
+            "  const chart = new google.visualization.Histogram(document.getElementById('histogram_chart'));\n",
+            "  chart.draw(histdata, options);\n",
+            "}\n"
+          ]
+    Nothing -> ""
 
 generateSankeyScript :: Maybe [(T.Text, T.Text, Double)] -> Html
 generateSankeyScript sankeyData =
@@ -173,7 +228,7 @@ generateDetailRows cat txs sectionId =
     detailRow t =
       H.tr $ do
         H.td (toHtml (transactionDescription t))
-        H.td (toHtml (transactionDateOfTransaction t))
+        H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
         H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
 
 generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
@@ -206,25 +261,11 @@ type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTra
 subtabMappings :: [(Text, GroupingFunction)]
 subtabMappings =
   [ ("Category", groupByBlah (categoryName . category)),
-    ("Month", groupByBlah (transactionDateOfTransaction . transaction))
+    ("Month", groupByBlah (formatMonthYear . transactionDateOfTransaction . transaction))
   ]
 
-generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
-generateSubTabContent index aggregatedBySource =
-  H.div ! A.class_ "subtab-content-container" $ do
-    H.ul ! A.class_ "tabs" $ do
-      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
-        H.li
-          ! A.class_ (if idx == 0 then "tab active" else "tab")
-          ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
-          $ toHtml name
-
-    forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
-      H.div
-        ! A.class_ "subtab-content"
-        ! A.style (if idx == 0 then "display: block;" else "display: none;")
-        $ do
-          generateAggregatedRows (toHtml subname) (groupingFunc $ concatMap snd $ Map.toList aggregatedBySource)
+formatMonthYear :: UTCTime -> Text
+formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
 
 generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource =
@@ -259,9 +300,7 @@ renderHomePage banner = do
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource
 
-  -- TODO
-  -- files <- getTransactionSourceFiles dbPath
-  let files = Map.empty
+  files <- getSourceFileMappings
 
   let strictText = generateHomapageHtml sankeyData banner tabs files
   return strictText

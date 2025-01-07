@@ -7,7 +7,7 @@ library
   hs-source-dirs: src
   exposed-modules: 
     Types
-    NewDatabase
+    Database
     ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
@@ -51,7 +51,7 @@ executable year-report-finances
   hs-source-dirs: src
   other-modules:
       Types
-      NewDatabase
+      Database
       Categorizer
       ConnectionPool
       HtmlGenerators.HtmlGenerators
