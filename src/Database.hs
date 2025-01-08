@@ -32,6 +32,7 @@ module Database
     updateTransactionCategory,
     parseTransactionKind,
     getSourceFileMappings,
+    fetchSourceMap,
   )
 where
 
@@ -527,3 +528,12 @@ getSourceFileMappings = do
             }
           | source <- sources
         ]
+
+fetchSourceMap :: (MonadUnliftIO m) => m (Map (Key TransactionSource) TransactionSource)
+fetchSourceMap = do
+  pool <- liftIO getConnectionPool
+  runSqlPool querySourceMap pool
+  where
+    querySourceMap = do
+      sources <- selectList [] []
+      return $ Map.fromList [(entityKey source, entityVal source) | source <- sources]

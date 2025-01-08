@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -7,18 +9,24 @@ import ConnectionPool
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Control.Monad.Logger (runStderrLoggingT)
+import Data.Aeson (ToJSON)
 import qualified Data.ByteString.Lazy as B
+import Data.HList
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.Map
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
+import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import Database
 import Database.Persist.Postgresql hiding (get)
+import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
@@ -30,6 +38,7 @@ import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers (extractTextFromPdf, processPdfFile)
+import Sankey
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import Text.Blaze.Html (Html)
@@ -39,6 +48,68 @@ import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
+
+data Matrix = Matrix
+  { columnHeaders :: [T.Text],
+    rowHeaders :: [T.Text],
+    dataRows :: [[Double]]
+  }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON Matrix
+
+generateHistogramData :: (MonadUnliftIO m) => [CategorizedTransaction] -> m Matrix
+generateHistogramData transactions = do
+  sourceMap <- fetchSourceMap
+  let grouped = groupBySourceAndMonth sourceMap transactions
+  let allSourceNames = extractAllSourceNames grouped
+  let matrix = buildMatrix allSourceNames grouped
+  return matrix
+
+groupBySourceAndMonth ::
+  Map (Key TransactionSource) TransactionSource ->
+  [CategorizedTransaction] ->
+  Map T.Text (Map T.Text Double)
+groupBySourceAndMonth sourceMap txns =
+  Map.fromListWith
+    (Map.unionWith (+))
+    [ ( formatMonthYear $ transactionDateOfTransaction $ transaction txn,
+        Map.singleton (resolveSourceName sourceMap txn) (transactionAmount $ transaction txn)
+      )
+      | txn <- txns
+    ]
+
+resolveSourceName ::
+  Map (Key TransactionSource) TransactionSource ->
+  CategorizedTransaction ->
+  T.Text
+resolveSourceName sourceMap txn =
+  let sourceId = categorySourceId $ category txn
+   in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap)
+
+extractAllSourceNames :: Map T.Text (Map T.Text Double) -> [T.Text]
+extractAllSourceNames groupedData =
+  Set.toList $ Set.unions (Prelude.map Map.keysSet $ Map.elems groupedData)
+
+buildMatrix ::
+  [T.Text] -> -- List of all source names
+  Map T.Text (Map T.Text Double) -> -- Grouped data by month and source
+  Matrix
+buildMatrix allSourceNames groupedData =
+  let columnHeaders = "Month" : allSourceNames
+      rowHeaders = Map.keys groupedData
+      dataRows = Prelude.map (buildRow allSourceNames) (Map.toList groupedData)
+   in Matrix columnHeaders rowHeaders dataRows
+
+buildRow ::
+  [T.Text] -> -- List of all source names
+  (T.Text, Map T.Text Double) -> -- A single month's data
+  [Double]
+buildRow allSourceNames (_, sources) =
+  Prelude.map (\source -> Map.findWithDefault 0 source sources) allSourceNames
+
+formatMonthYear :: UTCTime -> T.Text
+formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
 
 main :: IO ()
 main = do
@@ -226,3 +297,20 @@ main = do
       catName <- Web.Scotty.formParam "categoryName"
       liftIO $ updateCategory catId catName
       Web.Scotty.redirect "/configuration"
+
+    get "/api/sankey-data" $ do
+      categorizedTransactions <- liftIO getAllTransactions
+      gbs <- groupTransactionsBySource categorizedTransactions
+
+      sankeyConfig <- liftIO getFirstSankeyConfig
+      let sankeyData = case sankeyConfig of
+            Just config -> Just (generateSankeyData gbs config)
+            Nothing -> Nothing
+
+      json sankeyData
+
+    get "/api/histogram-data" $ do
+      -- Fetch or compute the histogram data
+      transactions <- liftIO getAllTransactions
+      histogramData <- generateHistogramData transactions
+      json histogramData

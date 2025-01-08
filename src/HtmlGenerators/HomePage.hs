@@ -29,7 +29,6 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types
-import Types (SourceFileMapping (handledFiles))
 
 truncateToTwoDecimals :: Double -> Double
 truncateToTwoDecimals x = fromIntegral (truncate (x * 100)) / 100
@@ -42,14 +41,13 @@ formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
 generateHomapageHtml ::
-  Maybe [(T.Text, T.Text, Double)] ->
   Maybe Text ->
   Html ->
   [SourceFileMapping] ->
   TL.Text
-generateHomapageHtml sankeyData banner tabs files =
+generateHomapageHtml banner tabs files =
   renderHtml $ do
-    generateHeader sankeyData
+    generateHeader
     case banner of
       Just bannerText ->
         H.div ! A.class_ "banner" $ toHtml bannerText
@@ -59,6 +57,7 @@ generateHomapageHtml sankeyData banner tabs files =
       generateProcessedFilesComponent files
       generateUpload
       generateSankeyDiv
+      generateHistogramDiv
       tabs
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
@@ -86,16 +85,12 @@ generateProcessedFilesComponent processedFiles = do
                     H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
                     H.input ! A.type_ "submit" ! A.value "Delete"
 
--- Format each row of the histogram data
-formatHistogramRow :: (T.Text, Double) -> T.Text
-formatHistogramRow (group, count) = T.concat ["['", group, "', ", T.pack (show count), "],"]
-
 generateHistogramDiv :: Html
 generateHistogramDiv =
   H.div ! A.id "histogram_chart" $ mempty
 
-generateHeader :: Maybe [(T.Text, T.Text, Double)] -> Html
-generateHeader sankeyData =
+generateHeader :: Html
+generateHeader =
   H.docTypeHtml $ do
     H.head $ do
       H.title "Expense Summary"
@@ -105,8 +100,10 @@ generateHeader sankeyData =
         ! A.type_ "text/css"
         ! A.href "/style.css"
 
+      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
+      H.script ! A.type_ "text/javascript" ! A.src "/sankey.js" $ mempty
       H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
-      generateSankeyScript sankeyData
+      H.script ! A.type_ "text/javascript" ! A.src "/histogram.js" $ mempty
 
 generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
@@ -120,65 +117,11 @@ generateSubTabContent index aggregatedBySource =
 
     forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
       let groupedData = groupingFunc $ concatMap snd $ Map.toList aggregatedBySource
-      let histogramData = Map.toList $ fmap (fromIntegral . Prelude.length) groupedData
       H.div
         ! A.class_ "subtab-content"
         ! A.style (if idx == 0 then "display: block;" else "display: none;")
         $ do
           generateAggregatedRows (toHtml subname) groupedData
-          generateHistogramScript (Just histogramData)
-          generateHistogramDiv
-
-generateHistogramScript :: Maybe [(T.Text, Double)] -> Html
-generateHistogramScript histogramData =
-  case histogramData of
-    Just rows -> do
-      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        $ H.toHtml
-        $ T.concat
-          [ "google.charts.load('current', {packages:['corechart']});\n",
-            "google.charts.setOnLoadCallback(drawHistogram);\n",
-            "function drawHistogram() {\n",
-            "  const histdata = new google.visualization.DataTable();\n",
-            "  histdata.addColumn('string', 'Group');\n",
-            "  histdata.addColumn('number', 'Count');\n",
-            "  histdata.addRows([\n",
-            T.concat (Prelude.map formatHistogramRow rows),
-            "  ]);\n",
-            "  const options = { width: 800, height: 600, legend: { position: 'none' } };\n",
-            "  const chart = new google.visualization.Histogram(document.getElementById('histogram_chart'));\n",
-            "  chart.draw(histdata, options);\n",
-            "}\n"
-          ]
-    Nothing -> ""
-
-generateSankeyScript :: Maybe [(T.Text, T.Text, Double)] -> Html
-generateSankeyScript sankeyData =
-  case sankeyData of
-    Just rows -> do
-      H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        $ H.toHtml
-        $ T.concat
-          [ "google.charts.load('current', {packages:['sankey']});\n",
-            "google.charts.setOnLoadCallback(drawChart);\n",
-            "function drawChart() {\n",
-            "  const data = new google.visualization.DataTable();\n",
-            "  data.addColumn('string', 'From');\n",
-            "  data.addColumn('string', 'To');\n",
-            "  data.addColumn('number', 'Weight');\n",
-            "  data.addRows([\n",
-            T.concat (Prelude.map formatSankeyRow rows),
-            "  ]);\n",
-            "  const options = { width: 800, height: 600 };\n",
-            "  const chart = new google.visualization.Sankey(document.getElementById('sankey_chart'));\n",
-            "  chart.draw(data, options);\n",
-            "}\n"
-          ]
-    Nothing -> ""
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -290,17 +233,11 @@ renderHomePage :: Maybe Text -> IO TL.LazyText
 renderHomePage banner = do
   transactionSources <- getAllTransactionSources
   categorizedTransactions <- getAllTransactions
-
   groupedBySource <- groupTransactionsBySource categorizedTransactions
-
-  sankeyConfig <- getFirstSankeyConfig
-  let sankeyData = case sankeyConfig of
-        Just config -> Just (generateSankeyData groupedBySource config)
-        Nothing -> Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource
 
   files <- getSourceFileMappings
 
-  let strictText = generateHomapageHtml sankeyData banner tabs files
+  let strictText = generateHomapageHtml banner tabs files
   return strictText
