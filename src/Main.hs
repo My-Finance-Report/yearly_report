@@ -253,7 +253,43 @@ main = do
 
     -- post "/add-upload-config" $ addUploadConfig dbPath
     -- post "/delete-upload-config/:id" $ deleteUploadConfig dbPath
-    -- post "/edit-upload-config/:id" $ editUploadConfig dbPath
+    post "/edit-upload-config/:id" $ do
+      -- Extract the ID parameter from the route
+      idParam <- Web.Scotty.param "id" :: ActionM Text
+      let uploadConfigId = toSqlKey (read $ T.unpack idParam) :: Key UploadConfiguration
+
+      -- Extract form or JSON parameters
+      startKeyword <- Web.Scotty.formParam "startKeyword"
+      endKeyword <- Web.Scotty.formParam "endKeyword"
+      filenameRegex <- Web.Scotty.formParam "filenameRegex"
+
+      -- Call the editUploadConfiguration function
+      liftIO $ editUploadConfiguration uploadConfigId startKeyword endKeyword filenameRegex
+
+      -- Respond to the client
+      redirect "/configuration"
+
+    post "/add-upload-config" $ do
+      filenameRegex <- formParam "filenameRegex" :: ActionM Text
+      startKeyword <- formParam "startKeyword" :: ActionM Text
+      endKeyword <- formParam "endKeyword" :: ActionM Text
+      transactionSourceId <- formParam "transactionSourceId" :: ActionM Text
+
+      let txnSourceId = toSqlKey (read $ T.unpack transactionSourceId) :: Key TransactionSource
+
+      liftIO $ persistUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex
+
+      redirect "/configuration"
+
+    post "/delete-upload-config/:id" $ do
+      -- Extract the ID parameter from the route
+      idParam <- Web.Scotty.param "id" :: ActionM Text
+      let uploadConfigId = toSqlKey (read $ T.unpack idParam) :: Key UploadConfiguration
+
+      -- Call the deleteUploadConfiguration function
+      liftIO $ deleteUploadConfiguration uploadConfigId
+
+    -- Respond with a success message
 
     post "/delete-processed-file" $ do
       filename <- Web.Scotty.formParam "filename" :: Web.Scotty.ActionM Int

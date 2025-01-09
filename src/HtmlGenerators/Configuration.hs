@@ -199,7 +199,7 @@ renderUploadConfigurationsPage configurations transactionSources =
         H.th "Start Keyword"
         H.th "End Keyword"
         H.th "Transaction Source"
-        H.th "Actions"
+        H.th ! A.colspan "2" $ "Actions" -- Span two columns
       forM_ configurations $ \(Entity configId config) -> do
         H.tr $ do
           H.form
@@ -221,10 +221,12 @@ renderUploadConfigurationsPage configurations transactionSources =
               H.td $ do
                 H.input ! A.type_ "hidden" ! A.name "id" ! A.value (toValue $ fromSqlKey configId)
                 H.input ! A.type_ "submit" ! A.value "Save"
-                H.form
-                  ! A.method "post"
-                  ! A.action (toValue $ "/delete-upload-config/" <> show (fromSqlKey configId))
-                  $ H.input ! A.type_ "submit" ! A.value "Delete"
+
+          H.form
+            ! A.method "post" -- Use POST for compatibility
+            ! A.action (toValue $ "/delete-upload-config/" <> show (fromSqlKey configId))
+            $ H.td
+            $ H.input ! A.type_ "submit" ! A.value "Delete"
 
     H.h2 "Add New Upload Configuration"
     H.form
@@ -279,27 +281,6 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
         ! A.href "/style.css"
     H.body $ do
       H.h1 "Configuration Page"
-
-      -- General Settings Section
-      H.div ! A.class_ "config-section" $ do
-        H.h2 "Update General Settings"
-        H.form
-          ! A.method "post"
-          ! A.action "/update-general-settings"
-          $ do
-            H.label ! A.for "setting1" $ "Setting 1:"
-            H.input
-              ! A.type_ "text"
-              ! A.name "setting1"
-              ! A.id "setting1"
-            H.br
-            H.label ! A.for "setting2" $ "Setting 2:"
-            H.input
-              ! A.type_ "number"
-              ! A.name "setting2"
-              ! A.id "setting2"
-            H.br
-            H.input ! A.type_ "submit" ! A.value "Save"
 
       -- Upload Configurations Section
       H.div ! A.class_ "config-section" $ do
