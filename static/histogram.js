@@ -7,7 +7,6 @@ function fetchAndDrawHistogram() {
     .then((data) => {
       const combinedData = combineMatrixData(data);
       console.log('Combined Data:', combinedData);
-
       drawHistogram(combinedData);
     })
     .catch((error) => console.error('Error fetching histogram data:', error));
@@ -15,41 +14,36 @@ function fetchAndDrawHistogram() {
 
 function combineMatrixData(matrix) {
   const { columnHeaders, rowHeaders, dataRows } = matrix;
-
-  // Combine each row header with its corresponding data row
   const combinedRows = rowHeaders.map((rowHeader, index) => [rowHeader].concat(dataRows[index]));
-
-  // Return the full heterogeneous array
   return [columnHeaders,...combinedRows];
 }
 
 function drawHistogram(rows) {
-  // Expect rows to be a 2D array, including header row
   const data = google.visualization.arrayToDataTable(rows);
 
   const options = {
-    width: 800,
-    height: 600,
+    width: 500,
+    height: 400,
     legend: { position: 'top', maxLines: 3 },
-    isStacked: false, // Changed to false for regular bar chart
+    isStacked: false, 
     bar: { 
       groupWidth: '75%',
-      spacing: 2 // Add spacing between bars in the same group
+      spacing: 2 
     },
     hAxis: { 
-      title: 'Month',
-      slantedText: true, // Make month labels slanted for better readability
-      slantedTextAngle: 45
+      slantedText: true, 
+      slantedTextAngle: 45,
+      gridlines: { color: 'transparent' }
     },
     vAxis: { 
-      title: 'Transactions',
-      minValue: 0 // Ensure the axis starts at 0
+      minValue: 0 ,
+      gridlines: { color: 'transparent' }
     },
     chartArea: {
-      width: '80%', // Give more space for the bars
+      width: '70%', 
       height: '70%'
     },
-    colors: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5E35B1', '#00ACC1'], // Google-style colors
+    colors: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5E35B1', '#00ACC1'], 
     animation: {
       startup: true,
       duration: 500,
@@ -57,7 +51,7 @@ function drawHistogram(rows) {
     }
   };
 
-  const chart = new google.visualization.BarChart(
+  const chart = new google.visualization.ColumnChart(
     document.getElementById('histogram_chart')
   );
   chart.draw(data, options);

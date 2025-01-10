@@ -448,6 +448,19 @@ tr:hover {
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  touch-action: none;
+  min-width: 300px;
+  min-height: 300px;
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 15px;
+  height: 15px;
 }
 
 .chart-card h2 {

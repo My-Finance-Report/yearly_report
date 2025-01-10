@@ -87,7 +87,7 @@ generateHomapageHtml banner tabs files =
           H.div ! A.class_ "chart-card" $ do
             H.h2 "Spending Flow"
             H.div
-              ! A.id "sankey_chart"
+              ! A.id "sankeyChart"
               ! A.class_ "chart sankey-chart"
               $ ""
 
@@ -106,6 +106,10 @@ generateHomapageHtml banner tabs files =
       -- Scripts at the end of body
       H.script 
         ! A.type_ "text/javascript" 
+        ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js" 
+        $ mempty
+      H.script 
+        ! A.type_ "text/javascript" 
         ! A.src "https://www.gstatic.com/charts/loader.js" 
         $ mempty
       H.script 
@@ -119,6 +123,10 @@ generateHomapageHtml banner tabs files =
       H.script 
         ! A.type_ "text/javascript" 
         ! A.src "/histogram.js" 
+        $ mempty
+      H.script 
+        ! A.type_ "text/javascript" 
+        ! A.src "/resizable.js" 
         $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
