@@ -7,7 +7,7 @@ make my yearly financial report using haskell
 - (DONE) parse PDF bank statements and credit card statements (see src/Parsers.hs)
 - (DONE) cleanup around in / out money -> summing deposits + withdrawls is weird
 - (DONE) categorize expenses (see src/Categorizer.hs)
-- (WORKING) generate "report" (see src/HtmlGenerators.hs)
+- (DONE) generate "report" (see src/HtmlGenerators.hs)
   - (DONE) per month drill down
   - (DONE) summary -> per transaction drill down
   - (DONE) allow for an interactive interface
@@ -22,7 +22,7 @@ make my yearly financial report using haskell
 - (DONE) allow for manually update transactions from a ui
   - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
 - (TODO) deploy in some capacity so i can run that app and let users try it
-  - (TODO) likely need some auth and user notion.
+  - (DONE) likely need some auth and user notion.
   - (DONE) probably should switch to postgres before we deploy
 
 # Tech
@@ -40,6 +40,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
-- Clean up the visuals and ergnomics
 - Some issue with case sensitivity in uploader matching
 - Some issue with negativity on sankey diagram
