@@ -55,14 +55,9 @@ renderPdfResultPage filename rawText =
       H.h2 "Extracted Text"
       H.pre (toHtml rawText)
 
-renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> TL.Text
+renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> Html
 renderTransactionsPage filename txs =
-  renderHtmlT $ docTypeHtml $ do
-    H.head $ do
-      H.title "Transactions"
-      H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
-      H.style "table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px }"
-    H.body $ do
+    body $ do
       H.h1 $ toHtml $ "Transactions for " <> filename
       H.table $ do
         H.tr $ do

@@ -5,42 +5,55 @@ module HtmlGenerators.RefineSelectionPage (renderSliderPage) where
 
 import Control.Monad (forM_)
 import Data.Text as T (Text)
-import qualified Data.Text.Lazy as TL
 import Database.Persist
+    ( PersistEntity(Key), Entity(entityKey, entityVal) )
 import Database.Persist.Postgresql (fromSqlKey)
 import HtmlGenerators.Components (navigationBar)
-import Models
-import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Models ( UploadedPdf, TransactionSource(..) )
 import Text.Blaze.Html5 as H
+    ( Html,
+      toHtml,
+      body,
+      br,
+      div,
+      form,
+      h1,
+      h2,
+      input,
+      label,
+      option,
+      p,
+      pre,
+      script,
+      select,
+      span,
+      ToValue(toValue),
+      (!) )
 import Text.Blaze.Html5.Attributes as A
+    ( action,
+      class_,
+      for,
+      id,
+      method,
+      name,
+      oninput,
+      placeholder,
+      src,
+      type_,
+      value )
 
 renderSliderPage ::
   Key UploadedPdf ->
   T.Text ->
   [T.Text] ->
   [Entity TransactionSource] ->
-  TL.Text
+    Html
 renderSliderPage pdfId filename linesGuessed transactionSources =
-  renderHtml $ docTypeHtml $ do
-    H.head $ do
-      H.title "Select Start/End Keywords"
-
-      H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/style.css"
-
-      H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/css/navbar.css"
-
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "/updateKeywords.js"
-        $ mempty
-
     H.body $ do
+      H.script
+            ! A.type_ "text/javascript"
+            ! A.src "/updateKeywords.js"
+            $ mempty
       H.div ! A.id "selectionContainer" $ do
         H.h1 "Select Transaction Boundaries"
         H.p $ toHtml ("File: " <> filename)

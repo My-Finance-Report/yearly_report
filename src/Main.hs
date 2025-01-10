@@ -164,7 +164,6 @@ main  = do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
-    -- Auth routes
     get "/login" $ do
       token <-getTokenFromRequest
 
@@ -277,11 +276,11 @@ main  = do
       uploadedPdf <- liftIO $ fetchPdfRecord pdfId
       let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
 
-      Web.html $ renderSliderPage pdfId (uploadedPdfFilename uploadedPdf) segments transactionSources
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename uploadedPdf) segments transactionSources
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO getAllFilenames
-      Web.html $ renderAllFilesPage filenames
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderAllFilesPage filenames
 
     get "/transactions/:fileid" $ requireUser pool $ \user -> do
       fileIdText <- Web.Scotty.pathParam "fileid"
@@ -289,7 +288,7 @@ main  = do
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
       uploadedFile <- fetchPdfRecord fileId
       transactions <- liftIO $ getTransactionsByFileId fileId
-      Web.html $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
 
     post "/update-category" $ requireUser pool $ \user -> do
       tId <- Web.Scotty.formParam "transactionId"
