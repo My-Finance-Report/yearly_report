@@ -67,7 +67,6 @@ generateHomapageHtml banner tabs files =
 
       H.div ! A.class_ "container" $ do
         H.div ! A.class_ "page-header" $ do
-          H.h1 "Financial Summary"
           H.div ! A.class_ "upload-section" $ do
             H.form
               ! A.action "/upload"
@@ -85,23 +84,20 @@ generateHomapageHtml banner tabs files =
 
         H.div ! A.class_ "charts-grid" $ do
           H.div ! A.class_ "chart-card" $ do
-            H.h2 "Spending Flow"
             H.div
               ! A.id "sankeyChart"
               ! A.class_ "chart sankey-chart"
               $ ""
 
           H.div ! A.class_ "chart-card" $ do
-            H.h2 "Monthly Spending"
             H.div
               ! A.id "histogram_chart"
               ! A.class_ "chart histogram-chart"
               $ ""
 
         H.div ! A.class_ "summary-section" $ do
-          H.h2 "Expense Summary"
-          generateProcessedFilesComponent files
           tabs
+          generateProcessedFilesComponent files
 
       -- Scripts at the end of body
       H.script 
@@ -256,7 +252,7 @@ generateAggregatedRows header aggregated =
                   sum
                     [ case transactionKind (transaction txn) of
                         Deposit -> transactionAmount (transaction txn)
-                        Withdrawal -> -transactionAmount (transaction txn)
+                        Withdrawal -> transactionAmount (transaction txn)
                       | txn <- txns
                     ]
            in do
