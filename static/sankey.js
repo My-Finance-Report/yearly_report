@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
       const options = { width: 800, height: 600 };
       const chart = new google.visualization.Sankey(
-        document.getElementById("sankey_chart")
+        document.getElementById("sankeyChart")
       );
       chart.draw(chartData, options);
     }

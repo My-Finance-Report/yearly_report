@@ -47,19 +47,79 @@ generateHomapageHtml ::
   [SourceFileMapping] ->
   Html
 generateHomapageHtml banner tabs files =
-      H.body $ do
-        generateHeader
-        case banner of
-          Just bannerText ->
-            H.div ! A.class_ "banner" $ toHtml bannerText
-          Nothing -> return ()
+  H.docTypeHtml $ do
+    H.head $ do
+      H.title "Expense Summary"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/style.css"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/css/navbar.css"
+    H.body $ do
+      generateHeader
+      case banner of
+        Just bannerText ->
+          H.div ! A.class_ "banner" $ toHtml bannerText
+        Nothing -> return ()
 
-        H.div $ do
+      H.div ! A.class_ "container" $ do
+        H.div ! A.class_ "page-header" $ do
+          H.h1 "Financial Summary"
+          H.div ! A.class_ "upload-section" $ do
+            H.form
+              ! A.action "/upload"
+              ! A.method "post"
+              ! A.enctype "multipart/form-data"
+              $ do
+                H.input
+                  ! A.type_ "file"
+                  ! A.name "pdfFile"
+                  ! A.accept "application/pdf"
+                H.button
+                  ! A.type_ "submit"
+                  ! A.class_ "btn upload-btn"
+                  $ "Upload PDF"
+
+        H.div ! A.class_ "charts-grid" $ do
+          H.div ! A.class_ "chart-card" $ do
+            H.h2 "Spending Flow"
+            H.div
+              ! A.id "sankey_chart"
+              ! A.class_ "chart sankey-chart"
+              $ ""
+
+          H.div ! A.class_ "chart-card" $ do
+            H.h2 "Monthly Spending"
+            H.div
+              ! A.id "histogram_chart"
+              ! A.class_ "chart histogram-chart"
+              $ ""
+
+        H.div ! A.class_ "summary-section" $ do
+          H.h2 "Expense Summary"
           generateProcessedFilesComponent files
-          generateUpload
-          generateSankeyDiv
-          generateHistogramDiv
           tabs
+
+      -- Scripts at the end of body
+      H.script 
+        ! A.type_ "text/javascript" 
+        ! A.src "https://www.gstatic.com/charts/loader.js" 
+        $ mempty
+      H.script 
+        ! A.type_ "text/javascript" 
+        ! A.src "/sankey.js" 
+        $ mempty
+      H.script 
+        ! A.type_ "text/javascript" 
+        ! A.src "/tabs.js" 
+        $ mempty
+      H.script 
+        ! A.type_ "text/javascript" 
+        ! A.src "/histogram.js" 
+        $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do

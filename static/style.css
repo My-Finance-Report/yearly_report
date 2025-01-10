@@ -2,17 +2,17 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
-    padding: 20px; /* Add padding to the page */
+    padding: 0;
     background-color: #f4f4f9;
 }
 
 .container {
-    max-width: 1200px; /* Limit the width of the content */
-    margin: 0 auto; /* Center the content */
-    padding: 20px; /* Add padding inside the container */
-    background-color: #fff; /* Optional: White background for content */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Light shadow around the container */
-    border-radius: 5px; /* Optional: Rounded corners */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
 }
 
 .tabs-container {
@@ -395,4 +395,112 @@ tr:hover {
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
   border-radius: 4px;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #333;
+}
+
+/* Upload Section */
+.upload-section {
+  display: flex;
+  align-items: center;
+}
+
+.upload-section form {
+  display: flex;
+  gap: 1rem;
+}
+
+.upload-section .btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-section .btn:hover {
+  background-color: #45a049;
+}
+
+/* Charts Grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.chart {
+  width: 100%;
+  height: 400px;
+}
+
+/* Summary Section */
+.summary-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.summary-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart {
+    height: 300px;
+  }
 }
