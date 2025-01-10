@@ -44,20 +44,8 @@ formatSankeyRow (from, to, weight) =
 generateHomapageHtml ::
   Maybe Text ->
   Html ->
-  [SourceFileMapping] ->
   Html
-generateHomapageHtml banner tabs files =
-  H.docTypeHtml $ do
-    H.head $ do
-      H.title "Expense Summary"
-      H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/style.css"
-      H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/css/navbar.css"
+generateHomapageHtml banner tabs =
     H.body $ do
       generateHeader
       case banner of
@@ -95,40 +83,37 @@ generateHomapageHtml banner tabs files =
               ! A.class_ "chart histogram-chart"
               $ ""
 
-        H.div ! A.class_ "summary-section" $ do
-          tabs
-          generateProcessedFilesComponent files
+        tabs
 
       -- Scripts at the end of body
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"
         $ mempty
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "https://www.gstatic.com/charts/loader.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "https://www.gstatic.com/charts/loader.js"
         $ mempty
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "/sankey.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "/sankey.js"
         $ mempty
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "/tabs.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "/tabs.js"
         $ mempty
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "/histogram.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "/histogram.js"
         $ mempty
-      H.script 
-        ! A.type_ "text/javascript" 
-        ! A.src "/resizable.js" 
+      H.script
+        ! A.type_ "text/javascript"
+        ! A.src "/resizable.js"
         $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "processed-files-section" $ do
-    H.h2 "Processed Files"
     if Data.List.null processedFiles
       then H.p "No files have been processed yet."
       else H.table $ do
@@ -275,8 +260,8 @@ subtabMappings =
 formatMonthYear :: UTCTime -> Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
 
-generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
-generateTabsWithSubTabs transactionSources aggregatedBySource =
+generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [SourceFileMapping] -> Html
+generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
   H.div ! A.class_ "tabs-container" $ do
     H.ul ! A.class_ "tabs" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
@@ -284,6 +269,10 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
           ! A.class_ (if idx == 0 then "tab active" else "tab")
           ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
           $ toHtml (transactionSourceName $ entityVal source)
+      H.li
+        ! A.class_  "tab"
+        ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show  (Prelude.length transactionSources) <> ")")
+        $ "Processed Files"
 
     H.div ! A.class_ "tab-content-container" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
@@ -293,16 +282,21 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
           ! A.style (if idx == 0 then "display: block;" else "display: none;")
           $ do
             generateSubTabContent idx $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
+      H.div
+        ! A.class_ "tab-content"
+        ! A.id (toValue $ "tab-content-" <> show  (Prelude.length transactionSources))
+        ! A.style  "display: none;"
+        $ generateProcessedFilesComponent processsedFiles
 
 renderHomePage :: Maybe Text -> IO Html
 renderHomePage banner = do
   transactionSources <- getAllTransactionSources
   categorizedTransactions <- getAllTransactions
   groupedBySource <- groupTransactionsBySource categorizedTransactions
-
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource
-
   files <- getSourceFileMappings
 
-  let strictText = generateHomapageHtml banner tabs files
+  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+
+
+  let strictText = generateHomapageHtml banner tabs 
   return strictText

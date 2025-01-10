@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chartData.addRows(data);
 
     const options = {
-      width: 500,
+      width: 600,
       height: 400,
       sankey: {
         link: {

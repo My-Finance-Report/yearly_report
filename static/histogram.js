@@ -22,7 +22,7 @@ function drawHistogram(rows) {
   const data = google.visualization.arrayToDataTable(rows);
 
   const options = {
-    width: 500,
+    width: 700,
     height: 400,
     legend: { position: 'top', maxLines: 3 },
     isStacked: false, 
