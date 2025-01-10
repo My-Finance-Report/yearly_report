@@ -21,7 +21,6 @@ renderAllFilesPage filenames =
       H.title "All Files"
       H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/navbar.css"
     H.body $ do
-      navigationBar
       H.h1 "All Files"
       H.ul $ do
         mapM_ (filenameListItem "/transactions/") filenames

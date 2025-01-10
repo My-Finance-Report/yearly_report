@@ -7,6 +7,7 @@ module Main where
 import Auth
 import Categorizer
 import ConnectionPool
+import HtmlGenerators.Layout (renderPage)
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -169,7 +170,7 @@ main  = do
 
       case token of
         Just _ -> Web.redirect "/"
-        Nothing ->Web.html $ renderLoginPage Nothing 
+        Nothing ->Web.html $ renderPage Nothing "Login"  $ renderLoginPage Nothing 
      
 
     post "/login" $ do
@@ -177,7 +178,7 @@ main  = do
       password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
       maybeUser <- liftIO $ validateLogin pool email password
       case maybeUser of
-        Nothing -> Web.html $ renderLoginPage (Just "Invalid email or password")
+        Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just "Invalid email or password")
         Just user -> do
           token <- liftIO $ createSession pool (entityKey user)
           Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
@@ -189,11 +190,11 @@ main  = do
       confirmPassword <- Web.Scotty.formParam "confirm-password" :: Web.Scotty.ActionM Text
       
       if password /= confirmPassword
-        then Web.html $ renderLoginPage (Just "Passwords do not match")
+        then Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just "Passwords do not match")
         else do
           result <- liftIO $ createUser pool email password
           case result of
-            Left err -> Web.html $ renderLoginPage (Just err)
+            Left err -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
             Right user -> do
               token <- liftIO $ createSession pool (entityKey user)
               Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
@@ -215,8 +216,8 @@ main  = do
       activeJobs <- liftIO $ readIORef activeJobs
       let banner = if activeJobs > 0 then Just "Job Running" else Nothing
       liftIO $ print banner
-      content <- liftIO $ renderHomePage banner
-      Web.html content
+      content <- liftIO $  renderHomePage banner
+      Web.html $ renderPage (Just user) "Financal Summary" content
 
     post "/setup-upload" $ requireUser pool $ \user -> do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
@@ -341,7 +342,7 @@ main  = do
         categories <- Prelude.mapM (getCategoriesBySource . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
 
-      Web.Scotty.html $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
+      Web.Scotty.html $ renderPage  (Just user) "Configuration" $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
 
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text

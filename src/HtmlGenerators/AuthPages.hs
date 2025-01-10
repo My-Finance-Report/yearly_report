@@ -11,15 +11,11 @@ import qualified Data.Text.Lazy as TL
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Text (renderHtml)
+import HtmlGenerators.Layout
 
-renderLoginPage :: Maybe Text -> TL.Text
-renderLoginPage errorMsg = renderHtml $ H.docTypeHtml $ do
-  H.head $ do
-    H.title "Login - Year Report Finances"
-    H.link
-      ! A.rel "stylesheet"
-      ! A.type_ "text/css"
-      ! A.href "/style.css"
+
+renderLoginPage :: Maybe Text -> Html
+renderLoginPage errorMsg = 
   H.body $ do
     H.div ! A.class_ "auth-container" $ do
       H.div ! A.class_ "auth-section" $ do

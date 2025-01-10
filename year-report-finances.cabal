@@ -15,6 +15,7 @@ library
     HtmlGenerators.HomePage
     HtmlGenerators.AllFilesPage
     HtmlGenerators.RefineSelectionPage
+    HtmlGenerators.Layout
     HtmlGenerators.Configuration
     HtmlGenerators.AuthPages
     Auth
@@ -65,6 +66,7 @@ executable year-report-finances
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
       HtmlGenerators.Components
+      HtmlGenerators.Layout
       HtmlGenerators.AuthPages
       HtmlGenerators.AllFilesPage
       HtmlGenerators.RefineSelectionPage

@@ -41,7 +41,6 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
         $ mempty
 
     H.body $ do
-      navigationBar
       H.div ! A.id "selectionContainer" $ do
         H.h1 "Select Transaction Boundaries"
         H.p $ toHtml ("File: " <> filename)

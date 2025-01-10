@@ -45,22 +45,9 @@ generateHomapageHtml ::
   Maybe Text ->
   Html ->
   [SourceFileMapping] ->
-  TL.Text
+  Html
 generateHomapageHtml banner tabs files =
-  renderHtml $ do
-    H.docTypeHtml $ do
-      H.head $ do
-        H.title "Expense Summary"
-        H.link
-          ! A.rel "stylesheet"
-          ! A.type_ "text/css"
-          ! A.href "/style.css"
-        H.link
-          ! A.rel "stylesheet"
-          ! A.type_ "text/css"
-          ! A.href "/css/navbar.css"
       H.body $ do
-        navigationBar
         generateHeader
         case banner of
           Just bannerText ->
@@ -243,7 +230,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource =
           $ do
             generateSubTabContent idx $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
 
-renderHomePage :: Maybe Text -> IO TL.LazyText
+renderHomePage :: Maybe Text -> IO Html
 renderHomePage banner = do
   transactionSources <- getAllTransactionSources
   categorizedTransactions <- getAllTransactions

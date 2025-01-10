@@ -16,7 +16,6 @@ import Data.Ord (comparing)
 import Data.Text as T (Text, intercalate, pack, unlines)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import HtmlGenerators.Components (navigationBar)
 import Models
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -30,7 +29,6 @@ renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
     H.title "Upload PDF"
     H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
   H.body $ do
-    navigationBar
     H.h1 "Upload a PDF"
     H.form
       H.! A.method "post"
@@ -50,7 +48,6 @@ renderPdfResultPage filename rawText =
       H.title "PDF Upload Result"
       H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
     H.body $ do
-      navigationBar
       H.h1 "PDF Uploaded Successfully!"
       H.p $ do
         "Filename: "
@@ -66,7 +63,6 @@ renderTransactionsPage filename txs =
       H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
       H.style "table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px }"
     H.body $ do
-      navigationBar
       H.h1 $ toHtml $ "Transactions for " <> filename
       H.table $ do
         H.tr $ do
