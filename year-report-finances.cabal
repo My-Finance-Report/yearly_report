@@ -11,10 +11,13 @@ library
     ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
+    HtmlGenerators.Components
     HtmlGenerators.HomePage
     HtmlGenerators.AllFilesPage
     HtmlGenerators.RefineSelectionPage
     HtmlGenerators.Configuration
+    HtmlGenerators.AuthPages
+    Auth
     Sankey
     Models
     Parsers
@@ -44,7 +47,11 @@ library
       filepath >= 1.4,
       directory >= 1.3,
       scotty >= 0.11,
-      blaze-html >= 0.9           
+      blaze-html >= 0.9,
+      cookie >= 0.5.0,
+      cryptonite >= 0.30,
+      random >= 1.2,
+      wai >= 3.2
   default-language: Haskell2010
 
 executable year-report-finances
@@ -57,9 +64,12 @@ executable year-report-finances
       ConnectionPool
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
+      HtmlGenerators.Components
+      HtmlGenerators.AuthPages
       HtmlGenerators.AllFilesPage
       HtmlGenerators.RefineSelectionPage
       HtmlGenerators.Configuration
+      Auth
       Sankey
       Models
       Parsers
@@ -89,7 +99,11 @@ executable year-report-finances
       filepath >= 1.4,
       directory >= 1.3,
       scotty >= 0.11,
-      blaze-html >= 0.9
+      blaze-html >= 0.9,
+      cookie >= 0.5.0,
+      cryptonite >= 0.30,
+      random >= 1.2,
+      wai >= 3.2
   ghc-options: -threaded
   default-language: Haskell2010
 

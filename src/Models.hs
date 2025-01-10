@@ -60,7 +60,6 @@ Transaction
     uploadedPdfId UploadedPdfId Maybe 
     deriving Show Eq Generic Ord
 
-
 ProcessedFile
     filename Text
     UniqueProcessedFile filename
@@ -96,5 +95,19 @@ SankeyLinkage
     sourceId TransactionSourceId
     categoryId CategoryId
     targetSourceId TransactionSourceId
+    deriving Show Eq
+
+User
+    email Text
+    passwordHash Text
+    createdAt UTCTime
+    UniqueUser email
+    deriving Show Eq
+
+UserSession
+    userId UserId
+    sessionToken Text
+    expiresAt UTCTime
+    UniqueUserSession sessionToken
     deriving Show Eq
 |]

@@ -8,6 +8,7 @@ import Data.Text as T (Text)
 import qualified Data.Text.Lazy as TL
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
+import HtmlGenerators.Components (navigationBar)
 import Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -29,12 +30,18 @@ renderSliderPage pdfId filename linesGuessed transactionSources =
         ! A.type_ "text/css"
         ! A.href "/style.css"
 
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/css/navbar.css"
+
       H.script
         ! A.type_ "text/javascript"
         ! A.src "/updateKeywords.js"
         $ mempty
 
     H.body $ do
+      navigationBar
       H.div ! A.id "selectionContainer" $ do
         H.h1 "Select Transaction Boundaries"
         H.p $ toHtml ("File: " <> filename)

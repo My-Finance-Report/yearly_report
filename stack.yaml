@@ -202,6 +202,7 @@ extra-deps:
   - bitvec-1.1.5.0@sha256:c04630f6b68f8deebfa6a07d468d3ff4582ab452b721797ef497642cf75e8b99,4921
   - HList-0.5.3.0@sha256:7166d99e8133cb6bffb66b748668f5be90cd76733f646553414f69052abebc84,7452
   - profunctors-5.6.2@sha256:e178ba4468982326656626e2089e296f64485e68fdddc9f4476dcd5d612b4f78,2484
+  - cryptonite-0.30@sha256:12c85dea7be63e5ad90bcb487eb3846bf3c413347f94336fa1dede7b28f9936a,18301
 
 # Override default flag values for project packages and extra-deps
 # flags: {}

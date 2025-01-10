@@ -1,53 +1,51 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
+import Auth
 import Categorizer
 import ConnectionPool
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.IO.Unlift (MonadUnliftIO)
-import Control.Monad.Logger (runStderrLoggingT)
-import Data.Aeson (ToJSON)
 import qualified Data.ByteString.Lazy as B
-import Data.HList
-import Data.IORef (modifyIORef, newIORef, readIORef)
-import Data.Map
+
+import Data.Aeson hiding (Key)
+import Data.IORef
+import Data.List (nub)
+import Data.Map (Map)
 import qualified Data.Map as Map
-import qualified Data.Set as Set
+import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
-import qualified Data.Text.IO as TIO
 import qualified Data.Text.Lazy as TL
-import Data.Time (UTCTime, defaultTimeLocale, formatTime)
-import Database
+import Data.Time
+import Database.Persist hiding (get)
 import Database.Persist.Postgresql hiding (get)
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
+import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
+import Database
 import HtmlGenerators.RefineSelectionPage
 import Models
-import Network.HTTP.Client (Request (redactHeaders))
+import Data.Set (Set)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import Parsers (extractTextFromPdf, processPdfFile)
+import Parsers
 import Sankey
-import System.Directory (listDirectory)
 import System.FilePath ((</>))
-import Text.Blaze.Html (Html)
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A hiding (open)
 import Types
-import Web.Scotty
+import Web.Scotty 
 import qualified Web.Scotty as Web
+import Control.Monad.IO.Unlift (MonadUnliftIO)
+import qualified Data.Set as Set
 
 data Matrix = Matrix
   { columnHeaders :: [T.Text],
@@ -111,25 +109,116 @@ buildRow allSourceNames (_, sources) =
 formatMonthYear :: UTCTime -> T.Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
 
-main :: IO ()
-main = do
-  activeJobs <- newIORef 0
+extractBearerToken :: TL.Text -> Maybe TL.Text
+extractBearerToken header =
+  let prefix = "Bearer "
+   in if prefix `TL.isPrefixOf` header
+        then Just $ TL.drop (TL.length prefix) header
+        else Nothing
 
+extractSessionCookie :: TL.Text -> Maybe TL.Text
+extractSessionCookie cookies =
+  let sessionPrefix = "session="
+   in listToMaybe [TL.drop (TL.length sessionPrefix) cookie | cookie <- TL.splitOn "; " cookies, sessionPrefix `TL.isPrefixOf` cookie]
+
+
+getTokenFromRequest :: ActionM (Maybe TL.Text)
+getTokenFromRequest = do
+    mCookie <- header "Cookie"
+    case mCookie >>= extractSessionCookie of
+      Just token -> return $ Just token
+      Nothing -> do
+        mAuthHeader <- header "Authorization"
+        return $ mAuthHeader >>= extractBearerToken
+
+
+
+requireUser :: ConnectionPool -> (Entity User -> ActionM ()) -> ActionM ()
+requireUser pool action = do
+  mToken <- getTokenFromRequest
+  case mToken of
+    Nothing -> Web.Scotty.redirect "/login" -- Redirect if no token
+    Just token -> do
+      mUser <- liftIO $ validateSession pool $ TL.toStrict token
+      case mUser of
+        Nothing -> Web.Scotty.redirect "/login" -- Redirect if token invalid
+        Just user -> action user -- Pass the user entity to the action
+
+getCurrentUser :: ConnectionPool -> ActionM (Maybe (Entity User))
+getCurrentUser pool = do
+  mToken <- getTokenFromRequest
+  case mToken of
+    Nothing -> return Nothing 
+    Just token -> liftIO $ validateSession pool $ TL.toStrict token
+
+
+main :: IO ()
+main  = do
+  activeJobs <- newIORef 0
   ConnectionPool.initializeDatabase
+  pool <- getConnectionPool
   Database.seedDatabase
   migratePostgres
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
-    get "/" $ do
+    -- Auth routes
+    get "/login" $ do
+      token <-getTokenFromRequest
+
+      case token of
+        Just _ -> Web.redirect "/"
+        Nothing ->Web.html $ renderLoginPage Nothing 
+     
+
+    post "/login" $ do
+      email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
+      password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
+      maybeUser <- liftIO $ validateLogin pool email password
+      case maybeUser of
+        Nothing -> Web.html $ renderLoginPage (Just "Invalid email or password")
+        Just user -> do
+          token <- liftIO $ createSession pool (entityKey user)
+          Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
+          Web.redirect "/"
+
+    post "/register" $ do
+      email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
+      password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
+      confirmPassword <- Web.Scotty.formParam "confirm-password" :: Web.Scotty.ActionM Text
+      
+      if password /= confirmPassword
+        then Web.html $ renderLoginPage (Just "Passwords do not match")
+        else do
+          result <- liftIO $ createUser pool email password
+          case result of
+            Left err -> Web.html $ renderLoginPage (Just err)
+            Right user -> do
+              token <- liftIO $ createSession pool (entityKey user)
+              Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
+              Web.redirect "/"
+
+    get "/logout" $ do
+      mToken <- getTokenFromRequest
+      
+      case mToken of
+        Nothing -> Web.redirect "/login" 
+        Just token -> do
+          pool <- liftIO getConnectionPool
+          liftIO $ deleteSession pool  $ TL.toStrict token 
+          Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
+          Web.redirect "/login"
+
+
+    get "/" $ requireUser pool $ \user -> do
       activeJobs <- liftIO $ readIORef activeJobs
       let banner = if activeJobs > 0 then Just "Job Running" else Nothing
       liftIO $ print banner
       content <- liftIO $ renderHomePage banner
       Web.html content
 
-    post "/setup-upload" $ do
+    post "/setup-upload" $ requireUser pool $ \user -> do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
       endKeyword <- Web.Scotty.formParam "endKeyword" :: ActionM T.Text
       filenamePattern <- Web.Scotty.formParam "filenamePattern" :: ActionM T.Text
@@ -140,7 +229,7 @@ main = do
 
       redirect "/"
 
-    post "/upload" $ do
+    post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
       case Prelude.lookup "pdfFile" allFiles of
         Nothing -> do
@@ -179,28 +268,21 @@ main = do
                   newPdfId <- liftIO $ insertPdfRecord originalName rawText "TODO"
                   redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
 
-    get "/adjust-transactions/:pdfId" $ do
-      pdfIdText <- Web.Scotty.param "pdfId"
-      liftIO $ print "here"
+    get "/adjust-transactions/:pdfId" $ requireUser pool $ \user -> do
+      pdfIdText <- Web.Scotty.pathParam "pdfId"
 
       let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
-
-      liftIO $ print "there"
       transactionSources <- liftIO getAllTransactionSources
-
-      liftIO $ print "there2"
       uploadedPdf <- liftIO $ fetchPdfRecord pdfId
-      liftIO $ print "there3"
-
       let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
 
       Web.html $ renderSliderPage pdfId (uploadedPdfFilename uploadedPdf) segments transactionSources
 
-    get "/transactions" $ do
+    get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO getAllFilenames
       Web.html $ renderAllFilesPage filenames
 
-    get "/transactions/:fileid" $ do
+    get "/transactions/:fileid" $ requireUser pool $ \user -> do
       fileIdText <- Web.Scotty.pathParam "fileid"
 
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
@@ -208,7 +290,7 @@ main = do
       transactions <- liftIO $ getTransactionsByFileId fileId
       Web.html $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
 
-    post "/update-category" $ do
+    post "/update-category" $ requireUser pool $ \user -> do
       tId <- Web.Scotty.formParam "transactionId"
       newCat <- Web.Scotty.formParam "newCategory"
       let newCatId = toSqlKey (read $ T.unpack newCat) :: Key Category
@@ -216,7 +298,7 @@ main = do
       liftIO $ updateTransactionCategory (read $ T.unpack tId) newCatId
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
-    post "/update-sankey-config" $ do
+    post "/update-sankey-config" $ requireUser pool $ \user -> do
       configName <- Web.Scotty.formParam "configName"
 
       allParams <- Web.Scotty.formParams
@@ -251,54 +333,7 @@ main = do
       liftIO $ saveSankeyConfig newConfig
       redirect "/"
 
-    -- post "/add-upload-config" $ addUploadConfig dbPath
-    -- post "/delete-upload-config/:id" $ deleteUploadConfig dbPath
-    post "/edit-upload-config/:id" $ do
-      -- Extract the ID parameter from the route
-      idParam <- Web.Scotty.param "id" :: ActionM Text
-      let uploadConfigId = toSqlKey (read $ T.unpack idParam) :: Key UploadConfiguration
-
-      -- Extract form or JSON parameters
-      startKeyword <- Web.Scotty.formParam "startKeyword"
-      endKeyword <- Web.Scotty.formParam "endKeyword"
-      filenameRegex <- Web.Scotty.formParam "filenameRegex"
-
-      -- Call the editUploadConfiguration function
-      liftIO $ editUploadConfiguration uploadConfigId startKeyword endKeyword filenameRegex
-
-      -- Respond to the client
-      redirect "/configuration"
-
-    post "/add-upload-config" $ do
-      filenameRegex <- formParam "filenameRegex" :: ActionM Text
-      startKeyword <- formParam "startKeyword" :: ActionM Text
-      endKeyword <- formParam "endKeyword" :: ActionM Text
-      transactionSourceId <- formParam "transactionSourceId" :: ActionM Text
-
-      let txnSourceId = toSqlKey (read $ T.unpack transactionSourceId) :: Key TransactionSource
-
-      liftIO $ persistUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex
-
-      redirect "/configuration"
-
-    post "/delete-upload-config/:id" $ do
-      -- Extract the ID parameter from the route
-      idParam <- Web.Scotty.param "id" :: ActionM Text
-      let uploadConfigId = toSqlKey (read $ T.unpack idParam) :: Key UploadConfiguration
-
-      -- Call the deleteUploadConfiguration function
-      liftIO $ deleteUploadConfiguration uploadConfigId
-
-    -- Respond with a success message
-
-    post "/delete-processed-file" $ do
-      filename <- Web.Scotty.formParam "filename" :: Web.Scotty.ActionM Int
-      transactionSourceId <- Web.Scotty.formParam "transactionSourceId" :: Web.Scotty.ActionM Int
-      -- TODO
-      -- liftIO $ deleteProcessedFile dbPath transactionSourceId filename
-      Web.Scotty.redirect "/manage-processed-files"
-
-    get "/configuration" $ do
+    get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO getAllUploadConfigs
       transactionSources <- liftIO getAllTransactionSources
       sankeyConfig <- liftIO getFirstSankeyConfig
@@ -308,33 +343,33 @@ main = do
 
       Web.Scotty.html $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
 
-    post "/add-transaction-source" $ do
+    post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
       liftIO $ addTransactionSource newSource
       Web.Scotty.redirect "/configuration"
 
-    post "/edit-transaction-source/:id" $ do
-      sourceIdText <- Web.Scotty.param "id"
+    post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
+      sourceIdText <- Web.Scotty.pathParam "id"
       let sourceId = toSqlKey $ read sourceIdText
       sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
       liftIO $ updateTransactionSource sourceId sourceName
       Web.Scotty.redirect "/configuration"
 
-    post "/add-category/:sourceId" $ do
-      sourceIdText <- Web.Scotty.param "sourceId"
+    post "/add-category/:sourceId" $ requireUser pool $ \user -> do
+      sourceIdText <- Web.Scotty.pathParam "sourceId"
       let sourceId = toSqlKey $ read sourceIdText
       newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
       liftIO $ addCategory newCategory sourceId
       Web.Scotty.redirect "/configuration"
 
-    post "/edit-category/:id" $ do
-      catIdText <- Web.Scotty.param "id"
+    post "/edit-category/:id" $ requireUser pool $ \user -> do
+      catIdText <- Web.Scotty.pathParam "id"
       let catId = toSqlKey $ read catIdText
       catName <- Web.Scotty.formParam "categoryName"
       liftIO $ updateCategory catId catName
       Web.Scotty.redirect "/configuration"
 
-    get "/api/sankey-data" $ do
+    get "/api/sankey-data" $ requireUser pool $ \user -> do
       categorizedTransactions <- liftIO getAllTransactions
       gbs <- groupTransactionsBySource categorizedTransactions
 
@@ -345,7 +380,7 @@ main = do
 
       json sankeyData
 
-    get "/api/histogram-data" $ do
+    get "/api/histogram-data" $ requireUser pool $ \user -> do
       -- Fetch or compute the histogram data
       transactions <- liftIO getAllTransactions
       histogramData <- generateHistogramData transactions

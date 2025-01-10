@@ -18,6 +18,7 @@ import Data.Time
 import Database
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
+import HtmlGenerators.Components (navigationBar)
 import HtmlGenerators.HtmlGenerators
 import Models
 import Parsers
@@ -47,18 +48,31 @@ generateHomapageHtml ::
   TL.Text
 generateHomapageHtml banner tabs files =
   renderHtml $ do
-    generateHeader
-    case banner of
-      Just bannerText ->
-        H.div ! A.class_ "banner" $ toHtml bannerText
-      Nothing -> return ()
+    H.docTypeHtml $ do
+      H.head $ do
+        H.title "Expense Summary"
+        H.link
+          ! A.rel "stylesheet"
+          ! A.type_ "text/css"
+          ! A.href "/style.css"
+        H.link
+          ! A.rel "stylesheet"
+          ! A.type_ "text/css"
+          ! A.href "/css/navbar.css"
+      H.body $ do
+        navigationBar
+        generateHeader
+        case banner of
+          Just bannerText ->
+            H.div ! A.class_ "banner" $ toHtml bannerText
+          Nothing -> return ()
 
-    H.body $ do
-      generateProcessedFilesComponent files
-      generateUpload
-      generateSankeyDiv
-      generateHistogramDiv
-      tabs
+        H.div $ do
+          generateProcessedFilesComponent files
+          generateUpload
+          generateSankeyDiv
+          generateHistogramDiv
+          tabs
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do

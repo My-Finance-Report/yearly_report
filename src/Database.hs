@@ -28,8 +28,6 @@ module Database
     addCategory,
     updateTransactionSource,
     persistUploadConfiguration,
-    editUploadConfiguration,
-    deleteUploadConfiguration,
     insertPdfRecord,
     updateTransactionCategory,
     parseTransactionKind,
@@ -479,35 +477,6 @@ saveSankeyConfig config = do
           update key [SankeyConfigName =. configName config]
           return key
         Nothing -> insert $ SankeyConfig (configName config)
-
-deleteUploadConfiguration :: (MonadUnliftIO m) => Key UploadConfiguration -> m ()
-deleteUploadConfiguration uploadConfigId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool (Database.Persist.Sql.delete uploadConfigId) pool
-
-editUploadConfiguration ::
-  (MonadUnliftIO m) =>
-  Key UploadConfiguration -> -- ID of the row to update
-  T.Text -> -- Start Keyword
-  T.Text -> -- End Keyword
-  T.Text -> -- Filename Regex
-  m ()
-editUploadConfiguration uploadConfigId startKeyword endKeyword filenameRegex = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryEditUploadConfiguration pool
-  where
-    queryEditUploadConfiguration = do
-      maybeConfig <- get uploadConfigId
-      case maybeConfig of
-        Nothing -> liftIO $ putStrLn "No matching UploadConfiguration found to edit" -- Log if no match
-        Just _ -> do
-          update
-            uploadConfigId
-            [ UploadConfigurationStartKeyword =. Just startKeyword,
-              UploadConfigurationEndKeyword =. Just endKeyword,
-              UploadConfigurationFilenameRegex =. Just filenameRegex
-            ]
-          liftIO $ putStrLn "UploadConfiguration successfully updated" -- Log success
 
 persistUploadConfiguration :: (MonadUnliftIO m) => T.Text -> T.Text -> Key TransactionSource -> T.Text -> m ()
 persistUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex = do

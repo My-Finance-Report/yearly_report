@@ -12,6 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
+import HtmlGenerators.Components (configNavigationBar)
 import Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -279,68 +280,74 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
         ! A.rel "stylesheet"
         ! A.type_ "text/css"
         ! A.href "/style.css"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/css/navbar.css"
     H.body $ do
-      H.h1 "Configuration Page"
+      configNavigationBar
+      H.div ! A.class_ "container" $ do
+        H.h1 "Configuration Page"
 
-      -- Upload Configurations Section
-      H.div ! A.class_ "config-section" $ do
-        renderUploadConfigurationsPage uploaderConfigs transactionSources
+        -- Upload Configurations Section
+        H.div ! A.class_ "config-section" $ do
+          renderUploadConfigurationsPage uploaderConfigs transactionSources
 
-      -- Sankey Configuration Section
-      H.div ! A.class_ "config-section" $ do
-        renderEditSankeyConfigPage sankeyConfig transactions
+        -- Sankey Configuration Section
+        H.div ! A.class_ "config-section" $ do
+          renderEditSankeyConfigPage sankeyConfig transactions
 
-      -- Transaction Sources Section
-      H.div ! A.class_ "config-section" $ do
-        H.h2 "Manage Transaction Sources"
-        H.form
-          ! A.method "post"
-          ! A.action "/add-transaction-source"
-          $ do
-            H.label ! A.for "newSource" $ "New Source Name:"
-            H.input
-              ! A.type_ "text"
-              ! A.name "newSource"
-              ! A.id "newSource"
-            H.br
-            H.input ! A.type_ "submit" ! A.value "Add Source"
-        H.ul $ do
-          forM_ transactionSources $ \(Entity sourceId source) -> do
-            H.li $ do
-              H.form
-                ! A.method "post"
-                ! A.action (toValue $ "/edit-transaction-source/" <> show (fromSqlKey sourceId))
-                $ do
-                  H.input
-                    ! A.type_ "text"
-                    ! A.name "sourceName"
-                    ! A.value (toValue $ transactionSourceName source)
-                  H.input ! A.type_ "submit" ! A.value "Rename"
-
-      -- Categories Section
-      H.div ! A.class_ "config-section" $ do
-        H.h2 "Manage Categories"
-        forM_ (Map.toList transactions) $ \(Entity sourceId source, categories) -> do
-          H.h3 $ toHtml $ "Categories for " <> transactionSourceName source
+        -- Transaction Sources Section
+        H.div ! A.class_ "config-section" $ do
+          H.h2 "Manage Transaction Sources"
+          H.form
+            ! A.method "post"
+            ! A.action "/add-transaction-source"
+            $ do
+              H.label ! A.for "newSource" $ "New Source Name:"
+              H.input
+                ! A.type_ "text"
+                ! A.name "newSource"
+                ! A.id "newSource"
+              H.br
+              H.input ! A.type_ "submit" ! A.value "Add Source"
           H.ul $ do
-            forM_ categories $ \(Entity catId cat) -> do
+            forM_ transactionSources $ \(Entity sourceId source) -> do
               H.li $ do
                 H.form
                   ! A.method "post"
-                  ! A.action (toValue $ "/edit-category/" <> show (fromSqlKey catId))
+                  ! A.action (toValue $ "/edit-transaction-source/" <> show (fromSqlKey sourceId))
                   $ do
                     H.input
                       ! A.type_ "text"
-                      ! A.name "categoryName"
-                      ! A.value (toValue $ categoryName cat)
+                      ! A.name "sourceName"
+                      ! A.value (toValue $ transactionSourceName source)
                     H.input ! A.type_ "submit" ! A.value "Rename"
-          H.form
-            ! A.method "post"
-            ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
-            $ do
-              H.label ! A.for "newCategory" $ "New Category Name:"
-              H.input
-                ! A.type_ "text"
-                ! A.name "newCategory"
-                ! A.id "newCategory"
-              H.input ! A.type_ "submit" ! A.value "Add Category"
+
+        -- Categories Section
+        H.div ! A.class_ "config-section" $ do
+          H.h2 "Manage Categories"
+          forM_ (Map.toList transactions) $ \(Entity sourceId source, categories) -> do
+            H.h3 $ toHtml $ "Categories for " <> transactionSourceName source
+            H.ul $ do
+              forM_ categories $ \(Entity catId cat) -> do
+                H.li $ do
+                  H.form
+                    ! A.method "post"
+                    ! A.action (toValue $ "/edit-category/" <> show (fromSqlKey catId))
+                    $ do
+                      H.input
+                        ! A.type_ "text"
+                        ! A.name "categoryName"
+                        ! A.value (toValue $ categoryName cat)
+                      H.input ! A.type_ "submit" ! A.value "Rename"
+            H.form
+              ! A.method "post"
+              ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
+              $ do
+                H.label ! A.for "newCategory" $ "New Category Name:"
+                H.input
+                  ! A.type_ "text"
+                  ! A.name "newCategory"
+                  ! A.id "newCategory"
+                H.input ! A.type_ "submit" ! A.value "Add Category"
