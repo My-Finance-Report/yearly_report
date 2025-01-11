@@ -14,7 +14,6 @@ import Models
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
--- Connection string and pool size
 connectionString :: IO ByteString
 connectionString = do
   maybeDbUrl <- lookupEnv "DATABASE_URL"

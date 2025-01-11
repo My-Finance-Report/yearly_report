@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Parsers
@@ -17,7 +16,7 @@ import qualified Data.ByteString.Lazy as B
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Database
+import Database.Database
 import Database.Persist
 import GHC.Generics (Generic)
 import Models
@@ -139,8 +138,8 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
-processPdfFile pdfId config = do
+processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
+processPdfFile user pdfId config = do
   uploadedFile <- liftIO $ fetchPdfRecord pdfId
   let filename = uploadedPdfFilename uploadedFile
   alreadyProcessed <- liftIO $ isFileProcessed filename
@@ -150,7 +149,7 @@ processPdfFile pdfId config = do
   if alreadyProcessed
     then do
       putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
-      getTransactionsByFileId pdfId
+      getTransactionsByFileId user pdfId
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
@@ -162,7 +161,7 @@ processPdfFile pdfId config = do
           return []
         Right transactions -> do
           -- Categorize and store transactions
-          categorizedTransactions <- mapM (\txn -> categorizeTransaction txn pdfId (entityKey transactionSource)) transactions
+          categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
           markFileAsProcessed filename
           putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
           return categorizedTransactions

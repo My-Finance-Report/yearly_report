@@ -25,7 +25,8 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import Database
+import Database.Category
+import Database.Database
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql hiding (get)
 import GHC.Generics (Generic)
@@ -154,7 +155,6 @@ main = do
   ConnectionPool.initializePool
   pool <- getConnectionPool
   migratePostgres
-  Database.seedDatabase
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
@@ -189,6 +189,7 @@ main = do
           case result of
             Left err -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
             Right user -> do
+              liftIO $ Database.Database.seedDatabase user
               token <- liftIO $ createSession pool (entityKey user)
               Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
               Web.redirect "/"
@@ -208,7 +209,7 @@ main = do
       activeJobs <- liftIO $ readIORef activeJobs
       let banner = if activeJobs > 0 then Just "Job Running" else Nothing
       liftIO $ print banner
-      content <- liftIO $ renderHomePage banner
+      content <- liftIO $ renderHomePage user banner
       Web.html $ renderPage (Just user) "Financal Summary" content
 
     post "/setup-upload" $ requireUser pool $ \user -> do
@@ -252,7 +253,7 @@ main = do
                   liftIO $ do
                     modifyIORef activeJobs (+ 1)
                     _ <- Control.Concurrent.Async.async $ do
-                      processPdfFile newPdfId config
+                      processPdfFile user newPdfId config
                       modifyIORef activeJobs (subtract 1)
                     return ()
 
@@ -280,7 +281,7 @@ main = do
 
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
       uploadedFile <- fetchPdfRecord fileId
-      transactions <- liftIO $ getTransactionsByFileId fileId
+      transactions <- liftIO $ getTransactionsByFileId user fileId
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
 
     post "/update-category" $ requireUser pool $ \user -> do
@@ -304,10 +305,10 @@ main = do
       linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
 
       inputTransactionSources <- liftIO $ mapM getTransactionSource inputSourceIds
-      inputCategories <- liftIO $ mapM getCategory inputCategoryIds
+      inputCategories <- liftIO $ mapM (getCategory user) inputCategoryIds
 
       linkageSource <- liftIO $ getTransactionSource (toSqlKey (read linkageSourceId))
-      (linkageCategory, _) <- liftIO $ getCategory (toSqlKey (read linkageCategoryId))
+      (linkageCategory, _) <- liftIO $ getCategory user (toSqlKey (read linkageCategoryId))
       linkageTarget <- liftIO $ getTransactionSource (toSqlKey (read linkageTargetId))
 
       -- Assuming rawInputs is created earlier, e.g., by zipping or combining sources and categories
@@ -331,7 +332,7 @@ main = do
       transactionSources <- liftIO getAllTransactionSources
       sankeyConfig <- liftIO getFirstSankeyConfig
       categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource . entityKey) transactionSources
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
 
       Web.Scotty.html $ renderPage (Just user) "Configuration" $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
@@ -352,18 +353,18 @@ main = do
       sourceIdText <- Web.Scotty.pathParam "sourceId"
       let sourceId = toSqlKey $ read sourceIdText
       newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
-      liftIO $ addCategory newCategory sourceId
+      liftIO $ addCategory user newCategory sourceId
       Web.Scotty.redirect "/configuration"
 
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"
       let catId = toSqlKey $ read catIdText
       catName <- Web.Scotty.formParam "categoryName"
-      liftIO $ updateCategory catId catName
+      liftIO $ updateCategory user catId catName
       Web.Scotty.redirect "/configuration"
 
     get "/api/sankey-data" $ requireUser pool $ \user -> do
-      categorizedTransactions <- liftIO getAllTransactions
+      categorizedTransactions <- liftIO $ getAllTransactions user
       gbs <- groupTransactionsBySource categorizedTransactions
 
       sankeyConfig <- liftIO getFirstSankeyConfig
@@ -375,6 +376,6 @@ main = do
 
     get "/api/histogram-data" $ requireUser pool $ \user -> do
       -- Fetch or compute the histogram data
-      transactions <- liftIO getAllTransactions
+      transactions <- liftIO $ getAllTransactions user
       histogramData <- generateHistogramData transactions
       json histogramData

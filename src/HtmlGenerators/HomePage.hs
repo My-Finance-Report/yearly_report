@@ -15,7 +15,7 @@ import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import Database
+import Database.Database
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
 import HtmlGenerators.Components (navigationBar)
@@ -46,70 +46,70 @@ generateHomapageHtml ::
   Html ->
   Html
 generateHomapageHtml banner tabs =
-    H.body $ do
-      generateHeader
-      case banner of
-        Just bannerText ->
-          H.div ! A.class_ "banner" $ toHtml bannerText
-        Nothing -> return ()
+  H.body $ do
+    generateHeader
+    case banner of
+      Just bannerText ->
+        H.div ! A.class_ "banner" $ toHtml bannerText
+      Nothing -> return ()
 
-      H.div ! A.class_ "container" $ do
-        H.div ! A.class_ "page-header" $ do
-          H.div ! A.class_ "upload-section" $ do
-            H.form
-              ! A.action "/upload"
-              ! A.method "post"
-              ! A.enctype "multipart/form-data"
-              $ do
-                H.input
-                  ! A.type_ "file"
-                  ! A.name "pdfFile"
-                  ! A.accept "application/pdf"
-                H.button
-                  ! A.type_ "submit"
-                  ! A.class_ "btn upload-btn"
-                  $ "Upload PDF"
+    H.div ! A.class_ "container" $ do
+      H.div ! A.class_ "page-header" $ do
+        H.div ! A.class_ "upload-section" $ do
+          H.form
+            ! A.action "/upload"
+            ! A.method "post"
+            ! A.enctype "multipart/form-data"
+            $ do
+              H.input
+                ! A.type_ "file"
+                ! A.name "pdfFile"
+                ! A.accept "application/pdf"
+              H.button
+                ! A.type_ "submit"
+                ! A.class_ "btn upload-btn"
+                $ "Upload PDF"
 
-        H.div ! A.class_ "charts-grid" $ do
-          H.div ! A.class_ "chart-card" $ do
-            H.div
-              ! A.id "sankeyChart"
-              ! A.class_ "chart sankey-chart"
-              $ ""
+      H.div ! A.class_ "charts-grid" $ do
+        H.div ! A.class_ "chart-card" $ do
+          H.div
+            ! A.id "sankeyChart"
+            ! A.class_ "chart sankey-chart"
+            $ ""
 
-          H.div ! A.class_ "chart-card" $ do
-            H.div
-              ! A.id "histogram_chart"
-              ! A.class_ "chart histogram-chart"
-              $ ""
+        H.div ! A.class_ "chart-card" $ do
+          H.div
+            ! A.id "histogram_chart"
+            ! A.class_ "chart histogram-chart"
+            $ ""
 
-        tabs
+      tabs
 
-      -- Scripts at the end of body
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"
-        $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "https://www.gstatic.com/charts/loader.js"
-        $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "/sankey.js"
-        $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "/tabs.js"
-        $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "/histogram.js"
-        $ mempty
-      H.script
-        ! A.type_ "text/javascript"
-        ! A.src "/resizable.js"
-        $ mempty
+    -- Scripts at the end of body
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"
+      $ mempty
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "https://www.gstatic.com/charts/loader.js"
+      $ mempty
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "/sankey.js"
+      $ mempty
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "/tabs.js"
+      $ mempty
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "/histogram.js"
+      $ mempty
+    H.script
+      ! A.type_ "text/javascript"
+      ! A.src "/resizable.js"
+      $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do
@@ -270,8 +270,8 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
           ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
           $ toHtml (transactionSourceName $ entityVal source)
       H.li
-        ! A.class_  "tab"
-        ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show  (Prelude.length transactionSources) <> ")")
+        ! A.class_ "tab"
+        ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ")")
         $ "Processed Files"
 
     H.div ! A.class_ "tab-content-container" $ do
@@ -284,19 +284,18 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
             generateSubTabContent idx $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
       H.div
         ! A.class_ "tab-content"
-        ! A.id (toValue $ "tab-content-" <> show  (Prelude.length transactionSources))
-        ! A.style  "display: none;"
+        ! A.id (toValue $ "tab-content-" <> show (Prelude.length transactionSources))
+        ! A.style "display: none;"
         $ generateProcessedFilesComponent processsedFiles
 
-renderHomePage :: Maybe Text -> IO Html
-renderHomePage banner = do
+renderHomePage :: Entity User -> Maybe Text -> IO Html
+renderHomePage user banner = do
   transactionSources <- getAllTransactionSources
-  categorizedTransactions <- getAllTransactions
+  categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource categorizedTransactions
   files <- getSourceFileMappings
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
 
-
-  let strictText = generateHomapageHtml banner tabs 
+  let strictText = generateHomapageHtml banner tabs
   return strictText

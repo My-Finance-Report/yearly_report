@@ -16,7 +16,8 @@ import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (Day, defaultTimeLocale, formatTime)
 import Data.Time.Clock (UTCTime)
-import Database
+import Database.Category
+import Database.Database
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
 import GHC.Generics (Generic)
@@ -99,12 +100,13 @@ classifyTransactions categoryMap description = do
 
 categorizeTransactionInner ::
   (MonadIO m) =>
+  Entity User ->
   Text ->
   UTCTime ->
   Key TransactionSource ->
   m (Entity Category)
-categorizeTransactionInner description day transactionSourceId = do
-  categories <- liftIO $ getCategoriesBySource transactionSourceId
+categorizeTransactionInner user description day transactionSourceId = do
+  categories <- liftIO $ getCategoriesBySource user transactionSourceId
   let categoryMap = Map.fromList [(categoryName (entityVal cat), cat) | cat <- categories]
   apiResponse <- liftIO $ classifyTransactions categoryMap description
   case apiResponse of
@@ -113,16 +115,17 @@ categorizeTransactionInner description day transactionSourceId = do
 
 categorizeTransaction ::
   (MonadIO m) =>
+  Entity User ->
   PartialTransaction ->
   Key UploadedPdf ->
   Key TransactionSource ->
   m CategorizedTransaction
-categorizeTransaction transaction uploadedPdfKey transactionSourceId = do
+categorizeTransaction user transaction uploadedPdfKey transactionSourceId = do
   -- Categorize the transaction
   let txnDsc = partialTransactionDescription transaction
   let dateOfTransaction = partialTransactionDateOfTransaction transaction
 
-  categoryEntity <- categorizeTransactionInner txnDsc dateOfTransaction transactionSourceId
+  categoryEntity <- categorizeTransactionInner user txnDsc dateOfTransaction transactionSourceId
 
   let categorizedTransaction =
         CategorizedTransaction
@@ -141,7 +144,7 @@ categorizeTransaction transaction uploadedPdfKey transactionSourceId = do
           }
 
   -- Insert the transaction and get the new ID
-  newId <- liftIO $ insertTransaction categorizedTransaction uploadedPdfKey
+  newId <- liftIO $ insertTransaction user categorizedTransaction uploadedPdfKey
 
   -- Return the updated CategorizedTransaction with the assigned ID
   return $

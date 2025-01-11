@@ -48,6 +48,7 @@ Category
     name Text
     sourceId TransactionSourceId
     UniqueCategory name sourceId
+    userId UserId 
     deriving Show Eq Ord
 
 Transaction

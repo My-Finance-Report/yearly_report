@@ -4,9 +4,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Database
-  ( updateCategory,
-    addTransactionSource,
+module Database.Database
+  ( addTransactionSource,
     seedDatabase,
     getAllFilenames,
     getTransactionSource,
@@ -14,7 +13,6 @@ module Database
     getTransactionsByFileId,
     getAllUploadConfigs,
     getUploadConfiguration,
-    getCategoriesBySource,
     insertTransaction,
     getFirstSankeyConfig,
     fetchPdfRecord,
@@ -22,9 +20,7 @@ module Database
     markFileAsProcessed,
     getAllTransactions,
     groupTransactionsBySource,
-    getCategory,
     saveSankeyConfig,
-    addCategory,
     updateTransactionSource,
     persistUploadConfiguration,
     insertPdfRecord,
@@ -51,26 +47,31 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import Database.Category
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
 import Models
 import Types
 
--- Seed the database with sources and categories
-seedDatabase :: IO ()
-seedDatabase = do
+seedDatabase :: Entity User -> IO ()
+seedDatabase user = do
   pool <- getConnectionPool
   runSqlPool
     ( do
+        -- Create or get transaction sources
         bankSourceId <- ensureTransactionSourceExists "Bank"
         ccSourceId <- ensureTransactionSourceExists "CreditCard"
 
+        -- Create categories for the bank source
         ensureCategoriesExist
+          user
           bankSourceId
           ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
 
+        -- Create categories for the credit card source
         ensureCategoriesExist
+          user
           ccSourceId
           ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]
 
@@ -85,19 +86,6 @@ ensureTransactionSourceExists name = do
   case maybeSource of
     Just (Entity sourceId _) -> return sourceId
     Nothing -> insert $ TransactionSource name
-
-ensureCategoriesExist :: Key TransactionSource -> [Text] -> SqlPersistT IO ()
-ensureCategoriesExist sourceId categories = do
-  forM_ categories $ \categoryName -> do
-    existingCategory <-
-      selectFirst
-        [CategoryName ==. categoryName, CategorySourceId ==. sourceId]
-        []
-    case existingCategory of
-      Nothing -> do
-        _ <- insert $ Category categoryName sourceId -- Insert and discard the result
-        return ()
-      Just _ -> return () -- Do nothing if the category already exists
 
 getTransactionSource :: (MonadUnliftIO m) => Key TransactionSource -> m (Entity TransactionSource)
 getTransactionSource sourceId = do
@@ -124,24 +112,6 @@ updateTransactionCategory transactionId newCategoryId = do
   where
     queryUpdateTransactionCategory =
       update transactionId [TransactionCategoryId =. newCategoryId]
-
-addCategory :: (MonadUnliftIO m) => Text -> Key TransactionSource -> m (Key Category)
-addCategory categoryName sourceId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryAddCategory pool
-  where
-    queryAddCategory = insert $ Category categoryName sourceId
-
-updateCategory :: (MonadUnliftIO m) => Key Category -> Text -> m ()
-updateCategory categoryId newName = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryUpdateCategory pool
-  where
-    queryUpdateCategory =
-      update
-        categoryId
-        [ CategoryName =. newName
-        ]
 
 getAllTransactionSources :: (MonadUnliftIO m) => m [Entity TransactionSource]
 getAllTransactionSources = do
@@ -178,8 +148,8 @@ getAllFilenames = do
       results <- selectList [] [Asc UploadedPdfId]
       return $ Prelude.map (uploadedPdfFilename . entityVal) results
 
-getTransactionsByFileId :: (MonadUnliftIO m) => Key UploadedPdf -> m [CategorizedTransaction]
-getTransactionsByFileId fileId = do
+getTransactionsByFileId :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m [CategorizedTransaction]
+getTransactionsByFileId user fileId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryTransactions pool
   where
@@ -209,7 +179,8 @@ getTransactionsByFileId fileId = do
               category =
                 Category
                   { categoryName = categoryName cat,
-                    categorySourceId = sourceId
+                    categorySourceId = sourceId,
+                    categoryUserId = entityKey user
                   },
               transactionId = Just txnId
             }
@@ -225,15 +196,8 @@ getTransactionsByFileId fileId = do
     parseTransactionKind "Deposit" = Deposit
     parseTransactionKind _ = error "Invalid transaction kind"
 
-getCategoriesBySource :: (MonadUnliftIO m) => Key TransactionSource -> m [Entity Category]
-getCategoriesBySource sourceId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryCategories pool
-  where
-    queryCategories = selectList [CategorySourceId ==. sourceId] [Asc CategoryId]
-
-insertTransaction :: (MonadUnliftIO m) => CategorizedTransaction -> Key UploadedPdf -> m (Key Transaction)
-insertTransaction categorizedTransaction uploadedPdfKey = do
+insertTransaction :: (MonadUnliftIO m) => Entity User -> CategorizedTransaction -> Key UploadedPdf -> m (Key Transaction)
+insertTransaction user categorizedTransaction uploadedPdfKey = do
   pool <- liftIO getConnectionPool
   runSqlPool insertTransactionQuery pool
   where
@@ -242,7 +206,7 @@ insertTransaction categorizedTransaction uploadedPdfKey = do
           cat = category categorizedTransaction
 
       -- Ensure the category exists and get its key
-      categoryKey <- ensureCategoryExists (categoryName cat) (categorySourceId cat)
+      categoryKey <- ensureCategoryExists user (categoryName cat) (categorySourceId cat)
 
       -- Insert the transaction
       let newTransaction =
@@ -257,12 +221,12 @@ insertTransaction categorizedTransaction uploadedPdfKey = do
               }
       insert newTransaction
 
-    ensureCategoryExists :: (MonadIO m) => Text -> Key TransactionSource -> ReaderT SqlBackend m (Key Category)
-    ensureCategoryExists catName sourceId = do
-      maybeCategory <- getBy (UniqueCategory catName sourceId)
-      case maybeCategory of
-        Just (Entity categoryId _) -> return categoryId
-        Nothing -> insert $ Category catName sourceId
+ensureCategoryExists :: (MonadIO m) => Entity User -> Text -> Key TransactionSource -> ReaderT SqlBackend m (Key Category)
+ensureCategoryExists user catName sourceId = do
+  maybeCategory <- getBy (UniqueCategory catName sourceId)
+  case maybeCategory of
+    Just (Entity categoryId _) -> return categoryId
+    Nothing -> insert $ Category catName sourceId (entityKey user)
 
 getFirstSankeyConfig :: (MonadUnliftIO m) => m (Maybe FullSankeyConfig)
 getFirstSankeyConfig = do
@@ -345,8 +309,8 @@ markFileAsProcessed filename = do
     Just _ -> liftIO $ putStrLn $ "File processed: " <> T.unpack filename
     Nothing -> liftIO $ putStrLn $ "File already marked as processed: " <> T.unpack filename
 
-getAllTransactions :: (MonadUnliftIO m) => m [CategorizedTransaction]
-getAllTransactions = do
+getAllTransactions :: (MonadUnliftIO m) => Entity User -> m [CategorizedTransaction]
+getAllTransactions user = do
   pool <- liftIO getConnectionPool
   runSqlPool queryAllTransactions pool
   where
@@ -368,7 +332,6 @@ getAllTransactions = do
           Just c -> return c
           Nothing -> error $ "Category not found for ID: " ++ show (transactionCategoryId txn)
 
-        -- Map the results to CategorizedTransaction
         return
           CategorizedTransaction
             { transaction =
@@ -384,7 +347,8 @@ getAllTransactions = do
               category =
                 Category
                   { categoryName = categoryName category,
-                    categorySourceId = transactionTransactionSourceId txn
+                    categorySourceId = transactionTransactionSourceId txn,
+                    categoryUserId = entityKey user
                   },
               transactionId = Just txnId
             }
@@ -423,22 +387,6 @@ groupTransactionsBySource categorizedTransactions = do
       -- Map TransactionSourceId keys to Entity TransactionSource keys
       return $
         mapKeys (\key -> findWithDefault (error "Source not found") key sourceMap) groupedBySourceId
-
-getCategory :: (MonadUnliftIO m) => Key Category -> m (Entity Category, Entity TransactionSource)
-getCategory categoryId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryCategory pool
-  where
-    queryCategory = do
-      maybeCategory <- getEntity categoryId
-      case maybeCategory of
-        Nothing -> liftIO $ fail $ "No category found with id=" ++ show (fromSqlKey categoryId)
-        Just categoryEntity -> do
-          let sourceId = categorySourceId $ entityVal categoryEntity
-          maybeSource <- getEntity sourceId
-          case maybeSource of
-            Nothing -> liftIO $ fail $ "No transaction source found for category id=" ++ show (fromSqlKey categoryId)
-            Just sourceEntity -> return (categoryEntity, sourceEntity)
 
 saveSankeyConfig :: (MonadUnliftIO m) => FullSankeyConfig -> m (Key SankeyConfig)
 saveSankeyConfig config = do
