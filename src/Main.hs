@@ -35,9 +35,7 @@ import Database.Database
   ( fetchPdfRecord,
     fetchSourceMap,
     getAllFilenames,
-    getFirstSankeyConfig,
     insertPdfRecord,
-    saveSankeyConfig,
     seedDatabase,
   )
 import Database.Persist
@@ -48,6 +46,7 @@ import Database.Persist.Postgresql hiding (get)
 import Database.TransactionSource
 import Database.UploadConfiguration
 import Database.Transaction
+import Database.Configurations
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -128,6 +127,7 @@ buildRow allSourceNames (_, sources) =
 
 formatMonthYear :: UTCTime -> T.Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
+
 
 extractBearerToken :: TL.Text -> Maybe TL.Text
 extractBearerToken header =
