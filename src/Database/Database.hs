@@ -8,8 +8,6 @@ module Database.Database
   ( seedDatabase,
     getAllFilenames,
     getTransactionsByFileId,
-    getAllUploadConfigs,
-    getUploadConfiguration,
     insertTransaction,
     getFirstSankeyConfig,
     fetchPdfRecord,
@@ -18,7 +16,6 @@ module Database.Database
     getAllTransactions,
     groupTransactionsBySource,
     saveSankeyConfig,
-    persistUploadConfiguration,
     insertPdfRecord,
     updateTransactionCategory,
     parseTransactionKind,
@@ -76,8 +73,6 @@ seedDatabase user = do
     )
     pool
 
--- Ensure a transaction source exists, returning its ID
-
 updateTransactionCategory :: (MonadUnliftIO m) => Key Transaction -> Key Category -> m ()
 updateTransactionCategory transactionId newCategoryId = do
   pool <- liftIO getConnectionPool
@@ -85,25 +80,6 @@ updateTransactionCategory transactionId newCategoryId = do
   where
     queryUpdateTransactionCategory =
       update transactionId [TransactionCategoryId =. newCategoryId]
-
-getAllUploadConfigs :: (MonadUnliftIO m) => m [Entity UploadConfiguration]
-getAllUploadConfigs = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryUploadConfigs pool
-  where
-    queryUploadConfigs = selectList [] [Asc UploadConfigurationTransactionSourceId]
-
-getUploadConfiguration :: (MonadUnliftIO m) => Text -> m (Maybe (Entity UploadConfiguration))
-getUploadConfiguration filename = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryUploadConfiguration pool
-  where
-    queryUploadConfiguration = do
-      results <-
-        rawSql
-          "SELECT ?? FROM upload_configuration WHERE ? ~ filename_regex"
-          [toPersistValue filename]
-      return $ listToMaybe results
 
 getAllFilenames :: (MonadUnliftIO m) => m [Text]
 getAllFilenames = do
@@ -381,23 +357,7 @@ saveSankeyConfig config = do
           return key
         Nothing -> insert $ SankeyConfig (configName config)
 
-persistUploadConfiguration :: (MonadUnliftIO m) => T.Text -> T.Text -> Key TransactionSource -> T.Text -> m ()
-persistUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryPersistUploadConfiguration pool
-  where
-    queryPersistUploadConfiguration = do
-      result <-
-        insertUnique $
-          UploadConfiguration
-            { uploadConfigurationStartKeyword = Just startKeyword,
-              uploadConfigurationEndKeyword = Just endKeyword,
-              uploadConfigurationTransactionSourceId = txnSourceId,
-              uploadConfigurationFilenameRegex = Just filenameRegex
-            }
-      case result of
-        Just _ -> return () -- Successfully inserted
-        Nothing -> liftIO $ putStrLn "UploadConfiguration already exists" -- Log if already exists
+
 
 getSourceFileMappings :: (MonadUnliftIO m) => m [SourceFileMapping]
 getSourceFileMappings = do

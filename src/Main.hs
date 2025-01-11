@@ -24,12 +24,33 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Lazy as TL
-import Data.Time
+import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import Database.Category
+  ( addCategory,
+    getCategoriesBySource,
+    getCategory,
+    updateCategory,
+  )
 import Database.Database
-import Database.Persist hiding (get)
+  ( fetchPdfRecord,
+    fetchSourceMap,
+    getAllFilenames,
+    getAllTransactions,
+    getFirstSankeyConfig,
+    getTransactionsByFileId,
+    groupTransactionsBySource,
+    insertPdfRecord,
+    saveSankeyConfig,
+    seedDatabase,
+    updateTransactionCategory,
+  )
+import Database.Persist
+  ( Entity (entityKey, entityVal),
+    PersistEntity (Key),
+  )
 import Database.Persist.Postgresql hiding (get)
 import Database.TransactionSource
+import Database.UploadConfiguration
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -220,7 +241,7 @@ main = do
       sourceIdText <- Web.Scotty.formParam "transactionSourceId"
       let sourceId = toSqlKey $ read sourceIdText
 
-      liftIO $ persistUploadConfiguration startKeyword endKeyword sourceId filenamePattern
+      liftIO $ addUploadConfiguration startKeyword endKeyword sourceId filenamePattern
 
       redirect "/"
 
