@@ -60,6 +60,7 @@ Transaction
     transactionSourceId TransactionSourceId
     kind TransactionKind
     uploadedPdfId UploadedPdfId Maybe 
+    userId UserId 
     deriving Show Eq Generic Ord
 
 ProcessedFile

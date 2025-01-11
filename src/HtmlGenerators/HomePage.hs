@@ -294,7 +294,7 @@ renderHomePage :: Entity User -> Maybe Text -> IO Html
 renderHomePage user banner = do
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
-  groupedBySource <- groupTransactionsBySource categorizedTransactions
+  groupedBySource <- groupTransactionsBySource user categorizedTransactions
   files <- getSourceFileMappings
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files

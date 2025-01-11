@@ -139,7 +139,8 @@ categorizeTransaction user transaction uploadedPdfKey transactionSourceId = do
                   transactionDateOfTransaction = dateOfTransaction,
                   transactionUploadedPdfId = Just uploadedPdfKey,
                   transactionCategoryId = entityKey categoryEntity,
-                  transactionTransactionSourceId = transactionSourceId
+                  transactionTransactionSourceId = transactionSourceId,
+                  transactionUserId = entityKey user
                 },
             category = entityVal categoryEntity
           }

@@ -26,8 +26,8 @@ import Database.Persist.Sql (selectList)
 import Models
 import Types
 
-updateTransactionCategory :: (MonadUnliftIO m) => Key Transaction -> Key Category -> m ()
-updateTransactionCategory transactionId newCategoryId = do
+updateTransactionCategory :: (MonadUnliftIO m) => Entity User ->Key Transaction -> Key Category -> m ()
+updateTransactionCategory user transactionId newCategoryId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUpdateTransactionCategory pool
   where
@@ -62,7 +62,8 @@ getTransactionsByFileId user fileId = do
                     transactionKind = transactionKind txn,
                     transactionUploadedPdfId = Just fileId,
                     transactionCategoryId = catId,
-                    transactionTransactionSourceId = sourceId
+                    transactionTransactionSourceId = sourceId,
+                    transactionUserId = entityKey user
                   },
               category =
                 Category
@@ -107,7 +108,8 @@ addTransaction user categorizedTransaction uploadedPdfKey = do
                 transactionAmount = transactionAmount tx,
                 transactionTransactionSourceId = categorySourceId cat,
                 transactionUploadedPdfId = Just uploadedPdfKey,
-                transactionKind = transactionKind tx
+                transactionKind = transactionKind tx,
+                transactionUserId = entityKey user
               }
       insert newTransaction
 
@@ -118,12 +120,10 @@ getAllTransactions user = do
   runSqlPool queryAllTransactions pool
   where
     queryAllTransactions = do
-      -- Fetch all transactions
-      transactions <- selectList [] []
+      transactions <- selectList  [TransactionUserId ==. entityKey user] []
 
-      -- For each transaction, fetch its associated TransactionSource and Category
       forM transactions $ \(Entity txnId txn) -> do
-        -- Get the associated TransactionSource
+
         maybeSource <- get (transactionTransactionSourceId txn)
         source <- case maybeSource of
           Just s -> return s
@@ -145,7 +145,8 @@ getAllTransactions user = do
                     transactionKind = transactionKind txn,
                     transactionUploadedPdfId = transactionUploadedPdfId txn,
                     transactionCategoryId = transactionCategoryId txn,
-                    transactionTransactionSourceId = transactionTransactionSourceId txn
+                    transactionTransactionSourceId = transactionTransactionSourceId txn,
+                    transactionUserId = entityKey user
                   },
               category =
                 Category
@@ -159,24 +160,23 @@ getAllTransactions user = do
 
 groupTransactionsBySource ::
   (MonadUnliftIO m) =>
+  Entity User ->
   [CategorizedTransaction] ->
   m (Map (Entity TransactionSource) [CategorizedTransaction])
-groupTransactionsBySource categorizedTransactions = do
+groupTransactionsBySource user categorizedTransactions = do
   pool <- liftIO getConnectionPool
   runSqlPool fetchTransactionSources pool
   where
     fetchTransactionSources = do
-      -- Get unique TransactionSource keys from transactions
       let sourceKeys = nub $ Prelude.map (transactionTransactionSourceId . transaction) categorizedTransactions
-      -- Fetch all corresponding TransactionSource entities
-      sources <- selectList [TransactionSourceId <-. sourceKeys] []
-      -- Build a Map from TransactionSourceId to Entity TransactionSource
+
+      sources <- selectList [TransactionSourceId <-. sourceKeys, TransactionSourceUserId ==. entityKey user] []
+
       let sourceMap = fromList [(entityKey source, source) | source <- sources]
-      -- Group transactions by TransactionSourceId and map to TransactionSource entities
+
       let groupedBySourceId =
             fromListWith
               (++)
               [(transactionTransactionSourceId (transaction txn), [txn]) | txn <- categorizedTransactions]
-      -- Map TransactionSourceId keys to Entity TransactionSource keys
       return $
         mapKeys (\key -> findWithDefault (error "Source not found") key sourceMap) groupedBySourceId

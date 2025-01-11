@@ -308,7 +308,7 @@ main = do
       newCat <- Web.Scotty.formParam "newCategory"
       let newCatId = toSqlKey (read $ T.unpack newCat) :: Key Category
       fileArg <- Web.Scotty.formParam "filename"
-      liftIO $ updateTransactionCategory (read $ T.unpack tId) newCatId
+      liftIO $ updateTransactionCategory user (read $ T.unpack tId) newCatId
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
     post "/update-sankey-config" $ requireUser pool $ \user -> do
@@ -384,7 +384,7 @@ main = do
 
     get "/api/sankey-data" $ requireUser pool $ \user -> do
       categorizedTransactions <- liftIO $ getAllTransactions user
-      gbs <- groupTransactionsBySource categorizedTransactions
+      gbs <- groupTransactionsBySource user categorizedTransactions
 
       sankeyConfig <- liftIO getFirstSankeyConfig
       let sankeyData = case sankeyConfig of
