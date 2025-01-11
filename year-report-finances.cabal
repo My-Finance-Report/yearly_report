@@ -43,7 +43,6 @@ library
       persistent-postgresql,
       persistent-template,
       http-client-tls >= 0.3,
-      sqlite-simple >= 0.4,
       bytestring >= 0.10,
       filepath >= 1.4,
       directory >= 1.3,
@@ -96,7 +95,6 @@ executable year-report-finances
       http-client >= 0.7,
       http-types,
       http-client-tls >= 0.3,
-      sqlite-simple >= 0.4,
       bytestring >= 0.10,
       filepath >= 1.4,
       directory >= 1.3,
@@ -125,6 +123,5 @@ test-suite year-report-finances-test
     aeson >= 1.5,
     http-client >= 0.7,
     http-client-tls >= 0.3,
-    sqlite-simple >= 0.4,
     bytestring >= 0.10
   default-language: Haskell2010

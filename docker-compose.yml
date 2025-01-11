@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   postgres:
     image: postgres:latest
@@ -5,11 +7,22 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: persistent_user
-      POSTGRES_PASSWORD: persistent_pass
-      POSTGRES_DB: persistent_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  haskell-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: haskell_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
     restart: unless-stopped
 
 volumes:

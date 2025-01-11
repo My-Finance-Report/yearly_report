@@ -2,6 +2,7 @@
 bank_files/*
 *.txt
 *.db
+*.env
 generated_code/*
 *.html
 *.pdf

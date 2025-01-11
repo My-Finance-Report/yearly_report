@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
@@ -7,23 +7,25 @@ module Main where
 import Auth
 import Categorizer
 import ConnectionPool
-import HtmlGenerators.Layout (renderPage)
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
-import qualified Data.ByteString.Lazy as B
-
+import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
+import qualified Data.ByteString.Lazy as B
 import Data.IORef
 import Data.List (nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Lazy as TL
 import Data.Time
+import Database
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql hiding (get)
 import GHC.Generics (Generic)
@@ -32,10 +34,9 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
-import Database
+import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.RefineSelectionPage
 import Models
-import Data.Set (Set)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -43,10 +44,8 @@ import Parsers
 import Sankey
 import System.FilePath ((</>))
 import Types
-import Web.Scotty 
+import Web.Scotty
 import qualified Web.Scotty as Web
-import Control.Monad.IO.Unlift (MonadUnliftIO)
-import qualified Data.Set as Set
 
 data Matrix = Matrix
   { columnHeaders :: [T.Text],
@@ -122,17 +121,14 @@ extractSessionCookie cookies =
   let sessionPrefix = "session="
    in listToMaybe [TL.drop (TL.length sessionPrefix) cookie | cookie <- TL.splitOn "; " cookies, sessionPrefix `TL.isPrefixOf` cookie]
 
-
 getTokenFromRequest :: ActionM (Maybe TL.Text)
 getTokenFromRequest = do
-    mCookie <- header "Cookie"
-    case mCookie >>= extractSessionCookie of
-      Just token -> return $ Just token
-      Nothing -> do
-        mAuthHeader <- header "Authorization"
-        return $ mAuthHeader >>= extractBearerToken
-
-
+  mCookie <- header "Cookie"
+  case mCookie >>= extractSessionCookie of
+    Just token -> return $ Just token
+    Nothing -> do
+      mAuthHeader <- header "Authorization"
+      return $ mAuthHeader >>= extractBearerToken
 
 requireUser :: ConnectionPool -> (Entity User -> ActionM ()) -> ActionM ()
 requireUser pool action = do
@@ -149,28 +145,26 @@ getCurrentUser :: ConnectionPool -> ActionM (Maybe (Entity User))
 getCurrentUser pool = do
   mToken <- getTokenFromRequest
   case mToken of
-    Nothing -> return Nothing 
+    Nothing -> return Nothing
     Just token -> liftIO $ validateSession pool $ TL.toStrict token
 
-
 main :: IO ()
-main  = do
+main = do
   activeJobs <- newIORef 0
-  ConnectionPool.initializeDatabase
+  ConnectionPool.initializePool
   pool <- getConnectionPool
-  Database.seedDatabase
   migratePostgres
+  Database.seedDatabase
   scotty 3000 $ do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     get "/login" $ do
-      token <-getTokenFromRequest
+      token <- getTokenFromRequest
 
       case token of
         Just _ -> Web.redirect "/"
-        Nothing ->Web.html $ renderPage Nothing "Login"  $ renderLoginPage Nothing 
-     
+        Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage Nothing
 
     post "/login" $ do
       email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
@@ -187,7 +181,7 @@ main  = do
       email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
       password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
       confirmPassword <- Web.Scotty.formParam "confirm-password" :: Web.Scotty.ActionM Text
-      
+
       if password /= confirmPassword
         then Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just "Passwords do not match")
         else do
@@ -201,21 +195,20 @@ main  = do
 
     get "/logout" $ do
       mToken <- getTokenFromRequest
-      
+
       case mToken of
-        Nothing -> Web.redirect "/login" 
+        Nothing -> Web.redirect "/login"
         Just token -> do
           pool <- liftIO getConnectionPool
-          liftIO $ deleteSession pool  $ TL.toStrict token 
+          liftIO $ deleteSession pool $ TL.toStrict token
           Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
           Web.redirect "/login"
-
 
     get "/" $ requireUser pool $ \user -> do
       activeJobs <- liftIO $ readIORef activeJobs
       let banner = if activeJobs > 0 then Just "Job Running" else Nothing
       liftIO $ print banner
-      content <- liftIO $  renderHomePage banner
+      content <- liftIO $ renderHomePage banner
       Web.html $ renderPage (Just user) "Financal Summary" content
 
     post "/setup-upload" $ requireUser pool $ \user -> do
@@ -341,7 +334,7 @@ main  = do
         categories <- Prelude.mapM (getCategoriesBySource . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
 
-      Web.Scotty.html $ renderPage  (Just user) "Configuration" $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
+      Web.Scotty.html $ renderPage (Just user) "Configuration" $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
 
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text

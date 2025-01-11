@@ -47,13 +47,6 @@ packages:
   original:
     hackage: http-client-tls-0.3.6.4@sha256:17217717fbbcda951b4ff000a7fbce416975b154c9bc09e56d9cac8ffb3b9525,2040
 - completed:
-    hackage: sqlite-simple-0.4.19.0@sha256:2996a0cef2ac99925ffb51cbf99d0a3fc129d67f3ece2294f14edb277d7b32d5,3153
-    pantry-tree:
-      sha256: 328b696862be96e4eb3769a3ef2ebf2ebf82fb85ae71c114826b81e85dc876c5
-      size: 1930
-  original:
-    hackage: sqlite-simple-0.4.19.0@sha256:2996a0cef2ac99925ffb51cbf99d0a3fc129d67f3ece2294f14edb277d7b32d5,3153
-- completed:
     hackage: OneTuple-0.4.2@sha256:ce39b24139694ee1facfdbf0eed3fbca3444fa3c7bcaa386c65cd4e1b7691a4d,1976
     pantry-tree:
       sha256: b0de4b84e7f224bc8d5c28c173e8a652feaf1da71589290d1a9702d474b9cc1e

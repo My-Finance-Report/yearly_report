@@ -21,8 +21,9 @@ make my yearly financial report using haskell
   -(DONE) put it into the ui for processing
 - (DONE) allow for manually update transactions from a ui
   - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
-- (TODO) deploy in some capacity so i can run that app and let users try it
+- (DONE) deploy in some capacity so i can run the app and let users try it
   - (DONE) likely need some auth and user notion.
+  - (TODO) apply per user scope (RLS) to the db
   - (DONE) probably should switch to postgres before we deploy
 
 # Tech
@@ -41,4 +42,4 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 - Batch calls to open ai to make less likely to error out
 - Some issue with case sensitivity in uploader matching
-- Some issue with negativity on sankey diagram
+- Build deploy is insanely slow

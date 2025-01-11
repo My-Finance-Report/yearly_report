@@ -5,8 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Database
-  ( initializeDatabase,
-    updateCategory,
+  ( updateCategory,
     addTransactionSource,
     seedDatabase,
     getAllFilenames,
@@ -64,16 +63,13 @@ seedDatabase = do
   pool <- getConnectionPool
   runSqlPool
     ( do
-        -- Insert transaction sources
         bankSourceId <- ensureTransactionSourceExists "Bank"
         ccSourceId <- ensureTransactionSourceExists "CreditCard"
 
-        -- Insert categories for Bank
         ensureCategoriesExist
           bankSourceId
           ["Investments", "Income", "Transfers", "Credit Card Payments", "Insurance"]
 
-        -- Insert categories for CreditCard
         ensureCategoriesExist
           ccSourceId
           ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]

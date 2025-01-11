@@ -1,18 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ConnectionPool (initializeDatabase, getConnectionPool, migratePostgres) where 
-import Database.Persist.Postgresql hiding (get)
-import Models
+module ConnectionPool (initializePool, getConnectionPool, migratePostgres) where
+
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
-import Database.Persist.Postgresql (ConnectionPool, createPostgresqlPool, runSqlPool)
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import System.IO.Unsafe (unsafePerformIO) -- Only for quick global variable usage
+-- Only for quick global variable usage
 import Data.ByteString (ByteString)
+import Data.ByteString.Char8 (pack)
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Database.Persist.Postgresql (ConnectionPool, createPostgresqlPool, runSqlPool)
+import Database.Persist.Postgresql hiding (get)
+import Models
+import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
 
 -- Connection string and pool size
-connectionString :: ByteString
-connectionString = "host=localhost port=5433 user=persistent_user dbname=persistent_db password=persistent_pass"
+connectionString :: IO ByteString
+connectionString = do
+  maybeDbUrl <- lookupEnv "DATABASE_URL"
+  case maybeDbUrl of
+    Just dbUrl -> do
+      return $ pack dbUrl
+    Nothing -> fail "Error: DATABASE_URL environment variable not set."
 
 poolSize :: Int
 poolSize = 10
@@ -21,9 +30,10 @@ poolSize = 10
 globalPool :: IORef (Maybe ConnectionPool)
 globalPool = unsafePerformIO $ newIORef Nothing
 
-initializeDatabase :: IO ()
-initializeDatabase = do
-  pool <- runStderrLoggingT $ createPostgresqlPool connectionString poolSize
+initializePool :: IO ()
+initializePool = do
+  connStr <- connectionString
+  pool <- runStderrLoggingT $ createPostgresqlPool connStr poolSize
   writeIORef globalPool (Just pool)
 
 getConnectionPool :: IO ConnectionPool
@@ -34,6 +44,7 @@ getConnectionPool = do
     Nothing -> error "Database connection pool not initialized. Call initializeDatabase first."
 
 migratePostgres :: IO ()
-migratePostgres = runStderrLoggingT $ withPostgresqlConn connectionString $ \backend ->
-  runSqlConn (runMigration migrateAll) backend
-
+migratePostgres = do
+  connStr <- connectionString
+  runStderrLoggingT $ withPostgresqlConn connStr $ \backend ->
+    runSqlConn (runMigration migrateAll) backend

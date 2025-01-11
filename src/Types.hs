@@ -28,7 +28,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Time (Day, UTCTime, defaultTimeLocale, formatTime, parseTimeM)
 import Database.Persist
-import Database.SQLite.Simple.FromRow
 import GHC.Generics (Generic)
 import Models
 
