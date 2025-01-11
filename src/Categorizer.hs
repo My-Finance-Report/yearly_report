@@ -17,6 +17,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (Day, defaultTimeLocale, formatTime)
 import Data.Time.Clock (UTCTime)
 import Database.Category
+import Database.Transaction
 import Database.Database
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
@@ -144,7 +145,7 @@ categorizeTransaction user transaction uploadedPdfKey transactionSourceId = do
           }
 
   -- Insert the transaction and get the new ID
-  newId <- liftIO $ insertTransaction user categorizedTransaction uploadedPdfKey
+  newId <- liftIO $ addTransaction user categorizedTransaction uploadedPdfKey
 
   -- Return the updated CategorizedTransaction with the assigned ID
   return $

@@ -35,14 +35,10 @@ import Database.Database
   ( fetchPdfRecord,
     fetchSourceMap,
     getAllFilenames,
-    getAllTransactions,
     getFirstSankeyConfig,
-    getTransactionsByFileId,
-    groupTransactionsBySource,
     insertPdfRecord,
     saveSankeyConfig,
     seedDatabase,
-    updateTransactionCategory,
   )
 import Database.Persist
   ( Entity (entityKey, entityVal),
@@ -51,6 +47,7 @@ import Database.Persist
 import Database.Persist.Postgresql hiding (get)
 import Database.TransactionSource
 import Database.UploadConfiguration
+import Database.Transaction
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -241,7 +238,7 @@ main = do
       sourceIdText <- Web.Scotty.formParam "transactionSourceId"
       let sourceId = toSqlKey $ read sourceIdText
 
-      liftIO $ addUploadConfiguration startKeyword endKeyword sourceId filenamePattern
+      liftIO $ addUploadConfiguration user startKeyword endKeyword sourceId filenamePattern
 
       redirect "/"
 
@@ -264,7 +261,7 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              maybeConfig <- liftIO $ getUploadConfiguration originalName
+              maybeConfig <- liftIO $ getUploadConfiguration user originalName
 
               liftIO $ print $ show maybeConfig
 
@@ -350,7 +347,7 @@ main = do
       redirect "/"
 
     get "/configuration" $ requireUser pool $ \user -> do
-      uploaderConfigs <- liftIO getAllUploadConfigs
+      uploaderConfigs <- liftIO $ getAllUploadConfigs user
       transactionSources <- liftIO $ getAllTransactionSources user
       sankeyConfig <- liftIO getFirstSankeyConfig
       categoriesBySource <- liftIO $ do

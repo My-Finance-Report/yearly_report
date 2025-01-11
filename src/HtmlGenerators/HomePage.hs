@@ -16,6 +16,7 @@ import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database.Database
+import Database.Transaction
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
 import Database.TransactionSource

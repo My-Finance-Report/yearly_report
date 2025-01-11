@@ -17,6 +17,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Database
+import Database.Transaction
 import Database.Persist
 import Database.TransactionSource
 import GHC.Generics (Generic)

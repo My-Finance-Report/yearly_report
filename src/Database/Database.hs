@@ -7,18 +7,12 @@
 module Database.Database
   ( seedDatabase,
     getAllFilenames,
-    getTransactionsByFileId,
-    insertTransaction,
     getFirstSankeyConfig,
     fetchPdfRecord,
     isFileProcessed,
     markFileAsProcessed,
-    getAllTransactions,
-    groupTransactionsBySource,
     saveSankeyConfig,
     insertPdfRecord,
-    updateTransactionCategory,
-    parseTransactionKind,
     getSourceFileMappings,
     fetchSourceMap,
   )
@@ -73,13 +67,7 @@ seedDatabase user = do
     )
     pool
 
-updateTransactionCategory :: (MonadUnliftIO m) => Key Transaction -> Key Category -> m ()
-updateTransactionCategory transactionId newCategoryId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryUpdateTransactionCategory pool
-  where
-    queryUpdateTransactionCategory =
-      update transactionId [TransactionCategoryId =. newCategoryId]
+
 
 getAllFilenames :: (MonadUnliftIO m) => m [Text]
 getAllFilenames = do
@@ -90,78 +78,7 @@ getAllFilenames = do
       results <- selectList [] [Asc UploadedPdfId]
       return $ Prelude.map (uploadedPdfFilename . entityVal) results
 
-getTransactionsByFileId :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m [CategorizedTransaction]
-getTransactionsByFileId user fileId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryTransactions pool
-  where
-    queryTransactions = do
-      results <-
-        rawSql
-          "SELECT ??, ??, ?? \
-          \FROM \"transaction\" t \
-          \INNER JOIN \"transaction_source\" ts ON t.transaction_source_id = ts.id \
-          \INNER JOIN \"category\" c ON t.category_id = c.id \
-          \WHERE t.uploaded_pdf_id = ?"
-          [toPersistValue fileId]
 
-      forM results $ \(Entity txnId txn, Entity sourceId source, Entity catId cat) -> do
-        return
-          CategorizedTransaction
-            { transaction =
-                Transaction
-                  { transactionDescription = transactionDescription txn,
-                    transactionAmount = transactionAmount txn,
-                    transactionDateOfTransaction = transactionDateOfTransaction txn,
-                    transactionKind = transactionKind txn,
-                    transactionUploadedPdfId = Just fileId,
-                    transactionCategoryId = catId,
-                    transactionTransactionSourceId = sourceId
-                  },
-              category =
-                Category
-                  { categoryName = categoryName cat,
-                    categorySourceId = sourceId,
-                    categoryUserId = entityKey user
-                  },
-              transactionId = Just txnId
-            }
-
-    parseTransactionDate :: Text -> Day
-    parseTransactionDate dateText =
-      case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
-        Just parsedDate -> parsedDate
-        Nothing -> error $ "Error parsing date: " <> T.unpack dateText
-
-    parseTransactionKind :: Text -> TransactionKind
-    parseTransactionKind "Withdrawal" = Withdrawal
-    parseTransactionKind "Deposit" = Deposit
-    parseTransactionKind _ = error "Invalid transaction kind"
-
-insertTransaction :: (MonadUnliftIO m) => Entity User -> CategorizedTransaction -> Key UploadedPdf -> m (Key Transaction)
-insertTransaction user categorizedTransaction uploadedPdfKey = do
-  pool <- liftIO getConnectionPool
-  runSqlPool insertTransactionQuery pool
-  where
-    insertTransactionQuery = do
-      let tx = transaction categorizedTransaction
-          cat = category categorizedTransaction
-
-      -- Ensure the category exists and get its key
-      categoryKey <- ensureCategoryExists user (categoryName cat) (categorySourceId cat)
-
-      -- Insert the transaction
-      let newTransaction =
-            Transaction
-              { transactionDescription = transactionDescription tx,
-                transactionCategoryId = categoryKey,
-                transactionDateOfTransaction = transactionDateOfTransaction tx,
-                transactionAmount = transactionAmount tx,
-                transactionTransactionSourceId = categorySourceId cat,
-                transactionUploadedPdfId = Just uploadedPdfKey,
-                transactionKind = transactionKind tx
-              }
-      insert newTransaction
 
 getFirstSankeyConfig :: (MonadUnliftIO m) => m (Maybe FullSankeyConfig)
 getFirstSankeyConfig = do
@@ -244,84 +161,8 @@ markFileAsProcessed filename = do
     Just _ -> liftIO $ putStrLn $ "File processed: " <> T.unpack filename
     Nothing -> liftIO $ putStrLn $ "File already marked as processed: " <> T.unpack filename
 
-getAllTransactions :: (MonadUnliftIO m) => Entity User -> m [CategorizedTransaction]
-getAllTransactions user = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryAllTransactions pool
-  where
-    queryAllTransactions = do
-      -- Fetch all transactions
-      transactions <- selectList [] []
 
-      -- For each transaction, fetch its associated TransactionSource and Category
-      forM transactions $ \(Entity txnId txn) -> do
-        -- Get the associated TransactionSource
-        maybeSource <- get (transactionTransactionSourceId txn)
-        source <- case maybeSource of
-          Just s -> return s
-          Nothing -> error $ "TransactionSource not found for ID: " ++ show (transactionTransactionSourceId txn)
 
-        -- Get the associated Category
-        maybeCategory <- get (transactionCategoryId txn)
-        category <- case maybeCategory of
-          Just c -> return c
-          Nothing -> error $ "Category not found for ID: " ++ show (transactionCategoryId txn)
-
-        return
-          CategorizedTransaction
-            { transaction =
-                Transaction
-                  { transactionDescription = transactionDescription txn,
-                    transactionAmount = transactionAmount txn,
-                    transactionDateOfTransaction = transactionDateOfTransaction txn,
-                    transactionKind = transactionKind txn,
-                    transactionUploadedPdfId = transactionUploadedPdfId txn,
-                    transactionCategoryId = transactionCategoryId txn,
-                    transactionTransactionSourceId = transactionTransactionSourceId txn
-                  },
-              category =
-                Category
-                  { categoryName = categoryName category,
-                    categorySourceId = transactionTransactionSourceId txn,
-                    categoryUserId = entityKey user
-                  },
-              transactionId = Just txnId
-            }
-
-parseTransactionDate :: Text -> Day
-parseTransactionDate dateText =
-  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText) of
-    Just parsedDate -> parsedDate
-    Nothing -> error $ "Error parsing date: " <> T.unpack dateText
-
-parseTransactionKind :: Text -> TransactionKind
-parseTransactionKind "Withdrawal" = Withdrawal
-parseTransactionKind "Deposit" = Deposit
-parseTransactionKind _ = error "Invalid transaction kind"
-
-groupTransactionsBySource ::
-  (MonadUnliftIO m) =>
-  [CategorizedTransaction] ->
-  m (Map (Entity TransactionSource) [CategorizedTransaction])
-groupTransactionsBySource categorizedTransactions = do
-  pool <- liftIO getConnectionPool
-  runSqlPool fetchTransactionSources pool
-  where
-    fetchTransactionSources = do
-      -- Get unique TransactionSource keys from transactions
-      let sourceKeys = nub $ Prelude.map (transactionTransactionSourceId . transaction) categorizedTransactions
-      -- Fetch all corresponding TransactionSource entities
-      sources <- selectList [TransactionSourceId <-. sourceKeys] []
-      -- Build a Map from TransactionSourceId to Entity TransactionSource
-      let sourceMap = fromList [(entityKey source, source) | source <- sources]
-      -- Group transactions by TransactionSourceId and map to TransactionSource entities
-      let groupedBySourceId =
-            fromListWith
-              (++)
-              [(transactionTransactionSourceId (transaction txn), [txn]) | txn <- categorizedTransactions]
-      -- Map TransactionSourceId keys to Entity TransactionSource keys
-      return $
-        mapKeys (\key -> findWithDefault (error "Source not found") key sourceMap) groupedBySourceId
 
 saveSankeyConfig :: (MonadUnliftIO m) => FullSankeyConfig -> m (Key SankeyConfig)
 saveSankeyConfig config = do
@@ -356,8 +197,6 @@ saveSankeyConfig config = do
           update key [SankeyConfigName =. configName config]
           return key
         Nothing -> insert $ SankeyConfig (configName config)
-
-
 
 getSourceFileMappings :: (MonadUnliftIO m) => m [SourceFileMapping]
 getSourceFileMappings = do

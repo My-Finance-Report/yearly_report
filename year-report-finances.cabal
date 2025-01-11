@@ -11,6 +11,7 @@ library
     Database.Category
     Database.TransactionSource
     Database.UploadConfiguration
+    Database.Transaction
     ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
@@ -66,6 +67,7 @@ executable year-report-finances
       Database.Category
       Database.TransactionSource
       Database.UploadConfiguration
+      Database.Transaction
       Categorizer
       ConnectionPool
       HtmlGenerators.HtmlGenerators

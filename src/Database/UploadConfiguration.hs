@@ -17,27 +17,27 @@ import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
 import Models
 
-getAllUploadConfigs :: (MonadUnliftIO m) => m [Entity UploadConfiguration]
-getAllUploadConfigs = do
+getAllUploadConfigs :: (MonadUnliftIO m) => Entity User -> m [Entity UploadConfiguration]
+getAllUploadConfigs user = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUploadConfigs pool
   where
-    queryUploadConfigs = selectList [] [Asc UploadConfigurationTransactionSourceId]
+    queryUploadConfigs = selectList [UploadConfigurationUserId ==. entityKey user] [Asc UploadConfigurationTransactionSourceId]
 
-getUploadConfiguration :: (MonadUnliftIO m) => Text -> m (Maybe (Entity UploadConfiguration))
-getUploadConfiguration filename = do
+getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> m (Maybe (Entity UploadConfiguration))
+getUploadConfiguration user filename = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUploadConfiguration pool
   where
     queryUploadConfiguration = do
       results <-
         rawSql
-          "SELECT ?? FROM upload_configuration WHERE ? ~ filename_regex"
-          [toPersistValue filename]
+          "SELECT ?? FROM upload_configuration WHERE ? ~ filename_regex AND user_id = ?"
+          [toPersistValue filename, toPersistValue (entityKey user)]
       return $ listToMaybe results
 
-addUploadConfiguration :: (MonadUnliftIO m) => Text -> Text -> Key TransactionSource -> Text -> m ()
-addUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex = do
+addUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Key TransactionSource -> Text -> m ()
+addUploadConfiguration user startKeyword endKeyword txnSourceId filenameRegex = do
   pool <- liftIO getConnectionPool
   runSqlPool queryPersistUploadConfiguration pool
   where
@@ -48,8 +48,9 @@ addUploadConfiguration startKeyword endKeyword txnSourceId filenameRegex = do
             { uploadConfigurationStartKeyword = Just startKeyword,
               uploadConfigurationEndKeyword = Just endKeyword,
               uploadConfigurationTransactionSourceId = txnSourceId,
-              uploadConfigurationFilenameRegex = Just filenameRegex
+              uploadConfigurationFilenameRegex = Just filenameRegex,
+              uploadConfigurationUserId = entityKey user
             }
       case result of
-        Just _ -> return ()
-        Nothing -> liftIO $ putStrLn "UploadConfiguration already exists"
+        Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
+        Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)

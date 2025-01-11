@@ -79,6 +79,7 @@ UploadConfiguration
     endKeyword Text Maybe
     transactionSourceId TransactionSourceId
     UniqueUploadConfiguration transactionSourceId
+    userId UserId 
     deriving Show Eq
 
 SankeyConfig
