@@ -29,6 +29,7 @@ import Database.Category
 import Database.Database
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql hiding (get)
+import Database.TransactionSource
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -266,7 +267,7 @@ main = do
       pdfIdText <- Web.Scotty.pathParam "pdfId"
 
       let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
-      transactionSources <- liftIO getAllTransactionSources
+      transactionSources <- liftIO $ getAllTransactionSources user
       uploadedPdf <- liftIO $ fetchPdfRecord pdfId
       let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
 
@@ -304,12 +305,12 @@ main = do
       linkageCategoryId <- Web.Scotty.formParam "linkageCategoryId"
       linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
 
-      inputTransactionSources <- liftIO $ mapM getTransactionSource inputSourceIds
+      inputTransactionSources <- liftIO $ mapM (getTransactionSource user) inputSourceIds
       inputCategories <- liftIO $ mapM (getCategory user) inputCategoryIds
 
-      linkageSource <- liftIO $ getTransactionSource (toSqlKey (read linkageSourceId))
+      linkageSource <- liftIO $ getTransactionSource user (toSqlKey (read linkageSourceId))
       (linkageCategory, _) <- liftIO $ getCategory user (toSqlKey (read linkageCategoryId))
-      linkageTarget <- liftIO $ getTransactionSource (toSqlKey (read linkageTargetId))
+      linkageTarget <- liftIO $ getTransactionSource user (toSqlKey (read linkageTargetId))
 
       -- Assuming rawInputs is created earlier, e.g., by zipping or combining sources and categories
       let rawInputs = zip inputTransactionSources inputCategories
@@ -329,7 +330,7 @@ main = do
 
     get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO getAllUploadConfigs
-      transactionSources <- liftIO getAllTransactionSources
+      transactionSources <- liftIO $ getAllTransactionSources user
       sankeyConfig <- liftIO getFirstSankeyConfig
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
@@ -339,14 +340,14 @@ main = do
 
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ addTransactionSource newSource
+      liftIO $ addTransactionSource user newSource
       Web.Scotty.redirect "/configuration"
 
     post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "id"
       let sourceId = toSqlKey $ read sourceIdText
       sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
-      liftIO $ updateTransactionSource sourceId sourceName
+      liftIO $ updateTransactionSource user sourceId sourceName
       Web.Scotty.redirect "/configuration"
 
     post "/add-category/:sourceId" $ requireUser pool $ \user -> do

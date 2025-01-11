@@ -18,6 +18,7 @@ import Data.Time
 import Database.Database
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
+import Database.TransactionSource
 import HtmlGenerators.Components (navigationBar)
 import HtmlGenerators.HtmlGenerators
 import Models
@@ -290,7 +291,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
 
 renderHomePage :: Entity User -> Maybe Text -> IO Html
 renderHomePage user banner = do
-  transactionSources <- getAllTransactionSources
+  transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource categorizedTransactions
   files <- getSourceFileMappings

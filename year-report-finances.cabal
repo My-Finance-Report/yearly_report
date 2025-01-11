@@ -9,6 +9,7 @@ library
     Types
     Database.Database
     Database.Category
+    Database.TransactionSource
     ConnectionPool
     Categorizer
     HtmlGenerators.HtmlGenerators
@@ -62,6 +63,7 @@ executable year-report-finances
       Types
       Database.Database
       Database.Category
+      Database.TransactionSource
       Categorizer
       ConnectionPool
       HtmlGenerators.HtmlGenerators

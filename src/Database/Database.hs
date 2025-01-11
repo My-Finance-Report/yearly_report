@@ -5,11 +5,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Database.Database
-  ( addTransactionSource,
-    seedDatabase,
+  ( seedDatabase,
     getAllFilenames,
-    getTransactionSource,
-    getAllTransactionSources,
     getTransactionsByFileId,
     getAllUploadConfigs,
     getUploadConfiguration,
@@ -21,7 +18,6 @@ module Database.Database
     getAllTransactions,
     groupTransactionsBySource,
     saveSankeyConfig,
-    updateTransactionSource,
     persistUploadConfiguration,
     insertPdfRecord,
     updateTransactionCategory,
@@ -47,10 +43,11 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
-import Database.Category
+import Database.Category (ensureCategoriesExist, ensureCategoryExists)
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
+import Database.TransactionSource (ensureTransactionSourceExists)
 import Models
 import Types
 
@@ -60,8 +57,8 @@ seedDatabase user = do
   runSqlPool
     ( do
         -- Create or get transaction sources
-        bankSourceId <- ensureTransactionSourceExists "Bank"
-        ccSourceId <- ensureTransactionSourceExists "CreditCard"
+        bankSourceId <- ensureTransactionSourceExists user "Bank"
+        ccSourceId <- ensureTransactionSourceExists user "CreditCard"
 
         -- Create categories for the bank source
         ensureCategoriesExist
@@ -80,30 +77,6 @@ seedDatabase user = do
     pool
 
 -- Ensure a transaction source exists, returning its ID
-ensureTransactionSourceExists :: Text -> SqlPersistT IO (Key TransactionSource)
-ensureTransactionSourceExists name = do
-  maybeSource <- selectFirst [TransactionSourceName ==. name] []
-  case maybeSource of
-    Just (Entity sourceId _) -> return sourceId
-    Nothing -> insert $ TransactionSource name
-
-getTransactionSource :: (MonadUnliftIO m) => Key TransactionSource -> m (Entity TransactionSource)
-getTransactionSource sourceId = do
-  pool <- liftIO getConnectionPool
-  result <- runSqlPool (get sourceId) pool
-  case result of
-    Just source -> return $ Entity sourceId source
-    Nothing -> liftIO $ error $ "No transaction source found with ID: " ++ show (fromSqlKey sourceId)
-
-addTransactionSource :: Text -> IO (Key TransactionSource)
-addTransactionSource sourceName = do
-  pool <- getConnectionPool
-  runSqlPool (insert $ TransactionSource sourceName) pool
-
-updateTransactionSource :: (MonadUnliftIO m) => Key TransactionSource -> Text -> m ()
-updateTransactionSource sourceId newName = do
-  pool <- liftIO getConnectionPool
-  runSqlPool (update sourceId [TransactionSourceName =. newName]) pool
 
 updateTransactionCategory :: (MonadUnliftIO m) => Key Transaction -> Key Category -> m ()
 updateTransactionCategory transactionId newCategoryId = do
@@ -112,13 +85,6 @@ updateTransactionCategory transactionId newCategoryId = do
   where
     queryUpdateTransactionCategory =
       update transactionId [TransactionCategoryId =. newCategoryId]
-
-getAllTransactionSources :: (MonadUnliftIO m) => m [Entity TransactionSource]
-getAllTransactionSources = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryTransactionSources pool
-  where
-    queryTransactionSources = selectList [] [Asc TransactionSourceName]
 
 getAllUploadConfigs :: (MonadUnliftIO m) => m [Entity UploadConfiguration]
 getAllUploadConfigs = do
@@ -220,13 +186,6 @@ insertTransaction user categorizedTransaction uploadedPdfKey = do
                 transactionKind = transactionKind tx
               }
       insert newTransaction
-
-ensureCategoryExists :: (MonadIO m) => Entity User -> Text -> Key TransactionSource -> ReaderT SqlBackend m (Key Category)
-ensureCategoryExists user catName sourceId = do
-  maybeCategory <- getBy (UniqueCategory catName sourceId)
-  case maybeCategory of
-    Just (Entity categoryId _) -> return categoryId
-    Nothing -> insert $ Category catName sourceId (entityKey user)
 
 getFirstSankeyConfig :: (MonadUnliftIO m) => m (Maybe FullSankeyConfig)
 getFirstSankeyConfig = do

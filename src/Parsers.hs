@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Database
 import Database.Persist
+import Database.TransactionSource
 import GHC.Generics (Generic)
 import Models
 import OpenAiUtils
@@ -144,7 +145,7 @@ processPdfFile user pdfId config = do
   let filename = uploadedPdfFilename uploadedFile
   alreadyProcessed <- liftIO $ isFileProcessed filename
 
-  transactionSource <- getTransactionSource (uploadConfigurationTransactionSourceId $ entityVal config)
+  transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
   if alreadyProcessed
     then do

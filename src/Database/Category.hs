@@ -4,6 +4,7 @@ module Database.Category
     getCategoriesBySource,
     addCategory,
     ensureCategoriesExist,
+    ensureCategoryExists,
   )
 where
 
@@ -11,6 +12,7 @@ import ConnectionPool
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
+import Control.Monad.Trans.Reader (ReaderT)
 import Data.Text (Text)
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
@@ -71,3 +73,10 @@ ensureCategoriesExist user sourceId categories = do
         _ <- insert $ Category categoryName sourceId (entityKey user)
         return ()
       Just _ -> return ()
+
+ensureCategoryExists :: (MonadIO m) => Entity User -> Text -> Key TransactionSource -> ReaderT SqlBackend m (Key Category)
+ensureCategoryExists user catName sourceId = do
+  maybeCategory <- getBy (UniqueCategory catName sourceId)
+  case maybeCategory of
+    Just (Entity categoryId _) -> return categoryId
+    Nothing -> insert $ Category catName sourceId (entityKey user)

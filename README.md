@@ -4,27 +4,25 @@ make my yearly financial report using haskell
 
 # Features
 
-- (DONE) parse PDF bank statements and credit card statements (see src/Parsers.hs)
-- (DONE) cleanup around in / out money -> summing deposits + withdrawls is weird
-- (DONE) categorize expenses (see src/Categorizer.hs)
-- (DONE) generate "report" (see src/HtmlGenerators.hs)
-  - (DONE) per month drill down
-  - (DONE) summary -> per transaction drill down
-  - (DONE) allow for an interactive interface
-- (DONE) try to serve the resulting report with haskell
-  - minimally implimented with Scotty
-- (DONE) allow uploading documents to generate "live" reports
-  - (DONE) create a minimal "upload" configuration that is tied to a source and allows saving upload config
-- (DONE) allow sankey nodes to be configurable
-  -(DONE) remove internal notion of bank vs CC statement
-  -(DONE) create a configurable object to make sankeys
-  -(DONE) put it into the ui for processing
-- (DONE) allow for manually update transactions from a ui
-  - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
-- (DONE) deploy in some capacity so i can run the app and let users try it
-  - (DONE) likely need some auth and user notion.
-  - (TODO) apply per user scope (RLS) to the db
-  - (DONE) probably should switch to postgres before we deploy
+- parse PDF bank statements and credit card statements (see src/Parsers.hs)
+- cleanup around in / out money -> summing deposits + withdrawls is weird
+- categorize expenses (see src/Categorizer.hs)
+- generate "report" (see src/HtmlGenerators.hs)
+- per month drill down
+- summary -> per transaction drill down
+- allow for an interactive interface
+- try to serve the resulting report with haskell
+- minimally implimented with Scotty
+- allow uploading documents to generate "live" reports
+- create a minimal "upload" configuration that is tied to a source and allows saving upload config
+- allow sankey nodes to be configurable
+- remove internal notion of bank vs CC statement
+- create a configurable object to make sankeys
+- put it into the ui for processing
+- allow for manually update transactions from a ui
+- (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
+- deploy in some capacity so i can run the app and let users try it
+- (TODO) apply per user scope (RLS) to the db
 
 # Tech
 
@@ -43,3 +41,4 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - Batch calls to open ai to make less likely to error out
 - Some issue with case sensitivity in uploader matching
 - Build deploy is insanely slow
+- the PDF reader code is not on the server

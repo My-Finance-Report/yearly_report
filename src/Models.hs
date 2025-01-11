@@ -42,6 +42,7 @@ share
 
 TransactionSource
     name Text
+    userId UserId 
     deriving Show Eq Ord
 
 Category
