@@ -607,3 +607,31 @@ tr:hover {
 .uploader-configs {
   margin-bottom: 2rem;
 }
+
+/* Expandable row base styles */
+.expandable-row {
+  cursor: pointer;
+  background-color: #f9f9f9; /* Light gray background */
+  transition: background-color 0.3s;
+}
+
+/* Hover effect to show it's clickable */
+.expandable-row:hover {
+  background-color: #f1f1f1; /* Slightly darker gray */
+}
+
+/* Use an arrow to indicate expandability */
+.expandable-row::before {
+  content: "▶"; /* Right-pointing arrow */
+  display: inline-block;
+  margin-right: 10px;
+  color: #666; /* Gray arrow color */
+  font-size: 12px;
+  transform: rotate(0deg);
+  transition: transform 0.2s; /* Smooth rotation for expand/collapse */
+}
+
+/* Rotate the arrow when expanded */
+.expandable-row.expanded::before {
+  transform: rotate(90deg); /* Down-pointing arrow */
+}

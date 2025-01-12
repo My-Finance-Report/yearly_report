@@ -20,8 +20,8 @@ WORKDIR /app
 COPY stack.yaml stack.yaml.lock year-report-finances.cabal /app/
 
 # Install dependencies (cached if stack files don't change)
-# --install-ghc
-RUN stack setup && stack build --only-dependencies
+# 
+RUN stack setup --install-ghc && stack build --only-dependencies
 
 # Copy the rest of the application files
 COPY src/ /app/src/
