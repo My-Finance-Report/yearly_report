@@ -1,42 +1,42 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database.Files (
-    getAllFilenames,
+module Database.Files
+  ( getAllFilenames,
     getPdfRecord,
     addPdfRecord,
     isFileProcessed,
     markFileAsProcessed,
     getSourceFileMappings,
-) where
-
+  )
+where
 
 import Control.Monad (forM, forM_)
-import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
-import Data.Text (Text, unpack)
-import Data.Time (Day, parseTimeM, defaultTimeLocale)
-import Data.List (nub)
+import Data.List (nubBy)
+import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
 import Data.Maybe (isJust)
-import Data.Set (Set, empty, toList, union, singleton)
-import Data.Map (Map, findWithDefault, fromListWith, mapKeys, fromList, fromListWith, lookup)
+import Data.Set (Set, empty, singleton, toList, union)
+import Data.Text (Text, unpack)
+import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import Database.Category
-import Database.TransactionSource
-import Database.Transaction
+import Database.ConnectionPool (getConnectionPool)
+import Database.Models
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Database.Models
+import Database.Transaction
+import Database.TransactionSource
 import Types
 
-getAllFilenames :: (MonadUnliftIO m) => Entity User -> m [Text]
+getAllFilenames :: (MonadUnliftIO m) => Entity User -> m [Entity UploadedPdf]
 getAllFilenames user = do
   pool <- liftIO getConnectionPool
   runSqlPool queryFilenames pool
   where
     queryFilenames = do
       results <- selectList [UploadedPdfUserId ==. entityKey user] [Asc UploadedPdfId]
-      return $ Prelude.map (uploadedPdfFilename . entityVal) results
+      return $ nubBy (\a b -> uploadedPdfFilename (entityVal a) == uploadedPdfFilename (entityVal b)) results
 
 getPdfRecord :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m UploadedPdf
 getPdfRecord user pdfId = do
@@ -46,12 +46,12 @@ getPdfRecord user pdfId = do
     Just (Entity _ pdf) -> return pdf
     Nothing -> liftIO $ error $ "No PDF found with id=" ++ show (fromSqlKey pdfId) ++ " for user id=" ++ show (fromSqlKey $ entityKey user)
   where
-    queryPdfRecord = selectFirst
-      [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
-      []
+    queryPdfRecord =
+      selectFirst
+        [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
+        []
 
-
-addPdfRecord :: (MonadUnliftIO m) => Entity User ->Text ->Text ->Text -> m (Key UploadedPdf)
+addPdfRecord :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Text -> m (Key UploadedPdf)
 addPdfRecord user filename rawContent uploadTime = do
   pool <- liftIO getConnectionPool
   runSqlPool queryInsertPdfRecord pool
@@ -74,11 +74,10 @@ isFileProcessed user filename = do
 markFileAsProcessed :: (MonadUnliftIO m) => Entity User -> Text -> m ()
 markFileAsProcessed user filename = do
   pool <- liftIO getConnectionPool
-  result <- runSqlPool (insertUnique $ ProcessedFile filename (entityKey user) ) pool
+  result <- runSqlPool (insertUnique $ ProcessedFile filename (entityKey user)) pool
   case result of
     Just _ -> liftIO $ putStrLn $ "File processed: " <> unpack filename
     Nothing -> liftIO $ putStrLn $ "File already marked as processed: " <> unpack filename
-
 
 getSourceFileMappings :: (MonadUnliftIO m) => Entity User -> m [SourceFileMapping]
 getSourceFileMappings user = do
@@ -87,7 +86,7 @@ getSourceFileMappings user = do
   where
     querySourceFileMappings = do
       -- Get all transaction sources for the user
-      sources <- getAllTransactionSources user 
+      sources <- getAllTransactionSources user
 
       -- Get all transactions for the user
       transactions <- selectList [TransactionUserId ==. entityKey user] []
@@ -116,5 +115,3 @@ getSourceFileMappings user = do
             }
           | source <- sources
         ]
-
-

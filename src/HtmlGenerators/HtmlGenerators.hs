@@ -17,6 +17,7 @@ import Data.Text as T (Text, intercalate, pack, unlines)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database.Models
+import Database.Persist.Postgresql (BackendKey (SqlBackendKey), fromSqlKey)
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -57,69 +58,62 @@ renderPdfResultPage filename rawText =
 
 renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> Html
 renderTransactionsPage filename txs =
-    body $ do
-      H.h1 $ toHtml $ "Transactions for " <> filename
-      H.table $ do
-        H.tr $ do
-          H.th "Id"
-          H.th "Description"
-          H.th "Date"
-          H.th "Amount"
-          H.th "Category"
-          H.th "Override"
-          H.th "Actions"
-        mapM_ (renderEditableTransactionRow filename) txs
+  body $ do
+    H.h1 $ toHtml $ "Transactions for " <> filename
+    H.table $ do
+      H.tr $ do
+        H.th "Id"
+        H.th "Description"
+        H.th "Date"
+        H.th "Amount"
+        H.th "Category"
+        H.th "Override"
+        H.th "Actions"
+      mapM_ (renderEditableTransactionRow filename) txs
 
--- TODO this should be removed
 renderEditableTransactionRow :: T.Text -> CategorizedTransaction -> Html
 renderEditableTransactionRow filename tx = do
   let Transaction {transactionDescription, transactionDateOfTransaction, transactionAmount} = transaction tx
       Category {categoryName} = category tx
-      txId = transactionId tx
-  H.tr $ do
-    -- Transaction ID
-    H.td $ toHtml $ show txId
-    -- Description (editable)
-    H.td
-      $ H.form
-        ! A.method "post"
-        ! A.action (toValue $ "/update-transaction/" <> T.pack (show txId))
-      $ do
-        H.input
-          ! A.type_ "text"
-          ! A.name "description"
-          ! A.value (toValue transactionDescription)
-    -- Date (editable)
-    H.td $
-      H.input
-        ! A.type_ "date"
-        ! A.name "transactionDate"
-        ! A.value (toValue $ show transactionDateOfTransaction)
-    -- Amount (editable)
-    H.td $
-      H.input
-        ! A.type_ "number"
-        ! A.step "0.01"
-        ! A.name "amount"
-        ! A.value (toValue $ show transactionAmount)
-    -- Category (editable dropdown)
-    H.td $
-      H.select ! A.name "category" $ do
-        H.option
-          ! A.value (toValue categoryName)
-          ! A.selected "selected"
-          $ toHtml categoryName
-        H.option ! A.value "Other" $ "Other" -- Example, expand this as needed
-        -- Override (editable)
-    H.td $
-      H.input
-        ! A.type_ "text"
-        ! A.name "override"
-    -- Submit button
-    H.td $
-      H.input
-        ! A.type_ "submit"
-        ! A.value "Save"
+      txId = case transactionId tx of
+        Just (TransactionKey (SqlBackendKey key)) -> T.pack (show key)
+        Nothing -> "Unknown"
+  H.form
+    ! A.method "post"
+    ! A.action (toValue $ "/update-transaction/" <> txId)
+    $ do
+      H.tr $ do
+        H.td $ toHtml txId
+        H.td $
+          H.input
+            ! A.type_ "text"
+            ! A.name "description"
+            ! A.value (toValue transactionDescription)
+        H.td $
+          H.input
+            ! A.type_ "date"
+            ! A.name "transactionDate"
+            ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
+        H.td $
+          H.input
+            ! A.type_ "number"
+            ! A.step "0.01"
+            ! A.name "amount"
+            ! A.value (toValue $ show transactionAmount)
+        H.td $
+          H.select ! A.name "category" $ do
+            H.option
+              ! A.value (toValue categoryName)
+              ! A.selected "selected"
+              $ toHtml categoryName
+            H.option ! A.value "Other" $ "Other"
+        H.td $
+          H.input
+            ! A.type_ "submit"
+            ! A.value "Save"
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml
+
+formatMonthYear :: UTCTime -> T.Text
+formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%Y-%m-%d" utcTime)

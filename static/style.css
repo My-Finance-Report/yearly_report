@@ -622,7 +622,6 @@ tr:hover {
 
 /* Use an arrow to indicate expandability */
 .expandable-row::before {
-  content: "▶"; /* Right-pointing arrow */
   display: inline-block;
   margin-right: 10px;
   color: #666; /* Gray arrow color */
@@ -634,4 +633,9 @@ tr:hover {
 /* Rotate the arrow when expanded */
 .expandable-row.expanded::before {
   transform: rotate(90deg); /* Down-pointing arrow */
+}
+
+.arrow-column {
+  width: 20px; /* Adjust as needed */
+  text-align: center; /* Center-align the arrow */
 }

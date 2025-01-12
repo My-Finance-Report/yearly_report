@@ -6,7 +6,6 @@ module Main where
 
 import Auth
 import Categorizer
-import Database.ConnectionPool
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -20,29 +19,30 @@ import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
-import System.Environment (lookupEnv)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Lazy as TL
-import Data.Time (UTCTime, defaultTimeLocale, formatTime)
+import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, fromGregorian, parseTimeM, toGregorian)
 import Database.Category
   ( addCategory,
     getCategoriesBySource,
     getCategory,
     updateCategory,
   )
+import Database.Configurations
+import Database.ConnectionPool
 import Database.Database (seedDatabase)
+import Database.Files
+import Database.Models
 import Database.Persist
   ( Entity (entityKey, entityVal),
     PersistEntity (Key),
   )
 import Database.Persist.Postgresql hiding (get)
-import Database.UploadConfiguration
 import Database.Transaction
 import Database.TransactionSource
-import Database.Configurations
-import Database.Files
+import Database.UploadConfiguration
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -51,13 +51,14 @@ import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.RefineSelectionPage
-import Database.Models
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Sankey
+import System.Environment (lookupEnv)
 import System.FilePath ((</>))
+import Text.Read (readMaybe)
 import Types
 import Web.Scotty
 import qualified Web.Scotty as Web
@@ -71,6 +72,14 @@ data Matrix = Matrix
 
 instance ToJSON Matrix
 
+parseDate :: Text -> Maybe UTCTime
+parseDate dateText = parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText)
+
+truncateToMonth :: UTCTime -> UTCTime
+truncateToMonth utcTime =
+  let (year, month, _) = toGregorian (utctDay utcTime)
+   in UTCTime (fromGregorian year month 1) 0
+
 generateHistogramData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
 generateHistogramData user transactions = do
   sourceMap <- fetchSourceMap user
@@ -82,11 +91,11 @@ generateHistogramData user transactions = do
 groupBySourceAndMonth ::
   Map (Key TransactionSource) TransactionSource ->
   [CategorizedTransaction] ->
-  Map T.Text (Map T.Text Double)
+  Map UTCTime (Map T.Text Double)
 groupBySourceAndMonth sourceMap txns =
   Map.fromListWith
     (Map.unionWith (+))
-    [ ( formatMonthYear $ transactionDateOfTransaction $ transaction txn,
+    [ ( truncateToMonth $ transactionDateOfTransaction $ transaction txn,
         Map.singleton (resolveSourceName sourceMap txn) (transactionAmount $ transaction txn)
       )
       | txn <- txns
@@ -100,30 +109,29 @@ resolveSourceName sourceMap txn =
   let sourceId = categorySourceId $ category txn
    in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap)
 
-extractAllSourceNames :: Map T.Text (Map T.Text Double) -> [T.Text]
+extractAllSourceNames :: Map UTCTime (Map T.Text Double) -> [T.Text]
 extractAllSourceNames groupedData =
   Set.toList $ Set.unions (Prelude.map Map.keysSet $ Map.elems groupedData)
 
 buildMatrix ::
-  [T.Text] -> -- List of all source names
-  Map T.Text (Map T.Text Double) -> -- Grouped data by month and source
+  [Text] ->
+  Map UTCTime (Map T.Text Double) -> -- Grouped data by date and source
   Matrix
 buildMatrix allSourceNames groupedData =
   let columnHeaders = "Month" : allSourceNames
-      rowHeaders = Map.keys groupedData
+      rowHeaders = Prelude.map formatMonthYear (Map.keys groupedData)
       dataRows = Prelude.map (buildRow allSourceNames) (Map.toList groupedData)
    in Matrix columnHeaders rowHeaders dataRows
 
 buildRow ::
-  [T.Text] -> -- List of all source names
-  (T.Text, Map T.Text Double) -> -- A single month's data
+  [T.Text] ->
+  (UTCTime, Map T.Text Double) ->
   [Double]
 buildRow allSourceNames (_, sources) =
   Prelude.map (\source -> Map.findWithDefault 0 source sources) allSourceNames
 
 formatMonthYear :: UTCTime -> T.Text
-formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
-
+formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%b %Y" utcTime)
 
 extractBearerToken :: TL.Text -> Maybe TL.Text
 extractBearerToken header =
@@ -170,7 +178,6 @@ getRequiredEnv key = do
   case maybeValue of
     Just value -> return value
     Nothing -> ioError $ userError $ "Environment variable not set: " ++ key
-
 
 main :: IO ()
 main = do
@@ -372,6 +379,19 @@ main = do
       sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
       liftIO $ updateTransactionSource user sourceId sourceName
       Web.Scotty.redirect "/configuration"
+
+    post "/update-transaction/:id" $ requireUser pool $ \user -> do
+      txIdText <- Web.Scotty.pathParam "id" :: Web.Scotty.ActionM Int
+      let txId = toSqlKey (fromIntegral txIdText)
+
+      mDescription <- Web.Scotty.formParam "description" >>= \d -> return $ readMaybe d
+      mDate <- Web.Scotty.formParam "transactionDate" >>= \d -> return $ parseDate d
+      mAmount <- Web.Scotty.formParam "amount" >>= \a -> return $ readMaybe a
+      mCategoryId <- Web.Scotty.formParam "category" >>= \c -> return $ Just (toSqlKey $ read c)
+
+      liftIO $ updateTransaction user txId mDescription mDate mAmount mCategoryId
+
+      Web.Scotty.redirect "/transactions"
 
     post "/add-category/:sourceId" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "sourceId"

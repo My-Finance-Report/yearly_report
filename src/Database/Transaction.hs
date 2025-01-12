@@ -1,32 +1,55 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database.Transaction(
-    updateTransactionCategory,
+module Database.Transaction
+  ( updateTransactionCategory,
     getTransactionsByFileId,
     parseTransactionKind,
     parseTransactionDate,
-    groupTransactionsBySource, 
+    groupTransactionsBySource,
     getAllTransactions,
+    updateTransaction,
     addTransaction,
-
-) where
+  )
+where
 
 import Control.Monad (forM, forM_)
-import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
-import Data.Text (Text, unpack)
-import Data.Time (Day, parseTimeM, defaultTimeLocale)
 import Data.List (nub)
-import Data.Map (Map, findWithDefault, fromListWith, mapKeys, fromList)
+import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
+import Data.Maybe (catMaybes)
+import Data.Text (Text, unpack)
+import Data.Time (Day, UTCTime, defaultTimeLocale, parseTimeM)
 import Database.Category
+import Database.ConnectionPool (getConnectionPool)
+import Database.Models
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Database.Models
 import Types
 
-updateTransactionCategory :: (MonadUnliftIO m) => Entity User ->Key Transaction -> Key Category -> m ()
+updateTransaction :: (MonadUnliftIO m) => Entity User -> Key Transaction -> Maybe Text -> Maybe UTCTime -> Maybe Double -> Maybe (Key Category) -> m ()
+updateTransaction user transactionId mDescription mDate mAmount mCategoryId = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryUpdateTransaction pool
+  where
+    queryUpdateTransaction = do
+      -- Ensure the transaction belongs to the user
+      transaction <- get transactionId
+      case transaction of
+        Just txn
+          | transactionUserId txn == entityKey user ->
+              let updates =
+                    catMaybes
+                      [ (TransactionDescription =.) <$> mDescription,
+                        (TransactionDateOfTransaction =.) <$> mDate,
+                        (TransactionAmount =.) <$> mAmount,
+                        (TransactionCategoryId =.) <$> mCategoryId
+                      ]
+               in update transactionId updates
+        _ -> return () -- Skip update if unauthorized or not found
+
+updateTransactionCategory :: (MonadUnliftIO m) => Entity User -> Key Transaction -> Key Category -> m ()
 updateTransactionCategory user transactionId newCategoryId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUpdateTransactionCategory pool
@@ -34,45 +57,56 @@ updateTransactionCategory user transactionId newCategoryId = do
     queryUpdateTransactionCategory =
       update transactionId [TransactionCategoryId =. newCategoryId]
 
-
-
 getTransactionsByFileId :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m [CategorizedTransaction]
 getTransactionsByFileId user fileId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryTransactions pool
   where
     queryTransactions = do
-      results <-
-        rawSql
-          "SELECT ??, ??, ?? \
-          \FROM \"transaction\" t \
-          \INNER JOIN \"transaction_source\" ts ON t.transaction_source_id = ts.id \
-          \INNER JOIN \"category\" c ON t.category_id = c.id \
-          \WHERE t.uploaded_pdf_id = ?"
-          [toPersistValue fileId]
+      -- Fetch transactions for the user and uploaded PDF ID
+      transactions <-
+        selectList
+          [ TransactionUploadedPdfId ==. Just fileId,
+            TransactionUserId ==. entityKey user
+          ]
+          [Asc TransactionId]
 
-      forM results $ \(Entity txnId txn, Entity sourceId source, Entity catId cat) -> do
-        return
-          CategorizedTransaction
-            { transaction =
-                Transaction
-                  { transactionDescription = transactionDescription txn,
-                    transactionAmount = transactionAmount txn,
-                    transactionDateOfTransaction = transactionDateOfTransaction txn,
-                    transactionKind = transactionKind txn,
-                    transactionUploadedPdfId = Just fileId,
-                    transactionCategoryId = catId,
-                    transactionTransactionSourceId = sourceId,
-                    transactionUserId = entityKey user
-                  },
-              category =
-                Category
-                  { categoryName = categoryName cat,
-                    categorySourceId = sourceId,
-                    categoryUserId = entityKey user
-                  },
-              transactionId = Just txnId
-            }
+      -- Fetch transaction sources for the user
+      sources <- selectList [TransactionSourceUserId ==. entityKey user] []
+
+      -- Fetch categories for the user
+      categories <- selectList [CategoryUserId ==. entityKey user] []
+
+      -- Build a lookup map for sources and categories
+      let sourceMap = Data.Map.fromList [(entityKey source, source) | source <- sources]
+      let categoryMap = Data.Map.fromList [(entityKey cat, entityVal cat) | cat <- categories]
+
+      -- Construct CategorizedTransaction for each transaction
+      catTransactions <- forM transactions $ \txn -> do
+        let txnVal = entityVal txn
+            txnSource = Data.Map.lookup (transactionTransactionSourceId txnVal) sourceMap
+            txnCategory = Data.Map.lookup (transactionCategoryId txnVal) categoryMap
+
+        -- Gracefully handle missing sources or categories
+        return $ case (txnSource, txnCategory) of
+          (Just source, Just category) ->
+            Just
+              CategorizedTransaction
+                { transaction =
+                    txnVal
+                      { transactionUserId = entityKey user,
+                        transactionUploadedPdfId = Just fileId
+                      },
+                  category =
+                    category
+                      { categorySourceId = entityKey source,
+                        categoryUserId = entityKey user
+                      },
+                  transactionId = Just (entityKey txn)
+                }
+          _ -> Nothing
+
+      return (catMaybes catTransactions)
 
 parseTransactionKind :: Text -> TransactionKind
 parseTransactionKind "Withdrawal" = Withdrawal
@@ -84,8 +118,6 @@ parseTransactionDate dateText =
   case parseTimeM True defaultTimeLocale "%Y-%m-%d" (unpack dateText) of
     Just parsedDate -> parsedDate
     Nothing -> error $ "Error parsing date: " <> unpack dateText
-
-
 
 addTransaction :: (MonadUnliftIO m) => Entity User -> CategorizedTransaction -> Key UploadedPdf -> m (Key Transaction)
 addTransaction user categorizedTransaction uploadedPdfKey = do
@@ -113,17 +145,15 @@ addTransaction user categorizedTransaction uploadedPdfKey = do
               }
       insert newTransaction
 
-
 getAllTransactions :: (MonadUnliftIO m) => Entity User -> m [CategorizedTransaction]
 getAllTransactions user = do
   pool <- liftIO getConnectionPool
   runSqlPool queryAllTransactions pool
   where
     queryAllTransactions = do
-      transactions <- selectList  [TransactionUserId ==. entityKey user] []
+      transactions <- selectList [TransactionUserId ==. entityKey user] []
 
       forM transactions $ \(Entity txnId txn) -> do
-
         maybeSource <- get (transactionTransactionSourceId txn)
         source <- case maybeSource of
           Just s -> return s
@@ -156,7 +186,6 @@ getAllTransactions user = do
                   },
               transactionId = Just txnId
             }
-
 
 groupTransactionsBySource ::
   (MonadUnliftIO m) =>
