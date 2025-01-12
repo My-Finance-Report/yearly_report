@@ -22,7 +22,6 @@ make my yearly financial report using haskell
 - allow for manually update transactions from a ui
 - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
 - deploy in some capacity so i can run the app and let users try it
-- (TODO) apply per user scope (RLS) to the db
 
 # Tech
 
@@ -42,3 +41,4 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - Some issue with case sensitivity in uploader matching
 - Build deploy is insanely slow
 - the PDF reader code is not on the server
+- Sankey currently only allows one intermediate node
