@@ -86,6 +86,7 @@ UploadConfiguration
 SankeyConfig
     name Text
     UniqueSankeyConfig name
+    userId UserId 
     deriving Show Eq
 
 SankeyInput

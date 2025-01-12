@@ -343,13 +343,13 @@ main = do
                 mapKeyFunction = mapKeyFunction
               }
 
-      liftIO $ saveSankeyConfig newConfig
+      liftIO $ saveSankeyConfig user newConfig
       redirect "/"
 
     get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO $ getAllUploadConfigs user
       transactionSources <- liftIO $ getAllTransactionSources user
-      sankeyConfig <- liftIO getFirstSankeyConfig
+      sankeyConfig <- liftIO $ getFirstSankeyConfig user
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
@@ -386,7 +386,7 @@ main = do
       categorizedTransactions <- liftIO $ getAllTransactions user
       gbs <- groupTransactionsBySource user categorizedTransactions
 
-      sankeyConfig <- liftIO getFirstSankeyConfig
+      sankeyConfig <- liftIO $ getFirstSankeyConfig user
       let sankeyData = case sankeyConfig of
             Just config -> Just (generateSankeyData gbs config)
             Nothing -> Nothing

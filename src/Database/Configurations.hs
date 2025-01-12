@@ -21,15 +21,15 @@ import Types
 
 
 -- in theory the user can have more than one config, but for now only one really makes sense
-getFirstSankeyConfig :: (MonadUnliftIO m) => m (Maybe FullSankeyConfig)
-getFirstSankeyConfig = do
+getFirstSankeyConfig :: (MonadUnliftIO m) => Entity User-> m (Maybe FullSankeyConfig)
+getFirstSankeyConfig user= do
   pool <- liftIO getConnectionPool
   liftIO $ runSqlPool queryFirstSankeyConfig pool
   where
     queryFirstSankeyConfig :: SqlPersistT IO (Maybe FullSankeyConfig)
     queryFirstSankeyConfig = do
-      -- Fetch the first SankeyConfig
-      maybeConfig <- selectFirst [] []
+
+      maybeConfig <- selectFirst [SankeyConfigUserId ==. entityKey user] []
       case maybeConfig of
         Nothing -> return Nothing
         Just (Entity configId SankeyConfig {sankeyConfigName = configName}) -> do
@@ -69,14 +69,13 @@ getFirstSankeyConfig = do
 
 
 
-saveSankeyConfig :: (MonadUnliftIO m) => FullSankeyConfig -> m (Key SankeyConfig)
-saveSankeyConfig config = do
+saveSankeyConfig :: (MonadUnliftIO m) => Entity User -> FullSankeyConfig -> m (Key SankeyConfig)
+saveSankeyConfig user config = do
   pool <- liftIO getConnectionPool
   liftIO $ runSqlPool saveConfigQuery pool
   where
     saveConfigQuery :: SqlPersistT IO (Key SankeyConfig)
     saveConfigQuery = do
-      -- Upsert into sankey_config
       sankeyConfigId <- upsertSankeyConfig
 
       -- Clear existing inputs and linkages
@@ -87,18 +86,26 @@ saveSankeyConfig config = do
       forM_ (inputs config) $ \(Entity sourceId _, Entity categoryId _) ->
         insert_ $ SankeyInput sankeyConfigId sourceId categoryId
 
-      -- Insert new linkage
-      let (Entity sourceId _, Entity categoryId _, Entity targetSourceId _) = linkages config
-      insert_ $ SankeyLinkage sankeyConfigId sourceId categoryId targetSourceId
+      -- Insert new linkages (currently handles a single tuple, extendable to multiple)
+      forM_ [linkages config] $ \(Entity sourceId _, Entity categoryId _, Entity targetSourceId _) -> do
+        insert_ $ SankeyLinkage sankeyConfigId sourceId categoryId targetSourceId
 
       return sankeyConfigId
 
     -- Helper to upsert into `sankey_config`
     upsertSankeyConfig :: SqlPersistT IO (Key SankeyConfig)
     upsertSankeyConfig = do
-      existing <- selectFirst [SankeyConfigName ==. configName config] []
+      existing <- selectFirst
+        [ SankeyConfigName ==. configName config
+        , SankeyConfigUserId ==. entityKey user
+        ]
+        []
       case existing of
         Just (Entity key _) -> do
-          update key [SankeyConfigName =. configName config]
+          update key [SankeyConfigName =. configName config] -- No need to update `user_id`
           return key
-        Nothing -> insert $ SankeyConfig (configName config)
+        Nothing ->
+          insert $ SankeyConfig
+            { sankeyConfigUserId = entityKey user
+            , sankeyConfigName = configName config
+            }
