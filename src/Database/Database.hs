@@ -16,7 +16,7 @@ module Database.Database
   )
 where
 
-import ConnectionPool
+import Database.ConnectionPool
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
@@ -37,7 +37,7 @@ import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
 import Database.TransactionSource (ensureTransactionSourceExists)
-import Models
+import Database.Models
 import Types
 
 seedDatabase :: Entity User -> IO ()

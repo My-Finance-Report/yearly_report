@@ -7,14 +7,14 @@ module Database.TransactionSource
   )
 where
 
-import ConnectionPool (getConnectionPool)
+import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Text (Text)
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Models
+import Database.Models
 
 ensureTransactionSourceExists :: Entity User -> Text -> SqlPersistT IO (Key TransactionSource)
 ensureTransactionSourceExists user name = do

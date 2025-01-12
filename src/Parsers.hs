@@ -21,7 +21,7 @@ import Database.Transaction
 import Database.Persist
 import Database.TransactionSource
 import GHC.Generics (Generic)
-import Models
+import Database.Models
 import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)

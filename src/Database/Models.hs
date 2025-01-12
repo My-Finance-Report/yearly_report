@@ -13,8 +13,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- module Models (TransactionKind (..), TransactionSource (..), Category (..), Transaction (..), UploadConfiguration (..)) where
-module Models where
+module Database.Models where
 
 import Data.Text (Text)
 import Data.Time (UTCTime)

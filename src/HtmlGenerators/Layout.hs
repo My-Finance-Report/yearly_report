@@ -7,7 +7,7 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import HtmlGenerators.Components (navigationBar)
-import Models
+import Database.Models
 import Database.Persist (Entity)
 
 renderPage :: Maybe (Entity User) -> TL.Text -> Html -> TL.Text

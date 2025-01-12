@@ -9,7 +9,7 @@ import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import Database.Persist
-import Models
+import Database.Models
 import Types
 
 buildSankeyLinks ::

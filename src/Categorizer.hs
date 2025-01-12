@@ -22,7 +22,7 @@ import Database.Database
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
 import GHC.Generics (Generic)
-import Models
+import Database.Models
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Status
@@ -75,7 +75,7 @@ generatePrompt categories transaction =
   let categoryList = "Here is a list of categories: " <> T.pack (show categories) <> ".\n"
    in categoryList <> "Assign the transaction to the most appropriate category:\n" <> transaction <> "\nReturn the category for the transaction."
 
-classifyTransactions :: Map.Map Text (Entity Category) -> Text -> IO (Maybe (Entity Models.Category))
+classifyTransactions :: Map.Map Text (Entity Category) -> Text -> IO (Maybe (Entity Category))
 classifyTransactions categoryMap description = do
   let categories = Map.keys categoryMap
       inputPrompt = generatePrompt categories description

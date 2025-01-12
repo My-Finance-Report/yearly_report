@@ -13,7 +13,8 @@ library
     Database.UploadConfiguration
     Database.Transaction
     Database.Configurations
-    ConnectionPool
+    Database.ConnectionPool
+    Database.Models
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.Components
@@ -25,7 +26,6 @@ library
     HtmlGenerators.AuthPages
     Auth
     Sankey
-    Models
     Parsers
     OpenAiUtils
   build-depends:
@@ -70,8 +70,9 @@ executable year-report-finances
       Database.UploadConfiguration
       Database.Transaction
       Database.Configurations
+      Database.ConnectionPool
+      Database.Models
       Categorizer
-      ConnectionPool
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
       HtmlGenerators.Components
@@ -82,7 +83,6 @@ executable year-report-finances
       HtmlGenerators.Configuration
       Auth
       Sankey
-      Models
       Parsers
       OpenAiUtils
   build-depends:

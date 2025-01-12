@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ConnectionPool (initializePool, getConnectionPool, migratePostgres) where
+module Database.ConnectionPool (initializePool, getConnectionPool, migratePostgres) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
@@ -10,7 +10,7 @@ import Data.ByteString.Char8 (pack)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Database.Persist.Postgresql (ConnectionPool, createPostgresqlPool, runSqlPool)
 import Database.Persist.Postgresql hiding (get)
-import Models
+import Database.Models
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 

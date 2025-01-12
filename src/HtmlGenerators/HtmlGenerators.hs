@@ -16,7 +16,7 @@ import Data.Ord (comparing)
 import Data.Text as T (Text, intercalate, pack, unlines)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import Models
+import Database.Models
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H

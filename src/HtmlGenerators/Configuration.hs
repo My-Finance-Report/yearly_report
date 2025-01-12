@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
-import Models
+import Database.Models
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A

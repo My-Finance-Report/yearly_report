@@ -6,7 +6,7 @@ module Main where
 
 import Auth
 import Categorizer
-import ConnectionPool
+import Database.ConnectionPool
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -55,7 +55,7 @@ import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.RefineSelectionPage
-import Models
+import Database.Models
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -171,7 +171,7 @@ getCurrentUser pool = do
 main :: IO ()
 main = do
   activeJobs <- newIORef 0
-  ConnectionPool.initializePool
+  initializePool
   pool <- getConnectionPool
   migratePostgres
   scotty 3000 $ do

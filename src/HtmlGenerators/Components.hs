@@ -6,7 +6,7 @@ module HtmlGenerators.Components
 
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Models (User(..))
+import Database.Models (User(..))
 import Database.Persist ( Entity (entityVal) )
 
 navigationBar :: Maybe (Entity User) -> Html

@@ -22,7 +22,7 @@ import Database.Persist.Postgresql (toSqlKey)
 import Database.TransactionSource
 import HtmlGenerators.Components (navigationBar)
 import HtmlGenerators.HtmlGenerators
-import Models
+import Database.Models
 import Parsers
 import Sankey
 import System.Directory (listDirectory)

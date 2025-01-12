@@ -7,7 +7,7 @@ module Database.UploadConfiguration
   )
 where
 
-import ConnectionPool (getConnectionPool)
+import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Maybe (listToMaybe)
@@ -15,7 +15,7 @@ import Data.Text (Text)
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Models
+import Database.Models
 
 getAllUploadConfigs :: (MonadUnliftIO m) => Entity User -> m [Entity UploadConfiguration]
 getAllUploadConfigs user = do

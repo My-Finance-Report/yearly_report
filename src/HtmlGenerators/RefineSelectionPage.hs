@@ -9,7 +9,7 @@ import Database.Persist
     ( PersistEntity(Key), Entity(entityKey, entityVal) )
 import Database.Persist.Postgresql (fromSqlKey)
 import HtmlGenerators.Components (navigationBar)
-import Models ( UploadedPdf, TransactionSource(..) )
+import Database.Models ( UploadedPdf, TransactionSource(..) )
 import Text.Blaze.Html5 as H
     ( Html,
       toHtml,

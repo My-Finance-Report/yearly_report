@@ -11,7 +11,7 @@ where
 
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
 import qualified Data.Text.Lazy as TL
-import ConnectionPool (getConnectionPool)
+import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (liftIO)
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Char8 as BS
@@ -21,7 +21,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time
 import Database.Persist
 import Database.Persist.Postgresql
-import Models
+import Database.Models
 import Data.Word (Word8)
 import Text.Printf (printf)
 import qualified Control.Monad

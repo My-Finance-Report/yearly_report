@@ -5,7 +5,7 @@ module Database.Configurations (
 
 
 import Control.Monad (forM, forM_)
-import ConnectionPool (getConnectionPool)
+import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Text (Text, unpack)
@@ -15,7 +15,7 @@ import Database.Category
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Models
+import Database.Models
 import Types
 
 
