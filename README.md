@@ -32,6 +32,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - Some issue with case sensitivity in uploader matching
 - Build deploy is insanely slow
 - Sankey currently only allows one intermediate node
+- Update categorized transaction to have entity category for forms
 
 # notes from onboarding myself
 
@@ -41,14 +42,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
   -- maybe these should just be called accounts for clarity
 - its weird that the first time thorugh the upload flow it doesnt actually run the upload
 - consider showing the source we associate with the file before we upload
-- disable the upload button unless there is a file there
 - the jobs running banner is vile
 - no way to update any miscategorization (transaction seems broken)
-- the dates on the histogram are not correctly ordered
 - the llm seems bad at getting dates, may need to include more file context
 - the configuration page is just wacky
 - its hard to know you need to configure the sankey
-- there is a dropdown arrow which is nice but the headers are off in the rows
-- there is an overflow on the histogram
 - process multiple files at once would be nice
-- display withdrawl vs deposit in the breakout table

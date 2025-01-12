@@ -6,7 +6,6 @@ function fetchAndDrawHistogram() {
     .then((response) => response.json())
     .then((data) => {
       const combinedData = combineMatrixData(data);
-      console.log('Combined Data:', combinedData);
       drawHistogram(combinedData);
     })
     .catch((error) => console.error('Error fetching histogram data:', error));
@@ -22,7 +21,7 @@ function drawHistogram(rows) {
   const data = google.visualization.arrayToDataTable(rows);
 
   const options = {
-    width: 700,
+    width: 650,
     height: 400,
     legend: { position: 'top', maxLines: 3 },
     isStacked: false, 

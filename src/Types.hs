@@ -27,9 +27,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Time (Day, UTCTime, defaultTimeLocale, formatTime, parseTimeM)
+import Database.Models
 import Database.Persist
 import GHC.Generics (Generic)
-import Database.Models
 
 newtype CategorizationResponse
   = CategorizationResponse {responseCategory :: Text}

@@ -16,14 +16,14 @@ import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database.Database
-import Database.Transaction
 import Database.Files
+import Database.Models
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
+import Database.Transaction
 import Database.TransactionSource
 import HtmlGenerators.Components (navigationBar)
 import HtmlGenerators.HtmlGenerators
-import Database.Models
 import Parsers
 import Sankey
 import System.Directory (listDirectory)
@@ -68,10 +68,20 @@ generateHomapageHtml banner tabs =
                 ! A.type_ "file"
                 ! A.name "pdfFile"
                 ! A.accept "application/pdf"
+                ! A.id "pdfFileInput" -- Add an ID for JavaScript
               H.button
                 ! A.type_ "submit"
                 ! A.class_ "btn upload-btn"
+                ! A.id "uploadButton" -- Add an ID for JavaScript
+                ! A.disabled "disabled" -- Initially disable the button
                 $ "Upload PDF"
+          -- Add JavaScript for interactivity
+          H.script $
+            H.script
+              "document.getElementById('pdfFileInput').addEventListener('change', function() {\
+              \ var uploadButton = document.getElementById('uploadButton');\
+              \ uploadButton.disabled = !this.files.length; // Enable button if file is selected\
+              \ });"
 
       H.div ! A.class_ "charts-grid" $ do
         H.div ! A.class_ "chart-card" $ do
@@ -162,7 +172,6 @@ generateHeader =
       H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
       H.script ! A.type_ "text/javascript" ! A.src "/histogram.js" $ mempty
 
-
 generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
   H.div ! A.class_ "subtab-content-container" $ do
@@ -187,30 +196,30 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
   H.table $ do
     -- Header row
     H.tr $ do
+      H.th ! A.class_ "arrow-column" $ ""
       H.th header
       H.th "Total Amount"
     -- Generate rows for each group
     Map.foldrWithKey
-      (\key txns accHtml ->
-         let totalAmount =
-               truncateToTwoDecimals $
-                 sum
-                   [ case transactionKind (transaction txn) of
-                       Deposit -> transactionAmount (transaction txn)
-                       Withdrawal -> transactionAmount (transaction txn)
-                     | txn <- txns
-                   ]
-             sectionId = "details-" <> key -- Unique ID for the expandable section
-          in do
-               -- Aggregated row
-               generateAggregateRow key totalAmount sectionId
-               -- Hidden detail rows
-               generateDetailRows key txns sectionId
-               accHtml)
+      ( \key txns accHtml ->
+          let totalAmount =
+                truncateToTwoDecimals $
+                  sum
+                    [ case transactionKind (transaction txn) of
+                        Deposit -> transactionAmount (transaction txn)
+                        Withdrawal -> transactionAmount (transaction txn)
+                      | txn <- txns
+                    ]
+              sectionId = "details-" <> key -- Unique ID for the expandable section
+           in do
+                -- Aggregated row
+                generateAggregateRow key totalAmount sectionId
+                -- Hidden detail rows
+                generateDetailRows key txns sectionId
+                accHtml
+      )
       (return ())
       aggregated
-
-
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -241,6 +250,7 @@ generateUpload =
 generateAggregateRow :: T.Text -> Double -> T.Text -> Html
 generateAggregateRow cat totalAmt sectionId =
   H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "')") $ do
+    H.td ! A.class_ "arrow-column" $ H.span "▶"
     H.td (toHtml cat)
     H.td (toHtml (show totalAmt))
 
@@ -248,10 +258,11 @@ generateDetailRows :: T.Text -> [CategorizedTransaction] -> T.Text -> Html
 generateDetailRows cat txs sectionId =
   H.tr ! A.id (H.toValue sectionId) ! A.class_ "hidden" $ do
     -- Make a nested table
-    H.td ! A.colspan "2" $ do
+    H.td ! A.colspan "3" $ do
       H.table $ do
         H.tr $ do
           H.th "Description"
+          H.th "Kind"
           H.th "Date"
           H.th "Amount"
         mapM_ (detailRow . transaction) txs
@@ -260,6 +271,7 @@ generateDetailRows cat txs sectionId =
     detailRow t =
       H.tr $ do
         H.td (toHtml (transactionDescription t))
+        H.td (toHtml $ show (transactionKind t))
         H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
         H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
 
@@ -298,8 +310,6 @@ subtabMappings =
 
 formatMonthYear :: UTCTime -> Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
-
-
 
 generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [SourceFileMapping] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
