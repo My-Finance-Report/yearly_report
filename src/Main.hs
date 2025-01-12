@@ -20,6 +20,7 @@ import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import System.Environment (lookupEnv)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
@@ -163,9 +164,18 @@ getCurrentUser pool = do
     Nothing -> return Nothing
     Just token -> liftIO $ validateSession pool $ TL.toStrict token
 
+getRequiredEnv :: String -> IO String
+getRequiredEnv key = do
+  maybeValue <- lookupEnv key
+  case maybeValue of
+    Just value -> return value
+    Nothing -> ioError $ userError $ "Environment variable not set: " ++ key
+
+
 main :: IO ()
 main = do
   activeJobs <- newIORef 0
+  openAiKey <- liftIO $ getRequiredEnv "OPENAI_API_KEY"
   initializePool
   pool <- getConnectionPool
   migratePostgres
