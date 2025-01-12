@@ -1,7 +1,7 @@
 # Big picture
 
 this started as a project to generate my yearly financial report using haskell
-and has evolved a bit to be a simple webapp
+and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
 
 # Features
 
