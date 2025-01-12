@@ -32,6 +32,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - Some issue with case sensitivity in uploader matching
 - Build deploy is insanely slow
 - Sankey currently only allows one intermediate node
+- Update categorized transaction to have entity category for forms
 
 # notes from onboarding myself
 
