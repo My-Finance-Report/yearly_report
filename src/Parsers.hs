@@ -17,12 +17,12 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Database
-import Database.Transaction
-import Database.Persist
 import Database.Files
+import Database.Models
+import Database.Persist
+import Database.Transaction
 import Database.TransactionSource
 import GHC.Generics (Generic)
-import Database.Models
 import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)
@@ -143,7 +143,7 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
 processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
 processPdfFile user pdfId config = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
-  let filename = uploadedPdfFilename uploadedFile
+  let filename = uploadedPdfFilename $ entityVal uploadedFile
   alreadyProcessed <- liftIO $ isFileProcessed user filename
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
@@ -155,7 +155,7 @@ processPdfFile user pdfId config = do
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
-      result <- try (extractTransactionsFromLines (uploadedPdfRawContent uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
+      result <- try (extractTransactionsFromLines (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
       case result of
         Left err -> do
           let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err

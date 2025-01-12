@@ -38,12 +38,12 @@ getAllFilenames user = do
       results <- selectList [UploadedPdfUserId ==. entityKey user] [Asc UploadedPdfId]
       return $ nubBy (\a b -> uploadedPdfFilename (entityVal a) == uploadedPdfFilename (entityVal b)) results
 
-getPdfRecord :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m UploadedPdf
+getPdfRecord :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m (Entity UploadedPdf)
 getPdfRecord user pdfId = do
   pool <- liftIO getConnectionPool
   result <- runSqlPool queryPdfRecord pool
   case result of
-    Just (Entity _ pdf) -> return pdf
+    Just pdf -> return pdf
     Nothing -> liftIO $ error $ "No PDF found with id=" ++ show (fromSqlKey pdfId) ++ " for user id=" ++ show (fromSqlKey $ entityKey user)
   where
     queryPdfRecord =

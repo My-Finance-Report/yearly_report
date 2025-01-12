@@ -95,8 +95,8 @@ groupBySourceAndMonth ::
 groupBySourceAndMonth sourceMap txns =
   Map.fromListWith
     (Map.unionWith (+))
-    [ ( truncateToMonth $ transactionDateOfTransaction $ transaction txn,
-        Map.singleton (resolveSourceName sourceMap txn) (transactionAmount $ transaction txn)
+    [ ( truncateToMonth $ transactionDateOfTransaction $ entityVal $ transaction txn,
+        Map.singleton (resolveSourceName sourceMap txn) (transactionAmount $ entityVal $ transaction txn)
       )
       | txn <- txns
     ]
@@ -106,7 +106,7 @@ resolveSourceName ::
   CategorizedTransaction ->
   T.Text
 resolveSourceName sourceMap txn =
-  let sourceId = categorySourceId $ category txn
+  let sourceId = categorySourceId $ entityVal $ category txn
    in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap)
 
 extractAllSourceNames :: Map UTCTime (Map T.Text Double) -> [T.Text]
@@ -299,9 +299,9 @@ main = do
       let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
       transactionSources <- liftIO $ getAllTransactionSources user
       uploadedPdf <- liftIO $ getPdfRecord user pdfId
-      let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
+      let segments = T.splitOn "\n" (uploadedPdfRawContent $ entityVal uploadedPdf)
 
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename uploadedPdf) segments transactionSources
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename $ entityVal uploadedPdf) segments transactionSources
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user
@@ -313,7 +313,7 @@ main = do
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
       uploadedFile <- getPdfRecord user fileId
       transactions <- liftIO $ getTransactionsByFileId user fileId
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile transactions
 
     post "/update-category" $ requireUser pool $ \user -> do
       tId <- Web.Scotty.formParam "transactionId"
@@ -382,6 +382,7 @@ main = do
 
     post "/update-transaction/:id" $ requireUser pool $ \user -> do
       txIdText <- Web.Scotty.pathParam "id" :: Web.Scotty.ActionM Int
+      fileIdText <- Web.Scotty.formParam "fileId" :: Web.Scotty.ActionM Text
       let txId = toSqlKey (fromIntegral txIdText)
 
       mDescription <- Web.Scotty.formParam "description" >>= \d -> return $ readMaybe d
@@ -391,7 +392,8 @@ main = do
 
       liftIO $ updateTransaction user txId mDescription mDate mAmount mCategoryId
 
-      Web.Scotty.redirect "/transactions"
+      let redirectUrl = TL.fromStrict $ T.append "/transactions/" fileIdText
+      Web.Scotty.redirect redirectUrl
 
     post "/add-category/:sourceId" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "sourceId"

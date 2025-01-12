@@ -639,3 +639,9 @@ tr:hover {
   width: 20px; /* Adjust as needed */
   text-align: center; /* Center-align the arrow */
 }
+
+.full-width {
+  width: 100%;
+  box-sizing: border-box; /* Ensure padding doesn't overflow */
+  padding: 8px;
+}

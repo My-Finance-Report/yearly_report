@@ -68,20 +68,12 @@ generateHomapageHtml banner tabs =
                 ! A.type_ "file"
                 ! A.name "pdfFile"
                 ! A.accept "application/pdf"
-                ! A.id "pdfFileInput" -- Add an ID for JavaScript
+                ! A.id "pdfFileInput"
               H.button
                 ! A.type_ "submit"
                 ! A.class_ "btn upload-btn"
-                ! A.id "uploadButton" -- Add an ID for JavaScript
-                ! A.disabled "disabled" -- Initially disable the button
+                ! A.id "uploadButton"
                 $ "Upload PDF"
-          -- Add JavaScript for interactivity
-          H.script $
-            H.script
-              "document.getElementById('pdfFileInput').addEventListener('change', function() {\
-              \ var uploadButton = document.getElementById('uploadButton');\
-              \ uploadButton.disabled = !this.files.length; // Enable button if file is selected\
-              \ });"
 
       H.div ! A.class_ "charts-grid" $ do
         H.div ! A.class_ "chart-card" $ do
@@ -205,9 +197,9 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
           let totalAmount =
                 truncateToTwoDecimals $
                   sum
-                    [ case transactionKind (transaction txn) of
-                        Deposit -> transactionAmount (transaction txn)
-                        Withdrawal -> transactionAmount (transaction txn)
+                    [ case transactionKind $ entityVal (transaction txn) of
+                        Deposit -> transactionAmount $ entityVal (transaction txn)
+                        Withdrawal -> transactionAmount $ entityVal (transaction txn)
                       | txn <- txns
                     ]
               sectionId = "details-" <> key -- Unique ID for the expandable section
@@ -265,7 +257,7 @@ generateDetailRows cat txs sectionId =
           H.th "Kind"
           H.th "Date"
           H.th "Amount"
-        mapM_ (detailRow . transaction) txs
+        mapM_ (detailRow . entityVal . transaction) txs
   where
     detailRow :: Transaction -> Html
     detailRow t =
@@ -286,9 +278,9 @@ generateAggregatedRows header aggregated =
           let totalAmount =
                 truncateToTwoDecimals $
                   sum
-                    [ case transactionKind (transaction txn) of
-                        Deposit -> transactionAmount (transaction txn)
-                        Withdrawal -> transactionAmount (transaction txn)
+                    [ case transactionKind $ entityVal (transaction txn) of
+                        Deposit -> transactionAmount $ entityVal (transaction txn)
+                        Withdrawal -> transactionAmount $ entityVal (transaction txn)
                       | txn <- txns
                     ]
            in do
@@ -304,8 +296,8 @@ type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTra
 
 subtabMappings :: [(Text, GroupingFunction)]
 subtabMappings =
-  [ ("Category", groupByBlah (categoryName . category)),
-    ("Month", groupByBlah (formatMonthYear . transactionDateOfTransaction . transaction))
+  [ ("Category", groupByBlah (categoryName . entityVal . category)),
+    ("Month", groupByBlah (formatMonthYear . transactionDateOfTransaction . entityVal . transaction))
   ]
 
 formatMonthYear :: UTCTime -> Text

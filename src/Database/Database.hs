@@ -6,14 +6,14 @@
 
 module Database.Database (seedDatabase) where
 
+import Control.Monad.IO.Class (liftIO)
+import Database.Category
 import Database.ConnectionPool
 import Database.Models
-import Control.Monad.IO.Class (liftIO)
-import Types
-import Database.TransactionSource
-import Database.Category
 import Database.Persist (Entity (..))
 import Database.Persist.Postgresql
+import Database.TransactionSource
+import Types
 
 seedDatabase :: Entity User -> IO ()
 seedDatabase user = do
@@ -21,7 +21,7 @@ seedDatabase user = do
   runSqlPool
     ( do
         bankSourceId <- ensureTransactionSourceExists user "Bank"
-        ccSourceId <- ensureTransactionSourceExists user "CreditCard"
+        ccSourceId <- ensureTransactionSourceExists user "Credit Card"
 
         ensureCategoriesExist
           user
@@ -36,4 +36,3 @@ seedDatabase user = do
         liftIO $ putStrLn "Database seeded successfully!"
     )
     pool
-

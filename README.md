@@ -29,10 +29,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
-- Some issue with case sensitivity in uploader matching
-- Build deploy is insanely slow
 - Sankey currently only allows one intermediate node
 - Update categorized transaction to have entity category for forms
+- Some bug with pulling processed files
 
 # notes from onboarding myself
 
