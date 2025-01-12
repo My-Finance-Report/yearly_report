@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y wget gnupg && \
     libpq-dev \
     postgresql-client-14 \
     pkg-config \
-    zlib1g-dev
+    zlib1g-dev \
+    poppler-utils
 
 # Set the working directory
 WORKDIR /app

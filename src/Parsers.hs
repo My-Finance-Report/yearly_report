@@ -106,7 +106,6 @@ decodeChatResponse responseBodyContent =
       print responseBodyContent
       return Nothing
 
--- Extract text from PDF, throwing an exception on failure
 extractTextFromPdf :: FilePath -> IO Text
 extractTextFromPdf pdfPath = do
   let command = "pdftotext"
