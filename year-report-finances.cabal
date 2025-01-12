@@ -15,6 +15,7 @@ library
     Database.Configurations
     Database.ConnectionPool
     Database.Models
+    Database.Files
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.Components
@@ -72,6 +73,7 @@ executable year-report-finances
       Database.Configurations
       Database.ConnectionPool
       Database.Models
+      Database.Files
       Categorizer
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage

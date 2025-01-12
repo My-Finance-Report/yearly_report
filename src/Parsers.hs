@@ -19,6 +19,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Database.Database
 import Database.Transaction
 import Database.Persist
+import Database.Files
 import Database.TransactionSource
 import GHC.Generics (Generic)
 import Database.Models
@@ -142,9 +143,9 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
 
 processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
 processPdfFile user pdfId config = do
-  uploadedFile <- liftIO $ fetchPdfRecord pdfId
+  uploadedFile <- liftIO $ getPdfRecord user pdfId
   let filename = uploadedPdfFilename uploadedFile
-  alreadyProcessed <- liftIO $ isFileProcessed filename
+  alreadyProcessed <- liftIO $ isFileProcessed user filename
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
@@ -164,6 +165,6 @@ processPdfFile user pdfId config = do
         Right transactions -> do
           -- Categorize and store transactions
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          markFileAsProcessed filename
+          markFileAsProcessed user filename
           putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
           return categorizedTransactions

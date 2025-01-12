@@ -4,6 +4,7 @@ module Database.TransactionSource
     updateTransactionSource,
     ensureTransactionSourceExists,
     getAllTransactionSources,
+    fetchSourceMap,
   )
 where
 
@@ -11,6 +12,7 @@ import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Text (Text)
+import Data.Map (Map, fromList)
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
@@ -60,3 +62,13 @@ getAllTransactionSources user = do
   runSqlPool queryTransactionSources pool
   where
     queryTransactionSources = selectList [TransactionSourceUserId ==. entityKey user] [Asc TransactionSourceName]
+
+
+fetchSourceMap :: (MonadUnliftIO m) => Entity User-> m (Map (Key TransactionSource) TransactionSource)
+fetchSourceMap user= do
+  pool <- liftIO getConnectionPool
+  runSqlPool querySourceMap pool
+  where
+    querySourceMap = do
+      sources <- selectList [TransactionSourceUserId ==. entityKey user] []
+      return $ fromList [(entityKey source, entityVal source) | source <- sources]

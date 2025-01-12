@@ -17,6 +17,7 @@ import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database.Database
 import Database.Transaction
+import Database.Files
 import Database.Persist
 import Database.Persist.Postgresql (toSqlKey)
 import Database.TransactionSource
@@ -295,7 +296,7 @@ renderHomePage user banner = do
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
-  files <- getSourceFileMappings
+  files <- getSourceFileMappings user
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
 

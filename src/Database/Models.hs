@@ -64,13 +64,15 @@ Transaction
 
 ProcessedFile
     filename Text
-    UniqueProcessedFile filename
+    userId UserId
+    UniqueProcessedFile filename userId
     deriving Show Eq
 
 UploadedPdf
     filename Text
     rawContent Text
     uploadTime Text
+    userId UserId
     deriving Show Eq
 
 UploadConfiguration

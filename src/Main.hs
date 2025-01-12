@@ -31,22 +31,17 @@ import Database.Category
     getCategory,
     updateCategory,
   )
-import Database.Database
-  ( fetchPdfRecord,
-    fetchSourceMap,
-    getAllFilenames,
-    insertPdfRecord,
-    seedDatabase,
-  )
+import Database.Database (seedDatabase)
 import Database.Persist
   ( Entity (entityKey, entityVal),
     PersistEntity (Key),
   )
 import Database.Persist.Postgresql hiding (get)
-import Database.TransactionSource
 import Database.UploadConfiguration
 import Database.Transaction
+import Database.TransactionSource
 import Database.Configurations
+import Database.Files
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -75,9 +70,9 @@ data Matrix = Matrix
 
 instance ToJSON Matrix
 
-generateHistogramData :: (MonadUnliftIO m) => [CategorizedTransaction] -> m Matrix
-generateHistogramData transactions = do
-  sourceMap <- fetchSourceMap
+generateHistogramData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
+generateHistogramData user transactions = do
+  sourceMap <- fetchSourceMap user
   let grouped = groupBySourceAndMonth sourceMap transactions
   let allSourceNames = extractAllSourceNames grouped
   let matrix = buildMatrix allSourceNames grouped
@@ -267,7 +262,7 @@ main = do
 
               case maybeConfig of
                 Just config -> do
-                  newPdfId <- liftIO $ insertPdfRecord originalName rawText "TODO"
+                  newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
 
                   liftIO $ do
                     modifyIORef activeJobs (+ 1)
@@ -278,7 +273,7 @@ main = do
 
                   redirect "/"
                 Nothing -> do
-                  newPdfId <- liftIO $ insertPdfRecord originalName rawText "TODO"
+                  newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
                   redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
 
     get "/adjust-transactions/:pdfId" $ requireUser pool $ \user -> do
@@ -286,20 +281,20 @@ main = do
 
       let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
       transactionSources <- liftIO $ getAllTransactionSources user
-      uploadedPdf <- liftIO $ fetchPdfRecord pdfId
+      uploadedPdf <- liftIO $ getPdfRecord user pdfId
       let segments = T.splitOn "\n" (uploadedPdfRawContent uploadedPdf)
 
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename uploadedPdf) segments transactionSources
 
     get "/transactions" $ requireUser pool $ \user -> do
-      filenames <- liftIO getAllFilenames
+      filenames <- liftIO $ getAllFilenames user
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderAllFilesPage filenames
 
     get "/transactions/:fileid" $ requireUser pool $ \user -> do
       fileIdText <- Web.Scotty.pathParam "fileid"
 
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
-      uploadedFile <- fetchPdfRecord fileId
+      uploadedFile <- getPdfRecord user fileId
       transactions <- liftIO $ getTransactionsByFileId user fileId
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage (uploadedPdfFilename uploadedFile) transactions
 
@@ -396,5 +391,5 @@ main = do
     get "/api/histogram-data" $ requireUser pool $ \user -> do
       -- Fetch or compute the histogram data
       transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateHistogramData transactions
+      histogramData <- generateHistogramData user transactions
       json histogramData
