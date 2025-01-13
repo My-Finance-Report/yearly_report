@@ -45,4 +45,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - consider showing the source we associate with the file before we upload
 - the jobs running banner is vile
 - no way to update any miscategorization (transaction page needs link)
+- still some bug with the files that are in /transactions
 - the llm seems bad at getting dates, may need to include more file context
