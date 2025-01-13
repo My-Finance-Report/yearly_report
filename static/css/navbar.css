@@ -13,6 +13,16 @@
   align-items: center;
 }
 
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-brand .brand-link {
+  text-decoration: none;
+  color: white;
+}
+
 .nav-links {
   list-style: none;
   margin: 0;

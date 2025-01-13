@@ -25,6 +25,7 @@ library
     HtmlGenerators.Layout
     HtmlGenerators.Configuration
     HtmlGenerators.AuthPages
+    HtmlGenerators.LandingPage
     Auth
     Sankey
     Parsers
@@ -83,6 +84,7 @@ executable year-report-finances
       HtmlGenerators.AllFilesPage
       HtmlGenerators.RefineSelectionPage
       HtmlGenerators.Configuration
+      HtmlGenerators.LandingPage
       Auth
       Sankey
       Parsers

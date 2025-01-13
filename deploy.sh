@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # Variables (update these with your own details)
 AWS_REGION="us-east-2"

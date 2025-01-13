@@ -49,6 +49,7 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
+import HtmlGenerators.LandingPage
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.RefineSelectionPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
@@ -194,7 +195,7 @@ main = do
       token <- getTokenFromRequest
 
       case token of
-        Just _ -> Web.redirect "/"
+        Just _ -> Web.redirect "/dashboard"
         Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage Nothing
 
     post "/login" $ do
@@ -206,7 +207,7 @@ main = do
         Just user -> do
           token <- liftIO $ createSession pool (entityKey user)
           Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-          Web.redirect "/"
+          Web.redirect "/dashboard"
 
     post "/register" $ do
       email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
@@ -223,7 +224,7 @@ main = do
               liftIO $ Database.Database.seedDatabase user
               token <- liftIO $ createSession pool (entityKey user)
               Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-              Web.redirect "/"
+              Web.redirect "/dashboard"
 
     get "/logout" $ do
       mToken <- getTokenFromRequest
@@ -236,7 +237,11 @@ main = do
           Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
           Web.redirect "/login"
 
-    get "/" $ requireUser pool $ \user -> do
+    get "/" $ do
+      let content = renderLandingPage
+      Web.html $ renderPage Nothing "My Financial Report" content
+
+    get "/dashboard" $ requireUser pool $ \user -> do
       activeJobs <- liftIO $ readIORef activeJobs
       let banner = if activeJobs > 0 then Just "Job Running" else Nothing
       liftIO $ print banner
@@ -252,7 +257,7 @@ main = do
 
       liftIO $ addUploadConfiguration user startKeyword endKeyword sourceId filenamePattern
 
-      redirect "/"
+      redirect "/dashboard"
 
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
@@ -288,7 +293,7 @@ main = do
                       modifyIORef activeJobs (subtract 1)
                     return ()
 
-                  redirect "/"
+                  redirect "/dashboard"
                 Nothing -> do
                   newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
                   redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
@@ -361,7 +366,7 @@ main = do
               }
 
       liftIO $ saveSankeyConfig user newConfig
-      redirect "/"
+      redirect "/dashboard"
 
     get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO $ getAllUploadConfigs user
