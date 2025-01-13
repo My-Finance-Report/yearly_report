@@ -8,16 +8,16 @@ module Database.Category
   )
 where
 
-import Database.ConnectionPool
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
 import Control.Monad.Trans.Reader (ReaderT)
 import Data.Text (Text)
+import Database.ConnectionPool
+import Database.Models
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
-import Database.Models
 import Types
 
 getCategoriesBySource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> m [Entity Category]

@@ -28,8 +28,8 @@ import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
 import Types
 
-updateTransaction :: (MonadUnliftIO m) => Entity User -> Key Transaction -> Maybe Text -> Maybe UTCTime -> Maybe Double -> Maybe (Key Category) -> m ()
-updateTransaction user transactionId mDescription mDate mAmount mCategoryId = do
+updateTransaction :: (MonadUnliftIO m) => Entity User -> Key Transaction -> Maybe Text -> Maybe UTCTime -> Maybe Double -> Maybe TransactionKind -> Maybe (Key Category) -> m ()
+updateTransaction user transactionId mDescription mDate mAmount mKind mCategoryId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUpdateTransaction pool
   where
@@ -44,7 +44,8 @@ updateTransaction user transactionId mDescription mDate mAmount mCategoryId = do
                       [ (TransactionDescription =.) <$> mDescription,
                         (TransactionDateOfTransaction =.) <$> mDate,
                         (TransactionAmount =.) <$> mAmount,
-                        (TransactionCategoryId =.) <$> mCategoryId
+                        (TransactionCategoryId =.) <$> mCategoryId,
+                        (TransactionKind =.) <$> mKind
                       ]
                in update transactionId updates
         _ -> return () -- Skip update if unauthorized or not found

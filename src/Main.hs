@@ -313,7 +313,12 @@ main = do
       let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
       uploadedFile <- getPdfRecord user fileId
       transactions <- liftIO $ getTransactionsByFileId user fileId
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile transactions
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoryLookup <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip (Prelude.map entityKey transactionSources) categories
+
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile categoryLookup transactions
 
     post "/update-category" $ requireUser pool $ \user -> do
       tId <- Web.Scotty.formParam "transactionId"
@@ -389,8 +394,13 @@ main = do
       mDate <- Web.Scotty.formParam "transactionDate" >>= \d -> return $ parseDate d
       mAmount <- Web.Scotty.formParam "amount" >>= \a -> return $ readMaybe a
       mCategoryId <- Web.Scotty.formParam "category" >>= \c -> return $ Just (toSqlKey $ read c)
+      mKind <-
+        Web.Scotty.formParam "kind" >>= \k -> return $ case (k :: Text) of
+          "Withdrawal" -> Just Withdrawal
+          "Deposit" -> Just Deposit
+          _ -> Nothing
 
-      liftIO $ updateTransaction user txId mDescription mDate mAmount mCategoryId
+      liftIO $ updateTransaction user txId mDescription mDate mAmount mKind mCategoryId
 
       let redirectUrl = TL.fromStrict $ T.append "/transactions/" fileIdText
       Web.Scotty.redirect redirectUrl

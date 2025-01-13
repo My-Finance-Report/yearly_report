@@ -56,8 +56,8 @@ renderPdfResultPage filename rawText =
       H.h2 "Extracted Text"
       H.pre (toHtml rawText)
 
-renderTransactionsPage :: Entity UploadedPdf -> [CategorizedTransaction] -> Html
-renderTransactionsPage file txs =
+renderTransactionsPage :: Entity UploadedPdf -> Map TransactionSourceId [Entity Category] -> [CategorizedTransaction] -> Html
+renderTransactionsPage file categoryLookup txs =
   body $ do
     H.h1 $ toHtml $ "Transactions for " <> uploadedPdfFilename (entityVal file)
     H.table $ do
@@ -66,15 +66,17 @@ renderTransactionsPage file txs =
         H.th "Description"
         H.th "Date"
         H.th "Amount"
+        H.th "Kind"
         H.th "Category"
         H.th "Actions"
-      mapM_ (renderEditableTransactionRow file) txs
+      mapM_ (renderEditableTransactionRow file categoryLookup) txs
 
-renderEditableTransactionRow :: Entity UploadedPdf -> CategorizedTransaction -> Html
-renderEditableTransactionRow file tx = do
-  let Transaction {transactionDescription, transactionDateOfTransaction, transactionAmount} = entityVal $ transaction tx
-      Category {categoryName} = entityVal $ category tx
+renderEditableTransactionRow :: Entity UploadedPdf -> Map TransactionSourceId [Entity Category] -> CategorizedTransaction -> Html
+renderEditableTransactionRow file categoryLookup tx = do
+  let Transaction {transactionTransactionSourceId, transactionKind, transactionDescription, transactionDateOfTransaction, transactionAmount} = entityVal $ transaction tx
+      currCatName = categoryName $ entityVal $ category tx
       catId = fromSqlKey $ entityKey $ category tx
+      allCategories = Map.lookup transactionTransactionSourceId categoryLookup
       txId = case transactionId tx of
         Just (TransactionKey (SqlBackendKey key)) -> T.pack (show key)
         Nothing -> "Unknown"
@@ -105,15 +107,31 @@ renderEditableTransactionRow file tx = do
             ! A.value (toValue $ show transactionAmount)
         H.td
           $ H.select
+            ! A.name "kind"
+            ! A.class_ "full-width"
+          $ forM_ [Withdrawal, Deposit]
+          $ \kind -> do
+            H.option
+              ! A.value (toValue $ show kind)
+              ! (if transactionKind == kind then A.selected "selected" else mempty)
+              $ toHtml
+              $ show kind
+        H.td
+          $ H.select
             ! A.name "category"
             ! A.class_ "full-width"
           $ do
-            -- TODO these need to be the available categorys
-            H.option
-              ! A.value (toValue catId)
-              ! A.selected "selected"
-              $ toHtml categoryName
-            H.option ! A.value "Other" $ "Other"
+            -- Generate options from allCategories
+            case allCategories of
+              Just categories ->
+                forM_ categories $ \cat -> do
+                  let currentCatId = fromSqlKey $ entityKey cat
+                      currentCatName = categoryName (entityVal cat)
+                  H.option
+                    ! A.value (toValue currentCatId)
+                    ! (if currentCatId == catId then A.selected "selected" else mempty)
+                    $ toHtml currentCatName
+              Nothing -> H.option ! A.value "" $ "No categories available"
         H.input
           ! A.type_ "hidden"
           ! A.name "fileId"
