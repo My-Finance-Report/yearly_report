@@ -32,7 +32,7 @@ import Database.Category
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (seedDatabase)
+import Database.Database (seedDatabase, updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -241,12 +241,46 @@ main = do
       let content = renderLandingPage
       Web.html $ renderPage Nothing "My Financial Report" content
 
+    get "/onboarding" $ requireUser pool $ \user -> do
+      let currentStep =  userOnboardingStep $ entityVal user
+      case currentStep of
+        Just 0 -> redirect "/onboarding/step-1"
+        Just 1 -> redirect "/onboarding/step-2"
+        Just 2 -> redirect "/onboarding/step-3"
+        _ -> redirect "/dashboard"
+
+    get "/onboarding/step-1" $ requireUser pool $ \user -> do
+      html "Welcome to step 1 of onboarding!"
+
+    post "/onboarding/step-1" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user (Just 1)
+      redirect "/onboarding/step-2"
+
+    get "/onboarding/step-2" $ requireUser pool $ \user -> do
+      html "Welcome to step 2 of onboarding!"
+
+    post "/onboarding/step-2" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user (Just 2)
+      redirect "/onboarding/step-3"
+
+    get "/onboarding/step-3" $ requireUser pool $ \user -> do
+      html "Welcome to step 3 of onboarding!"
+
+    post "/onboarding/step-3" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user Nothing
+      redirect "/dashboard"
+
     get "/dashboard" $ requireUser pool $ \user -> do
-      activeJobs <- liftIO $ readIORef activeJobs
-      let banner = if activeJobs > 0 then Just "Job Running" else Nothing
-      liftIO $ print banner
-      content <- liftIO $ renderHomePage user banner
-      Web.html $ renderPage (Just user) "Financal Summary" content
+      let onboardingStep = userOnboardingStep $ entityVal user
+      case onboardingStep of
+        Just _ -> Web.Scotty.redirect "/onboarding" 
+        Nothing -> do
+          activeJobs <- liftIO $ readIORef activeJobs
+          let banner = if activeJobs > 0 then Just "Job Running" else Nothing
+          liftIO $ print banner
+          content <- liftIO $ renderHomePage user banner
+          Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
+
 
     post "/setup-upload" $ requireUser pool $ \user -> do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text

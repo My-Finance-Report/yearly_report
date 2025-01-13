@@ -107,6 +107,7 @@ User
     email Text
     passwordHash Text
     createdAt UTCTime
+    onboardingStep Int Maybe
     UniqueUser email
     deriving Show Eq
 
