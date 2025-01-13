@@ -17,7 +17,7 @@ import Data.Text as T (Text, intercalate, pack, unlines)
 import qualified Data.Text.Lazy as TL
 import Data.Time
 import Database.Models
-import Database.Persist.Postgresql (BackendKey (SqlBackendKey), fromSqlKey)
+import Database.Persist.Postgresql (BackendKey (SqlBackendKey), Entity (entityKey, entityVal), fromSqlKey)
 import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -56,25 +56,27 @@ renderPdfResultPage filename rawText =
       H.h2 "Extracted Text"
       H.pre (toHtml rawText)
 
-renderTransactionsPage :: T.Text -> [CategorizedTransaction] -> Html
-renderTransactionsPage filename txs =
+renderTransactionsPage :: Entity UploadedPdf -> Map TransactionSourceId [Entity Category] -> [CategorizedTransaction] -> Html
+renderTransactionsPage file categoryLookup txs =
   body $ do
-    H.h1 $ toHtml $ "Transactions for " <> filename
+    H.h1 $ toHtml $ "Transactions for " <> uploadedPdfFilename (entityVal file)
     H.table $ do
       H.tr $ do
         H.th "Id"
         H.th "Description"
         H.th "Date"
         H.th "Amount"
+        H.th "Kind"
         H.th "Category"
-        H.th "Override"
         H.th "Actions"
-      mapM_ (renderEditableTransactionRow filename) txs
+      mapM_ (renderEditableTransactionRow file categoryLookup) txs
 
-renderEditableTransactionRow :: T.Text -> CategorizedTransaction -> Html
-renderEditableTransactionRow filename tx = do
-  let Transaction {transactionDescription, transactionDateOfTransaction, transactionAmount} = transaction tx
-      Category {categoryName} = category tx
+renderEditableTransactionRow :: Entity UploadedPdf -> Map TransactionSourceId [Entity Category] -> CategorizedTransaction -> Html
+renderEditableTransactionRow file categoryLookup tx = do
+  let Transaction {transactionTransactionSourceId, transactionKind, transactionDescription, transactionDateOfTransaction, transactionAmount} = entityVal $ transaction tx
+      currCatName = categoryName $ entityVal $ category tx
+      catId = fromSqlKey $ entityKey $ category tx
+      allCategories = Map.lookup transactionTransactionSourceId categoryLookup
       txId = case transactionId tx of
         Just (TransactionKey (SqlBackendKey key)) -> T.pack (show key)
         Nothing -> "Unknown"
@@ -88,28 +90,56 @@ renderEditableTransactionRow filename tx = do
           H.input
             ! A.type_ "text"
             ! A.name "description"
+            ! A.class_ "full-width"
             ! A.value (toValue transactionDescription)
         H.td $
           H.input
             ! A.type_ "date"
             ! A.name "transactionDate"
+            ! A.class_ "full-width"
             ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
         H.td $
           H.input
             ! A.type_ "number"
             ! A.step "0.01"
             ! A.name "amount"
+            ! A.class_ "full-width"
             ! A.value (toValue $ show transactionAmount)
-        H.td $
-          H.select ! A.name "category" $ do
+        H.td
+          $ H.select
+            ! A.name "kind"
+            ! A.class_ "full-width"
+          $ forM_ [Withdrawal, Deposit]
+          $ \kind -> do
             H.option
-              ! A.value (toValue categoryName)
-              ! A.selected "selected"
-              $ toHtml categoryName
-            H.option ! A.value "Other" $ "Other"
+              ! A.value (toValue $ show kind)
+              ! (if transactionKind == kind then A.selected "selected" else mempty)
+              $ toHtml
+              $ show kind
+        H.td
+          $ H.select
+            ! A.name "category"
+            ! A.class_ "full-width"
+          $ do
+            -- Generate options from allCategories
+            case allCategories of
+              Just categories ->
+                forM_ categories $ \cat -> do
+                  let currentCatId = fromSqlKey $ entityKey cat
+                      currentCatName = categoryName (entityVal cat)
+                  H.option
+                    ! A.value (toValue currentCatId)
+                    ! (if currentCatId == catId then A.selected "selected" else mempty)
+                    $ toHtml currentCatName
+              Nothing -> H.option ! A.value "" $ "No categories available"
+        H.input
+          ! A.type_ "hidden"
+          ! A.name "fileId"
+          ! A.value (toValue $ fromSqlKey $ entityKey file)
         H.td $
           H.input
             ! A.type_ "submit"
+            ! A.class_ "full-width"
             ! A.value "Save"
 
 renderHtmlT :: Html -> TL.Text

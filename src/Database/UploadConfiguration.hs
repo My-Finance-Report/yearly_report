@@ -7,15 +7,15 @@ module Database.UploadConfiguration
   )
 where
 
-import Database.ConnectionPool (getConnectionPool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
+import Database.ConnectionPool (getConnectionPool)
+import Database.Models
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
-import Database.Models
 
 getAllUploadConfigs :: (MonadUnliftIO m) => Entity User -> m [Entity UploadConfiguration]
 getAllUploadConfigs user = do
@@ -32,7 +32,7 @@ getUploadConfiguration user filename = do
     queryUploadConfiguration = do
       results <-
         rawSql
-          "SELECT ?? FROM upload_configuration WHERE ? ~ filename_regex AND user_id = ?"
+          "SELECT ?? FROM upload_configuration WHERE ? ~* filename_regex AND user_id = ?"
           [toPersistValue filename, toPersistValue (entityKey user)]
       return $ listToMaybe results
 

@@ -29,22 +29,20 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
-- Some issue with case sensitivity in uploader matching
-- Build deploy is insanely slow
 - Sankey currently only allows one intermediate node
 - Update categorized transaction to have entity category for forms
+- Some bug with pulling processed files
 
 # notes from onboarding myself
 
 - null state is kind of weird on landing page, should probably be a setup flow
+- its hard to know you need to configure the sankey
 - the adjust page has no margins and is super confusing
+- the configuration page is just wacky
 - i dont get a chance to add sources before
   -- maybe these should just be called accounts for clarity
 - its weird that the first time thorugh the upload flow it doesnt actually run the upload
 - consider showing the source we associate with the file before we upload
 - the jobs running banner is vile
-- no way to update any miscategorization (transaction seems broken)
+- no way to update any miscategorization (transaction page needs link)
 - the llm seems bad at getting dates, may need to include more file context
-- the configuration page is just wacky
-- its hard to know you need to configure the sankey
-- process multiple files at once would be nice

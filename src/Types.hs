@@ -95,9 +95,9 @@ groupByBlahForAll groupedBySource groupingFunc =
   Map.map (groupingFunc `groupByBlah`) groupedBySource
 
 data CategorizedTransaction = CategorizedTransaction
-  { transaction :: Transaction,
-    transactionId :: Maybe TransactionId,
-    category :: Category
+  { transaction :: Entity Transaction,
+    transactionId :: Maybe TransactionId, -- fine to deprecate now that this transaction is an entity
+    category :: Entity Category
   }
   deriving (Show, Eq, Ord)
 

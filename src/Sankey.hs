@@ -8,8 +8,8 @@ import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
-import Database.Persist
 import Database.Models
+import Database.Persist
 import Types
 
 buildSankeyLinks ::
@@ -19,7 +19,7 @@ buildSankeyLinks ::
 buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
   case Map.lookup targetSource aggregatedTransactions of
     Just targetTransactions ->
-      let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . transaction)) targetTransactions
+      let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
           sankeyLinks =
             Prelude.map
               (\(category, total) -> (categoryName (entityVal sourceCategory), category, total))
@@ -32,7 +32,7 @@ generateSankeyData ::
   FullSankeyConfig ->
   [(Text, Text, Double)]
 generateSankeyData transactions config =
-  let aggregatedTransactions = groupByBlahForAll transactions (categoryName . category)
+  let aggregatedTransactions = groupByBlahForAll transactions (categoryName . entityVal . category)
 
       FullSankeyConfig {inputs, linkages, mapKeyFunction} = config
 
@@ -54,7 +54,7 @@ generateSankeyData transactions config =
                           ( \(subCatName, txns) ->
                               ( categoryName (entityVal category),
                                 subCatName,
-                                sum $ Prelude.map (sankeyAmount . transaction) txns
+                                sum $ Prelude.map (sankeyAmount . entityVal . transaction) txns
                               )
                           )
                           subCategoryFlows

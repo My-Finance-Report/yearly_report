@@ -17,12 +17,12 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (Day, defaultTimeLocale, formatTime)
 import Data.Time.Clock (UTCTime)
 import Database.Category
-import Database.Transaction
 import Database.Database
+import Database.Models
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
+import Database.Transaction
 import GHC.Generics (Generic)
-import Database.Models
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Status
@@ -122,34 +122,34 @@ categorizeTransaction ::
   Key TransactionSource ->
   m CategorizedTransaction
 categorizeTransaction user transaction uploadedPdfKey transactionSourceId = do
-  -- Categorize the transaction
   let txnDsc = partialTransactionDescription transaction
-  let dateOfTransaction = partialTransactionDateOfTransaction transaction
+  let txnAmount = partialTransactionAmount transaction
+  let txnKind = parseTransactionKind $ partialTransactionKind transaction
+  let txnDate = partialTransactionDateOfTransaction transaction
 
-  categoryEntity <- categorizeTransactionInner user txnDsc dateOfTransaction transactionSourceId
+  categoryEntity <- categorizeTransactionInner user txnDsc txnDate transactionSourceId
+  let catName = categoryName (entityVal categoryEntity)
+  let categorySourceKey = transactionSourceId
+
+  -- Insert the transaction into the database
+  entityTransaction <-
+    liftIO $
+      addTransaction
+        user
+        txnDsc
+        txnAmount
+        txnKind
+        txnDate
+        uploadedPdfKey
+        transactionSourceId
+        catName
+        categorySourceKey
 
   let categorizedTransaction =
         CategorizedTransaction
-          { transactionId = Nothing,
-            transaction =
-              Transaction
-                { transactionDescription = txnDsc,
-                  transactionAmount = partialTransactionAmount transaction,
-                  transactionKind = parseTransactionKind $ partialTransactionKind transaction,
-                  transactionDateOfTransaction = dateOfTransaction,
-                  transactionUploadedPdfId = Just uploadedPdfKey,
-                  transactionCategoryId = entityKey categoryEntity,
-                  transactionTransactionSourceId = transactionSourceId,
-                  transactionUserId = entityKey user
-                },
-            category = entityVal categoryEntity
+          { transactionId = Just (entityKey entityTransaction),
+            transaction = entityTransaction,
+            category = categoryEntity
           }
 
-  -- Insert the transaction and get the new ID
-  newId <- liftIO $ addTransaction user categorizedTransaction uploadedPdfKey
-
-  -- Return the updated CategorizedTransaction with the assigned ID
-  return $
-    categorizedTransaction
-      { transactionId = Just newId
-      }
+  return categorizedTransaction
