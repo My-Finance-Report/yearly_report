@@ -4,6 +4,7 @@
 module HtmlGenerators.HtmlGenerators
   ( renderTransactionsPage,
     renderUploadPage,
+    renderSupportPage,
     renderPdfResultPage,
   )
 where
@@ -40,6 +41,14 @@ renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
         H.input H.! A.type_ "file" H.! A.name "pdfFile"
         H.br
         H.input H.! A.type_ "submit" H.! A.value "Upload"
+
+renderSupportPage :: Html
+renderSupportPage =
+  H.body $ do
+    H.div ! A.class_ "container" $ do
+      H.h1 "Support"
+      H.p $ do
+        "If you need assistance, please reach out to me via email: mcarroll1220@gmail.com"
 
 renderPdfResultPage :: Text -> Text -> TL.Text
 renderPdfResultPage filename rawText =

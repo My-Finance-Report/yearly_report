@@ -116,10 +116,6 @@ generateHomapageHtml banner tabs =
       ! A.type_ "text/javascript"
       ! A.src "/histogram.js"
       $ mempty
-    H.script
-      ! A.type_ "text/javascript"
-      ! A.src "/resizable.js"
-      $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do

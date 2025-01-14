@@ -243,10 +243,9 @@ main = do
     get "/" $ do
       pool <- liftIO getConnectionPool
       user <- getCurrentUser pool
-      case user of 
-        Just user ->  Web.redirect "/dashboard"
-        Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage 
-      
+      case user of
+        Just user -> Web.redirect "/dashboard"
+        Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage
 
     get "/onboarding" $ requireUser pool $ \user -> do
       let currentStep = userOnboardingStep $ entityVal user
@@ -373,6 +372,11 @@ main = do
       let segments = T.splitOn "\n" (uploadedPdfRawContent $ entityVal uploadedPdf)
 
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename $ entityVal uploadedPdf) segments transactionSources
+
+    get "/help" $ do
+      pool <- liftIO getConnectionPool
+      user <- getCurrentUser pool
+      Web.html $ renderPage user "Help Me" $ renderSupportPage
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user

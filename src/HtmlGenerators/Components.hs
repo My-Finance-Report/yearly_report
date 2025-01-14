@@ -21,6 +21,7 @@ navigationBar mUser = H.nav H.! A.class_ "navbar" $ do
     H.ul H.! A.class_ "nav-links" $ do
       H.li $ H.a H.! A.href "/dashboard" $ "Home"
       H.li $ H.a H.! A.href "/configuration" $ "Configuration"
+      H.li $ H.a H.! A.href "/help" $ "Help Me!"
 
     H.div H.! A.class_ "nav-user" $ do
       case mUser of
