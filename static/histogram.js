@@ -5,16 +5,23 @@ function fetchAndDrawHistogram() {
   fetch('/api/histogram-data')
     .then((response) => response.json())
     .then((data) => {
-      const combinedData = combineMatrixData(data);
-      drawHistogram(combinedData);
+      if (!data || !data.rowHeaders || data.rowHeaders.length === 0) {
+        displayNoDataMessage();
+      } else {
+        const combinedData = combineMatrixData(data);
+        drawHistogram(combinedData);
+      }
     })
-    .catch((error) => console.error('Error fetching histogram data:', error));
+    .catch((error) => {
+      console.error('Error fetching histogram data:', error);
+      displayNoDataMessage();
+    });
 }
 
 function combineMatrixData(matrix) {
   const { columnHeaders, rowHeaders, dataRows } = matrix;
   const combinedRows = rowHeaders.map((rowHeader, index) => [rowHeader].concat(dataRows[index]));
-  return [columnHeaders,...combinedRows];
+  return [columnHeaders, ...combinedRows];
 }
 
 function drawHistogram(rows) {
@@ -54,4 +61,12 @@ function drawHistogram(rows) {
     document.getElementById('histogram_chart')
   );
   chart.draw(data, options);
+}
+
+function displayNoDataMessage() {
+  const chartContainer = document.getElementById('histogram_chart');
+  chartContainer.innerHTML = '<p>No transactions yet</p>';
+  chartContainer.style.textAlign = 'center';
+  chartContainer.style.fontSize = '18px';
+  chartContainer.style.color = '#666';
 }

@@ -62,6 +62,7 @@ generateHomapageHtml banner tabs =
           H.form
             ! A.action "/upload"
             ! A.method "post"
+            ! A.class_ "upload_form"
             ! A.enctype "multipart/form-data"
             $ do
               H.input
@@ -73,7 +74,7 @@ generateHomapageHtml banner tabs =
                 ! A.type_ "submit"
                 ! A.class_ "btn upload-btn"
                 ! A.id "uploadButton"
-                $ "Upload PDF"
+                $ "Add Transactions"
 
       H.div ! A.class_ "charts-grid" $ do
         H.div ! A.class_ "chart-card" $ do
@@ -348,7 +349,11 @@ renderHomePage user banner = do
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
   files <- getSourceFileMappings user
 
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+  let updatedBanner =
+        if Data.List.null categorizedTransactions
+          then Just "You need to add transactions to get started."
+          else banner
 
-  let strictText = generateHomapageHtml banner tabs
+  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+  let strictText = generateHomapageHtml updatedBanner tabs
   return strictText
