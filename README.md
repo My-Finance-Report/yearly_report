@@ -47,3 +47,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - no way to update any miscategorization (transaction page needs link)
 - still some bug with the files that are in /transactions
 - the llm seems bad at getting dates, may need to include more file context
+- ability to add and remove categories and sources
+  -- deletes just need to make sure that there are no transactions

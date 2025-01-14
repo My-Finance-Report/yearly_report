@@ -53,6 +53,8 @@ import HtmlGenerators.LandingPage
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.OnboardingOne
 import HtmlGenerators.OnboardingTwo
+import HtmlGenerators.OnboardingThree
+import HtmlGenerators.OnboardingFour
 import HtmlGenerators.RefineSelectionPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
@@ -248,6 +250,7 @@ main = do
         Just 0 -> redirect "/onboarding/step-1"
         Just 1 -> redirect "/onboarding/step-2"
         Just 2 -> redirect "/onboarding/step-3"
+        Just 3 -> redirect "/onboarding/step-4"
         _ -> redirect "/dashboard"
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
@@ -262,7 +265,6 @@ main = do
     get "/onboarding/step-2" $ requireUser pool $ \user -> do
 
       transactionSources <- liftIO $ getAllTransactionSources user
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
@@ -276,9 +278,28 @@ main = do
       redirect "/onboarding/step-3"
 
     get "/onboarding/step-3" $ requireUser pool $ \user -> do
-      html "Welcome to step 3 of onboarding!"
+      transactionSources <- liftIO $ getAllTransactionSources user
+      let content = renderOnboardingThree user transactionSources
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
 
     post "/onboarding/step-3" $ requireUser pool $ \user -> do
+      --liftIO $ updateUserOnboardingStep user (Just 3)
+      -- for now, now step 4 in the onboarding
+      liftIO $ updateUserOnboardingStep user Nothing
+      redirect "/dashboard"
+
+    get "/onboarding/step-4" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingFour user categoriesBySource
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+
+    post "/onboarding/step-4" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user Nothing
       redirect "/dashboard"
 

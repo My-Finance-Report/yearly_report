@@ -90,6 +90,8 @@ input[type="submit"]:hover {
   gap: 20px;
   flex-wrap: wrap; /* Wrap columns on smaller screens */
   margin-top: 20px;
+  margin-left: 100px;
+  margin-right: 100px;
 }
 
 .config-column {
@@ -173,3 +175,244 @@ input[type="submit"]:hover {
   border-radius: 5px;
   font-size: 14px;
 }
+
+
+.upload-section {
+  display: flex;
+  margin-top: 15px;
+}
+
+.blah{
+    flex-direction: column;
+}
+
+.upload-section label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+
+
+.upload-section input[type="file"] {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.btn-submit {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+.btn-submit:hover {
+  background-color: #45a049;
+}
+
+.next-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.btn-next {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-next:hover {
+  background-color: #45a049;
+}
+
+
+
+.instructions {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  color: #666;
+}
+
+.sankey-config-container {
+  display: flex;
+  flex-wrap: wrap; /* Wrap columns for smaller screens */
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.sankey-config-column {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 300px;
+  flex: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sankey-config-column h3 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.category-list {
+  margin-top: 15px;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.category-card select {
+  margin-left: 10px;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.category-card .btn-submit {
+  margin-left: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.category-card .btn-submit:hover {
+  background-color: #45a049;
+}
+
+.next-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.next-button-container .btn-next {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.next-button-container .btn-next:hover {
+  background-color: #45a049;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .top-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .category-pair-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .category-pair-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    width: 300px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category-pair-card .btn-add {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .category-pair-card .btn-add:hover {
+    background-color: #45a049;
+  }
+  
+  .main-columns {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .column {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .income-list {
+    margin-top: 10px;
+  }
+  
+  .dropdown-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  #connect-button {
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 10px;
+  }
+  
+  #connect-button:hover {
+    background-color: #45a049;
+  }
+  
+

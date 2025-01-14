@@ -223,7 +223,7 @@ renderUploadConfigurationsPage configurations transactionSources =
 
           H.form
             ! A.method "post"
-            ! A.action (toValue $ "/merge-upload-crConf/" <> show (fromSqlKey configId))
+            ! A.action (toValue $ "/merge-upload-config/" <> show (fromSqlKey configId))
             $ H.td
             $ H.input ! A.type_ "submit" ! A.value "Merge"
 

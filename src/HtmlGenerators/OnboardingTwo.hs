@@ -72,8 +72,8 @@ renderOnboardingTwo user transactions =
             ! A.class_ "btn-next"
 
       H.form
-        ! A.method "get"
-        ! A.action "/onboarding/step-3"
+        ! A.method "post"
+        ! A.action "/onboarding/step-2"
         $ do
           H.input
             ! A.type_ "submit"
