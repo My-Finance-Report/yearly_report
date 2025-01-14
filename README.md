@@ -36,10 +36,10 @@ this is mainly a project through which I will learn more about haskell, but I ex
   -> can we just remove this all together?
 - the configuration page is just wacky
 - its weird that the first time thorugh the upload flow it doesnt actually run the upload
+  -> this should be fine now that there is an onboarding flow
+- redirect to the dashboard there is a user and they click on the nav bar
 - consider showing the source we associate with the file before we upload
 - the jobs running banner is vile
-- no way to update any miscategorization
-  -- this just needs a link from the dashboard
 - still some bug with the files that are in /transactions
 - the llm seems bad at getting dates, may need to include more file context
 - ability to add and remove categories and sources

@@ -51,10 +51,10 @@ import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.LandingPage
 import HtmlGenerators.Layout (renderPage)
-import HtmlGenerators.OnboardingOne
-import HtmlGenerators.OnboardingTwo
-import HtmlGenerators.OnboardingThree
 import HtmlGenerators.OnboardingFour
+import HtmlGenerators.OnboardingOne
+import HtmlGenerators.OnboardingThree
+import HtmlGenerators.OnboardingTwo
 import HtmlGenerators.RefineSelectionPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
@@ -241,8 +241,12 @@ main = do
           Web.redirect "/login"
 
     get "/" $ do
-      let content = renderLandingPage
-      Web.html $ renderPage Nothing "My Financial Report" content
+      pool <- liftIO getConnectionPool
+      user <- getCurrentUser pool
+      case user of 
+        Just user ->  Web.redirect "/dashboard"
+        Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage 
+      
 
     get "/onboarding" $ requireUser pool $ \user -> do
       let currentStep = userOnboardingStep $ entityVal user
@@ -254,7 +258,7 @@ main = do
         _ -> redirect "/dashboard"
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
-      transactionSources<- liftIO $ getAllTransactionSources user
+      transactionSources <- liftIO $ getAllTransactionSources user
       let content = renderOnboardingOne user transactionSources
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
@@ -263,15 +267,13 @@ main = do
       redirect "/onboarding/step-2"
 
     get "/onboarding/step-2" $ requireUser pool $ \user -> do
-
       transactionSources <- liftIO $ getAllTransactionSources user
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
 
-      let content = renderOnboardingTwo user categoriesBySource 
+      let content = renderOnboardingTwo user categoriesBySource
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
 
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 2)
@@ -282,9 +284,8 @@ main = do
       let content = renderOnboardingThree user transactionSources
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
-
     post "/onboarding/step-3" $ requireUser pool $ \user -> do
-      --liftIO $ updateUserOnboardingStep user (Just 3)
+      -- liftIO $ updateUserOnboardingStep user (Just 3)
       -- for now, now step 4 in the onboarding
       liftIO $ updateUserOnboardingStep user Nothing
       redirect "/dashboard"
@@ -297,7 +298,6 @@ main = do
 
       let content = renderOnboardingFour user categoriesBySource
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
 
     post "/onboarding/step-4" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user Nothing
@@ -452,7 +452,6 @@ main = do
       let redirectTo = fromMaybe "/dashboard" referer
 
       Web.Scotty.redirect redirectTo
-
 
     post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "id"

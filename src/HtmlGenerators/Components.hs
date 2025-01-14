@@ -13,9 +13,10 @@ import Text.Blaze.Html5.Attributes as A
 navigationBar :: Maybe (Entity User) -> Html
 navigationBar mUser = H.nav H.! A.class_ "navbar" $ do
   H.div H.! A.class_ "nav-content" $ do
-    -- Add My Finance to the header
     H.div H.! A.class_ "nav-brand" $ do
-      H.a H.! A.href "/" H.! A.class_ "brand-link" $ "My Finance"
+      case mUser of
+        Nothing -> H.a H.! A.href "/" H.! A.class_ "brand-link" $ "My Finance"
+        Just user -> H.a H.! A.href "/dashboard" H.! A.class_ "brand-link" $ "My Finance"
 
     H.ul H.! A.class_ "nav-links" $ do
       H.li $ H.a H.! A.href "/dashboard" $ "Home"
