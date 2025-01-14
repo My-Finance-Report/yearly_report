@@ -19,7 +19,7 @@ import Database.Database
 import Database.Files
 import Database.Models
 import Database.Persist
-import Database.Persist.Postgresql (toSqlKey)
+import Database.Persist.Postgresql (fromSqlKey, toSqlKey)
 import Database.Transaction
 import Database.TransactionSource
 import HtmlGenerators.Components (navigationBar)
@@ -257,15 +257,25 @@ generateDetailRows cat txs sectionId =
           H.th "Kind"
           H.th "Date"
           H.th "Amount"
-        mapM_ (detailRow . entityVal . transaction) txs
+          H.th "Action"
+        mapM_ (\catTrans -> detailRow (entityKey (transaction catTrans)) (entityVal (transaction catTrans))) txs
   where
-    detailRow :: Transaction -> Html
-    detailRow t =
+    detailRow :: TransactionId -> Transaction -> Html
+    detailRow tid t =
       H.tr $ do
         H.td (toHtml (transactionDescription t))
         H.td (toHtml $ show (transactionKind t))
         H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
         H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
+        H.td $ do
+          case transactionUploadedPdfId t of
+            Just pdfId ->
+              H.a
+                ! A.href (H.toValue $ "/transactions/" <> show (fromSqlKey pdfId) <> "#tx-" <> show (fromSqlKey tid))
+                ! A.class_ "btn-edit"
+                $ "Edit"
+            Nothing ->
+              H.span "No PDF ID"
 
 generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
 generateAggregatedRows header aggregated =

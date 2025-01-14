@@ -700,3 +700,8 @@ tr:hover {
   border-radius: 8px;
   margin-bottom: 20px;
 }
+
+.table-row-highlight {
+  background-color: #ffffcc; /* Light yellow */
+  transition: background-color 0.3s ease;
+}

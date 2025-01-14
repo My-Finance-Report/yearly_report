@@ -82,63 +82,65 @@ renderEditableTransactionRow file categoryLookup tx = do
     ! A.method "post"
     ! A.action (toValue $ "/update-transaction/" <> txId)
     $ do
-      H.tr $ do
-        H.td $ toHtml txId
-        H.td $
+      H.tr
+        ! A.id (H.toValue $ "tx-" <> txId)
+        $ do
+          H.td $ toHtml txId
+          H.td $
+            H.input
+              ! A.type_ "text"
+              ! A.name "description"
+              ! A.class_ "full-width"
+              ! A.value (toValue transactionDescription)
+          H.td $
+            H.input
+              ! A.type_ "date"
+              ! A.name "transactionDate"
+              ! A.class_ "full-width"
+              ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
+          H.td $
+            H.input
+              ! A.type_ "number"
+              ! A.step "0.01"
+              ! A.name "amount"
+              ! A.class_ "full-width"
+              ! A.value (toValue $ show transactionAmount)
+          H.td
+            $ H.select
+              ! A.name "kind"
+              ! A.class_ "full-width"
+            $ forM_ [Withdrawal, Deposit]
+            $ \kind -> do
+              H.option
+                ! A.value (toValue $ show kind)
+                ! (if transactionKind == kind then A.selected "selected" else mempty)
+                $ toHtml
+                $ show kind
+          H.td
+            $ H.select
+              ! A.name "category"
+              ! A.class_ "full-width"
+            $ do
+              -- Generate options from allCategories
+              case allCategories of
+                Just categories ->
+                  forM_ categories $ \cat -> do
+                    let currentCatId = fromSqlKey $ entityKey cat
+                        currentCatName = categoryName (entityVal cat)
+                    H.option
+                      ! A.value (toValue currentCatId)
+                      ! (if currentCatId == catId then A.selected "selected" else mempty)
+                      $ toHtml currentCatName
+                Nothing -> H.option ! A.value "" $ "No categories available"
           H.input
-            ! A.type_ "text"
-            ! A.name "description"
-            ! A.class_ "full-width"
-            ! A.value (toValue transactionDescription)
-        H.td $
-          H.input
-            ! A.type_ "date"
-            ! A.name "transactionDate"
-            ! A.class_ "full-width"
-            ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
-        H.td $
-          H.input
-            ! A.type_ "number"
-            ! A.step "0.01"
-            ! A.name "amount"
-            ! A.class_ "full-width"
-            ! A.value (toValue $ show transactionAmount)
-        H.td
-          $ H.select
-            ! A.name "kind"
-            ! A.class_ "full-width"
-          $ forM_ [Withdrawal, Deposit]
-          $ \kind -> do
-            H.option
-              ! A.value (toValue $ show kind)
-              ! (if transactionKind == kind then A.selected "selected" else mempty)
-              $ toHtml
-              $ show kind
-        H.td
-          $ H.select
-            ! A.name "category"
-            ! A.class_ "full-width"
-          $ do
-            -- Generate options from allCategories
-            case allCategories of
-              Just categories ->
-                forM_ categories $ \cat -> do
-                  let currentCatId = fromSqlKey $ entityKey cat
-                      currentCatName = categoryName (entityVal cat)
-                  H.option
-                    ! A.value (toValue currentCatId)
-                    ! (if currentCatId == catId then A.selected "selected" else mempty)
-                    $ toHtml currentCatName
-              Nothing -> H.option ! A.value "" $ "No categories available"
-        H.input
-          ! A.type_ "hidden"
-          ! A.name "fileId"
-          ! A.value (toValue $ fromSqlKey $ entityKey file)
-        H.td $
-          H.input
-            ! A.type_ "submit"
-            ! A.class_ "full-width"
-            ! A.value "Save"
+            ! A.type_ "hidden"
+            ! A.name "fileId"
+            ! A.value (toValue $ fromSqlKey $ entityKey file)
+          H.td $
+            H.input
+              ! A.type_ "submit"
+              ! A.class_ "full-width"
+              ! A.value "Save"
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml
