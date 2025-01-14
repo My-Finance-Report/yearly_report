@@ -28,7 +28,6 @@ renderUploadPage :: TL.Text
 renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
   H.head $ do
     H.title "Upload PDF"
-    H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
   H.body $ do
     H.h1 "Upload a PDF"
     H.form
@@ -47,7 +46,6 @@ renderPdfResultPage filename rawText =
   renderHtml $ H.docTypeHtml $ do
     H.head $ do
       H.title "PDF Upload Result"
-      H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
     H.body $ do
       H.h1 "PDF Uploaded Successfully!"
       H.p $ do

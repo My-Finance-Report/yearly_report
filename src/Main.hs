@@ -32,7 +32,7 @@ import Database.Category
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (seedDatabase, updateUserOnboardingStep)
+import Database.Database (updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -51,6 +51,8 @@ import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.LandingPage
 import HtmlGenerators.Layout (renderPage)
+import HtmlGenerators.OnboardingOne
+import HtmlGenerators.OnboardingTwo
 import HtmlGenerators.RefineSelectionPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
@@ -221,7 +223,6 @@ main = do
           case result of
             Left err -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
             Right user -> do
-              liftIO $ Database.Database.seedDatabase user
               token <- liftIO $ createSession pool (entityKey user)
               Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
               Web.redirect "/dashboard"
@@ -242,7 +243,7 @@ main = do
       Web.html $ renderPage Nothing "My Financial Report" content
 
     get "/onboarding" $ requireUser pool $ \user -> do
-      let currentStep =  userOnboardingStep $ entityVal user
+      let currentStep = userOnboardingStep $ entityVal user
       case currentStep of
         Just 0 -> redirect "/onboarding/step-1"
         Just 1 -> redirect "/onboarding/step-2"
@@ -250,14 +251,25 @@ main = do
         _ -> redirect "/dashboard"
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
-      html "Welcome to step 1 of onboarding!"
+      transactionSources<- liftIO $ getAllTransactionSources user
+      let content = renderOnboardingOne user transactionSources
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-1" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 1)
       redirect "/onboarding/step-2"
 
     get "/onboarding/step-2" $ requireUser pool $ \user -> do
-      html "Welcome to step 2 of onboarding!"
+
+      transactionSources <- liftIO $ getAllTransactionSources user
+      sankeyConfig <- liftIO $ getFirstSankeyConfig user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingTwo user categoriesBySource 
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
 
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 2)
@@ -273,14 +285,13 @@ main = do
     get "/dashboard" $ requireUser pool $ \user -> do
       let onboardingStep = userOnboardingStep $ entityVal user
       case onboardingStep of
-        Just _ -> Web.Scotty.redirect "/onboarding" 
+        Just _ -> Web.Scotty.redirect "/onboarding"
         Nothing -> do
           activeJobs <- liftIO $ readIORef activeJobs
           let banner = if activeJobs > 0 then Just "Job Running" else Nothing
           liftIO $ print banner
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
-
 
     post "/setup-upload" $ requireUser pool $ \user -> do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
@@ -415,7 +426,12 @@ main = do
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
       liftIO $ addTransactionSource user newSource
-      Web.Scotty.redirect "/configuration"
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
 
     post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "id"
@@ -449,7 +465,11 @@ main = do
       let sourceId = toSqlKey $ read sourceIdText
       newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
       liftIO $ addCategory user newCategory sourceId
-      Web.Scotty.redirect "/configuration"
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
 
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"

@@ -26,6 +26,8 @@ library
     HtmlGenerators.Configuration
     HtmlGenerators.AuthPages
     HtmlGenerators.LandingPage
+    HtmlGenerators.OnboardingOne
+    HtmlGenerators.OnboardingTwo
     Auth
     Sankey
     Parsers
@@ -85,6 +87,8 @@ executable year-report-finances
       HtmlGenerators.RefineSelectionPage
       HtmlGenerators.Configuration
       HtmlGenerators.LandingPage
+      HtmlGenerators.OnboardingOne
+      HtmlGenerators.OnboardingTwo
       Auth
       Sankey
       Parsers
