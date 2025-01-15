@@ -28,11 +28,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Batch calls to open ai to make less likely to error out
+  -> increase timeout
 - Sankey currently only allows one intermediate node
 - need to build the example file endpoint, right now it doesnt actually work
 - the adjust page has no margins and is super confusing
   -> can we just remove this all together?
-- the configuration page is just wacky
+
+  - the configuration page is just wacky
+    -> maybe we can reuse elements from onboarding
 
 - consider showing the source we associate with the file before we upload
 - the llm seems bad at getting dates, may need to include more file context

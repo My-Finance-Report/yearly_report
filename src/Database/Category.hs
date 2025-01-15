@@ -3,6 +3,7 @@ module Database.Category
     getCategory,
     getCategoriesBySource,
     addCategory,
+    removeCategory,
     ensureCategoriesExist,
     ensureCategoryExists,
   )
@@ -25,7 +26,7 @@ getCategoriesBySource user sourceId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryCategories pool
   where
-    queryCategories = selectList [CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user] [Asc CategoryId]
+    queryCategories = selectList [CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user, CategoryArchived ==. False] [Asc CategoryId]
 
 getCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> m (Entity Category, Entity TransactionSource)
 getCategory user categoryId = do
@@ -52,9 +53,35 @@ getCategory user categoryId = do
 addCategory :: (MonadUnliftIO m) => Entity User -> Text -> Key TransactionSource -> m (Key Category)
 addCategory user categoryName sourceId = do
   pool <- liftIO getConnectionPool
-  runSqlPool queryAddCategory pool
+  runSqlPool queryAddOrUnarchiveCategory pool
   where
-    queryAddCategory = insert $ Category categoryName sourceId (entityKey user)
+    queryAddOrUnarchiveCategory = do
+      maybeCategory <- getBy $ UniqueCategory categoryName sourceId
+      case maybeCategory of
+        Just (Entity categoryId category)
+          | categoryArchived category -> do
+              -- Unarchive the category
+              update categoryId [CategoryArchived =. False]
+              return categoryId
+        _ -> do
+          -- Insert a new category
+          insert $ Category categoryName sourceId (entityKey user) False
+
+removeCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> m ()
+removeCategory user categoryId = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryArchiveCategory pool
+  where
+    queryArchiveCategory = do
+      maybeCategory <- get categoryId
+      case maybeCategory of
+        Nothing -> liftIO $ putStrLn $ "Category not found: " ++ show (fromSqlKey categoryId)
+        Just category -> do
+          if categoryUserId category /= entityKey user
+            then liftIO $ putStrLn $ "Unauthorized attempt to archive category: " ++ show (fromSqlKey categoryId)
+            else do
+              update categoryId [CategoryArchived =. True]
+              liftIO $ putStrLn $ "Category " ++ show (fromSqlKey categoryId) ++ " archived successfully."
 
 updateCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> Text -> m ()
 updateCategory user categoryId newName = do
@@ -76,18 +103,18 @@ ensureCategoriesExist user sourceId categories = do
   forM_ categories $ \categoryName -> do
     existingCategory <-
       selectFirst
-        [CategoryName ==. categoryName, CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user]
+        [CategoryName ==. categoryName, CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user, CategoryArchived ==. False]
         []
     case existingCategory of
-      Nothing -> insert_ $ Category categoryName sourceId (entityKey user)
+      Nothing -> insert_ $ Category categoryName sourceId (entityKey user) False
       Just _ -> return ()
 
 ensureCategoryExists :: (MonadIO m) => Entity User -> Text -> Key TransactionSource -> ReaderT SqlBackend m (Key Category)
 ensureCategoryExists user catName sourceId = do
   maybeCategory <-
     selectFirst
-      [CategoryName ==. catName, CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user]
+      [CategoryName ==. catName, CategorySourceId ==. sourceId, CategoryUserId ==. entityKey user, CategoryArchived ==. False]
       []
   case maybeCategory of
     Just (Entity categoryId _) -> return categoryId
-    Nothing -> insert $ Category catName sourceId (entityKey user)
+    Nothing -> insert $ Category catName sourceId (entityKey user) False

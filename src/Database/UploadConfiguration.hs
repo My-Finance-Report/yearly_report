@@ -4,9 +4,11 @@ module Database.UploadConfiguration
   ( getAllUploadConfigs,
     getUploadConfiguration,
     addUploadConfiguration,
+    addUploadConfigurationObject,
   )
 where
 
+import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Maybe (listToMaybe)
@@ -51,6 +53,29 @@ addUploadConfiguration user startKeyword endKeyword txnSourceId filenameRegex = 
               uploadConfigurationFilenameRegex = Just filenameRegex,
               uploadConfigurationUserId = entityKey user
             }
+      case result of
+        Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
+        Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)
+
+addUploadConfigurationObject :: (MonadUnliftIO m) => Entity User -> UploadConfiguration -> m ()
+addUploadConfigurationObject user config = do
+  let userIdInConfig = uploadConfigurationUserId config
+  let passedUserId = entityKey user
+
+  when (userIdInConfig /= passedUserId) $
+    error $
+      "User ID mismatch: config userId "
+        ++ show (fromSqlKey userIdInConfig)
+        ++ " does not match passed userId "
+        ++ show (fromSqlKey passedUserId)
+
+  pool <- liftIO getConnectionPool
+  runSqlPool queryPersistUploadConfiguration pool
+  where
+    queryPersistUploadConfiguration = do
+      result <-
+        insertUnique config
+
       case result of
         Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
         Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)

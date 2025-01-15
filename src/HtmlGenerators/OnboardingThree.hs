@@ -42,7 +42,7 @@ renderOnboardingThree user transactionSources =
                     ! A.type_ "file"
                     ! A.name "exampleFile"
                     ! A.id "exampleFile"
-                    ! A.accept "application/pdf" -- Assume PDF files for now
+                    ! A.accept "application/pdf"
                   H.input
                     ! A.type_ "submit"
                     ! A.value "Upload File"

@@ -4,6 +4,7 @@
 module Types
   ( CategorizedTransaction (..),
     AggregatedTransactions,
+    PartialUploadConfig (..),
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
@@ -77,6 +78,12 @@ instance FromJSON TransactionKind
 instance FromJSON Transaction
 
 instance FromJSON TransactionsWrapper
+
+data PartialUploadConfig
+  = PartialUploadConfig {partialFilenameRegex :: Text, partialStartKeyword :: Text, partialEndKeyword :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON PartialUploadConfig
 
 groupByBlah ::
   (Ord t) =>

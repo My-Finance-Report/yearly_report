@@ -48,20 +48,6 @@ input[type="text"] {
   box-sizing: border-box;
 }
 
-input[type="submit"] {
-  background-color: #4CAF50;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-input[type="submit"]:hover {
-  background-color: #45a049;
-}
-
 
 .next-button-container {
   display: flex;
@@ -137,19 +123,9 @@ input[type="submit"]:hover {
   margin-right: 10px; /* Ensure space between the text and button */
 }
 
-.category-card input[type="submit"] {
-  margin-left: 10px; /* Add spacing between text and button */
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 5px 10px;
-}
 
-.category-card input[type="submit"]:hover {
-  background-color: #45a049;
-}
+
+
 
 
 .easy-add h4,
@@ -210,9 +186,31 @@ input[type="submit"]:hover {
   font-size: 14px;
 }
 
+
+
 .btn-submit:hover {
   background-color: #45a049;
 }
+
+
+.btn-delete {
+  background-color: #eb1e1e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+
+
+.btn-delete:hover {
+  background-color: #ad1717;
+}
+
+
+
 
 .next-button-container {
   display: flex;
@@ -299,6 +297,20 @@ input[type="submit"]:hover {
 
 .category-card .btn-submit:hover {
   background-color: #45a049;
+}
+
+.category-card .btn-delete {
+  margin-left: 10px;
+  background-color: #eb1e1e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.category-card .btn-submit:delete {
+  background-color: #ad1717;
 }
 
 .next-button-container {

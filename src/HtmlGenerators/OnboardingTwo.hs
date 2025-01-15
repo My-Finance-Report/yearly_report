@@ -2,14 +2,14 @@
 
 module HtmlGenerators.OnboardingTwo (renderOnboardingTwo) where
 
+import Control.Monad (forM_)
+import Data.Map (Map, toList)
+import Data.Text (Text)
+import Database.Models
+import Database.Persist (Entity (..))
+import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Data.Text (Text)
-import Data.Map (Map, toList)
-import Database.Models
-import Database.Persist.Postgresql (fromSqlKey)
-import Database.Persist (Entity (..))
-import Control.Monad (forM_)
 
 renderOnboardingTwo :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Html
 renderOnboardingTwo user transactions =
@@ -28,22 +28,30 @@ renderOnboardingTwo user transactions =
     H.div ! A.class_ "config-columns" $ do
       forM_ (toList transactions) $ \(Entity sourceId source, categories) -> do
         H.div ! A.class_ "config-column" $ do
-          -- Transaction Source Header
           H.h3 $ toHtml $ transactionSourceName source
 
           -- Existing Categories
           H.div ! A.class_ "category-list" $ do
             forM_ categories $ \(Entity catId cat) -> do
               H.div ! A.class_ "category-card" $ do
-                H.span $ toHtml $ categoryName cat
+                H.form
+                  ! A.class_ "card-content"
+                  ! A.method "post"
+                  ! A.action (toValue $ "/remove-category/" <> show (fromSqlKey catId))
+                  $ do
+                    H.span $ toHtml $ categoryName cat
+                    H.input
+                      ! A.type_ "submit"
+                      ! A.value "-"
+                      ! A.class_ "btn-delete"
 
-          -- Easy Add Categories
           let sourceName = transactionSourceName source
           if sourceName == "Savings Account" || sourceName == "Checking Account"
             then renderEasyAdd sourceId categories ["Income", "Investments", "Credit Card Payments", "Transfers"]
-            else if sourceName == "Credit Card" || sourceName == "Debit Card"
-              then renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]
-              else return () 
+            else
+              if sourceName == "Credit Card" || sourceName == "Debit Card"
+                then renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food"]
+                else return ()
 
           H.div ! A.class_ "category-card" $ do
             H.form
@@ -52,10 +60,11 @@ renderOnboardingTwo user transactions =
               ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
               $ do
                 H.input
-                        ! A.type_ "text"
-                        ! A.name "newCategory"
-                        ! A.placeholder "Category"
-                        ! A.class_ "free-form-input" 
+                  ! A.type_ "text"
+                  ! A.name "newCategory"
+                  ! A.placeholder "Category"
+                  ! A.class_ "free-form-input"
+                  ! A.required "required"
                 H.input
                   ! A.type_ "submit"
                   ! A.value "+"
@@ -79,7 +88,6 @@ renderOnboardingTwo user transactions =
             ! A.type_ "submit"
             ! A.value "Next"
             ! A.class_ "btn-next"
-    
 
 renderEasyAdd :: Key TransactionSource -> [Entity Category] -> [Text] -> Html
 renderEasyAdd sourceId categories easyCategories = do
@@ -87,17 +95,16 @@ renderEasyAdd sourceId categories easyCategories = do
     forM_ easyCategories $ \easyCategory -> do
       let alreadyAdded = any (\(Entity _ cat) -> categoryName cat == easyCategory) categories
       if alreadyAdded
-        then return () 
-        else
-          H.div ! A.class_ "category-card" $ do
-            H.form  
-              ! A.class_ "card-content"
-              ! A.method "post"
-              ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
-              $ do
-                H.span $ toHtml easyCategory
-                H.input
-                  ! A.type_ "hidden"
-                  ! A.name "newCategory"
-                  ! A.value (toValue easyCategory)
-                H.input ! A.type_ "submit" ! A.value "+" ! A.class_ "btn-submit"
+        then return ()
+        else H.div ! A.class_ "category-card" $ do
+          H.form
+            ! A.class_ "card-content"
+            ! A.method "post"
+            ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
+            $ do
+              H.span $ toHtml easyCategory
+              H.input
+                ! A.type_ "hidden"
+                ! A.name "newCategory"
+                ! A.value (toValue easyCategory)
+              H.input ! A.type_ "submit" ! A.value "+" ! A.class_ "btn-submit"

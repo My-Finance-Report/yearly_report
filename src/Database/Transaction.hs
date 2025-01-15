@@ -3,6 +3,7 @@
 module Database.Transaction
   ( updateTransactionCategory,
     getTransactionsByFileId,
+    removeTransaction,
     parseTransactionKind,
     parseTransactionDate,
     groupTransactionsBySource,
@@ -26,6 +27,7 @@ import Database.Models
 import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
+import Database.TransactionSource (getAllTransactionSources)
 import Types
 
 updateTransaction :: (MonadUnliftIO m) => Entity User -> Key Transaction -> Maybe Text -> Maybe UTCTime -> Maybe Double -> Maybe TransactionKind -> Maybe (Key Category) -> m ()
@@ -68,7 +70,8 @@ getTransactionsByFileId user fileId = do
       transactions <-
         selectList
           [ TransactionUploadedPdfId ==. Just fileId,
-            TransactionUserId ==. entityKey user
+            TransactionUserId ==. entityKey user,
+            TransactionArchived ==. False
           ]
           [Asc TransactionId]
 
@@ -142,12 +145,28 @@ addTransaction user txnDescription txnAmount txnKind txnDate uploadedPdfKey txnS
                 transactionTransactionSourceId = txnSourceKey,
                 transactionUploadedPdfId = Just uploadedPdfKey,
                 transactionKind = txnKind,
-                transactionUserId = entityKey user
+                transactionUserId = entityKey user,
+                transactionArchived = False
               }
 
-      -- Insert the transaction and return as Entity
       transactionKey <- insert newTransaction
       return $ Entity transactionKey newTransaction
+
+removeTransaction :: Entity User -> Key Transaction -> IO ()
+removeTransaction user txnId = do
+  pool <- getConnectionPool
+  runSqlPool queryArchiveTransaction pool
+  where
+    queryArchiveTransaction = do
+      maybeTransaction <- get txnId
+      case maybeTransaction of
+        Nothing -> liftIO $ putStrLn $ "Transaction not found: " ++ show (fromSqlKey txnId)
+        Just transaction -> do
+          if transactionUserId transaction /= entityKey user
+            then liftIO $ putStrLn $ "Unauthorized attempt to archive transaction: " ++ show (fromSqlKey txnId)
+            else do
+              update txnId [TransactionArchived =. True]
+              liftIO $ putStrLn $ "Transaction " ++ show (fromSqlKey txnId) ++ " archived successfully."
 
 getAllTransactions :: (MonadUnliftIO m) => Entity User -> m [CategorizedTransaction]
 getAllTransactions user = do
@@ -155,7 +174,7 @@ getAllTransactions user = do
   runSqlPool queryAllTransactions pool
   where
     queryAllTransactions = do
-      transactions <- selectList [TransactionUserId ==. entityKey user] []
+      transactions <- selectList [TransactionUserId ==. entityKey user, TransactionArchived ==. False] []
 
       forM transactions $ \txn -> do
         maybeEntityCategory <- getEntity (transactionCategoryId (entityVal txn))
@@ -182,7 +201,7 @@ groupTransactionsBySource user categorizedTransactions = do
     fetchTransactionSources = do
       let sourceKeys = nub $ Prelude.map (transactionTransactionSourceId . entityVal . transaction) categorizedTransactions
 
-      sources <- selectList [TransactionSourceId <-. sourceKeys, TransactionSourceUserId ==. entityKey user] []
+      sources <- getAllTransactionSources user
 
       let sourceMap = fromList [(entityKey source, source) | source <- sources]
 

@@ -2,12 +2,12 @@
 
 module HtmlGenerators.OnboardingOne (renderOnboardingOne) where
 
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
+import Control.Monad (forM_)
 import Data.Text (Text)
 import Database.Models
 import Database.Persist (Entity (..))
-import Control.Monad (forM_)
+import Text.Blaze.Html5 as H
+import Text.Blaze.Html5.Attributes as A
 
 renderOnboardingOne :: Entity User -> [Entity TransactionSource] -> Html
 renderOnboardingOne user transactionSources =
@@ -18,15 +18,27 @@ renderOnboardingOne user transactionSources =
       H.h1 "Onboarding"
       H.h2 "Step 1 of 3"
       H.h2 "Add an account type"
-      H.p "Each account will have its transactions grouped together. Think Saving Account, Checking Account, Credit Card, etc."
+      H.p "Think Saving Account, Checking Account, Credit Card, etc."
 
     H.div ! A.class_ "card-container" $ do
-
       forM_ transactionSources $ \source -> do
         let txnName = transactionSourceName $ entityVal source
+
         H.div ! A.class_ "card" $ do
           H.h3 $ toHtml txnName
-          H.p "This account type has been added."
+          H.form
+            ! A.method "post"
+            ! A.action "/remove-transaction-source"
+            $ do
+              H.div ! A.class_ "form-group" $ do
+                H.input
+                  ! A.type_ "hidden"
+                  ! A.name "newSource"
+                  ! A.value (toValue txnName)
+              H.input
+                ! A.type_ "submit"
+                ! A.value "Remove"
+                ! A.class_ "btn-delete"
 
       renderPrefilledCard "Credit Card" transactionSources
       renderPrefilledCard "Debit Card" transactionSources
@@ -34,51 +46,47 @@ renderOnboardingOne user transactionSources =
       renderPrefilledCard "Checking Account" transactionSources
 
       H.div ! A.class_ "card" $ do
-        H.h3 "Custom Account Type"
         H.form
           ! A.method "post"
           ! A.action "/add-transaction-source"
           $ do
             H.div ! A.class_ "form-group" $ do
               H.input
-                ! A.type_ "text"
+                ! A.type_ "Text"
+                ! A.placeholder "account name"
                 ! A.name "newSource"
-                ! A.placeholder "Enter a custom account name"
-            H.br
+                ! A.required "required"
             H.input
               ! A.type_ "submit"
-              ! A.value "Add Source"
+              ! A.value "Add"
               ! A.class_ "btn-submit"
 
     H.div ! A.class_ "next-button-container" $ do
-        H.form
-          ! A.method "get"
-          ! A.action "/onboarding/step-2"
-          $ do
-            H.input
-              ! A.type_ "submit"
-              ! A.value "Next"
-              ! A.class_ "btn-next"
+      H.form
+        ! A.method "get"
+        ! A.action "/onboarding/step-2"
+        $ do
+          H.input
+            ! A.type_ "submit"
+            ! A.value "Next"
+            ! A.class_ "btn-next"
 
 renderPrefilledCard :: Text -> [Entity TransactionSource] -> Html
 renderPrefilledCard name transactionSources =
   if name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources
-    then return () 
-    else
-      H.div ! A.class_ "card" $ do
-        H.h3 $ toHtml name
-        H.form
-          ! A.method "post"
-          ! A.action "/add-transaction-source"
-          $ do
-            H.div ! A.class_ "form-group" $ do
-              H.input
-                ! A.type_ "hidden" 
-                ! A.name "newSource"
-                ! A.value (toValue name)
+    then return ()
+    else H.div ! A.class_ "card" $ do
+      H.h3 $ toHtml name
+      H.form
+        ! A.method "post"
+        ! A.action "/add-transaction-source"
+        $ do
+          H.div ! A.class_ "form-group" $ do
             H.input
-              ! A.type_ "submit"
-              ! A.value "Save"
-              ! A.class_ "btn-submit"
-
-
+              ! A.type_ "hidden"
+              ! A.name "newSource"
+              ! A.value (toValue name)
+          H.input
+            ! A.type_ "submit"
+            ! A.value "Add"
+            ! A.class_ "btn-submit"

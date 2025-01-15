@@ -22,12 +22,14 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Lazy (fromStrict)
 import qualified Data.Text.Lazy as TL
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, fromGregorian, parseTimeM, toGregorian)
 import Database.Category
   ( addCategory,
     getCategoriesBySource,
     getCategory,
+    removeCategory,
     updateCategory,
   )
 import Database.Configurations
@@ -43,6 +45,7 @@ import Database.Persist.Postgresql hiding (get)
 import Database.Transaction
 import Database.TransactionSource
 import Database.UploadConfiguration
+import ExampleFileParser
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -457,6 +460,15 @@ main = do
 
       Web.Scotty.redirect redirectTo
 
+    post "/remove-transaction-source" $ requireUser pool $ \user -> do
+      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
+      liftIO $ removeTransactionSource user newSource
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
     post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "id"
       let sourceId = toSqlKey $ read sourceIdText
@@ -495,6 +507,16 @@ main = do
 
       Web.Scotty.redirect redirectTo
 
+    post "/remove-category/:sourceId" $ requireUser pool $ \user -> do
+      sourceIdText <- Web.Scotty.pathParam "sourceId"
+      let sourceId = toSqlKey $ read sourceIdText
+      liftIO $ removeCategory user sourceId
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"
       let catId = toSqlKey $ read catIdText
@@ -514,7 +536,27 @@ main = do
       json sankeyData
 
     get "/api/histogram-data" $ requireUser pool $ \user -> do
-      -- Fetch or compute the histogram data
       transactions <- liftIO $ getAllTransactions user
       histogramData <- generateHistogramData user transactions
       json histogramData
+
+    post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
+      sourceIdText <- Web.Scotty.pathParam "sourceId" :: Web.Scotty.ActionM Text
+      let sourceId = toSqlKey (read $ T.unpack sourceIdText) :: Key TransactionSource
+
+      files <- Web.Scotty.files
+      case lookup "exampleFile" files of
+        Just fileInfo -> do
+          let uploadedBytes = fileContent fileInfo
+          let originalName = decodeUtf8 $ fileName fileInfo
+          let tempFilePath = "/tmp/" <> originalName
+          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+          uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
+          case uploadConfig of
+            Just config -> addUploadConfigurationObject user config
+            Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration from the example file."
+
+          Web.Scotty.text $ "File " <> fromStrict originalName <> " uploaded and processed successfully for source ID: " <> fromStrict sourceIdText
+        Nothing -> do
+          Web.Scotty.text "No file provided in the request"
