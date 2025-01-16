@@ -28,6 +28,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bugs
 
 - Sankey currently only allows one intermediate node
+- consider poor mans analytics by writing visits to the db for now
 
 - the adjust page has no margins and is super confusing
   -> can we just remove this all together?

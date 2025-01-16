@@ -82,5 +82,5 @@ validateSession pool token = do
             Just user -> return $ Just $ Entity (userSessionUserId session) user
 
 deleteSession :: (MonadUnliftIO m) => ConnectionPool -> Text -> m ()
-deleteSession pool token = 
+deleteSession pool token =
   runSqlPool (deleteWhere [UserSessionSessionToken ==. token]) pool

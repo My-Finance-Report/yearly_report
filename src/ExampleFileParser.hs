@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module ExampleFileParser
   ( generateUploadConfiguration,
@@ -21,9 +22,12 @@ generateUploadConfigPrompt pdfContent fileName =
   "look at the following PDF content and filename to determine how we can parse more files in the future. "
     <> "keywords should not contain numbers or random strings, look for things that are stable and likely to be"
     <> "in multiple files. the start and end keywords are so we can isolate that months transactions from the file."
-    <> " including a bit of data before or after the transaction tables is totally fine."
+    <> " including a bit of data before or after the transaction tables is totally fine. for the filename, try to find one word"
+    <> " that might be exclusive"
     <> "filename:"
     <> fileName
+    <> "\n\n\n"
+    <> "content:"
     <> pdfContent
 
 generateSchema :: Value
@@ -68,11 +72,17 @@ generateUploadConfiguration user txnSourceId filePath = do
     Right responseBodyContent -> decodeChatResponse responseBodyContent txnSourceId (entityKey user)
 
 decodeChatResponse :: B.ByteString -> Key TransactionSource -> Key User -> IO (Maybe UploadConfiguration)
-decodeChatResponse responseBodyContent transactionSouceId userId =
+decodeChatResponse responseBodyContent transactionSourceId userId =
   case decode responseBodyContent of
     Just ChatResponse {choices = (ChatChoice {message = ChatMessage {content = innerJson}} : _)} -> do
       case eitherDecode (B.fromStrict $ encodeUtf8 innerJson) of
-        Right PartialUploadConfig {partialFilenameRegex = parsedFilename, partialStartKeyword = parsedStartKeyword, partialEndKeyword = parsedEndKeyword} -> return (Just UploadConfiguration {uploadConfigurationFilenameRegex = Just parsedFilename, uploadConfigurationStartKeyword = Just parsedStartKeyword, uploadConfigurationEndKeyword = Just parsedEndKeyword, uploadConfigurationTransactionSourceId = transactionSouceId, uploadConfigurationUserId = userId})
+        Right PartialUploadConfig {..} -> return $ Just UploadConfiguration
+              { uploadConfigurationFilenameRegex = Just partialFilenameRegex
+              , uploadConfigurationStartKeyword = Just partialStartKeyword
+              , uploadConfigurationEndKeyword = Just partialEndKeyword
+              , uploadConfigurationTransactionSourceId = transactionSourceId
+              , uploadConfigurationUserId = userId
+              }
         Left err -> do
           putStrLn $ "Failed to decode inner JSON: " <> err
           print innerJson

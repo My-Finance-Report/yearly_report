@@ -345,10 +345,12 @@ renderHomePage user banner = do
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
   files <- getSourceFileMappings user
 
-  let updatedBanner =
-        if Data.List.null categorizedTransactions
+  let updatedBanner = case banner of
+        Just existingBanner | not (Prelude.null banner) -> Just existingBanner
+        _ ->
+          if Data.List.null categorizedTransactions
           then Just "You need to add transactions to get started."
-          else banner
+          else Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
   let strictText = generateHomapageHtml updatedBanner tabs

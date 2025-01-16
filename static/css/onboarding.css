@@ -72,7 +72,7 @@ input[type="text"] {
 
 .config-columns {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   gap: 20px;
   flex-wrap: wrap; /* Wrap columns on smaller screens */
   margin-top: 20px;

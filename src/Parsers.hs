@@ -27,12 +27,16 @@ import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)
 import Types
+import Database.Persist.TH (persistUpperCase)
 
-generatePdfParsingPrompt :: Text -> Text
-generatePdfParsingPrompt pdfContent =
+generatePdfParsingPrompt :: Text -> Text-> Text
+generatePdfParsingPrompt pdfContent transactionSourceName =
   "Parse the following PDF content into a JSON array of transactions. "
     <> "structure the dates as MM/DD/YYYY"
-    <> "Each transaction should have the fields: 'transactionDate', 'description', and 'amount'.\n\n"
+    <> "Each transaction should have the fields: 'transactionDate', 'description', 'kind' and 'amount'\n\n"
+    <> "For banks, withdrawal and deposit should be clear. for credit cards and debit cards, we consider a purchase"
+    <> "to be a withdrawal and a payment on the card to be a deposit. This file is for a "
+    <> transactionSourceName <> "\n\n\n"
     <> pdfContent
 
 -- TODO really we want to unify this with the type that we are parsing into in the api call
@@ -77,9 +81,9 @@ generateTransactionSchema =
           ]
     ]
 
-parseRawTextToJson :: Text -> IO (Maybe [PartialTransaction])
-parseRawTextToJson pdfContent = do
-  let inputPrompt = generatePdfParsingPrompt pdfContent
+parseRawTextToJson :: Text ->Text-> IO (Maybe [PartialTransaction])
+parseRawTextToJson pdfContent transactionSourceName= do
+  let inputPrompt = generatePdfParsingPrompt pdfContent transactionSourceName
   let schema = generateTransactionSchema
 
   let messages = [ChatMessage {role = "user", content = inputPrompt}]
@@ -120,8 +124,8 @@ trimLeadingText pdfText keyword =
   case keyword of
     Just key ->
       let (_, afterTransactions) = T.breakOn key pdfText
-       in T.drop (T.length key) afterTransactions -- Drop the keyword itself
-    Nothing -> pdfText -- If no keyword, return the original text
+       in T.drop (T.length key) afterTransactions 
+    Nothing -> pdfText 
 
 trimTrailingText :: Text -> Maybe Text -> Text
 trimTrailingText pdfText keyword =
@@ -129,13 +133,13 @@ trimTrailingText pdfText keyword =
     Just key ->
       let (beforeTransactions, _) = T.breakOn key pdfText
        in beforeTransactions
-    Nothing -> pdfText -- If no keyword, return the original text
+    Nothing -> pdfText
 
 extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
 extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
   let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
-  parsedTransactions <- parseRawTextToJson trimmedLines
+  parsedTransactions <- parseRawTextToJson trimmedLines (transactionSourceName transactionSource)
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions

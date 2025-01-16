@@ -26,8 +26,8 @@ getAllUploadConfigs user = do
   where
     queryUploadConfigs = selectList [UploadConfigurationUserId ==. entityKey user] [Asc UploadConfigurationTransactionSourceId]
 
-getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> m (Maybe (Entity UploadConfiguration))
-getUploadConfiguration user filename = do
+getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> m (Maybe (Entity UploadConfiguration))
+getUploadConfiguration user filename rawText = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUploadConfiguration pool
   where
@@ -35,7 +35,7 @@ getUploadConfiguration user filename = do
       results <-
         rawSql
           "SELECT ?? FROM upload_configuration WHERE ? ~* filename_regex AND user_id = ?"
-          [toPersistValue filename, toPersistValue (entityKey user)]
+          [toPersistValue (filename <> rawText), toPersistValue (entityKey user)]
       return $ listToMaybe results
 
 addUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Key TransactionSource -> Text -> m ()

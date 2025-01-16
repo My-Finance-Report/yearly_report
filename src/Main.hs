@@ -283,7 +283,8 @@ main = do
 
     get "/onboarding/step-3" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
-      let content = renderOnboardingThree user transactionSources
+      uploadConfigs <- liftIO $ getAllUploadConfigs user
+      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs)
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-3" $ requireUser pool $ \user -> do
@@ -311,8 +312,7 @@ main = do
         Just _ -> Web.Scotty.redirect "/onboarding"
         Nothing -> do
           activeJobs <- liftIO $ readIORef activeJobs
-          let banner = if activeJobs > 0 then Just "Job Running" else Nothing
-          liftIO $ print banner
+          let banner = if activeJobs > 0 then Just "Job running, check back soon!" else Nothing
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
@@ -346,7 +346,7 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              maybeConfig <- liftIO $ getUploadConfiguration user originalName
+              maybeConfig <- liftIO $ getUploadConfiguration user originalName rawText
 
               liftIO $ print $ show maybeConfig
 
@@ -557,6 +557,10 @@ main = do
             Just config -> addUploadConfigurationObject user config
             Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration from the example file."
 
-          Web.Scotty.text $ "File " <> fromStrict originalName <> " uploaded and processed successfully for source ID: " <> fromStrict sourceIdText
+          referer <- Web.Scotty.header "Referer"
+          let redirectTo = fromMaybe "/dashboard" referer
+          Web.Scotty.redirect redirectTo
+
+
         Nothing -> do
           Web.Scotty.text "No file provided in the request"
