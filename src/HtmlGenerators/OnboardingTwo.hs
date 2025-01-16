@@ -11,18 +11,31 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-renderOnboardingTwo :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Html
-renderOnboardingTwo user transactions =
-  H.body $ do
+renderOnboardingTwo :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Bool-> Html
+renderOnboardingTwo user transactions isOnboarding=
+  let nextUrl = if isOnboarding
+                  then "/onboarding/step-3"
+                  else "/add-account/step-3"
+      prevUrl = if isOnboarding
+                  then "/onboarding/step-1"
+                  else "/add-account/step-1"
+      method = if isOnboarding
+                  then "post"
+                  else "get"
+
+  in H.body $ do
     -- Include the CSS for onboarding
     H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
 
     -- Page Header
     H.div ! A.class_ "page-header" $ do
-      H.h1 "Onboarding"
-      H.h2 "Step 2 of 3"
+      case isOnboarding of
+        True -> do
+              H.h1 "Onboarding"
+              H.h2 "Step 2 of 3"
+        False -> return ()
       H.h2 "Create Categories"
-      H.p "Organize your transactions by adding categories to each account type."
+      H.p "Add categories for each account type."
 
     -- Config Section: Columns for Each Transaction Source
     H.div ! A.class_ "config-columns" $ do
@@ -72,8 +85,8 @@ renderOnboardingTwo user transactions =
 
     H.div ! A.class_ "button-container" $ do
       H.form
-        ! A.method "get"
-        ! A.action "/onboarding/step-1"
+        ! A.method method
+        ! A.action prevUrl
         $ do
           H.input
             ! A.type_ "submit"
@@ -81,8 +94,8 @@ renderOnboardingTwo user transactions =
             ! A.class_ "btn-next"
 
       H.form
-        ! A.method "post"
-        ! A.action "/onboarding/step-2"
+        ! A.method method
+        ! A.action nextUrl
         $ do
           H.input
             ! A.type_ "submit"

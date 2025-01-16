@@ -11,18 +11,30 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Database.Persist (Entity (..))
 import Control.Monad (forM_)
 
+  
+renderOnboardingThree :: Entity User -> [Entity TransactionSource] -> [UploadConfiguration] -> Bool-> Html
+renderOnboardingThree user transactionSources uploadConfigurations isOnboarding=
+  let nextUrl = if isOnboarding
+                  then "/onboarding/step-3"
+                  else "/dashboard"
+      prevUrl = if isOnboarding
+                  then "/onboarding/step-2"
+                  else "/add-account/step-2"
+      method = if isOnboarding
+                  then "post"
+                  else "get"
 
-renderOnboardingThree :: Entity User -> [Entity TransactionSource] -> [UploadConfiguration] -> Html
-renderOnboardingThree user transactionSources uploadConfigurations =
-  H.body $ do
+  in H.body $ do
     H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
 
     H.div ! A.class_ "page-header" $ do
-      H.h1 "Onboarding"
-      H.h2 "Step 3 of 3"
-      H.h2 "Upload Example Files"
-      H.p "Help us understand how to parse transactions for each of your account types by uploading an example file."
-      H.h3 "You will only have to do this once, and you can do it later!"
+      case isOnboarding of
+        True -> do
+              H.h1 "Onboarding"
+              H.h2 "Step 3 of 3"
+        False -> return ()
+      H.h2 "Upload Example File"
+      H.p "We use this file to determine how to process future files for this account"
 
     H.div ! A.class_ "config-columns" $ do
       forM_ transactionSources $ \(Entity sourceId source) -> do
@@ -52,8 +64,8 @@ renderOnboardingThree user transactionSources uploadConfigurations =
 
     H.div ! A.class_ "button-container" $ do
       H.form
-        ! A.method "get"
-        ! A.action "/onboarding/step-2"
+        ! A.method method
+        ! A.action prevUrl
         $ do
           H.input
             ! A.type_ "submit"
@@ -61,8 +73,8 @@ renderOnboardingThree user transactionSources uploadConfigurations =
             ! A.class_ "btn-next"
 
       H.form
-        ! A.method "post"
-        ! A.action "/onboarding/step-3"
+        ! A.method method
+        ! A.action nextUrl
         $ do
           H.input
             ! A.type_ "submit"

@@ -126,20 +126,11 @@ generateProcessedFilesComponent processedFiles = do
         H.tr $ do
           H.th "Transaction Source"
           H.th "Filenames"
-          H.th "Actions"
         forM_ processedFiles $ \mapping -> do
           forM_ (handledFiles mapping) $ \filename -> do
             H.tr $ do
               H.td (toHtml (transactionSourceName $ entityVal (Types.source mapping)))
               H.td (toHtml filename)
-              H.td $ do
-                H.form
-                  ! A.method "post"
-                  ! A.action (toValue $ "/delete-processed-file?filename=" <> T.unpack filename)
-                  $ do
-                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ show $ entityKey (Types.source mapping))
-                    H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
-                    H.input ! A.type_ "submit" ! A.value "Delete"
 
 generateHistogramDiv :: Html
 generateHistogramDiv =
@@ -235,6 +226,9 @@ generateUpload =
             ! A.type_ "submit"
             ! A.class_ "btn upload-btn"
             $ "Upload"
+
+
+
 
 generateAggregateRow :: T.Text -> Double -> T.Text -> Html
 generateAggregateRow cat totalAmt sectionId =

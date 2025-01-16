@@ -58,7 +58,6 @@ import HtmlGenerators.OnboardingFour
 import HtmlGenerators.OnboardingOne
 import HtmlGenerators.OnboardingThree
 import HtmlGenerators.OnboardingTwo
-import HtmlGenerators.RefineSelectionPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -261,8 +260,14 @@ main = do
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
-      let content = renderOnboardingOne user transactionSources
+      let content = renderOnboardingOne user transactionSources True
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-1" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      let content = renderOnboardingOne user transactionSources False
+      Web.Scotty.html $ renderPage (Just user) "Add Account" content
+
 
     post "/onboarding/step-1" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 1)
@@ -274,8 +279,19 @@ main = do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
         return $ Map.fromList $ zip transactionSources categories
 
-      let content = renderOnboardingTwo user categoriesBySource
+      let content = renderOnboardingTwo user categoriesBySource True
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-2" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingTwo user categoriesBySource False
+      Web.Scotty.html $ renderPage (Just user) "Add Account" content
+
+
 
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 2)
@@ -284,7 +300,13 @@ main = do
     get "/onboarding/step-3" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
       uploadConfigs <- liftIO $ getAllUploadConfigs user
-      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs)
+      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) True
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-3" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      uploadConfigs <- liftIO $ getAllUploadConfigs user
+      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-3" $ requireUser pool $ \user -> do
@@ -364,17 +386,9 @@ main = do
                   redirect "/dashboard"
                 Nothing -> do
                   newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
+                  content <- liftIO $ renderHomePage user (Just "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
+                  Web.html $ renderPage (Just user) "Dashboard" content
 
-    get "/adjust-transactions/:pdfId" $ requireUser pool $ \user -> do
-      pdfIdText <- Web.Scotty.pathParam "pdfId"
-
-      let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
-      transactionSources <- liftIO $ getAllTransactionSources user
-      uploadedPdf <- liftIO $ getPdfRecord user pdfId
-      let segments = T.splitOn "\n" (uploadedPdfRawContent $ entityVal uploadedPdf)
-
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename $ entityVal uploadedPdf) segments transactionSources
 
     get "/help" $ do
       pool <- liftIO getConnectionPool
@@ -507,15 +521,27 @@ main = do
 
       Web.Scotty.redirect redirectTo
 
-    post "/remove-category/:sourceId" $ requireUser pool $ \user -> do
-      sourceIdText <- Web.Scotty.pathParam "sourceId"
-      let sourceId = toSqlKey $ read sourceIdText
-      liftIO $ removeCategory user sourceId
+    post "/remove-category/:catId" $ requireUser pool $ \user -> do
+      catIdText <- Web.Scotty.pathParam "catId"
+      let catId = toSqlKey $ read catIdText
+      liftIO $ removeCategory user catId
 
       referer <- Web.Scotty.header "Referer"
       let redirectTo = fromMaybe "/dashboard" referer
 
       Web.Scotty.redirect redirectTo
+
+    post "/remove-transaction/:tId" $ requireUser pool $ \user -> do
+      tIdText <- Web.Scotty.pathParam "tId"
+      let tId = toSqlKey $ read tIdText
+      liftIO $ removeTransaction user tId
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
+
 
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"
@@ -564,3 +590,5 @@ main = do
 
         Nothing -> do
           Web.Scotty.text "No file provided in the request"
+
+      
