@@ -255,7 +255,6 @@ main = do
         Just 0 -> redirect "/onboarding/step-1"
         Just 1 -> redirect "/onboarding/step-2"
         Just 2 -> redirect "/onboarding/step-3"
-        Just 3 -> redirect "/onboarding/step-4"
         _ -> redirect "/dashboard"
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
@@ -274,6 +273,7 @@ main = do
       redirect "/onboarding/step-2"
 
     get "/onboarding/step-2" $ requireUser pool $ \user -> do
+      liftIO $ print "we are in step 2"
       transactionSources <- liftIO $ getAllTransactionSources user
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
@@ -291,11 +291,10 @@ main = do
       let content = renderOnboardingTwo user categoriesBySource False
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
-
-
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
+
       liftIO $ updateUserOnboardingStep user (Just 2)
-      redirect "/onboarding/step-3"
+      redirect "/onboarding/step-2"
 
     get "/onboarding/step-3" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -310,10 +309,8 @@ main = do
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-3" $ requireUser pool $ \user -> do
-      -- liftIO $ updateUserOnboardingStep user (Just 3)
-      -- for now, now step 4 in the onboarding
       liftIO $ updateUserOnboardingStep user Nothing
-      redirect "/dashboard"
+      redirect "/onboarding/step-3"
 
     get "/onboarding/step-4" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -334,7 +331,7 @@ main = do
         Just _ -> Web.Scotty.redirect "/onboarding"
         Nothing -> do
           activeJobs <- liftIO $ readIORef activeJobs
-          let banner = if activeJobs > 0 then Just "Job running, check back soon!" else Nothing
+          let banner = if activeJobs > 0 then Just "Processing transactions, check back soon!" else Nothing
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 

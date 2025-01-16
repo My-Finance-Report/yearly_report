@@ -85,7 +85,7 @@ renderOnboardingTwo user transactions isOnboarding=
 
     H.div ! A.class_ "button-container" $ do
       H.form
-        ! A.method method
+        ! A.method "get"
         ! A.action prevUrl
         $ do
           H.input

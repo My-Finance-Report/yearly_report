@@ -15,7 +15,7 @@ import Control.Monad (forM_)
 renderOnboardingThree :: Entity User -> [Entity TransactionSource] -> [UploadConfiguration] -> Bool-> Html
 renderOnboardingThree user transactionSources uploadConfigurations isOnboarding=
   let nextUrl = if isOnboarding
-                  then "/onboarding/step-3"
+                  then "/onboarding/step-4"
                   else "/dashboard"
       prevUrl = if isOnboarding
                   then "/onboarding/step-2"

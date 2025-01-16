@@ -141,7 +141,7 @@ addTransaction user txnDescription txnAmount txnKind txnDate uploadedPdfKey txnS
               { transactionDescription = txnDescription,
                 transactionCategoryId = categoryKey,
                 transactionDateOfTransaction = txnDate,
-                transactionAmount = txnAmount,
+                transactionAmount = abs txnAmount,
                 transactionTransactionSourceId = txnSourceKey,
                 transactionUploadedPdfId = Just uploadedPdfKey,
                 transactionKind = txnKind,

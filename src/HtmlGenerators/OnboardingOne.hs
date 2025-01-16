@@ -79,9 +79,9 @@ newSourceComponent transactionSources includeDefaults=
 renderOnboardingOne :: Entity User -> [Entity TransactionSource] -> Bool -> Html
 renderOnboardingOne user transactionSources isOnboarding=
   let nextUrl = if isOnboarding 
-                  then "/onboarding/step-2" 
+                  then "/onboarding/step-2"
                   else "/add-account/step-2"
-      method = if isOnboarding 
+      method = if isOnboarding
                   then "post" 
                   else "get"
 
