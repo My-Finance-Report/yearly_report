@@ -57,19 +57,18 @@ renderLandingPage =
         H.h2 ! A.class_ "subtag" $ "Simple personal finance for just $2/month or $20/year."
 
       H.div ! A.class_ "features-section" $ do
-        H.div ! A.class_ "landing-page-cards-container" $ do
+        H.div ! A.class_ "cards-container" $ do
           featureCard "Upload Transactions" "Automatically pull transactions from your bank statements"
           featureCard "Categorize Expenses" "Automatically categorize all your expenses"
           featureCard "See The Money Flow" "Understand where your money is actually going!"
 
         H.div ! A.class_ "cta-section" $ do
-          H.h3 "Explore the sandbox"
-          H.p "or  to sign up if our sales pitch sold you"
+          H.h3 "Try it in the sandbox!"
           H.div ! A.class_ "button-group" $ do
             H.button
               ! A.class_ "explore-btn"
               ! A.onclick "window.location.href='/demo-account'"
-              $ "Explore"
+              $ "Try it"
             H.button
               ! A.class_ "login-btn"
               ! A.onclick "window.location.href='/login'"
