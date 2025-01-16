@@ -355,6 +355,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
 
 renderHomePage :: Entity User -> Maybe Text -> IO Html
 renderHomePage user banner = do
+
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
@@ -368,5 +369,5 @@ renderHomePage user banner = do
           else Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
-  let strictText = generateHomapageHtml updatedBanner tabs
+  let strictText = generateHomapageHtml updatedBanner tabs 
   return strictText

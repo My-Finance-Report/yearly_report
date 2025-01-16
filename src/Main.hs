@@ -17,6 +17,7 @@ import Data.List (nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
+import Control.Exception (throwIO)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
@@ -165,12 +166,12 @@ requireUser :: ConnectionPool -> (Entity User -> ActionM ()) -> ActionM ()
 requireUser pool action = do
   mToken <- getTokenFromRequest
   case mToken of
-    Nothing -> Web.Scotty.redirect "/login" -- Redirect if no token
+    Nothing -> Web.Scotty.redirect "/login"
     Just token -> do
       mUser <- liftIO $ validateSession pool $ TL.toStrict token
       case mUser of
-        Nothing -> Web.Scotty.redirect "/login" -- Redirect if token invalid
-        Just user -> action user -- Pass the user entity to the action
+        Nothing -> Web.Scotty.redirect "/login"
+        Just user -> action user
 
 getCurrentUser :: ConnectionPool -> ActionM (Maybe (Entity User))
 getCurrentUser pool = do
@@ -178,6 +179,16 @@ getCurrentUser pool = do
   case mToken of
     Nothing -> return Nothing
     Just token -> liftIO $ validateSession pool $ TL.toStrict token
+
+
+getDemoUser :: (MonadUnliftIO m) => m (Entity User)
+getDemoUser = do
+  pool <- liftIO getConnectionPool
+  result <- runSqlPool queryDemoUser pool
+  liftIO $ maybe (throwIO $ userError "Demo user not found!") pure result
+  where
+    demoId = toSqlKey $ read "1"
+    queryDemoUser = selectFirst [UserId ==. demoId] []
 
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
@@ -325,6 +336,11 @@ main = do
       liftIO $ updateUserOnboardingStep user Nothing
       redirect "/dashboard"
 
+    get "/demo-account" $ do
+        demoUser <- getDemoUser
+        content <- liftIO $ renderHomePage demoUser  (Just "You are in a demo account")
+        Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
+
     get "/dashboard" $ requireUser pool $ \user -> do
       let onboardingStep = userOnboardingStep $ entityVal user
       case onboardingStep of
@@ -436,7 +452,6 @@ main = do
       (linkageCategory, _) <- liftIO $ getCategory user (toSqlKey (read linkageCategoryId))
       linkageTarget <- liftIO $ getTransactionSource user (toSqlKey (read linkageTargetId))
 
-      -- Assuming rawInputs is created earlier, e.g., by zipping or combining sources and categories
       let rawInputs = zip inputTransactionSources inputCategories
           inputs = Prelude.map (\(source, (category, _)) -> (source, category)) rawInputs
           linkages = (linkageSource, linkageCategory, linkageTarget)
@@ -563,6 +578,25 @@ main = do
       histogramData <- generateHistogramData user transactions
       json histogramData
 
+    get "/demo/api/sankey-data" $  do
+
+      user <- getDemoUser
+      categorizedTransactions <- liftIO $ getAllTransactions user
+      gbs <- groupTransactionsBySource user categorizedTransactions
+
+      sankeyConfig <- liftIO $ getFirstSankeyConfig user
+      let sankeyData = case sankeyConfig of
+            Just config -> Just (generateSankeyData gbs config)
+            Nothing -> Nothing
+
+      json sankeyData
+
+    get "/demo/api/histogram-data" $ do
+      user <- getDemoUser
+      transactions <- liftIO $ getAllTransactions user
+      histogramData <- generateHistogramData user transactions
+      json histogramData
+
     post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "sourceId" :: Web.Scotty.ActionM Text
       let sourceId = toSqlKey (read $ T.unpack sourceIdText) :: Key TransactionSource
@@ -588,4 +622,3 @@ main = do
         Nothing -> do
           Web.Scotty.text "No file provided in the request"
 
-      

@@ -647,15 +647,16 @@ tr:hover {
 }
 
 .cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  align-items: center;
+  flex: 1;
   gap: 20px;
-  margin-top: 20px;
 }
 
 .card {
   background-color: #f9f9f9;
   border: 1px solid #ddd;
+  flex: 1;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

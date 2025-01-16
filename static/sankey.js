@@ -2,8 +2,14 @@ document.addEventListener("DOMContentLoaded", function () {
   google.charts.load("current", { packages: ["sankey"] });
   google.charts.setOnLoadCallback(fetchAndDrawSankey);
 
+
   function fetchAndDrawSankey() {
-    fetch("/api/sankey-data")
+      const apiEndpoint = window.location.pathname.includes('/demo-account')
+          ? '/demo/api/sankey-data'
+          : '/api/sankey-data';
+
+
+    fetch(apiEndpoint)
       .then((response) => response.json())
       .then((data) => drawSankey(data))
       .catch((error) => {

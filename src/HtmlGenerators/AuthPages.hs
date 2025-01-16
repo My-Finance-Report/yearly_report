@@ -31,10 +31,8 @@ renderLoginPage errorMsg =
             H.label ! A.for "login-password" $ "Password"
             H.input ! A.type_ "password" ! A.name "password" ! A.id "login-password" ! A.class_ "form-control"
           H.button ! A.type_ "submit" ! A.class_ "btn btn-primary" $ "Login"
-      
       H.div ! A.class_ "auth-divider" $ do
-        H.span "or"
-      
+        H.span ""
       H.div ! A.class_ "auth-section" $ do
         H.h1 "Create Account"
         H.form ! A.method "post" ! A.action "/register" $ do

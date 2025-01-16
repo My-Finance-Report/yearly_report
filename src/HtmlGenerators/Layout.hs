@@ -23,6 +23,10 @@ renderPage mUser pageTitle content =
         ! A.rel "stylesheet"
         ! A.type_ "text/css"
         ! A.href "/css/navbar.css"
+      H.link
+        ! A.rel "stylesheet"
+        ! A.type_ "text/css"
+        ! A.href "/css/landing.css"
 
       H.script ! A.type_ "text/javascript" ! A.src "/allPages.js" $ mempty
     H.body $ do

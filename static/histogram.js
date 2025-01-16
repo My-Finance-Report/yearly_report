@@ -2,7 +2,12 @@ google.charts.load('current', { packages: ['corechart'] });
 google.charts.setOnLoadCallback(fetchAndDrawHistogram);
 
 function fetchAndDrawHistogram() {
-  fetch('/api/histogram-data')
+   const apiEndpoint = window.location.pathname.includes('/demo-account')
+        ? '/demo/api/histogram-data'
+        : '/api/histogram-data';
+
+
+  fetch(apiEndpoint)
     .then((response) => response.json())
     .then((data) => {
       if (!data || !data.rowHeaders || data.rowHeaders.length === 0) {

@@ -15,12 +15,11 @@ navigationBar mUser = H.nav H.! A.class_ "navbar" $ do
   H.div H.! A.class_ "nav-content" $ do
     H.div H.! A.class_ "nav-brand" $ do
       case mUser of
-        Nothing -> H.a H.! A.href "/" H.! A.class_ "brand-link" $ "My Finance"
-        Just user -> H.a H.! A.href "/dashboard" H.! A.class_ "brand-link" $ "My Finance"
+        Nothing -> H.a H.! A.href "/" H.! A.class_ "brand-link" $ "My Financé"
+        Just user -> H.a H.! A.href "/dashboard" H.! A.class_ "brand-link" $ "My Financé"
 
     H.ul H.! A.class_ "nav-links" $ do
       H.li $ H.a H.! A.href "/dashboard" $ "Home"
-      H.li $ H.a H.! A.href "/configuration" $ "Configuration"
       H.li $ H.a H.! A.href "/help" $ "Help Me!"
 
     H.div H.! A.class_ "nav-user" $ do
