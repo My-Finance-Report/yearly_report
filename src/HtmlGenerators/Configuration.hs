@@ -12,6 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Database.Models
 import Database.Persist
+import HtmlGenerators.OnboardingOne
 import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
@@ -223,7 +224,7 @@ renderUploadConfigurationsPage configurations transactionSources =
 
           H.form
             ! A.method "post"
-            ! A.action (toValue $ "/merge-upload-crConf/" <> show (fromSqlKey configId))
+            ! A.action (toValue $ "/merge-upload-config/" <> show (fromSqlKey configId))
             $ H.td
             $ H.input ! A.type_ "submit" ! A.value "Merge"
 
@@ -275,6 +276,8 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
     H.div ! A.class_ "container" $ do
       H.h1 "Configuration Page"
 
+      newSourceComponent transactionSources False
+
       -- Upload Configurations Section
       H.div ! A.class_ "config-section" $ do
         renderUploadConfigurationsPage uploaderConfigs transactionSources
@@ -282,6 +285,7 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
       -- Sankey Configuration Section
       H.div ! A.class_ "config-section" $ do
         renderEditSankeyConfigPage sankeyConfig transactions
+
 
       -- Transaction Sources Section
       H.div ! A.class_ "config-section" $ do

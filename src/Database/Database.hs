@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Database.Database (seedDatabase) where
+module Database.Database (seedDatabase, updateUserOnboardingStep) where
 
 import Control.Monad.IO.Class (liftIO)
 import Database.Category
@@ -36,3 +36,10 @@ seedDatabase user = do
         liftIO $ putStrLn "Database seeded successfully!"
     )
     pool
+
+updateUserOnboardingStep :: Entity User -> Maybe Int -> IO ()
+updateUserOnboardingStep user step = do
+  pool <- getConnectionPool
+  runSqlPool (updateUserStep user step) pool
+  where
+    updateUserStep user step = update (entityKey user) [UserOnboardingStep =. step]

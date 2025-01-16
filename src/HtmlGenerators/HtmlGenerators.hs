@@ -4,6 +4,7 @@
 module HtmlGenerators.HtmlGenerators
   ( renderTransactionsPage,
     renderUploadPage,
+    renderSupportPage,
     renderPdfResultPage,
   )
 where
@@ -28,7 +29,6 @@ renderUploadPage :: TL.Text
 renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
   H.head $ do
     H.title "Upload PDF"
-    H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
   H.body $ do
     H.h1 "Upload a PDF"
     H.form
@@ -42,12 +42,19 @@ renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
         H.br
         H.input H.! A.type_ "submit" H.! A.value "Upload"
 
+renderSupportPage :: Html
+renderSupportPage =
+  H.body $ do
+    H.div ! A.class_ "container" $ do
+      H.h1 "Support"
+      H.p $ do
+        "If you need assistance, please reach out to me via email: mcarroll1220@gmail.com"
+
 renderPdfResultPage :: Text -> Text -> TL.Text
 renderPdfResultPage filename rawText =
   renderHtml $ H.docTypeHtml $ do
     H.head $ do
       H.title "PDF Upload Result"
-      H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/static/css/navbar.css"
     H.body $ do
       H.h1 "PDF Uploaded Successfully!"
       H.p $ do
@@ -84,63 +91,77 @@ renderEditableTransactionRow file categoryLookup tx = do
     ! A.method "post"
     ! A.action (toValue $ "/update-transaction/" <> txId)
     $ do
-      H.tr $ do
-        H.td $ toHtml txId
-        H.td $
+      H.tr
+        ! A.id (H.toValue $ "tx-" <> txId)
+        $ do
+          H.td $ toHtml txId
+          H.td $
+            H.input
+              ! A.type_ "text"
+              ! A.name "description"
+              ! A.class_ "full-width"
+              ! A.value (toValue transactionDescription)
+          H.td $
+            H.input
+              ! A.type_ "date"
+              ! A.name "transactionDate"
+              ! A.class_ "full-width"
+              ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
+          H.td $
+            H.input
+              ! A.type_ "number"
+              ! A.step "0.01"
+              ! A.name "amount"
+              ! A.class_ "full-width"
+              ! A.value (toValue $ show transactionAmount)
+          H.td
+            $ H.select
+              ! A.name "kind"
+              ! A.class_ "full-width"
+            $ forM_ [Withdrawal, Deposit]
+            $ \kind -> do
+              H.option
+                ! A.value (toValue $ show kind)
+                ! (if transactionKind == kind then A.selected "selected" else mempty)
+                $ toHtml
+                $ show kind
+          H.td
+            $ H.select
+              ! A.name "category"
+              ! A.class_ "full-width"
+            $ do
+              -- Generate options from allCategories
+              case allCategories of
+                Just categories ->
+                  forM_ categories $ \cat -> do
+                    let currentCatId = fromSqlKey $ entityKey cat
+                        currentCatName = categoryName (entityVal cat)
+                    H.option
+                      ! A.value (toValue currentCatId)
+                      ! (if currentCatId == catId then A.selected "selected" else mempty)
+                      $ toHtml currentCatName
+                Nothing -> H.option ! A.value "" $ "No categories available"
           H.input
-            ! A.type_ "text"
-            ! A.name "description"
-            ! A.class_ "full-width"
-            ! A.value (toValue transactionDescription)
-        H.td $
-          H.input
-            ! A.type_ "date"
-            ! A.name "transactionDate"
-            ! A.class_ "full-width"
-            ! A.value (toValue $ formatMonthYear transactionDateOfTransaction)
-        H.td $
-          H.input
-            ! A.type_ "number"
-            ! A.step "0.01"
-            ! A.name "amount"
-            ! A.class_ "full-width"
-            ! A.value (toValue $ show transactionAmount)
-        H.td
-          $ H.select
-            ! A.name "kind"
-            ! A.class_ "full-width"
-          $ forM_ [Withdrawal, Deposit]
-          $ \kind -> do
-            H.option
-              ! A.value (toValue $ show kind)
-              ! (if transactionKind == kind then A.selected "selected" else mempty)
-              $ toHtml
-              $ show kind
-        H.td
-          $ H.select
-            ! A.name "category"
-            ! A.class_ "full-width"
-          $ do
-            -- Generate options from allCategories
-            case allCategories of
-              Just categories ->
-                forM_ categories $ \cat -> do
-                  let currentCatId = fromSqlKey $ entityKey cat
-                      currentCatName = categoryName (entityVal cat)
-                  H.option
-                    ! A.value (toValue currentCatId)
-                    ! (if currentCatId == catId then A.selected "selected" else mempty)
-                    $ toHtml currentCatName
-              Nothing -> H.option ! A.value "" $ "No categories available"
-        H.input
-          ! A.type_ "hidden"
-          ! A.name "fileId"
-          ! A.value (toValue $ fromSqlKey $ entityKey file)
-        H.td $
-          H.input
-            ! A.type_ "submit"
-            ! A.class_ "full-width"
-            ! A.value "Save"
+            ! A.type_ "hidden"
+            ! A.name "fileId"
+            ! A.value (toValue $ fromSqlKey $ entityKey file)
+          H.td $ do
+            H.input
+              ! A.type_ "submit"
+              ! A.class_ "full-width"
+              ! A.value "Save"
+
+            H.form
+              ! A.method "post"
+              ! A.action (toValue $ "/remove-transaction/" <> txId)
+              $ do
+                H.div ! A.class_ "form-group" $ do
+                  H.input
+                    ! A.type_ "submit"
+                    ! A.value "Delete"
+                    ! A.class_ "full-width"
+
+
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml

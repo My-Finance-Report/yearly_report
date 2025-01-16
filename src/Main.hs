@@ -22,17 +22,19 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Lazy (fromStrict)
 import qualified Data.Text.Lazy as TL
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, fromGregorian, parseTimeM, toGregorian)
 import Database.Category
   ( addCategory,
     getCategoriesBySource,
     getCategory,
+    removeCategory,
     updateCategory,
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (seedDatabase)
+import Database.Database (updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -43,14 +45,19 @@ import Database.Persist.Postgresql hiding (get)
 import Database.Transaction
 import Database.TransactionSource
 import Database.UploadConfiguration
+import ExampleFileParser
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
+import HtmlGenerators.LandingPage
 import HtmlGenerators.Layout (renderPage)
-import HtmlGenerators.RefineSelectionPage
+import HtmlGenerators.OnboardingFour
+import HtmlGenerators.OnboardingOne
+import HtmlGenerators.OnboardingThree
+import HtmlGenerators.OnboardingTwo
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -194,7 +201,7 @@ main = do
       token <- getTokenFromRequest
 
       case token of
-        Just _ -> Web.redirect "/"
+        Just _ -> Web.redirect "/dashboard"
         Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage Nothing
 
     post "/login" $ do
@@ -206,7 +213,7 @@ main = do
         Just user -> do
           token <- liftIO $ createSession pool (entityKey user)
           Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-          Web.redirect "/"
+          Web.redirect "/dashboard"
 
     post "/register" $ do
       email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
@@ -220,10 +227,9 @@ main = do
           case result of
             Left err -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
             Right user -> do
-              liftIO $ Database.Database.seedDatabase user
               token <- liftIO $ createSession pool (entityKey user)
               Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-              Web.redirect "/"
+              Web.redirect "/dashboard"
 
     get "/logout" $ do
       mToken <- getTokenFromRequest
@@ -236,12 +242,98 @@ main = do
           Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
           Web.redirect "/login"
 
-    get "/" $ requireUser pool $ \user -> do
-      activeJobs <- liftIO $ readIORef activeJobs
-      let banner = if activeJobs > 0 then Just "Job Running" else Nothing
-      liftIO $ print banner
-      content <- liftIO $ renderHomePage user banner
-      Web.html $ renderPage (Just user) "Financal Summary" content
+    get "/" $ do
+      pool <- liftIO getConnectionPool
+      user <- getCurrentUser pool
+      case user of
+        Just user -> Web.redirect "/dashboard"
+        Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage
+
+    get "/onboarding" $ requireUser pool $ \user -> do
+      let currentStep = userOnboardingStep $ entityVal user
+      case currentStep of
+        Just 0 -> redirect "/onboarding/step-1"
+        Just 1 -> redirect "/onboarding/step-2"
+        Just 2 -> redirect "/onboarding/step-3"
+        _ -> redirect "/dashboard"
+
+    get "/onboarding/step-1" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      let content = renderOnboardingOne user transactionSources True
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-1" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      let content = renderOnboardingOne user transactionSources False
+      Web.Scotty.html $ renderPage (Just user) "Add Account" content
+
+
+    post "/onboarding/step-1" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user (Just 1)
+      redirect "/onboarding/step-2"
+
+    get "/onboarding/step-2" $ requireUser pool $ \user -> do
+      liftIO $ print "we are in step 2"
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingTwo user categoriesBySource True
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-2" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingTwo user categoriesBySource False
+      Web.Scotty.html $ renderPage (Just user) "Add Account" content
+
+    post "/onboarding/step-2" $ requireUser pool $ \user -> do
+
+      liftIO $ updateUserOnboardingStep user (Just 2)
+      redirect "/onboarding/step-2"
+
+    get "/onboarding/step-3" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      uploadConfigs <- liftIO $ getAllUploadConfigs user
+      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) True
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    get "/add-account/step-3" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      uploadConfigs <- liftIO $ getAllUploadConfigs user
+      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    post "/onboarding/step-3" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user Nothing
+      redirect "/onboarding/step-3"
+
+    get "/onboarding/step-4" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      let content = renderOnboardingFour user categoriesBySource
+      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+
+    post "/onboarding/step-4" $ requireUser pool $ \user -> do
+      liftIO $ updateUserOnboardingStep user Nothing
+      redirect "/dashboard"
+
+    get "/dashboard" $ requireUser pool $ \user -> do
+      let onboardingStep = userOnboardingStep $ entityVal user
+      case onboardingStep of
+        Just _ -> Web.Scotty.redirect "/onboarding"
+        Nothing -> do
+          activeJobs <- liftIO $ readIORef activeJobs
+          let banner = if activeJobs > 0 then Just "Processing transactions, check back soon!" else Nothing
+          content <- liftIO $ renderHomePage user banner
+          Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
     post "/setup-upload" $ requireUser pool $ \user -> do
       startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
@@ -252,7 +344,7 @@ main = do
 
       liftIO $ addUploadConfiguration user startKeyword endKeyword sourceId filenamePattern
 
-      redirect "/"
+      redirect "/dashboard"
 
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
@@ -273,7 +365,7 @@ main = do
             Left err -> do
               Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
             Right rawText -> do
-              maybeConfig <- liftIO $ getUploadConfiguration user originalName
+              maybeConfig <- liftIO $ getUploadConfiguration user originalName rawText
 
               liftIO $ print $ show maybeConfig
 
@@ -288,20 +380,17 @@ main = do
                       modifyIORef activeJobs (subtract 1)
                     return ()
 
-                  redirect "/"
+                  redirect "/dashboard"
                 Nothing -> do
                   newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-                  redirect $ TL.fromStrict ("/adjust-transactions/" <> T.pack (show $ fromSqlKey newPdfId))
+                  content <- liftIO $ renderHomePage user (Just "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
+                  Web.html $ renderPage (Just user) "Dashboard" content
 
-    get "/adjust-transactions/:pdfId" $ requireUser pool $ \user -> do
-      pdfIdText <- Web.Scotty.pathParam "pdfId"
 
-      let pdfId = toSqlKey (read $ T.unpack pdfIdText) :: Key UploadedPdf
-      transactionSources <- liftIO $ getAllTransactionSources user
-      uploadedPdf <- liftIO $ getPdfRecord user pdfId
-      let segments = T.splitOn "\n" (uploadedPdfRawContent $ entityVal uploadedPdf)
-
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSliderPage pdfId (uploadedPdfFilename $ entityVal uploadedPdf) segments transactionSources
+    get "/help" $ do
+      pool <- liftIO getConnectionPool
+      user <- getCurrentUser pool
+      Web.html $ renderPage user "Help Me" $ renderSupportPage
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user
@@ -361,7 +450,7 @@ main = do
               }
 
       liftIO $ saveSankeyConfig user newConfig
-      redirect "/"
+      redirect "/dashboard"
 
     get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO $ getAllUploadConfigs user
@@ -376,7 +465,20 @@ main = do
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
       liftIO $ addTransactionSource user newSource
-      Web.Scotty.redirect "/configuration"
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
+    post "/remove-transaction-source" $ requireUser pool $ \user -> do
+      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
+      liftIO $ removeTransactionSource user newSource
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
 
     post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
       sourceIdText <- Web.Scotty.pathParam "id"
@@ -410,7 +512,33 @@ main = do
       let sourceId = toSqlKey $ read sourceIdText
       newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
       liftIO $ addCategory user newCategory sourceId
-      Web.Scotty.redirect "/configuration"
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
+    post "/remove-category/:catId" $ requireUser pool $ \user -> do
+      catIdText <- Web.Scotty.pathParam "catId"
+      let catId = toSqlKey $ read catIdText
+      liftIO $ removeCategory user catId
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
+    post "/remove-transaction/:tId" $ requireUser pool $ \user -> do
+      tIdText <- Web.Scotty.pathParam "tId"
+      let tId = toSqlKey $ read tIdText
+      liftIO $ removeTransaction user tId
+
+      referer <- Web.Scotty.header "Referer"
+      let redirectTo = fromMaybe "/dashboard" referer
+
+      Web.Scotty.redirect redirectTo
+
+
 
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"
@@ -431,7 +559,33 @@ main = do
       json sankeyData
 
     get "/api/histogram-data" $ requireUser pool $ \user -> do
-      -- Fetch or compute the histogram data
       transactions <- liftIO $ getAllTransactions user
       histogramData <- generateHistogramData user transactions
       json histogramData
+
+    post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
+      sourceIdText <- Web.Scotty.pathParam "sourceId" :: Web.Scotty.ActionM Text
+      let sourceId = toSqlKey (read $ T.unpack sourceIdText) :: Key TransactionSource
+
+      files <- Web.Scotty.files
+      case lookup "exampleFile" files of
+        Just fileInfo -> do
+          let uploadedBytes = fileContent fileInfo
+          let originalName = decodeUtf8 $ fileName fileInfo
+          let tempFilePath = "/tmp/" <> originalName
+          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+          uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
+          case uploadConfig of
+            Just config -> addUploadConfigurationObject user config
+            Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration from the example file."
+
+          referer <- Web.Scotty.header "Referer"
+          let redirectTo = fromMaybe "/dashboard" referer
+          Web.Scotty.redirect redirectTo
+
+
+        Nothing -> do
+          Web.Scotty.text "No file provided in the request"
+
+      

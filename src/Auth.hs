@@ -38,15 +38,16 @@ createUser pool email password = do
     queryCreateUser = do
       existing <- getBy $ UniqueUser email
       case existing of
-        Just _ -> return $ Left "Email already exists" -- Return error if user exists
+        Just _ -> return $ Left "Email already exists" 
         Nothing -> do
           now <- liftIO getCurrentTime
+          let onboardStep = Just 0
           let hashedPassword = hashPassword password
-          userId <- insert $ User email hashedPassword now
+          userId <- insert $ User email hashedPassword now onboardStep
           maybeUser <- get userId
           case maybeUser of
-            Nothing -> return $ Left "Failed to create user" -- Return error if insert fails
-            Just user -> return $ Right $ Entity userId user -- Return created user
+            Nothing -> return $ Left "Failed to create user" 
+            Just user -> return $ Right $ Entity userId user 
 
 validateLogin :: (MonadUnliftIO m) => ConnectionPool -> Text -> Text -> m (Maybe (Entity User))
 validateLogin pool email password = do
@@ -61,7 +62,7 @@ generateSessionToken = do
 createSession :: (MonadUnliftIO m) => ConnectionPool -> Key User -> m Text
 createSession pool userId = do
   token <- liftIO generateSessionToken
-  expiresAt <- liftIO $ addUTCTime (60 * 60 * 24 * 7) <$> getCurrentTime -- 7 days from now
+  expiresAt <- liftIO $ addUTCTime (60 * 60 * 24 * 7) <$> getCurrentTime 
   _ <- runSqlPool (insert $ UserSession userId token expiresAt) pool
   return token
 
@@ -80,7 +81,6 @@ validateSession pool token = do
             Nothing -> return Nothing
             Just user -> return $ Just $ Entity (userSessionUserId session) user
 
--- | Delete a session
 deleteSession :: (MonadUnliftIO m) => ConnectionPool -> Text -> m ()
-deleteSession pool token = 
+deleteSession pool token =
   runSqlPool (deleteWhere [UserSessionSessionToken ==. token]) pool

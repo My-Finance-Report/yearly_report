@@ -12,7 +12,6 @@ and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
   - summary -> per transaction drill down
   - configurable sankey nodes
 - allow for manually update transactions from a ui
-  - (TODO) need to persist the matchers to the DB so that in the future the same transactions get binned accordingly
 
 # Tech
 
@@ -26,24 +25,25 @@ and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
 
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
-# Bugs
+# Launch blocking
 
-- Batch calls to open ai to make less likely to error out
 - Sankey currently only allows one intermediate node
-- Update categorized transaction to have entity category for forms
-- Some bug with pulling processed files
+- sankey config comes from openai, has configability somewhere
+- privacy policy
+- the configuration page is just wacky, unlink and work on removing
+- remove mention of plaid for now
 
-# notes from onboarding myself
-
-- null state is kind of weird on landing page, should probably be a setup flow
-- its hard to know you need to configure the sankey
-- the adjust page has no margins and is super confusing
-- the configuration page is just wacky
-- i dont get a chance to add sources before
-  -- maybe these should just be called accounts for clarity
-- its weird that the first time thorugh the upload flow it doesnt actually run the upload
-- consider showing the source we associate with the file before we upload
-- the jobs running banner is vile
-- no way to update any miscategorization (transaction page needs link)
-- still some bug with the files that are in /transactions
 - the llm seems bad at getting dates, may need to include more file context
+- link to login on the landing page
+
+# Not Blocking
+
+- clicking on charts pops tables would be nice
+- would be nice to be able to dump all the files at once
+- setup a demo for people to mess with
+- consider poor mans analytics by writing visits to the db for now
+- consider showing the source we associate with the file before we upload
+- refactor css
+- refactor Main.hs routes
+- pretty print dates in the tables
+- delete transactions

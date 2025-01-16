@@ -3,12 +3,12 @@
 module HtmlGenerators.Layout (renderPage) where
 
 import qualified Data.Text.Lazy as TL
+import Database.Models
+import Database.Persist (Entity)
+import HtmlGenerators.Components (navigationBar)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import HtmlGenerators.Components (navigationBar)
-import Database.Models
-import Database.Persist (Entity)
 
 renderPage :: Maybe (Entity User) -> TL.Text -> Html -> TL.Text
 renderPage mUser pageTitle content =
@@ -23,6 +23,8 @@ renderPage mUser pageTitle content =
         ! A.rel "stylesheet"
         ! A.type_ "text/css"
         ! A.href "/css/navbar.css"
+
+      H.script ! A.type_ "text/javascript" ! A.src "/allPages.js" $ mempty
     H.body $ do
       navigationBar mUser
       H.div ! A.class_ "page-content" $ content

@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types
   ( CategorizedTransaction (..),
     AggregatedTransactions,
+    PartialUploadConfig (..),
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
@@ -77,6 +79,18 @@ instance FromJSON TransactionKind
 instance FromJSON Transaction
 
 instance FromJSON TransactionsWrapper
+
+data PartialUploadConfig
+  = PartialUploadConfig {partialFilenameRegex :: Text, partialStartKeyword :: Text, partialEndKeyword :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON PartialUploadConfig where
+  parseJSON = withObject "PartialUploadConfig" $ \v -> do
+    partialFilenameRegex <- v .: "filenameRegex" -- Map JSON "filenameRegex" to Haskell "partialFilenameRegex"
+    partialStartKeyword  <- v .: "startKeyword"  -- Map JSON "startKeyword" to Haskell "partialStartKeyword"
+    partialEndKeyword    <- v .: "endKeyword"    -- Map JSON "endKeyword" to Haskell "partialEndKeyword"
+    return PartialUploadConfig {..}
+
 
 groupByBlah ::
   (Ord t) =>

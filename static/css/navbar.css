@@ -1,7 +1,6 @@
 .navbar {
   background-color: #4CAF50;
   padding: 1rem;
-  margin-bottom: 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -11,6 +10,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-brand .brand-link {
+  text-decoration: none;
+  color: white;
 }
 
 .nav-links {

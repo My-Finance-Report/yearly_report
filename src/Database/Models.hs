@@ -42,13 +42,16 @@ share
 TransactionSource
     name Text
     userId UserId 
+    archived Bool default=False
+    UniqueTransactionSource userId name
     deriving Show Eq Ord
 
 Category
     name Text
     sourceId TransactionSourceId
-    UniqueCategory name sourceId
     userId UserId 
+    archived Bool default=False
+    UniqueCategory name sourceId
     deriving Show Eq Ord
 
 Transaction
@@ -60,6 +63,7 @@ Transaction
     kind TransactionKind
     uploadedPdfId UploadedPdfId Maybe 
     userId UserId 
+    archived Bool default=False
     deriving Show Eq Generic Ord
 
 ProcessedFile
@@ -107,6 +111,7 @@ User
     email Text
     passwordHash Text
     createdAt UTCTime
+    onboardingStep Int Maybe
     UniqueUser email
     deriving Show Eq
 

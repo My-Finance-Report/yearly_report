@@ -4,9 +4,11 @@ module Database.UploadConfiguration
   ( getAllUploadConfigs,
     getUploadConfiguration,
     addUploadConfiguration,
+    addUploadConfigurationObject,
   )
 where
 
+import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Maybe (listToMaybe)
@@ -24,8 +26,8 @@ getAllUploadConfigs user = do
   where
     queryUploadConfigs = selectList [UploadConfigurationUserId ==. entityKey user] [Asc UploadConfigurationTransactionSourceId]
 
-getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> m (Maybe (Entity UploadConfiguration))
-getUploadConfiguration user filename = do
+getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> m (Maybe (Entity UploadConfiguration))
+getUploadConfiguration user filename rawText = do
   pool <- liftIO getConnectionPool
   runSqlPool queryUploadConfiguration pool
   where
@@ -33,7 +35,7 @@ getUploadConfiguration user filename = do
       results <-
         rawSql
           "SELECT ?? FROM upload_configuration WHERE ? ~* filename_regex AND user_id = ?"
-          [toPersistValue filename, toPersistValue (entityKey user)]
+          [toPersistValue (filename <> rawText), toPersistValue (entityKey user)]
       return $ listToMaybe results
 
 addUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Key TransactionSource -> Text -> m ()
@@ -51,6 +53,29 @@ addUploadConfiguration user startKeyword endKeyword txnSourceId filenameRegex = 
               uploadConfigurationFilenameRegex = Just filenameRegex,
               uploadConfigurationUserId = entityKey user
             }
+      case result of
+        Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
+        Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)
+
+addUploadConfigurationObject :: (MonadUnliftIO m) => Entity User -> UploadConfiguration -> m ()
+addUploadConfigurationObject user config = do
+  let userIdInConfig = uploadConfigurationUserId config
+  let passedUserId = entityKey user
+
+  when (userIdInConfig /= passedUserId) $
+    error $
+      "User ID mismatch: config userId "
+        ++ show (fromSqlKey userIdInConfig)
+        ++ " does not match passed userId "
+        ++ show (fromSqlKey passedUserId)
+
+  pool <- liftIO getConnectionPool
+  runSqlPool queryPersistUploadConfiguration pool
+  where
+    queryPersistUploadConfiguration = do
+      result <-
+        insertUnique config
+
       case result of
         Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
         Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)

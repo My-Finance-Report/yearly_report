@@ -8,18 +8,18 @@ where
 import Categorizer
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Data.List (null, sortBy)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
+import Data.List
 import Database.Database
 import Database.Files
 import Database.Models
 import Database.Persist
-import Database.Persist.Postgresql (toSqlKey)
+import Database.Persist.Postgresql (fromSqlKey, toSqlKey)
 import Database.Transaction
 import Database.TransactionSource
 import HtmlGenerators.Components (navigationBar)
@@ -62,6 +62,7 @@ generateHomapageHtml banner tabs =
           H.form
             ! A.action "/upload"
             ! A.method "post"
+            ! A.class_ "upload_form"
             ! A.enctype "multipart/form-data"
             $ do
               H.input
@@ -73,7 +74,7 @@ generateHomapageHtml banner tabs =
                 ! A.type_ "submit"
                 ! A.class_ "btn upload-btn"
                 ! A.id "uploadButton"
-                $ "Upload PDF"
+                $ "Add Transactions"
 
       H.div ! A.class_ "charts-grid" $ do
         H.div ! A.class_ "chart-card" $ do
@@ -115,10 +116,6 @@ generateHomapageHtml banner tabs =
       ! A.type_ "text/javascript"
       ! A.src "/histogram.js"
       $ mempty
-    H.script
-      ! A.type_ "text/javascript"
-      ! A.src "/resizable.js"
-      $ mempty
 
 generateProcessedFilesComponent :: [SourceFileMapping] -> Html
 generateProcessedFilesComponent processedFiles = do
@@ -129,20 +126,11 @@ generateProcessedFilesComponent processedFiles = do
         H.tr $ do
           H.th "Transaction Source"
           H.th "Filenames"
-          H.th "Actions"
         forM_ processedFiles $ \mapping -> do
           forM_ (handledFiles mapping) $ \filename -> do
             H.tr $ do
               H.td (toHtml (transactionSourceName $ entityVal (Types.source mapping)))
               H.td (toHtml filename)
-              H.td $ do
-                H.form
-                  ! A.method "post"
-                  ! A.action (toValue $ "/delete-processed-file?filename=" <> T.unpack filename)
-                  $ do
-                    H.input ! A.type_ "hidden" ! A.name "transactionSourceId" ! A.value (toValue $ show $ entityKey (Types.source mapping))
-                    H.input ! A.type_ "hidden" ! A.name "filename" ! A.value (toValue filename)
-                    H.input ! A.type_ "submit" ! A.value "Delete"
 
 generateHistogramDiv :: Html
 generateHistogramDiv =
@@ -167,7 +155,6 @@ generateHeader =
 generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
   H.div ! A.class_ "subtab-content-container" $ do
-    -- Generate tabs for subtabs
     H.ul ! A.class_ "tabs" $ do
       forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
         H.li
@@ -175,7 +162,6 @@ generateSubTabContent index aggregatedBySource =
           ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
           $ toHtml name
 
-    -- Generate subtab content for each grouping
     forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
       let groupedData = groupingFunc $ concatMap snd $ Map.toList aggregatedBySource
       H.div
@@ -183,35 +169,81 @@ generateSubTabContent index aggregatedBySource =
         ! A.style (if idx == 0 then "display: block;" else "display: none;")
         $ generateAggregatedRowsWithExpandableDetails (toHtml subname) groupedData
 
+
 generateAggregatedRowsWithExpandableDetails :: Html -> Map.Map Text [CategorizedTransaction] -> Html
 generateAggregatedRowsWithExpandableDetails header aggregated =
-  H.table $ do
-    -- Header row
+  let
+    totalBalance = truncateToTwoDecimals $ sum
+      [ case transactionKind $ entityVal (transaction txn) of
+          Deposit -> transactionAmount $ entityVal (transaction txn)
+          Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
+        | txns <- Map.elems aggregated, txn <- txns
+      ]
+
+    totalWithdrawals = truncateToTwoDecimals $ sum
+      [ case transactionKind $ entityVal (transaction txn) of
+          Deposit -> 0
+          Withdrawal -> transactionAmount $ entityVal (transaction txn)
+        | txns <- Map.elems aggregated, txn <- txns
+      ]
+
+    totalDeposits = truncateToTwoDecimals $ sum
+      [ case transactionKind $ entityVal (transaction txn) of
+          Deposit -> transactionAmount $ entityVal (transaction txn)
+          Withdrawal -> 0
+        | txns <- Map.elems aggregated, txn <- txns
+      ]
+
+  in H.table $ do
     H.tr $ do
       H.th ! A.class_ "arrow-column" $ ""
       H.th header
-      H.th "Total Amount"
-    -- Generate rows for each group
+      H.th "Withdrawals"
+      H.th "Deposits"
+      H.th "Balance"
+
     Map.foldrWithKey
       ( \key txns accHtml ->
-          let totalAmount =
+          let balance =
                 truncateToTwoDecimals $
                   sum
                     [ case transactionKind $ entityVal (transaction txn) of
                         Deposit -> transactionAmount $ entityVal (transaction txn)
+                        Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
+                      | txn <- txns
+                    ]
+              withdrawals =
+                truncateToTwoDecimals $
+                  sum
+                    [ case transactionKind $ entityVal (transaction txn) of
+                        Deposit -> 0
                         Withdrawal -> transactionAmount $ entityVal (transaction txn)
                       | txn <- txns
                     ]
-              sectionId = "details-" <> key -- Unique ID for the expandable section
+              deposits =
+                truncateToTwoDecimals $
+                  sum
+                    [ case transactionKind $ entityVal (transaction txn) of
+                        Deposit -> transactionAmount $ entityVal (transaction txn)
+                        Withdrawal -> 0
+                      | txn <- txns
+                    ]
+              sectionId = "details-" <> key <> (T.pack . show . fromSqlKey . entityKey . transaction . Data.List.head $ txns)
            in do
-                -- Aggregated row
-                generateAggregateRow key totalAmount sectionId
-                -- Hidden detail rows
+                generateAggregateRow key balance withdrawals deposits sectionId
                 generateDetailRows key txns sectionId
                 accHtml
       )
       (return ())
       aggregated
+
+    H.tr ! A.class_ "totals-row" $ do
+      H.td ! A.colspan "2" $ "Totals"
+      H.td $ toHtml $ show totalWithdrawals
+      H.td $ toHtml $ show totalDeposits
+      H.td $ toHtml $ show totalBalance
+
+
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -239,58 +271,48 @@ generateUpload =
             ! A.class_ "btn upload-btn"
             $ "Upload"
 
-generateAggregateRow :: T.Text -> Double -> T.Text -> Html
-generateAggregateRow cat totalAmt sectionId =
+
+
+
+generateAggregateRow :: T.Text -> Double -> Double -> Double ->T.Text -> Html
+generateAggregateRow cat balance withdrawls deposits sectionId =
   H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "')") $ do
     H.td ! A.class_ "arrow-column" $ H.span "▶"
     H.td (toHtml cat)
-    H.td (toHtml (show totalAmt))
+    H.td (toHtml (show withdrawls))
+    H.td (toHtml (show deposits))
+    H.td (toHtml (show balance))
 
 generateDetailRows :: T.Text -> [CategorizedTransaction] -> T.Text -> Html
 generateDetailRows cat txs sectionId =
   H.tr ! A.id (H.toValue sectionId) ! A.class_ "hidden" $ do
     -- Make a nested table
-    H.td ! A.colspan "3" $ do
+    H.td ! A.colspan "5" $ do
       H.table $ do
         H.tr $ do
-          H.th "Description"
+          H.th "Transaction"
           H.th "Kind"
           H.th "Date"
           H.th "Amount"
-        mapM_ (detailRow . entityVal . transaction) txs
+          H.th "Action"
+        mapM_ (\catTrans -> detailRow (entityKey (transaction catTrans)) (entityVal (transaction catTrans))) txs
   where
-    detailRow :: Transaction -> Html
-    detailRow t =
+    detailRow :: TransactionId -> Transaction -> Html
+    detailRow tid t =
       H.tr $ do
         H.td (toHtml (transactionDescription t))
         H.td (toHtml $ show (transactionKind t))
         H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
         H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
-
-generateAggregatedRows :: Html -> Map.Map Text [CategorizedTransaction] -> Html
-generateAggregatedRows header aggregated =
-  H.table $ do
-    H.tr $ do
-      H.th header
-      H.th "Total Amount"
-    Map.foldrWithKey
-      ( \key txns accHtml ->
-          let totalAmount =
-                truncateToTwoDecimals $
-                  sum
-                    [ case transactionKind $ entityVal (transaction txn) of
-                        Deposit -> transactionAmount $ entityVal (transaction txn)
-                        Withdrawal -> transactionAmount $ entityVal (transaction txn)
-                      | txn <- txns
-                    ]
-           in do
-                H.tr $ do
-                  H.td (toHtml key)
-                  H.td (toHtml (show totalAmount))
-                accHtml
-      )
-      (return ())
-      aggregated
+        H.td $ do
+          case transactionUploadedPdfId t of
+            Just pdfId ->
+              H.a
+                ! A.href (H.toValue $ "/transactions/" <> show (fromSqlKey pdfId) <> "#tx-" <> show (fromSqlKey tid))
+                ! A.class_ "btn-edit"
+                $ "Edit"
+            Nothing ->
+              H.span "No PDF ID"
 
 type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]
 
@@ -338,7 +360,13 @@ renderHomePage user banner = do
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
   files <- getSourceFileMappings user
 
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+  let updatedBanner = case banner of
+        Just existingBanner | not (Prelude.null banner) -> Just existingBanner
+        _ ->
+          if Data.List.null categorizedTransactions
+          then Just "You need to add transactions to get started."
+          else Nothing
 
-  let strictText = generateHomapageHtml banner tabs
+  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+  let strictText = generateHomapageHtml updatedBanner tabs
   return strictText

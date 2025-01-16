@@ -21,13 +21,18 @@ library
     HtmlGenerators.Components
     HtmlGenerators.HomePage
     HtmlGenerators.AllFilesPage
-    HtmlGenerators.RefineSelectionPage
     HtmlGenerators.Layout
     HtmlGenerators.Configuration
     HtmlGenerators.AuthPages
+    HtmlGenerators.LandingPage
+    HtmlGenerators.OnboardingOne
+    HtmlGenerators.OnboardingTwo
+    HtmlGenerators.OnboardingThree
+    HtmlGenerators.OnboardingFour
     Auth
     Sankey
     Parsers
+    ExampleFileParser
     OpenAiUtils
   build-depends:
       base >= 4.7 && < 5,
@@ -81,10 +86,15 @@ executable year-report-finances
       HtmlGenerators.Layout
       HtmlGenerators.AuthPages
       HtmlGenerators.AllFilesPage
-      HtmlGenerators.RefineSelectionPage
       HtmlGenerators.Configuration
+      HtmlGenerators.LandingPage
+      HtmlGenerators.OnboardingOne
+      HtmlGenerators.OnboardingTwo
+      HtmlGenerators.OnboardingThree
+      HtmlGenerators.OnboardingFour
       Auth
       Sankey
+      ExampleFileParser
       Parsers
       OpenAiUtils
   build-depends:

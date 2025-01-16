@@ -57,7 +57,7 @@ instance FromJSON ChatChoice
 makeChatRequest :: Value -> [ChatMessage] -> IO (Either String B.ByteString)
 makeChatRequest schema messages = do
   apiKey <- getEnv "OPENAI_API_KEY"
-  let managerSettings = tlsManagerSettings {managerResponseTimeout = responseTimeoutMicro (60 * 1000000)}
+  let managerSettings = tlsManagerSettings {managerResponseTimeout = responseTimeoutMicro (120 * 1000000)}
   manager <- newManager managerSettings
   let url = "https://api.openai.com/v1/chat/completions"
       requestBody =

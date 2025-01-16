@@ -6,10 +6,18 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("/api/sankey-data")
       .then((response) => response.json())
       .then((data) => drawSankey(data))
-      .catch((error) => console.error("Error fetching Sankey data:", error));
+      .catch((error) => {
+        console.error("Error fetching Sankey data:", error);
+        displayNoDataMessage();
+      });
   }
 
   function drawSankey(data) {
+    if (data.length === 0) {
+      displayNoDataMessage();
+      return;
+    }
+
     const chartData = new google.visualization.DataTable();
     chartData.addColumn("string", "From");
     chartData.addColumn("string", "To");
@@ -30,5 +38,13 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("sankeyChart")
     );
     chart.draw(chartData, options);
+  }
+
+  function displayNoDataMessage() {
+    const sankeyContainer = document.getElementById("sankeyChart");
+    sankeyContainer.innerHTML = "<p>No transactions yet</p>";
+    sankeyContainer.style.textAlign = "center";
+    sankeyContainer.style.fontSize = "18px";
+    sankeyContainer.style.color = "#666";
   }
 });
