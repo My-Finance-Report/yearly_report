@@ -54,7 +54,7 @@ renderLandingPage =
       H.div ! A.class_ "banner" $ do
         H.h1 "My Financé"
         H.h2 "Because you should love your finances"
-        H.h3 "Simple financial reporting for just $2/month or $20/year." 
+        H.h3 "Simple personal finance for just $2/month or $20/year."
 
       H.div ! A.class_ "features-section" $ do
         H.div ! A.class_ "cards-container" $ do
@@ -64,8 +64,8 @@ renderLandingPage =
 
       -- Call-to-action Section
       H.div ! A.class_ "cta-section" $ do
-        H.h3 "Try before you buy?"
-        H.p "Explore my finances"
+        H.h3 "Play in the sandbox"
+        H.p "or straight to sign up if our sales pitch sold you"
         H.div ! A.class_ "button-group" $ do
           H.button
             ! A.class_ "explore-btn"
