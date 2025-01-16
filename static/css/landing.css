@@ -1,4 +1,3 @@
-/* Landing Page Styles */
 .landing-page {
     max-width: 100%;
     padding: 2rem 1rem;
@@ -27,8 +26,9 @@
     color: #4a5568;
 }
 
-.banner h3 {
-    font-size: 1.2rem;
+.banner .subtag {
+    font-size: 1.8rem;
+    font-weight: 600;
     color: #4CAF50;
 }
 
@@ -42,6 +42,7 @@
     gap: 2rem;
     padding: 1rem;
 }
+
 
 .card {
     background: white;
@@ -126,7 +127,7 @@
 }
 
 /* Mobile Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .banner {
         padding: 3rem 1rem;
     }
@@ -144,7 +145,8 @@
     }
 
     .cards-container {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
     }
 
     .cta-section {
@@ -162,3 +164,6 @@
         text-align: center;
     }
 }
+
+
+
