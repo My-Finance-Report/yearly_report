@@ -63,12 +63,12 @@ renderLandingPage =
           featureCard "See The Money Flow" "Understand where your money is actually going!"
 
         H.div ! A.class_ "cta-section" $ do
-          H.h3 "Try it in the sandbox!"
+          H.h3 "Explore the sandbox!"
           H.div ! A.class_ "button-group" $ do
             H.button
               ! A.class_ "explore-btn"
               ! A.onclick "window.location.href='/demo-account'"
-              $ "Try it"
+              $ "Explore"
             H.button
               ! A.class_ "login-btn"
               ! A.onclick "window.location.href='/login'"

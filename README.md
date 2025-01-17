@@ -26,24 +26,29 @@ and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 # Launch blocking
+
 - make the column charts make sense
 - the configuration page is just wacky, unlink and work on removing
+
 - Sankey currently only allows one intermediate node
 - sankey config comes from openai, has configability somewhere
+
 - privacy policy
-- some CTA during the demo
+
+- some CTA during the demo in banner
 
 - the llm seems bad at getting dates, may need to include more file context
 
 # Not Blocking
-
 - clicking on charts pops tables would be nice
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload
+- some bug with the job counter if a file has already been processed
 - refactor css
 - refactor Main.hs routes
 - pretty print dates in the tables
+- refresh on the page keeps you in the same view
 - delete transactions
 
 # Bad UI

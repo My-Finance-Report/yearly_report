@@ -4,9 +4,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Database.Database (seedDatabase, updateUserOnboardingStep) where
+module Database.Database (seedDatabase, updateUserOnboardingStep, getDemoUser) where
 
+import Control.Exception (throwIO)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Database.Category
 import Database.ConnectionPool
 import Database.Models
@@ -43,3 +45,12 @@ updateUserOnboardingStep user step = do
   runSqlPool (updateUserStep user step) pool
   where
     updateUserStep user step = update (entityKey user) [UserOnboardingStep =. step]
+
+getDemoUser :: (MonadUnliftIO m) => m (Entity User)
+getDemoUser = do
+  pool <- liftIO getConnectionPool
+  result <- runSqlPool queryDemoUser pool
+  liftIO $ maybe (throwIO $ userError "Demo user not found!") pure result
+  where
+    demoId = toSqlKey $ read "1"
+    queryDemoUser = selectFirst [UserId ==. demoId] []

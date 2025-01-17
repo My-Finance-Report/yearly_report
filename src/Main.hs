@@ -35,7 +35,7 @@ import Database.Category
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (updateUserOnboardingStep)
+import Database.Database (getDemoUser, updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -180,15 +180,6 @@ getCurrentUser pool = do
   case mToken of
     Nothing -> return Nothing
     Just token -> liftIO $ validateSession pool $ TL.toStrict token
-
-getDemoUser :: (MonadUnliftIO m) => m (Entity User)
-getDemoUser = do
-  pool <- liftIO getConnectionPool
-  result <- runSqlPool queryDemoUser pool
-  liftIO $ maybe (throwIO $ userError "Demo user not found!") pure result
-  where
-    demoId = toSqlKey $ read "1"
-    queryDemoUser = selectFirst [UserId ==. demoId] []
 
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
@@ -336,7 +327,7 @@ main = do
 
     get "/demo-account" $ do
       demoUser <- getDemoUser
-      content <- liftIO $ renderHomePage demoUser (Just "You are in a demo account")
+      content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
       Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
 
     get "/dashboard" $ requireUser pool $ \user -> do
@@ -345,7 +336,7 @@ main = do
         Just _ -> Web.Scotty.redirect "/onboarding"
         Nothing -> do
           activeJobs <- liftIO $ readIORef activeJobs
-          let banner = if activeJobs > 0 then Just "Processing transactions, check back soon!" else Nothing
+          let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
@@ -397,7 +388,7 @@ main = do
                   redirect "/dashboard"
                 Nothing -> do
                   newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-                  content <- liftIO $ renderHomePage user (Just "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
+                  content <- liftIO $ renderHomePage user (Just $ makeSimpleBanner "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
                   Web.html $ renderPage (Just user) "Dashboard" content
 
     get "/help" $ do
