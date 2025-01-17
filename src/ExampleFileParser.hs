@@ -22,8 +22,9 @@ generateUploadConfigPrompt pdfContent fileName =
   "look at the following PDF content and filename to determine how we can parse more files in the future. "
     <> "keywords should not contain numbers or random strings, look for things that are stable and likely to be"
     <> "in multiple files. the start and end keywords are so we can isolate that months transactions from the file."
-    <> " including a bit of data before or after the transaction tables is totally fine. for the filename, try to find one word"
-    <> " that might be exclusive"
+    <> " including a bit of data before or after the transaction tables is totally fine.  Make sure to also select the words"
+    <> " in a way that we have access to a full date somewhere (including the year)"
+    <> "for the filename, try to find one word that might be exclusive across files"
     <> "filename:"
     <> fileName
     <> "\n\n\n"

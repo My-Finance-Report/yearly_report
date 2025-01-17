@@ -376,7 +376,7 @@ renderHomePage user banner = do
         Just existingBanner | not (Prelude.null banner) -> Just existingBanner
         _ ->
           if Data.List.null categorizedTransactions
-            then Just "You need to add transactions to get started."
+            then Just $ makeSimpleBanner "You need to add transactions to get started."
             else Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files

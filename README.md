@@ -28,18 +28,18 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Launch blocking
 
 - make the column charts make sense
-- the configuration page is just wacky, unlink and work on removing
+
+- the configuration page is just wacky
 
 - Sankey currently only allows one intermediate node
 - sankey config comes from openai, has configability somewhere
 
 - privacy policy
 
-- some CTA during the demo in banner
-
 - the llm seems bad at getting dates, may need to include more file context
 
 # Not Blocking
+
 - clicking on charts pops tables would be nice
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
