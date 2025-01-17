@@ -23,6 +23,7 @@ library
     HtmlGenerators.AllFilesPage
     HtmlGenerators.Layout
     HtmlGenerators.Configuration
+    HtmlGenerators.ConfigurationNew
     HtmlGenerators.AuthPages
     HtmlGenerators.LandingPage
     HtmlGenerators.OnboardingOne
@@ -87,6 +88,7 @@ executable year-report-finances
       HtmlGenerators.AuthPages
       HtmlGenerators.AllFilesPage
       HtmlGenerators.Configuration
+      HtmlGenerators.ConfigurationNew
       HtmlGenerators.LandingPage
       HtmlGenerators.OnboardingOne
       HtmlGenerators.OnboardingTwo

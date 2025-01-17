@@ -22,10 +22,14 @@ buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransact
       let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
           sankeyLinks =
             Prelude.map
-              (\(category, total) -> (categoryName (entityVal sourceCategory), category, total))
+              (\(category, total) -> (formatSankeyLabel sourceSource sourceCategory, transactionSourceName (entityVal targetSource) <> pack ":" <> category, total))
               (Map.toList categoryTotals)
        in sankeyLinks
     Nothing -> []
+
+formatSankeyLabel :: Entity TransactionSource -> Entity Category -> Text
+formatSankeyLabel source category =
+  transactionSourceName (entityVal source) <> pack ":" <> categoryName (entityVal category)
 
 generateSankeyData ::
   Map (Entity TransactionSource) [CategorizedTransaction] ->
@@ -36,7 +40,6 @@ generateSankeyData transactions config =
 
       FullSankeyConfig {inputs, linkages, mapKeyFunction} = config
 
-      -- Process input flows
       inputFlows = concatMap processInput inputs
         where
           processInput :: (Entity TransactionSource, Entity Category) -> [(Text, Text, Double)]
@@ -52,8 +55,8 @@ generateSankeyData transactions config =
                               categorizedByCategory
                      in Prelude.map
                           ( \(subCatName, txns) ->
-                              ( categoryName (entityVal category),
-                                subCatName,
+                              ( formatSankeyLabel source category,
+                                transactionSourceName (entityVal source) <> pack ":" <> subCatName,
                                 sum $ Prelude.map (sankeyAmount . entityVal . transaction) txns
                               )
                           )
@@ -61,19 +64,20 @@ generateSankeyData transactions config =
                   Nothing -> []
               Nothing -> []
 
-      -- Build the Sankey links
       combinedFlows = inputFlows ++ buildSankeyLinks linkages aggregatedTransactions
-
-      -- Sort the flows by the third element (weight) in descending order
-      sortedFlows = sortBy (comparing (Down . third)) combinedFlows
-   in sortedFlows
+      sortedFlows = sortBy (comparing (Down . second)) combinedFlows
+      prunedFlows = Prelude.filter (\flow -> third flow /= 0) sortedFlows
+   in prunedFlows
   where
+    second (_, x, _) = x
+    third :: (Text, Text, Double) -> Double
     third (_, _, x) = x
 
 sankeyAmount :: Transaction -> Double
 sankeyAmount txn = abs $ signedAmount txn
 
+-- weird but technically deposits shouldnt show up on sankeys
 signedAmount :: Transaction -> Double
 signedAmount txn = case transactionKind txn of
-  Deposit -> transactionAmount txn
+  Deposit -> 0
   Withdrawal -> negate (transactionAmount txn)
