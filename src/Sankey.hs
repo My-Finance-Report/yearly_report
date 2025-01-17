@@ -76,7 +76,6 @@ generateSankeyData transactions config =
 sankeyAmount :: Transaction -> Double
 sankeyAmount txn = abs $ signedAmount txn
 
--- weird but technically deposits shouldnt show up on sankeys
 signedAmount :: Transaction -> Double
 signedAmount txn = case transactionKind txn of
   Deposit -> 0
