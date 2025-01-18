@@ -27,19 +27,18 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Launch blocking
 
-- renewed ability to deploy
-
 - make the column charts make sense
 
 - the configuration page is just wacky
-
 - sankey config has configability somewhere
 
 # Not Blocking
 
 - clicking on charts pops tables would be nice
+- put wildcards in the cabal file to prevent rebuilds on large deploys
 - privacy policy
 - ability to add accounts
+- add an og image for the homepage
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload

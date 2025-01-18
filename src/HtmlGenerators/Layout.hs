@@ -29,6 +29,13 @@ renderPage mUser pageTitle content =
         ! A.href "/css/landing.css"
 
       H.script ! A.type_ "text/javascript" ! A.src "/allPages.js" $ mempty
+
+      H.meta ! A.property "og:title" ! A.content "My Financé - Simple Personal Finance"
+      H.meta ! A.property "og:description" ! A.content "Because you should love your finances. Simple personal finance for just $2/month or $20/year."
+      H.meta ! A.property "og:image" ! A.content "/landing.png"
+      H.meta ! A.property "og:url" ! A.content "https://myfinancereport.com"
+      H.meta ! A.property "og:type" ! A.content "website"
+
     H.body $ do
       navigationBar mUser
       H.div ! A.class_ "page-content" $ content
