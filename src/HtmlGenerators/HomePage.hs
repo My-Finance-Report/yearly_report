@@ -35,10 +35,13 @@ import Text.Blaze.Html (Html)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
+import Text.Printf (printf)
 import Types
 
-truncateToTwoDecimals :: Double -> Double
-truncateToTwoDecimals x = fromIntegral (truncate (x * 100)) / 100
+formatCurrency :: Double -> Text
+formatCurrency x
+  | x < 0 = "-$" `append` pack (printf "%.2f" (abs x))
+  | otherwise = "$" `append` pack (printf "%.2f" x)
 
 prettyFormat :: Day -> Text
 prettyFormat = T.pack . formatTime defaultTimeLocale "%B %Y"
@@ -183,7 +186,7 @@ generateSubTabContent index aggregatedBySource =
 generateAggregatedRowsWithExpandableDetails :: Html -> Map.Map Text [CategorizedTransaction] -> Html
 generateAggregatedRowsWithExpandableDetails header aggregated =
   let totalBalance =
-        truncateToTwoDecimals $
+        formatCurrency $
           sum
             [ case transactionKind $ entityVal (transaction txn) of
                 Deposit -> transactionAmount $ entityVal (transaction txn)
@@ -193,7 +196,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
             ]
 
       totalWithdrawals =
-        truncateToTwoDecimals $
+        formatCurrency $
           sum
             [ case transactionKind $ entityVal (transaction txn) of
                 Deposit -> 0
@@ -203,7 +206,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
             ]
 
       totalDeposits =
-        truncateToTwoDecimals $
+        formatCurrency $
           sum
             [ case transactionKind $ entityVal (transaction txn) of
                 Deposit -> transactionAmount $ entityVal (transaction txn)
@@ -222,7 +225,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
         Map.foldrWithKey
           ( \key txns accHtml ->
               let balance =
-                    truncateToTwoDecimals $
+                    formatCurrency $
                       sum
                         [ case transactionKind $ entityVal (transaction txn) of
                             Deposit -> transactionAmount $ entityVal (transaction txn)
@@ -230,7 +233,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
                           | txn <- txns
                         ]
                   withdrawals =
-                    truncateToTwoDecimals $
+                    formatCurrency $
                       sum
                         [ case transactionKind $ entityVal (transaction txn) of
                             Deposit -> 0
@@ -238,7 +241,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
                           | txn <- txns
                         ]
                   deposits =
-                    truncateToTwoDecimals $
+                    formatCurrency $
                       sum
                         [ case transactionKind $ entityVal (transaction txn) of
                             Deposit -> transactionAmount $ entityVal (transaction txn)
@@ -256,9 +259,9 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
 
         H.tr ! A.class_ "totals-row" $ do
           H.td ! A.colspan "2" $ "Totals"
-          H.td $ toHtml $ show totalWithdrawals
-          H.td $ toHtml $ show totalDeposits
-          H.td $ toHtml $ show totalBalance
+          H.td $ toHtml $ totalWithdrawals
+          H.td $ toHtml $ totalDeposits
+          H.td $ toHtml $ totalBalance
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -286,14 +289,14 @@ generateUpload =
             ! A.class_ "btn upload-btn"
             $ "Upload"
 
-generateAggregateRow :: T.Text -> Double -> Double -> Double -> T.Text -> Html
+generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
   H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "')") $ do
     H.td ! A.class_ "arrow-column" $ H.span "▶"
     H.td (toHtml cat)
-    H.td (toHtml (show withdrawls))
-    H.td (toHtml (show deposits))
-    H.td (toHtml (show balance))
+    H.td (toHtml withdrawls)
+    H.td (toHtml deposits)
+    H.td (toHtml balance)
 
 generateDetailRows :: T.Text -> [CategorizedTransaction] -> T.Text -> Html
 generateDetailRows cat txs sectionId =
@@ -315,7 +318,7 @@ generateDetailRows cat txs sectionId =
         H.td (toHtml (transactionDescription t))
         H.td (toHtml $ show (transactionKind t))
         H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
-        H.td (toHtml (show (truncateToTwoDecimals (transactionAmount t))))
+        H.td (toHtml (formatCurrency (transactionAmount t)))
         H.td $ do
           case transactionUploadedPdfId t of
             Just pdfId ->

@@ -27,6 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Launch blocking
 
+- renewed ability to deploy
 - make the column charts make sense
 
 - the configuration page is just wacky
@@ -34,8 +35,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - sankey config has configability somewhere
 
 - privacy policy
-
-- the llm seems bad at getting dates, may need to include more file context
 
 # Not Blocking
 
@@ -55,8 +54,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Bad UI
 
 - make sure all units are shown as dollars
+- the dropdowns dont twist the arrow
 - clicking add transactions with no file there
 - password dont match in wrong modal
 - let people know something is happening async
 - default to categories being added
-

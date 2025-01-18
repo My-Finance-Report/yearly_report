@@ -19,9 +19,8 @@ WORKDIR /app
 # Copy only the stack configuration files first
 COPY stack.yaml stack.yaml.lock year-report-finances.cabal /app/
 
-# Install dependencies (cached if stack files don't change)
-# 
-RUN stack setup --install-ghc && stack build --only-dependencies
+RUN stack setup --install-ghc
+RUN stack build --only-dependencies
 
 # Copy the rest of the application files
 COPY src/ /app/src/
