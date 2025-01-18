@@ -118,6 +118,6 @@ type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
 
 data FullSankeyConfig = FullSankeyConfig
   { inputs :: [(Entity TransactionSource, Entity Category)],
-    linkages :: (Entity TransactionSource, Entity Category, Entity TransactionSource)
+    linkages :: [(Entity TransactionSource, Entity Category, Entity TransactionSource)]
   }
   deriving (Show, Generic)

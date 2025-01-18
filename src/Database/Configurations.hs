@@ -44,25 +44,18 @@ getFirstSankeyConfig user = do
             maybeCategory <- getEntity categoryId
             return $ (,) <$> maybeSource <*> maybeCategory
 
-          -- Resolve the linkage into entities
-          linkage <- case linkageEntities of
-            [Entity _ (SankeyLinkage _ sourceId categoryId targetId)] -> do
-              maybeSource <- getEntity sourceId
-              maybeCategory <- getEntity categoryId
-              maybeTarget <- getEntity targetId
-              return $ (,,) <$> maybeSource <*> maybeCategory <*> maybeTarget
-            _ -> return Nothing
+          linkages <- fmap catMaybes $ forM linkageEntities $ \(Entity _ (SankeyLinkage _ sourceId categoryId targetId)) -> do
+            maybeSource <- getEntity sourceId
+            maybeCategory <- getEntity categoryId
+            maybeTarget <- getEntity targetId
+            return $ (,,) <$> maybeSource <*> maybeCategory <*> maybeTarget
 
-          -- Construct and return the FullSankeyConfig if all components are valid
-          case linkage of
-            Just linkageTriple ->
-              return $
-                Just
-                  FullSankeyConfig
-                    { inputs = inputs,
-                      linkages = linkageTriple
-                    }
-            Nothing -> return Nothing
+          return $
+            Just
+              FullSankeyConfig
+                { inputs = inputs,
+                  linkages = linkages
+                }
 
 saveSankeyConfig :: (MonadUnliftIO m) => Entity User -> FullSankeyConfig -> m (Key SankeyConfig)
 saveSankeyConfig user config = do
@@ -82,7 +75,7 @@ saveSankeyConfig user config = do
         insert_ $ SankeyInput sankeyConfigId sourceId categoryId
 
       -- Insert new linkages (currently handles a single tuple, extendable to multiple)
-      forM_ [linkages config] $ \(Entity sourceId _, Entity categoryId _, Entity targetSourceId _) -> do
+      forM_ (linkages config) $ \(Entity sourceId _, Entity categoryId _, Entity targetSourceId _) -> do
         insert_ $ SankeyLinkage sankeyConfigId sourceId categoryId targetSourceId
 
       return sankeyConfigId

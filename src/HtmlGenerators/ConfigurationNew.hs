@@ -65,8 +65,8 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
         H.fieldset $ do
           H.legend "Linkages"
           case maybeConfig of
-            Just FullSankeyConfig {linkages = (source, category, target)} ->
-              renderLinkageRow sourceCategories (Just (source, category, target))
+            Just FullSankeyConfig {linkages = linkagesList} -> do
+              mapM_ (renderLinkageRow sourceCategories . Just) linkagesList
             Nothing -> renderEmptyLinkageRow sourceCategories
 
         H.br

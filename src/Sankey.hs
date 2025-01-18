@@ -13,19 +13,21 @@ import Database.Persist
 import Types
 
 buildSankeyLinks ::
-  (Entity TransactionSource, Entity Category, Entity TransactionSource) ->
+  [(Entity TransactionSource, Entity Category, Entity TransactionSource)] ->
   Map (Entity TransactionSource) AggregatedTransactions ->
   [(Text, Text, Double)]
-buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
-  case Map.lookup targetSource aggregatedTransactions of
-    Just targetTransactions ->
-      let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
-          sankeyLinks =
-            Prelude.map
-              (\(category, total) -> (formatSankeyLabel sourceSource sourceCategory, transactionSourceName (entityVal targetSource) <> pack ":" <> category, total))
-              (Map.toList categoryTotals)
-       in sankeyLinks
-    Nothing -> []
+buildSankeyLinks linkages aggregatedTransactions =
+  concatMap buildSingleLinkage linkages
+  where
+    buildSingleLinkage :: (Entity TransactionSource, Entity Category, Entity TransactionSource) -> [(Text, Text, Double)]
+    buildSingleLinkage (sourceSource, sourceCategory, targetSource) =
+      case Map.lookup targetSource aggregatedTransactions of
+        Just targetTransactions ->
+          let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
+           in [ (formatSankeyLabel sourceSource sourceCategory, transactionSourceName (entityVal targetSource) <> pack ":" <> category, total)
+                | (category, total) <- Map.toList categoryTotals
+              ]
+        Nothing -> []
 
 formatSankeyLabel :: Entity TransactionSource -> Entity Category -> Text
 formatSankeyLabel source category =

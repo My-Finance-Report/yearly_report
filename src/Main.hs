@@ -245,15 +245,6 @@ main = do
           Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
           Web.redirect "/login"
 
-    get "/test" $ do
-      user <- getDemoUser
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-      liftIO $ generateSankeyConfig categoriesBySource
-      Web.html "ok"
-
     get "/" $ do
       pool <- liftIO getConnectionPool
       user <- getCurrentUser pool
@@ -332,8 +323,23 @@ main = do
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-4" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      liftIO $ do
+        modifyIORef activeJobs (+ 1)
+        _ <- async $ do
+          generateSankeyConfig categoriesBySource
+          modifyIORef activeJobs (subtract 1)
+        return ()
+
       liftIO $ updateUserOnboardingStep user Nothing
-      redirect "/dashboard"
+
+      let banner = Just $ makeSimpleBanner "Setting up your account!"
+      content <- liftIO $ renderHomePage user banner
+      Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
     get "/demo-account" $ do
       demoUser <- getDemoUser
@@ -456,8 +462,7 @@ main = do
       let rawInputs = zip inputTransactionSources inputCategories
           inputs = Prelude.map (\(source, (category, _)) -> (source, category)) rawInputs
           linkages = (linkageSource, linkageCategory, linkageTarget)
-          newConfig = FullSankeyConfig {inputs = inputs, linkages = linkages}
-
+          newConfig = FullSankeyConfig {inputs = inputs, linkages = [linkages]} -- TODO this needs to handle multiple
       liftIO $ saveSankeyConfig user newConfig
       redirect "/dashboard"
 
@@ -610,13 +615,17 @@ main = do
           let tempFilePath = "/tmp/" <> originalName
           liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
 
-          uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
-          case uploadConfig of
-            Just config -> addUploadConfigurationObject user config
-            Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration from the example file."
+          liftIO $ do
+            modifyIORef activeJobs (+ 1)
+            _ <- async $ do
+              uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
+              case uploadConfig of
+                Just config -> addUploadConfigurationObject user config
+                Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
+              modifyIORef activeJobs (subtract 1)
+            return ()
 
           referer <- Web.Scotty.header "Referer"
           let redirectTo = fromMaybe "/dashboard" referer
           Web.Scotty.redirect redirectTo
-        Nothing -> do
-          Web.Scotty.text "No file provided in the request"
+        Nothing -> Web.Scotty.text "No file provided in the request"
