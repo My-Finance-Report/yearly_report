@@ -1,5 +1,6 @@
 *.csv
 bank_files/*
+.DS_Store
 *.txt
 *.db
 *.env

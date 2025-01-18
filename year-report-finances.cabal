@@ -23,6 +23,7 @@ library
     HtmlGenerators.AllFilesPage
     HtmlGenerators.Layout
     HtmlGenerators.Configuration
+    HtmlGenerators.ConfigurationNew
     HtmlGenerators.AuthPages
     HtmlGenerators.LandingPage
     HtmlGenerators.OnboardingOne
@@ -31,6 +32,7 @@ library
     HtmlGenerators.OnboardingFour
     Auth
     Sankey
+    SankeyConfiguration
     Parsers
     ExampleFileParser
     OpenAiUtils
@@ -87,6 +89,7 @@ executable year-report-finances
       HtmlGenerators.AuthPages
       HtmlGenerators.AllFilesPage
       HtmlGenerators.Configuration
+      HtmlGenerators.ConfigurationNew
       HtmlGenerators.LandingPage
       HtmlGenerators.OnboardingOne
       HtmlGenerators.OnboardingTwo
@@ -94,6 +97,7 @@ executable year-report-finances
       HtmlGenerators.OnboardingFour
       Auth
       Sankey
+      SankeyConfiguration
       ExampleFileParser
       Parsers
       OpenAiUtils

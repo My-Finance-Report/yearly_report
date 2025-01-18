@@ -27,23 +27,34 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Launch blocking
 
+- make the column charts make sense
+
+- the configuration page is just wacky
+
 - Sankey currently only allows one intermediate node
 - sankey config comes from openai, has configability somewhere
+
 - privacy policy
-- the configuration page is just wacky, unlink and work on removing
-- remove mention of plaid for now
 
 - the llm seems bad at getting dates, may need to include more file context
-- link to login on the landing page
 
 # Not Blocking
 
 - clicking on charts pops tables would be nice
 - would be nice to be able to dump all the files at once
-- setup a demo for people to mess with
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload
+- some bug with the job counter if a file has already been processed
 - refactor css
 - refactor Main.hs routes
 - pretty print dates in the tables
+- refresh on the page keeps you in the same view
 - delete transactions
+- the sankey config object is bad and doesnt make much sense
+
+# Bad UI
+
+- make sure all units are shown as dollars
+- clicking add transactions with no file there
+- password dont match in wrong modal
+- let people know something is happening async  

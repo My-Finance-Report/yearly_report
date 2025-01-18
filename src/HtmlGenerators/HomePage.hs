@@ -1,20 +1,23 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-wrong-do-bind #-}
 
 module HtmlGenerators.HomePage
   ( renderHomePage,
+    makeSimpleBanner,
+    makeDemoBanner,
   )
 where
 
 import Categorizer
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.List
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import qualified Data.Text.Lazy as TL
 import Data.Time
-import Data.List
 import Database.Database
 import Database.Files
 import Database.Models
@@ -44,16 +47,24 @@ formatSankeyRow :: (Text, Text, Double) -> Text
 formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
+makeSimpleBanner :: Text -> Html
+makeSimpleBanner banner = H.div ! A.class_ "banner" $ toHtml banner
+
+makeDemoBanner :: Html
+makeDemoBanner =
+  H.div ! A.class_ "banner demo-banner" $ do
+    H.span "You are in demo mode. "
+    H.a ! A.href "/login" ! A.class_ "signup-button" $ "Sign up now"
+
 generateHomapageHtml ::
-  Maybe Text ->
+  Maybe Html ->
   Html ->
   Html
 generateHomapageHtml banner tabs =
   H.body $ do
     generateHeader
     case banner of
-      Just bannerText ->
-        H.div ! A.class_ "banner" $ toHtml bannerText
+      Just bannerHtml -> bannerHtml
       Nothing -> return ()
 
     H.div ! A.class_ "container" $ do
@@ -169,81 +180,85 @@ generateSubTabContent index aggregatedBySource =
         ! A.style (if idx == 0 then "display: block;" else "display: none;")
         $ generateAggregatedRowsWithExpandableDetails (toHtml subname) groupedData
 
-
 generateAggregatedRowsWithExpandableDetails :: Html -> Map.Map Text [CategorizedTransaction] -> Html
 generateAggregatedRowsWithExpandableDetails header aggregated =
-  let
-    totalBalance = truncateToTwoDecimals $ sum
-      [ case transactionKind $ entityVal (transaction txn) of
-          Deposit -> transactionAmount $ entityVal (transaction txn)
-          Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
-        | txns <- Map.elems aggregated, txn <- txns
-      ]
+  let totalBalance =
+        truncateToTwoDecimals $
+          sum
+            [ case transactionKind $ entityVal (transaction txn) of
+                Deposit -> transactionAmount $ entityVal (transaction txn)
+                Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
+              | txns <- Map.elems aggregated,
+                txn <- txns
+            ]
 
-    totalWithdrawals = truncateToTwoDecimals $ sum
-      [ case transactionKind $ entityVal (transaction txn) of
-          Deposit -> 0
-          Withdrawal -> transactionAmount $ entityVal (transaction txn)
-        | txns <- Map.elems aggregated, txn <- txns
-      ]
+      totalWithdrawals =
+        truncateToTwoDecimals $
+          sum
+            [ case transactionKind $ entityVal (transaction txn) of
+                Deposit -> 0
+                Withdrawal -> transactionAmount $ entityVal (transaction txn)
+              | txns <- Map.elems aggregated,
+                txn <- txns
+            ]
 
-    totalDeposits = truncateToTwoDecimals $ sum
-      [ case transactionKind $ entityVal (transaction txn) of
-          Deposit -> transactionAmount $ entityVal (transaction txn)
-          Withdrawal -> 0
-        | txns <- Map.elems aggregated, txn <- txns
-      ]
+      totalDeposits =
+        truncateToTwoDecimals $
+          sum
+            [ case transactionKind $ entityVal (transaction txn) of
+                Deposit -> transactionAmount $ entityVal (transaction txn)
+                Withdrawal -> 0
+              | txns <- Map.elems aggregated,
+                txn <- txns
+            ]
+   in H.table $ do
+        H.tr $ do
+          H.th ! A.class_ "arrow-column" $ ""
+          H.th header
+          H.th "Withdrawals"
+          H.th "Deposits"
+          H.th "Balance"
 
-  in H.table $ do
-    H.tr $ do
-      H.th ! A.class_ "arrow-column" $ ""
-      H.th header
-      H.th "Withdrawals"
-      H.th "Deposits"
-      H.th "Balance"
+        Map.foldrWithKey
+          ( \key txns accHtml ->
+              let balance =
+                    truncateToTwoDecimals $
+                      sum
+                        [ case transactionKind $ entityVal (transaction txn) of
+                            Deposit -> transactionAmount $ entityVal (transaction txn)
+                            Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
+                          | txn <- txns
+                        ]
+                  withdrawals =
+                    truncateToTwoDecimals $
+                      sum
+                        [ case transactionKind $ entityVal (transaction txn) of
+                            Deposit -> 0
+                            Withdrawal -> transactionAmount $ entityVal (transaction txn)
+                          | txn <- txns
+                        ]
+                  deposits =
+                    truncateToTwoDecimals $
+                      sum
+                        [ case transactionKind $ entityVal (transaction txn) of
+                            Deposit -> transactionAmount $ entityVal (transaction txn)
+                            Withdrawal -> 0
+                          | txn <- txns
+                        ]
+                  sectionId = "details-" <> key <> (T.pack . show . fromSqlKey . entityKey . transaction . Data.List.head $ txns)
+               in do
+                    generateAggregateRow key balance withdrawals deposits sectionId
+                    generateDetailRows key txns sectionId
+                    accHtml
+          )
+          (return ())
+          aggregated
 
-    Map.foldrWithKey
-      ( \key txns accHtml ->
-          let balance =
-                truncateToTwoDecimals $
-                  sum
-                    [ case transactionKind $ entityVal (transaction txn) of
-                        Deposit -> transactionAmount $ entityVal (transaction txn)
-                        Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
-                      | txn <- txns
-                    ]
-              withdrawals =
-                truncateToTwoDecimals $
-                  sum
-                    [ case transactionKind $ entityVal (transaction txn) of
-                        Deposit -> 0
-                        Withdrawal -> transactionAmount $ entityVal (transaction txn)
-                      | txn <- txns
-                    ]
-              deposits =
-                truncateToTwoDecimals $
-                  sum
-                    [ case transactionKind $ entityVal (transaction txn) of
-                        Deposit -> transactionAmount $ entityVal (transaction txn)
-                        Withdrawal -> 0
-                      | txn <- txns
-                    ]
-              sectionId = "details-" <> key <> (T.pack . show . fromSqlKey . entityKey . transaction . Data.List.head $ txns)
-           in do
-                generateAggregateRow key balance withdrawals deposits sectionId
-                generateDetailRows key txns sectionId
-                accHtml
-      )
-      (return ())
-      aggregated
-
-    H.tr ! A.class_ "totals-row" $ do
-      H.td ! A.colspan "2" $ "Totals"
-      H.td $ toHtml $ show totalWithdrawals
-      H.td $ toHtml $ show totalDeposits
-      H.td $ toHtml $ show totalBalance
-
-
+        H.tr ! A.class_ "totals-row" $ do
+          H.td ! A.colspan "2" $ "Totals"
+          H.td $ toHtml $ show totalWithdrawals
+          H.td $ toHtml $ show totalDeposits
+          H.td $ toHtml $ show totalBalance
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -271,10 +286,7 @@ generateUpload =
             ! A.class_ "btn upload-btn"
             $ "Upload"
 
-
-
-
-generateAggregateRow :: T.Text -> Double -> Double -> Double ->T.Text -> Html
+generateAggregateRow :: T.Text -> Double -> Double -> Double -> T.Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
   H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "')") $ do
     H.td ! A.class_ "arrow-column" $ H.span "▶"
@@ -353,9 +365,8 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
         ! A.style "display: none;"
         $ generateProcessedFilesComponent processsedFiles
 
-renderHomePage :: Entity User -> Maybe Text -> IO Html
+renderHomePage :: Entity User -> Maybe Html -> IO Html
 renderHomePage user banner = do
-
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
@@ -365,9 +376,9 @@ renderHomePage user banner = do
         Just existingBanner | not (Prelude.null banner) -> Just existingBanner
         _ ->
           if Data.List.null categorizedTransactions
-          then Just "You need to add transactions to get started."
-          else Nothing
+            then Just $ makeSimpleBanner "You need to add transactions to get started."
+            else Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
-  let strictText = generateHomapageHtml updatedBanner tabs 
+  let strictText = generateHomapageHtml updatedBanner tabs
   return strictText

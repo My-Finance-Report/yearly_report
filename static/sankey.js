@@ -34,10 +34,12 @@ document.addEventListener("DOMContentLoaded", function () {
       width: 600,
       height: 400,
       sankey: {
+        iterations: 0,
         link: {
           colors: ['#a6cee3', '#b2df8a', '#fb9a99', '#fdbf6f']
-        }
-      }
+        },
+    }
+    
     };
 
     const chart = new google.visualization.Sankey(

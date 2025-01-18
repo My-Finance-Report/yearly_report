@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -7,7 +8,8 @@ module Main where
 import Auth
 import Categorizer
 import Control.Concurrent.Async (async)
-import Control.Exception (SomeException, try)
+import Control.Exception (SomeException, throwIO, try)
+import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
@@ -17,7 +19,6 @@ import Data.List (nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
-import Control.Exception (throwIO)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
@@ -35,7 +36,7 @@ import Database.Category
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (updateUserOnboardingStep)
+import Database.Database (getDemoUser, updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -51,6 +52,7 @@ import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.Configuration (renderConfigurationPage)
+import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage
 import HtmlGenerators.HtmlGenerators
 import HtmlGenerators.LandingPage
@@ -64,6 +66,7 @@ import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Sankey
+import SankeyConfiguration
 import System.Environment (lookupEnv)
 import System.FilePath ((</>))
 import Text.Read (readMaybe)
@@ -180,16 +183,6 @@ getCurrentUser pool = do
     Nothing -> return Nothing
     Just token -> liftIO $ validateSession pool $ TL.toStrict token
 
-
-getDemoUser :: (MonadUnliftIO m) => m (Entity User)
-getDemoUser = do
-  pool <- liftIO getConnectionPool
-  result <- runSqlPool queryDemoUser pool
-  liftIO $ maybe (throwIO $ userError "Demo user not found!") pure result
-  where
-    demoId = toSqlKey $ read "1"
-    queryDemoUser = selectFirst [UserId ==. demoId] []
-
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
   maybeValue <- lookupEnv key
@@ -278,7 +271,6 @@ main = do
       let content = renderOnboardingOne user transactionSources False
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
-
     post "/onboarding/step-1" $ requireUser pool $ \user -> do
       liftIO $ updateUserOnboardingStep user (Just 1)
       redirect "/onboarding/step-2"
@@ -303,7 +295,6 @@ main = do
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
-
       liftIO $ updateUserOnboardingStep user (Just 2)
       redirect "/onboarding/step-2"
 
@@ -333,13 +324,29 @@ main = do
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     post "/onboarding/step-4" $ requireUser pool $ \user -> do
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      liftIO $ do
+        modifyIORef activeJobs (+ 1)
+        void $ async $ do
+          config <- generateSankeyConfig user categoriesBySource
+          case config of
+            Just con -> do
+              saveSankeyConfig user con
+              -- since we dont actually need the result
+              return ()
+            Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
+          modifyIORef activeJobs (subtract 1) -- ✅ Always decrement, even on failure
       liftIO $ updateUserOnboardingStep user Nothing
-      redirect "/dashboard"
+      Web.Scotty.redirect "/dashboard"
 
     get "/demo-account" $ do
-        demoUser <- getDemoUser
-        content <- liftIO $ renderHomePage demoUser  (Just "You are in a demo account")
-        Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
+      demoUser <- getDemoUser
+      content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
+      Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
 
     get "/dashboard" $ requireUser pool $ \user -> do
       let onboardingStep = userOnboardingStep $ entityVal user
@@ -347,7 +354,7 @@ main = do
         Just _ -> Web.Scotty.redirect "/onboarding"
         Nothing -> do
           activeJobs <- liftIO $ readIORef activeJobs
-          let banner = if activeJobs > 0 then Just "Processing transactions, check back soon!" else Nothing
+          let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
@@ -399,9 +406,8 @@ main = do
                   redirect "/dashboard"
                 Nothing -> do
                   newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-                  content <- liftIO $ renderHomePage user (Just "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
+                  content <- liftIO $ renderHomePage user (Just $ makeSimpleBanner "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
                   Web.html $ renderPage (Just user) "Dashboard" content
-
 
     get "/help" $ do
       pool <- liftIO getConnectionPool
@@ -434,38 +440,43 @@ main = do
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
     post "/update-sankey-config" $ requireUser pool $ \user -> do
-      configName <- Web.Scotty.formParam "configName"
-
       allParams <- Web.Scotty.formParams
 
-      let inputSourceIds = [toSqlKey (read $ T.unpack value) | (key, value) <- allParams, key == "inputSourceId[]"]
-          inputCategoryIds = [toSqlKey (read $ T.unpack value) | (key, value) <- allParams, key == "inputCategoryId[]"]
+      let parseComposite keyValue =
+            case T.splitOn "-" keyValue of
+              [srcId, catId] -> Just (toSqlKey (read $ T.unpack srcId), toSqlKey (read $ T.unpack catId))
+              _ -> Nothing
 
-      linkageSourceId <- Web.Scotty.formParam "linkageSourceId"
-      linkageCategoryId <- Web.Scotty.formParam "linkageCategoryId"
+          inputPairs = [pair | (key, value) <- allParams, key == "inputSourceCategory[]", Just pair <- [parseComposite value]]
+
+      linkageSourceCategory <- Web.Scotty.formParam "linkageSourceCategory"
       linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
 
-      inputTransactionSources <- liftIO $ mapM (getTransactionSource user) inputSourceIds
-      inputCategories <- liftIO $ mapM (getCategory user) inputCategoryIds
+      let (linkageSourceId, linkageCategoryId) = fromMaybe (error "Invalid linkage format") (parseComposite linkageSourceCategory)
 
-      linkageSource <- liftIO $ getTransactionSource user (toSqlKey (read linkageSourceId))
-      (linkageCategory, _) <- liftIO $ getCategory user (toSqlKey (read linkageCategoryId))
+      -- Fetch database entities
+      inputTransactionSources <- liftIO $ mapM (getTransactionSource user . fst) inputPairs
+      inputCategories <- liftIO $ mapM (getCategory user . snd) inputPairs
+      linkageSource <- liftIO $ getTransactionSource user linkageSourceId
+      (linkageCategory, _) <- liftIO $ getCategory user linkageCategoryId
       linkageTarget <- liftIO $ getTransactionSource user (toSqlKey (read linkageTargetId))
 
       let rawInputs = zip inputTransactionSources inputCategories
           inputs = Prelude.map (\(source, (category, _)) -> (source, category)) rawInputs
           linkages = (linkageSource, linkageCategory, linkageTarget)
-          mapKeyFunction entity = transactionSourceName (entityVal entity)
-          newConfig =
-            FullSankeyConfig
-              { configName = configName,
-                inputs = inputs,
-                linkages = linkages,
-                mapKeyFunction = mapKeyFunction
-              }
-
+          newConfig = FullSankeyConfig {inputs = inputs, linkages = [linkages]} -- TODO this needs to handle multiple
       liftIO $ saveSankeyConfig user newConfig
       redirect "/dashboard"
+
+    get "/new-configuration" $ requireUser pool $ \user -> do
+      uploaderConfigs <- liftIO $ getAllUploadConfigs user
+      transactionSources <- liftIO $ getAllTransactionSources user
+      sankeyConfig <- liftIO $ getFirstSankeyConfig user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+
+      Web.Scotty.html $ renderPage (Just user) "Configuration" $ renderConfigurationPageNew sankeyConfig categoriesBySource uploaderConfigs transactionSources
 
     get "/configuration" $ requireUser pool $ \user -> do
       uploaderConfigs <- liftIO $ getAllUploadConfigs user
@@ -553,8 +564,6 @@ main = do
 
       Web.Scotty.redirect redirectTo
 
-
-
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"
       let catId = toSqlKey $ read catIdText
@@ -578,8 +587,7 @@ main = do
       histogramData <- generateHistogramData user transactions
       json histogramData
 
-    get "/demo/api/sankey-data" $  do
-
+    get "/demo/api/sankey-data" $ do
       user <- getDemoUser
       categorizedTransactions <- liftIO $ getAllTransactions user
       gbs <- groupTransactionsBySource user categorizedTransactions
@@ -609,16 +617,17 @@ main = do
           let tempFilePath = "/tmp/" <> originalName
           liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
 
-          uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
-          case uploadConfig of
-            Just config -> addUploadConfigurationObject user config
-            Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration from the example file."
+          liftIO $ do
+            modifyIORef activeJobs (+ 1)
+            _ <- async $ do
+              uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
+              case uploadConfig of
+                Just config -> addUploadConfigurationObject user config
+                Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
+              modifyIORef activeJobs (subtract 1)
+            return ()
 
           referer <- Web.Scotty.header "Referer"
           let redirectTo = fromMaybe "/dashboard" referer
           Web.Scotty.redirect redirectTo
-
-
-        Nothing -> do
-          Web.Scotty.text "No file provided in the request"
-
+        Nothing -> Web.Scotty.text "No file provided in the request"

@@ -13,19 +13,25 @@ import Database.Persist
 import Types
 
 buildSankeyLinks ::
-  (Entity TransactionSource, Entity Category, Entity TransactionSource) ->
+  [(Entity TransactionSource, Entity Category, Entity TransactionSource)] ->
   Map (Entity TransactionSource) AggregatedTransactions ->
   [(Text, Text, Double)]
-buildSankeyLinks (sourceSource, sourceCategory, targetSource) aggregatedTransactions =
-  case Map.lookup targetSource aggregatedTransactions of
-    Just targetTransactions ->
-      let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
-          sankeyLinks =
-            Prelude.map
-              (\(category, total) -> (categoryName (entityVal sourceCategory), category, total))
-              (Map.toList categoryTotals)
-       in sankeyLinks
-    Nothing -> []
+buildSankeyLinks linkages aggregatedTransactions =
+  concatMap buildSingleLinkage linkages
+  where
+    buildSingleLinkage :: (Entity TransactionSource, Entity Category, Entity TransactionSource) -> [(Text, Text, Double)]
+    buildSingleLinkage (sourceSource, sourceCategory, targetSource) =
+      case Map.lookup targetSource aggregatedTransactions of
+        Just targetTransactions ->
+          let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
+           in [ (formatSankeyLabel sourceSource sourceCategory, transactionSourceName (entityVal targetSource) <> pack ":" <> category, total)
+                | (category, total) <- Map.toList categoryTotals
+              ]
+        Nothing -> []
+
+formatSankeyLabel :: Entity TransactionSource -> Entity Category -> Text
+formatSankeyLabel source category =
+  transactionSourceName (entityVal source) <> pack ":" <> categoryName (entityVal category)
 
 generateSankeyData ::
   Map (Entity TransactionSource) [CategorizedTransaction] ->
@@ -34,9 +40,8 @@ generateSankeyData ::
 generateSankeyData transactions config =
   let aggregatedTransactions = groupByBlahForAll transactions (categoryName . entityVal . category)
 
-      FullSankeyConfig {inputs, linkages, mapKeyFunction} = config
+      FullSankeyConfig {inputs, linkages} = config
 
-      -- Process input flows
       inputFlows = concatMap processInput inputs
         where
           processInput :: (Entity TransactionSource, Entity Category) -> [(Text, Text, Double)]
@@ -52,8 +57,8 @@ generateSankeyData transactions config =
                               categorizedByCategory
                      in Prelude.map
                           ( \(subCatName, txns) ->
-                              ( categoryName (entityVal category),
-                                subCatName,
+                              ( formatSankeyLabel source category,
+                                transactionSourceName (entityVal source) <> pack ":" <> subCatName,
                                 sum $ Prelude.map (sankeyAmount . entityVal . transaction) txns
                               )
                           )
@@ -61,13 +66,13 @@ generateSankeyData transactions config =
                   Nothing -> []
               Nothing -> []
 
-      -- Build the Sankey links
       combinedFlows = inputFlows ++ buildSankeyLinks linkages aggregatedTransactions
-
-      -- Sort the flows by the third element (weight) in descending order
-      sortedFlows = sortBy (comparing (Down . third)) combinedFlows
-   in sortedFlows
+      sortedFlows = sortBy (comparing (Down . second)) combinedFlows
+      prunedFlows = Prelude.filter (\flow -> third flow /= 0) sortedFlows
+   in prunedFlows
   where
+    second (_, x, _) = x
+    third :: (Text, Text, Double) -> Double
     third (_, _, x) = x
 
 sankeyAmount :: Transaction -> Double
@@ -75,5 +80,5 @@ sankeyAmount txn = abs $ signedAmount txn
 
 signedAmount :: Transaction -> Double
 signedAmount txn = case transactionKind txn of
-  Deposit -> transactionAmount txn
+  Deposit -> 0
   Withdrawal -> negate (transactionAmount txn)
