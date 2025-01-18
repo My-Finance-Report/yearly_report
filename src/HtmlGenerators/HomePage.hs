@@ -43,9 +43,6 @@ formatCurrency x
   | x < 0 = "-$" `append` pack (printf "%.2f" (abs x))
   | otherwise = "$" `append` pack (printf "%.2f" x)
 
-prettyFormat :: Day -> Text
-prettyFormat = T.pack . formatTime defaultTimeLocale "%B %Y"
-
 formatSankeyRow :: (Text, Text, Double) -> Text
 formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
@@ -317,7 +314,7 @@ generateDetailRows cat txs sectionId =
       H.tr $ do
         H.td (toHtml (transactionDescription t))
         H.td (toHtml $ show (transactionKind t))
-        H.td (toHtml (formatMonthYear $ transactionDateOfTransaction t))
+        H.td (toHtml (formatFullDate $ transactionDateOfTransaction t))
         H.td (toHtml (formatCurrency (transactionAmount t)))
         H.td $ do
           case transactionUploadedPdfId t of
@@ -338,7 +335,10 @@ subtabMappings =
   ]
 
 formatMonthYear :: UTCTime -> Text
-formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%m/%Y" utcTime)
+formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%B %Y" utcTime)
+
+formatFullDate :: UTCTime -> Text
+formatFullDate utcTime = T.pack (formatTime defaultTimeLocale "%m/%d/%Y" utcTime)
 
 generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [SourceFileMapping] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =

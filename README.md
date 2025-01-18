@@ -28,17 +28,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Launch blocking
 
 - renewed ability to deploy
+
 - make the column charts make sense
 
 - the configuration page is just wacky
 
 - sankey config has configability somewhere
 
-- privacy policy
-
 # Not Blocking
 
 - clicking on charts pops tables would be nice
+- privacy policy
 - ability to add accounts
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
@@ -46,14 +46,11 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - some bug with the job counter if a file has already been processed
 - refactor css
 - refactor Main.hs routes
-- pretty print dates in the tables
 - refresh on the page keeps you in the same view
 - delete transactions
-- the sankey config object is bad and doesnt make much sense
 
 # Bad UI
 
-- make sure all units are shown as dollars
 - the dropdowns dont twist the arrow
 - clicking add transactions with no file there
 - password dont match in wrong modal
