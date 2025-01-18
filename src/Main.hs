@@ -9,13 +9,13 @@ import Auth
 import Categorizer
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, throwIO, try)
-import Control.Monad (void)
+import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
 import qualified Data.ByteString.Lazy as B
 import Data.IORef
-import Data.List (nub)
+import Data.List (foldl', nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
@@ -72,6 +72,22 @@ import System.FilePath ((</>))
 import Text.Read (readMaybe)
 import Types
 import Web.Scotty
+  ( ActionM,
+    files,
+    formParam,
+    formParams,
+    get,
+    header,
+    html,
+    json,
+    liftIO,
+    middleware,
+    pathParam,
+    post,
+    redirect,
+    scotty,
+    text,
+  )
 import qualified Web.Scotty as Web
 
 data Matrix = Matrix
@@ -330,7 +346,6 @@ main = do
         return $ Map.fromList $ zip transactionSources categories
 
       liftIO $ do
-        modifyIORef activeJobs (+ 1)
         void $ async $ do
           config <- generateSankeyConfig user categoriesBySource
           case config of
@@ -339,7 +354,6 @@ main = do
               -- since we dont actually need the result
               return ()
             Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
-          modifyIORef activeJobs (subtract 1) -- ✅ Always decrement, even on failure
       liftIO $ updateUserOnboardingStep user Nothing
       Web.Scotty.redirect "/dashboard"
 
@@ -618,14 +632,10 @@ main = do
           liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
 
           liftIO $ do
-            modifyIORef activeJobs (+ 1)
-            _ <- async $ do
-              uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
-              case uploadConfig of
-                Just config -> addUploadConfigurationObject user config
-                Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
-              modifyIORef activeJobs (subtract 1)
-            return ()
+            uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
+            case uploadConfig of
+              Just config -> addUploadConfigurationObject user config
+              Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
 
           referer <- Web.Scotty.header "Referer"
           let redirectTo = fromMaybe "/dashboard" referer

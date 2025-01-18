@@ -31,8 +31,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 - the configuration page is just wacky
 
-- Sankey currently only allows one intermediate node
-- sankey config comes from openai, has configability somewhere
+- sankey config has configability somewhere
 
 - privacy policy
 
@@ -41,6 +40,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Not Blocking
 
 - clicking on charts pops tables would be nice
+- ability to add accounts
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload
@@ -57,4 +57,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - make sure all units are shown as dollars
 - clicking add transactions with no file there
 - password dont match in wrong modal
-- let people know something is happening async  
+- let people know something is happening async
+- default to categories being added
+
