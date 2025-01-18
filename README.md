@@ -54,7 +54,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Bad UI
 
-- onboarding step 1 cards not consistent
-- make example file loading async
 - make sure all units are shown as dollars
 - clicking add transactions with no file there
+- password dont match in wrong modal
+- let people know something is happening async  

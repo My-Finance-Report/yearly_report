@@ -45,16 +45,19 @@ formatEntitiesForLinks entities inputSources =
 
 generateSankeyInputPrompt :: Map (Entity TransactionSource) [Entity Category] -> Text
 generateSankeyInputPrompt entities =
-  "Given the following (account, category) pairs generate a Sankey configuration."
-    <> "First return account-category that are 'inputs', things like income. "
+  "You are given the following (account, category) pairs for a user. we want to make a Sankey diagram that displays the flow of their money."
+    <> "there may be a category that represents an external source of money, such as income"
+    <> "First return an account-category list of these 'inputs', things like income."
+    <> "also lets not assuming things like 'investments' are inherintly sources, they could also be purchasing investments"
     <> "\n\nEntities:\n"
     <> intercalate "\n" (formatEntitiesForInput entities)
 
 generateSankeyLinksPrompt :: [Text] -> Text
 generateSankeyLinksPrompt formattedEntities =
-  "Ok now we want to select any possible linkages within the acconts. Things like a bank account having a "
-    <> "credit card payment category -> the credit card account"
-    <> "each linkage should be a account-category that is source then return the account that is the sink"
+  "Ok now we want to select the linkages between acconts. Your selections here will create a intermediate node between the source and the sink of the graph."
+    <> "This is a case where money in one account flows to another specific Account, such as a bank account having payments to a credit card. the payments would be  "
+    <> "categorized as Bank-Credit Card Payment and those would 'flow' into the credit card node, (which will have it's own outputs)"
+    <> "Only select linkages that make sense. We just want linkages that are logical and only one or none is fine."
     <> "\n\nEntities:\n"
     <> intercalate "\n" formattedEntities
 
@@ -218,7 +221,7 @@ fetchSankeyLinks entities selectedSources txSourceMap categoryMap = do
       putStrLn $ "Error getting links: " ++ err
       return Nothing
     Right responseBodyLinks -> do
-      print responseBodyLinks -- Debugging output
+      print responseBodyLinks
       parseSankeyLinksResponse responseBodyLinks txSourceMap categoryMap
 
 persistSankeyConfig ::
@@ -235,27 +238,36 @@ persistSankeyConfig user inputPairs linkPairs = do
           }
   saveSankeyConfig user fullConfig
 
--- | Parent function that calls both helpers
 generateSankeyConfig ::
-  Map (Entity TransactionSource) [Entity Category] -> IO ()
-generateSankeyConfig entities = do
+  (MonadUnliftIO m) =>
+  Entity User ->
+  Map (Entity TransactionSource) [Entity Category] ->
+  m (Maybe FullSankeyConfig)
+generateSankeyConfig user entities = do
   -- Step 1: Build lookup maps
   let txSourceMap = fromList [(transactionSourceName $ entityVal tx, tx) | (tx, _) <- toList entities]
   let categoryMap = fromList [(categoryName $ entityVal cat, cat) | (_, cats) <- toList entities, cat <- cats]
 
   -- Step 2: Get selected inputs
-  inputPairs <- fetchSankeyInputs entities txSourceMap categoryMap
+  inputPairs <- liftIO $ fetchSankeyInputs entities txSourceMap categoryMap
   case inputPairs of
-    Just pairs -> do
-      putStrLn "Parsed Sankey Inputs:"
-      print pairs -- Debugging output
+    Just inputs -> do
+      liftIO $ putStrLn "Parsed Sankey Inputs:"
+      liftIO $ print inputs -- Debugging output
 
       -- Step 3: Fetch possible linkages
-      linkPairs <- fetchSankeyLinks entities [ts | (ts, _) <- pairs] txSourceMap categoryMap
+      linkPairs <- liftIO $ fetchSankeyLinks entities [tx | (tx, _) <- inputs] txSourceMap categoryMap
       case linkPairs of
         Just links -> do
-          putStrLn "Parsed Sankey Links:"
-          print links -- Debugging output
-          -- Final Step: Combine inputPairs and linkPairs as needed
-        Nothing -> putStrLn "Failed to parse Sankey links."
-    Nothing -> putStrLn "Failed to parse Sankey inputs."
+          liftIO $ putStrLn "Parsed Sankey Links:"
+          liftIO $ print links -- Debugging output
+          return $ Just FullSankeyConfig {inputs = inputs, linkages = map flatten links}
+        Nothing -> do
+          liftIO $ putStrLn "Failed to parse Sankey links."
+          return Nothing
+    Nothing -> do
+      liftIO $ putStrLn "Failed to parse Sankey inputs."
+      return Nothing
+
+flatten :: ((Entity TransactionSource, Entity Category), Entity TransactionSource) -> (Entity TransactionSource, Entity Category, Entity TransactionSource)
+flatten ((a, b), c) = (a, b, c)

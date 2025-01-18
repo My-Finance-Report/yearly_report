@@ -9,6 +9,7 @@ import Auth
 import Categorizer
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, throwIO, try)
+import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
@@ -330,16 +331,17 @@ main = do
 
       liftIO $ do
         modifyIORef activeJobs (+ 1)
-        _ <- async $ do
-          generateSankeyConfig categoriesBySource
-          modifyIORef activeJobs (subtract 1)
-        return ()
-
+        void $ async $ do
+          config <- generateSankeyConfig user categoriesBySource
+          case config of
+            Just con -> do
+              saveSankeyConfig user con
+              -- since we dont actually need the result
+              return ()
+            Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
+          modifyIORef activeJobs (subtract 1) -- ✅ Always decrement, even on failure
       liftIO $ updateUserOnboardingStep user Nothing
-
-      let banner = Just $ makeSimpleBanner "Setting up your account!"
-      content <- liftIO $ renderHomePage user banner
-      Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
+      Web.Scotty.redirect "/dashboard"
 
     get "/demo-account" $ do
       demoUser <- getDemoUser
