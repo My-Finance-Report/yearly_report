@@ -50,6 +50,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - pretty print dates in the tables
 - refresh on the page keeps you in the same view
 - delete transactions
+- the sankey config object is bad and doesnt make much sense
 
 # Bad UI
 

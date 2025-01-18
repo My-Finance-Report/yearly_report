@@ -44,15 +44,6 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
       ! A.method "post"
       ! A.action "/update-sankey-config"
       $ do
-        -- Configuration Name
-        H.label ! A.for "configName" $ "Configuration Name:"
-        H.input
-          ! A.type_ "text"
-          ! A.name "configName"
-          ! A.id "configName"
-          ! A.value (toValue $ maybe "" configName maybeConfig)
-        H.br
-
         -- Inputs Section
         H.fieldset $ do
           H.legend "Inputs"

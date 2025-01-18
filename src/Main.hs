@@ -65,6 +65,7 @@ import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Sankey
+import SankeyConfiguration
 import System.Environment (lookupEnv)
 import System.FilePath ((</>))
 import Text.Read (readMaybe)
@@ -244,6 +245,15 @@ main = do
           Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
           Web.redirect "/login"
 
+    get "/test" $ do
+      user <- getDemoUser
+      transactionSources <- liftIO $ getAllTransactionSources user
+      categoriesBySource <- liftIO $ do
+        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+        return $ Map.fromList $ zip transactionSources categories
+      liftIO $ generateSankeyConfig categoriesBySource
+      Web.html "ok"
+
     get "/" $ do
       pool <- liftIO getConnectionPool
       user <- getCurrentUser pool
@@ -422,7 +432,6 @@ main = do
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
     post "/update-sankey-config" $ requireUser pool $ \user -> do
-      configName <- Web.Scotty.formParam "configName"
       allParams <- Web.Scotty.formParams
 
       let parseComposite keyValue =
@@ -447,7 +456,7 @@ main = do
       let rawInputs = zip inputTransactionSources inputCategories
           inputs = Prelude.map (\(source, (category, _)) -> (source, category)) rawInputs
           linkages = (linkageSource, linkageCategory, linkageTarget)
-          newConfig = FullSankeyConfig {configName = configName, inputs = inputs, linkages = linkages}
+          newConfig = FullSankeyConfig {inputs = inputs, linkages = linkages}
 
       liftIO $ saveSankeyConfig user newConfig
       redirect "/dashboard"

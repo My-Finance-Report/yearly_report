@@ -95,7 +95,7 @@ SankeyConfig
 
 SankeyInput
     configId SankeyConfigId
-    sourceId TransactionSourceId
+    sourceId TransactionSourceId -- DEPRECATED: We don't need this anymore
     categoryId CategoryId
     deriving Show Eq
 

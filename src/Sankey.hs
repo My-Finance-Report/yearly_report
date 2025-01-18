@@ -38,7 +38,7 @@ generateSankeyData ::
 generateSankeyData transactions config =
   let aggregatedTransactions = groupByBlahForAll transactions (categoryName . entityVal . category)
 
-      FullSankeyConfig {inputs, linkages, mapKeyFunction} = config
+      FullSankeyConfig {inputs, linkages} = config
 
       inputFlows = concatMap processInput inputs
         where

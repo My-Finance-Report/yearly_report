@@ -12,8 +12,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Database.Models
 import Database.Persist
-import HtmlGenerators.OnboardingOne
 import Database.Persist.Postgresql (fromSqlKey)
+import HtmlGenerators.OnboardingOne
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
@@ -31,16 +31,6 @@ renderEditSankeyConfigPage maybeConfig sourceCategories =
       ! A.method "post"
       ! A.action "/update-sankey-config"
       $ do
-        -- Configuration Name
-        H.label ! A.for "configName" $ "Configuration Name:"
-        H.input
-          ! A.type_ "text"
-          ! A.name "configName"
-          ! A.id "configName"
-          ! A.value (toValue $ maybe "" configName maybeConfig)
-        H.br
-
-        -- Inputs Section
         H.fieldset $ do
           H.legend "Inputs"
           case maybeConfig of
@@ -285,7 +275,6 @@ renderConfigurationPage sankeyConfig transactions uploaderConfigs transactionSou
       -- Sankey Configuration Section
       H.div ! A.class_ "config-section" $ do
         renderEditSankeyConfigPage sankeyConfig transactions
-
 
       -- Transaction Sources Section
       H.div ! A.class_ "config-section" $ do

@@ -19,7 +19,7 @@ module Types
 where
 
 import Control.Exception
-import Data.Aeson (FromJSON (parseJSON), withObject, (.:))
+import Data.Aeson (FromJSON (parseJSON), fromJSON, withObject, (.:))
 import Data.Function (on)
 import Data.List (groupBy, sortOn)
 import Data.Map (Map)
@@ -86,11 +86,10 @@ data PartialUploadConfig
 
 instance FromJSON PartialUploadConfig where
   parseJSON = withObject "PartialUploadConfig" $ \v -> do
-    partialFilenameRegex <- v .: "filenameRegex" -- Map JSON "filenameRegex" to Haskell "partialFilenameRegex"
-    partialStartKeyword  <- v .: "startKeyword"  -- Map JSON "startKeyword" to Haskell "partialStartKeyword"
-    partialEndKeyword    <- v .: "endKeyword"    -- Map JSON "endKeyword" to Haskell "partialEndKeyword"
+    partialFilenameRegex <- v .: "filenameRegex"
+    partialStartKeyword <- v .: "startKeyword"
+    partialEndKeyword <- v .: "endKeyword"
     return PartialUploadConfig {..}
-
 
 groupByBlah ::
   (Ord t) =>
@@ -102,9 +101,9 @@ groupByBlah groupingFunc transactions =
 
 groupByBlahForAll ::
   (Ord t) =>
-  Map.Map (Entity TransactionSource) [CategorizedTransaction] ->
+  Map.Map k [CategorizedTransaction] ->
   (CategorizedTransaction -> t) ->
-  Map.Map (Entity TransactionSource) (Map.Map t [CategorizedTransaction])
+  Map.Map k (Map.Map t [CategorizedTransaction])
 groupByBlahForAll groupedBySource groupingFunc =
   Map.map (groupingFunc `groupByBlah`) groupedBySource
 
@@ -119,7 +118,6 @@ type AggregatedTransactions = Map.Map Text [CategorizedTransaction]
 
 data FullSankeyConfig = FullSankeyConfig
   { inputs :: [(Entity TransactionSource, Entity Category)],
-    linkages :: (Entity TransactionSource, Entity Category, Entity TransactionSource),
-    mapKeyFunction :: Entity TransactionSource -> Text,
-    configName :: Text
+    linkages :: (Entity TransactionSource, Entity Category, Entity TransactionSource)
   }
+  deriving (Show, Generic)
