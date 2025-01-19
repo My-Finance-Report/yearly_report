@@ -9,6 +9,10 @@ IMAGE_TAG="latest"
 # Derived variables
 ECR_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
 
+
+# minify the tailwind css for the project
+./tailwindcss -i static/css/input.css -o static/css/output.css --minify
+
 # Step 1: Authenticate Docker to ECR
 echo "Logging into Amazon ECR..."
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
