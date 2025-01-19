@@ -28,12 +28,24 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Launch blocking
 
 - make the column charts make sense
-
 - the configuration page is just wacky
 - sankey config has configability somewhere
 
+# Mom feedback
+
+- make it clear when they start the onboarding that they need their bank / cc statements
+- sankey needs to fix within its container
+- First page need to know you need statements
+  -> import to be able to name credit cards
+  -> the first page spells out all the things you need to do
+  -> harder to crash page on final step
+  -> from the onboard page just upload those transactions
+- manually add transactions
+- budget and budget progress
+
 # Not Blocking
 
+- filter by year when you look at dashboard
 - clicking on charts pops tables would be nice
 - put wildcards in the cabal file to prevent rebuilds on large deploys
 - privacy policy

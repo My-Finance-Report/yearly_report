@@ -8,15 +8,16 @@ import Text.Blaze.Html5 as H
     ToValue (toValue),
     body,
     br,
+    button,
     div,
     form,
     h1,
     h2,
     h3,
     input,
-    button,
     label,
     li,
+    link,
     option,
     p,
     pre,
@@ -25,30 +26,32 @@ import Text.Blaze.Html5 as H
     span,
     toHtml,
     ul,
-    (!), link,
+    (!),
   )
 import Text.Blaze.Html5.Attributes as A
   ( action,
     class_,
     for,
+    href,
     id,
     method,
     name,
-    oninput,
     onclick,
+    oninput,
     placeholder,
+    rel,
     src,
     type_,
-    value, rel, href,
+    value,
   )
 
 renderLandingPage :: Html
-renderLandingPage = 
+renderLandingPage =
   H.body $ do
     H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/css/landing.css"
+      ! A.rel "stylesheet"
+      ! A.type_ "text/css"
+      ! A.href "/css/landing.css"
     H.div ! A.class_ "container landing-page" $ do
       -- Banner
       H.div ! A.class_ "banner" $ do
@@ -57,7 +60,7 @@ renderLandingPage =
         H.h2 ! A.class_ "subtag" $ "Simple personal finance for just $2/month or $20/year."
 
       H.div ! A.class_ "features-section" $ do
-        H.div ! A.class_ "cards-container" $ do
+        H.div ! A.class_ "flex flex-col sm:flex-row gap-2" $ do
           featureCard "Upload Transactions" "Automatically pull transactions from your bank statements"
           featureCard "Categorize Expenses" "Automatically categorize all your expenses"
           featureCard "See The Money Flow" "Understand where your money is actually going!"
@@ -73,7 +76,6 @@ renderLandingPage =
               ! A.class_ "login-btn"
               ! A.onclick "window.location.href='/login'"
               $ "Sign up"
-
 
 -- Helper function to generate a feature card
 featureCard :: Text -> Text -> Html

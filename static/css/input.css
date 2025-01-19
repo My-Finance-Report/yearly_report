@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer components {
+  .primary-button {
+    @apply bg-primary text-white border-primary border-[1px] rounded-md p-2 hover:bg-opacity-90 transition duration-200 ease-in-out;
+  }
+
+  .secondary-button {
+    @apply bg-white text-primary border-primary border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
+  }
+
+  /* Improve hover state for better readability */
+  .secondary-button:hover {
+    @apply bg-gray-100 border-primary; /* Light gray background instead of dark */
+  }
+
+  /* Optional: If more contrast is needed, keep text primary but darken background */
+  .secondary-button:active {
+    @apply bg-gray-200 border-primary; /* Slightly darker gray on click */
+  }
+}

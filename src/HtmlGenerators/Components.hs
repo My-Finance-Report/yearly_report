@@ -11,20 +11,21 @@ import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
 navigationBar :: Maybe (Entity User) -> Html
-navigationBar mUser = H.nav H.! A.class_ "navbar" $ do
-  H.div H.! A.class_ "nav-content" $ do
-    H.div H.! A.class_ "nav-brand" $ do
-      case mUser of
-        Nothing -> H.a H.! A.href "/" H.! A.class_ "brand-link" $ "My Financé"
-        Just user -> H.a H.! A.href "/dashboard" H.! A.class_ "brand-link" $ "My Financé"
+navigationBar mUser = H.nav H.! A.class_ "flex items-center justify-between bg-white border-b border-primary px-6 py-4 shadow-md" $ do
+  -- Brand / Logo
+  H.div H.! A.class_ "text-primary font-semibold text-lg" $ do
+    let brandLink = case mUser of
+          Nothing -> "/"
+          Just _ -> "/dashboard"
+    H.a H.! A.href brandLink H.! A.class_ "ml-12 hover:opacity-80 transition" $ "My Financé"
 
-    H.ul H.! A.class_ "nav-links" $ do
-      H.li $ H.a H.! A.href "/dashboard" $ "Home"
-      H.li $ H.a H.! A.href "/help" $ "Help Me!"
+  -- User Section (Login / Logout)
+  H.div H.! A.class_ "flex items-center gap-4" $ do
+    case mUser of
+      Nothing -> do
+        H.a H.! A.href "/login" H.! A.class_ "primary-button" $ "Login"
+      Just user -> do
+        H.span H.! A.class_ "text-primary font-medium" $ H.toHtml $ userEmail $ entityVal user
+        H.a H.! A.href "/logout" H.! A.class_ "primary-button" $ "Logout"
 
-    H.div H.! A.class_ "nav-user" $ do
-      case mUser of
-        Nothing -> H.a H.! A.href "/login" H.! A.class_ "btn-login" $ "Login"
-        Just user -> do
-          H.span H.! A.class_ "user-name" $ H.toHtml $ userEmail $ entityVal user
-          H.a H.! A.href "/logout" H.! A.class_ "btn-logout" $ "Logout"
+    H.a H.! A.href "/help" H.! A.class_ "secondary-button" $ "Help me!"

@@ -61,6 +61,7 @@ import HtmlGenerators.OnboardingFour
 import HtmlGenerators.OnboardingOne
 import HtmlGenerators.OnboardingThree
 import HtmlGenerators.OnboardingTwo
+import HtmlGenerators.UploadPage
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -382,6 +383,10 @@ main = do
       liftIO $ addUploadConfiguration user startKeyword endKeyword sourceId filenamePattern
 
       redirect "/dashboard"
+
+    get "/upload" $ requireUser pool $ \user -> do
+      let content = renderUploadPage user
+      Web.html $ renderPage (Just user) "Upload Page" content
 
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files

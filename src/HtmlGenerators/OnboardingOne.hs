@@ -88,16 +88,16 @@ renderOnboardingOne user transactionSources isOnboarding =
    in H.body $ do
         H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
 
-        H.div ! A.class_ "page-header" $ do
+        H.div ! A.class_ "flex flex-col rounded-lg border-red-500 border-2" $ do
           case isOnboarding of
             True -> do
-              H.h1 "Onboarding"
-              H.h2 "Step 1 of 3"
+              H.h1 "Onboarding" ! A.class_ "text-xl"
+              H.h2 "Step 1 of 3" ! A.class_ "text-lg"
             False -> return ()
           H.h2 "Add Accounts"
           H.p "Think Saving Account, Checking Account, Credit Card, etc."
 
-          newSourceComponent transactionSources isOnboarding
+        newSourceComponent transactionSources isOnboarding
 
         H.div ! A.class_ "next-button-container" $ do
           H.form

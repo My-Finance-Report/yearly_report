@@ -30,6 +30,7 @@ library
     HtmlGenerators.OnboardingTwo
     HtmlGenerators.OnboardingThree
     HtmlGenerators.OnboardingFour
+    HtmlGenerators.UploadPage 
     Auth
     Sankey
     SankeyConfiguration
@@ -95,6 +96,7 @@ executable year-report-finances
       HtmlGenerators.OnboardingTwo
       HtmlGenerators.OnboardingThree
       HtmlGenerators.OnboardingFour
+      HtmlGenerators.UploadPage 
       Auth
       Sankey
       SankeyConfiguration

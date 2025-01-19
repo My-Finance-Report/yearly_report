@@ -3,7 +3,6 @@
 
 module HtmlGenerators.HtmlGenerators
   ( renderTransactionsPage,
-    renderUploadPage,
     renderSupportPage,
     renderPdfResultPage,
   )
@@ -24,23 +23,6 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types (CategorizedTransaction (transaction, transactionId), category)
-
-renderUploadPage :: TL.Text
-renderUploadPage = renderHtmlT $ H.docTypeHtml $ do
-  H.head $ do
-    H.title "Upload PDF"
-  H.body $ do
-    H.h1 "Upload a PDF"
-    H.form
-      H.! A.method "post"
-      H.! A.action "/upload"
-      H.! A.enctype "multipart/form-data"
-      $ do
-        H.label "Choose PDF to upload:"
-        H.br
-        H.input H.! A.type_ "file" H.! A.name "pdfFile"
-        H.br
-        H.input H.! A.type_ "submit" H.! A.value "Upload"
 
 renderSupportPage :: Html
 renderSupportPage =
@@ -160,8 +142,6 @@ renderEditableTransactionRow file categoryLookup tx = do
                     ! A.type_ "submit"
                     ! A.value "Delete"
                     ! A.class_ "full-width"
-
-
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml

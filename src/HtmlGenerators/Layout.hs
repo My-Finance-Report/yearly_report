@@ -25,6 +25,9 @@ renderPage mUser pageTitle content =
         ! A.href "/css/navbar.css"
       H.link
         ! A.rel "stylesheet"
+        ! A.href "/css/output.css"
+      H.link
+        ! A.rel "stylesheet"
         ! A.type_ "text/css"
         ! A.href "/css/landing.css"
 

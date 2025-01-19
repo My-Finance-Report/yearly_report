@@ -10,7 +10,11 @@ import Data.Ord (Down (Down), comparing)
 import Data.Text as T hiding (concatMap, elem)
 import Database.Models
 import Database.Persist
+import Text.Printf (printf)
 import Types
+
+truncateTo2 :: Double -> Double
+truncateTo2 x = read (printf "%.2f" x) :: Double
 
 buildSankeyLinks ::
   [(Entity TransactionSource, Entity Category, Entity TransactionSource)] ->
@@ -23,7 +27,7 @@ buildSankeyLinks linkages aggregatedTransactions =
     buildSingleLinkage (sourceSource, sourceCategory, targetSource) =
       case Map.lookup targetSource aggregatedTransactions of
         Just targetTransactions ->
-          let categoryTotals = Map.map (sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
+          let categoryTotals = Map.map (truncateTo2 . sum . Prelude.map (sankeyAmount . entityVal . transaction)) targetTransactions
            in [ (formatSankeyLabel sourceSource sourceCategory, transactionSourceName (entityVal targetSource) <> pack ":" <> category, total)
                 | (category, total) <- Map.toList categoryTotals
               ]
@@ -59,7 +63,7 @@ generateSankeyData transactions config =
                           ( \(subCatName, txns) ->
                               ( formatSankeyLabel source category,
                                 transactionSourceName (entityVal source) <> pack ":" <> subCatName,
-                                sum $ Prelude.map (sankeyAmount . entityVal . transaction) txns
+                                truncateTo2 . sum $ Prelude.map (sankeyAmount . entityVal . transaction) txns
                               )
                           )
                           subCategoryFlows

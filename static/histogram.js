@@ -33,8 +33,8 @@ function drawHistogram(rows) {
   const data = google.visualization.arrayToDataTable(rows);
 
   const options = {
-    width: 650,
-    height: 400,
+    width: "100%",
+    height: "100%",
     legend: { position: 'top', maxLines: 3 },
     isStacked: false, 
     bar: { 

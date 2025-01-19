@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-wrong-do-bind #-}
 
 module HtmlGenerators.HomePage
   ( renderHomePage,
@@ -56,6 +55,41 @@ makeDemoBanner =
     H.span "You are in demo mode. "
     H.a ! A.href "/login" ! A.class_ "signup-button" $ "Sign up now"
 
+makeToolBar :: Html
+makeToolBar =
+  H.div ! A.class_ "flex flex-row items-center justify-center" $ do
+    H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4" $ do
+      H.button
+        ! A.type_ "submit"
+        ! A.class_ "secondary-button"
+        ! A.id "uploadButton"
+        $ "Configure Charts"
+      H.button
+        ! A.type_ "submit"
+        ! A.class_ "secondary-button"
+        ! A.id "uploadButton"
+        $ "Add Account"
+      H.button
+        ! A.type_ "submit"
+        ! A.class_ "primary-button"
+        ! A.id "uploadButton"
+        $ "Add Transactions"
+
+makeCharts :: Html
+makeCharts =
+  H.div ! A.class_ "charts-grid flex flex-col md:flex-row gap-6  rounded-md p-4" $ do
+    H.div ! A.class_ "chart-card flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+      H.div
+        ! A.id "sankeyChart"
+        ! A.class_ "sankey-chart w-full h-full"
+        $ ""
+
+    H.div ! A.class_ "chart-card flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+      H.div
+        ! A.id "histogram_chart"
+        ! A.class_ "histogram-chart w-full h-full"
+        $ ""
+
 generateHomapageHtml ::
   Maybe Html ->
   Html ->
@@ -68,45 +102,10 @@ generateHomapageHtml banner tabs =
       Nothing -> return ()
 
     H.div ! A.class_ "container" $ do
-      H.div ! A.class_ "page-header" $ do
-        H.div ! A.class_ "upload-section" $ do
-          H.form
-            ! A.action "/upload"
-            ! A.method "post"
-            ! A.class_ "upload_form"
-            ! A.enctype "multipart/form-data"
-            $ do
-              H.input
-                ! A.type_ "file"
-                ! A.name "pdfFile"
-                ! A.accept "application/pdf"
-                ! A.id "pdfFileInput"
-              H.button
-                ! A.type_ "submit"
-                ! A.class_ "btn upload-btn"
-                ! A.id "uploadButton"
-                $ "Add Transactions"
-
-      H.div ! A.class_ "charts-grid" $ do
-        H.div ! A.class_ "chart-card" $ do
-          H.div
-            ! A.id "sankeyChart"
-            ! A.class_ "chart sankey-chart"
-            $ ""
-
-        H.div ! A.class_ "chart-card" $ do
-          H.div
-            ! A.id "histogram_chart"
-            ! A.class_ "chart histogram-chart"
-            $ ""
-
+      makeToolBar
+      makeCharts
       tabs
 
-    -- Scripts at the end of body
-    H.script
-      ! A.type_ "text/javascript"
-      ! A.src "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"
-      $ mempty
     H.script
       ! A.type_ "text/javascript"
       ! A.src "https://www.gstatic.com/charts/loader.js"
@@ -263,28 +262,6 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
 generateSankeyDiv :: Html
 generateSankeyDiv =
   H.div ! A.id "sankey_chart" $ mempty
-
-generateUpload :: Html
-generateUpload =
-  H.div ! A.class_ "upload-section" $ do
-    H.h2 "Upload a PDF File"
-    H.form
-      ! A.method "post"
-      ! A.action "/upload"
-      ! A.enctype "multipart/form-data"
-      $ do
-        H.div ! A.class_ "form-group file-upload-wrapper" $ do
-          H.label ! A.for "pdfFile" ! A.class_ "custom-file-label" $ "Choose File"
-          H.input
-            ! A.type_ "file"
-            ! A.name "pdfFile"
-            ! A.id "pdfFile"
-            ! A.class_ "custom-file-input"
-        H.div ! A.class_ "form-group" $ do
-          H.button
-            ! A.type_ "submit"
-            ! A.class_ "btn upload-btn"
-            $ "Upload"
 
 generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
