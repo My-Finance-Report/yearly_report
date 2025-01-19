@@ -23,8 +23,7 @@ body {
     display: flex;
     list-style: none;
     padding: 0;
-    margin: 0 0 10px 0;
-    border-bottom: 2px solid #ddd;
+    margin-left: 20px;
 }
 
 .tabs .tab {
@@ -45,12 +44,7 @@ body {
     font-weight: bold;
 }
 
-.tab-content-container {
-    border: 1px solid #ddd;
-    padding: 15px;
-    background-color: #fff;
-    border-radius: 5px;
-}
+
 
 .tab-content {
     display: none;
@@ -619,7 +613,6 @@ tr:hover {
   background-color: #f1f1f1; /* Slightly darker gray */
 }
 
-/* Use an arrow to indicate expandability */
 .expandable-row::before {
   display: inline-block;
   margin-right: 10px;

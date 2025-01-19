@@ -53,7 +53,7 @@ makeDemoBanner :: Html
 makeDemoBanner =
   H.div ! A.class_ "banner demo-banner" $ do
     H.span "You are in demo mode. "
-    H.a ! A.href "/login" ! A.class_ "signup-button" $ "Sign up now"
+    H.a ! A.href "/login" ! A.class_ "underline" $ "Sign up now"
 
 makeToolBar :: Html
 makeToolBar =
@@ -68,7 +68,7 @@ makeToolBar =
         ! A.type_ "submit"
         ! A.class_ "secondary-button"
         ! A.id "uploadButton"
-        $ "Add Account"
+        $ "Manage Accounts"
       H.button
         ! A.type_ "submit"
         ! A.class_ "primary-button"
@@ -101,7 +101,7 @@ generateHomapageHtml banner tabs =
       Just bannerHtml -> bannerHtml
       Nothing -> return ()
 
-    H.div ! A.class_ "container" $ do
+    H.div ! A.class_ "" $ do
       makeToolBar
       makeCharts
       tabs
@@ -210,13 +210,13 @@ generateAggregatedRowsWithExpandableDetails header aggregated =
               | txns <- Map.elems aggregated,
                 txn <- txns
             ]
-   in H.table $ do
-        H.tr $ do
-          H.th ! A.class_ "arrow-column" $ ""
-          H.th header
-          H.th "Withdrawals"
-          H.th "Deposits"
-          H.th "Balance"
+   in H.table ! A.class_ "w-full border-collapse border border-primary text-left rounded-md" $ do
+        H.tr ! A.class_ "bg-primary text-white" $ do
+          H.th ! A.class_ "w-6 text-center p-2 border border-primary" $ ""
+          H.th ! A.class_ "p-2 border border-primary font-semibold" $ header
+          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Withdrawals"
+          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Deposits"
+          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Balance"
 
         Map.foldrWithKey
           ( \key txns accHtml ->
@@ -265,8 +265,10 @@ generateSankeyDiv =
 
 generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
-  H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "')") $ do
-    H.td ! A.class_ "arrow-column" $ H.span "▶"
+  H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "'); toggleArrow(this)") $ do
+    H.td ! A.class_ "w-6 text-center transition-transform duration-200 ease-in-out" $
+      H.span ! A.class_ "inline-block transform" $
+        "▶"
     H.td (toHtml cat)
     H.td (toHtml withdrawls)
     H.td (toHtml deposits)
@@ -331,7 +333,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
         ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ")")
         $ "Processed Files"
 
-    H.div ! A.class_ "tab-content-container" $ do
+    H.div ! A.class_ "border border-primary p-2 rounded-md" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
         H.div
           ! A.class_ "tab-content"

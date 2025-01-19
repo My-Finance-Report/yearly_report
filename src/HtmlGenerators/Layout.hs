@@ -41,4 +41,4 @@ renderPage mUser pageTitle content =
 
     H.body $ do
       navigationBar mUser
-      H.div ! A.class_ "page-content" $ content
+      H.div ! A.class_ "m-2 md:mx-24 md:my-4" $ content

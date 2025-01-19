@@ -28,6 +28,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Launch blocking
 
 - make the column charts make sense
+- sort is wrong on the barchart x axis
 - the configuration page is just wacky
 - sankey config has configability somewhere
 
@@ -47,10 +48,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 - filter by year when you look at dashboard
 - clicking on charts pops tables would be nice
-- put wildcards in the cabal file to prevent rebuilds on large deploys
 - privacy policy
 - ability to add accounts
-- add an og image for the homepage
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload
@@ -62,7 +61,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Bad UI
 
-- the dropdowns dont twist the arrow
 - clicking add transactions with no file there
 - password dont match in wrong modal
 - let people know something is happening async

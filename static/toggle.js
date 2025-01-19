@@ -4,9 +4,7 @@ function toggleDetails(sectionId) {
   
   if (section.classList.contains('hidden')) {
     section.classList.remove('hidden');
-    row.classList.add('expanded'); // Add expanded class
   } else {
     section.classList.add('hidden');
-    row.classList.remove('expanded'); // Remove expanded class
   }
 }
