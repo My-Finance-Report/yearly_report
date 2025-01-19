@@ -60,19 +60,22 @@ makeToolBar =
   H.div ! A.class_ "flex flex-row items-center justify-center" $ do
     H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4" $ do
       H.button
-        ! A.type_ "submit"
+        ! A.type_ "button"
         ! A.class_ "secondary-button"
-        ! A.id "uploadButton"
+        ! A.id "configureChartsButton"
+        ! A.onclick "window.location.href='/new-configuration'"
         $ "Configure Charts"
       H.button
-        ! A.type_ "submit"
+        ! A.type_ "button"
         ! A.class_ "secondary-button"
-        ! A.id "uploadButton"
+        ! A.id "manageAccountsButton"
+        ! A.onclick "window.location.href='/manage-accounts'"
         $ "Manage Accounts"
       H.button
-        ! A.type_ "submit"
+        ! A.type_ "button"
         ! A.class_ "primary-button"
-        ! A.id "uploadButton"
+        ! A.id "addTransactionsButton"
+        ! A.onclick "window.location.href='/upload'"
         $ "Add Transactions"
 
 makeCharts :: Html

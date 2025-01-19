@@ -24,3 +24,4 @@ function toggleArrow(row) {
     arrow.classList.add("rotate-90");
   }
 }
+

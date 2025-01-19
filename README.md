@@ -46,6 +46,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Not Blocking
 
+- there is some redirect bug in the onboarding flow
 - filter by year when you look at dashboard
 - clicking on charts pops tables would be nice
 - privacy policy
@@ -61,7 +62,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Bad UI
 
-- clicking add transactions with no file there
 - password dont match in wrong modal
 - let people know something is happening async
 - default to categories being added
