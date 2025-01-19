@@ -70,7 +70,7 @@ renderLandingPage =
         H.button
           ! A.class_ "primary-button"
           ! A.onclick "window.location.href='/demo-account'"
-          $ "See Playground"
+          $ "Try the demo"
         H.button
           ! A.class_ "secondary-button"
           ! A.onclick "window.location.href='/login'"
