@@ -2,7 +2,7 @@
 
 module HtmlGenerators.OnboardingTwo (renderOnboardingTwo) where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, unless, when)
 import Data.Map (Map, toList)
 import Data.Text (Text)
 import Database.Models
@@ -25,67 +25,61 @@ renderOnboardingTwo user transactions isOnboarding =
         if isOnboarding
           then "post"
           else "get"
-   in H.body $ do
-        -- Include the CSS for onboarding
-        H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
-
+   in H.div ! A.class_ "bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center p-6" $ do
         -- Page Header
-        H.div ! A.class_ "page-header" $ do
-          case isOnboarding of
-            True -> do
-              H.h1 "Onboarding"
-              H.h2 "Step 2 of 3"
-            False -> return ()
-          H.h2 "Create Categories"
-          H.p "Add categories for each account type."
+        H.div ! A.class_ "w-full max-w-3xl text-center mb-8" $ do
+          when isOnboarding $ do
+            H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
+            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 2 of 3"
+          H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Create Categories"
+          H.p ! A.class_ "text-gray-600 mt-2" $ "Add categories for each account type."
 
         -- Config Section: Columns for Each Transaction Source
-        H.div ! A.class_ "config-columns" $ do
+        H.div ! A.class_ "flex flex-col md:flex-row gap-6 w-full max-w-4xl" $ do
           forM_ (toList transactions) $ \(Entity sourceId source, categories) -> do
-            H.div ! A.class_ "config-column" $ do
-              H.h3 $ toHtml $ transactionSourceName source
+            H.div ! A.class_ "flex flex-col justify-around border border-primary rounded-md p-6 shadow-md w-full md:w-1/2" $ do
+              H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml $ transactionSourceName source
 
               -- Existing Categories
-              H.div ! A.class_ "category-list" $ do
+              H.div ! A.class_ "flex flex-wrap gap-2" $ do
                 forM_ categories $ \(Entity catId cat) -> do
-                  H.div ! A.class_ "category-card" $ do
+                  H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex items-center gap-2" $ do
+                    H.span $ toHtml $ categoryName cat
                     H.form
-                      ! A.class_ "card-content"
                       ! A.method "post"
                       ! A.action (toValue $ "/remove-category/" <> show (fromSqlKey catId))
                       $ do
-                        H.span $ toHtml $ categoryName cat
                         H.input
                           ! A.type_ "submit"
-                          ! A.value "-"
-                          ! A.class_ "btn-delete"
+                          ! A.value "×"
+                          ! A.class_ "text-red-500 cursor-pointer hover:text-red-700 font-bold"
 
               let sourceName = transactionSourceName source
-              if sourceName == "Savings Account" || sourceName == "Checking Account"
-                then renderEasyAdd sourceId categories ["Income", "Investments", "Credit Card Payments", "Transfers"]
-                else
-                  if sourceName == "Credit Card" || sourceName == "Debit Card"
-                    then renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food", "Credit Card Payments"]
-                    else return ()
+              when (sourceName `elem` ["Savings Account", "Checking Account"]) $
+                renderEasyAdd sourceId categories ["Income", "Investments", "Credit Card Payments", "Transfers"]
+              when (sourceName `elem` ["Credit Card", "Debit Card"]) $
+                renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food", "Credit Card Payments"]
 
-              H.div ! A.class_ "category-card" $ do
+              -- Add Custom Category
+              H.div ! A.class_ "mt-4" $ do
                 H.form
-                  ! A.class_ "card-content"
                   ! A.method "post"
                   ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
+                  ! A.class_ "flex gap-2"
                   $ do
                     H.input
                       ! A.type_ "text"
                       ! A.name "newCategory"
                       ! A.placeholder "Category"
-                      ! A.class_ "free-form-input"
+                      ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
                       ! A.required "required"
                     H.input
                       ! A.type_ "submit"
                       ! A.value "+"
-                      ! A.class_ "btn-submit"
+                      ! A.class_ "primary-button"
 
-        H.div ! A.class_ "button-container" $ do
+        -- Navigation Buttons
+        H.div ! A.class_ "flex flex-col sm:flex-row gap-4 mt-12 justify-center" $ do
           H.form
             ! A.method "get"
             ! A.action prevUrl
@@ -93,7 +87,7 @@ renderOnboardingTwo user transactions isOnboarding =
               H.input
                 ! A.type_ "submit"
                 ! A.value "Previous"
-                ! A.class_ "btn-next"
+                ! A.class_ "secondary-button"
 
           H.form
             ! A.method method
@@ -102,24 +96,26 @@ renderOnboardingTwo user transactions isOnboarding =
               H.input
                 ! A.type_ "submit"
                 ! A.value "Next"
-                ! A.class_ "btn-next"
+                ! A.class_ "primary-button"
 
+-- Reusable Easy Add Component
 renderEasyAdd :: Key TransactionSource -> [Entity Category] -> [Text] -> Html
 renderEasyAdd sourceId categories easyCategories = do
-  H.div ! A.class_ "easy-add" $ do
+  H.div ! A.class_ "mt-4 flex flex-wrap gap-2" $ do
     forM_ easyCategories $ \easyCategory -> do
       let alreadyAdded = any (\(Entity _ cat) -> categoryName cat == easyCategory) categories
-      if alreadyAdded
-        then return ()
-        else H.div ! A.class_ "category-card" $ do
+      unless alreadyAdded $ do
+        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex items-center gap-2" $ do
+          H.span $ toHtml easyCategory
           H.form
-            ! A.class_ "card-content"
             ! A.method "post"
             ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
             $ do
-              H.span $ toHtml easyCategory
               H.input
                 ! A.type_ "hidden"
                 ! A.name "newCategory"
                 ! A.value (toValue easyCategory)
-              H.input ! A.type_ "submit" ! A.value "+" ! A.class_ "btn-submit"
+              H.input
+                ! A.type_ "submit"
+                ! A.value "+"
+                ! A.class_ "text-green-600 cursor-pointer hover:text-green-800 font-bold"

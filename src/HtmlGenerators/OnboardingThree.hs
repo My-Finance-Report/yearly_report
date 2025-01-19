@@ -50,7 +50,6 @@ renderOnboardingThree user transactionSources uploadConfigurations isOnboarding 
                 ! A.value "Previous"
                 ! A.class_ "secondary-button"
 
-          -- Finish Button (Initially Disabled)
           H.form
             ! A.method method
             ! A.action nextUrl
@@ -80,7 +79,7 @@ uploadConfigCard sourceId source isCompleted =
     -- Upload Section
     H.div ! A.class_ "upload-section" $ do
       if isCompleted
-        then H.p ! A.class_ "text-green-600 font-medium" $ "Completed"
+        then H.p ! A.class_ "flex flex-col gap-4 text-green-600 font-medium" $ "Completed"
         else H.form
           ! A.method "post"
           ! A.enctype "multipart/form-data"

@@ -2,7 +2,7 @@
 
 module HtmlGenerators.OnboardingOne (renderOnboardingOne, newSourceComponent) where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, unless, when)
 import Data.Text (Text)
 import Database.Models
 import Database.Persist (Entity (..))
@@ -11,69 +11,70 @@ import Text.Blaze.Html5.Attributes as A
 
 renderPrefilledCard :: Text -> [Entity TransactionSource] -> Html
 renderPrefilledCard name transactionSources =
-  if name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources
-    then return ()
-    else H.div ! A.class_ "onboard-one-card" $ do
-      H.h3 $ toHtml name
+  unless (name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources) $
+    H.div ! A.class_ "border border-primary rounded-md p-6 shadow-md w-full flex flex-col items-center" $ do
+      H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml name
       H.form
         ! A.method "post"
         ! A.action "/add-transaction-source"
+        ! A.class_ "flex gap-2"
         $ do
-          H.div ! A.class_ "form-group" $ do
-            H.input
-              ! A.type_ "hidden"
-              ! A.name "newSource"
-              ! A.value (toValue name)
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "newSource"
+            ! A.value (toValue name)
           H.input
             ! A.type_ "submit"
             ! A.value "Add"
-            ! A.class_ "btn-submit"
+            ! A.class_ "primary-button"
 
 newSourceComponent :: [Entity TransactionSource] -> Bool -> Html
 newSourceComponent transactionSources includeDefaults =
-  H.div ! A.class_ "onboard-one-card-container" $ do
+  H.div ! A.class_ "flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-4xl" $ do
+    -- Existing Accounts
     forM_ transactionSources $ \source -> do
       let txnName = transactionSourceName $ entityVal source
 
-      H.div ! A.class_ "onboard-one-card" $ do
-        H.h3 $ toHtml txnName
+      H.div ! A.class_ "border border-primary rounded-md p-6 shadow-md w-full sm:w-1/3 flex flex-col items-center" $ do
+        H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml txnName
         H.form
           ! A.method "post"
           ! A.action "/remove-transaction-source"
+          ! A.class_ "flex gap-2"
           $ do
-            H.div ! A.class_ "form-group" $ do
-              H.input
-                ! A.type_ "hidden"
-                ! A.name "newSource"
-                ! A.value (toValue txnName)
+            H.input
+              ! A.type_ "hidden"
+              ! A.name "newSource"
+              ! A.value (toValue txnName)
             H.input
               ! A.type_ "submit"
               ! A.value "Remove"
-              ! A.class_ "btn-delete"
+              ! A.class_ "secondary-button"
 
-    case includeDefaults of
-      True -> do
-        renderPrefilledCard "Credit Card" transactionSources
-        renderPrefilledCard "Debit Card" transactionSources
-        renderPrefilledCard "Savings Account" transactionSources
-        renderPrefilledCard "Checking Account" transactionSources
-      False -> return ()
+    -- Prefilled Cards for Common Accounts
+    when includeDefaults $ do
+      renderPrefilledCard "Credit Card" transactionSources
+      renderPrefilledCard "Debit Card" transactionSources
+      renderPrefilledCard "Savings Account" transactionSources
+      renderPrefilledCard "Checking Account" transactionSources
 
-    H.div ! A.class_ "onboard-one-free-card" $ do
+    -- Add Custom Account
+    H.div ! A.class_ "border border-dashed border-gray-400 rounded-md p-6 shadow-md w-full flex flex-col items-center" $ do
       H.form
         ! A.method "post"
         ! A.action "/add-transaction-source"
+        ! A.class_ "flex gap-2 w-full sm:w-1/2"
         $ do
-          H.div ! A.class_ "form-group" $ do
-            H.input
-              ! A.type_ "Text"
-              ! A.placeholder "account name"
-              ! A.name "newSource"
-              ! A.required "required"
+          H.input
+            ! A.type_ "text"
+            ! A.name "newSource"
+            ! A.placeholder "Account Name"
+            ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
+            ! A.required "required"
           H.input
             ! A.type_ "submit"
             ! A.value "Add"
-            ! A.class_ "btn-submit"
+            ! A.class_ "primary-button"
 
 renderOnboardingOne :: Entity User -> [Entity TransactionSource] -> Bool -> Html
 renderOnboardingOne user transactionSources isOnboarding =
@@ -85,21 +86,20 @@ renderOnboardingOne user transactionSources isOnboarding =
         if isOnboarding
           then "post"
           else "get"
-   in H.body $ do
-        H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
+   in H.div ! A.class_ "bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center p-6" $ do
+        -- Page Header
+        H.div ! A.class_ "w-full max-w-3xl text-center mb-8" $ do
+          when isOnboarding $ do
+            H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
+            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 3"
+          H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Add Accounts"
+          H.p ! A.class_ "text-gray-600 mt-2" $ "Think Savings Account, Checking Account, Credit Card, etc."
 
-        H.div ! A.class_ "page-header" $ do
-          case isOnboarding of
-            True -> do
-              H.h1 "Onboarding" ! A.class_ "text-xl"
-              H.h2 "Step 1 of 3" ! A.class_ "text-lg"
-            False -> return ()
-          H.h2 "Add Accounts"
-          H.p "Think Saving Account, Checking Account, Credit Card, etc."
+        -- Account List & Input
+        newSourceComponent transactionSources isOnboarding
 
-          newSourceComponent transactionSources isOnboarding
-
-        H.div ! A.class_ "next-button-container" $ do
+        -- Navigation Button
+        H.div ! A.class_ "flex flex-col sm:flex-row gap-4 mt-12 justify-center" $ do
           H.form
             ! A.method method
             ! A.action nextUrl
@@ -107,4 +107,4 @@ renderOnboardingOne user transactionSources isOnboarding =
               H.input
                 ! A.type_ "submit"
                 ! A.value "Next"
-                ! A.class_ "btn-next"
+                ! A.class_ "primary-button"
