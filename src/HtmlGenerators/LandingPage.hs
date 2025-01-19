@@ -49,7 +49,7 @@ import Text.Blaze.Html5.Attributes as A
 
 renderLandingPage :: Html
 renderLandingPage =
-  H.div ! A.class_ "container mx-auto px-6 py-12 flex flex-col items-center text-center" $ do
+  H.div ! A.class_ " px-6 py-12 flex flex-col items-center text-center" $ do
     -- Banner
     H.div ! A.class_ "w-full max-w-2xl" $ do
       H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "My Financé"
