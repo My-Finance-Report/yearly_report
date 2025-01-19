@@ -691,6 +691,14 @@ video {
   margin-bottom: 2rem;
 }
 
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
 .block {
   display: block;
 }
@@ -729,6 +737,14 @@ video {
 
 .w-full {
   width: 100%;
+}
+
+.min-w-48 {
+  min-width: 12rem;
+}
+
+.min-w-96 {
+  min-width: 24rem;
 }
 
 .max-w-2xl {
@@ -944,6 +960,11 @@ video {
   line-height: 1.75rem;
 }
 
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
 .font-bold {
   font-weight: 700;
 }
@@ -1040,6 +1061,11 @@ video {
 
 .rotate-90 {
   transform: rotate(90deg);
+}
+
+.hover\:bg-gray-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:text-green-800:hover {
