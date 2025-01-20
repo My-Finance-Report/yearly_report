@@ -373,21 +373,14 @@ main = do
           content <- liftIO $ renderHomePage user banner
           Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
 
-    post "/setup-upload" $ requireUser pool $ \user -> do
-      startKeyword <- Web.Scotty.formParam "startKeyword" :: ActionM T.Text
-      endKeyword <- Web.Scotty.formParam "endKeyword" :: ActionM T.Text
-      filenamePattern <- Web.Scotty.formParam "filenamePattern" :: ActionM T.Text
-      sourceIdText <- Web.Scotty.formParam "transactionSourceId"
-      let sourceId = toSqlKey $ read sourceIdText
-
-      liftIO $ addUploadConfiguration user startKeyword endKeyword sourceId filenamePattern
-
-      redirect "/dashboard"
+    get "/manage-accounts" $ requireUser pool $ \user -> do
+      Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
 
     get "/upload" $ requireUser pool $ \user -> do
       let content = renderUploadPage user
       Web.html $ renderPage (Just user) "Upload Page" content
 
+    -- TODO, refactor to support multiple files
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
       case Prelude.lookup "pdfFile" allFiles of
