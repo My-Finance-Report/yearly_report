@@ -58,7 +58,7 @@ renderOnboardingTwo user transactions isOnboarding =
               when (sourceName `elem` ["Savings Account", "Checking Account"]) $
                 renderEasyAdd sourceId categories ["Income", "Investments", "Credit Card Payments", "Transfers"]
               when (sourceName `elem` ["Credit Card", "Debit Card"]) $
-                renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food", "Credit Card Payments"]
+                renderEasyAdd sourceId categories ["Groceries", "Travel", "Gas", "Misc", "Subscriptions", "Food", "Credit Card Payments", "Entertainment"]
 
               -- Add Custom Category
               H.div ! A.class_ "mt-4" $ do

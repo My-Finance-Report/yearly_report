@@ -45,6 +45,7 @@ delete button in the table doesnt work
 
 # Not Blocking
 
+- need some sort of queue for jobs that fail to process
 - it seems like the text on mobile just needs to be bigger
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow

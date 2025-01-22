@@ -76,6 +76,7 @@ import Web.Scotty
   ( ActionM,
     File,
     files,
+    finish,
     formParam,
     formParams,
     get,
@@ -227,15 +228,19 @@ reprocessFileUpload ::
   IORef Int ->
   Web.Scotty.ActionM ()
 reprocessFileUpload user processedFileId activeJobs = do
+  liftIO $ print "getting to here"
   processedFile <- liftIO $ getProcessedFile user processedFileId
-
   let pdfId = processedFileUploadedPdfId $ entityVal processedFile
   let uploadConfigId = processedFileUploadConfigurationId $ entityVal processedFile
 
+  liftIO $ print (show pdfId <> show uploadConfigId)
+
   case (pdfId, uploadConfigId) of
+    (Nothing, Nothing) -> Web.text "Error: Processed file does not have an associated uploaded PDF or config"
     (Nothing, _) -> Web.text "Error: Processed file does not have an associated uploaded PDF."
     (_, Nothing) -> Web.text "Error: Processed file does not have an associated upload configuration."
     (Just validPdfId, Just validUploadConfigId) -> do
+      liftIO $ putStrLn "Reprocessing with a valid config"
       liftIO $ do
         putStrLn $ "Reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
         putStrLn $ "Using upload config ID: " <> show (fromSqlKey validUploadConfigId)
@@ -250,6 +255,7 @@ reprocessFileUpload user processedFileId activeJobs = do
           return ()
         return ()
 
+      -- Ensure response is sent after the async job starts
       Web.text "Reprocessing started successfully!"
 
 processFileUpload user fileInfo activeJobs = do
@@ -634,6 +640,7 @@ main = do
 
       let processedFileId = toSqlKey $ read fIdText
 
+      liftIO $ print "reprocessing"
       reprocessFileUpload user processedFileId activeJobs
 
       Web.Scotty.redirect "/dashboard"
