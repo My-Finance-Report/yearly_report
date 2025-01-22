@@ -29,6 +29,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 file is not processed but also not listed on the processed files page
 -> maybe just remove "processed files"
+-> can hit rate limits on openai api
 
 delete button in the table doesnt work
 
@@ -51,9 +52,7 @@ delete button in the table doesnt work
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow
 - filter by year when you look at dashboard
-- clicking on charts pops tables would be nice
 - privacy policy
-- ability to add accounts
 - would be nice to be able to dump all the files at once
 - consider poor mans analytics by writing visits to the db for now
 - consider showing the source we associate with the file before we upload
@@ -69,3 +68,4 @@ delete button in the table doesnt work
 
 - password dont match in wrong modal
 - let people know something is happening async
+- hit box is just the tiny thing on step 2 of onboard

@@ -9,7 +9,7 @@ import Auth
 import Categorizer
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, throwIO, try)
-import Control.Monad (forM_, void)
+import Control.Monad (forM, forM_, unless, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
@@ -74,6 +74,7 @@ import Text.Read (readMaybe)
 import Types
 import Web.Scotty
   ( ActionM,
+    File,
     files,
     formParam,
     formParams,
@@ -143,7 +144,7 @@ extractAllSourceNames groupedData =
 
 buildMatrix ::
   [Text] ->
-  Map UTCTime (Map T.Text Double) -> -- Grouped data by date and source
+  Map UTCTime (Map T.Text Double) ->
   Matrix
 buildMatrix allSourceNames groupedData =
   let columnHeaders = "Month" : allSourceNames
@@ -206,6 +207,38 @@ getRequiredEnv key = do
   case maybeValue of
     Just value -> return value
     Nothing -> ioError $ userError $ "Environment variable not set: " ++ key
+
+processFileUpload user fileInfo activeJobs = do
+  let uploadedBytes = fileContent fileInfo
+  let originalName = decodeUtf8 $ fileName fileInfo
+  let tempFilePath = "/tmp/" <> originalName
+
+  liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
+
+  extractedTextOrError <-
+    liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
+      ActionM (Either SomeException Text)
+
+  case extractedTextOrError of
+    Left err -> Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
+    Right rawText -> do
+      maybeConfig <- liftIO $ getUploadConfiguration user originalName rawText
+      liftIO $ print $ show maybeConfig
+
+      case maybeConfig of
+        Just config -> do
+          newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
+
+          liftIO $ do
+            modifyIORef activeJobs (+ 1)
+            _ <- Control.Concurrent.Async.async $ do
+              processPdfFile user newPdfId config
+              modifyIORef activeJobs (subtract 1)
+            return ()
+          return ()
+        Nothing -> do
+          newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
+          return ()
 
 main :: IO ()
 main = do
@@ -381,46 +414,21 @@ main = do
       Web.html $ renderPage (Just user) "Upload Page" content
 
     -- TODO, refactor to support multiple files
+    {-     post "/upload" $ requireUser pool $ \user -> do
+          allFiles <- Web.Scotty.files
+          case Prelude.lookup "pdfFiles" allFiles of
+            Nothing -> do
+              Web.text "No file with field name 'pdfFile' was uploaded!"
+            Just fileInfo -> processFileUpload user fileInfo activeJobs
+     -}
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
-      case Prelude.lookup "pdfFile" allFiles of
-        Nothing -> do
-          Web.text "No file with field name 'pdfFile' was uploaded!"
-        Just fileInfo -> do
-          let uploadedBytes = fileContent fileInfo
-          let originalName = decodeUtf8 $ fileName fileInfo
-
-          let tempFilePath = "/tmp/" <> originalName
-          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
-
-          extractedTextOrError <-
-            liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
-              ActionM (Either SomeException Text)
-          case extractedTextOrError of
-            Left err -> do
-              Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
-            Right rawText -> do
-              maybeConfig <- liftIO $ getUploadConfiguration user originalName rawText
-
-              liftIO $ print $ show maybeConfig
-
-              case maybeConfig of
-                Just config -> do
-                  newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-
-                  liftIO $ do
-                    modifyIORef activeJobs (+ 1)
-                    _ <- Control.Concurrent.Async.async $ do
-                      processPdfFile user newPdfId config
-                      modifyIORef activeJobs (subtract 1)
-                    return ()
-
-                  redirect "/dashboard"
-                Nothing -> do
-                  newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-                  content <- liftIO $ renderHomePage user (Just $ makeSimpleBanner "Looks like we don't know how to process that one. Add a new Account if this is a new transaction")
-                  Web.html $ renderPage (Just user) "Dashboard" content
-
+      let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles -- Get all "pdfFiles" fields
+      case uploadedFiles of
+        [] -> Web.text "No files were uploaded!"
+        _ -> do
+          forM_ uploadedFiles $ \(_, fileInfo) -> processFileUpload user fileInfo activeJobs
+          redirect "/dashboard" -- Redirect only once after processing all files
     get "/help" $ do
       pool <- liftIO getConnectionPool
       user <- getCurrentUser pool
