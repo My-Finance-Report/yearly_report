@@ -117,6 +117,18 @@ generateHistogramData user transactions = do
   let matrix = buildMatrix allSourceNames grouped
   return matrix
 
+isWithdrawal :: CategorizedTransaction -> Bool
+isWithdrawal txn =
+  case transactionKind $ entityVal (transaction txn) of
+    Deposit -> False
+    Withdrawal -> True
+
+getWithdrawalAmount :: CategorizedTransaction -> Double
+getWithdrawalAmount txn =
+  case transactionKind $ entityVal (transaction txn) of
+    Deposit -> 0
+    Withdrawal -> transactionAmount $ entityVal $ transaction txn
+
 groupBySourceAndMonth ::
   Map (Key TransactionSource) TransactionSource ->
   [CategorizedTransaction] ->
@@ -125,9 +137,10 @@ groupBySourceAndMonth sourceMap txns =
   Map.fromListWith
     (Map.unionWith (+))
     [ ( truncateToMonth $ transactionDateOfTransaction $ entityVal $ transaction txn,
-        Map.singleton (resolveSourceName sourceMap txn) (transactionAmount $ entityVal $ transaction txn)
+        Map.singleton (resolveSourceName sourceMap txn) (getWithdrawalAmount txn)
       )
-      | txn <- txns
+      | txn <- txns,
+        isWithdrawal txn
     ]
 
 resolveSourceName ::
@@ -136,7 +149,7 @@ resolveSourceName ::
   T.Text
 resolveSourceName sourceMap txn =
   let sourceId = categorySourceId $ entityVal $ category txn
-   in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap)
+   in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap) <> " Withdrawals"
 
 extractAllSourceNames :: Map UTCTime (Map T.Text Double) -> [T.Text]
 extractAllSourceNames groupedData =
