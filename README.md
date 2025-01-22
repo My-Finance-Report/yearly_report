@@ -32,7 +32,7 @@ file is not processed but also not listed on the processed files page
 
 delete button in the table doesnt work
 
-# Mom feedback
+# User feedback
 
 - make it clear when they start the onboarding that they need their bank / cc statements
 - First page need to know you need statements
