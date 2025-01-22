@@ -154,7 +154,7 @@ generateProcessedFilesComponent processedFiles = do
                 show (processedFileStatus processedFile)
 
             -- Actions Column
-            H.td ! A.class_ "border border-gray-300 px-4 py-2 text-center" $ do
+            H.td ! A.class_ "flex items-center border border-gray-300 px-4 py-2 text-center gap-3" $ do
               H.form
                 ! A.method "post"
                 ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
@@ -167,6 +167,18 @@ generateProcessedFilesComponent processedFiles = do
                     ! A.type_ "submit"
                     ! A.class_ "secondary-button"
                     $ "Reprocess"
+              H.form
+                ! A.method "post"
+                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
+                $ do
+                  H.input
+                    ! A.type_ "hidden"
+                    ! A.name "fId"
+                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                  H.button
+                    ! A.type_ "submit"
+                    ! A.class_ "secondary-danger-button"
+                    $ "Delete File and Transactions"
 
 generateHistogramDiv :: Html
 generateHistogramDiv =
@@ -326,7 +338,7 @@ generateDetailRows cat txs sectionId =
             Just pdfId ->
               H.a
                 ! A.href (H.toValue $ "/transactions/" <> show (fromSqlKey pdfId) <> "#tx-" <> show (fromSqlKey tid))
-                ! A.class_ "btn-edit"
+                ! A.class_ "secondary-button"
                 $ "Edit"
             Nothing ->
               H.span "No PDF ID"

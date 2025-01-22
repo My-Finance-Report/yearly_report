@@ -21,6 +21,32 @@
   .secondary-button:active {
     @apply bg-gray-200 border-primary; /* Slightly darker gray on click */
   }
+
+  .danger-button {
+    @apply bg-red-600 text-white border-red-600 border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
+  }
+
+  /* Danger Button Hover */
+  .danger-button:hover {
+    @apply bg-red-700 border-red-700;
+  }
+
+  /* Danger Button Active (Clicked) */
+  .danger-button:active {
+    @apply bg-red-800 border-red-800;
+  }
+
+  .secondary-danger-button {
+    @apply bg-white text-red-600 border-red-600 border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
+  }
+
+  .secondary-danger-button:hover {
+    @apply bg-red-50 border-red-700;
+  }
+  .secondary-danger-button:active {
+    @apply bg-red-100 border-red-800;
+  }
+
 }
 
 .rotate-90 {

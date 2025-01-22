@@ -27,7 +27,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Blocking
 
-store file status and allow reprocessing
 delete button in the table doesnt work
 
 # User feedback
@@ -45,7 +44,8 @@ delete button in the table doesnt work
 
 # Not Blocking
 
-- need some sort of queue for jobs that fail to process
+- update schema to remove nullability on processed file fields
+- update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow

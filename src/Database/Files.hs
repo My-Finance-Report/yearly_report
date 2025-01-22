@@ -6,6 +6,7 @@ module Database.Files
     addPdfRecord,
     isFileProcessed,
     updateProcessedFileStatus,
+    deleteProcessedFile,
     getAllProcessedFiles,
     getProcessedFile,
   )
@@ -80,6 +81,22 @@ getProcessedFile user fileId = do
   liftIO $ maybe (throwIO $ userError "Processed file not found") pure result
   where
     queryProcessedFile = selectFirst [ProcessedFileId ==. fileId] []
+
+deleteProcessedFile :: (MonadUnliftIO m) => Entity User -> Key ProcessedFile -> m ()
+deleteProcessedFile user fileId = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryDeleteProcessedFile pool
+  where
+    queryDeleteProcessedFile = do
+      maybeProcessedFile <- get fileId
+      case maybeProcessedFile of
+        Nothing -> liftIO $ putStrLn $ "Processed file not found: " ++ show (fromSqlKey fileId)
+        Just processedFile -> do
+          if processedFileUserId processedFile /= entityKey user
+            then liftIO $ putStrLn $ "Unauthorized attempt to delete processed file: " ++ show (fromSqlKey fileId)
+            else do
+              delete fileId
+              liftIO $ putStrLn $ "Deleted processed file: " ++ show (fromSqlKey fileId)
 
 updateProcessedFileStatus :: (MonadUnliftIO m) => Entity User -> Text -> Maybe (Key UploadConfiguration) -> Maybe (Key UploadedPdf) -> JobStatus -> m ()
 updateProcessedFileStatus user filename uploadConfigId uploadedFileId status = do

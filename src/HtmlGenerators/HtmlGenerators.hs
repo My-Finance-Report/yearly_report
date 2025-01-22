@@ -130,18 +130,8 @@ renderEditableTransactionRow file categoryLookup tx = do
           H.td $ do
             H.input
               ! A.type_ "submit"
-              ! A.class_ "full-width"
+              ! A.class_ "button-secondary"
               ! A.value "Save"
-
-            H.form
-              ! A.method "post"
-              ! A.action (toValue $ "/remove-transaction/" <> txId)
-              $ do
-                H.div ! A.class_ "form-group" $ do
-                  H.input
-                    ! A.type_ "submit"
-                    ! A.value "Delete"
-                    ! A.class_ "full-width"
 
 renderHtmlT :: Html -> TL.Text
 renderHtmlT = renderHtml

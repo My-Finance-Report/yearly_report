@@ -222,13 +222,28 @@ getRequiredEnv key = do
     Just value -> return value
     Nothing -> ioError $ userError $ "Environment variable not set: " ++ key
 
+deleteFileAndTransactions ::
+  Entity User ->
+  Key ProcessedFile ->
+  IORef Int ->
+  Web.Scotty.ActionM ()
+deleteFileAndTransactions user processedFileId activeJobs = do
+  processedFile <- liftIO $ getProcessedFile user processedFileId
+  let fileId = entityKey processedFile
+  liftIO $ putStrLn "Deleting with a valid config"
+  let pdfId = processedFileUploadedPdfId $ entityVal processedFile
+  case pdfId of 
+    Nothing -> redirect "/dashboard"
+    Just validPdfId -> do
+      liftIO $ removeTransactionByPdfId user validPdfId
+      liftIO $ deleteProcessedFile user fileId
+
 reprocessFileUpload ::
   Entity User ->
   Key ProcessedFile ->
   IORef Int ->
   Web.Scotty.ActionM ()
 reprocessFileUpload user processedFileId activeJobs = do
-  liftIO $ print "getting to here"
   processedFile <- liftIO $ getProcessedFile user processedFileId
   let pdfId = processedFileUploadedPdfId $ entityVal processedFile
   let uploadConfigId = processedFileUploadConfigurationId $ entityVal processedFile
