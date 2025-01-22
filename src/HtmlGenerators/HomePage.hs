@@ -160,7 +160,7 @@ generateProcessedFilesComponent processedFiles = do
                     ! A.value (H.toValue $ show (fromSqlKey processedFileId))
                   H.button
                     ! A.type_ "submit"
-                    ! A.class_ "bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+                    ! A.class_ "secondary-button"
                     $ "Reprocess"
 
 generateHistogramDiv :: Html

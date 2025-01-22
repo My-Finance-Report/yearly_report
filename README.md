@@ -32,7 +32,9 @@ delete button in the table doesnt work
 
 # User feedback
 
-- make it clear when they start the onboarding that they need their bank / cc statements
+- 2x! make it clear when they start the onboarding that they need their bank / cc statements
+- add the categories from the start
+- the third page is just genreally confusing
 - First page need to know you need statements
   -> import to be able to name credit cards
   -> the first page spells out all the things you need to do

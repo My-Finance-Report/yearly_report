@@ -19,7 +19,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.List (nub)
 import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Text (Text, unpack)
 import Data.Time (Day, UTCTime, defaultTimeLocale, parseTimeM)
 import Database.Category
@@ -191,23 +191,43 @@ removeTransaction user txnId = do
 getAllTransactions :: (MonadUnliftIO m) => Entity User -> m [CategorizedTransaction]
 getAllTransactions user = do
   pool <- liftIO getConnectionPool
-  runSqlPool queryAllTransactions pool
+  runSqlPool queryTransactions pool
   where
-    queryAllTransactions = do
-      transactions <- selectList [TransactionUserId ==. entityKey user, TransactionArchived ==. False] []
+    queryTransactions = do
+      -- Fetch transactions for the user and uploaded PDF ID
+      transactions <-
+        selectList
+          [ TransactionUserId ==. entityKey user,
+            TransactionArchived ==. False
+          ]
+          [Asc TransactionId]
 
-      forM transactions $ \txn -> do
-        maybeEntityCategory <- getEntity (transactionCategoryId (entityVal txn))
-        category <- case maybeEntityCategory of
-          Just c -> return c
-          Nothing -> error $ "Category not found for ID: " ++ show (transactionCategoryId (entityVal txn))
+      sources <- selectList [TransactionSourceUserId ==. entityKey user] []
+      categories <- selectList [CategoryUserId ==. entityKey user] []
 
-        return
-          CategorizedTransaction
-            { transaction = txn,
-              category = category,
-              transactionId = Just (entityKey txn)
-            }
+      let sourceMap = Data.Map.fromList [(entityKey source, source) | source <- sources]
+      let categoryMap = Data.Map.fromList [(entityKey cat, cat) | cat <- categories]
+      catTransactions <-
+        mapM
+          ( \txn -> do
+              let txnVal = entityVal txn
+                  maybeSource = Data.Map.lookup (transactionTransactionSourceId txnVal) sourceMap
+                  maybeCategory = Data.Map.lookup (transactionCategoryId txnVal) categoryMap
+
+              case (maybeSource, maybeCategory) of
+                (Just _, Just category) ->
+                  return $
+                    Just
+                      CategorizedTransaction
+                        { transaction = txn,
+                          category = category,
+                          transactionId = Just (entityKey txn)
+                        }
+                _ -> return Nothing -- Skip incomplete transactions
+          )
+          transactions
+
+      return $ catMaybes catTransactions
 
 groupTransactionsBySource ::
   (MonadUnliftIO m) =>

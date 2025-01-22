@@ -1,6 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Sankey where
+module Sankey (generateSankeyData) where
 
 import Data.List (sortBy)
 import Data.Map
