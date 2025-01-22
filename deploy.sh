@@ -1,26 +1,28 @@
   #!/bin/bash
 
-# Variables (update these with your own details)
 AWS_REGION="us-east-2"
-AWS_ACCOUNT_ID="067448242226"
 ECR_REPO_NAME="finance"
 IMAGE_TAG="latest"
 
-# Derived variables
+
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+if [[ -z "$AWS_ACCOUNT_ID" || -z "$AWS_PROFILE" ]]; then
+    echo "Error: Missing AWS_ACCOUNT_ID or AWS_PROFILE in .env file"
+    exit 1
+fi
+
 ECR_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
 
-
-# minify the tailwind css for the project
+# Step 0: Minify the Tailwind CSS for the project
 ./tailwindcss -i static/css/input.css -o static/css/output.css --minify
 
-# Step 1: Authenticate Docker to ECR
-echo "Logging into Amazon ECR..."
-aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+# Step 1: Authenticate Docker to ECR using the specified profile
+echo "Logging into Amazon ECR with profile ${AWS_PROFILE}..."
+aws ecr get-login-password --region ${AWS_REGION} --profile ${AWS_PROFILE} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-if [ $? -ne 0 ]; then
-  echo "Failed to log in to ECR"
-  exit 1
-fi
 
 # Step 2: Build the Docker container
 echo "Building the Docker container..."

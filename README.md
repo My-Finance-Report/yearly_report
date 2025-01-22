@@ -27,6 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Blocking
 
+a share option 
 file is not processed but also not listed on the processed files page
 -> maybe just remove "processed files"
 -> can hit rate limits on openai api
@@ -47,7 +48,6 @@ delete button in the table doesnt work
 # Not Blocking
 
 - it seems like the text on mobile just needs to be bigger
-- make the column charts make sense
 - the configuration page is just wacky
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow
