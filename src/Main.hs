@@ -221,6 +221,37 @@ getRequiredEnv key = do
     Just value -> return value
     Nothing -> ioError $ userError $ "Environment variable not set: " ++ key
 
+reprocessFileUpload ::
+  Entity User ->
+  Key ProcessedFile ->
+  IORef Int ->
+  Web.Scotty.ActionM ()
+reprocessFileUpload user processedFileId activeJobs = do
+  processedFile <- liftIO $ getProcessedFile user processedFileId
+
+  let pdfId = processedFileUploadedPdfId $ entityVal processedFile
+  let uploadConfigId = processedFileUploadConfigurationId $ entityVal processedFile
+
+  case (pdfId, uploadConfigId) of
+    (Nothing, _) -> Web.text "Error: Processed file does not have an associated uploaded PDF."
+    (_, Nothing) -> Web.text "Error: Processed file does not have an associated upload configuration."
+    (Just validPdfId, Just validUploadConfigId) -> do
+      liftIO $ do
+        putStrLn $ "Reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
+        putStrLn $ "Using upload config ID: " <> show (fromSqlKey validUploadConfigId)
+
+        modifyIORef activeJobs (+ 1)
+        _ <- Control.Concurrent.Async.async $ do
+          uploadConfig <- getUploadConfigById user validUploadConfigId
+          removeTransactionByPdfId user validPdfId
+          processPdfFile user validPdfId uploadConfig True
+          modifyIORef activeJobs (subtract 1)
+          putStrLn $ "Finished reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
+          return ()
+        return ()
+
+      Web.text "Reprocessing started successfully!"
+
 processFileUpload user fileInfo activeJobs = do
   let uploadedBytes = fileContent fileInfo
   let originalName = decodeUtf8 $ fileName fileInfo
@@ -245,7 +276,8 @@ processFileUpload user fileInfo activeJobs = do
           liftIO $ do
             modifyIORef activeJobs (+ 1)
             _ <- Control.Concurrent.Async.async $ do
-              processPdfFile user newPdfId config
+              -- only allow reprocess if we explicitly have the user requesting
+              processPdfFile user newPdfId config False
               modifyIORef activeJobs (subtract 1)
             return ()
           return ()
@@ -596,6 +628,15 @@ main = do
       let redirectTo = fromMaybe "/dashboard" referer
 
       Web.Scotty.redirect redirectTo
+
+    post "/reprocess-file/:fId" $ requireUser pool $ \user -> do
+      fIdText <- Web.Scotty.pathParam "fId"
+
+      let processedFileId = toSqlKey $ read fIdText
+
+      reprocessFileUpload user processedFileId activeJobs
+
+      Web.Scotty.redirect "/dashboard"
 
     post "/edit-category/:id" $ requireUser pool $ \user -> do
       catIdText <- Web.Scotty.pathParam "id"

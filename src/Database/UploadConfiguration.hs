@@ -5,9 +5,11 @@ module Database.UploadConfiguration
     getUploadConfiguration,
     addUploadConfiguration,
     addUploadConfigurationObject,
+    getUploadConfigById,
   )
 where
 
+import Control.Exception (throwIO)
 import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
@@ -25,6 +27,14 @@ getAllUploadConfigs user = do
   runSqlPool queryUploadConfigs pool
   where
     queryUploadConfigs = selectList [UploadConfigurationUserId ==. entityKey user] [Asc UploadConfigurationTransactionSourceId]
+
+getUploadConfigById :: (MonadUnliftIO m) => Entity User -> Key UploadConfiguration -> m (Entity UploadConfiguration)
+getUploadConfigById user configId = do
+  pool <- liftIO getConnectionPool
+  result <- runSqlPool queryUploadConfig pool
+  liftIO $ maybe (throwIO $ userError "Upload config not found") pure result
+  where
+    queryUploadConfig = selectFirst [UploadConfigurationUserId ==. entityKey user, UploadConfigurationId ==. configId] []
 
 getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> m (Maybe (Entity UploadConfiguration))
 getUploadConfiguration user filename rawText = do

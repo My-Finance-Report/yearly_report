@@ -14,7 +14,6 @@ module Types
     PartialTransaction (..),
     groupByBlah,
     groupByBlahForAll,
-    SourceFileMapping (..),
   )
 where
 
@@ -44,12 +43,6 @@ newtype PdfParseException
   deriving (Show)
 
 instance Exception PdfParseException
-
-data SourceFileMapping = SourceFileMapping
-  { source :: Entity TransactionSource,
-    handledFiles :: [Text]
-  }
-  deriving (Show, Eq)
 
 data PartialTransaction = PartialTransaction
   { partialTransactionAmount :: Double,

@@ -27,11 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Blocking
 
-a share option 
-file is not processed but also not listed on the processed files page
--> maybe just remove "processed files"
--> can hit rate limits on openai api
-
+store file status and allow reprocessing
 delete button in the table doesnt work
 
 # User feedback
@@ -48,21 +44,16 @@ delete button in the table doesnt work
 # Not Blocking
 
 - it seems like the text on mobile just needs to be bigger
-- the configuration page is just wacky
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow
 - filter by year when you look at dashboard
 - privacy policy
-- would be nice to be able to dump all the files at once
-- consider poor mans analytics by writing visits to the db for now
-- consider showing the source we associate with the file before we upload
-- some bug with the job counter if a file has already been processed
 - refactor css
 - refactor Main.hs routes
 - refresh on the page keeps you in the same view
 - delete transactions
 - the data model should likely differentiate between cards and accounts and keep it at a type level
-- use this to inform what presets we show, and also which things we want in which charts
+  - use this to inform what presets we show, and also which things we want in which charts
 
 # Bad UI
 

@@ -69,6 +69,8 @@ Transaction
 ProcessedFile
     filename Text
     userId UserId
+    uploadConfigurationId UploadConfigurationId Maybe -- todo remove this maybe
+    uploadedPdfId UploadedPdfId Maybe --todo remove this maybe
     UniqueProcessedFile filename userId
     deriving Show Eq
 

@@ -6,10 +6,12 @@ module Database.Files
     addPdfRecord,
     isFileProcessed,
     markFileAsProcessed,
-    getSourceFileMappings,
+    getAllProcessedFiles,
+    getProcessedFile,
   )
 where
 
+import Control.Exception (throwIO)
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
@@ -71,47 +73,34 @@ isFileProcessed user filename = do
   result <- runSqlPool (selectFirst [ProcessedFileFilename ==. filename, ProcessedFileUserId ==. entityKey user] []) pool
   return $ isJust result
 
-markFileAsProcessed :: (MonadUnliftIO m) => Entity User -> Text -> m ()
-markFileAsProcessed user filename = do
+getProcessedFile :: (MonadUnliftIO m) => Entity User -> Key ProcessedFile -> m (Entity ProcessedFile)
+getProcessedFile user fileId = do
   pool <- liftIO getConnectionPool
-  result <- runSqlPool (insertUnique $ ProcessedFile filename (entityKey user)) pool
-  case result of
-    Just _ -> liftIO $ putStrLn $ "File processed: " <> unpack filename
-    Nothing -> liftIO $ putStrLn $ "File already marked as processed: " <> unpack filename
-
-getSourceFileMappings :: (MonadUnliftIO m) => Entity User -> m [SourceFileMapping]
-getSourceFileMappings user = do
-  pool <- liftIO getConnectionPool
-  runSqlPool querySourceFileMappings pool
+  result <- runSqlPool queryProcessedFile pool
+  liftIO $ maybe (throwIO $ userError "Processed file not found") pure result
   where
-    querySourceFileMappings = do
-      -- Get all transaction sources for the user
-      sources <- getAllTransactionSources user
+    queryProcessedFile = selectFirst [ProcessedFileId ==. fileId] []
 
-      -- Get all transactions for the user
-      transactions <- selectList [TransactionUserId ==. entityKey user] []
+markFileAsProcessed :: (MonadUnliftIO m) => Entity User -> Text -> Maybe (Key UploadConfiguration) -> Maybe (Key UploadedPdf) -> m ()
+markFileAsProcessed user filename uploadConfigId uploadedFileId = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryInsertOrUpdate pool
+  where
+    queryInsertOrUpdate = do
+      maybeExistingFile <- getBy $ UniqueProcessedFile filename (entityKey user)
+      case maybeExistingFile of
+        Nothing -> do
+          _ <- insert $ ProcessedFile filename (entityKey user) uploadConfigId uploadedFileId
+          liftIO $ putStrLn $ "File processed: " <> unpack filename
+        Just (Entity fileId _) -> do
+          update
+            fileId
+            [ ProcessedFileUploadConfigurationId =. uploadConfigId,
+              ProcessedFileUploadedPdfId =. uploadedFileId
+            ]
+          liftIO $ putStrLn $ "File updated: " <> unpack filename
 
-      -- Get all PDFs belonging to the user
-      pdfs <- selectList [UploadedPdfUserId ==. entityKey user] []
-
-      -- Create a map of PDF IDs to their respective records
-      let pdfMap = fromList [(entityKey pdf, entityVal pdf) | pdf <- pdfs]
-
-      -- Map transaction sources to handled files
-      let sourceToFiles =
-            fromListWith
-              union
-              [ (transactionTransactionSourceId txn, singleton (uploadedPdfFilename pdf))
-                | Entity _ txn <- transactions,
-                  Just pdfId <- [transactionUploadedPdfId txn],
-                  Just pdf <- [Data.Map.lookup pdfId pdfMap]
-              ]
-
-      -- Create SourceFileMapping for each source
-      return
-        [ SourceFileMapping
-            { source = source,
-              handledFiles = toList $ findWithDefault empty (entityKey source) sourceToFiles
-            }
-          | source <- sources
-        ]
+getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [Entity ProcessedFile]
+getAllProcessedFiles user = do
+  pool <- liftIO getConnectionPool
+  runSqlPool (selectList [ProcessedFileUserId ==. entityKey user] [Asc ProcessedFileFilename]) pool

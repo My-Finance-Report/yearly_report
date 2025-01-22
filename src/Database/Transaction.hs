@@ -8,6 +8,7 @@ module Database.Transaction
     parseTransactionDate,
     groupTransactionsBySource,
     getAllTransactions,
+    removeTransactionByPdfId,
     updateTransaction,
     addTransaction,
   )
@@ -151,6 +152,25 @@ addTransaction user txnDescription txnAmount txnKind txnDate uploadedPdfKey txnS
 
       transactionKey <- insert newTransaction
       return $ Entity transactionKey newTransaction
+
+removeTransactionByPdfId :: Entity User -> Key UploadedPdf -> IO ()
+removeTransactionByPdfId user uploadedPdfId = do
+  pool <- getConnectionPool
+  runSqlPool queryArchiveTransactions pool
+  where
+    queryArchiveTransactions = do
+      maybePdf <- get uploadedPdfId
+      case maybePdf of
+        Nothing -> liftIO $ putStrLn $ "Uploaded PDF not found: " ++ show (fromSqlKey uploadedPdfId)
+        Just pdf -> do
+          if uploadedPdfUserId pdf /= entityKey user
+            then liftIO $ putStrLn $ "Unauthorized attempt to archive transactions: " ++ show (fromSqlKey uploadedPdfId)
+            else do
+              updateWhere
+                [TransactionUploadedPdfId ==. Just uploadedPdfId]
+                [TransactionArchived =. True]
+
+              liftIO $ putStrLn $ "Transactions from PDF " ++ show (fromSqlKey uploadedPdfId) ++ " archived successfully."
 
 removeTransaction :: Entity User -> Key Transaction -> IO ()
 removeTransaction user txnId = do

@@ -130,20 +130,38 @@ generateHomapageHtml banner tabs =
       ! A.src "/histogram.js"
       $ mempty
 
-generateProcessedFilesComponent :: [SourceFileMapping] -> Html
+generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
 generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "processed-files-section" $ do
     if Data.List.null processedFiles
       then H.p "No files have been processed yet."
-      else H.table $ do
-        H.tr $ do
-          H.th "Transaction Source"
-          H.th "Filenames"
-        forM_ processedFiles $ \mapping -> do
-          forM_ (handledFiles mapping) $ \filename -> do
-            H.tr $ do
-              H.td (toHtml (transactionSourceName $ entityVal (Types.source mapping)))
-              H.td (toHtml filename)
+      else H.table ! A.class_ "w-full border-collapse border border-gray-300" $ do
+        -- Table Header
+        H.tr ! A.class_ "bg-gray-100" $ do
+          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Filename"
+          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Actions"
+
+        -- Table Rows
+        forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
+          H.tr ! A.class_ "border border-gray-300" $ do
+            -- Filename Column
+            H.td ! A.class_ "border border-gray-300 px-4 py-2" $
+              toHtml (processedFileFilename processedFile)
+
+            -- Actions Column
+            H.td ! A.class_ "border border-gray-300 px-4 py-2 text-center" $ do
+              H.form
+                ! A.method "post"
+                ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
+                $ do
+                  H.input
+                    ! A.type_ "hidden"
+                    ! A.name "fId"
+                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                  H.button
+                    ! A.type_ "submit"
+                    ! A.class_ "bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+                    $ "Reprocess"
 
 generateHistogramDiv :: Html
 generateHistogramDiv =
@@ -322,7 +340,7 @@ formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%B %Y" utcTime)
 formatFullDate :: UTCTime -> Text
 formatFullDate utcTime = T.pack (formatTime defaultTimeLocale "%m/%d/%Y" utcTime)
 
-generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [SourceFileMapping] -> Html
+generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [Entity ProcessedFile] -> Html
 generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
   H.div ! A.class_ "tabs-container" $ do
     H.ul ! A.class_ "tabs" $ do
@@ -355,7 +373,7 @@ renderHomePage user banner = do
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
-  files <- getSourceFileMappings user
+  files <- getAllProcessedFiles user
 
   let updatedBanner = case banner of
         Just existingBanner | not (Prelude.null banner) -> Just existingBanner

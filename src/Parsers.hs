@@ -20,6 +20,7 @@ import Database.Database
 import Database.Files
 import Database.Models
 import Database.Persist
+import Database.Persist.TH (persistUpperCase)
 import Database.Transaction
 import Database.TransactionSource
 import GHC.Generics (Generic)
@@ -27,16 +28,16 @@ import OpenAiUtils
 import System.FilePath (takeFileName)
 import System.Process (readProcess)
 import Types
-import Database.Persist.TH (persistUpperCase)
 
-generatePdfParsingPrompt :: Text -> Text-> Text
+generatePdfParsingPrompt :: Text -> Text -> Text
 generatePdfParsingPrompt pdfContent transactionSourceName =
   "Parse the following PDF content into a JSON array of transactions. "
     <> "structure the dates as MM/DD/YYYY"
     <> "Each transaction should have the fields: 'transactionDate', 'description', 'kind' and 'amount'\n\n"
     <> "For banks, withdrawal and deposit should be clear. for credit cards and debit cards, we consider a purchase"
     <> "to be a withdrawal and a payment on the card to be a deposit. This file is for a "
-    <> transactionSourceName <> "\n\n\n"
+    <> transactionSourceName
+    <> "\n\n\n"
     <> pdfContent
 
 -- TODO really we want to unify this with the type that we are parsing into in the api call
@@ -81,8 +82,8 @@ generateTransactionSchema =
           ]
     ]
 
-parseRawTextToJson :: Text ->Text-> IO (Maybe [PartialTransaction])
-parseRawTextToJson pdfContent transactionSourceName= do
+parseRawTextToJson :: Text -> Text -> IO (Maybe [PartialTransaction])
+parseRawTextToJson pdfContent transactionSourceName = do
   let inputPrompt = generatePdfParsingPrompt pdfContent transactionSourceName
   let schema = generateTransactionSchema
 
@@ -124,8 +125,8 @@ trimLeadingText pdfText keyword =
   case keyword of
     Just key ->
       let (_, afterTransactions) = T.breakOn key pdfText
-       in T.drop (T.length key) afterTransactions 
-    Nothing -> pdfText 
+       in T.drop (T.length key) afterTransactions
+    Nothing -> pdfText
 
 trimTrailingText :: Text -> Maybe Text -> Text
 trimTrailingText pdfText keyword =
@@ -144,15 +145,15 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO [CategorizedTransaction]
-processPdfFile user pdfId config = do
+processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO [CategorizedTransaction]
+processPdfFile user pdfId config allowReprocess = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
   let filename = uploadedPdfFilename $ entityVal uploadedFile
   alreadyProcessed <- liftIO $ isFileProcessed user filename
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
-  if alreadyProcessed
+  if alreadyProcessed && not allowReprocess
     then do
       putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
       getTransactionsByFileId user pdfId
@@ -166,8 +167,7 @@ processPdfFile user pdfId config = do
           putStrLn errorMsg
           return []
         Right transactions -> do
-          -- Categorize and store transactions
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          markFileAsProcessed user filename
+          markFileAsProcessed user filename (Just $ entityKey config) (Just pdfId)
           putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
           return categorizedTransactions
