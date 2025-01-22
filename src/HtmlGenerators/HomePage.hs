@@ -139,6 +139,7 @@ generateProcessedFilesComponent processedFiles = do
         -- Table Header
         H.tr ! A.class_ "bg-gray-100" $ do
           H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Filename"
+          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Status"
           H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Actions"
 
         -- Table Rows
@@ -147,6 +148,10 @@ generateProcessedFilesComponent processedFiles = do
             -- Filename Column
             H.td ! A.class_ "border border-gray-300 px-4 py-2" $
               toHtml (processedFileFilename processedFile)
+
+            H.td ! A.class_ "border border-gray-300 px-4 py-2" $
+              toHtml $
+                show (processedFileStatus processedFile)
 
             -- Actions Column
             H.td ! A.class_ "border border-gray-300 px-4 py-2 text-center" $ do

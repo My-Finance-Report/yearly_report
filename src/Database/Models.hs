@@ -21,6 +21,22 @@ import Database.Persist.Postgresql
 import Database.Persist.TH
 import GHC.Generics
 
+data JobStatus = Completed | Processing | Failed
+  deriving (Show, Eq, Ord, Generic, Bounded, Enum)
+
+instance PersistField JobStatus where
+  toPersistValue Completed = PersistText "Completed"
+  toPersistValue Processing = PersistText "Processing"
+  toPersistValue Failed = PersistText "Failed"
+
+  fromPersistValue (PersistText "Completed") = Right Completed
+  fromPersistValue (PersistText "Processing") = Right Processing
+  fromPersistValue (PersistText "Failed") = Right Failed
+  fromPersistValue _ = Left "Invalid TransactionStatus"
+
+instance PersistFieldSql JobStatus where
+  sqlType _ = SqlString
+
 data TransactionKind = Withdrawal | Deposit
   deriving (Show, Eq, Ord, Generic)
 
@@ -71,6 +87,7 @@ ProcessedFile
     userId UserId
     uploadConfigurationId UploadConfigurationId Maybe -- todo remove this maybe
     uploadedPdfId UploadedPdfId Maybe --todo remove this maybe
+    status JobStatus default='Completed'
     UniqueProcessedFile filename userId
     deriving Show Eq
 

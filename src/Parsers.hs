@@ -148,7 +148,10 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
 processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO [CategorizedTransaction]
 processPdfFile user pdfId config allowReprocess = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
+
   let filename = uploadedPdfFilename $ entityVal uploadedFile
+
+  updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Processing
   alreadyProcessed <- liftIO $ isFileProcessed user filename
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
@@ -164,10 +167,11 @@ processPdfFile user pdfId config allowReprocess = do
       case result of
         Left err -> do
           let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
+          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Failed
           putStrLn errorMsg
           return []
         Right transactions -> do
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          markFileAsProcessed user filename (Just $ entityKey config) (Just pdfId)
+          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Completed
           putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
           return categorizedTransactions

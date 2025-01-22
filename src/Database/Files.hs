@@ -5,7 +5,7 @@ module Database.Files
     getPdfRecord,
     addPdfRecord,
     isFileProcessed,
-    markFileAsProcessed,
+    updateProcessedFileStatus,
     getAllProcessedFiles,
     getProcessedFile,
   )
@@ -81,8 +81,8 @@ getProcessedFile user fileId = do
   where
     queryProcessedFile = selectFirst [ProcessedFileId ==. fileId] []
 
-markFileAsProcessed :: (MonadUnliftIO m) => Entity User -> Text -> Maybe (Key UploadConfiguration) -> Maybe (Key UploadedPdf) -> m ()
-markFileAsProcessed user filename uploadConfigId uploadedFileId = do
+updateProcessedFileStatus :: (MonadUnliftIO m) => Entity User -> Text -> Maybe (Key UploadConfiguration) -> Maybe (Key UploadedPdf) -> JobStatus -> m ()
+updateProcessedFileStatus user filename uploadConfigId uploadedFileId status = do
   pool <- liftIO getConnectionPool
   runSqlPool queryInsertOrUpdate pool
   where
@@ -90,13 +90,14 @@ markFileAsProcessed user filename uploadConfigId uploadedFileId = do
       maybeExistingFile <- getBy $ UniqueProcessedFile filename (entityKey user)
       case maybeExistingFile of
         Nothing -> do
-          _ <- insert $ ProcessedFile filename (entityKey user) uploadConfigId uploadedFileId
+          _ <- insert $ ProcessedFile filename (entityKey user) uploadConfigId uploadedFileId status
           liftIO $ putStrLn $ "File processed: " <> unpack filename
         Just (Entity fileId _) -> do
           update
             fileId
             [ ProcessedFileUploadConfigurationId =. uploadConfigId,
-              ProcessedFileUploadedPdfId =. uploadedFileId
+              ProcessedFileUploadedPdfId =. uploadedFileId,
+              ProcessedFileStatus =. status
             ]
           liftIO $ putStrLn $ "File updated: " <> unpack filename
 
