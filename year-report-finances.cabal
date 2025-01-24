@@ -33,6 +33,7 @@ library
     HtmlGenerators.UploadPage 
     Auth
     Sankey
+    ColumnChart
     SankeyConfiguration
     Parsers
     ExampleFileParser
@@ -98,6 +99,7 @@ executable year-report-finances
       HtmlGenerators.OnboardingFour
       HtmlGenerators.UploadPage 
       Auth
+      ColumnChart
       Sankey
       SankeyConfiguration
       ExampleFileParser

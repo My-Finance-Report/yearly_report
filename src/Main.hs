@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -48,6 +47,7 @@ import Database.Transaction
 import Database.TransactionSource
 import Database.UploadConfiguration
 import ExampleFileParser
+import ColumnChart 
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -93,88 +93,10 @@ import Web.Scotty
   )
 import qualified Web.Scotty as Web
 
-data Matrix = Matrix
-  { columnHeaders :: [T.Text],
-    rowHeaders :: [T.Text],
-    dataRows :: [[Double]]
-  }
-  deriving (Show, Eq, Generic)
-
-instance ToJSON Matrix
 
 parseDate :: Text -> Maybe UTCTime
 parseDate dateText = parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText)
 
-truncateToMonth :: UTCTime -> UTCTime
-truncateToMonth utcTime =
-  let (year, month, _) = toGregorian (utctDay utcTime)
-   in UTCTime (fromGregorian year month 1) 0
-
-generateHistogramData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
-generateHistogramData user transactions = do
-  sourceMap <- fetchSourceMap user
-  let grouped = groupBySourceAndMonth sourceMap transactions
-  let allSourceNames = extractAllSourceNames grouped
-  let matrix = buildMatrix allSourceNames grouped
-  return matrix
-
-isWithdrawal :: CategorizedTransaction -> Bool
-isWithdrawal txn =
-  case transactionKind $ entityVal (transaction txn) of
-    Deposit -> False
-    Withdrawal -> True
-
-getWithdrawalAmount :: CategorizedTransaction -> Double
-getWithdrawalAmount txn =
-  case transactionKind $ entityVal (transaction txn) of
-    Deposit -> 0
-    Withdrawal -> transactionAmount $ entityVal $ transaction txn
-
-groupBySourceAndMonth ::
-  Map (Key TransactionSource) TransactionSource ->
-  [CategorizedTransaction] ->
-  Map UTCTime (Map T.Text Double)
-groupBySourceAndMonth sourceMap txns =
-  Map.fromListWith
-    (Map.unionWith (+))
-    [ ( truncateToMonth $ transactionDateOfTransaction $ entityVal $ transaction txn,
-        Map.singleton (resolveSourceName sourceMap txn) (getWithdrawalAmount txn)
-      )
-      | txn <- txns,
-        isWithdrawal txn
-    ]
-
-resolveSourceName ::
-  Map (Key TransactionSource) TransactionSource ->
-  CategorizedTransaction ->
-  T.Text
-resolveSourceName sourceMap txn =
-  let sourceId = categorySourceId $ entityVal $ category txn
-   in Map.findWithDefault "Unknown" sourceId (Map.map transactionSourceName sourceMap) <> " Withdrawals"
-
-extractAllSourceNames :: Map UTCTime (Map T.Text Double) -> [T.Text]
-extractAllSourceNames groupedData =
-  Set.toList $ Set.unions (Prelude.map Map.keysSet $ Map.elems groupedData)
-
-buildMatrix ::
-  [Text] ->
-  Map UTCTime (Map T.Text Double) ->
-  Matrix
-buildMatrix allSourceNames groupedData =
-  let columnHeaders = "Month" : allSourceNames
-      rowHeaders = Prelude.map formatMonthYear (Map.keys groupedData)
-      dataRows = Prelude.map (buildRow allSourceNames) (Map.toList groupedData)
-   in Matrix columnHeaders rowHeaders dataRows
-
-buildRow ::
-  [T.Text] ->
-  (UTCTime, Map T.Text Double) ->
-  [Double]
-buildRow allSourceNames (_, sources) =
-  Prelude.map (\source -> Map.findWithDefault 0 source sources) allSourceNames
-
-formatMonthYear :: UTCTime -> T.Text
-formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%b %Y" utcTime)
 
 extractBearerToken :: TL.Text -> Maybe TL.Text
 extractBearerToken header =
@@ -691,7 +613,7 @@ main = do
 
     get "/api/histogram-data" $ requireUser pool $ \user -> do
       transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateHistogramData user transactions
+      histogramData <- generateColChartData user transactions
       json histogramData
 
     get "/demo/api/sankey-data" $ do
@@ -709,7 +631,7 @@ main = do
     get "/demo/api/histogram-data" $ do
       user <- getDemoUser
       transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateHistogramData user transactions
+      histogramData <- generateColChartData user transactions
       json histogramData
 
     post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
