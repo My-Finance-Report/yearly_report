@@ -3,6 +3,7 @@
 module Database.Files
   ( getAllFilenames,
     getPdfRecord,
+    getPdfRecords,
     addPdfRecord,
     isFileProcessed,
     updateProcessedFileStatus,
@@ -52,6 +53,16 @@ getPdfRecord user pdfId = do
     queryPdfRecord =
       selectFirst
         [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
+        []
+
+getPdfRecords :: (MonadUnliftIO m) => Entity User -> [Key UploadedPdf] -> m [Entity UploadedPdf]
+getPdfRecords user pdfIds = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryPdfRecords pool
+  where
+    queryPdfRecords =
+      selectList
+        [UploadedPdfId <-. pdfIds, UploadedPdfUserId ==. entityKey user]
         []
 
 addPdfRecord :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Text -> m (Key UploadedPdf)

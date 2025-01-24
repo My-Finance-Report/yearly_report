@@ -15,10 +15,10 @@ import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Aeson hiding (Key)
 import qualified Data.ByteString.Lazy as B
 import Data.IORef
-import Data.List (foldl', nub)
+import Data.List (foldl', nub, partition)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
@@ -232,7 +232,7 @@ deleteFileAndTransactions user processedFileId activeJobs = do
   let fileId = entityKey processedFile
   liftIO $ putStrLn "Deleting with a valid config"
   let pdfId = processedFileUploadedPdfId $ entityVal processedFile
-  case pdfId of 
+  case pdfId of
     Nothing -> redirect "/dashboard"
     Just validPdfId -> do
       liftIO $ removeTransactionByPdfId user validPdfId
@@ -273,38 +273,14 @@ reprocessFileUpload user processedFileId activeJobs = do
       -- Ensure response is sent after the async job starts
       Web.text "Reprocessing started successfully!"
 
-processFileUpload user fileInfo activeJobs = do
-  let uploadedBytes = fileContent fileInfo
-  let originalName = decodeUtf8 $ fileName fileInfo
-  let tempFilePath = "/tmp/" <> originalName
-
-  liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
-
-  extractedTextOrError <-
-    liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) ::
-      ActionM (Either SomeException Text)
-
-  case extractedTextOrError of
-    Left err -> Web.text $ "Failed to parse the PDF: " <> TL.pack (show err)
-    Right rawText -> do
-      maybeConfig <- liftIO $ getUploadConfiguration user originalName rawText
-      liftIO $ print $ show maybeConfig
-
-      case maybeConfig of
-        Just config -> do
-          newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-
-          liftIO $ do
-            modifyIORef activeJobs (+ 1)
-            _ <- Control.Concurrent.Async.async $ do
-              -- only allow reprocess if we explicitly have the user requesting
-              processPdfFile user newPdfId config False
-              modifyIORef activeJobs (subtract 1)
-            return ()
-          return ()
-        Nothing -> do
-          newPdfId <- liftIO $ addPdfRecord user originalName rawText "TODO"
-          return ()
+processFileUpload user pdfId config activeJobs = do
+  liftIO $ do
+    modifyIORef activeJobs (+ 1)
+    _ <- Control.Concurrent.Async.async $ do
+      processPdfFile user pdfId config False
+      modifyIORef activeJobs (subtract 1)
+    return ()
+  return ()
 
 main :: IO ()
 main = do
@@ -475,30 +451,79 @@ main = do
     get "/manage-accounts" $ requireUser pool $ \user -> do
       Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
 
+    get "/select-account" $ requireUser pool $ \user -> do
+      pdfIdsParam <- Web.queryParam "pdfIds"
+
+      -- Fetch pending PDF records from the database
+      let pdfIds = map (toSqlKey . read . T.unpack) pdfIdsParam :: [Key UploadedPdf]
+      fileRecords <- liftIO $ getPdfRecords user pdfIds
+
+      liftIO $ print pdfIds
+
+      transactionSources <- liftIO $ getAllTransactionSources user
+
+      let txnLookup = Map.fromList [(entityKey txn, txn) | txn <- transactionSources]
+
+      liftIO $ print txnLookup
+
+      pdfsWithSources <- forM fileRecords $ \record -> do
+        maybeConfig <- liftIO $ getUploadConfigurationFromPdf user (entityKey record)
+        let maybeTxnSource = maybeConfig >>= \(Entity _ config) -> Map.lookup (uploadConfigurationTransactionSourceId config) txnLookup
+        return (record, maybeTxnSource)
+
+      transactionSources <- liftIO $ getAllTransactionSources user
+
+      liftIO $ print "making it to here"
+
+      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources
+
     get "/upload" $ requireUser pool $ \user -> do
       let content = renderUploadPage user
       Web.html $ renderPage (Just user) "Upload Page" content
 
-    -- TODO, refactor to support multiple files
-    {-     post "/upload" $ requireUser pool $ \user -> do
-          allFiles <- Web.Scotty.files
-          case Prelude.lookup "pdfFiles" allFiles of
-            Nothing -> do
-              Web.text "No file with field name 'pdfFile' was uploaded!"
-            Just fileInfo -> processFileUpload user fileInfo activeJobs
-     -}
+
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
-      let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles -- Get all "pdfFiles" fields
+      let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles
       case uploadedFiles of
         [] -> Web.text "No files were uploaded!"
         _ -> do
-          forM_ uploadedFiles $ \(_, fileInfo) -> processFileUpload user fileInfo activeJobs
-          redirect "/dashboard" -- Redirect only once after processing all files
+          fileConfigs <- forM uploadedFiles $ \(_, fileInfo) -> do
+            let originalName = decodeUtf8 $ fileName fileInfo
+            let tempFilePath = "/tmp/" <> originalName
+
+            liftIO $ B.writeFile (T.unpack tempFilePath) (fileContent fileInfo)
+
+            extractedTextOrError <-
+              liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) :: ActionM (Either SomeException Text)
+
+            case extractedTextOrError of
+              Left err -> return (fileInfo, Nothing, Nothing)
+              Right extractedText -> do
+                maybeConfig <- liftIO $ getUploadConfiguration user originalName extractedText
+                return (fileInfo, maybeConfig, Just extractedText)
+
+          pdfIds <- forM fileConfigs $ \(fileInfo, maybeConfig, maybeExtractedText) -> do
+            let originalName = decodeUtf8 $ fileName fileInfo
+            pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "pending"
+            return (pdfId, maybeConfig)
+
+          let (missingConfigs, validConfigs) = partition (isNothing . snd) pdfIds
+
+          if null missingConfigs
+            then do
+              -- All files have configurations, process them immediately
+              forM_ validConfigs $ \(pdfId, Just config) -> do
+                processFileUpload user pdfId config activeJobs
+              redirect "/dashboard"
+            else do
+              -- Some files are missing configurations, redirect to select-account
+              redirect $ "/select-account?pdfIds=" <> TL.intercalate "," (map (TL.pack . show . fromSqlKey . fst) pdfIds)
+
     get "/help" $ do
       pool <- liftIO getConnectionPool
       user <- getCurrentUser pool
-      Web.html $ renderPage user "Help Me" $ renderSupportPage
+      Web.html $ renderPage user "Help Me" renderSupportPage
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user
@@ -723,3 +748,40 @@ main = do
           let redirectTo = fromMaybe "/dashboard" referer
           Web.Scotty.redirect redirectTo
         Nothing -> Web.Scotty.text "No file provided in the request"
+
+    post "/assign-transaction-source" $ requireUser pool $ \user -> do
+      params <- Web.formParams
+
+      let selections =
+            [ (toSqlKey (read $ T.unpack (T.drop 7 key)) :: Key UploadedPdf, toSqlKey (read $ T.unpack val) :: Key TransactionSource)
+              | (key, val) <- params,
+                "source-" `T.isPrefixOf` key
+            ]
+      liftIO $ print selections
+
+      -- Process each selected transaction source
+      forM_ selections $ \(pdfId, sourceId) -> do
+        pdfRecord <- liftIO $ getPdfRecord user pdfId
+
+        -- Ensure we have a valid file path to use for generating config
+        let tempFilePath = "/tmp/" <> uploadedPdfFilename (entityVal pdfRecord)
+
+        -- Generate and store the UploadConfiguration
+        uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
+        case uploadConfig of
+          Just config -> liftIO $ addUploadConfigurationObject user config
+          Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration."
+
+      liftIO $ print "created the upload config"
+
+      -- Reprocess all uploaded files
+      forM_ selections $ \(pdfId, sourceId) -> do
+        pdfRecord <- liftIO $ getPdfRecord user pdfId
+        let extractedText = uploadedPdfRawContent (entityVal pdfRecord)
+        maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
+
+        case maybeConfig of
+          Just config -> processFileUpload user pdfId config activeJobs
+          Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
+
+      redirect "/dashboard"

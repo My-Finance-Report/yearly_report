@@ -32,6 +32,7 @@ delete button in the table doesnt work
 # User feedback
 
 - 2x! make it clear when they start the onboarding that they need their bank / cc statements
+- remove onboarding step 3, have a selector in the upload page for unrecognized files
 - add the categories from the start
 - the third page is just genreally confusing
 - First page need to know you need statements

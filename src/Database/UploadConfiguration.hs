@@ -3,6 +3,7 @@
 module Database.UploadConfiguration
   ( getAllUploadConfigs,
     getUploadConfiguration,
+    getUploadConfigurationFromPdf,
     addUploadConfiguration,
     addUploadConfigurationObject,
     getUploadConfigById,
@@ -35,6 +36,26 @@ getUploadConfigById user configId = do
   liftIO $ maybe (throwIO $ userError "Upload config not found") pure result
   where
     queryUploadConfig = selectFirst [UploadConfigurationUserId ==. entityKey user, UploadConfigurationId ==. configId] []
+
+getUploadConfigurationFromPdf :: (MonadUnliftIO m) => Entity User -> Key UploadedPdf -> m (Maybe (Entity UploadConfiguration))
+getUploadConfigurationFromPdf user pdfId = do
+  pool <- liftIO getConnectionPool
+  runSqlPool queryUploadConfiguration pool
+  where
+    queryUploadConfiguration = do
+      maybePdf <- get pdfId
+      case maybePdf of
+        Nothing -> return Nothing
+        Just pdf -> do
+          let filename = uploadedPdfFilename pdf
+          let rawText = uploadedPdfRawContent pdf
+
+          results <-
+            rawSql
+              "SELECT ?? FROM upload_configuration WHERE ? ~* filename_regex AND user_id = ?"
+              [toPersistValue (filename <> rawText), toPersistValue (entityKey user)]
+
+          return $ listToMaybe results
 
 getUploadConfiguration :: (MonadUnliftIO m) => Entity User -> Text -> Text -> m (Maybe (Entity UploadConfiguration))
 getUploadConfiguration user filename rawText = do
