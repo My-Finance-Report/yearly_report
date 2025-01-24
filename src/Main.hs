@@ -67,6 +67,7 @@ import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Routes.Login.RegisterLogin (registerLoginRoutes)
+import Routes.Misc.RegisterMisc (registerMiscRoutes)
 import Routes.Onboarding.RegisterOnboarding
   ( registerOnboardingRoutes,
   )
@@ -180,13 +181,7 @@ main = do
 
     registerOnboardingRoutes pool
     registerLoginRoutes pool
-
-    get "/" $ do
-      pool <- liftIO getConnectionPool
-      user <- getCurrentUser pool
-      case user of
-        Just user -> Web.redirect "/dashboard"
-        Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage
+    registerMiscRoutes pool activeJobs
 
     get "/add-account/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -207,15 +202,7 @@ main = do
       content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
       Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
 
-    get "/dashboard" $ requireUser pool $ \user -> do
-      let onboardingStep = userOnboardingStep $ entityVal user
-      case onboardingStep of
-        Just _ -> Web.Scotty.redirect "/onboarding"
-        Nothing -> do
-          activeJobs <- liftIO $ readIORef activeJobs
-          let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
-          content <- liftIO $ renderHomePage user banner
-          Web.Scotty.html $ renderPage (Just user) "Financial Summary" content
+
 
     get "/manage-accounts" $ requireUser pool $ \user -> do
       Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
@@ -285,11 +272,6 @@ main = do
               redirect "/dashboard"
             else do
               redirect $ "/select-account?pdfIds=" <> TL.intercalate "," (map (TL.pack . show . fromSqlKey . fst) pdfIds)
-
-    get "/help" $ do
-      pool <- liftIO getConnectionPool
-      user <- getCurrentUser pool
-      Web.html $ renderPage user "Help Me" renderSupportPage
 
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user

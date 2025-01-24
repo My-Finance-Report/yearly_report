@@ -33,6 +33,7 @@ library
     HtmlGenerators.UploadPage 
     Routes.Onboarding.RegisterOnboarding
     Routes.Login.RegisterLogin
+    Routes.Misc.RegisterMisc
     Auth
     Sankey
     ColumnChart
@@ -102,6 +103,7 @@ executable year-report-finances
       HtmlGenerators.UploadPage 
       Routes.Onboarding.RegisterOnboarding
       Routes.Login.RegisterLogin
+      Routes.Misc.RegisterMisc
       Auth
       ColumnChart
       Sankey
