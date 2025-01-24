@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+
 module Database.Files
   ( getAllFilenames,
     getPdfRecord,
@@ -82,8 +83,14 @@ addPdfRecord user filename rawContent uploadTime = do
 isFileProcessed :: (MonadUnliftIO m) => Entity User -> Text -> m Bool
 isFileProcessed user filename = do
   pool <- liftIO getConnectionPool
-  result <- runSqlPool (selectFirst [ProcessedFileFilename ==. filename, ProcessedFileUserId ==. entityKey user] []) pool
+  result <- runSqlPool query pool
   return $ isJust result
+  where
+    query = selectFirst 
+      [ ProcessedFileFilename ==. filename
+      , ProcessedFileUserId ==. entityKey user
+      , ProcessedFileStatus ==. Completed
+      ] []
 
 getProcessedFile :: (MonadUnliftIO m) => Entity User -> Key ProcessedFile -> m (Entity ProcessedFile)
 getProcessedFile user fileId = do

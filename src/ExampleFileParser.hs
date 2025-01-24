@@ -17,16 +17,15 @@ import Parsers
 import System.FilePath (takeFileName)
 import Types
 
-generateUploadConfigPrompt :: Text -> Text -> Text
-generateUploadConfigPrompt pdfContent fileName =
+generateUploadConfigPrompt :: Text -> Text 
+generateUploadConfigPrompt pdfContent =
   "look at the following PDF content and filename to determine how we can parse more files in the future. "
     <> "keywords should not contain numbers or random strings, look for things that are stable and likely to be"
-    <> "in multiple files. the start and end keywords are so we can isolate that months transactions from the file."
+    <> " in files from any month. The start and end keywords are so we can isolate that months transactions from the file."
     <> " including a bit of data before or after the transaction tables is totally fine.  Make sure to also select the words"
-    <> " in a way that we have access to a full date somewhere (including the year)"
-    <> "for the filename, try to find one word that might be exclusive across files"
-    <> "filename:"
-    <> fileName
+    <> " in a way that we have access to a full date somewhere."
+    <> " be mindful some files have summary sections, and we DO NOT want those sections."
+    <> " PLEASE DO NOT INCLUDE SUMMARY SECTIONS!"
     <> "\n\n\n"
     <> "content:"
     <> pdfContent
@@ -44,11 +43,11 @@ generateSchema =
                 [ "type" .= ("object" :: Text),
                   "properties"
                     .= object
-                      [ "filenameRegex" .= object ["type" .= ("string" :: Text)],
+                      [ "fileIdKeyword" .= object ["type" .= ("string" :: Text)],
                         "startKeyword" .= object ["type" .= ("string" :: Text)],
                         "endKeyword" .= object ["type" .= ("string" :: Text)]
                       ],
-                  "required" .= (["filenameRegex", "startKeyword", "endKeyword"] :: [Text]),
+                  "required" .= (["fileIdKeyword", "startKeyword", "endKeyword"] :: [Text]),
                   "additionalProperties" .= False
                 ]
           ]
@@ -62,10 +61,12 @@ generateUploadConfiguration ::
 generateUploadConfiguration user txnSourceId filePath = do
   extractedText <- extractTextFromPdf (unpack filePath)
   let schema = generateSchema
-  let prompt = generateUploadConfigPrompt extractedText (pack (takeFileName $ unpack filePath))
+  let prompt = generateUploadConfigPrompt extractedText 
+  print prompt
   let messages = [ChatMessage {role = "user", content = prompt}]
 
   response <- makeChatRequest schema messages
+  print response
   case response of
     Left err -> do
       putStrLn $ "Error: " ++ err

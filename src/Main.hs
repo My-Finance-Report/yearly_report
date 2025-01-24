@@ -350,7 +350,6 @@ main = do
       case currentStep of
         Just 0 -> redirect "/onboarding/step-1"
         Just 1 -> redirect "/onboarding/step-2"
-        Just 2 -> redirect "/onboarding/step-3"
         _ -> redirect "/dashboard"
 
     get "/onboarding/step-1" $ requireUser pool $ \user -> do
@@ -387,24 +386,14 @@ main = do
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
     post "/onboarding/step-2" $ requireUser pool $ \user -> do
-      liftIO $ updateUserOnboardingStep user (Just 2)
+      liftIO $ updateUserOnboardingStep user Nothing
       redirect "/onboarding/step-2"
-
-    get "/onboarding/step-3" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      uploadConfigs <- liftIO $ getAllUploadConfigs user
-      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) True
-      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     get "/add-account/step-3" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
       uploadConfigs <- liftIO $ getAllUploadConfigs user
       let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
-    post "/onboarding/step-3" $ requireUser pool $ \user -> do
-      liftIO $ updateUserOnboardingStep user Nothing
-      redirect "/onboarding/step-3"
 
     get "/onboarding/step-4" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -415,7 +404,7 @@ main = do
       let content = renderOnboardingFour user categoriesBySource
       Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
-    post "/onboarding/step-4" $ requireUser pool $ \user -> do
+    post "/onboarding/finalize" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
       categoriesBySource <- liftIO $ do
         categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
@@ -481,7 +470,6 @@ main = do
       let content = renderUploadPage user
       Web.html $ renderPage (Just user) "Upload Page" content
 
-
     post "/upload" $ requireUser pool $ \user -> do
       allFiles <- Web.Scotty.files
       let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles
@@ -512,12 +500,10 @@ main = do
 
           if null missingConfigs
             then do
-              -- All files have configurations, process them immediately
               forM_ validConfigs $ \(pdfId, Just config) -> do
                 processFileUpload user pdfId config activeJobs
               redirect "/dashboard"
             else do
-              -- Some files are missing configurations, redirect to select-account
               redirect $ "/select-account?pdfIds=" <> TL.intercalate "," (map (TL.pack . show . fromSqlKey . fst) pdfIds)
 
     get "/help" $ do

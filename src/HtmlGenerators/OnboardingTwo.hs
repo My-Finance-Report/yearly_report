@@ -15,7 +15,7 @@ renderOnboardingTwo :: Entity User -> Map (Entity TransactionSource) [Entity Cat
 renderOnboardingTwo user transactions isOnboarding =
   let nextUrl =
         if isOnboarding
-          then "/onboarding/step-3"
+          then "/onboarding/finalize"
           else "/add-account/step-3"
       prevUrl =
         if isOnboarding
@@ -30,7 +30,7 @@ renderOnboardingTwo user transactions isOnboarding =
         H.div ! A.class_ "w-full max-w-3xl text-center mb-8" $ do
           when isOnboarding $ do
             H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
-            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 2 of 3"
+            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 2 of 2"
           H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Create Categories"
           H.p ! A.class_ "text-gray-600 mt-2" $ "Add categories for each account type."
 
@@ -40,19 +40,21 @@ renderOnboardingTwo user transactions isOnboarding =
             H.div ! A.class_ "flex flex-col justify-around border border-primary rounded-md p-6 shadow-md w-full md:w-1/2" $ do
               H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml $ transactionSourceName source
 
-              -- Existing Categories
               H.div ! A.class_ "flex flex-wrap gap-2" $ do
                 forM_ categories $ \(Entity catId cat) -> do
-                  H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex items-center gap-2" $ do
-                    H.span $ toHtml $ categoryName cat
-                    H.form
-                      ! A.method "post"
-                      ! A.action (toValue $ "/remove-category/" <> show (fromSqlKey catId))
-                      $ do
-                        H.input
-                          ! A.type_ "submit"
-                          ! A.value "×"
-                          ! A.class_ "text-red-500 cursor-pointer hover:text-red-700 font-bold"
+                  H.form
+                    ! A.method "post"
+                    ! A.action (toValue $ "/remove-category/" <> show (fromSqlKey catId))
+                    ! A.class_ "cursor-pointer"
+                    $ do
+                      H.button
+                        ! A.type_ "submit"
+                        ! A.name "removeCategory"
+                        ! A.value (toValue $ categoryName cat)
+                        ! A.class_ "w-full flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none"
+                        $ do
+                          H.span $ toHtml $ categoryName cat
+                          H.span ! A.class_ "text-red-500 font-bold" $ "×"
 
               let sourceName = transactionSourceName source
               when (sourceName `elem` ["Savings Account", "Checking Account"]) $
@@ -95,27 +97,25 @@ renderOnboardingTwo user transactions isOnboarding =
             $ do
               H.input
                 ! A.type_ "submit"
-                ! A.value "Next"
+                ! A.value "Finish"
                 ! A.class_ "primary-button"
 
--- Reusable Easy Add Component
 renderEasyAdd :: Key TransactionSource -> [Entity Category] -> [Text] -> Html
 renderEasyAdd sourceId categories easyCategories = do
   H.div ! A.class_ "mt-4 flex flex-wrap gap-2" $ do
     forM_ easyCategories $ \easyCategory -> do
       let alreadyAdded = any (\(Entity _ cat) -> categoryName cat == easyCategory) categories
       unless alreadyAdded $ do
-        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex items-center gap-2" $ do
-          H.span $ toHtml easyCategory
-          H.form
-            ! A.method "post"
-            ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
-            $ do
-              H.input
-                ! A.type_ "hidden"
-                ! A.name "newCategory"
-                ! A.value (toValue easyCategory)
-              H.input
-                ! A.type_ "submit"
-                ! A.value "+"
-                ! A.class_ "text-green-600 cursor-pointer hover:text-green-800 font-bold"
+        H.form
+          ! A.method "post"
+          ! A.action (toValue $ "/add-category/" <> show (fromSqlKey sourceId))
+          ! A.class_ "cursor-pointer"
+          $ do
+            H.button
+              ! A.type_ "submit"
+              ! A.name "newCategory"
+              ! A.value (toValue easyCategory)
+              ! A.class_ "w-full flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none"
+              $ do
+                H.span $ toHtml easyCategory
+                H.span ! A.class_ "text-green-600 font-bold" $ "+"

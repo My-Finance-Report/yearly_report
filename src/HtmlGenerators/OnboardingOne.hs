@@ -91,7 +91,7 @@ renderOnboardingOne user transactionSources isOnboarding =
         H.div ! A.class_ "w-full max-w-3xl text-center mb-8" $ do
           when isOnboarding $ do
             H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
-            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 3"
+            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 2"
           H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Add Accounts"
           H.p ! A.class_ "text-gray-600 mt-2" $ "Think Savings Account, Checking Account, Credit Card, etc."
 

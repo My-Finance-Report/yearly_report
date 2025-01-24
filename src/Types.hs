@@ -79,7 +79,7 @@ data PartialUploadConfig
 
 instance FromJSON PartialUploadConfig where
   parseJSON = withObject "PartialUploadConfig" $ \v -> do
-    partialFilenameRegex <- v .: "filenameRegex"
+    partialFilenameRegex <- v .: "fileIdKeyword"
     partialStartKeyword <- v .: "startKeyword"
     partialEndKeyword <- v .: "endKeyword"
     return PartialUploadConfig {..}

@@ -32,9 +32,7 @@ delete button in the table doesnt work
 # User feedback
 
 - 2x! make it clear when they start the onboarding that they need their bank / cc statements
-- remove onboarding step 3, have a selector in the upload page for unrecognized files
 - add the categories from the start
-- the third page is just genreally confusing
 - First page need to know you need statements
   -> import to be able to name credit cards
   -> the first page spells out all the things you need to do
@@ -47,6 +45,7 @@ delete button in the table doesnt work
 
 - update schema to remove nullability on processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
+- consider ability to regenerate sankey somewhere
 - it seems like the text on mobile just needs to be bigger
 - sankey config has configability somewhere
 - there is some redirect bug in the onboarding flow
