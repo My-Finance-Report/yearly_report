@@ -34,13 +34,8 @@ truncateToMonth utcTime =
   let (year, month, _) = toGregorian (utctDay utcTime)
    in UTCTime (fromGregorian year month 1) 0
 
-generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
-generateColChartData user transactions = do
-  sourceMap <- fetchSourceMap user
-  let grouped = groupBySourceAndMonth sourceMap transactions
-  let allSourceNames = extractAllSourceNames grouped
-  let matrix = buildMatrix allSourceNames grouped
-  return matrix
+formatMonthYear :: UTCTime -> Text
+formatMonthYear utcTime = pack (formatTime defaultTimeLocale "%b %Y" utcTime)
 
 isWithdrawal :: CategorizedTransaction -> Bool
 isWithdrawal txn =
@@ -97,5 +92,10 @@ buildRow ::
 buildRow allSourceNames (_, sources) =
   Prelude.map (\source -> findWithDefault 0 source sources) allSourceNames
 
-formatMonthYear :: UTCTime -> Text
-formatMonthYear utcTime = pack (formatTime defaultTimeLocale "%b %Y" utcTime)
+generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
+generateColChartData user transactions = do
+  sourceMap <- fetchSourceMap user
+  let grouped = groupBySourceAndMonth sourceMap transactions
+  let allSourceNames = extractAllSourceNames grouped
+  let matrix = buildMatrix allSourceNames grouped
+  return matrix

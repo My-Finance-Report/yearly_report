@@ -6,6 +6,7 @@ module Main where
 
 import Auth
 import Categorizer
+import ColumnChart
 import Control.Concurrent.Async (async)
 import Control.Exception (SomeException, throwIO, try)
 import Control.Monad (forM, forM_, unless, void)
@@ -47,7 +48,6 @@ import Database.Transaction
 import Database.TransactionSource
 import Database.UploadConfiguration
 import ExampleFileParser
-import ColumnChart 
 import GHC.Generics (Generic)
 import HtmlGenerators.AllFilesPage
 import HtmlGenerators.AuthPages (renderLoginPage)
@@ -66,6 +66,10 @@ import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
+import Routes.Login.RegisterLogin (registerLoginRoutes)
+import Routes.Onboarding.RegisterOnboarding
+  ( registerOnboardingRoutes,
+  )
 import Sankey
 import SankeyConfiguration
 import System.Environment (lookupEnv)
@@ -93,49 +97,8 @@ import Web.Scotty
   )
 import qualified Web.Scotty as Web
 
-
 parseDate :: Text -> Maybe UTCTime
 parseDate dateText = parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText)
-
-
-extractBearerToken :: TL.Text -> Maybe TL.Text
-extractBearerToken header =
-  let prefix = "Bearer "
-   in if prefix `TL.isPrefixOf` header
-        then Just $ TL.drop (TL.length prefix) header
-        else Nothing
-
-extractSessionCookie :: TL.Text -> Maybe TL.Text
-extractSessionCookie cookies =
-  let sessionPrefix = "session="
-   in listToMaybe [TL.drop (TL.length sessionPrefix) cookie | cookie <- TL.splitOn "; " cookies, sessionPrefix `TL.isPrefixOf` cookie]
-
-getTokenFromRequest :: ActionM (Maybe TL.Text)
-getTokenFromRequest = do
-  mCookie <- header "Cookie"
-  case mCookie >>= extractSessionCookie of
-    Just token -> return $ Just token
-    Nothing -> do
-      mAuthHeader <- header "Authorization"
-      return $ mAuthHeader >>= extractBearerToken
-
-requireUser :: ConnectionPool -> (Entity User -> ActionM ()) -> ActionM ()
-requireUser pool action = do
-  mToken <- getTokenFromRequest
-  case mToken of
-    Nothing -> Web.Scotty.redirect "/login"
-    Just token -> do
-      mUser <- liftIO $ validateSession pool $ TL.toStrict token
-      case mUser of
-        Nothing -> Web.Scotty.redirect "/login"
-        Just user -> action user
-
-getCurrentUser :: ConnectionPool -> ActionM (Maybe (Entity User))
-getCurrentUser pool = do
-  mToken <- getTokenFromRequest
-  case mToken of
-    Nothing -> return Nothing
-    Just token -> liftIO $ validateSession pool $ TL.toStrict token
 
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
@@ -215,50 +178,8 @@ main = do
     middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
-    get "/login" $ do
-      token <- getTokenFromRequest
-
-      case token of
-        Just _ -> Web.redirect "/dashboard"
-        Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage Nothing
-
-    post "/login" $ do
-      email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
-      password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
-      maybeUser <- liftIO $ validateLogin pool email password
-      case maybeUser of
-        Nothing -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just "Invalid email or password")
-        Just user -> do
-          token <- liftIO $ createSession pool (entityKey user)
-          Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-          Web.redirect "/dashboard"
-
-    post "/register" $ do
-      email <- Web.Scotty.formParam "email" :: Web.Scotty.ActionM Text
-      password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
-      confirmPassword <- Web.Scotty.formParam "confirm-password" :: Web.Scotty.ActionM Text
-
-      if password /= confirmPassword
-        then Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just "Passwords do not match")
-        else do
-          result <- liftIO $ createUser pool email password
-          case result of
-            Left err -> Web.html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
-            Right user -> do
-              token <- liftIO $ createSession pool (entityKey user)
-              Web.setHeader "Set-Cookie" $ TL.fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
-              Web.redirect "/dashboard"
-
-    get "/logout" $ do
-      mToken <- getTokenFromRequest
-
-      case mToken of
-        Nothing -> Web.redirect "/login"
-        Just token -> do
-          pool <- liftIO getConnectionPool
-          liftIO $ deleteSession pool $ TL.toStrict token
-          Web.setHeader "Set-Cookie" "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
-          Web.redirect "/login"
+    registerOnboardingRoutes pool
+    registerLoginRoutes pool
 
     get "/" $ do
       pool <- liftIO getConnectionPool
@@ -267,36 +188,10 @@ main = do
         Just user -> Web.redirect "/dashboard"
         Nothing -> Web.html $ renderPage user "My Financial Report" renderLandingPage
 
-    get "/onboarding" $ requireUser pool $ \user -> do
-      let currentStep = userOnboardingStep $ entityVal user
-      case currentStep of
-        Just 0 -> redirect "/onboarding/step-1"
-        Just 1 -> redirect "/onboarding/step-2"
-        _ -> redirect "/dashboard"
-
-    get "/onboarding/step-1" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      let content = renderOnboardingOne user transactionSources True
-      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
     get "/add-account/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
       let content = renderOnboardingOne user transactionSources False
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-    post "/onboarding/step-1" $ requireUser pool $ \user -> do
-      liftIO $ updateUserOnboardingStep user (Just 1)
-      redirect "/onboarding/step-2"
-
-    get "/onboarding/step-2" $ requireUser pool $ \user -> do
-      liftIO $ print "we are in step 2"
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      let content = renderOnboardingTwo user categoriesBySource True
-      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
     get "/add-account/step-2" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -306,43 +201,6 @@ main = do
 
       let content = renderOnboardingTwo user categoriesBySource False
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-    post "/onboarding/step-2" $ requireUser pool $ \user -> do
-      liftIO $ updateUserOnboardingStep user Nothing
-      redirect "/onboarding/step-2"
-
-    get "/add-account/step-3" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      uploadConfigs <- liftIO $ getAllUploadConfigs user
-      let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
-      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
-    get "/onboarding/step-4" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      let content = renderOnboardingFour user categoriesBySource
-      Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
-
-    post "/onboarding/finalize" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      liftIO $ do
-        void $ async $ do
-          config <- generateSankeyConfig user categoriesBySource
-          case config of
-            Just con -> do
-              saveSankeyConfig user con
-              -- since we dont actually need the result
-              return ()
-            Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
-      liftIO $ updateUserOnboardingStep user Nothing
-      Web.Scotty.redirect "/dashboard"
 
     get "/demo-account" $ do
       demoUser <- getDemoUser
