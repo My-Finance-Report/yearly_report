@@ -29,12 +29,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 delete button in the table doesnt work
 add the categories from the start
+-> designate cc, vs account vs investment at source level
+sankey config
+-> page to actually edit it
+-> consider ability to regenerate sankey somewhere
+ability to add accounts
 
 # User feedback
 
-- First page need to know you need statements
-  -> import to be able to name credit cards
-  -> the first page spells out all the things you need to do
 - manually add transactions
 - budget and budget progress
 
@@ -42,21 +44,13 @@ add the categories from the start
 
 - update schema to remove nullability on processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
-- consider ability to regenerate sankey somewhere
 - it seems like the text on mobile just needs to be bigger
-- sankey config has configability somewhere
-- there is some redirect bug in the onboarding flow
 - filter by year when you look at dashboard
 - privacy policy
-- refactor css
 - refactor Main.hs routes
 - refresh on the page keeps you in the same view
-- delete transactions
-- the data model should likely differentiate between cards and accounts and keep it at a type level
-  - use this to inform what presets we show, and also which things we want in which charts
 
 # Bad UI
 
 - password dont match in wrong modal
 - let people know something is happening async
-- hit box is just the tiny thing on step 2 of onboard
