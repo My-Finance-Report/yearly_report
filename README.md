@@ -28,16 +28,13 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Blocking
 
 delete button in the table doesnt work
+add the categories from the start
 
 # User feedback
 
-- 2x! make it clear when they start the onboarding that they need their bank / cc statements
-- add the categories from the start
 - First page need to know you need statements
   -> import to be able to name credit cards
   -> the first page spells out all the things you need to do
-  -> harder to crash page on final step
-  -> from the onboard page just upload those transactions
 - manually add transactions
 - budget and budget progress
 
