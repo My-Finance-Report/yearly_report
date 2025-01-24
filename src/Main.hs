@@ -8,7 +8,7 @@ import Auth
 import Categorizer
 import ColumnChart
 import Control.Concurrent.Async (async)
-import Control.Exception (SomeException, throwIO, try)
+import Control.Exception (SomeException (SomeException), try)
 import Control.Monad (forM, forM_, unless, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
@@ -68,6 +68,7 @@ import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Routes.Login.RegisterLogin (registerLoginRoutes)
 import Routes.Misc.RegisterMisc (registerMiscRoutes)
+import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
 import Routes.Onboarding.RegisterOnboarding
   ( registerOnboardingRoutes,
   )
@@ -182,6 +183,7 @@ main = do
     registerOnboardingRoutes pool
     registerLoginRoutes pool
     registerMiscRoutes pool activeJobs
+    registerVisualizationRoutes pool
 
     get "/add-account/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -201,8 +203,6 @@ main = do
       demoUser <- getDemoUser
       content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
       Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
-
-
 
     get "/manage-accounts" $ requireUser pool $ \user -> do
       Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
@@ -439,22 +439,6 @@ main = do
       catName <- Web.Scotty.formParam "categoryName"
       liftIO $ updateCategory user catId catName
       Web.Scotty.redirect "/configuration"
-
-    get "/api/sankey-data" $ requireUser pool $ \user -> do
-      categorizedTransactions <- liftIO $ getAllTransactions user
-      gbs <- groupTransactionsBySource user categorizedTransactions
-
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
-      let sankeyData = case sankeyConfig of
-            Just config -> Just (generateSankeyData gbs config)
-            Nothing -> Nothing
-
-      json sankeyData
-
-    get "/api/histogram-data" $ requireUser pool $ \user -> do
-      transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateColChartData user transactions
-      json histogramData
 
     get "/demo/api/sankey-data" $ do
       user <- getDemoUser

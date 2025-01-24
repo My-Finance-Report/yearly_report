@@ -4,7 +4,7 @@ google.charts.setOnLoadCallback(fetchAndDrawHistogram);
 function fetchAndDrawHistogram() {
    const apiEndpoint = window.location.pathname.includes('/demo-account')
         ? '/demo/api/histogram-data'
-        : '/api/histogram-data';
+        : '/api/column-data';
 
 
   fetch(apiEndpoint)
