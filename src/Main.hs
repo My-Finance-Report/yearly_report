@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -36,7 +35,6 @@ import Database.Category
   )
 import Database.Configurations
 import Database.ConnectionPool
-import Database.Database (getDemoUser, updateUserOnboardingStep)
 import Database.Files
 import Database.Models
 import Database.Persist
@@ -66,12 +64,16 @@ import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
+import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
+import Routes.Configuration.RegisterConfiguration (registerConfigurationRoutes)
+import Routes.Crud.Sankey.RegisterSankey (registerSankeyRoutes)
+import Routes.Demo.RegisterDemo (registerDemoRoutes)
 import Routes.Login.RegisterLogin (registerLoginRoutes)
 import Routes.Misc.RegisterMisc (registerMiscRoutes)
-import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
 import Routes.Onboarding.RegisterOnboarding
   ( registerOnboardingRoutes,
   )
+import Routes.Upload.RegisterUpload (registerUploadRoutes)
 import Sankey
 import SankeyConfiguration
 import System.Environment (lookupEnv)
@@ -160,19 +162,11 @@ reprocessFileUpload user processedFileId activeJobs = do
       -- Ensure response is sent after the async job starts
       Web.text "Reprocessing started successfully!"
 
-processFileUpload user pdfId config activeJobs = do
-  liftIO $ do
-    modifyIORef activeJobs (+ 1)
-    _ <- Control.Concurrent.Async.async $ do
-      processPdfFile user pdfId config False
-      modifyIORef activeJobs (subtract 1)
-    return ()
-  return ()
-
 main :: IO ()
 main = do
   activeJobs <- newIORef 0
   openAiKey <- liftIO $ getRequiredEnv "OPENAI_API_KEY"
+  openAiKey <- liftIO $ getRequiredEnv "DATABASE_URL"
   initializePool
   pool <- getConnectionPool
   migratePostgres
@@ -184,6 +178,10 @@ main = do
     registerLoginRoutes pool
     registerMiscRoutes pool activeJobs
     registerVisualizationRoutes pool
+    registerDemoRoutes pool
+    registerSankeyRoutes pool
+    registerConfigurationRoutes pool
+    registerUploadRoutes pool activeJobs
 
     get "/add-account/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -198,11 +196,6 @@ main = do
 
       let content = renderOnboardingTwo user categoriesBySource False
       Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-    get "/demo-account" $ do
-      demoUser <- getDemoUser
-      content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
-      Web.Scotty.html $ renderPage (Just demoUser) "Financial Summary" content
 
     get "/manage-accounts" $ requireUser pool $ \user -> do
       Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
@@ -233,46 +226,6 @@ main = do
 
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources
 
-    get "/upload" $ requireUser pool $ \user -> do
-      let content = renderUploadPage user
-      Web.html $ renderPage (Just user) "Upload Page" content
-
-    post "/upload" $ requireUser pool $ \user -> do
-      allFiles <- Web.Scotty.files
-      let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles
-      case uploadedFiles of
-        [] -> Web.text "No files were uploaded!"
-        _ -> do
-          fileConfigs <- forM uploadedFiles $ \(_, fileInfo) -> do
-            let originalName = decodeUtf8 $ fileName fileInfo
-            let tempFilePath = "/tmp/" <> originalName
-
-            liftIO $ B.writeFile (T.unpack tempFilePath) (fileContent fileInfo)
-
-            extractedTextOrError <-
-              liftIO $ try (extractTextFromPdf (T.unpack tempFilePath)) :: ActionM (Either SomeException Text)
-
-            case extractedTextOrError of
-              Left err -> return (fileInfo, Nothing, Nothing)
-              Right extractedText -> do
-                maybeConfig <- liftIO $ getUploadConfiguration user originalName extractedText
-                return (fileInfo, maybeConfig, Just extractedText)
-
-          pdfIds <- forM fileConfigs $ \(fileInfo, maybeConfig, maybeExtractedText) -> do
-            let originalName = decodeUtf8 $ fileName fileInfo
-            pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "pending"
-            return (pdfId, maybeConfig)
-
-          let (missingConfigs, validConfigs) = partition (isNothing . snd) pdfIds
-
-          if null missingConfigs
-            then do
-              forM_ validConfigs $ \(pdfId, Just config) -> do
-                processFileUpload user pdfId config activeJobs
-              redirect "/dashboard"
-            else do
-              redirect $ "/select-account?pdfIds=" <> TL.intercalate "," (map (TL.pack . show . fromSqlKey . fst) pdfIds)
-
     get "/transactions" $ requireUser pool $ \user -> do
       filenames <- liftIO $ getAllFilenames user
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderAllFilesPage filenames
@@ -297,55 +250,6 @@ main = do
       fileArg <- Web.Scotty.formParam "filename"
       liftIO $ updateTransactionCategory user (read $ T.unpack tId) newCatId
       redirect $ TL.fromStrict ("/transactions/" <> fileArg)
-
-    post "/update-sankey-config" $ requireUser pool $ \user -> do
-      allParams <- Web.Scotty.formParams
-
-      let parseComposite keyValue =
-            case T.splitOn "-" keyValue of
-              [srcId, catId] -> Just (toSqlKey (read $ T.unpack srcId), toSqlKey (read $ T.unpack catId))
-              _ -> Nothing
-
-          inputPairs = [pair | (key, value) <- allParams, key == "inputSourceCategory[]", Just pair <- [parseComposite value]]
-
-      linkageSourceCategory <- Web.Scotty.formParam "linkageSourceCategory"
-      linkageTargetId <- Web.Scotty.formParam "linkageTargetId"
-
-      let (linkageSourceId, linkageCategoryId) = fromMaybe (error "Invalid linkage format") (parseComposite linkageSourceCategory)
-
-      -- Fetch database entities
-      inputTransactionSources <- liftIO $ mapM (getTransactionSource user . fst) inputPairs
-      inputCategories <- liftIO $ mapM (getCategory user . snd) inputPairs
-      linkageSource <- liftIO $ getTransactionSource user linkageSourceId
-      (linkageCategory, _) <- liftIO $ getCategory user linkageCategoryId
-      linkageTarget <- liftIO $ getTransactionSource user (toSqlKey (read linkageTargetId))
-
-      let rawInputs = zip inputTransactionSources inputCategories
-          inputs = Prelude.map (\(source, (category, _)) -> (source, category)) rawInputs
-          linkages = (linkageSource, linkageCategory, linkageTarget)
-          newConfig = FullSankeyConfig {inputs = inputs, linkages = [linkages]} -- TODO this needs to handle multiple
-      liftIO $ saveSankeyConfig user newConfig
-      redirect "/dashboard"
-
-    get "/new-configuration" $ requireUser pool $ \user -> do
-      uploaderConfigs <- liftIO $ getAllUploadConfigs user
-      transactionSources <- liftIO $ getAllTransactionSources user
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      Web.Scotty.html $ renderPage (Just user) "Configuration" $ renderConfigurationPageNew sankeyConfig categoriesBySource uploaderConfigs transactionSources
-
-    get "/configuration" $ requireUser pool $ \user -> do
-      uploaderConfigs <- liftIO $ getAllUploadConfigs user
-      transactionSources <- liftIO $ getAllTransactionSources user
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      Web.Scotty.html $ renderPage (Just user) "Configuration" $ renderConfigurationPage sankeyConfig categoriesBySource uploaderConfigs transactionSources
 
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
@@ -439,81 +343,3 @@ main = do
       catName <- Web.Scotty.formParam "categoryName"
       liftIO $ updateCategory user catId catName
       Web.Scotty.redirect "/configuration"
-
-    get "/demo/api/sankey-data" $ do
-      user <- getDemoUser
-      categorizedTransactions <- liftIO $ getAllTransactions user
-      gbs <- groupTransactionsBySource user categorizedTransactions
-
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
-      let sankeyData = case sankeyConfig of
-            Just config -> Just (generateSankeyData gbs config)
-            Nothing -> Nothing
-
-      json sankeyData
-
-    get "/demo/api/histogram-data" $ do
-      user <- getDemoUser
-      transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateColChartData user transactions
-      json histogramData
-
-    post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
-      sourceIdText <- Web.Scotty.pathParam "sourceId" :: Web.Scotty.ActionM Text
-      let sourceId = toSqlKey (read $ T.unpack sourceIdText) :: Key TransactionSource
-
-      files <- Web.Scotty.files
-      case lookup "exampleFile" files of
-        Just fileInfo -> do
-          let uploadedBytes = fileContent fileInfo
-          let originalName = decodeUtf8 $ fileName fileInfo
-          let tempFilePath = "/tmp/" <> originalName
-          liftIO $ B.writeFile (T.unpack tempFilePath) uploadedBytes
-
-          liftIO $ do
-            uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
-            case uploadConfig of
-              Just config -> addUploadConfigurationObject user config
-              Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
-
-          referer <- Web.Scotty.header "Referer"
-          let redirectTo = fromMaybe "/dashboard" referer
-          Web.Scotty.redirect redirectTo
-        Nothing -> Web.Scotty.text "No file provided in the request"
-
-    post "/assign-transaction-source" $ requireUser pool $ \user -> do
-      params <- Web.formParams
-
-      let selections =
-            [ (toSqlKey (read $ T.unpack (T.drop 7 key)) :: Key UploadedPdf, toSqlKey (read $ T.unpack val) :: Key TransactionSource)
-              | (key, val) <- params,
-                "source-" `T.isPrefixOf` key
-            ]
-      liftIO $ print selections
-
-      -- Process each selected transaction source
-      forM_ selections $ \(pdfId, sourceId) -> do
-        pdfRecord <- liftIO $ getPdfRecord user pdfId
-
-        -- Ensure we have a valid file path to use for generating config
-        let tempFilePath = "/tmp/" <> uploadedPdfFilename (entityVal pdfRecord)
-
-        -- Generate and store the UploadConfiguration
-        uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
-        case uploadConfig of
-          Just config -> liftIO $ addUploadConfigurationObject user config
-          Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration."
-
-      liftIO $ print "created the upload config"
-
-      -- Reprocess all uploaded files
-      forM_ selections $ \(pdfId, sourceId) -> do
-        pdfRecord <- liftIO $ getPdfRecord user pdfId
-        let extractedText = uploadedPdfRawContent (entityVal pdfRecord)
-        maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
-
-        case maybeConfig of
-          Just config -> processFileUpload user pdfId config activeJobs
-          Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
-
-      redirect "/dashboard"
