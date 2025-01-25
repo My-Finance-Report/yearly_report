@@ -11,11 +11,11 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString
 import qualified Data.ByteString.Lazy
 import Data.HList (IORef, modifyIORef)
+import Data.List (partition)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, isNothing)
 import Data.Text (Text, isPrefixOf, pack, splitOn, unpack)
 import qualified Data.Text
-import Data.List (partition)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Lazy
   ( fromStrict,
@@ -27,7 +27,7 @@ import qualified Data.Text.Lazy
 import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
-import Database.Files (addPdfRecord, getPdfRecord)
+import Database.Files (addPdfRecord, getPdfRecord, getPdfRecords)
 import Database.Models
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
@@ -42,13 +42,13 @@ import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
-import HtmlGenerators.UploadPage (renderUploadPage)
+import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers (extractTextFromPdf, processPdfFile)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types
-import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, redirect, setHeader, text)
+import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, setHeader, text)
 
 processFileUpload user pdfId config activeJobs = do
   liftIO $ do
@@ -160,3 +160,26 @@ registerUploadRoutes pool activeJobs = do
         let redirectTo = fromMaybe "/dashboard" referer
         redirect redirectTo
       Nothing -> text "No file provided in the request"
+
+  get "/select-account" $ requireUser pool $ \user -> do
+    pdfIdsParam <- queryParam "pdfIds"
+
+    let pdfIds = map (toSqlKey . read . unpack) pdfIdsParam :: [Key UploadedPdf]
+    fileRecords <- liftIO $ getPdfRecords user pdfIds
+
+    liftIO $ print pdfIds
+
+    transactionSources <- liftIO $ getAllTransactionSources user
+
+    let txnLookup = Map.fromList [(entityKey txn, txn) | txn <- transactionSources]
+
+    liftIO $ print txnLookup
+
+    pdfsWithSources <- forM fileRecords $ \record -> do
+      maybeConfig <- liftIO $ getUploadConfigurationFromPdf user (entityKey record)
+      let maybeTxnSource = maybeConfig >>= \(Entity _ config) -> Map.lookup (uploadConfigurationTransactionSourceId config) txnLookup
+      return (record, maybeTxnSource)
+
+    transactionSources <- liftIO $ getAllTransactionSources user
+
+    html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources

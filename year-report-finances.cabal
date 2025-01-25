@@ -42,6 +42,7 @@ library
     Routes.Demo.RegisterDemo
     Routes.Configuration.RegisterConfiguration
     Routes.Upload.RegisterUpload
+    Routes.Crud.File.RegisterFile
     Auth
     Sankey
     ColumnChart
@@ -117,6 +118,7 @@ executable year-report-finances
       Routes.Crud.Category.RegisterCategory
       Routes.Crud.Transaction.RegisterTransaction
       Routes.Crud.TransactionSource.RegisterTransactionSource
+      Routes.Crud.File.RegisterFile
       Routes.Demo.RegisterDemo
       Routes.Upload.RegisterUpload
       Routes.Configuration.RegisterConfiguration

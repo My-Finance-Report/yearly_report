@@ -49,6 +49,7 @@ ability to add accounts
 - privacy policy
 - refactor Main.hs routes
 - refresh on the page keeps you in the same view
+- install a linter for extraneous imports
 
 # Bad UI
 
