@@ -7,7 +7,7 @@ import Control.Concurrent.Async (async)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map
-import Database.Category (getCategoriesBySource, getCategoriesAndSources)
+import Database.Category (getCategoriesAndSources, getCategoriesBySource)
 import Database.Configurations (saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Models
@@ -26,7 +26,6 @@ import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, get, html, post, redirect)
 
-
 registerOnboardingRoutes :: ConnectionPool -> ScottyM ()
 registerOnboardingRoutes pool = do
   -- Main onboarding route (redirects based on current step)
@@ -41,7 +40,7 @@ registerOnboardingRoutes pool = do
   get "/onboarding/step-1" $ requireUser pool $ \user -> do
     transactionSources <- liftIO $ getAllTransactionSources user
     let content = renderOnboardingOne user transactionSources True
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
 
   post "/onboarding/step-2" $ requireUser pool $ \user -> do
     liftIO $ updateUserOnboardingStep user Nothing
@@ -55,13 +54,13 @@ registerOnboardingRoutes pool = do
     liftIO $ print "we are in step 2"
     categoriesBySource <- liftIO $ getCategoriesAndSources user
     let content = renderOnboardingTwo user categoriesBySource True
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
 
   get "/add-account/step-3" $ requireUser pool $ \user -> do
     transactionSources <- liftIO $ getAllTransactionSources user
     uploadConfigs <- liftIO $ getAllUploadConfigs user
     let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
+    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
 
   post "/onboarding/finalize" $ requireUser pool $ \user -> do
     categoriesBySource <- liftIO $ getCategoriesAndSources user

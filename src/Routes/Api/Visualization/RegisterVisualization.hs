@@ -11,7 +11,7 @@ import qualified Data.Map
 import Data.Text (Text)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource)
-import Database.Configurations (saveSankeyConfig, getFirstSankeyConfig)
+import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Models (User (userOnboardingStep))
 import Database.Persist
@@ -23,9 +23,6 @@ import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
-import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
-import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, get, json, post, redirect, setHeader)
@@ -36,8 +33,8 @@ registerVisualizationRoutes pool = do
     categorizedTransactions <- liftIO $ getAllTransactions user
     gbs <- groupTransactionsBySource user categorizedTransactions
 
-    (sankeyConfig,_) <- liftIO $ getFirstSankeyConfig user
-    json $ generateSankeyData gbs sankeyConfig 
+    (sankeyConfig, _) <- liftIO $ getFirstSankeyConfig user
+    json $ generateSankeyData gbs sankeyConfig
 
   get "/api/column-data" $ requireUser pool $ \user -> do
     transactions <- liftIO $ getAllTransactions user

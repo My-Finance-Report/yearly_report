@@ -29,7 +29,6 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
@@ -47,9 +46,10 @@ registerConfigurationRoutes pool = do
       categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
       return $ Map.fromList $ zip transactionSources categories
 
-    html $ renderPage (Just user) "Configuration" $ renderConfigurationPageNew configId sankeyConfig categoriesBySource uploaderConfigs transactionSources
+    let content = renderConfigurationPageNew configId sankeyConfig categoriesBySource uploaderConfigs transactionSources
+    html $ renderPage (Just user) "Configuration" content True
 
   get "/manage-accounts" $ requireUser pool $ \user -> do
     categoriesBySource <- liftIO $ getCategoriesAndSources user
     let content = renderAccountManagement user categoriesBySource True
-    Web.Scotty.html $ renderPage (Just user) "Account Management" content
+    Web.Scotty.html $ renderPage (Just user) "Account Management" content True

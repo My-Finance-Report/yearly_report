@@ -5,13 +5,13 @@ module HtmlGenerators.Layout (renderPage) where
 import qualified Data.Text.Lazy as TL
 import Database.Models
 import Database.Persist (Entity)
-import HtmlGenerators.Components (navigationBar, makeToolBar)
+import HtmlGenerators.Components (makeToolBar, navigationBar)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-renderPage :: Maybe (Entity User) -> TL.Text -> Html -> TL.Text
-renderPage mUser pageTitle content =
+renderPage :: Maybe (Entity User) -> TL.Text -> Html -> Bool -> TL.Text
+renderPage mUser pageTitle content showToolbar =
   renderHtml $ docTypeHtml $ do
     H.head $ do
       H.title $ toHtml pageTitle
@@ -41,5 +41,5 @@ renderPage mUser pageTitle content =
 
     H.body $ do
       navigationBar mUser
-      makeToolBar
+      if showToolbar then makeToolBar else mempty
       H.div ! A.class_ "m-2" $ content

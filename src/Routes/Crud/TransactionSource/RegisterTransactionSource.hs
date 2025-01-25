@@ -24,8 +24,6 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
-import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.OnboardingOne (renderOnboardingOne)
 import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
 import Sankey (generateSankeyData)
@@ -65,17 +63,3 @@ registerTransactionSourceRoutes pool = do
     let redirectTo = fromMaybe "/dashboard" referer
 
     Web.Scotty.redirect redirectTo
-
-  get "/add-account/step-1" $ requireUser pool $ \user -> do
-    transactionSources <- liftIO $ getAllTransactionSources user
-    let content = renderOnboardingOne user transactionSources False
-    Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-  get "/add-account/step-2" $ requireUser pool $ \user -> do
-    transactionSources <- liftIO $ getAllTransactionSources user
-    categoriesBySource <- liftIO $ do
-      categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-      return $ Map.fromList $ zip transactionSources categories
-
-    let content = renderOnboardingTwo user categoriesBySource False
-    Web.Scotty.html $ renderPage (Just user) "Add Account" content

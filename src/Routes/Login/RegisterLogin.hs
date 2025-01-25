@@ -36,14 +36,14 @@ registerLoginRoutes pool = do
 
     case token of
       Just _ -> redirect "/dashboard"
-      Nothing -> html $ renderPage Nothing "Login" $ renderLoginPage Nothing
+      Nothing -> html $ renderPage Nothing "Login" (renderLoginPage Nothing) False
 
   post "/login" $ do
     email <- formParam "email" :: Web.Scotty.ActionM Text
     password <- Web.Scotty.formParam "password" :: Web.Scotty.ActionM Text
     maybeUser <- liftIO $ validateLogin pool email password
     case maybeUser of
-      Nothing -> html $ renderPage Nothing "Login" $ renderLoginPage (Just "Invalid email or password")
+      Nothing -> html $ renderPage Nothing "Login" (renderLoginPage (Just "Invalid email or password")) False
       Just user -> do
         token <- liftIO $ createSession pool (entityKey user)
         setHeader "Set-Cookie" $ fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"
@@ -55,11 +55,11 @@ registerLoginRoutes pool = do
     confirmPassword <- Web.Scotty.formParam "confirm-password" :: Web.Scotty.ActionM Text
 
     if password /= confirmPassword
-      then html $ renderPage Nothing "Login" $ renderLoginPage (Just "Passwords do not match")
+      then html $ renderPage Nothing "Login" (renderLoginPage (Just "Passwords do not match")) False
       else do
         result <- liftIO $ createUser pool email password
         case result of
-          Left err -> html $ renderPage Nothing "Login" $ renderLoginPage (Just err)
+          Left err -> html $ renderPage Nothing "Login"  (renderLoginPage (Just err)) False
           Right user -> do
             token <- liftIO $ createSession pool (entityKey user)
             setHeader "Set-Cookie" $ fromStrict $ "session=" <> token <> "; Path=/; HttpOnly"

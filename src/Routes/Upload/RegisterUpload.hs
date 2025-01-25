@@ -39,7 +39,6 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
@@ -62,7 +61,7 @@ registerUploadRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
 registerUploadRoutes pool activeJobs = do
   get "/upload" $ requireUser pool $ \user -> do
     let content = renderUploadPage user
-    html $ renderPage (Just user) "Upload Page" content
+    html $ renderPage (Just user) "Upload Page" content True
 
   post "/upload" $ requireUser pool $ \user -> do
     allFiles <- files
@@ -181,4 +180,4 @@ registerUploadRoutes pool activeJobs = do
 
     transactionSources <- liftIO $ getAllTransactionSources user
 
-    html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources
+    html $ renderPage (Just user) "Adjust Transactions"  (renderSelectAccountPage pdfsWithSources transactionSources) True

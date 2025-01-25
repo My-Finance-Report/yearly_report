@@ -24,7 +24,6 @@ import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.HomePage (makeDemoBanner, makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
@@ -50,4 +49,4 @@ registerDemoRoutes pool = do
   get "/demo-account" $ do
     demoUser <- getDemoUser
     content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
-    html $ renderPage (Just demoUser) "Financial Summary" content
+    html $ renderPage (Just demoUser) "Financial Summary" content True

@@ -18,7 +18,7 @@ import Database.Files (getAllFilenames, getPdfRecord)
 import Database.Models (Category (Category), UploadedPdf (UploadedPdf), User (userOnboardingStep))
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, toSqlKey)
-import Database.Transaction (getAllTransactions, getTransactionsByFileId, groupTransactionsBySource, updateTransaction, updateTransactionCategory, removeTransaction)
+import Database.Transaction (getAllTransactions, getTransactionsByFileId, groupTransactionsBySource, removeTransaction, updateTransaction, updateTransactionCategory)
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AllFilesPage (renderAllFilesPage)
@@ -26,7 +26,6 @@ import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage, renderTransactionsPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
 import Text.Read (readMaybe)
 import Types
@@ -69,7 +68,8 @@ registerTransactionRoutes pool = do
 
   get "/transactions" $ requireUser pool $ \user -> do
     filenames <- liftIO $ getAllFilenames user
-    html $ renderPage (Just user) "Adjust Transactions" $ renderAllFilesPage filenames
+    let content = renderAllFilesPage filenames
+    html $ renderPage (Just user) "Adjust Transactions" content True
 
   get "/transactions/:fileid" $ requireUser pool $ \user -> do
     fileIdText <- pathParam "fileid"
@@ -81,5 +81,5 @@ registerTransactionRoutes pool = do
     categoryLookup <- liftIO $ do
       categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
       return $ Map.fromList $ zip (Prelude.map entityKey transactionSources) categories
-
-    html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile categoryLookup transactions
+    let content = renderTransactionsPage uploadedFile categoryLookup transactions
+    html $ renderPage (Just user) "Adjust Transactions" content True

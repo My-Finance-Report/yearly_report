@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Routes.Crud.File.RegisterFile(registerFileRoutes) where
 
+module Routes.Crud.File.RegisterFile (registerFileRoutes) where
 
-
+import Auth (requireUser)
 import ColumnChart (generateColChartData)
 import Control.Concurrent.Async (async)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
+import Data.HList (IORef, modifyIORef)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, splitOn, unpack)
@@ -14,28 +15,23 @@ import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (addCategory, getCategoriesBySource, getCategory, removeCategory, updateCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
-import Database.Models (Category (Category), User (userOnboardingStep), ProcessedFile (processedFileUploadedPdfId, processedFileUploadConfigurationId))
+import Database.Files (deleteProcessedFile, getProcessedFile)
+import Database.Models (Category (Category), ProcessedFile (processedFileUploadConfigurationId, processedFileUploadedPdfId), User (userOnboardingStep))
 import Database.Persist hiding (get)
-import Database.Persist.Postgresql (ConnectionPool, toSqlKey,fromSqlKey)
-import Database.Transaction (getAllTransactions, groupTransactionsBySource, updateTransactionCategory, removeTransactionByPdfId)
-import Database.TransactionSource (getAllTransactionSources, getTransactionSource, updateTransactionSource, addTransactionSource, removeTransactionSource)
+import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
+import Database.Transaction (getAllTransactions, groupTransactionsBySource, removeTransactionByPdfId, updateTransactionCategory)
+import Database.TransactionSource (addTransactionSource, getAllTransactionSources, getTransactionSource, removeTransactionSource, updateTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs, getUploadConfigById)
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
-import HtmlGenerators.LandingPage (renderLandingPage)
-import HtmlGenerators.Layout (renderPage)
+import HtmlGenerators.OnboardingOne (renderOnboardingOne)
+import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
+import Parsers (processPdfFile)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
-import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect,text)
-import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
-import HtmlGenerators.OnboardingOne (renderOnboardingOne)
-import Auth (requireUser)
-import Data.HList (IORef, modifyIORef)
-import Database.Files (getProcessedFile, deleteProcessedFile)
-import Parsers (processPdfFile)
-
+import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect, text)
 
 deleteFileAndTransactions ::
   Entity User ->
@@ -52,10 +48,6 @@ deleteFileAndTransactions user processedFileId activeJobs = do
     Just validPdfId -> do
       liftIO $ removeTransactionByPdfId user validPdfId
       liftIO $ deleteProcessedFile user fileId
-
-
-
-
 
 reprocessFileUpload ::
   Entity User ->
@@ -91,17 +83,14 @@ reprocessFileUpload user processedFileId activeJobs = do
 
       text "Reprocessing started successfully!"
 
-
-
 registerFileRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
-registerFileRoutes pool activeJobs= do
+registerFileRoutes pool activeJobs = do
+  post "/reprocess-file/:fId" $ requireUser pool $ \user -> do
+    fIdText <- Web.Scotty.pathParam "fId"
 
-    post "/reprocess-file/:fId" $ requireUser pool $ \user -> do
-      fIdText <- Web.Scotty.pathParam "fId"
+    let processedFileId = toSqlKey $ read fIdText
 
-      let processedFileId = toSqlKey $ read fIdText
+    liftIO $ print "reprocessing"
+    reprocessFileUpload user processedFileId activeJobs
 
-      liftIO $ print "reprocessing"
-      reprocessFileUpload user processedFileId activeJobs
-
-      Web.Scotty.redirect "/dashboard"
+    Web.Scotty.redirect "/dashboard"
