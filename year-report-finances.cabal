@@ -31,8 +31,21 @@ library
     HtmlGenerators.OnboardingThree
     HtmlGenerators.OnboardingFour
     HtmlGenerators.UploadPage 
+    Routes.Onboarding.RegisterOnboarding
+    Routes.Login.RegisterLogin
+    Routes.Misc.RegisterMisc
+    Routes.Api.Visualization.RegisterVisualization
+    Routes.Crud.Sankey.RegisterSankey
+    Routes.Crud.Category.RegisterCategory
+    Routes.Crud.Transaction.RegisterTransaction
+    Routes.Crud.TransactionSource.RegisterTransactionSource
+    Routes.Demo.RegisterDemo
+    Routes.Configuration.RegisterConfiguration
+    Routes.Upload.RegisterUpload
+    Routes.Crud.File.RegisterFile
     Auth
     Sankey
+    ColumnChart
     SankeyConfiguration
     Parsers
     ExampleFileParser
@@ -97,7 +110,20 @@ executable year-report-finances
       HtmlGenerators.OnboardingThree
       HtmlGenerators.OnboardingFour
       HtmlGenerators.UploadPage 
+      Routes.Onboarding.RegisterOnboarding
+      Routes.Login.RegisterLogin
+      Routes.Misc.RegisterMisc
+      Routes.Api.Visualization.RegisterVisualization
+      Routes.Crud.Sankey.RegisterSankey
+      Routes.Crud.Category.RegisterCategory
+      Routes.Crud.Transaction.RegisterTransaction
+      Routes.Crud.TransactionSource.RegisterTransactionSource
+      Routes.Crud.File.RegisterFile
+      Routes.Demo.RegisterDemo
+      Routes.Upload.RegisterUpload
+      Routes.Configuration.RegisterConfiguration
       Auth
+      ColumnChart
       Sankey
       SankeyConfiguration
       ExampleFileParser
