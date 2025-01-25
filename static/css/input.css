@@ -46,8 +46,16 @@
   .secondary-danger-button:active {
     @apply bg-red-100 border-red-800;
   }
+  
+
 
 }
+.active {
+    background-color: #fff;
+    border-color: #4CAF50;
+    color: #4CAF50;
+    font-weight: bold;
+  }
 
 .rotate-90 {
   transform: rotate(90deg);
