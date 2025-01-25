@@ -29,7 +29,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 delete button in the table doesnt work
 
--> designate cc, vs account vs investment at source level
 sankey config
 -> page to actually edit it
 -> consider ability to regenerate sankey somewhere
@@ -48,6 +47,7 @@ ability to add accounts
 - filter by year when you look at dashboard
 - privacy policy
 - refresh on the page keeps you in the same view
+ -same with form submitting the login flow
 - there is a bug if you add / remove / add a source
 - install a linter for extraneous imports
 

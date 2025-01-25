@@ -7,7 +7,7 @@ import Control.Concurrent.Async (async)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map
-import Database.Category (getCategoriesBySource)
+import Database.Category (getCategoriesBySource, getCategoriesAndSources)
 import Database.Configurations (saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Models
@@ -25,6 +25,7 @@ import HtmlGenerators.OnboardingThree (renderOnboardingThree)
 import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, get, html, post, redirect)
+
 
 registerOnboardingRoutes :: ConnectionPool -> ScottyM ()
 registerOnboardingRoutes pool = do
@@ -52,11 +53,7 @@ registerOnboardingRoutes pool = do
 
   get "/onboarding/step-2" $ requireUser pool $ \user -> do
     liftIO $ print "we are in step 2"
-    transactionSources <- liftIO $ getAllTransactionSources user
-    categoriesBySource <- liftIO $ do
-      categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-      return $ Data.Map.fromList $ zip transactionSources categories
-
+    categoriesBySource <- liftIO $ getCategoriesAndSources user
     let content = renderOnboardingTwo user categoriesBySource True
     Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
@@ -67,10 +64,7 @@ registerOnboardingRoutes pool = do
     Web.Scotty.html $ renderPage (Just user) "User Onboarding" content
 
   post "/onboarding/finalize" $ requireUser pool $ \user -> do
-    transactionSources <- liftIO $ getAllTransactionSources user
-    categoriesBySource <- liftIO $ do
-      categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-      return $ Data.Map.fromList $ zip transactionSources categories
+    categoriesBySource <- liftIO $ getCategoriesAndSources user
 
     liftIO $ do
       void $ async $ do

@@ -11,7 +11,7 @@ import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, splitOn, unpack)
 import Data.Text.Lazy (fromStrict, toStrict)
-import Database.Category (getCategoriesBySource, getCategory)
+import Database.Category (getCategoriesBySource, getCategory, getCategoriesAndSources)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Models (User (userOnboardingStep))
@@ -34,6 +34,7 @@ import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, html, json, post, redirect, setHeader)
 import HtmlGenerators.Configuration (renderConfigurationPage)
+import HtmlGenerators.AccountManagement (renderAccountManagement)
 
 registerConfigurationRoutes :: ConnectionPool -> ScottyM ()
 registerConfigurationRoutes pool = do
@@ -57,3 +58,8 @@ registerConfigurationRoutes pool = do
             return $ Map.fromList $ zip transactionSources categories
 
         html $ renderPage (Just user) "Configuration" $ renderConfigurationPageNew sankeyConfig categoriesBySource uploaderConfigs transactionSources
+
+    get "/manage-accounts" $ requireUser pool $ \user -> do
+        categoriesBySource <- liftIO $ getCategoriesAndSources user
+        let content = renderAccountManagement user categoriesBySource True
+        Web.Scotty.html $ renderPage (Just user) "Account Management" content

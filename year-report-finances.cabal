@@ -31,6 +31,7 @@ library
     HtmlGenerators.OnboardingThree
     HtmlGenerators.OnboardingFour
     HtmlGenerators.UploadPage 
+    HtmlGenerators.AccountManagement
     Routes.Onboarding.RegisterOnboarding
     Routes.Login.RegisterLogin
     Routes.Misc.RegisterMisc
@@ -109,6 +110,7 @@ executable year-report-finances
       HtmlGenerators.OnboardingTwo
       HtmlGenerators.OnboardingThree
       HtmlGenerators.OnboardingFour
+      HtmlGenerators.AccountManagement
       HtmlGenerators.UploadPage 
       Routes.Onboarding.RegisterOnboarding
       Routes.Login.RegisterLogin

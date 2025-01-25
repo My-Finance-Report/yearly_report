@@ -1,6 +1,7 @@
 module Database.Category
   ( updateCategory,
     getCategory,
+    getCategoriesAndSources,
     getCategoriesBySource,
     addCategory,
     removeCategory,
@@ -14,12 +15,15 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
 import Control.Monad.Trans.Reader (ReaderT)
 import Data.Text (Text)
+
+import Data.Map (Map, toList, fromList)
 import Database.ConnectionPool
 import Database.Models
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
 import Types
+import Database.TransactionSource (getAllTransactionSources)
 
 getCategoriesBySource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> m [Entity Category]
 getCategoriesBySource user sourceId = do
@@ -118,3 +122,10 @@ ensureCategoryExists user catName sourceId = do
   case maybeCategory of
     Just (Entity categoryId _) -> return categoryId
     Nothing -> insert $ Category catName sourceId (entityKey user) False
+
+getCategoriesAndSources :: Entity User -> IO (Map (Entity TransactionSource) [Entity Category])
+getCategoriesAndSources user = do
+  transactionSources <- getAllTransactionSources user
+  categoriesBySource <- mapM (getCategoriesBySource user . entityKey) transactionSources
+  return $ fromList $ zip transactionSources categoriesBySource
+
