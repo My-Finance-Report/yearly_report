@@ -36,8 +36,10 @@ library
     Routes.Misc.RegisterMisc
     Routes.Api.Visualization.RegisterVisualization
     Routes.Crud.Sankey.RegisterSankey
+    Routes.Crud.Category.RegisterCategory
     Routes.Demo.RegisterDemo
     Routes.Configuration.RegisterConfiguration
+    Routes.Upload.RegisterUpload
     Auth
     Sankey
     ColumnChart
@@ -110,7 +112,9 @@ executable year-report-finances
       Routes.Misc.RegisterMisc
       Routes.Api.Visualization.RegisterVisualization
       Routes.Crud.Sankey.RegisterSankey
+      Routes.Crud.Category.RegisterCategory
       Routes.Demo.RegisterDemo
+      Routes.Upload.RegisterUpload
       Routes.Configuration.RegisterConfiguration
       Auth
       ColumnChart

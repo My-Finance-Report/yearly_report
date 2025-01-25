@@ -66,6 +66,7 @@ import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
 import Parsers
 import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
 import Routes.Configuration.RegisterConfiguration (registerConfigurationRoutes)
+import Routes.Crud.Category.RegisterCategory (registerCategoryRoutes)
 import Routes.Crud.Sankey.RegisterSankey (registerSankeyRoutes)
 import Routes.Demo.RegisterDemo (registerDemoRoutes)
 import Routes.Login.RegisterLogin (registerLoginRoutes)
@@ -182,6 +183,7 @@ main = do
     registerSankeyRoutes pool
     registerConfigurationRoutes pool
     registerUploadRoutes pool activeJobs
+    registerCategoryRoutes pool
 
     get "/add-account/step-1" $ requireUser pool $ \user -> do
       transactionSources <- liftIO $ getAllTransactionSources user
@@ -222,8 +224,6 @@ main = do
 
       transactionSources <- liftIO $ getAllTransactionSources user
 
-      liftIO $ print "making it to here"
-
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources
 
     get "/transactions" $ requireUser pool $ \user -> do
@@ -242,14 +242,6 @@ main = do
         return $ Map.fromList $ zip (Prelude.map entityKey transactionSources) categories
 
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile categoryLookup transactions
-
-    post "/update-category" $ requireUser pool $ \user -> do
-      tId <- Web.Scotty.formParam "transactionId"
-      newCat <- Web.Scotty.formParam "newCategory"
-      let newCatId = toSqlKey (read $ T.unpack newCat) :: Key Category
-      fileArg <- Web.Scotty.formParam "filename"
-      liftIO $ updateTransactionCategory user (read $ T.unpack tId) newCatId
-      redirect $ TL.fromStrict ("/transactions/" <> fileArg)
 
     post "/add-transaction-source" $ requireUser pool $ \user -> do
       newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
@@ -296,27 +288,6 @@ main = do
       let redirectUrl = TL.fromStrict $ T.append "/transactions/" fileIdText
       Web.Scotty.redirect redirectUrl
 
-    post "/add-category/:sourceId" $ requireUser pool $ \user -> do
-      sourceIdText <- Web.Scotty.pathParam "sourceId"
-      let sourceId = toSqlKey $ read sourceIdText
-      newCategory <- Web.Scotty.formParam "newCategory" :: Web.Scotty.ActionM Text
-      liftIO $ addCategory user newCategory sourceId
-
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
-
-      Web.Scotty.redirect redirectTo
-
-    post "/remove-category/:catId" $ requireUser pool $ \user -> do
-      catIdText <- Web.Scotty.pathParam "catId"
-      let catId = toSqlKey $ read catIdText
-      liftIO $ removeCategory user catId
-
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
-
-      Web.Scotty.redirect redirectTo
-
     post "/remove-transaction/:tId" $ requireUser pool $ \user -> do
       tIdText <- Web.Scotty.pathParam "tId"
       let tId = toSqlKey $ read tIdText
@@ -336,10 +307,3 @@ main = do
       reprocessFileUpload user processedFileId activeJobs
 
       Web.Scotty.redirect "/dashboard"
-
-    post "/edit-category/:id" $ requireUser pool $ \user -> do
-      catIdText <- Web.Scotty.pathParam "id"
-      let catId = toSqlKey $ read catIdText
-      catName <- Web.Scotty.formParam "categoryName"
-      liftIO $ updateCategory user catId catName
-      Web.Scotty.redirect "/configuration"
