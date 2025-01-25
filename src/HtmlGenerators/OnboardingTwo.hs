@@ -11,7 +11,6 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-
 renderOnboardingTwo :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Bool -> Html
 renderOnboardingTwo user transactions isOnboarding =
   let nextUrl =
@@ -33,18 +32,19 @@ renderOnboardingTwo user transactions isOnboarding =
             H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
             H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 2 of 2"
           H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Create Categories"
-          H.p ! A.class_ "text-gray-600 mt-2" $ "Add, edit, or remove categories for each account type."
+          H.p ! A.class_ "text-gray-600 mt-2" $ "Edit, add, or remove categories for each account type."
 
         -- Full Column Layout for Transaction Sources
         H.div ! A.class_ "flex flex-col gap-6 w-full max-w-3xl" $ do
           forM_ (toList transactions) $ \(Entity sourceId source, categories) -> do
-            H.div ! A.class_ "border border-primary rounded-md p-6 shadow-md w-full" $ do
-              H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4 text-center" $ toHtml $ transactionSourceName source
-
+            H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4 relative" $ do
+              H.legend ! A.class_ "text-2xl font-semibold text-primary mb-2" $ toHtml $ transactionSourceName source
               -- Editable Categories List
               H.div ! A.class_ "flex flex-wrap gap-2 justify-center" $ do
                 forM_ categories $ \(Entity catId cat) -> do
                   H.div ! A.class_ "flex items-center bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all w-full md:w-auto" $ do
+
+                    H.p ! A.class_ "text-lg mr-2" $ "✅"
                     -- Edit Form
                     H.form
                       ! A.method "post"
@@ -56,13 +56,16 @@ renderOnboardingTwo user transactions isOnboarding =
                           ! A.type_ "text"
                           ! A.name "updatedCategoryName"
                           ! A.value (toValue $ categoryName cat)
-                          ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
+                          ! A.class_ "border border-gray-300 rounded-md p-2 flex-1 edit-input"
 
                         -- Save Button
                         H.input
                           ! A.type_ "submit"
                           ! A.value "Update"
-                          ! A.class_ "secondary-button text-sm"
+                          ! A.class_ "secondary-button update-button"
+                          ! A.disabled "true"
+
+
 
                     -- Remove Form
                     H.form
@@ -89,7 +92,7 @@ renderOnboardingTwo user transactions isOnboarding =
                     H.input
                       ! A.type_ "text"
                       ! A.name "newCategory"
-                      ! A.placeholder "Category"
+                      ! A.placeholder "New Category"
                       ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
                       ! A.required "required"
                     H.input
@@ -116,5 +119,3 @@ renderOnboardingTwo user transactions isOnboarding =
                 ! A.type_ "submit"
                 ! A.value "Finish"
                 ! A.class_ "primary-button"
-
-

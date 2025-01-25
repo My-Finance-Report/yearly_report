@@ -79,8 +79,8 @@ renderLandingPage =
     -- Features Section
     H.div ! A.class_ "features-section mt-12" $ do
       H.div ! A.class_ "flex flex-col sm:flex-row gap-6 justify-center" $ do
-        featureCard "Upload Transactions" "Automatically pull transactions from your bank statements"
-        featureCard "Categorize Expenses" "Automatically categorize all your expenses"
+        featureCard "Upload Transactions" "Automatically extract transactions from your bank statements."
+        featureCard "Categorize Expenses" "Automatically categorize all your expenses."
         featureCard "See The Money Flow" "Understand where your money is actually going!"
 
 -- Feature Card Component

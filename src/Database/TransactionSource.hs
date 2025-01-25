@@ -11,7 +11,7 @@ module Database.TransactionSource
   )
 where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Map (Map, fromList)
@@ -55,25 +55,32 @@ defaultCategoriesForSource Card =
 defaultCategoriesForSource Investment =
   ["Stocks", "Bonds", "Real Estate", "Crypto", "Index Funds"]
 
-addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Key TransactionSource)
+addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Either Text (Key TransactionSource))
 addTransactionSource user sourceName kind = do
   pool <- getConnectionPool
   runSqlPool queryAddTransactionSource pool
   where
     queryAddTransactionSource = do
-      maybeArchivedSource <- getBy (UniqueTransactionSource (entityKey user) sourceName)
-      case maybeArchivedSource of
+      maybeSource <- getBy (UniqueTransactionSource (entityKey user) sourceName)
+      case maybeSource of
+        -- If the source exists but is archived, unarchive it
         Just (Entity sourceId archivedSource)
           | transactionSourceArchived archivedSource -> do
               update sourceId [TransactionSourceArchived =. False]
-
+              
+              -- Ensure default categories exist
               let defaultCategories = defaultCategoriesForSource kind
               forM_ defaultCategories $ \categoryName -> do
                 _ <- queryAddOrUnarchiveCategory categoryName sourceId
                 return ()
+              
+              return (Right sourceId)
 
-              return sourceId
-        _ -> do
+        -- If the source exists and is not archived, return an error
+        Just _ -> return (Left "A transaction source with this name already exists.")
+
+        -- Otherwise, create a new transaction source
+        Nothing -> do
           newSourceId <-
             insert $
               TransactionSource
@@ -83,21 +90,25 @@ addTransactionSource user sourceName kind = do
                   transactionSourceSourceKind = kind
                 }
 
+          -- Insert default categories
           let defaultCategories = defaultCategoriesForSource kind
           forM_ defaultCategories $ \categoryName -> do
             _ <- queryAddOrUnarchiveCategory categoryName newSourceId
             return ()
 
-          return newSourceId
+          return (Right newSourceId)
 
+    -- Add category if it does not exist, otherwise unarchive it
     queryAddOrUnarchiveCategory categoryName sourceId = do
       maybeCategory <- getBy $ UniqueCategory categoryName sourceId
       case maybeCategory of
         Just (Entity categoryId category) -> do
-              update categoryId [CategoryArchived =. False]
-              return categoryId
-        _ -> do
+          when (categoryArchived category) $
+            update categoryId [CategoryArchived =. False]
+          return categoryId
+        Nothing -> do
           insert $ Category categoryName sourceId (entityKey user) False
+
 
 removeTransactionSource :: Entity User -> Text -> IO ()
 removeTransactionSource user sourceName = do
@@ -136,7 +147,7 @@ getAllTransactionSources user = do
   pool <- liftIO getConnectionPool
   runSqlPool queryTransactionSources pool
   where
-    queryTransactionSources = selectList [TransactionSourceUserId ==. entityKey user, TransactionSourceArchived ==. False] [Asc TransactionSourceName]
+    queryTransactionSources = selectList [TransactionSourceUserId ==. entityKey user, TransactionSourceArchived ==. False] [Asc TransactionSourceId]
 
 fetchSourceMap :: (MonadUnliftIO m) => Entity User -> m (Map (Key TransactionSource) TransactionSource)
 fetchSourceMap user = do

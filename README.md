@@ -34,9 +34,7 @@ delete button in the table doesnt work
 
 - manually add transactions
 - budget and budget progress
-- fix the bug in the launch flow
 - sankey selectors should not be dropdowns
-- no "fast adds" on account page
 
 # Not Blocking
 
@@ -47,8 +45,7 @@ delete button in the table doesnt work
 - filter by year when you look at dashboard
 - privacy policy
 - refresh on the page keeps you in the same view
- -same with form submitting the login flow
-- there is a bug if you add / remove / add a source
+  -same with form submitting the login flow
 - install a linter for extraneous imports
 
 # Bad UI

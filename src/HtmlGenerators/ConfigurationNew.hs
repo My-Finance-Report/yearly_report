@@ -46,7 +46,7 @@ renderEditSankeyConfigPage configId config sourceCategories =
       forM_ (inputs config) $ \(source, category) ->
         renderInputForm configId sourceCategories (Just (source, category))
 
-      renderNewInputForm configId sourceCategories Nothing 
+      renderNewInputForm configId sourceCategories Nothing
 
     -- Linkages Section
     H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
@@ -64,25 +64,25 @@ renderInputForm ::
   Html
 renderInputForm configId sourceCategories maybeSelected = do
   H.form ! A.method "post" ! A.action "/remove-sankey-input" ! A.class_ "flex items-center gap-2 m-2" $ do
+    -- Hidden Input for Config ID
     H.input
       ! A.type_ "hidden"
       ! A.name "sankeyConfigId"
       ! A.value (toValue $ fromSqlKey configId)
 
-    H.select ! A.name "inputSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
-      forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
-        forM_ categories $ \(Entity categoryId category) -> do
-          let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
-          let isSelected = case maybeSelected of
-                Just (selectedSource, selectedCategory) ->
-                  entityKey selectedSource == sourceId && entityKey selectedCategory == categoryId
-                Nothing -> False
-          H.option
-            ! A.value optionValue
-            !? (isSelected, A.selected "selected")
-            $ toHtml
-            $ transactionSourceName source <> " - " <> categoryName category
-    H.input ! A.type_ "submit" ! A.value "Remove" ! A.class_ "secondary-danger-button" ! A.formaction "/remove-sankey-input"
+    -- Display the Source - Category as Read-Only
+    case maybeSelected of
+      Just (selectedSource, selectedCategory) -> do
+        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex-1" $ do
+          toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory)
+      Nothing -> return ()
+
+    -- Remove Button
+    H.input
+      ! A.type_ "submit"
+      ! A.value "Remove"
+      ! A.class_ "secondary-danger-button"
+      ! A.formaction "/remove-sankey-input"
 
 -- Individual Input Form
 renderNewInputForm ::
@@ -112,7 +112,7 @@ renderNewInputForm configId sourceCategories maybeSelected = do
             $ transactionSourceName source <> " - " <> categoryName category
     H.input ! A.type_ "submit" ! A.value "Add" ! A.class_ "secondary-button"
 
--- Individual Linkage Form
+-- Individual Linkage Form (Read-Only Display)
 renderLinkageForm ::
   Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
@@ -126,32 +126,14 @@ renderLinkageForm configId sourceCategories maybeSelected = do
       ! A.name "sankeyConfigId"
       ! A.value (toValue $ fromSqlKey configId)
 
-    -- Source & Category Selection
-    H.select ! A.name "linkageSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
-      forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
-        forM_ categories $ \(Entity categoryId category) -> do
-          let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
-          let isSelected = case maybeSelected of
-                Just (selectedSource, selectedCategory, _) ->
-                  entityKey selectedSource == sourceId && entityKey selectedCategory == categoryId
-                Nothing -> False
-          H.option
-            ! A.value optionValue
-            !? (isSelected, A.selected "selected")
-            $ toHtml
-            $ transactionSourceName source <> " - " <> categoryName category
+    -- Display the Source - Category - Target as Read-Only
+    case maybeSelected of
+      Just (selectedSource, selectedCategory, selectedTarget) -> do
+        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex-1" $ do
+          toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory) <> " → " <> transactionSourceName (entityVal selectedTarget)
+      Nothing -> return ()
 
-    H.select ! A.name "linkageTargetId" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
-      forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
-        let isSelected = case maybeSelected of
-              Just (_, _, selectedTarget) -> entityKey selectedTarget == sourceId
-              Nothing -> False
-        H.option
-          ! A.value (toValue $ fromSqlKey sourceId)
-          !? (isSelected, A.selected "selected")
-          $ toHtml
-          $ transactionSourceName source
-
+    -- Remove Button
     H.input
       ! A.type_ "submit"
       ! A.value "Remove"
