@@ -37,6 +37,8 @@ library
     Routes.Api.Visualization.RegisterVisualization
     Routes.Crud.Sankey.RegisterSankey
     Routes.Crud.Category.RegisterCategory
+    Routes.Crud.Transaction.RegisterTransaction
+    Routes.Crud.TransactionSource.RegisterTransactionSource
     Routes.Demo.RegisterDemo
     Routes.Configuration.RegisterConfiguration
     Routes.Upload.RegisterUpload
@@ -113,6 +115,8 @@ executable year-report-finances
       Routes.Api.Visualization.RegisterVisualization
       Routes.Crud.Sankey.RegisterSankey
       Routes.Crud.Category.RegisterCategory
+      Routes.Crud.Transaction.RegisterTransaction
+      Routes.Crud.TransactionSource.RegisterTransactionSource
       Routes.Demo.RegisterDemo
       Routes.Upload.RegisterUpload
       Routes.Configuration.RegisterConfiguration

@@ -68,6 +68,8 @@ import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRout
 import Routes.Configuration.RegisterConfiguration (registerConfigurationRoutes)
 import Routes.Crud.Category.RegisterCategory (registerCategoryRoutes)
 import Routes.Crud.Sankey.RegisterSankey (registerSankeyRoutes)
+import Routes.Crud.Transaction.RegisterTransaction (registerTransactionRoutes)
+import Routes.Crud.TransactionSource.RegisterTransactionSource (registerTransactionSourceRoutes)
 import Routes.Demo.RegisterDemo (registerDemoRoutes)
 import Routes.Login.RegisterLogin (registerLoginRoutes)
 import Routes.Misc.RegisterMisc (registerMiscRoutes)
@@ -101,9 +103,6 @@ import Web.Scotty
     text,
   )
 import qualified Web.Scotty as Web
-
-parseDate :: Text -> Maybe UTCTime
-parseDate dateText = parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack dateText)
 
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
@@ -184,20 +183,9 @@ main = do
     registerConfigurationRoutes pool
     registerUploadRoutes pool activeJobs
     registerCategoryRoutes pool
+    registerTransactionRoutes pool
+    registerTransactionSourceRoutes pool
 
-    get "/add-account/step-1" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      let content = renderOnboardingOne user transactionSources False
-      Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-    get "/add-account/step-2" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      let content = renderOnboardingTwo user categoriesBySource False
-      Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
     get "/manage-accounts" $ requireUser pool $ \user -> do
       Web.Scotty.html $ renderPage (Just user) "Manage Accounts" "this page is not ready yet :) "
@@ -226,77 +214,6 @@ main = do
 
       Web.html $ renderPage (Just user) "Adjust Transactions" $ renderSelectAccountPage pdfsWithSources transactionSources
 
-    get "/transactions" $ requireUser pool $ \user -> do
-      filenames <- liftIO $ getAllFilenames user
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderAllFilesPage filenames
-
-    get "/transactions/:fileid" $ requireUser pool $ \user -> do
-      fileIdText <- Web.Scotty.pathParam "fileid"
-
-      let fileId = toSqlKey (read $ T.unpack fileIdText) :: Key UploadedPdf
-      uploadedFile <- getPdfRecord user fileId
-      transactions <- liftIO $ getTransactionsByFileId user fileId
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoryLookup <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip (Prelude.map entityKey transactionSources) categories
-
-      Web.html $ renderPage (Just user) "Adjust Transactions" $ renderTransactionsPage uploadedFile categoryLookup transactions
-
-    post "/add-transaction-source" $ requireUser pool $ \user -> do
-      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ addTransactionSource user newSource
-
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
-
-      Web.Scotty.redirect redirectTo
-
-    post "/remove-transaction-source" $ requireUser pool $ \user -> do
-      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ removeTransactionSource user newSource
-
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
-
-      Web.Scotty.redirect redirectTo
-
-    post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
-      sourceIdText <- Web.Scotty.pathParam "id"
-      let sourceId = toSqlKey $ read sourceIdText
-      sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
-      liftIO $ updateTransactionSource user sourceId sourceName
-      Web.Scotty.redirect "/configuration"
-
-    post "/update-transaction/:id" $ requireUser pool $ \user -> do
-      txIdText <- Web.Scotty.pathParam "id" :: Web.Scotty.ActionM Int
-      fileIdText <- Web.Scotty.formParam "fileId" :: Web.Scotty.ActionM Text
-      let txId = toSqlKey (fromIntegral txIdText)
-
-      mDescription <- Web.Scotty.formParam "description" >>= \d -> return $ readMaybe d
-      mDate <- Web.Scotty.formParam "transactionDate" >>= \d -> return $ parseDate d
-      mAmount <- Web.Scotty.formParam "amount" >>= \a -> return $ readMaybe a
-      mCategoryId <- Web.Scotty.formParam "category" >>= \c -> return $ Just (toSqlKey $ read c)
-      mKind <-
-        Web.Scotty.formParam "kind" >>= \k -> return $ case (k :: Text) of
-          "Withdrawal" -> Just Withdrawal
-          "Deposit" -> Just Deposit
-          _ -> Nothing
-
-      liftIO $ updateTransaction user txId mDescription mDate mAmount mKind mCategoryId
-
-      let redirectUrl = TL.fromStrict $ T.append "/transactions/" fileIdText
-      Web.Scotty.redirect redirectUrl
-
-    post "/remove-transaction/:tId" $ requireUser pool $ \user -> do
-      tIdText <- Web.Scotty.pathParam "tId"
-      let tId = toSqlKey $ read tIdText
-      liftIO $ removeTransaction user tId
-
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
-
-      Web.Scotty.redirect redirectTo
 
     post "/reprocess-file/:fId" $ requireUser pool $ \user -> do
       fIdText <- Web.Scotty.pathParam "fId"
