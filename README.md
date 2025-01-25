@@ -29,9 +29,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 delete button in the table doesnt work
 
-sankey config
--> page to actually edit it
--> consider ability to regenerate sankey somewhere
 
 # User feedback
 
