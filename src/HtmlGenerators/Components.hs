@@ -2,6 +2,7 @@
 
 module HtmlGenerators.Components
   ( navigationBar,
+    makeToolBar,
   )
 where
 
@@ -29,3 +30,39 @@ navigationBar mUser = H.nav H.! A.class_ "flex items-center justify-between bg-w
         H.a H.! A.href "/logout" H.! A.class_ "primary-button" $ "Logout"
 
     H.a H.! A.href "/help" H.! A.class_ "secondary-button" $ "Help me!"
+
+makeToolBar :: Html
+makeToolBar =
+  H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
+    H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
+      H.button
+        ! A.type_ "button"
+        ! A.class_ "toolbar-button secondary-button"
+        ! A.id "configureChartsButton"
+        ! H.dataAttribute "path" "/new-configuration"
+        ! A.onclick "window.location.href='/new-configuration'"
+        $ "Configure Charts"
+
+      H.button
+        ! A.type_ "button"
+        ! A.class_ "toolbar-button secondary-button"
+        ! A.id "homeButton"
+        ! H.dataAttribute "path" "/dashboard"
+        ! A.onclick "window.location.href='/dashboard'"
+        $ "Dashboard"
+
+      H.button
+        ! A.type_ "button"
+        ! A.class_ "toolbar-button secondary-button"
+        ! A.id "manageAccountsButton"
+        ! H.dataAttribute "path" "/manage-accounts"
+        ! A.onclick "window.location.href='/manage-accounts'"
+        $ "Manage Accounts"
+
+      H.button
+        ! A.type_ "button"
+        ! A.class_ "toolbar-button secondary-button"
+        ! A.id "addTransactionsButton"
+        ! H.dataAttribute "path" "/upload"
+        ! A.onclick "window.location.href='/upload'"
+        $ "Add Transactions"

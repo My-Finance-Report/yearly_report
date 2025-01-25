@@ -2,38 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer components {
   .primary-button {
     @apply bg-primary text-white border-primary border-[1px] rounded-md p-2 hover:bg-opacity-90 transition duration-200 ease-in-out;
+  }
+
+  .primary-button:disabled {
+    @apply bg-primary text-white border-primary opacity-80 shadow-inner cursor-not-allowed; /* Slightly darker + pressed effect */
   }
 
   .secondary-button {
     @apply bg-white text-primary border-primary border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
   }
 
-  /* Improve hover state for better readability */
   .secondary-button:hover {
     @apply bg-gray-100 border-primary; /* Light gray background instead of dark */
   }
 
-  /* Optional: If more contrast is needed, keep text primary but darken background */
   .secondary-button:active {
-    @apply bg-gray-200 border-primary; /* Slightly darker gray on click */
+    @apply bg-gray-200 border-primary;
+  }
+
+  .secondary-button:disabled {
+    @apply bg-primary text-white border-primary shadow-inner opacity-80 cursor-not-allowed; /* Active "clicked" look */
   }
 
   .danger-button {
     @apply bg-red-600 text-white border-red-600 border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
   }
 
-  /* Danger Button Hover */
   .danger-button:hover {
     @apply bg-red-700 border-red-700;
   }
 
-  /* Danger Button Active (Clicked) */
   .danger-button:active {
     @apply bg-red-800 border-red-800;
+  }
+
+  .danger-button:disabled {
+    @apply bg-red-700 text-white border-red-800 shadow-inner opacity-80 cursor-not-allowed; /* Pressed look */
   }
 
   .secondary-danger-button {
@@ -43,17 +50,22 @@
   .secondary-danger-button:hover {
     @apply bg-red-50 border-red-700;
   }
+
   .secondary-danger-button:active {
     @apply bg-red-100 border-red-800;
   }
-  
 
-
+  .secondary-danger-button:disabled {
+    @apply bg-red-700 text-white border-red-800 shadow-inner opacity-80 cursor-not-allowed;
+  }
 }
+
+
+
 .active {
     background-color: #fff;
-    border-color: #4CAF50;
-    color: #4CAF50;
+    border-color: #4caf50;
+    color: #4caf50;
     font-weight: bold;
   }
 

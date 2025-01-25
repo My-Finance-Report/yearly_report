@@ -24,7 +24,6 @@ import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey, toSqlKey)
 import Database.Transaction
 import Database.TransactionSource
-import HtmlGenerators.Components (navigationBar)
 import HtmlGenerators.HtmlGenerators
 import Parsers
 import Sankey
@@ -55,29 +54,6 @@ makeDemoBanner =
     H.span "You are in demo mode. "
     H.a ! A.href "/login" ! A.class_ "underline" $ "Sign up now"
 
-makeToolBar :: Html
-makeToolBar =
-  H.div ! A.class_ "flex flex-row items-center justify-center" $ do
-    H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4" $ do
-      H.button
-        ! A.type_ "button"
-        ! A.class_ "secondary-button"
-        ! A.id "configureChartsButton"
-        ! A.onclick "window.location.href='/new-configuration'"
-        $ "Configure Charts"
-      H.button
-        ! A.type_ "button"
-        ! A.class_ "secondary-button"
-        ! A.id "manageAccountsButton"
-        ! A.onclick "window.location.href='/manage-accounts'"
-        $ "Manage Accounts"
-      H.button
-        ! A.type_ "button"
-        ! A.class_ "primary-button"
-        ! A.id "addTransactionsButton"
-        ! A.onclick "window.location.href='/upload'"
-        $ "Add Transactions"
-
 makeCharts :: Html
 makeCharts =
   H.div ! A.class_ "charts-grid flex flex-col md:flex-row gap-6  rounded-md p-4" $ do
@@ -105,7 +81,6 @@ generateHomapageHtml banner tabs =
       Nothing -> return ()
 
     H.div ! A.class_ "" $ do
-      makeToolBar
       makeCharts
       tabs
 

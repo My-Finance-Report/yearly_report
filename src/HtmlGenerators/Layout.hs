@@ -5,7 +5,7 @@ module HtmlGenerators.Layout (renderPage) where
 import qualified Data.Text.Lazy as TL
 import Database.Models
 import Database.Persist (Entity)
-import HtmlGenerators.Components (navigationBar)
+import HtmlGenerators.Components (navigationBar, makeToolBar)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
@@ -41,4 +41,5 @@ renderPage mUser pageTitle content =
 
     H.body $ do
       navigationBar mUser
+      makeToolBar
       H.div ! A.class_ "m-2" $ content

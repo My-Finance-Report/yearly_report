@@ -25,3 +25,26 @@ function toggleArrow(row) {
   }
 }
 
+
+document.addEventListener("DOMContentLoaded", function () {
+  const buttons = [
+    { id: "configureChartsButton", path: "/new-configuration" },
+    { id: "homeButton", path: "/dashboard" },
+    { id: "manageAccountsButton", path: "/manage-accounts" },
+    { id: "addTransactionsButton", path: "/upload" }
+  ];
+
+  const currentPath = window.location.pathname;
+
+  buttons.forEach(({ id, path }) => {
+    const button = document.getElementById(id);
+    if (button) {
+      if (currentPath === path) {
+        button.setAttribute("disabled", "true"); 
+      } else {
+        button.removeAttribute("disabled"); 
+      }
+    }
+  });
+});
+
