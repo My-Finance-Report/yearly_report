@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
+import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.HList (newIORef)
 import Database.ConnectionPool
+import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
 import Routes.Configuration.RegisterConfiguration (registerConfigurationRoutes)
 import Routes.Crud.Category.RegisterCategory (registerCategoryRoutes)
@@ -18,13 +21,9 @@ import Routes.Onboarding.RegisterOnboarding
   ( registerOnboardingRoutes,
   )
 import Routes.Upload.RegisterUpload (registerUploadRoutes)
-import qualified Web.Scotty as Web
 import System.Environment (lookupEnv)
 import Web.Scotty (middleware, scotty)
-import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Network.Wai.Middleware.Static (staticPolicy, addBase)
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.HList (newIORef)
+import qualified Web.Scotty as Web
 
 getRequiredEnv :: String -> IO String
 getRequiredEnv key = do
@@ -39,10 +38,10 @@ main = do
   openAiKey <- liftIO $ getRequiredEnv "OPENAI_API_KEY"
   openAiKey <- liftIO $ getRequiredEnv "DATABASE_URL"
   initializePool
-  pool <- getConnectionPool 
+  pool <- getConnectionPool
   migratePostgres
   scotty 3000 $ do
-    middleware  logStdoutDev
+    middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     registerOnboardingRoutes pool

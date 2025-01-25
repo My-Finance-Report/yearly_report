@@ -28,7 +28,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # Blocking
 
 delete button in the table doesnt work
-add the categories from the start
+
 -> designate cc, vs account vs investment at source level
 sankey config
 -> page to actually edit it
@@ -47,8 +47,8 @@ ability to add accounts
 - it seems like the text on mobile just needs to be bigger
 - filter by year when you look at dashboard
 - privacy policy
-- refactor Main.hs routes
 - refresh on the page keeps you in the same view
+- there is a bug if you add / remove / add a source
 - install a linter for extraneous imports
 
 # Bad UI

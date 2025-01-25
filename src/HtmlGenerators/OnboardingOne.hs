@@ -6,75 +6,144 @@ import Control.Monad (forM_, unless, when)
 import Data.Text (Text)
 import Database.Models
 import Database.Persist (Entity (..))
+import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-renderPrefilledCard :: Text -> [Entity TransactionSource] -> Html
-renderPrefilledCard name transactionSources =
-  unless (name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources) $
-    H.div ! A.class_ "border border-primary rounded-md p-6 shadow-md w-full flex flex-col items-center" $ do
-      H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml name
-      H.form
-        ! A.method "post"
-        ! A.action "/add-transaction-source"
-        ! A.class_ "flex gap-2"
-        $ do
-          H.input
-            ! A.type_ "hidden"
-            ! A.name "newSource"
-            ! A.value (toValue name)
-          H.input
-            ! A.type_ "submit"
-            ! A.value "Add"
-            ! A.class_ "primary-button"
-
 newSourceComponent :: [Entity TransactionSource] -> Bool -> Html
-newSourceComponent transactionSources includeDefaults =
-  H.div ! A.class_ "flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-4xl" $ do
-    -- Existing Accounts
-    forM_ transactionSources $ \source -> do
-      let txnName = transactionSourceName $ entityVal source
+newSourceComponent transactionSources includeDefaults = do
+  let filterByKind kind = filter (\(Entity _ source) -> transactionSourceSourceKind source == kind) transactionSources
 
-      H.div ! A.class_ "border border-primary rounded-md p-6 shadow-md w-full sm:w-1/3 flex flex-col items-center" $ do
-        H.h3 ! A.class_ "text-lg font-semibold text-primary mb-4" $ toHtml txnName
-        H.form
-          ! A.method "post"
-          ! A.action "/remove-transaction-source"
-          ! A.class_ "flex gap-2"
-          $ do
-            H.input
-              ! A.type_ "hidden"
-              ! A.name "newSource"
-              ! A.value (toValue txnName)
-            H.input
-              ! A.type_ "submit"
-              ! A.value "Remove"
-              ! A.class_ "secondary-button"
+  let accountSources = filterByKind Account
+  let cardSources = filterByKind Card
+  let investmentSources = filterByKind Investment
 
-    -- Prefilled Cards for Common Accounts
+  H.div ! A.class_ "flex flex-col items-center gap-6  max-w-4xl" $ do
+    -- Section: Accounts (Savings, Checking)
+    renderSourceGroup "Accounts" accountSources Account includeDefaults
+    -- Section: Cards (Credit, Debit)
+    renderSourceGroup "Cards" cardSources Card includeDefaults
+    -- Section: Investments (if applicable)
+    renderSourceGroup "Investments" investmentSources Investment includeDefaults
+
+renderSourceGroup :: Text -> [Entity TransactionSource] -> SourceKind -> Bool -> Html
+renderSourceGroup title sources kind includeDefaults = do
+  H.div ! A.class_ "" $ do
+    H.h3 ! A.class_ "text-2xl font-semibold text-primary mb-2" $ toHtml title
+
+    -- Render Existing Sources
+    unless (null sources) $
+      H.div ! A.class_ "flex flex-col gap-2" $ do
+        forM_ sources $ \(Entity sourceId source) -> do
+          H.div ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none" $ do
+            -- Edit Form
+            H.form
+              ! A.method "post"
+              ! A.action (toValue $ "/edit-transaction-source/" <> show (fromSqlKey sourceId))
+              ! A.class_ "flex flex-1 items-center gap-2"
+              $ do
+                -- Editable Input Field for Name
+                H.input
+                  ! A.type_ "text"
+                  ! A.name "updatedSourceName"
+                  ! A.value (toValue $ transactionSourceName source)
+                  ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
+
+                -- Hidden Field for Source Kind
+                H.input
+                  ! A.type_ "hidden"
+                  ! A.name "sourceKind"
+                  ! A.value (toValue $ show kind)
+
+                -- Save Button
+                H.input
+                  ! A.type_ "submit"
+                  ! A.value "Update"
+                  ! A.class_ "secondary-button"
+
+            -- Remove Form (Separate Form)
+            H.form
+              ! A.method "post"
+              ! A.action "/remove-transaction-source"
+              ! A.class_ "flex items-center"
+              $ do
+                -- Hidden Fields to Identify Source
+                H.input
+                  ! A.type_ "hidden"
+                  ! A.name "sourceName"
+                  ! A.value (toValue $ transactionSourceName source)
+                H.input
+                  ! A.type_ "hidden"
+                  ! A.name "sourceKind"
+                  ! A.value (toValue $ show kind)
+
+                -- Remove Button
+                H.input
+                  ! A.type_ "submit"
+                  ! A.value "Remove"
+                  ! A.class_ "secondary-danger-button"
+
+    -- Render Prefilled Options if IncludeDefaults is True
     when includeDefaults $ do
-      renderPrefilledCard "Credit Card" transactionSources
-      renderPrefilledCard "Debit Card" transactionSources
-      renderPrefilledCard "Savings Account" transactionSources
-      renderPrefilledCard "Checking Account" transactionSources
+      case kind of
+        Account -> do
+          renderPrefilledCard "Savings Account" Account sources
+          renderPrefilledCard "Checking Account" Account sources
+          renderCustomAccountForm Account
+        Card -> do
+          renderPrefilledCard "Credit Card" Card sources
+          renderPrefilledCard "Debit Card" Card sources
+          renderCustomAccountForm Card
+        Investment -> do
+          renderPrefilledCard "Stock Portfolio" Investment sources
+          renderPrefilledCard "Retirement Fund" Investment sources
+          renderCustomAccountForm Investment
 
-    -- Add Custom Account
-    H.div ! A.class_ "border border-dashed border-gray-400 rounded-md p-6 shadow-md w-full flex flex-col items-center" $ do
-      H.form
-        ! A.method "post"
-        ! A.action "/add-transaction-source"
-        ! A.class_ "flex gap-2 w-full sm:w-1/2"
-        $ do
-          H.input
-            ! A.type_ "text"
-            ! A.name "newSource"
-            ! A.placeholder "Account Name"
-            ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
-            ! A.required "required"
-          H.input
-            ! A.type_ "submit"
-            ! A.value "Add"
-            ! A.class_ "primary-button"
+renderPrefilledCard :: Text -> SourceKind -> [Entity TransactionSource] -> Html
+renderPrefilledCard name kind transactionSources =
+  unless (name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources)
+    $ H.form
+      ! A.method "post"
+      ! A.action "/add-transaction-source"
+      ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none cursor-pointer"
+    $ do
+      H.input
+        ! A.type_ "text"
+        ! A.name "newSource"
+        ! A.value (toValue name)
+        ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
+
+      H.input
+        ! A.type_ "hidden"
+        ! A.name "newKind"
+        ! A.value
+          (toValue $ show kind) -- Include the kind in the form
+      H.input
+        ! A.type_ "submit"
+        ! A.value "Add"
+        ! A.class_ "primary-button"
+
+renderCustomAccountForm :: SourceKind -> Html
+renderCustomAccountForm kind = do
+  H.form
+    ! A.method "post"
+    ! A.action "/add-transaction-source"
+    ! A.class_ "flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none cursor-pointer"
+  $ do
+    H.input
+      ! A.type_ "text"
+      ! A.name "newSource"
+      ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
+
+    H.input
+      ! A.type_ "hidden"
+      ! A.name "newKind"
+      ! A.value
+        (toValue $ show kind) -- Include the kind in the form
+    H.input
+      ! A.type_ "submit"
+      ! A.value "Add"
+      ! A.class_ "primary-button"
 
 renderOnboardingOne :: Entity User -> [Entity TransactionSource] -> Bool -> Html
 renderOnboardingOne user transactionSources isOnboarding =
@@ -93,7 +162,6 @@ renderOnboardingOne user transactionSources isOnboarding =
             H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
             H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 2"
           H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Add Accounts"
-          H.p ! A.class_ "text-gray-600 mt-2" $ "Think Savings Account, Checking Account, Credit Card, etc."
 
         -- Account List & Input
         newSourceComponent transactionSources isOnboarding

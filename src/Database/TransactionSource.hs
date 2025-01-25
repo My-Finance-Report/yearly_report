@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Database.TransactionSource
   ( addTransactionSource,
     getTransactionSource,
@@ -9,6 +11,7 @@ module Database.TransactionSource
   )
 where
 
+import Control.Monad (forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Map (Map, fromList)
@@ -19,12 +22,19 @@ import Database.Persist (Entity (..), PersistEntity (Key), SelectOpt (Asc))
 import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
 
-ensureTransactionSourceExists :: Entity User -> Text -> SqlPersistT IO (Key TransactionSource)
-ensureTransactionSourceExists user name = do
+ensureTransactionSourceExists :: Entity User -> Text -> SourceKind -> SqlPersistT IO (Key TransactionSource)
+ensureTransactionSourceExists user name kind = do
   maybeSource <- selectFirst [TransactionSourceName ==. name, TransactionSourceUserId ==. entityKey user] []
   case maybeSource of
     Just (Entity sourceId _) -> return sourceId
-    Nothing -> insert $ TransactionSource name (entityKey user) False
+    Nothing ->
+      insert $
+        TransactionSource
+          { transactionSourceUserId = entityKey user,
+            transactionSourceName = name,
+            transactionSourceArchived = False,
+            transactionSourceSourceKind = kind
+          }
 
 getTransactionSource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> m (Entity TransactionSource)
 getTransactionSource user sourceId = do
@@ -37,8 +47,16 @@ getTransactionSource user sourceId = do
     Just (Entity _ source) -> return $ Entity sourceId source
     Nothing -> liftIO $ error $ "No transaction source found with ID: " ++ show (fromSqlKey sourceId) ++ " for user ID: " ++ show (fromSqlKey $ entityKey user)
 
-addTransactionSource :: Entity User -> Text -> IO (Key TransactionSource)
-addTransactionSource user sourceName = do
+defaultCategoriesForSource :: SourceKind -> [Text]
+defaultCategoriesForSource Account =
+  ["Income", "Investments", "Credit Card Payments", "Transfers"]
+defaultCategoriesForSource Card =
+  ["Groceries", "Travel", "Gas", "Insurance", "Misc", "Subscriptions", "Credit Card Payments", "Entertainment"]
+defaultCategoriesForSource Investment =
+  ["Stocks", "Bonds", "Real Estate", "Crypto", "Index Funds"]
+
+addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Key TransactionSource)
+addTransactionSource user sourceName kind = do
   pool <- getConnectionPool
   runSqlPool queryAddTransactionSource pool
   where
@@ -48,14 +66,39 @@ addTransactionSource user sourceName = do
         Just (Entity sourceId archivedSource)
           | transactionSourceArchived archivedSource -> do
               update sourceId [TransactionSourceArchived =. False]
+
+              let defaultCategories = defaultCategoriesForSource kind
+              forM_ defaultCategories $ \categoryName -> do
+                _ <- queryAddOrUnarchiveCategory categoryName sourceId
+                return ()
+
               return sourceId
-        _ ->
-          insert $
-            TransactionSource
-              { transactionSourceUserId = entityKey user,
-                transactionSourceName = sourceName,
-                transactionSourceArchived = False
-              }
+        _ -> do
+          newSourceId <-
+            insert $
+              TransactionSource
+                { transactionSourceUserId = entityKey user,
+                  transactionSourceName = sourceName,
+                  transactionSourceArchived = False,
+                  transactionSourceSourceKind = kind
+                }
+
+          let defaultCategories = defaultCategoriesForSource kind
+          forM_ defaultCategories $ \categoryName -> do
+            _ <- queryAddOrUnarchiveCategory categoryName newSourceId
+            return ()
+
+          return newSourceId
+
+    queryAddOrUnarchiveCategory categoryName sourceId = do
+      maybeCategory <- getBy $ UniqueCategory categoryName sourceId
+      case maybeCategory of
+        Just (Entity categoryId category)
+          | categoryArchived category -> do
+              update categoryId [CategoryArchived =. False]
+              return categoryId
+        _ -> do
+          insert $ Category categoryName sourceId (entityKey user) False
 
 removeTransactionSource :: Entity User -> Text -> IO ()
 removeTransactionSource user sourceName = do

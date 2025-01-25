@@ -22,8 +22,8 @@ seedDatabase user = do
   pool <- getConnectionPool
   runSqlPool
     ( do
-        bankSourceId <- ensureTransactionSourceExists user "Bank"
-        ccSourceId <- ensureTransactionSourceExists user "Credit Card"
+        bankSourceId <- ensureTransactionSourceExists user "Bank" Account
+        ccSourceId <- ensureTransactionSourceExists user "Credit Card" Card
 
         ensureCategoriesExist
           user

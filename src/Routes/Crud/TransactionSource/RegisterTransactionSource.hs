@@ -1,9 +1,8 @@
-
 {-# LANGUAGE OverloadedStrings #-}
-module Routes.Crud.TransactionSource.RegisterTransactionSource(registerTransactionSourceRoutes) where
 
+module Routes.Crud.TransactionSource.RegisterTransactionSource (registerTransactionSourceRoutes) where
 
-
+import Auth (requireUser)
 import ColumnChart (generateColChartData)
 import Control.Concurrent.Async (async)
 import Control.Monad (void)
@@ -15,11 +14,11 @@ import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (addCategory, getCategoriesBySource, getCategory, removeCategory, updateCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
-import Database.Models (Category (Category), User (userOnboardingStep))
+import Database.Models (Category (Category), User (userOnboardingStep), parseSourceKind)
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, toSqlKey)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource, updateTransactionCategory)
-import Database.TransactionSource (getAllTransactionSources, getTransactionSource, updateTransactionSource, addTransactionSource, removeTransactionSource)
+import Database.TransactionSource (addTransactionSource, getAllTransactionSources, getTransactionSource, removeTransactionSource, updateTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
@@ -27,58 +26,56 @@ import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
+import HtmlGenerators.OnboardingOne (renderOnboardingOne)
+import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types
-import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect)
-import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
-import HtmlGenerators.OnboardingOne (renderOnboardingOne)
-import Auth (requireUser)
+import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, pathParam, post, redirect, text)
 
 registerTransactionSourceRoutes :: ConnectionPool -> ScottyM ()
 registerTransactionSourceRoutes pool = do
-    post "/add-transaction-source" $ requireUser pool $ \user -> do
-      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ addTransactionSource user newSource
+  post "/add-transaction-source" $ requireUser pool $ \user -> do
+    newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
+    kindText <- Web.Scotty.formParam "newKind" :: Web.Scotty.ActionM Text
+    case parseSourceKind kindText of
+      Right kind -> do
+        _ <- liftIO $ addTransactionSource user newSource kind
+        referer <- Web.Scotty.header "Referer"
+        let redirectTo = fromMaybe "/dashboard" referer
+        Web.Scotty.redirect redirectTo
+      Left errMsg -> html $ fromStrict errMsg
 
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
+  post "/remove-transaction-source" $ requireUser pool $ \user -> do
+    sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
+    liftIO $ removeTransactionSource user sourceName
 
-      Web.Scotty.redirect redirectTo
+    referer <- Web.Scotty.header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
 
-    post "/remove-transaction-source" $ requireUser pool $ \user -> do
-      newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
-      liftIO $ removeTransactionSource user newSource
+    Web.Scotty.redirect redirectTo
 
-      referer <- Web.Scotty.header "Referer"
-      let redirectTo = fromMaybe "/dashboard" referer
+  post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
+    sourceIdText <- Web.Scotty.pathParam "id"
+    let sourceId = toSqlKey $ read sourceIdText
+    newSourceName <- Web.Scotty.formParam "updatedSourceName" :: Web.Scotty.ActionM Text
+    liftIO $ updateTransactionSource user sourceId newSourceName
 
-      Web.Scotty.redirect redirectTo
+    referer <- Web.Scotty.header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
 
-    post "/edit-transaction-source/:id" $ requireUser pool $ \user -> do
-      sourceIdText <- Web.Scotty.pathParam "id"
-      let sourceId = toSqlKey $ read sourceIdText
-      sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
-      liftIO $ updateTransactionSource user sourceId sourceName
-      Web.Scotty.redirect "/configuration"
+    Web.Scotty.redirect redirectTo
 
+  get "/add-account/step-1" $ requireUser pool $ \user -> do
+    transactionSources <- liftIO $ getAllTransactionSources user
+    let content = renderOnboardingOne user transactionSources False
+    Web.Scotty.html $ renderPage (Just user) "Add Account" content
 
+  get "/add-account/step-2" $ requireUser pool $ \user -> do
+    transactionSources <- liftIO $ getAllTransactionSources user
+    categoriesBySource <- liftIO $ do
+      categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
+      return $ Map.fromList $ zip transactionSources categories
 
-    get "/add-account/step-1" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      let content = renderOnboardingOne user transactionSources False
-      Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-    get "/add-account/step-2" $ requireUser pool $ \user -> do
-      transactionSources <- liftIO $ getAllTransactionSources user
-      categoriesBySource <- liftIO $ do
-        categories <- Prelude.mapM (getCategoriesBySource user . entityKey) transactionSources
-        return $ Map.fromList $ zip transactionSources categories
-
-      let content = renderOnboardingTwo user categoriesBySource False
-      Web.Scotty.html $ renderPage (Just user) "Add Account" content
-
-
-
-
-
+    let content = renderOnboardingTwo user categoriesBySource False
+    Web.Scotty.html $ renderPage (Just user) "Add Account" content

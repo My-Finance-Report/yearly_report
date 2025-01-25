@@ -51,6 +51,28 @@ instance PersistField TransactionKind where
 instance PersistFieldSql TransactionKind where
   sqlType _ = SqlString
 
+data SourceKind = Investment | Account | Card
+  deriving (Show, Eq, Ord, Generic)
+
+instance PersistField SourceKind where
+  toPersistValue Investment = PersistText "Investment"
+  toPersistValue Account = PersistText "Account"
+  toPersistValue Card = PersistText "Card"
+
+  fromPersistValue (PersistText "Investment") = Right Investment
+  fromPersistValue (PersistText "Account") = Right Account
+  fromPersistValue (PersistText "Card") = Right Card
+  fromPersistValue _ = Left "Invalid SourceKind"
+
+parseSourceKind :: Text -> Either Text SourceKind
+parseSourceKind "Investment" = Right Investment
+parseSourceKind "Account" = Right Account
+parseSourceKind "Card" = Right Card
+parseSourceKind other = Left $ "Invalid SourceKind: " <> other
+
+instance PersistFieldSql SourceKind where
+  sqlType _ = SqlString
+
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
   [persistLowerCase|
@@ -59,8 +81,10 @@ TransactionSource
     name Text
     userId UserId 
     archived Bool default=False
+    sourceKind SourceKind default='Account'
     UniqueTransactionSource userId name
     deriving Show Eq Ord
+
 
 Category
     name Text
