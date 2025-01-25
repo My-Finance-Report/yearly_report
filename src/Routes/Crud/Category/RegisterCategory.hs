@@ -65,6 +65,8 @@ registerCategoryRoutes pool = do
   post "/edit-category/:id" $ requireUser pool $ \user -> do
     catIdText <- Web.Scotty.pathParam "id"
     let catId = toSqlKey $ read catIdText
-    catName <- Web.Scotty.formParam "categoryName"
+    catName <- Web.Scotty.formParam "updatedCategoryName"
     liftIO $ updateCategory user catId catName
-    Web.Scotty.redirect "/configuration"
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
+    redirect redirectTo
