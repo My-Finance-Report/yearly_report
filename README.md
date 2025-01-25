@@ -32,7 +32,6 @@ delete button in the table doesnt work
 sankey config
 -> page to actually edit it
 -> consider ability to regenerate sankey somewhere
-ability to add accounts
 
 # User feedback
 
@@ -44,6 +43,7 @@ ability to add accounts
 - update schema to remove nullability on processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger
+ - there seems to be some general bug with the mobile presentation
 - filter by year when you look at dashboard
 - privacy policy
 - refresh on the page keeps you in the same view

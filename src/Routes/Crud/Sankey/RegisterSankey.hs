@@ -13,7 +13,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text, splitOn, unpack)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource, getCategory)
-import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
+import Database.Configurations (addSankeyInput, addSankeyLinkage, getFirstSankeyConfig, removeSankeyInput, removeSankeyLinkage, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Models (User (userOnboardingStep))
 import Database.Persist
@@ -33,10 +33,95 @@ import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types
-import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, html, json, post, redirect, setHeader)
+import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, post, redirect, setHeader, text)
 
 registerSankeyRoutes :: ConnectionPool -> ScottyM ()
 registerSankeyRoutes pool = do
+  post "/add-sankey-linkage" $ requireUser pool $ \user -> do
+    sankeyConfigIdText <- formParam "sankeyConfigId"
+    linkageSourceCategory <- formParam "linkageSourceCategory"
+    linkageTargetIdText <- formParam "linkageTargetId"
+
+    let parseComposite keyValue =
+          case splitOn "-" keyValue of
+            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
+            _ -> Nothing
+
+    case parseComposite linkageSourceCategory of
+      Just (linkageSourceId, linkageCategoryId) -> do
+        let linkageTargetId = toSqlKey (read $ unpack linkageTargetIdText)
+            sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+
+        liftIO $ addSankeyLinkage user sankeyConfigId linkageSourceId linkageCategoryId linkageTargetId
+
+        referer <- header "Referer"
+        let redirectTo = fromMaybe "/dashboard" referer
+        redirect redirectTo
+      Nothing -> text "Invalid linkage format"
+
+  post "/remove-sankey-linkage" $ requireUser pool $ \user -> do
+    sankeyConfigIdText <- formParam "sankeyConfigId"
+    linkageSourceCategory <- formParam "linkageSourceCategory"
+    linkageTargetIdText <- formParam "linkageTargetId"
+
+    let parseComposite keyValue =
+          case splitOn "-" keyValue of
+            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
+            _ -> Nothing
+
+    case parseComposite linkageSourceCategory of
+      Just (linkageSourceId, linkageCategoryId) -> do
+        let linkageTargetId = toSqlKey (read $ unpack linkageTargetIdText)
+            sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+
+        liftIO $ removeSankeyLinkage user sankeyConfigId linkageSourceId linkageCategoryId linkageTargetId
+        referer <- header "Referer"
+
+        let redirectTo = fromMaybe "/dashboard" referer
+
+        redirect redirectTo
+      Nothing -> text "Invalid linkage format"
+
+  post "/add-sankey-input" $ requireUser pool $ \user -> do
+    sankeyConfigIdText <- formParam "sankeyConfigId"
+    inputSourceCategory <- formParam "inputSourceCategory"
+
+    let parseComposite keyValue =
+          case splitOn "-" keyValue of
+            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
+            _ -> Nothing
+
+    case parseComposite inputSourceCategory of
+      Just (inputSourceId, inputCategoryId) -> do
+        let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+
+        liftIO $ addSankeyInput user sankeyConfigId inputSourceId inputCategoryId
+
+        referer <- header "Referer"
+        let redirectTo = fromMaybe "/dashboard" referer
+        redirect redirectTo
+      Nothing -> text "Invalid input format"
+
+  post "/remove-sankey-input" $ requireUser pool $ \user -> do
+    sankeyConfigIdText <- formParam "sankeyConfigId"
+    inputSourceCategory <- formParam "inputSourceCategory"
+
+    let parseComposite keyValue =
+          case splitOn "-" keyValue of
+            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
+            _ -> Nothing
+
+    case parseComposite inputSourceCategory of
+      Just (inputSourceId, inputCategoryId) -> do
+        let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+
+        liftIO $ removeSankeyInput user sankeyConfigId inputSourceId inputCategoryId
+
+        referer <- header "Referer"
+        let redirectTo = fromMaybe "/dashboard" referer
+        redirect redirectTo
+      Nothing -> text "Invalid input format"
+
   post "/update-sankey-config" $ requireUser pool $ \user -> do
     allParams <- formParams
 
@@ -65,5 +150,3 @@ registerSankeyRoutes pool = do
         newConfig = FullSankeyConfig {inputs = inputs, linkages = [linkages]}
     liftIO $ saveSankeyConfig user newConfig
     redirect "/dashboard"
-
-  

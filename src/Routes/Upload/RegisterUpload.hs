@@ -36,7 +36,6 @@ import Database.TransactionSource (getAllTransactionSources, getTransactionSourc
 import Database.UploadConfiguration (addUploadConfigurationObject, getAllUploadConfigs, getUploadConfiguration, getUploadConfigurationFromPdf)
 import ExampleFileParser (generateUploadConfiguration)
 import HtmlGenerators.AuthPages (renderLoginPage)
-import HtmlGenerators.Configuration (renderConfigurationPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)

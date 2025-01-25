@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.ConfigurationNew (renderConfigurationPageNew) where
@@ -20,67 +19,57 @@ import Text.Blaze.Html5.Attributes as A
 import Types
 
 renderConfigurationPageNew ::
-  Maybe FullSankeyConfig ->
+  Key SankeyConfig ->
+  FullSankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
   [Entity UploadConfiguration] ->
   [Entity TransactionSource] ->
   Html
-renderConfigurationPageNew sankeyConfig transactions uploaderConfigs transactionSources = do
+renderConfigurationPageNew configId sankeyConfig transactions uploaderConfigs transactionSources = do
   H.body $ do
-    H.div ! A.class_ "container" $ do
-      H.h1 "Configuration Page"
-
-      renderEditSankeyConfigPage sankeyConfig transactions
+    H.div ! A.class_ "container mx-auto p-6" $ do
+      H.h1 ! A.class_ "text-2xl font-bold text-gray-900 mb-4" $ "Sankey Configuration"
+      renderEditSankeyConfigPage configId sankeyConfig transactions
 
 renderEditSankeyConfigPage ::
-  Maybe FullSankeyConfig ->
+  Key SankeyConfig ->
+  FullSankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
   Html
-renderEditSankeyConfigPage maybeConfig sourceCategories =
-  H.div $ do
-    H.h1 "Edit or Create Sankey Configuration"
+renderEditSankeyConfigPage configId config sourceCategories =
+  H.div ! A.class_ "space-y-6" $ do
+    -- Inputs Section
+    H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
+      H.legend ! A.class_ "font-semibold text-gray-700" $ "Inputs"
 
-    H.form
-      ! A.method "post"
-      ! A.action "/update-sankey-config"
-      $ do
-        -- Inputs Section
-        H.fieldset $ do
-          H.legend "Inputs"
-          case maybeConfig of
-            Just FullSankeyConfig {inputs} ->
-              forM_ inputs $ \(source, category) ->
-                renderInputRow sourceCategories (Just (source, category))
-            Nothing -> renderEmptyInputRow sourceCategories
+      H.p "These are the ways you get paid -- for example you both consult and have a day job "
+      forM_ (inputs config) $ \(source, category) ->
+        renderInputForm configId sourceCategories (Just (source, category))
 
-          -- Add New Input Button
-          H.button
-            ! A.type_ "button"
-            ! A.onclick "addInputRow()"
-            $ "Add Input"
+      renderNewInputForm configId sourceCategories Nothing 
 
-        H.br
+    -- Linkages Section
+    H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
+      H.legend ! A.class_ "font-semibold text-gray-700" $ "Linkages"
+      H.p "describe where money flows from one account to another, such as paying a credit card bill from a bank account"
+      mapM_ (renderLinkageForm configId sourceCategories . Just) (linkages config)
 
-        -- Linkages Section
-        H.fieldset $ do
-          H.legend "Linkages"
-          case maybeConfig of
-            Just FullSankeyConfig {linkages = linkagesList} -> do
-              mapM_ (renderLinkageRow sourceCategories . Just) linkagesList
-            Nothing -> renderEmptyLinkageRow sourceCategories
+      renderNewLinkageForm configId sourceCategories Nothing -- Add new linkage form
 
-        H.br
-        -- Submit Button
-        H.input ! A.type_ "submit" ! A.value "Save Changes"
-
--- Simplified Dropdown for Input Pairs (TransactionSource - Category)
-renderInputRow ::
+-- Individual Input Form
+renderInputForm ::
+  Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
   Maybe (Entity TransactionSource, Entity Category) ->
   Html
-renderInputRow sourceCategories maybeSelected = do
-  H.div $ do
-    H.select ! A.name "inputSourceCategory[]" $ do
+renderInputForm configId sourceCategories maybeSelected = do
+  H.form ! A.method "post" ! A.action "/remove-sankey-input" ! A.class_ "flex items-center gap-2 m-2" $ do
+    H.input
+      ! A.type_ "hidden"
+      ! A.name "sankeyConfigId"
+      ! A.value (toValue $ fromSqlKey configId)
+
+    H.select ! A.name "inputSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
         forM_ categories $ \(Entity categoryId category) -> do
           let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
@@ -93,30 +82,52 @@ renderInputRow sourceCategories maybeSelected = do
             !? (isSelected, A.selected "selected")
             $ toHtml
             $ transactionSourceName source <> " - " <> categoryName category
+    H.input ! A.type_ "submit" ! A.value "Remove" ! A.class_ "secondary-danger-button" ! A.formaction "/remove-sankey-input"
 
--- Render Empty Row for New Input
-renderEmptyInputRow ::
+-- Individual Input Form
+renderNewInputForm ::
+  Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
+  Maybe (Entity TransactionSource, Entity Category) ->
   Html
-renderEmptyInputRow sourceCategories = do
-  H.div $ do
-    H.select ! A.name "inputSourceCategory[]" $ do
+renderNewInputForm configId sourceCategories maybeSelected = do
+  H.form ! A.method "post" ! A.action "/add-sankey-input" ! A.class_ "flex items-center gap-2 m-2" $ do
+    H.input
+      ! A.type_ "hidden"
+      ! A.name "sankeyConfigId"
+      ! A.value (toValue $ fromSqlKey configId)
+
+    H.select ! A.name "inputSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
         forM_ categories $ \(Entity categoryId category) -> do
           let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
+          let isSelected = case maybeSelected of
+                Just (selectedSource, selectedCategory) ->
+                  entityKey selectedSource == sourceId && entityKey selectedCategory == categoryId
+                Nothing -> False
           H.option
             ! A.value optionValue
+            !? (isSelected, A.selected "selected")
             $ toHtml
             $ transactionSourceName source <> " - " <> categoryName category
+    H.input ! A.type_ "submit" ! A.value "Add" ! A.class_ "secondary-button"
 
--- Linkage Dropdowns (Using Composite Source-Category Field)
-renderLinkageRow ::
+-- Individual Linkage Form
+renderLinkageForm ::
+  Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
   Maybe (Entity TransactionSource, Entity Category, Entity TransactionSource) ->
   Html
-renderLinkageRow sourceCategories maybeSelected = do
-  H.div $ do
-    H.select ! A.name "linkageSourceCategory" $ do
+renderLinkageForm configId sourceCategories maybeSelected = do
+  H.form ! A.method "post" ! A.action "/remove-sankey-linkage" ! A.class_ "flex items-center gap-2 m-2" $ do
+    -- Hidden input for Sankey Config ID
+    H.input
+      ! A.type_ "hidden"
+      ! A.name "sankeyConfigId"
+      ! A.value (toValue $ fromSqlKey configId)
+
+    -- Source & Category Selection
+    H.select ! A.name "linkageSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
         forM_ categories $ \(Entity categoryId category) -> do
           let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
@@ -130,7 +141,7 @@ renderLinkageRow sourceCategories maybeSelected = do
             $ toHtml
             $ transactionSourceName source <> " - " <> categoryName category
 
-    H.select ! A.name "linkageTargetId" $ do
+    H.select ! A.name "linkageTargetId" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
         let isSelected = case maybeSelected of
               Just (_, _, selectedTarget) -> entityKey selectedTarget == sourceId
@@ -141,23 +152,46 @@ renderLinkageRow sourceCategories maybeSelected = do
           $ toHtml
           $ transactionSourceName source
 
-renderEmptyLinkageRow ::
+    H.input
+      ! A.type_ "submit"
+      ! A.value "Remove"
+      ! A.class_ "secondary-danger-button"
+      ! A.formaction "/remove-sankey-linkage"
+
+renderNewLinkageForm ::
+  Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
+  Maybe (Entity TransactionSource, Entity Category, Entity TransactionSource) ->
   Html
-renderEmptyLinkageRow sourceCategories = do
-  H.div $ do
-    H.select ! A.name "linkageSourceCategory" $ do
+renderNewLinkageForm configId sourceCategories maybeSelected = do
+  H.form ! A.method "post" ! A.action "/add-sankey-linkage" ! A.class_ "flex items-center gap-2 m-2" $ do
+    H.input
+      ! A.type_ "hidden"
+      ! A.name "sankeyConfigId"
+      ! A.value (toValue $ fromSqlKey configId)
+
+    H.select ! A.name "linkageSourceCategory" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.toList sourceCategories) $ \(Entity sourceId source, categories) ->
         forM_ categories $ \(Entity categoryId category) -> do
           let optionValue = toValue (fromSqlKey sourceId) <> "-" <> toValue (fromSqlKey categoryId)
+          let isSelected = case maybeSelected of
+                Just (selectedSource, selectedCategory, _) ->
+                  entityKey selectedSource == sourceId && entityKey selectedCategory == categoryId
+                Nothing -> False
           H.option
             ! A.value optionValue
+            !? (isSelected, A.selected "selected")
             $ toHtml
             $ transactionSourceName source <> " - " <> categoryName category
 
-    H.select ! A.name "linkageTargetId" $ do
+    H.select ! A.name "linkageTargetId" ! A.class_ "border border-gray-300 rounded-md p-2 flex-1" $ do
       forM_ (Map.keys sourceCategories) $ \(Entity sourceId source) -> do
+        let isSelected = case maybeSelected of
+              Just (_, _, selectedTarget) -> entityKey selectedTarget == sourceId
+              Nothing -> False
         H.option
           ! A.value (toValue $ fromSqlKey sourceId)
+          !? (isSelected, A.selected "selected")
           $ toHtml
           $ transactionSourceName source
+    H.input ! A.type_ "submit" ! A.value "Add" ! A.class_ "secondary-button"

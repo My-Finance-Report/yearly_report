@@ -12,7 +12,7 @@ import Data.Text (Text)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
-import Database.Database (updateUserOnboardingStep, getDemoUser)
+import Database.Database (getDemoUser, updateUserOnboardingStep)
 import Database.Models (User (userOnboardingStep))
 import Database.Persist
   ( Entity (entityKey, entityVal),
@@ -22,37 +22,32 @@ import Database.Persist.Postgresql (ConnectionPool)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AuthPages (renderLoginPage)
-import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage, makeDemoBanner)
+import HtmlGenerators.HomePage (makeDemoBanner, makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
-import Web.Scotty (ActionM, ScottyM, formParam, get, json, post, redirect,  html)
+import Web.Scotty (ActionM, ScottyM, formParam, get, html, json, post, redirect)
 
 registerDemoRoutes :: ConnectionPool -> ScottyM ()
 registerDemoRoutes pool = do
+  get "/demo/api/sankey-data" $ do
+    user <- getDemoUser
+    categorizedTransactions <- liftIO $ getAllTransactions user
+    gbs <- groupTransactionsBySource user categorizedTransactions
 
-    get "/demo/api/sankey-data" $ do
-      user <- getDemoUser
-      categorizedTransactions <- liftIO $ getAllTransactions user
-      gbs <- groupTransactionsBySource user categorizedTransactions
+    (config, _) <- liftIO $ getFirstSankeyConfig user
 
-      sankeyConfig <- liftIO $ getFirstSankeyConfig user
-      let sankeyData = case sankeyConfig of
-            Just config -> Just (generateSankeyData gbs config)
-            Nothing -> Nothing
+    json (generateSankeyData gbs config)
 
-      json sankeyData
+  get "/demo/api/histogram-data" $ do
+    user <- getDemoUser
+    transactions <- liftIO $ getAllTransactions user
+    histogramData <- generateColChartData user transactions
+    json histogramData
 
-    get "/demo/api/histogram-data" $ do
-      user <- getDemoUser
-      transactions <- liftIO $ getAllTransactions user
-      histogramData <- generateColChartData user transactions
-      json histogramData
-
-
-    get "/demo-account" $ do
-        demoUser <- getDemoUser
-        content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
-        html $ renderPage (Just demoUser) "Financial Summary" content
+  get "/demo-account" $ do
+    demoUser <- getDemoUser
+    content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
+    html $ renderPage (Just demoUser) "Financial Summary" content

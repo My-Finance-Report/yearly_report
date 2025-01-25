@@ -36,12 +36,8 @@ registerVisualizationRoutes pool = do
     categorizedTransactions <- liftIO $ getAllTransactions user
     gbs <- groupTransactionsBySource user categorizedTransactions
 
-    sankeyConfig <- liftIO $ getFirstSankeyConfig user
-    let sankeyData = case sankeyConfig of
-          Just config -> Just (generateSankeyData gbs config)
-          Nothing -> Nothing
-
-    json sankeyData
+    (sankeyConfig,_) <- liftIO $ getFirstSankeyConfig user
+    json $ generateSankeyData gbs sankeyConfig 
 
   get "/api/column-data" $ requireUser pool $ \user -> do
     transactions <- liftIO $ getAllTransactions user

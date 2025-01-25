@@ -1,8 +1,13 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Database.Configurations
   ( getFirstSankeyConfig,
     saveSankeyConfig,
+    addSankeyLinkage,
+    removeSankeyLinkage,
+    addSankeyInput,
+    removeSankeyInput,
   )
 where
 
@@ -20,42 +25,110 @@ import Database.Persist.Postgresql
 import Database.Persist.Sql (selectList)
 import Types
 
--- in theory the user can have more than one config, but for now only one really makes sense
-getFirstSankeyConfig :: (MonadUnliftIO m) => Entity User -> m (Maybe FullSankeyConfig)
+getFirstSankeyConfig :: (MonadUnliftIO m) => Entity User -> m (FullSankeyConfig, Key SankeyConfig)
 getFirstSankeyConfig user = do
   pool <- liftIO getConnectionPool
   liftIO $ runSqlPool queryFirstSankeyConfig pool
   where
-    queryFirstSankeyConfig :: SqlPersistT IO (Maybe FullSankeyConfig)
+    queryFirstSankeyConfig :: SqlPersistT IO (FullSankeyConfig, Key SankeyConfig)
     queryFirstSankeyConfig = do
       maybeConfig <- selectFirst [SankeyConfigUserId ==. entityKey user] []
-      case maybeConfig of
-        Nothing -> return Nothing
-        Just (Entity configId SankeyConfig {sankeyConfigName = configName}) -> do
-          -- Fetch the inputs for the config
-          inputEntities <- selectList [SankeyInputConfigId ==. configId] []
+      configId <-
+        case maybeConfig of
+          Just (Entity existingConfigId _) -> return existingConfigId
+          Nothing -> do
+            insert $ SankeyConfig "Auto-Generated Config" (entityKey user)
 
-          -- Fetch the linkages for the config
-          linkageEntities <- selectList [SankeyLinkageConfigId ==. configId] []
+      inputEntities <- selectList [SankeyInputConfigId ==. configId] []
 
-          -- Resolve inputs into entities for TransactionSource and Category
-          inputs <- fmap catMaybes $ forM inputEntities $ \(Entity _ (SankeyInput _ sourceId categoryId)) -> do
-            maybeSource <- getEntity sourceId
-            maybeCategory <- getEntity categoryId
-            return $ (,) <$> maybeSource <*> maybeCategory
+      linkageEntities <- selectList [SankeyLinkageConfigId ==. configId] []
 
-          linkages <- fmap catMaybes $ forM linkageEntities $ \(Entity _ (SankeyLinkage _ sourceId categoryId targetId)) -> do
-            maybeSource <- getEntity sourceId
-            maybeCategory <- getEntity categoryId
-            maybeTarget <- getEntity targetId
-            return $ (,,) <$> maybeSource <*> maybeCategory <*> maybeTarget
+      inputs <- fmap catMaybes $ forM inputEntities $ \(Entity _ (SankeyInput _ sourceId categoryId)) -> do
+        maybeSource <- getEntity sourceId
+        maybeCategory <- getEntity categoryId
+        return $ (,) <$> maybeSource <*> maybeCategory
 
-          return $
-            Just
-              FullSankeyConfig
-                { inputs = inputs,
-                  linkages = linkages
-                }
+      linkages <- fmap catMaybes $ forM linkageEntities $ \(Entity _ (SankeyLinkage _ sourceId categoryId targetId)) -> do
+        maybeSource <- getEntity sourceId
+        maybeCategory <- getEntity categoryId
+        maybeTarget <- getEntity targetId
+        return $ (,,) <$> maybeSource <*> maybeCategory <*> maybeTarget
+
+      return
+        ( FullSankeyConfig
+            { inputs = inputs,
+              linkages = linkages
+            },
+          configId
+        )
+
+addSankeyInput :: Entity User -> Key SankeyConfig -> Key TransactionSource -> Key Category -> IO ()
+addSankeyInput user configId sourceId categoryId = do
+  pool <- getConnectionPool
+  runSqlPool
+    ( do
+        -- Check if the SankeyConfig belongs to the user
+        maybeConfig <- get configId
+        case maybeConfig of
+          Just SankeyConfig {sankeyConfigUserId}
+            | sankeyConfigUserId == entityKey user ->
+                insert_ $ SankeyInput configId sourceId categoryId
+          _ -> error "Unauthorized access: Cannot modify this configuration"
+    )
+    pool
+
+removeSankeyInput :: Entity User -> Key SankeyConfig -> Key TransactionSource -> Key Category -> IO ()
+removeSankeyInput user configId sourceId categoryId = do
+  pool <- getConnectionPool
+  runSqlPool
+    ( do
+        -- Check if the SankeyConfig belongs to the user
+        maybeConfig <- get configId
+        case maybeConfig of
+          Just SankeyConfig {sankeyConfigUserId}
+            | sankeyConfigUserId == entityKey user ->
+                deleteWhere
+                  [ SankeyInputConfigId ==. configId,
+                    SankeyInputSourceId ==. sourceId,
+                    SankeyInputCategoryId ==. categoryId
+                  ]
+          _ -> error "Unauthorized access: Cannot delete this input"
+    )
+    pool
+
+addSankeyLinkage :: Entity User -> Key SankeyConfig -> Key TransactionSource -> Key Category -> Key TransactionSource -> IO ()
+addSankeyLinkage user configId sourceId categoryId targetSourceId = do
+  pool <- getConnectionPool
+  runSqlPool
+    ( do
+        -- Check if the SankeyConfig belongs to the user
+        maybeConfig <- get configId
+        case maybeConfig of
+          Just SankeyConfig {sankeyConfigUserId}
+            | sankeyConfigUserId == entityKey user -> insert_ $ SankeyLinkage configId sourceId categoryId targetSourceId
+          _ -> error "Unauthorized access: Cannot modify this configuration"
+    )
+    pool
+
+removeSankeyLinkage :: Entity User -> Key SankeyConfig -> Key TransactionSource -> Key Category -> Key TransactionSource -> IO ()
+removeSankeyLinkage user configId sourceId categoryId targetSourceId = do
+  pool <- getConnectionPool
+  runSqlPool
+    ( do
+        -- Check if the SankeyConfig belongs to the user
+        maybeConfig <- get configId
+        case maybeConfig of
+          Just SankeyConfig {sankeyConfigUserId}
+            | sankeyConfigUserId == entityKey user ->
+                deleteWhere
+                  [ SankeyLinkageConfigId ==. configId,
+                    SankeyLinkageSourceId ==. sourceId,
+                    SankeyLinkageCategoryId ==. categoryId,
+                    SankeyLinkageTargetSourceId ==. targetSourceId
+                  ]
+          _ -> error "Unauthorized access: Cannot delete this linkage"
+    )
+    pool
 
 saveSankeyConfig :: (MonadUnliftIO m) => Entity User -> FullSankeyConfig -> m (Key SankeyConfig)
 saveSankeyConfig user config = do
