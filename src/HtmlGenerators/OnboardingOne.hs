@@ -28,26 +28,29 @@ newSourceComponent transactionSources includeDefaults = do
 
 renderSourceGroup :: Text -> [Entity TransactionSource] -> SourceKind -> Bool -> Html
 renderSourceGroup title sources kind includeDefaults = do
-  H.div ! A.class_ "" $ do
-    H.h3 ! A.class_ "text-2xl font-semibold text-primary mb-2" $ toHtml title
+  H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4 relative" $ do
+    H.legend ! A.class_ "text-2xl font-semibold text-primary mb-2" $ toHtml title
 
     -- Render Existing Sources
     unless (null sources) $
       H.div ! A.class_ "flex flex-col gap-2" $ do
         forM_ sources $ \(Entity sourceId source) -> do
-          H.div ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none" $ do
-            -- Edit Form
+          H.div ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none relative" $ do
+            H.p ! A.class_ "text-lg" $ "✅"
             H.form
               ! A.method "post"
               ! A.action (toValue $ "/edit-transaction-source/" <> show (fromSqlKey sourceId))
-              ! A.class_ "flex flex-1 items-center gap-2"
+              ! A.class_ "flex flex-1 items-center gap-2 edit-source-form"
+              ! A.onsubmit "showSuccessIndicator(this)"
               $ do
-                -- Editable Input Field for Name
+                -- Editable Input Field
                 H.input
                   ! A.type_ "text"
                   ! A.name "updatedSourceName"
                   ! A.value (toValue $ transactionSourceName source)
-                  ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
+                  ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1 edit-input"
+                  ! A.required "required"
+                  ! A.oninput "toggleUpdateButton(this)"
 
                 -- Hidden Field for Source Kind
                 H.input
@@ -55,11 +58,12 @@ renderSourceGroup title sources kind includeDefaults = do
                   ! A.name "sourceKind"
                   ! A.value (toValue $ show kind)
 
-                -- Save Button
+                -- Save Button (Disabled by Default)
                 H.input
                   ! A.type_ "submit"
                   ! A.value "Update"
-                  ! A.class_ "secondary-button"
+                  ! A.class_ "secondary-button update-button"
+                  ! A.disabled "true"
 
             -- Remove Form (Separate Form)
             H.form
@@ -87,53 +91,25 @@ renderSourceGroup title sources kind includeDefaults = do
     when includeDefaults $ do
       case kind of
         Account -> do
-          renderPrefilledCard "Savings Account" Account sources
-          renderPrefilledCard "Checking Account" Account sources
-          renderCustomAccountForm Account
+          renderCustomAccountForm Account "Wells Fargo Checking, etc"
         Card -> do
-          renderPrefilledCard "Credit Card" Card sources
-          renderPrefilledCard "Debit Card" Card sources
-          renderCustomAccountForm Card
+          renderCustomAccountForm Card "Capital One, etc"
         Investment -> do
-          renderPrefilledCard "Stock Portfolio" Investment sources
-          renderPrefilledCard "Retirement Fund" Investment sources
-          renderCustomAccountForm Investment
+          renderCustomAccountForm Investment "Vanguard Roth IRA, etc"
 
-renderPrefilledCard :: Text -> SourceKind -> [Entity TransactionSource] -> Html
-renderPrefilledCard name kind transactionSources =
-  unless (name `elem` Prelude.map (transactionSourceName . entityVal) transactionSources)
-    $ H.form
-      ! A.method "post"
-      ! A.action "/add-transaction-source"
-      ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none cursor-pointer"
-    $ do
-      H.input
-        ! A.type_ "text"
-        ! A.name "newSource"
-        ! A.value (toValue name)
-        ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
-
-      H.input
-        ! A.type_ "hidden"
-        ! A.name "newKind"
-        ! A.value
-          (toValue $ show kind) -- Include the kind in the form
-      H.input
-        ! A.type_ "submit"
-        ! A.value "Add"
-        ! A.class_ "primary-button"
-
-renderCustomAccountForm :: SourceKind -> Html
-renderCustomAccountForm kind = do
+renderCustomAccountForm :: SourceKind -> Text -> Html
+renderCustomAccountForm kind placeholderText = do
   H.form
     ! A.method "post"
     ! A.action "/add-transaction-source"
-    ! A.class_ "flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none cursor-pointer"
+    ! A.class_ "min-w-[600px] flex items-center gap-2 bg-gray-100 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-200 transition-all focus:outline-none cursor-pointer"
   $ do
     H.input
       ! A.type_ "text"
       ! A.name "newSource"
-      ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
+      ! A.placeholder (toValue placeholderText)
+      ! A.class_ "border border-gray-300 rounded-md p-2 flex-1"
+      ! A.required "required"
 
     H.input
       ! A.type_ "hidden"
@@ -161,7 +137,7 @@ renderOnboardingOne user transactionSources isOnboarding =
           when isOnboarding $ do
             H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
             H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 2"
-          H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Add Accounts"
+          H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Let us know which cards, bank and investment accounts you use"
 
         -- Account List & Input
         newSourceComponent transactionSources isOnboarding

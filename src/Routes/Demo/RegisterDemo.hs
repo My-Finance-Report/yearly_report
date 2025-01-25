@@ -49,4 +49,4 @@ registerDemoRoutes pool = do
   get "/demo-account" $ do
     demoUser <- getDemoUser
     content <- liftIO $ renderHomePage demoUser (Just makeDemoBanner)
-    html $ renderPage (Just demoUser) "Financial Summary" content True
+    html $ renderPage (Just demoUser) "Financial Summary" content False

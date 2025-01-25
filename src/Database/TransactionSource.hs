@@ -93,8 +93,7 @@ addTransactionSource user sourceName kind = do
     queryAddOrUnarchiveCategory categoryName sourceId = do
       maybeCategory <- getBy $ UniqueCategory categoryName sourceId
       case maybeCategory of
-        Just (Entity categoryId category)
-          | categoryArchived category -> do
+        Just (Entity categoryId category) -> do
               update categoryId [CategoryArchived =. False]
               return categoryId
         _ -> do

@@ -71,3 +71,27 @@ document.addEventListener("DOMContentLoaded", function () {
     image.style.transition = "transform 0.3s ease-out";
   });
 });
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  function toggleUpdateButton(inputElement) {
+    const form = inputElement.closest("form");
+    const updateButton = form.querySelector(".update-button");
+    if (!updateButton) return;
+
+    // Compare the current value with the original value
+    if (inputElement.value.trim() !== inputElement.defaultValue.trim()) {
+      updateButton.removeAttribute("disabled");
+    } else {
+      updateButton.setAttribute("disabled", "true");
+    }
+  }
+
+  // Attach event listeners to all input fields inside editable forms
+  document.querySelectorAll(".edit-input").forEach((input) => {
+    input.addEventListener("input", function () {
+      toggleUpdateButton(this);
+    });
+  });
+});

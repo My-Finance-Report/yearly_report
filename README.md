@@ -34,6 +34,9 @@ delete button in the table doesnt work
 
 - manually add transactions
 - budget and budget progress
+- fix the bug in the launch flow
+- sankey selectors should not be dropdowns
+- no "fast adds" on account page
 
 # Not Blocking
 
