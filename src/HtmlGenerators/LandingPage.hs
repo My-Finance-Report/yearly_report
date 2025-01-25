@@ -56,12 +56,12 @@ renderLandingPage =
       H.h2 ! A.class_ "text-xl font-medium text-gray-800 mt-2" $ "Because you should love your finances"
       H.h2 ! A.class_ "text-lg text-gray-600 mt-2" $ "Simple personal finance for just $2/month or $20/year."
 
-    -- Dashboard Preview Image
     H.div ! A.class_ "mt-8 flex justify-center" $ do
       H.img
+        ! A.id "tilting-image"
         ! A.src "/landing.png"
         ! A.alt "Preview of the My Financé dashboard"
-        ! A.class_ "w-full max-w-4xl rounded-lg shadow-lg"
+        ! A.class_ "w-full max-w-4xl rounded-lg shadow-2xl shadow-primary/50 transition-transform duration-300 ease-out"
 
     -- Call to Action
     H.div ! A.class_ "mt-12 text-center" $ do

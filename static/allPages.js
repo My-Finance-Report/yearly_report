@@ -48,3 +48,26 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+
+document.addEventListener("DOMContentLoaded", function () {
+  const image = document.getElementById("tilting-image");
+
+  image.addEventListener("mousemove", function (event) {
+    const rect = image.getBoundingClientRect();
+    const x = event.clientX - rect.left; // X position within the element
+    const y = event.clientY - rect.top; // Y position within the element
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * 10; // Max 10 degrees tilt
+    const rotateY = ((centerX - x) / centerX) * 10; // Max 10 degrees tilt
+
+    image.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    image.style.transition = "transform 0.1s ease-out";
+  });
+
+  image.addEventListener("mouseleave", function () {
+    image.style.transform = "rotateX(0deg) rotateY(0deg)";
+    image.style.transition = "transform 0.3s ease-out";
+  });
+});
