@@ -3,7 +3,9 @@
 module HtmlGenerators.AccountManagement (renderAccountManagement) where
 
 import Control.Monad (forM_)
-import Data.Map (Map, findWithDefault, fromListWith, keys, toList)
+import Data.List (nub)
+import Data.Map (Map, findWithDefault, fromListWith, keys, lookup, toList)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Database.Models
 import Database.Persist (Entity (..))
@@ -11,37 +13,51 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-renderAccountManagement :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Bool -> Html
-renderAccountManagement user transactions isOnboarding =
+renderAccountManagement :: Entity User -> [SourceKind] -> Map (Entity TransactionSource) [Entity Category] -> Bool -> Html
+renderAccountManagement user kinds transactions isOnboarding =
   let groupedTransactions = fromListWith (++) [(transactionSourceSourceKind (entityVal ts), [ts]) | ts <- keys transactions]
+      allKinds = nub $ kinds ++ keys groupedTransactions
    in H.div ! A.class_ "bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center p-4" $ do
         H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
-        H.div ! A.class_ "w-full max-w-3xl flex gap-4 ml-3" $ do
-          forM_ (zip [0 ..] (toList groupedTransactions)) $ \(idx, (kind, _)) ->
-            H.button
-              ! A.class_ ("tab px-4 py-2 text-lg border border-gray-300 bg-gray-100 hover:bg-white hover:text-primary cursor-pointer rounded-t-lg" <> if idx == 0 then " active" else "")
-              ! A.onclick (toValue $ "showTabWithSubtabs(" <> show idx <> ")")
-              $ toHtml
-              $ show kind <> "s"
 
-        forM_ (zip [0 ..] (toList groupedTransactions)) $ \(idx, (kind, sources)) ->
-          H.div
-            ! A.class_ ("tab-content w-full p-5 rounded-lg border border-primary max-w-3xl" <> if idx == 0 then " block" else " hidden")
-            ! A.id (toValue $ "tab-content-" <> show idx)
-            $ do
-              renderNewAccountForm kind
+        -- Button Group
+        H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
+          H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
+            forM_ (zip [0 ..] allKinds) $ \(idx, kind) -> do
+              let count = length $ fromMaybe [] (Data.Map.lookup kind groupedTransactions)
+              H.button
+                ! A.type_ "button"
+                ! A.class_ "tab-button secondary-button flex items-center gap-2 px-4 py-2 border border-gray-300 bg-gray-100 hover:bg-white hover:text-primary cursor-pointer rounded-md"
+                ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show idx)
+                ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show idx <> ");")
+                $ do
+                  toHtml (show kind <> "s")
+                  H.span
+                    ! A.class_ "text-xs bg-primary text-white w-5 h-5 flex items-center justify-center rounded-full"
+                    $ toHtml (show count)
 
-              H.div ! A.class_ "flex flex-col gap-2 items-center" $ do
-                forM_ sources $ \sourceEntity@(Entity sourceId source) -> do
-                  let categories = findWithDefault [] sourceEntity transactions
-                  H.div ! A.class_ "border border-primary rounded-md p-3 shadow-md bg-white w-full" $ do
-                    renderTransactionSourceForm sourceEntity
+        -- Tab Content
+        H.div ! A.class_ "border border-primary p-2 rounded-md mt-4 w-full max-w-3xl" $ do
+          forM_ (zip [0 ..] allKinds) $ \(idx, kind) ->
+            H.div
+              ! A.class_ "tab-content w-full p-5 rounded-lg border border-primary max-w-3xl"
+              ! A.id (toValue $ "tab-content-" <> show idx)
+              ! A.style (if idx == 0 then "display: block;" else "display: none;")
+              $ do
+                renderNewAccountForm kind
 
-                    H.div ! A.class_ "flex flex-wrap gap-1 mt-1" $ do
-                      forM_ categories $ \category ->
-                        renderCategoryForm category
+                H.div ! A.class_ "flex flex-col gap-2 items-center" $ do
+                  let sources = fromMaybe [] (Data.Map.lookup kind groupedTransactions)
+                  forM_ sources $ \sourceEntity@(Entity sourceId source) -> do
+                    let categories = findWithDefault [] sourceEntity transactions
+                    H.div ! A.class_ "border border-primary rounded-md p-3 shadow-md bg-white w-full" $ do
+                      renderTransactionSourceForm sourceEntity
 
-                    renderNewCategoryForm sourceId
+                      H.div ! A.class_ "flex flex-wrap gap-1 mt-1" $ do
+                        forM_ categories $ \category ->
+                          renderCategoryForm category
+
+                      renderNewCategoryForm sourceId
 
 renderNewAccountForm :: SourceKind -> Html
 renderNewAccountForm kind = do
@@ -77,7 +93,9 @@ renderTransactionSourceForm source = do
           ! A.type_ "text"
           ! A.name "updatedSourceName"
           ! A.value (toValue $ transactionSourceName $ entityVal source)
-          ! A.class_ "min-w-[350px] border border-gray-300 rounded-md p-1 flex-1 text-sm"
+          ! A.class_ "edit-input min-w-[350px] border border-gray-300 rounded-md p-1 flex-1 text-sm"
+          ! A.required "required"
+          ! A.oninput "toggleUpdateButton(this)"
 
         H.input
           ! A.type_ "hidden"
@@ -88,7 +106,8 @@ renderTransactionSourceForm source = do
         H.input
           ! A.type_ "submit"
           ! A.value "Update"
-          ! A.class_ "secondary-button text-sm"
+          ! A.class_ "update-button secondary-button text-sm"
+          ! A.disabled "true"
 
     -- Remove Form
     H.form
@@ -125,13 +144,15 @@ renderCategoryForm category = do
           ! A.type_ "text"
           ! A.name "updatedCategoryName"
           ! A.value (toValue $ categoryName $ entityVal category)
-          ! A.class_ "border border-gray-300 rounded-md p-1 flex-1 text-sm"
+          ! A.class_ "edit-input border border-gray-300 rounded-md p-1 flex-1 text-sm"
+          ! A.oninput "toggleUpdateButton(this)"
 
         -- Save Button
         H.input
           ! A.type_ "submit"
           ! A.value "Update"
-          ! A.class_ "secondary-button text-xs"
+          ! A.class_ "update-button secondary-button text-xs"
+          ! A.disabled "true"
 
     -- Remove Form
     H.form

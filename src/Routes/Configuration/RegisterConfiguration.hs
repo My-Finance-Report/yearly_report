@@ -15,7 +15,7 @@ import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesAndSources, getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
-import Database.Models (User (userOnboardingStep))
+import Database.Models (SourceKind (Account, Card, Investment), User (userOnboardingStep))
 import Database.Persist
   ( Entity (entityKey, entityVal),
     PersistEntity (Key),
@@ -50,5 +50,6 @@ registerConfigurationRoutes pool = do
 
   get "/manage-accounts" $ requireUser pool $ \user -> do
     categoriesBySource <- liftIO $ getCategoriesAndSources user
-    let content = renderAccountManagement user categoriesBySource True
+
+    let content = renderAccountManagement user [Account, Card, Investment] categoriesBySource True
     Web.Scotty.html $ renderPage (Just user) "Account Management" content True

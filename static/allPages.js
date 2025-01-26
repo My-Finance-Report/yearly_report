@@ -76,7 +76,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function toggleUpdateButton(inputElement) {
     const form = inputElement.closest("form");
     const updateButton = form.querySelector(".update-button");
+
+
+    console.log(updateButton)
     if (!updateButton) return;
+
+    console.log(updateButton)
 
     // Compare the current value with the original value
     if (inputElement.value.trim() !== inputElement.defaultValue.trim()) {

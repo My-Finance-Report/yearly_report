@@ -43,8 +43,6 @@ delete button in the table doesnt work
 - there seems to be some general bug with the mobile presentation
 - filter by year when you look at dashboard
 - privacy policy
-- refresh on the page keeps you in the same view
-  -same with form submitting the login flow
 - install a linter for extraneous imports
 
 # Bad UI

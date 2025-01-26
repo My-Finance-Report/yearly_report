@@ -28,7 +28,7 @@ renderConfigurationPageNew ::
 renderConfigurationPageNew configId sankeyConfig transactions uploaderConfigs transactionSources = do
   H.body $ do
     H.div ! A.class_ "container mx-auto p-6" $ do
-      H.h1 ! A.class_ "text-2xl font-bold text-gray-900 mb-4" $ "Sankey Configuration"
+      H.h1 ! A.class_ "text-2xl font-bold text-gray-900 mb-4" $ "Flow Chart Configuration"
       renderEditSankeyConfigPage configId sankeyConfig transactions
 
 renderEditSankeyConfigPage ::
@@ -51,7 +51,7 @@ renderEditSankeyConfigPage configId config sourceCategories =
     -- Linkages Section
     H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
       H.legend ! A.class_ "font-semibold text-gray-700" $ "Linkages"
-      H.p "describe where money flows from one account to another, such as paying a credit card bill from a bank account"
+      H.p "Describes when money flows from one account to another, such as paying a credit card bill from a bank account"
       mapM_ (renderLinkageForm configId sourceCategories . Just) (linkages config)
 
       renderNewLinkageForm configId sourceCategories Nothing -- Add new linkage form

@@ -107,16 +107,16 @@ generateHomapageHtml banner tabs =
 
 generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
 generateProcessedFilesComponent processedFiles = do
-  H.div ! A.class_ "processed-files-section p-6 bg-white rounded-lg shadow-md" $ do
+  H.div ! A.class_ "p-6 bg-white rounded-lg shadow-md" $ do
     if Data.List.null processedFiles
       then H.p ! A.class_ "text-gray-500 text-center" $ "No files have been processed yet."
       else H.table ! A.class_ "base-table striped-table hover-table border-primary rounded-lg w-full" $ do
         -- Table Header
         H.thead ! A.class_ "table-head" $ do
           H.tr $ do
-            H.th ! A.class_ "table-cell px-4 py-3" $ "Filename"
-            H.th ! A.class_ "table-cell px-4 py-3" $ "Status"
-            H.th ! A.class_ "table-cell px-4 py-3 text-center" $ "Actions"
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Filename"
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Status"
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Actions"
 
         -- Table Rows
         H.tbody $ forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
@@ -300,7 +300,7 @@ generateDetailRows cat txs sectionId =
     H.td ! A.colspan "5" $ do
       H.div ! A.class_ "p-2 border border-gray-300 rounded-md bg-white shadow-sm" $ do
         H.table ! A.class_ "base-table" $ do
-          H.thead ! A.class_ "table-head hover" $ do
+          H.thead ! A.class_ "table-head" $ do
             H.tr ! A.class_ "" $ do
               H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Transaction"
               H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Kind"
