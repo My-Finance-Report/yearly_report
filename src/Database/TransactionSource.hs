@@ -67,18 +67,17 @@ addTransactionSource user sourceName kind = do
         Just (Entity sourceId archivedSource)
           | transactionSourceArchived archivedSource -> do
               update sourceId [TransactionSourceArchived =. False]
-              
+
               -- Ensure default categories exist
               let defaultCategories = defaultCategoriesForSource kind
               forM_ defaultCategories $ \categoryName -> do
                 _ <- queryAddOrUnarchiveCategory categoryName sourceId
                 return ()
-              
+
               return (Right sourceId)
 
         -- If the source exists and is not archived, return an error
         Just _ -> return (Left "A transaction source with this name already exists.")
-
         -- Otherwise, create a new transaction source
         Nothing -> do
           newSourceId <-
@@ -109,7 +108,6 @@ addTransactionSource user sourceName kind = do
         Nothing -> do
           insert $ Category categoryName sourceId (entityKey user) False
 
-
 removeTransactionSource :: Entity User -> Text -> IO ()
 removeTransactionSource user sourceName = do
   pool <- getConnectionPool
@@ -127,8 +125,8 @@ removeTransactionSource user sourceName = do
               update sourceId [TransactionSourceArchived =. True]
               liftIO $ putStrLn $ "TransactionSource '" ++ unpack sourceName ++ "' archived successfully."
 
-updateTransactionSource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> Text -> m ()
-updateTransactionSource user sourceId newName = do
+updateTransactionSource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> Maybe SourceKind -> Text -> m ()
+updateTransactionSource user sourceId maybeKind newName = do
   pool <- liftIO getConnectionPool
   runSqlPool
     ( do
@@ -136,9 +134,10 @@ updateTransactionSource user sourceId newName = do
           selectFirst
             [TransactionSourceId ==. sourceId, TransactionSourceUserId ==. entityKey user]
             []
-        case maybeSource of
-          Just _ -> update sourceId [TransactionSourceName =. newName]
-          Nothing -> liftIO $ error $ "No transaction source found with ID: " ++ show (fromSqlKey sourceId) ++ " for user ID: " ++ show (fromSqlKey $ entityKey user)
+        case (maybeSource, maybeKind) of
+          (Just _, Nothing) -> update sourceId [TransactionSourceName =. newName]
+          (Just _, Just kind) -> update sourceId [TransactionSourceName =. newName, TransactionSourceSourceKind =. kind]
+          (Nothing, Nothing) -> liftIO $ error $ "No transaction source found with ID: " ++ show (fromSqlKey sourceId) ++ " for user ID: " ++ show (fromSqlKey $ entityKey user)
     )
     pool
 

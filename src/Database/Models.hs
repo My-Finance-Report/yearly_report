@@ -64,11 +64,11 @@ instance PersistField SourceKind where
   fromPersistValue (PersistText "Card") = Right Card
   fromPersistValue _ = Left "Invalid SourceKind"
 
-parseSourceKind :: Text -> Either Text SourceKind
-parseSourceKind "Investment" = Right Investment
-parseSourceKind "Account" = Right Account
-parseSourceKind "Card" = Right Card
-parseSourceKind other = Left $ "Invalid SourceKind: " <> other
+parseSourceKind :: Text -> Maybe SourceKind
+parseSourceKind "Investment" = Just Investment
+parseSourceKind "Account" = Just Account
+parseSourceKind "Card" = Just Card
+parseSourceKind other = Nothing
 
 instance PersistFieldSql SourceKind where
   sqlType _ = SqlString

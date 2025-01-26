@@ -51,7 +51,7 @@ renderAccountManagement user kinds transactions isOnboarding =
                   forM_ sources $ \sourceEntity@(Entity sourceId source) -> do
                     let categories = findWithDefault [] sourceEntity transactions
                     H.div ! A.class_ "border border-primary rounded-md p-3 shadow-md bg-white w-full" $ do
-                      renderTransactionSourceForm sourceEntity
+                      renderTransactionSourceForm sourceEntity kinds
 
                       H.div ! A.class_ "flex flex-wrap gap-1 mt-1" $ do
                         forM_ categories $ \category ->
@@ -80,8 +80,8 @@ renderNewAccountForm kind = do
       ! A.value ("Add New " <> toValue (show kind))
       ! A.class_ "primary-button text-s"
 
-renderTransactionSourceForm :: Entity TransactionSource -> Html
-renderTransactionSourceForm source = do
+renderTransactionSourceForm :: Entity TransactionSource -> [SourceKind] -> Html
+renderTransactionSourceForm source kinds = do
   H.div ! A.class_ "flex gap-2 my-3 items-center" $ do
     H.form
       ! A.method "post"
@@ -93,14 +93,21 @@ renderTransactionSourceForm source = do
           ! A.type_ "text"
           ! A.name "updatedSourceName"
           ! A.value (toValue $ transactionSourceName $ entityVal source)
-          ! A.class_ "edit-input min-w-[350px] border border-gray-300 rounded-md p-1 flex-1 text-sm"
+          ! A.class_ "edit-input min-w-[250px] border border-gray-300 rounded-md p-1 flex-1 text-sm"
           ! A.required "required"
           ! A.oninput "toggleUpdateButton(this)"
 
-        H.input
-          ! A.type_ "hidden"
-          ! A.name "sourceKind"
-          ! A.value (toValue $ show (transactionSourceSourceKind $ entityVal source))
+        -- Dropdown for Selecting Source Kind
+        H.select
+          ! A.name "updatedSourceKind"
+          ! A.class_ "edit-input border border-gray-300 rounded-md p-1 text-sm bg-white"
+          ! A.oninput "toggleUpdateButton(this)"
+          $ forM_ kinds
+          $ \kind ->
+            H.option
+              ! A.value (toValue $ show kind)
+              !? (kind == transactionSourceSourceKind (entityVal source), A.selected "selected")
+              $ toHtml (show kind)
 
         -- Save Button
         H.input

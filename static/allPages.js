@@ -71,30 +71,43 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-
 document.addEventListener("DOMContentLoaded", function () {
   function toggleUpdateButton(inputElement) {
     const form = inputElement.closest("form");
     const updateButton = form.querySelector(".update-button");
 
-
-    console.log(updateButton)
     if (!updateButton) return;
 
-    console.log(updateButton)
+    // Get all form elements that can trigger updates
+    const textInput = form.querySelector("input[name='updatedSourceName']");
+    const selectInput = form.querySelector("select[name='updatedSourceKind']");
 
-    // Compare the current value with the original value
-    if (inputElement.value.trim() !== inputElement.defaultValue.trim()) {
+    // Check if the text input value has changed
+    const textChanged = textInput && textInput.value.trim() !== textInput.defaultValue.trim();
+
+    // Check if the select dropdown value has changed
+    const selectChanged = selectInput && selectInput.value !== selectInput.defaultValue;
+
+    // Enable button if any value has changed
+    if (textChanged || selectChanged) {
       updateButton.removeAttribute("disabled");
     } else {
       updateButton.setAttribute("disabled", "true");
     }
   }
 
-  // Attach event listeners to all input fields inside editable forms
-  document.querySelectorAll(".edit-input").forEach((input) => {
-    input.addEventListener("input", function () {
+  // Attach event listeners to all relevant input fields and dropdowns
+  document.querySelectorAll("input[name='updatedSourceName'], select[name='updatedSourceKind']").forEach(element => {
+    element.addEventListener("input", function () {
       toggleUpdateButton(this);
     });
+
+    // Ensure dropdown updates trigger the check
+    if (element.tagName === "SELECT") {
+      element.addEventListener("change", function () {
+        toggleUpdateButton(this);
+      });
+    }
   });
 });
+

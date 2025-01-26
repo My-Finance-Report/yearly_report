@@ -36,12 +36,12 @@ registerTransactionSourceRoutes pool = do
     newSource <- Web.Scotty.formParam "newSource" :: Web.Scotty.ActionM Text
     kindText <- Web.Scotty.formParam "newKind" :: Web.Scotty.ActionM Text
     case parseSourceKind kindText of
-      Right kind -> do
+      Just kind -> do
         _ <- liftIO $ addTransactionSource user newSource kind
         referer <- Web.Scotty.header "Referer"
         let redirectTo = fromMaybe "/dashboard" referer
         Web.Scotty.redirect redirectTo
-      Left errMsg -> html $ fromStrict errMsg
+      Nothing -> html $ fromStrict "Invalid Source"
 
   post "/remove-transaction-source" $ requireUser pool $ \user -> do
     sourceName <- Web.Scotty.formParam "sourceName" :: Web.Scotty.ActionM Text
@@ -56,7 +56,9 @@ registerTransactionSourceRoutes pool = do
     sourceIdText <- Web.Scotty.pathParam "id"
     let sourceId = toSqlKey $ read sourceIdText
     newSourceName <- Web.Scotty.formParam "updatedSourceName" :: Web.Scotty.ActionM Text
-    liftIO $ updateTransactionSource user sourceId newSourceName
+    newSourceKind <- Web.Scotty.formParam "updatedSourceKind" :: Web.Scotty.ActionM Text
+
+    liftIO $ updateTransactionSource user sourceId (parseSourceKind newSourceKind) newSourceName
 
     referer <- Web.Scotty.header "Referer"
     let redirectTo = fromMaybe "/dashboard" referer
