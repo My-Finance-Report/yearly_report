@@ -38,18 +38,18 @@ makeToolBar =
       H.button
         ! A.type_ "button"
         ! A.class_ "secondary-button"
-        ! A.id "configureChartsButton"
-        ! H.dataAttribute "path" "/new-configuration"
-        ! A.onclick "window.location.href='/new-configuration'"
-        $ "Configure Charts"
-
-      H.button
-        ! A.type_ "button"
-        ! A.class_ "secondary-button"
         ! A.id "homeButton"
         ! H.dataAttribute "path" "/dashboard"
         ! A.onclick "window.location.href='/dashboard'"
         $ "Dashboard"
+
+      H.button
+        ! A.type_ "button"
+        ! A.class_ "secondary-button"
+        ! A.id "configureChartsButton"
+        ! H.dataAttribute "path" "/new-configuration"
+        ! A.onclick "window.location.href='/new-configuration'"
+        $ "Configure Charts"
 
       H.button
         ! A.type_ "button"

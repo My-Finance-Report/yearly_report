@@ -31,7 +31,6 @@ delete button in the table doesnt work
 
 # User feedback
 
-- ability to change the kind of a source
 - manually add transactions
 - budget and budget progress
 

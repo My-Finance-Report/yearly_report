@@ -105,60 +105,7 @@ generateHomapageHtml banner tabs =
       ! A.src "/histogram.js"
       $ mempty
 
-generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
-generateProcessedFilesComponent processedFiles = do
-  H.div ! A.class_ "p-6 bg-white rounded-lg shadow-md" $ do
-    if Data.List.null processedFiles
-      then H.p ! A.class_ "text-gray-500 text-center" $ "No files have been processed yet."
-      else H.table ! A.class_ "base-table striped-table hover-table border-primary rounded-lg w-full" $ do
-        -- Table Header
-        H.thead ! A.class_ "table-head" $ do
-          H.tr $ do
-            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Filename"
-            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Status"
-            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Actions"
 
-        -- Table Rows
-        H.tbody $ forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
-          H.tr ! A.class_ "table-row hover:bg-gray-50 transition" $ do
-            -- Filename Column
-            H.td ! A.class_ "table-cell px-4 py-3" $
-              toHtml (processedFileFilename processedFile)
-
-            -- Status Column
-            H.td ! A.class_ "table-cell px-4 py-3 font-medium text-gray-700" $
-              toHtml $
-                show (processedFileStatus processedFile)
-
-            -- Actions Column
-            H.td ! A.class_ "table-cell-center px-4 py-3 flex justify-center items-center gap-4" $ do
-              -- Reprocess Button
-              H.form
-                ! A.method "post"
-                ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
-                $ do
-                  H.input
-                    ! A.type_ "hidden"
-                    ! A.name "fId"
-                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
-                  H.button
-                    ! A.type_ "submit"
-                    ! A.class_ "secondary-button"
-                    $ "Reprocess"
-
-              -- Delete Button
-              H.form
-                ! A.method "post"
-                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
-                $ do
-                  H.input
-                    ! A.type_ "hidden"
-                    ! A.name "fId"
-                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
-                  H.button
-                    ! A.type_ "submit"
-                    ! A.class_ "secondary-danger-button"
-                    $ "Delete File and Transactions"
 
 generateHistogramDiv :: Html
 generateHistogramDiv =
@@ -332,17 +279,36 @@ type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTra
 subtabMappings :: [(Text, GroupingFunction)]
 subtabMappings =
   [ ("Category", groupByBlah (categoryName . entityVal . category)),
-    ("Month", groupByBlah (formatMonthYear . transactionDateOfTransaction . entityVal . transaction))
+    ("Month", groupByMonthDescending),
+    ("Year", groupByYearDescending)
   ]
+
+groupByYearDescending :: GroupingFunction
+groupByYearDescending transactions =
+  let grouped = groupByBlah (formatYear . transactionDateOfTransaction . entityVal . transaction) transactions
+   in Map.fromList $ sortOn fst (Map.toList grouped)
+
+groupByMonthDescending :: GroupingFunction
+groupByMonthDescending transactions =
+  let grouped = groupByBlah (formatMonthYear . transactionDateOfTransaction . entityVal . transaction) transactions
+   in Map.fromList $ sortOn (Down . parseMonthYear . fst) (Map.toList grouped)
 
 formatMonthYear :: UTCTime -> Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%B %Y" utcTime)
 
+formatYear :: UTCTime -> Text
+formatYear utcTime = T.pack (formatTime defaultTimeLocale "%Y" utcTime)
+
+parseMonthYear :: Text -> UTCTime
+parseMonthYear text =
+  fromMaybe (error "Invalid date format") $
+    parseTimeM True defaultTimeLocale "%B %Y" (T.unpack text)
+
 formatFullDate :: UTCTime -> Text
 formatFullDate utcTime = T.pack (formatTime defaultTimeLocale "%m/%d/%Y" utcTime)
 
-generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [Entity ProcessedFile] -> Html
-generateTabsWithSubTabs transactionSources aggregatedBySource processedFiles =
+generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] ->  Html
+generateTabsWithSubTabs transactionSources aggregatedBySource =
   H.div ! A.class_ "tabs-container flex flex-col" $ do
     -- Button Group for Tabs
     H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
@@ -355,14 +321,6 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processedFiles =
             ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show idx <> ");")
             $ toHtml (transactionSourceName $ entityVal source)
 
-        -- Button for Processed Files Tab
-        H.button
-          ! A.type_ "button"
-          ! A.class_ "tab-button secondary-button"
-          ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show (Prelude.length transactionSources))
-          ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ");")
-          $ "Processed Files"
-
     -- Tab Content Sections
     H.div ! A.class_ "border border-primary p-2 rounded-md mt-4" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
@@ -373,19 +331,12 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processedFiles =
           $ generateSubTabContent idx
           $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
 
-      -- Processed Files Tab Content
-      H.div
-        ! A.class_ "tab-content"
-        ! A.id (toValue $ "tab-content-" <> show (Prelude.length transactionSources))
-        ! A.style "display: none;"
-        $ generateProcessedFilesComponent processedFiles
 
 renderHomePage :: Entity User -> Maybe Html -> IO Html
 renderHomePage user banner = do
   transactionSources <- getAllTransactionSources user
   categorizedTransactions <- getAllTransactions user
   groupedBySource <- groupTransactionsBySource user categorizedTransactions
-  files <- getAllProcessedFiles user
 
   let updatedBanner = case banner of
         Just existingBanner | not (Prelude.null banner) -> Just existingBanner
@@ -394,6 +345,6 @@ renderHomePage user banner = do
             then Just $ makeSimpleBanner "You need to add transactions to get started."
             else Nothing
 
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource files
+  let tabs = generateTabsWithSubTabs transactionSources groupedBySource
   let strictText = generateHomapageHtml updatedBanner tabs
   return strictText

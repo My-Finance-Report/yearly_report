@@ -59,7 +59,7 @@ processFileUpload user pdfId config activeJobs = do
 registerUploadRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
 registerUploadRoutes pool activeJobs = do
   get "/upload" $ requireUser pool $ \user -> do
-    let content = renderUploadPage user
+    content <- liftIO $ renderUploadPage user
     html $ renderPage (Just user) "Upload Page" content True
 
   post "/upload" $ requireUser pool $ \user -> do

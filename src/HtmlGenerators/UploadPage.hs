@@ -3,6 +3,10 @@
 module HtmlGenerators.UploadPage (renderUploadPage, renderSelectAccountPage) where
 
 import Control.Monad (forM_)
+import Control.Monad.IO.Class (MonadIO (liftIO))
+import Data.List (null)
+import Data.Semigroup (All (getAll))
+import Database.Files (getAllProcessedFiles)
 import Database.Models
 import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey)
@@ -57,9 +61,68 @@ makeToolBar =
           ! A.disabled "disabled"
           $ "Upload Files"
 
-renderUploadPage :: Entity User -> Html
-renderUploadPage user =
-  makeToolBar
+renderUploadPage :: Entity User -> IO Html
+renderUploadPage user = do
+  files <- getAllProcessedFiles user
+
+  return $ H.div $ do
+    makeToolBar
+    generateProcessedFilesComponent files
+
+generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
+generateProcessedFilesComponent processedFiles = do
+  H.div ! A.class_ "p-6 bg-white rounded-lg shadow-md" $ do
+    if Data.List.null processedFiles
+      then H.p ! A.class_ "text-gray-500 text-center" $ "No files have been processed yet."
+      else H.table ! A.class_ "base-table striped-table hover-table border-primary rounded-lg w-full" $ do
+        -- Table Header
+        H.thead ! A.class_ "table-head" $ do
+          H.tr $ do
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Filename"
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Status"
+            H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Actions"
+
+        -- Table Rows
+        H.tbody $ forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
+          H.tr ! A.class_ "table-row hover:bg-gray-50 transition" $ do
+            -- Filename Column
+            H.td ! A.class_ "table-cell px-4 py-3" $
+              toHtml (processedFileFilename processedFile)
+
+            -- Status Column
+            H.td ! A.class_ "table-cell px-4 py-3 font-medium text-gray-700" $
+              toHtml $
+                show (processedFileStatus processedFile)
+
+            -- Actions Column
+            H.td ! A.class_ "table-cell-center px-4 py-3 flex justify-center items-center gap-4" $ do
+              -- Reprocess Button
+              H.form
+                ! A.method "post"
+                ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
+                $ do
+                  H.input
+                    ! A.type_ "hidden"
+                    ! A.name "fId"
+                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                  H.button
+                    ! A.type_ "submit"
+                    ! A.class_ "secondary-button"
+                    $ "Reprocess"
+
+              -- Delete Button
+              H.form
+                ! A.method "post"
+                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
+                $ do
+                  H.input
+                    ! A.type_ "hidden"
+                    ! A.name "fId"
+                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                  H.button
+                    ! A.type_ "submit"
+                    ! A.class_ "secondary-danger-button"
+                    $ "Delete File and Transactions"
 
 renderSelectAccountPage :: [(Entity UploadedPdf, Maybe (Entity TransactionSource))] -> [Entity TransactionSource] -> Html
 renderSelectAccountPage fileRecords transactionSources =
