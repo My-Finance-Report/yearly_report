@@ -129,33 +129,58 @@ generateDetailRows txs sectionId =
 generateButtonRow ::
   [Entity TransactionSource] ->
   [(Text, GroupingFunction)] ->
-  H.Html
+  Html
 generateButtonRow transactionSources mappings =
-  -- You may want to group by sourceKind. This is optional:
-  let sortedSources = transactionSources
-   in -- group them or sort them as you need:
-      -- groupedByKind = groupBy ... (Your existing logic)
+  let -- Typically, you'd sort your sources if you want them in a specific order:
+      sortedSources = transactionSources
 
-      H.div ! A.class_ "flex flex-row items-center justify-between mt-4 bg-white border border-primary rounded-md p-4 shadow-sm w-full" $ do
-        -- Left side: Buttons for each TransactionSource
-        H.div ! A.class_ "flex flex-row gap-4" $ do
-          -- If you want them grouped by kind, do that. Otherwise just map over them:
-          forM_ (Prelude.zip [0 ..] sortedSources) $ \(idx, srcEnt) -> do
-            let srcName = transactionSourceName (entityVal srcEnt)
-            H.button
-              ! A.type_ "button"
-              ! A.class_ "tab-button secondary-button"
-              ! A.onclick (toValue $ "showTabWithSubtabs(" <> show idx <> ");")
-              $ toHtml srcName
+      -- Assign a global index to each source. This index is used in the onClick calls.
+      indexedSources = Prelude.zip [0 ..] sortedSources
+      -- indexedSources :: [(Int, Entity TransactionSource)]
 
-        -- Right side: Grouping buttons
-        H.fieldset ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-2 bg-white shadow-sm" $ do
+      -- Group them by the TransactionSourceKind of their underlying value
+      groupedByKind =
+        Data.List.groupBy
+          ( \(_, entA) (_, entB) ->
+              transactionSourceSourceKind (entityVal entA)
+                == transactionSourceSourceKind (entityVal entB)
+          )
+          indexedSources
+   in -- groupedByKind :: [[(Int, Entity TransactionSource)]]
+
+      -- A container <div> that places each kind fieldset + the group-by fieldset as siblings
+      H.div ! A.class_ "flex flex-row flex-wrap gap-6" $ do
+        -- (1) One <fieldset> per kind group
+        forM_ groupedByKind $ \sameKindGroup ->
+          case sameKindGroup of
+            [] -> mempty
+            ((_, firstEnt) : _) -> do
+              let kind = transactionSourceSourceKind (entityVal firstEnt)
+              -- Fieldset for this kind
+              H.fieldset ! A.class_ "flex flex-col gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
+                -- The legend: name of the kind (e.g., "BankAccount" or "CreditCard")
+                H.legend ! A.class_ "text-lg font-semibold text-primary" $
+                  toHtml (show kind)
+
+                -- Within this kind, create a button for each source
+                forM_ sameKindGroup $ \(idx, srcEnt) -> do
+                  let srcName = transactionSourceName (entityVal srcEnt)
+                  H.button
+                    ! A.type_ "button"
+                    ! A.class_ "tab-button secondary-button"
+                    -- Use the global index so that showTabWithSubtabs(idx) toggles the correct tab
+                    ! A.onclick (toValue $ "showTabWithSubtabs(" <> Prelude.show idx <> ");")
+                    $ toHtml srcName
+
+        -- (2) A sibling fieldset for the "Group By" mappings
+        H.fieldset ! A.class_ "flex flex-col gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
           H.legend ! A.class_ "text-lg font-semibold text-primary" $ "Group By"
+
           forM_ (Prelude.zip [0 ..] mappings) $ \(subIdx, (subName, _)) -> do
             H.button
               ! A.type_ "button"
               ! A.class_ "subtab-button secondary-button"
-              ! A.onclick (toValue $ "showSubTab(" <> show subIdx <> ")")
+              ! A.onclick (toValue $ "showSubTab(" <> Prelude.show subIdx <> ")")
               $ toHtml subName
 
 generateSubTabContent ::
