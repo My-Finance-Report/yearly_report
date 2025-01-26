@@ -2,19 +2,18 @@
 
 module HtmlGenerators.OnboardingFour (renderOnboardingFour) where
 
+import Control.Monad (forM_)
+import Data.Map (Map, keys, toList)
+import Data.Text (Text)
+import Database.Models
+import Database.Persist (Entity (..))
+import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
-import Data.Text (Text)
-import Data.Map (Map, keys, toList)
-import Database.Models
-import Database.Persist.Postgresql (fromSqlKey)
-import Database.Persist (Entity (..))
-import Control.Monad (forM_)
 
 renderOnboardingFour :: Entity User -> Map (Entity TransactionSource) [Entity Category] -> Html
 renderOnboardingFour user sourceCategoriesMap =
   H.body $ do
-    H.link H.! A.rel "stylesheet" H.! A.type_ "text/css" H.! A.href "/css/onboarding.css"
     H.script H.! A.type_ "text/javascript" H.! A.src "/onboarding.js" $ ""
 
     -- Page Header
@@ -59,7 +58,8 @@ renderOnboardingFour user sourceCategoriesMap =
             forM_ (keys sourceCategoriesMap) $ \(Entity sourceId source) -> do
               H.option
                 ! A.value (toValue $ fromSqlKey sourceId)
-                $ toHtml $ transactionSourceName source
+                $ toHtml
+                $ transactionSourceName source
 
         -- Second Dropdown: Select Category
         H.div ! A.class_ "dropdown-container" $ do

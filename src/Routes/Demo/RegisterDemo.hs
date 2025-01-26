@@ -21,7 +21,6 @@ import Database.Persist
 import Database.Persist.Postgresql (ConnectionPool)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.UploadConfiguration (getAllUploadConfigs)
-import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.HomePage (makeDemoBanner, makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.Layout (renderPage)

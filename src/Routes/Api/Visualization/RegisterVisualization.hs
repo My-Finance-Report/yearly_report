@@ -21,7 +21,6 @@ import Database.Persist
 import Database.Persist.Postgresql (ConnectionPool)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.UploadConfiguration (getAllUploadConfigs)
-import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)

@@ -22,7 +22,6 @@ import Database.Transaction (getAllTransactions, getTransactionsByFileId, groupT
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AllFilesPage (renderAllFilesPage)
-import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage, renderTransactionsPage)

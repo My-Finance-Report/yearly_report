@@ -35,7 +35,6 @@ function drawHistogram(rows) {
   const options = {
     width: "100%",
     height: "100%",
-    backgroundColor: "#f4f4f9",
     legend: { position: 'top', maxLines: 3 },
     isStacked: false, 
     bar: { 

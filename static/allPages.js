@@ -1,16 +1,14 @@
-
 document.addEventListener("DOMContentLoaded", () => {
-    const urlHash = window.location.hash; 
+    const urlHash = window.location.hash;
     if (urlHash) {
-      const targetRow = document.querySelector(urlHash);
-      if (targetRow) {
-        targetRow.classList.add("table-row-highlight");
-  
-        targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+        const targetRow = document.querySelector(urlHash);
+        if (targetRow) {
+            targetRow.setAttribute("data-highlight", "true"); // Use an attribute instead of a class
+            targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
     }
-  });
-  
+});
+
 
 function toggleArrow(row) {
   const arrow = row.querySelector("td span"); // Find the arrow inside the row

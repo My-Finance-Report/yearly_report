@@ -46,24 +46,24 @@ formatSankeyRow (from, to, weight) =
   "['" <> from <> "', '" <> to <> "', " <> T.pack (show weight) <> "],\n"
 
 makeSimpleBanner :: Text -> Html
-makeSimpleBanner banner = H.div ! A.class_ "banner" $ toHtml banner
+makeSimpleBanner banner = H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ toHtml banner
 
 makeDemoBanner :: Html
 makeDemoBanner =
-  H.div ! A.class_ "banner demo-banner" $ do
+  H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ do
     H.span "You are in demo mode. "
     H.a ! A.href "/login" ! A.class_ "underline" $ "Sign up now"
 
 makeCharts :: Html
 makeCharts =
-  H.div ! A.class_ "charts-grid flex flex-col md:flex-row gap-6  rounded-md p-4" $ do
-    H.div ! A.class_ "chart-card flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+  H.div ! A.class_ "flex flex-col md:flex-row gap-6  rounded-md p-4" $ do
+    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
       H.div
         ! A.id "sankeyChart"
         ! A.class_ "sankey-chart w-full h-full"
         $ ""
 
-    H.div ! A.class_ "chart-card flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
       H.div
         ! A.id "histogram_chart"
         ! A.class_ "histogram-chart w-full h-full"
@@ -94,11 +94,11 @@ generateHomapageHtml banner tabs =
       $ mempty
     H.script
       ! A.type_ "text/javascript"
-      ! A.src "/toggle.js"
+      ! A.src "/tabs.js"
       $ mempty
     H.script
       ! A.type_ "text/javascript"
-      ! A.src "/tabs.js"
+      ! A.src "/toggle.js"
       $ mempty
     H.script
       ! A.type_ "text/javascript"
@@ -107,29 +107,32 @@ generateHomapageHtml banner tabs =
 
 generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
 generateProcessedFilesComponent processedFiles = do
-  H.div ! A.class_ "processed-files-section" $ do
+  H.div ! A.class_ "processed-files-section p-6 bg-white rounded-lg shadow-md" $ do
     if Data.List.null processedFiles
-      then H.p "No files have been processed yet."
-      else H.table ! A.class_ "w-full border-collapse border border-gray-300" $ do
+      then H.p ! A.class_ "text-gray-500 text-center" $ "No files have been processed yet."
+      else H.table ! A.class_ "base-table striped-table hover-table border rounded-lg w-full" $ do
         -- Table Header
-        H.tr ! A.class_ "bg-gray-100" $ do
-          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Filename"
-          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Status"
-          H.th ! A.class_ "border border-gray-300 px-4 py-2" $ "Actions"
+        H.thead ! A.class_ "table-head" $ do
+          H.tr $ do
+            H.th ! A.class_ "table-cell px-4 py-3" $ "Filename"
+            H.th ! A.class_ "table-cell px-4 py-3" $ "Status"
+            H.th ! A.class_ "table-cell px-4 py-3 text-center" $ "Actions"
 
         -- Table Rows
-        forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
-          H.tr ! A.class_ "border border-gray-300" $ do
+        H.tbody $ forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
+          H.tr ! A.class_ "table-row hover:bg-gray-50 transition" $ do
             -- Filename Column
-            H.td ! A.class_ "border border-gray-300 px-4 py-2" $
+            H.td ! A.class_ "table-cell px-4 py-3" $
               toHtml (processedFileFilename processedFile)
 
-            H.td ! A.class_ "border border-gray-300 px-4 py-2" $
+            -- Status Column
+            H.td ! A.class_ "table-cell px-4 py-3 font-medium text-gray-700" $
               toHtml $
                 show (processedFileStatus processedFile)
 
             -- Actions Column
-            H.td ! A.class_ "flex items-center border border-gray-300 px-4 py-2 text-center gap-3" $ do
+            H.td ! A.class_ "table-cell-center px-4 py-3 flex justify-center items-center gap-4" $ do
+              -- Reprocess Button
               H.form
                 ! A.method "post"
                 ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
@@ -142,6 +145,8 @@ generateProcessedFilesComponent processedFiles = do
                     ! A.type_ "submit"
                     ! A.class_ "secondary-button"
                     $ "Reprocess"
+
+              -- Delete Button
               H.form
                 ! A.method "post"
                 ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
@@ -165,11 +170,6 @@ generateHeader =
     H.head $ do
       H.title "Expense Summary"
 
-      H.link
-        ! A.rel "stylesheet"
-        ! A.type_ "text/css"
-        ! A.href "/style.css"
-
       H.script ! A.type_ "text/javascript" ! A.src "https://www.gstatic.com/charts/loader.js" $ mempty
       H.script ! A.type_ "text/javascript" ! A.src "/sankey.js" $ mempty
       H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
@@ -177,100 +177,106 @@ generateHeader =
 
 generateSubTabContent :: Int -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> Html
 generateSubTabContent index aggregatedBySource =
-  H.div ! A.class_ "subtab-content-container" $ do
-    H.ul ! A.class_ "tabs" $ do
-      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
-        H.li
-          ! A.class_ (if idx == 0 then "tab active" else "tab")
-          ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
-          $ toHtml name
+  H.div ! A.class_ "subtab-content-container flex flex-col w-full" $ do
+    H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
+      H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
+        forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (name, _)) -> do
+          H.button
+            ! A.type_ "button"
+            ! A.class_ "subtab-button secondary-button"
+            ! H.dataAttribute "subtab-id" (H.toValue $ "subtab-content-" <> show index <> "-" <> show idx)
+            ! A.onclick (H.toValue $ "showSubTab(" <> show index <> "," <> show idx <> ")")
+            $ toHtml name
 
-    forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
-      let groupedData = groupingFunc $ concatMap snd $ Map.toList aggregatedBySource
-      H.div
-        ! A.class_ "subtab-content"
-        ! A.style (if idx == 0 then "display: block;" else "display: none;")
-        $ generateAggregatedRowsWithExpandableDetails (toHtml subname) groupedData
+    H.div ! A.class_ "border border-primary p-2 rounded-md mt-4" $ do
+      forM_ (Prelude.zip [0 ..] subtabMappings) $ \(idx, (subname, groupingFunc)) -> do
+        let groupedData = groupingFunc $ concatMap snd $ Map.toList aggregatedBySource
+        H.div
+          ! A.class_ "subtab-content"
+          ! A.id (H.toValue $ "subtab-content-" <> show index <> "-" <> show idx)
+          ! A.style (if idx == 0 then "display: block;" else "display: none;")
+          $ generateAggregatedRowsWithExpandableDetails (toHtml subname) groupedData
 
 generateAggregatedRowsWithExpandableDetails :: Html -> Map.Map Text [CategorizedTransaction] -> Html
-generateAggregatedRowsWithExpandableDetails header aggregated =
-  let totalBalance =
+generateAggregatedRowsWithExpandableDetails header aggregated = do
+  let (totalBalance, totalWithdrawals, totalDeposits) = computeTotals aggregated
+
+  H.table ! A.class_ "base-table hover-table striped-table" $ do
+    -- Table Header
+    generateTableHeader header
+
+    -- Table Rows (Grouped Aggregates + Expandable Details)
+    Map.foldrWithKey generateAggregatedSection (return ()) aggregated
+
+    -- Totals Row
+    generateTotalsRow totalWithdrawals totalDeposits totalBalance
+
+-- Compute total balance, withdrawals, and deposits
+computeTotals :: Map.Map Text [CategorizedTransaction] -> (Text, Text, Text)
+computeTotals aggregated =
+  let sumTransactions f =
         formatCurrency $
-          sum
-            [ case transactionKind $ entityVal (transaction txn) of
-                Deposit -> transactionAmount $ entityVal (transaction txn)
-                Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
-              | txns <- Map.elems aggregated,
-                txn <- txns
-            ]
+          sum [f (entityVal (transaction txn)) | txns <- Map.elems aggregated, txn <- txns]
+   in ( sumTransactions computeBalance,
+        sumTransactions computeWithdrawals,
+        sumTransactions computeDeposits
+      )
 
-      totalWithdrawals =
-        formatCurrency $
-          sum
-            [ case transactionKind $ entityVal (transaction txn) of
-                Deposit -> 0
-                Withdrawal -> transactionAmount $ entityVal (transaction txn)
-              | txns <- Map.elems aggregated,
-                txn <- txns
-            ]
+computeBalance :: Transaction -> Double
+computeBalance txn =
+  case transactionKind txn of
+    Deposit -> transactionAmount txn
+    Withdrawal -> negate $ transactionAmount txn
 
-      totalDeposits =
-        formatCurrency $
-          sum
-            [ case transactionKind $ entityVal (transaction txn) of
-                Deposit -> transactionAmount $ entityVal (transaction txn)
-                Withdrawal -> 0
-              | txns <- Map.elems aggregated,
-                txn <- txns
-            ]
-   in H.table ! A.class_ "w-full border-collapse border border-primary text-left rounded-md" $ do
-        H.tr ! A.class_ "bg-primary text-white" $ do
-          H.th ! A.class_ "w-6 text-center p-2 border border-primary" $ ""
-          H.th ! A.class_ "p-2 border border-primary font-semibold" $ header
-          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Withdrawals"
-          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Deposits"
-          H.th ! A.class_ "p-2 border border-primary font-semibold" $ "Balance"
+computeWithdrawals :: Transaction -> Double
+computeWithdrawals txn =
+  case transactionKind txn of
+    Deposit -> 0
+    Withdrawal -> transactionAmount txn
 
-        Map.foldrWithKey
-          ( \key txns accHtml ->
-              let balance =
-                    formatCurrency $
-                      sum
-                        [ case transactionKind $ entityVal (transaction txn) of
-                            Deposit -> transactionAmount $ entityVal (transaction txn)
-                            Withdrawal -> negate $ transactionAmount $ entityVal (transaction txn)
-                          | txn <- txns
-                        ]
-                  withdrawals =
-                    formatCurrency $
-                      sum
-                        [ case transactionKind $ entityVal (transaction txn) of
-                            Deposit -> 0
-                            Withdrawal -> transactionAmount $ entityVal (transaction txn)
-                          | txn <- txns
-                        ]
-                  deposits =
-                    formatCurrency $
-                      sum
-                        [ case transactionKind $ entityVal (transaction txn) of
-                            Deposit -> transactionAmount $ entityVal (transaction txn)
-                            Withdrawal -> 0
-                          | txn <- txns
-                        ]
-                  sectionId = "details-" <> key <> (T.pack . show . fromSqlKey . entityKey . transaction . Data.List.head $ txns)
-               in do
-                    generateAggregateRow key balance withdrawals deposits sectionId
-                    generateDetailRows key txns sectionId
-                    accHtml
-          )
-          (return ())
-          aggregated
+computeDeposits :: Transaction -> Double
+computeDeposits txn =
+  case transactionKind txn of
+    Deposit -> transactionAmount txn
+    Withdrawal -> 0
 
-        H.tr ! A.class_ "totals-row" $ do
-          H.td ! A.colspan "2" $ "Totals"
-          H.td $ toHtml $ totalWithdrawals
-          H.td $ toHtml $ totalDeposits
-          H.td $ toHtml $ totalBalance
+-- Generate Table Header
+generateTableHeader :: Html -> Html
+generateTableHeader header = do
+  H.thead ! A.class_ "table-head" $ do
+    H.tr ! A.class_ "" $ do
+      H.th ! A.class_ "table-cell w-6 text-center p-2 border-primary border-l border-b border-t" $ ""
+      H.th ! A.class_ "table-cell p-2 border-t border-b border-primary font-semibold" $ header
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Withdrawals"
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Deposits"
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Balance"
+
+-- Generate Aggregated Section with Expandable Details
+generateAggregatedSection :: Text -> [CategorizedTransaction] -> Html -> Html
+generateAggregatedSection key txns accHtml = do
+  let (balance, withdrawals, deposits) = computeGroupTotals txns
+      sectionId = "details-" <> key <> (T.pack . show . fromSqlKey . entityKey . transaction . Data.List.head $ txns)
+
+  generateAggregateRow key balance withdrawals deposits sectionId
+  generateDetailRows key txns sectionId
+  accHtml
+
+-- Compute totals for a given transaction group
+computeGroupTotals :: [CategorizedTransaction] -> (Text, Text, Text)
+computeGroupTotals txns =
+  ( formatCurrency $ sum $ Prelude.map (computeBalance . entityVal . transaction) txns,
+    formatCurrency $ sum $ Prelude.map (computeWithdrawals . entityVal . transaction) txns,
+    formatCurrency $ sum $ Prelude.map (computeDeposits . entityVal . transaction) txns
+  )
+
+-- Generate Totals Row
+generateTotalsRow :: Text -> Text -> Text -> Html
+generateTotalsRow totalWithdrawals totalDeposits totalBalance = do
+  H.tr ! A.class_ "totals-row font-semibold" $ do
+    H.td ! A.colspan "2" ! A.class_ "p-2 border-t border-primary" $ "Totals"
+    H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalWithdrawals
+    H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalDeposits
+    H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalBalance
 
 generateSankeyDiv :: Html
 generateSankeyDiv =
@@ -278,42 +284,45 @@ generateSankeyDiv =
 
 generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
-  H.tr ! A.class_ "expandable-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "'); toggleArrow(this)") $ do
-    H.td ! A.class_ "w-6 text-center transition-transform duration-200 ease-in-out" $
+  H.tr ! A.class_ "expandable-row table-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "'); toggleArrow(this)") $ do
+    H.td ! A.class_ "table-cell w-6 text-center transition-transform duration-200 ease-in-out" $
       H.span ! A.class_ "inline-block transform" $
         "▶"
-    H.td (toHtml cat)
-    H.td (toHtml withdrawls)
-    H.td (toHtml deposits)
-    H.td (toHtml balance)
+    H.td ! A.class_ "table-cell" $ toHtml cat
+    H.td ! A.class_ "table-cell" $ toHtml withdrawls
+    H.td ! A.class_ "table-cell" $ toHtml deposits
+    H.td ! A.class_ "table-cell" $ toHtml balance
 
 generateDetailRows :: T.Text -> [CategorizedTransaction] -> T.Text -> Html
 generateDetailRows cat txs sectionId =
   H.tr ! A.id (H.toValue sectionId) ! A.class_ "hidden" $ do
     -- Make a nested table
     H.td ! A.colspan "5" $ do
-      H.table $ do
-        H.tr $ do
-          H.th "Transaction"
-          H.th "Kind"
-          H.th "Date"
-          H.th "Amount"
-          H.th "Action"
-        mapM_ (\catTrans -> detailRow (entityKey (transaction catTrans)) (entityVal (transaction catTrans))) txs
+      H.div ! A.class_ "p-2 border border-gray-300 rounded-md bg-white shadow-sm" $ do
+        H.table ! A.class_ "base-table" $ do
+          H.thead ! A.class_ "table-head hover" $ do
+            H.tr ! A.class_ "" $ do
+              H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Transaction"
+              H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Kind"
+              H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Date"
+              H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Amount"
+              H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Action"
+          H.tbody $ do
+            mapM_ (\catTrans -> detailRow (entityKey (transaction catTrans)) (entityVal (transaction catTrans))) txs
   where
     detailRow :: TransactionId -> Transaction -> Html
     detailRow tid t =
-      H.tr $ do
-        H.td (toHtml (transactionDescription t))
-        H.td (toHtml $ show (transactionKind t))
-        H.td (toHtml (formatFullDate $ transactionDateOfTransaction t))
-        H.td (toHtml (formatCurrency (transactionAmount t)))
-        H.td $ do
+      H.tr ! A.class_ "border-b border-gray-200 hover:bg-gray-100 transition-all" $ do
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (transactionDescription t)
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml $ show (transactionKind t)
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatFullDate $ transactionDateOfTransaction t)
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatCurrency (transactionAmount t))
+        H.td ! A.class_ "p-2 border border-gray-200 text-center" $ do
           case transactionUploadedPdfId t of
             Just pdfId ->
               H.a
                 ! A.href (H.toValue $ "/transactions/" <> show (fromSqlKey pdfId) <> "#tx-" <> show (fromSqlKey tid))
-                ! A.class_ "secondary-button"
+                ! A.class_ "secondary-button px-3 py-1 text-sm"
                 $ "Edit"
             Nothing ->
               H.span "No PDF ID"
@@ -333,32 +342,43 @@ formatFullDate :: UTCTime -> Text
 formatFullDate utcTime = T.pack (formatTime defaultTimeLocale "%m/%d/%Y" utcTime)
 
 generateTabsWithSubTabs :: [Entity TransactionSource] -> Map.Map (Entity TransactionSource) [CategorizedTransaction] -> [Entity ProcessedFile] -> Html
-generateTabsWithSubTabs transactionSources aggregatedBySource processsedFiles =
-  H.div ! A.class_ "tabs-container" $ do
-    H.ul ! A.class_ "tabs" $ do
-      forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
-        H.li
-          ! A.class_ (if idx == 0 then "tab active" else "tab")
-          ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show idx <> ")")
-          $ toHtml (transactionSourceName $ entityVal source)
-      H.li
-        ! A.class_ "tab"
-        ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ")")
-        $ "Processed Files"
+generateTabsWithSubTabs transactionSources aggregatedBySource processedFiles =
+  H.div ! A.class_ "tabs-container flex flex-col" $ do
+    -- Button Group for Tabs
+    H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
+      H.div ! A.class_ "tabs flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
+        forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
+          H.button
+            ! A.type_ "button"
+            ! A.class_ "tab-button secondary-button"
+            ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show idx)
+            ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show idx <> ");")
+            $ toHtml (transactionSourceName $ entityVal source)
 
-    H.div ! A.class_ "border border-primary p-2 rounded-md" $ do
+        -- Button for Processed Files Tab
+        H.button
+          ! A.type_ "button"
+          ! A.class_ "secondary-button"
+          ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show (Prelude.length transactionSources))
+          ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ")")
+          $ "Processed Files"
+
+    -- Tab Content Sections
+    H.div ! A.class_ "border border-primary p-2 rounded-md mt-4" $ do
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(idx, source) -> do
         H.div
           ! A.class_ "tab-content"
           ! A.id (toValue $ "tab-content-" <> show idx)
           ! A.style (if idx == 0 then "display: block;" else "display: none;")
-          $ do
-            generateSubTabContent idx $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
+          $ generateSubTabContent idx
+          $ Map.filterWithKey (\s _ -> s == source) aggregatedBySource
+
+      -- Processed Files Tab Content
       H.div
         ! A.class_ "tab-content"
         ! A.id (toValue $ "tab-content-" <> show (Prelude.length transactionSources))
         ! A.style "display: none;"
-        $ generateProcessedFilesComponent processsedFiles
+        $ generateProcessedFilesComponent processedFiles
 
 renderHomePage :: Entity User -> Maybe Html -> IO Html
 renderHomePage user banner = do

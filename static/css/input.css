@@ -2,21 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer components {
+  /* Table Base */
+  .base-table {
+    @apply w-full border-collapse rounded-lg;
+  }
+
+  /* Primary Table */
+  .primary-table {
+    @apply bg-primary text-white rounded-md p-3 text-left;
+  }
+
+  /* Table Head */
+  .table-head {
+    @apply bg-gray-200 text-gray-700 font-semibold uppercase tracking-wide;
+  }
+
+  /* Table Row */
+  .table-row {
+    @apply border-b border-gray-300;
+  }
+
+  /* Striped Table */
+  .striped-table tbody tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+
+  .striped-table tbody tr[data-highlight="true"] {
+    @apply bg-yellow-500 ; 
+  }
+
+  /* Hover Effect */
+  .hover-table tbody tr:hover {
+    @apply bg-gray-100 transition duration-150 ease-in-out;
+  }
+
+  /* Table Cell */
+  .table-cell {
+    @apply p-3 text-gray-900 text-sm;
+  }
+
+  /* Centered Cell */
+  .table-cell-center {
+    @apply p-3 text-gray-900 text-sm text-center;
+  }
+
+  /* Borderless Table */
+  .borderless-table {
+    @apply border-none;
+  }
+
+  /* Primary Buttons */
   .primary-button {
     @apply bg-primary text-white border-primary border-[1px] rounded-md p-2 hover:bg-opacity-90 transition duration-200 ease-in-out;
   }
 
   .primary-button:disabled {
-    @apply bg-gray-500 text-gray-400 border-gray-500  opacity-80 shadow-inner cursor-not-allowed; /* Slightly darker + pressed effect */
+    @apply bg-light text-dark border-gray-500 opacity-80 shadow-inner cursor-not-allowed;
   }
 
+  /* Secondary Buttons */
   .secondary-button {
     @apply bg-white text-primary border-primary border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
   }
 
   .secondary-button:hover {
-    @apply bg-gray-100 border-primary; /* Light gray background instead of dark */
+    @apply bg-gray-100 border-primary;
   }
 
   .secondary-button:active {
@@ -24,9 +76,10 @@
   }
 
   .secondary-button:disabled {
-    @apply bg-gray-300 text-gray-400 border-gray-500 shadow-inner opacity-80 cursor-not-allowed; /* Active "clicked" look */
+    @apply bg-light text-dark border-gray-500 shadow-inner opacity-80;
   }
 
+  /* Danger Buttons */
   .danger-button {
     @apply bg-red-600 text-white border-red-600 border-[1px] rounded-md p-2 transition duration-200 ease-in-out;
   }
@@ -40,7 +93,7 @@
   }
 
   .danger-button:disabled {
-    @apply bg-red-700 text-white border-red-800 shadow-inner opacity-80 cursor-not-allowed; /* Pressed look */
+    @apply bg-red-700 text-white border-red-800 shadow-inner opacity-80 cursor-not-allowed;
   }
 
   .secondary-danger-button {
@@ -62,12 +115,7 @@
 
 
 
-.active {
-    background-color: #fff;
-    border-color: #4caf50;
-    color: #4caf50;
-    font-weight: bold;
-  }
+
 
 .rotate-90 {
   transform: rotate(90deg);

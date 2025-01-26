@@ -35,7 +35,6 @@ import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (addUploadConfigurationObject, getAllUploadConfigs, getUploadConfiguration, getUploadConfigurationFromPdf)
 import ExampleFileParser (generateUploadConfiguration)
-import HtmlGenerators.AuthPages (renderLoginPage)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
@@ -180,4 +179,4 @@ registerUploadRoutes pool activeJobs = do
 
     transactionSources <- liftIO $ getAllTransactionSources user
 
-    html $ renderPage (Just user) "Adjust Transactions"  (renderSelectAccountPage pdfsWithSources transactionSources) True
+    html $ renderPage (Just user) "Adjust Transactions" (renderSelectAccountPage pdfsWithSources transactionSources) True

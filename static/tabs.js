@@ -1,11 +1,15 @@
 
 function showTabWithSubtabs(index) {
-  var tabs = document.getElementsByClassName('tab');
+  var tabs = document.getElementsByClassName('tabs');
+
   for (var i = 0; i < tabs.length; i++) {
     if (i === index) {
       tabs[i].classList.add('active');
+      tabs[1].setAttribute("disabled", "true"); 
+      console.log("foudn and set")
     } else {
       tabs[i].classList.remove('active');
+      tabs[1].removeAttribute("disabled"); 
     }
   }
 
@@ -23,8 +27,10 @@ function showSubTab(tabIndex, subTabIndex) {
   for (var i = 0; i < subtabs.length; i++) {
     if (i === subTabIndex) {
       subtabs[i].classList.add('active');
+      subTabs[1].setAttribute("disabled", "true"); 
     } else {
       subtabs[i].classList.remove('active');
+      subTabs[1].removeAttribute("disabled"); 
     }
   }
 
@@ -34,16 +40,3 @@ function showSubTab(tabIndex, subTabIndex) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const fileInput = document.getElementById("pdfFile");
-  const fileLabel = document.querySelector(".custom-file-label");
-
-  if (fileInput && fileLabel) {
-    fileInput.addEventListener("change", function () {
-      const fileName = this.files[0]?.name || "Choose File";
-      fileLabel.textContent = fileName;
-    });
-  } else {
-    console.error("File input or label element not found");
-  }
-});

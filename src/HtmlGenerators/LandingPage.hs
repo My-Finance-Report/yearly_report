@@ -86,6 +86,6 @@ renderLandingPage =
 -- Feature Card Component
 featureCard :: Text -> Text -> Html
 featureCard title description =
-  H.div ! A.class_ "card bg-white shadow-md rounded-md p-6 w-full sm:w-1/3 text-center border border-primary" $ do
+  H.div ! A.class_ "card bg-white shadow-md rounded-md p-6 w-full sm:w-1/3 text-center border border-primary transform translate-y-3 transition duration-200 ease-in-out" $ do
     H.h3 ! A.class_ "text-lg font-semibold text-primary" $ toHtml title
     H.p ! A.class_ "text-base text-gray-700 mt-2" $ toHtml description
