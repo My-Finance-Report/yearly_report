@@ -915,6 +915,10 @@ video {
   display: table-row;
 }
 
+.contents {
+  display: contents;
+}
+
 .hidden {
   display: none;
 }

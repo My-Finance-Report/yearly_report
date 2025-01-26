@@ -26,7 +26,6 @@ import Database.TransactionSource (getAllTransactionSources, getTransactionSourc
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.AccountManagement (renderAccountManagement)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
-import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
