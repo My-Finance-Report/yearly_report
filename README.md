@@ -29,19 +29,18 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 delete button in the table doesnt work
 
-
 # User feedback
 
+- ability to change the kind of a source
 - manually add transactions
 - budget and budget progress
-- sankey selectors should not be dropdowns
 
 # Not Blocking
 
 - update schema to remove nullability on processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger
- - there seems to be some general bug with the mobile presentation
+- there seems to be some general bug with the mobile presentation
 - filter by year when you look at dashboard
 - privacy policy
 - refresh on the page keeps you in the same view

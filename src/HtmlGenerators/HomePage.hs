@@ -110,7 +110,7 @@ generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "processed-files-section p-6 bg-white rounded-lg shadow-md" $ do
     if Data.List.null processedFiles
       then H.p ! A.class_ "text-gray-500 text-center" $ "No files have been processed yet."
-      else H.table ! A.class_ "base-table striped-table hover-table border rounded-lg w-full" $ do
+      else H.table ! A.class_ "base-table striped-table hover-table border-primary rounded-lg w-full" $ do
         -- Table Header
         H.thead ! A.class_ "table-head" $ do
           H.tr $ do
@@ -358,9 +358,9 @@ generateTabsWithSubTabs transactionSources aggregatedBySource processedFiles =
         -- Button for Processed Files Tab
         H.button
           ! A.type_ "button"
-          ! A.class_ "secondary-button"
+          ! A.class_ "tab-button secondary-button"
           ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show (Prelude.length transactionSources))
-          ! A.onclick (H.toValue $ "showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ")")
+          ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show (Prelude.length transactionSources) <> ");")
           $ "Processed Files"
 
     -- Tab Content Sections
