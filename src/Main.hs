@@ -1,12 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.HList (newIORef)
 import Database.ConnectionPool
+import Database.Models
+import Database.Models (UserSession (UserSession))
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
+import Routes.Admin.RegisterAdmin (registerEntityRoutes)
 import Routes.Api.Visualization.RegisterVisualization (registerVisualizationRoutes)
 import Routes.Configuration.RegisterConfiguration (registerConfigurationRoutes)
 import Routes.Crud.Category.RegisterCategory (registerCategoryRoutes)
@@ -56,3 +60,7 @@ main = do
     registerTransactionRoutes pool
     registerTransactionSourceRoutes pool
     registerFileRoutes pool activeJobs
+
+    registerEntityRoutes @User "user" pool
+    registerEntityRoutes @Transaction "transaction" pool
+    registerEntityRoutes @UserSession "user-session" pool

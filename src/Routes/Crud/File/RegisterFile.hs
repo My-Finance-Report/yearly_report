@@ -88,3 +88,9 @@ registerFileRoutes pool activeJobs = do
     reprocessFileUpload user processedFileId activeJobs
 
     Web.Scotty.redirect "/dashboard"
+
+  post "/delete-file" $ requireUser pool $ \user -> do
+    fIdText <- Web.Scotty.formParam "fId"
+    let processedFileId = toSqlKey $ read fIdText
+    deleteFileAndTransactions user processedFileId activeJobs
+    Web.Scotty.redirect "/dashboard"

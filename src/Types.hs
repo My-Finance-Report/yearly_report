@@ -6,7 +6,6 @@ module Types
   ( CategorizedTransaction (..),
     AggregatedTransactions,
     PartialUploadConfig (..),
-    TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
     GroupingFunction,
@@ -67,10 +66,6 @@ instance FromJSON PartialTransaction where
 newtype TransactionsWrapper
   = TransactionsWrapper {transactions :: [PartialTransaction]}
   deriving (Show, Generic)
-
-instance FromJSON TransactionKind
-
-instance FromJSON Transaction
 
 instance FromJSON TransactionsWrapper
 

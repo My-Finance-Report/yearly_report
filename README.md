@@ -27,7 +27,10 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # Blocking
 
-delete button in the table doesnt work
+- delete button in the table doesnt work
+  - some files dont have the right data for this
+- reprocess doesnt seem to show the banner
+- simple admin page
 
 # User feedback
 
@@ -40,7 +43,9 @@ delete button in the table doesnt work
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger
 - there seems to be some general bug with the mobile presentation
-- filter by year when you look at dashboard
+
+- update the charts based on the state of the selectors
+
 - privacy policy
 - install a linter for extraneous imports
 

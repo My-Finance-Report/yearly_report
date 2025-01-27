@@ -33,6 +33,7 @@ library
     HtmlGenerators.OnboardingFour
     HtmlGenerators.UploadPage 
     HtmlGenerators.AccountManagement
+    HtmlGenerators.Admin
     Routes.Onboarding.RegisterOnboarding
     Routes.Login.RegisterLogin
     Routes.Misc.RegisterMisc
@@ -45,7 +46,9 @@ library
     Routes.Configuration.RegisterConfiguration
     Routes.Upload.RegisterUpload
     Routes.Crud.File.RegisterFile
+    Routes.Admin.RegisterAdmin
     Auth
+    Admin
     Sankey
     ColumnChart
     SankeyConfiguration
@@ -114,6 +117,7 @@ executable year-report-finances
       HtmlGenerators.OnboardingFour
       HtmlGenerators.AccountManagement
       HtmlGenerators.UploadPage 
+      HtmlGenerators.Admin
       Routes.Onboarding.RegisterOnboarding
       Routes.Login.RegisterLogin
       Routes.Misc.RegisterMisc
@@ -126,7 +130,9 @@ executable year-report-finances
       Routes.Demo.RegisterDemo
       Routes.Upload.RegisterUpload
       Routes.Configuration.RegisterConfiguration
+      Routes.Admin.RegisterAdmin
       Auth
+      Admin
       ColumnChart
       Sankey
       SankeyConfiguration

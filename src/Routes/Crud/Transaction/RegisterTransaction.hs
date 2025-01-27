@@ -15,7 +15,7 @@ import Database.Category (addCategory, getCategoriesBySource, getCategory, remov
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
 import Database.Files (getAllFilenames, getPdfRecord)
-import Database.Models (Category (Category), UploadedPdf (UploadedPdf), User (userOnboardingStep))
+import Database.Models (Category (Category), TransactionKind (Deposit, Withdrawal), UploadedPdf (UploadedPdf), User (userOnboardingStep))
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, toSqlKey)
 import Database.Transaction (getAllTransactions, getTransactionsByFileId, groupTransactionsBySource, removeTransaction, updateTransaction, updateTransactionCategory)

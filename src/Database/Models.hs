@@ -15,6 +15,7 @@
 
 module Database.Models where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Database.Persist.Postgresql
@@ -39,6 +40,10 @@ instance PersistFieldSql JobStatus where
 
 data TransactionKind = Withdrawal | Deposit
   deriving (Show, Eq, Ord, Generic)
+
+instance ToJSON TransactionKind
+
+instance FromJSON TransactionKind
 
 instance PersistField TransactionKind where
   toPersistValue Withdrawal = PersistText "Withdrawal"
@@ -94,7 +99,7 @@ Category
     UniqueCategory name sourceId
     deriving Show Eq Ord
 
-Transaction
+Transaction json
     description Text
     categoryId CategoryId
     dateOfTransaction UTCTime
@@ -149,7 +154,7 @@ SankeyLinkage
     targetSourceId TransactionSourceId
     deriving Show Eq
 
-User
+User json
     email Text
     passwordHash Text
     createdAt UTCTime
@@ -157,7 +162,7 @@ User
     UniqueUser email
     deriving Show Eq
 
-UserSession
+UserSession json
     userId UserId
     sessionToken Text
     expiresAt UTCTime

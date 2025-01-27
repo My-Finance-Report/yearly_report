@@ -113,7 +113,7 @@ generateProcessedFilesComponent processedFiles = do
               -- Delete Button
               H.form
                 ! A.method "post"
-                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
+                ! A.action "/delete-file/"
                 $ do
                   H.input
                     ! A.type_ "hidden"
