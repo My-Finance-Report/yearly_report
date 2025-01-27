@@ -108,9 +108,8 @@ renderSingleEntityPage entityName entity = H.docTypeHtml $ do
 
   H.div ! A.class_ "bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl" $ do
     H.h1 ! A.class_ "text-2xl font-bold mb-6 text-gray-700" $ "Edit " <> H.toHtml entityName
-
     -- Update Form
-    H.form ! A.method "POST" ! A.action (H.toValue updateUrl) ! A.class_ "space-y-4" $ do
+    H.form ! A.id "updateForm" ! A.method "POST" ! A.action (H.toValue updateUrl) ! A.class_ "space-y-4" $ do
       mapM_ renderField both
       H.button
         ! A.type_ "submit"
@@ -167,7 +166,7 @@ persistValueToText _ = ""
 -- Determine HTML input type based on the field type
 determineInputType :: String -> Text
 determineInputType fieldTypeText
-  | "Int" `isInfixOf` pack fieldTypeText = "number"
+  | "Id" `isInfixOf` pack fieldTypeText = "number"
   | "Text" `isInfixOf` pack fieldTypeText = "text"
   | "Double" `isInfixOf` pack fieldTypeText = "number"
   | "Bool" `isInfixOf` pack fieldTypeText = "checkbox"

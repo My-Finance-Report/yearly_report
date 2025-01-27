@@ -13,6 +13,8 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (decode)
 import Data.Aeson.Key ()
 import Data.Aeson.Types (FromJSON, ToJSON)
+import Data.Int (Int64)
+import Data.Maybe (fromMaybe)
 import Data.String (IsString (fromString))
 import Data.Text (Text, isInfixOf, pack, unpack)
 import qualified Data.Text.Lazy as TL
@@ -23,6 +25,7 @@ import Database.Persist.Sql (SqlPersistT, fromSqlKey, toSqlKey)
 import HtmlGenerators.Admin (renderListPage, renderSingleEntityPage)
 import HtmlGenerators.Layout (renderPage)
 import Network.HTTP.Types (status400, status404)
+import Text.Read (readMaybe)
 import Web.Scotty
 
 routeWithNoId entityName =
@@ -79,20 +82,53 @@ registerEntityRoutes entityName pool = do
         json key
       Nothing -> status status400
 
-  Web.Scotty.post (updateRoute entityName) $ do
-    (entityId :: Int) <- param "id"
-    let entityKey :: Key a
-        entityKey = toSqlKey (fromIntegral entityId)
-    bodyData <- body
-    case decode bodyData of
-      Just (entity :: a) -> do
-        liftIO $ runSqlPool (replace entityKey entity) pool
-        text "Entity updated successfully"
-      Nothing -> status status400
-
   Web.Scotty.post (deleteRoute entityName) $ do
     (entityId :: Int) <- param "id"
     let entityKey :: Key a
         entityKey = toSqlKey (fromIntegral entityId)
     liftIO $ runSqlPool (Database.Persist.delete entityKey) pool
     text "Entity deleted successfully"
+
+  Web.Scotty.post (updateRoute entityName) $ do
+    (entityId :: Int) <- param "id"
+    let entityKey :: Key a
+        entityKey = toSqlKey (fromIntegral entityId)
+
+    -- Get entity metadata
+    let entityMeta = entityDef (Nothing :: Maybe a)
+        fieldDefs = getEntityFields entityMeta
+
+    -- Read form parameters dynamically
+    fieldValues <- mapM extractParam fieldDefs
+
+    case fromPersistValues fieldValues of
+      Right updatedEntity -> do
+        liftIO $ runSqlPool (replace entityKey updatedEntity) pool
+        text "Entity updated successfully"
+      Left err -> do
+        liftIO $ print err
+        status status400
+        text "Failed to parse entity: "
+  where
+    -- Extract form parameters dynamically based on field names
+    extractParam :: FieldDef -> ActionM PersistValue
+    extractParam field = do
+      let fieldName = unFieldNameHS $ fieldHaskell field
+      paramText <- formParam (TL.fromStrict fieldName)
+      return $ textToPersistValue paramText (fieldType field)
+
+    -- Convert form text input to appropriate PersistValue
+    textToPersistValue :: Text -> FieldType -> PersistValue
+    textToPersistValue txt fieldType
+      | "Id" `isInfixOf` pack (show fieldType) = PersistInt64 (readInt txt)
+      | "Double" `isInfixOf` pack (show fieldType) = PersistDouble (readDouble txt)
+      | "Bool" `isInfixOf` pack (show fieldType) = PersistBool (txt == "on" || txt == "true")
+      | "UTCTime" `isInfixOf` pack (show fieldType) = PersistText "2025-01-27T14:57:00Z"
+      | otherwise = PersistText txt
+
+    -- Safe parsing helpers
+    readInt :: Text -> Int64
+    readInt txt = fromMaybe 0 (readMaybe (unpack txt) :: Maybe Int64)
+
+    readDouble :: Text -> Double
+    readDouble txt = fromMaybe 0.0 (readMaybe (unpack txt) :: Maybe Double)
