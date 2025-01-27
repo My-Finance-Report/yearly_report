@@ -13,50 +13,76 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-renderAccountManagement :: Entity User -> [SourceKind] -> Map (Entity TransactionSource) [Entity Category] -> Bool -> Html
+renderAccountManagement ::
+  Entity User ->
+  [SourceKind] ->
+  Map (Entity TransactionSource) [Entity Category] ->
+  Bool ->
+  Html
 renderAccountManagement user kinds transactions isOnboarding =
-  let groupedTransactions = fromListWith (++) [(transactionSourceSourceKind (entityVal ts), [ts]) | ts <- keys transactions]
+  let -- Group the existing sources by their SourceKind
+      groupedTransactions :: Map SourceKind [Entity TransactionSource]
+      groupedTransactions =
+        fromListWith
+          (++)
+          [ (transactionSourceSourceKind (entityVal ts), [ts])
+            | ts <- keys transactions
+          ]
+
+      allKinds :: [SourceKind]
       allKinds = nub $ kinds ++ keys groupedTransactions
    in H.div ! A.class_ "bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center p-4" $ do
+        -- (1) Load your new tabs.js file with showTabWithSubtabs()
         H.script ! A.type_ "text/javascript" ! A.src "/tabs.js" $ mempty
 
-        -- Button Group
+        -- (2) Button group: one button per SourceKind
         H.div ! A.class_ "flex flex-row items-center justify-center mt-4" $ do
           H.div ! A.class_ "flex flex-row gap-2 text-primary border-primary rounded-md border-[1px] p-4 bg-white shadow-sm" $ do
-            forM_ (zip [0 ..] allKinds) $ \(idx, kind) -> do
-              let count = length $ fromMaybe [] (Data.Map.lookup kind groupedTransactions)
+            forM_ (Prelude.zip [0 ..] allKinds) $ \(idx, kind) -> do
+              let sources = fromMaybe [] (Data.Map.lookup kind groupedTransactions)
+                  count = Prelude.length sources
+
               H.button
                 ! A.type_ "button"
-                ! A.class_ "tab-button secondary-button flex items-center gap-2 px-4 py-2 border border-gray-300 bg-gray-100 hover:bg-white hover:text-primary cursor-pointer rounded-md"
-                ! H.dataAttribute "tab-id" (H.toValue $ "tab-content-" <> show idx)
-                ! A.onclick (H.toValue $ "this.setAttribute('disabled', 'true'); showTabWithSubtabs(" <> show idx <> ");")
+                ! H.dataAttribute "tab-index" (toValue $ Prelude.show idx)
+                ! A.class_
+                  "tab-button secondary-button flex items-center gap-2 px-4 py-2 border border-gray-300 \
+                  \bg-gray-100 hover:bg-white hover:text-primary cursor-pointer rounded-md"
+                ! A.onclick (toValue $ "showTabWithSubtabs(" <> Prelude.show idx <> ")")
                 $ do
                   toHtml (show kind <> "s")
                   H.span
                     ! A.class_ "text-xs bg-primary text-white w-5 h-5 flex items-center justify-center rounded-full"
-                    $ toHtml (show count)
+                    $ toHtml (Prelude.show count)
 
-        -- Tab Content
+        -- (3) Tab Content container
         H.div ! A.class_ "border border-primary p-2 rounded-md mt-4 w-full max-w-3xl" $ do
-          forM_ (zip [0 ..] allKinds) $ \(idx, kind) ->
+          -- For each kind, generate a <div> with id="tab-content-idx"
+          -- The first tab is shown by default (style="display:block")
+          forM_ (Prelude.zip [0 ..] allKinds) $ \(idx, kind) -> do
             H.div
               ! A.class_ "tab-content w-full p-5 rounded-lg border border-primary max-w-3xl"
-              ! A.id (toValue $ "tab-content-" <> show idx)
+              ! A.id (toValue $ "tab-content-" <> Prelude.show idx)
               ! A.style (if idx == 0 then "display: block;" else "display: none;")
               $ do
+                -- (a) A form for creating a new account of this kind
                 renderNewAccountForm kind
 
+                -- (b) Display each existing TransactionSource + categories
+                let sources = fromMaybe [] (Data.Map.lookup kind groupedTransactions)
                 H.div ! A.class_ "flex flex-col gap-2 items-center" $ do
-                  let sources = fromMaybe [] (Data.Map.lookup kind groupedTransactions)
                   forM_ sources $ \sourceEntity@(Entity sourceId source) -> do
                     let categories = findWithDefault [] sourceEntity transactions
                     H.div ! A.class_ "border border-primary rounded-md p-3 shadow-md bg-white w-full" $ do
+                      -- Show the existing source form
                       renderTransactionSourceForm sourceEntity kinds
 
+                      -- List all categories
                       H.div ! A.class_ "flex flex-wrap gap-1 mt-1" $ do
-                        forM_ categories $ \category ->
-                          renderCategoryForm category
+                        forM_ categories $ \catEntity ->
+                          renderCategoryForm catEntity
 
+                      -- Button or form for new category
                       renderNewCategoryForm sourceId
 
 renderNewAccountForm :: SourceKind -> Html
