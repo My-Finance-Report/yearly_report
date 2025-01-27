@@ -12,7 +12,7 @@ import Auth (getCurrentUser)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (decode)
 import Data.Aeson.Key ()
-import Data.Aeson.Types (FromJSON)
+import Data.Aeson.Types (FromJSON, ToJSON)
 import Data.String (IsString (fromString))
 import Data.Text (Text, isInfixOf, pack, unpack)
 import qualified Data.Text.Lazy as TL
@@ -38,7 +38,8 @@ registerEntityRoutes ::
     ToBackendKey SqlBackend a,
     Show a,
     SafeToInsert a,
-    FromJSON a
+    FromJSON a,
+    ToJSON a
   ) =>
   String ->
   ConnectionPool ->

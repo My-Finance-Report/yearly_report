@@ -7,14 +7,16 @@ module HtmlGenerators.Admin (renderListPage, renderSingleEntityPage) where
 
 import Auth (getCurrentUser)
 import Control.Monad.IO.Class (liftIO)
-import Data.Aeson (decode)
+import Data.Aeson (decode, encode)
 import Data.Aeson.Key ()
-import Data.Aeson.Types (FromJSON)
+import Data.Aeson.Types (FromJSON, ToJSON)
+import qualified Data.ByteString.Lazy.Char8 as B
 import Data.String (IsString (fromString))
 import Data.Text (Text, isInfixOf, pack, unpack)
 import qualified Data.Text.Lazy as TL
 import Database.Models (User)
 import Database.Persist
+import Database.Persist.EntityDef (EntityDef, getEntityFields)
 import Database.Persist.Postgresql (ConnectionPool, SqlBackend, runSqlPool)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, toSqlKey)
 import HtmlGenerators.Layout (renderPage)
@@ -57,7 +59,9 @@ renderSingleEntityPage ::
   ( PersistEntity a,
     PersistEntityBackend a ~ SqlBackend,
     ToBackendKey SqlBackend a,
-    Show a
+    Show a,
+    ToJSON a,
+    FromJSON a
   ) =>
   Text ->
   Entity a ->
@@ -67,6 +71,9 @@ renderSingleEntityPage entityName entity = H.docTypeHtml $ do
   let updateUrl = "/admin/" <> entityName <> "/" <> pack (show entityId)
   let deleteUrl = "/admin/" <> entityName <> "/" <> pack (show entityId)
   let entityMeta = entityDef (Nothing :: Maybe a)
+  let fieldsVals = toPersistFields $ entityVal entity
+  let fieldsMeta = getEntityFields entityMeta
+  let both = Prelude.zip fieldsMeta fieldsVals
 
   H.head $ do
     H.title $ "Details for " <> H.toHtml entityName
@@ -81,7 +88,7 @@ renderSingleEntityPage entityName entity = H.docTypeHtml $ do
     -- Update Form
     H.h2 "Update Entity"
     H.form ! A.method "POST" ! A.action (H.toValue updateUrl) $ do
-      mapM_ renderField (getEntityFields entityMeta)
+      mapM_ renderField both
       H.button ! A.type_ "submit" $ "Update"
 
     -- Delete Button
@@ -93,23 +100,40 @@ renderSingleEntityPage entityName entity = H.docTypeHtml $ do
     -- Add New Entity
     H.h2 "Create New Entity"
     H.form ! A.method "POST" ! A.action (H.toValue ("/admin/" <> entityName)) $ do
-      mapM_ renderField (getEntityFields entityMeta)
+      mapM_ renderField both
       H.button ! A.type_ "submit" $ "Create New"
   where
-    renderField :: FieldDef -> Html
-    renderField field = do
-      let fieldName = fieldHaskell field
-          fieldTypeText = show (fieldType field) -- Get type as a string
+    renderField :: (FieldDef, PersistValue) -> Html
+    renderField (fullField, fieldVal) = do
+      let fieldName = unFieldNameHS $ fieldHaskell fullField
+          fieldTypeText = show (fieldType fullField)
           fieldInputType = determineInputType fieldTypeText
+          fieldValue = persistValueToText fieldVal
+
       H.div $ do
-        H.label ! A.for (H.toValue $ show fieldName) $ H.toHtml (unpack (fieldNameToText fieldName))
-        H.input
-          ! A.type_ (H.toValue fieldInputType)
-          ! A.name (H.toValue (fieldNameToText fieldName))
-          ! A.placeholder (H.toValue ("Enter " <> fieldNameToText fieldName))
+        H.label ! A.for (H.toValue fieldName) $ H.toHtml fieldName
+        if fieldInputType == "checkbox"
+          then
+            H.input
+              ! A.type_ "checkbox"
+              ! A.name (H.toValue fieldName)
+              ! (if fieldValue == "True" then A.checked "checked" else mempty)
+          else
+            H.input
+              ! A.type_ (H.toValue fieldInputType)
+              ! A.name (H.toValue fieldName)
+              ! A.value (H.toValue fieldValue)
 
-    fieldNameToText = pack . show
+    -- Convert PersistValue to Text
+    persistValueToText :: PersistValue -> Text
+    persistValueToText (PersistText t) = t
+    persistValueToText (PersistInt64 n) = pack (show n)
+    persistValueToText (PersistDouble d) = pack (show d)
+    persistValueToText (PersistBool b) = pack (show b)
+    persistValueToText (PersistUTCTime t) = pack (show t)
+    persistValueToText _ = ""
 
+    -- Determine HTML input type based on the field type
     determineInputType :: String -> Text
     determineInputType fieldTypeText
       | "Int" `isInfixOf` pack fieldTypeText = "number"
