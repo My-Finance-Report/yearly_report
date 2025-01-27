@@ -99,8 +99,8 @@ renderSingleEntityPage ::
   Html
 renderSingleEntityPage entityName entity = H.docTypeHtml $ do
   let entityId = fromSqlKey (entityKey entity)
-  let updateUrl = "/admin/" <> entityName <> "/" <> pack (show entityId)
-  let deleteUrl = "/admin/" <> entityName <> "/" <> pack (show entityId)
+  let updateUrl = "/admin/" <> entityName <> "/" <> pack (show entityId) <> "/update"
+  let deleteUrl = "/admin/" <> entityName <> "/" <> pack (show entityId) <> "/delete"
   let entityMeta = entityDef (Nothing :: Maybe a)
   let fieldsVals = toPersistFields $ entityVal entity
   let fieldsMeta = getEntityFields entityMeta

@@ -31,6 +31,12 @@ routeWithNoId entityName =
 routeWithId entityName =
   fromString ("/admin/" <> entityName <> "/:id")
 
+deleteRoute entityName =
+  fromString ("/admin/" <> entityName <> "/:id/delete")
+
+updateRoute entityName =
+  fromString ("/admin/" <> entityName <> "/:id/update")
+
 registerEntityRoutes ::
   forall a.
   ( PersistEntity a,
@@ -73,7 +79,7 @@ registerEntityRoutes entityName pool = do
         json key
       Nothing -> status status400
 
-  Web.Scotty.put (routeWithId entityName) $ do
+  Web.Scotty.post (updateRoute entityName) $ do
     (entityId :: Int) <- param "id"
     let entityKey :: Key a
         entityKey = toSqlKey (fromIntegral entityId)
@@ -84,7 +90,7 @@ registerEntityRoutes entityName pool = do
         text "Entity updated successfully"
       Nothing -> status status400
 
-  Web.Scotty.delete (routeWithId entityName) $ do
+  Web.Scotty.post (deleteRoute entityName) $ do
     (entityId :: Int) <- param "id"
     let entityKey :: Key a
         entityKey = toSqlKey (fromIntegral entityId)
