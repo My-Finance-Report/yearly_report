@@ -20,6 +20,7 @@ library
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.Components
     HtmlGenerators.HomePage
+    HtmlGenerators.HomePageHelpers
     HtmlGenerators.AllFilesPage
     HtmlGenerators.Layout
     HtmlGenerators.Configuration
@@ -99,6 +100,7 @@ executable year-report-finances
       Categorizer
       HtmlGenerators.HtmlGenerators
       HtmlGenerators.HomePage
+      HtmlGenerators.HomePageHelpers
       HtmlGenerators.Components
       HtmlGenerators.Layout
       HtmlGenerators.AuthPages

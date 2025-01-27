@@ -3,9 +3,12 @@
 module HtmlGenerators.Components
   ( navigationBar,
     makeToolBar,
+    makeDemoBanner,
+    makeSimpleBanner,
   )
 where
 
+import Data.Text (Text)
 import Database.Models (User (..))
 import Database.Persist (Entity (entityVal))
 import Text.Blaze.Html5 as H
@@ -66,3 +69,12 @@ makeToolBar =
         ! H.dataAttribute "path" "/upload"
         ! A.onclick "window.location.href='/upload'"
         $ "Add Transactions"
+
+makeSimpleBanner :: Text -> Html
+makeSimpleBanner banner = H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ toHtml banner
+
+makeDemoBanner :: Html
+makeDemoBanner =
+  H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ do
+    H.span "You are in demo mode. "
+    H.a ! A.href "/login" ! A.class_ "underline" $ "Sign up now"

@@ -9,6 +9,7 @@ module Types
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
+    GroupingFunction,
     PdfParseException (..),
     CategorizationResponse (..),
     PartialTransaction (..),
@@ -114,3 +115,5 @@ data FullSankeyConfig = FullSankeyConfig
     linkages :: [(Entity TransactionSource, Entity Category, Entity TransactionSource)]
   }
   deriving (Show, Generic)
+
+type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]

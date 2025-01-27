@@ -21,7 +21,6 @@ import Database.Transaction (getAllTransactions, groupTransactionsBySource, upda
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
-import HtmlGenerators.HomePage (makeSimpleBanner, renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)

@@ -1,80 +1,91 @@
-function updateQueryParams(tabIndex, subTabIndex = null) {
-    const url = new URL(window.location);
-    url.searchParams.set("tab", tabIndex);
-    if (subTabIndex !== null) {
-        url.searchParams.set("subtab", subTabIndex);
-    } else {
-        url.searchParams.delete("subtab");
-    }
-    window.history.replaceState(null, "", url);
-}
-
 function showTabWithSubtabs(tabIndex) {
-    document.querySelectorAll(".tab-content").forEach(tab => {
-        tab.style.display = "none";
-    });
+  // (A) Re-enable all tab-button elements
+  let allTabButtons = document.querySelectorAll(".tab-button");
+  for (let btn of allTabButtons) {
+    btn.removeAttribute("disabled");
+  }
 
-    const selectedTab = document.getElementById(`tab-content-${tabIndex}`);
-    if (selectedTab) {
-        selectedTab.style.display = "block";
-    }
+  // (B) Hide all tab-content elements
+  let tabs = document.getElementsByClassName("tab-content");
+  for (let t of tabs) {
+    t.style.display = "none";
+  }
 
-    document.querySelectorAll(".tab-button").forEach(button => {
-        button.removeAttribute("disabled");
-        button.classList.remove("active-tab"); // Remove green styling
-    });
+  // (C) Show the chosen tab
+  let chosenTab = document.getElementById("tab-content-" + tabIndex);
+  if (chosenTab) {
+    chosenTab.style.display = "block";
+  }
 
-    const clickedTabButton = document.querySelector(`[data-tab-id="tab-content-${tabIndex}"]`);
-    if (clickedTabButton) {
-        clickedTabButton.setAttribute("disabled", "true");
-        clickedTabButton.classList.add("active-tab"); // Add green styling
-    }
-
-    // Update URL
-    updateQueryParams(tabIndex);
-
-    // Automatically show the first subtab of the selected tab
-    const firstSubtabButton = document.querySelector(`#tab-content-${tabIndex} .subtab-button`);
-    if (firstSubtabButton) {
-        const firstSubtabIndex = firstSubtabButton.getAttribute("data-subtab-id").split("-").pop();
-        showSubTab(tabIndex, firstSubtabIndex);
-    }
+  // (D) Disable the newly "active" button
+  //     (Assumes each button has data-tab-index="<idx>" to match tabIndex)
+  let activeButton = document.querySelector('.tab-button[data-tab-index="' + tabIndex + '"]');
+  if (activeButton) {
+    activeButton.setAttribute("disabled", "true");
+  }
 }
 
-function showSubTab(tabIndex, subTabIndex) {
-    document.querySelectorAll(`#tab-content-${tabIndex} .subtab-content`).forEach(subtab => {
-        subtab.style.display = "none";
-    });
+function showSubTab(subtabIndex) {
+  // Find the currently visible tab
+  let visibleTab = document.querySelector('.tab-content[style*="display: block"]');
+  if (!visibleTab) {
+    return;
+  }
 
-    const selectedSubTab = document.getElementById(`subtab-content-${tabIndex}-${subTabIndex}`);
-    if (selectedSubTab) {
-        selectedSubTab.style.display = "block";
-    }
+  // (A) Re-enable all subtab-button elements *within* the visible tab
+  let subtabButtons = document.querySelectorAll(".subtab-button");
+  for (let btn of subtabButtons) {
+    btn.removeAttribute("disabled");
+  }
 
-    document.querySelectorAll(`#tab-content-${tabIndex} .subtab-button`).forEach(button => {
-        button.removeAttribute("disabled");
-        button.classList.remove("active-subtab"); // Remove green styling
-    });
+  // (B) Hide all .subtab-content sections in the visible tab
+  let subtabs = visibleTab.getElementsByClassName("subtab-content");
+  for (let s of subtabs) {
+    s.style.display = "none";
+  }
 
-    const clickedSubTabButton = document.querySelector(`[data-subtab-id="subtab-content-${tabIndex}-${subTabIndex}"]`);
-    if (clickedSubTabButton) {
-        clickedSubTabButton.setAttribute("disabled", "true");
-        clickedSubTabButton.classList.add("active-subtab"); // Add green styling
-    }
+  // (C) Show the requested subtab
+  let tabIndex = visibleTab.id.replace("tab-content-", "");
+  let subtabId = "subtab-content-" + tabIndex + "-" + subtabIndex;
+  let chosenSub = document.getElementById(subtabId);
+  if (chosenSub) {
+    chosenSub.style.display = "block";
+  }
 
-    // Update URL
-    updateQueryParams(tabIndex, subTabIndex);
+  // (D) Disable the newly "active" subtab button
+  //     (Assumes each subtab button has data-subtab-index="<subtabIndex>" in the visible tab)
+  let activeSubBtn = document.querySelector('.subtab-button[data-subtab-index="' + subtabIndex + '"]');
+
+  if (activeSubBtn) {
+    activeSubBtn.setAttribute("disabled", "true");
+  }
 }
 
-// Restore tab from URL on page load
-document.addEventListener("DOMContentLoaded", function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabIndex = urlParams.has("tab") ? parseInt(urlParams.get("tab"), 10) : 0;
-    const subTabIndex = urlParams.has("subtab") ? parseInt(urlParams.get("subtab"), 10) : null;
+function toggleDetails(sectionId) {
+  let row = document.getElementById(sectionId);
+  if (!row) {
+    return;
+  }
 
-    showTabWithSubtabs(tabIndex);
+  // Toggle the "hidden" class
+  if (row.classList.contains("hidden")) {
+    row.classList.remove("hidden");
+  } else {
+    row.classList.add("hidden");
+  }
+}
 
-    if (subTabIndex !== null) {
-        showSubTab(tabIndex, subTabIndex);
-    }
+function toggleArrow(clickedRow) {
+  let arrowEl = clickedRow.querySelector(".arrow");
+  if (!arrowEl) {
+    return;
+  }
+
+  // Switch arrow from ▶ to ▼ (and vice versa)
+  arrowEl.textContent = (arrowEl.textContent.trim() === "▶") ? "▼" : "▶";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  showTabWithSubtabs(0);
+  showSubTab(0);
 });
