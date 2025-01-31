@@ -24,13 +24,16 @@ import Data.Text.Lazy
     toStrict,
   )
 import qualified Data.Text.Lazy
+import Data.Time (UTCTime)
+import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
+import Database.ConnectionPool (getConnectionPool)
 import Database.Database (updateUserOnboardingStep)
 import Database.Files (addPdfRecord, getPdfRecord, getPdfRecords)
 import Database.Models
 import Database.Persist hiding (get)
-import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
+import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (addUploadConfigurationObject, getAllUploadConfigs, getUploadConfiguration, getUploadConfigurationFromPdf)
@@ -44,12 +47,23 @@ import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, setHeader, text)
 
+processFileUpload :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO ()
 processFileUpload user pdfId config = do
-  liftIO $ do
-    _ <- Control.Concurrent.Async.async $ do
-      processPdfFile user pdfId config False
-    return ()
-  return ()
+  now <- getCurrentTime
+  pool <- getConnectionPool
+  runSqlPool (enqueueFileProcessingJob user pdfId config now) pool
+
+enqueueFileProcessingJob :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> UTCTime -> SqlPersistT IO ()
+enqueueFileProcessingJob user pdfId config now = do
+  insert_
+    ProcessFileJob
+      { processFileJobStatus = Pending,
+        processFileJobCreatedAt = now,
+        processFileJobLastTriedAt = Nothing,
+        processFileJobUserId = entityKey user,
+        processFileJobPdfId = pdfId,
+        processFileJobConfigId = entityKey config
+      }
 
 registerUploadRoutes :: ConnectionPool -> ScottyM ()
 registerUploadRoutes pool = do
@@ -87,8 +101,7 @@ registerUploadRoutes pool = do
 
         if null missingConfigs
           then do
-            forM_ validConfigs $ \(pdfId, Just config) -> do
-              processFileUpload user pdfId config
+            forM_ validConfigs $ \(pdfId, Just config) -> liftIO $ processFileUpload user pdfId config
             redirect "/dashboard"
           else do
             redirect $ "/select-account?pdfIds=" <> intercalate "," (map (Data.Text.Lazy.pack . show . fromSqlKey . fst) pdfIds)
@@ -124,7 +137,7 @@ registerUploadRoutes pool = do
       maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
 
       case maybeConfig of
-        Just config -> processFileUpload user pdfId config
+        Just config -> liftIO $ processFileUpload user pdfId config
         Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
 
     redirect "/dashboard"

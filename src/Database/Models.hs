@@ -184,10 +184,11 @@ UserSession
     UniqueUserSession sessionToken
     deriving Show Eq
 
-Job
-   jobId JobId
+ProcessFileJob
    createdAt UTCTime
    lastTriedAt UTCTime Maybe
    status JobStatus
-   jobKind JobKind
+   userId UserId
+   configId UploadConfigurationId
+   pdfId  UploadedPdfId
 |]

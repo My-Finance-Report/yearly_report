@@ -10,6 +10,7 @@ import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.ConnectionPool
 import Database.Models
+import Database.Models (ProcessFileJob (ProcessFileJob))
 import Database.Persist
 import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, createPostgresqlPool, runSqlPool)
 import System.Environment (lookupEnv)
@@ -46,21 +47,21 @@ processNextJob pool = do
       success <- tryJob jobData
       now <- getCurrentTime
       let newStatus = if success then Completed else Failed
-      runSqlPool (update jobId [JobStatus =. newStatus, JobLastTriedAt =. Just now]) pool
+      runSqlPool (update jobId [ProcessFileJobStatus =. newStatus, ProcessFileJobLastTriedAt =. Just now]) pool
       putStrLn $ "Job " ++ show jobId ++ " completed with status: " ++ show newStatus
     Nothing -> putStrLn "No jobs available."
 
-fetchAndLockNextJob :: SqlPersistT IO (Maybe (Entity Job))
+fetchAndLockNextJob :: SqlPersistT IO (Maybe (Entity ProcessFileJob))
 fetchAndLockNextJob = do
-  maybeJob <- selectFirst [JobStatus ==. Pending] []
+  maybeJob <- selectFirst [ProcessFileJobStatus ==. Pending] []
   case maybeJob of
     Just (Entity jobId jobData) -> do
       now <- liftIO getCurrentTime
-      update jobId [JobStatus =. Processing, JobLastTriedAt =. Just now]
+      update jobId [ProcessFileJobStatus =. Processing, ProcessFileJobLastTriedAt =. Just now]
       return $ Just (Entity jobId jobData)
     Nothing -> return Nothing
 
-tryJob :: Job -> IO Bool
+tryJob :: ProcessFileJob -> IO Bool
 tryJob job = do
   result <- try (runJob job) :: IO (Either SomeException ())
   case result of
@@ -69,8 +70,6 @@ tryJob job = do
       return False
     Right _ -> return True
 
-runJob :: Job -> IO ()
-runJob job = case jobJobKind job of
-  ParseTransactions -> putStrLn "Handling ParseTransactions..."
-  CategorizeTransactions -> putStrLn "Handling CategorizeTransactions..."
-  GenerateSankeyConfig -> putStrLn "Handling GenerateSankeyConfig..."
+runJob :: ProcessFileJob -> IO ()
+runJob job =
+  print "running job"
