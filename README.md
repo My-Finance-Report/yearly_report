@@ -28,7 +28,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - delete button in the table doesnt work
+
 - there is deff some bugs with the workers
+- processed files should come from the .. job? or the job maybe should just have an FK to file?
 
 - manually add transactions
 - budget and budget progress
