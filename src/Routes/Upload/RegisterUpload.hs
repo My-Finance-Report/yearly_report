@@ -41,7 +41,7 @@ import ExampleFileParser (generateUploadConfiguration)
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import Parsers (extractTextFromPdf, processPdfFile)
+import Parsers (extractTextFromPdf)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types

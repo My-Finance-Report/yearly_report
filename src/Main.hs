@@ -40,7 +40,7 @@ main = do
   pool <- getConnectionPool
   migratePostgres
   scotty 3000 $ do
-    middleware logStdoutDev
+    -- middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     registerOnboardingRoutes pool

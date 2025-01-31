@@ -145,7 +145,7 @@ extractTransactionsFromLines rawText transactionSource startKeyword endKeyword =
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO [CategorizedTransaction]
+processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO (Maybe Text)
 processPdfFile user pdfId config allowReprocess = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
 
@@ -158,20 +158,18 @@ processPdfFile user pdfId config allowReprocess = do
 
   if alreadyProcessed && not allowReprocess
     then do
-      putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
-      getTransactionsByFileId user pdfId
+      let msg = T.pack ("File '" ++ show pdfId ++ "' has already been processed.")
+      return $ Just msg
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
       result <- try (extractTransactionsFromLines (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
       case result of
         Left err -> do
-          let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
+          let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
           updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Failed
-          putStrLn errorMsg
-          return []
+          return $ Just errorMsg
         Right transactions -> do
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
           updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Completed
-          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
-          return categorizedTransactions
+          return Nothing

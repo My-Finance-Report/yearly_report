@@ -3,10 +3,11 @@
 module Main where
 
 import Control.Concurrent (threadDelay)
-import Control.Exception (SomeException (SomeException), try)
+import Control.Exception (SomeException (SomeException), throw, throwIO, try)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.IO.Unlift (MonadUnliftIO)
+import Data.Text (unpack)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.ConnectionPool
 import Database.Models
@@ -73,19 +74,23 @@ tryJob job = do
 runJob :: ProcessFileJob -> IO ()
 runJob job = do
   pool <- getConnectionPool
-  -- Fetch the PDF record
+
   maybePdf <- runSqlPool (getEntity (processFileJobPdfId job)) pool
-  case maybePdf of
-    Nothing -> putStrLn "Error: PDF record not found!"
-    Just pdf -> do
-      -- Fetch the User record
-      maybeUser <- runSqlPool (getEntity (processFileJobUserId job)) pool
-      case maybeUser of
-        Nothing -> putStrLn "Error: User record not found!"
-        Just userEntity -> do
-          -- Fetch the Upload Configuration
-          maybeConfig <- runSqlPool (getEntity (processFileJobConfigId job)) pool
-          case maybeConfig of
-            Just config -> do
-              processPdfFile (entityVal userEntity) (entityKey pdf) config False
-            Nothing -> putStrLn "Error: Missing job configuration!"
+  pdf <- case maybePdf of
+    Nothing -> throwIO $ userError $ unpack "PDF record not found!"
+    Just entity -> return entity
+
+  maybeUser <- runSqlPool (getEntity (processFileJobUserId job)) pool
+  userEntity <- case maybeUser of
+    Nothing -> throwIO $ userError $ unpack "User record not found!"
+    Just entity -> return entity
+
+  maybeConfig <- runSqlPool (getEntity (processFileJobConfigId job)) pool
+  config <- case maybeConfig of
+    Nothing -> throwIO $ userError $ unpack "Missing job configuration!"
+    Just entity -> return entity
+
+  result <- processPdfFile userEntity (entityKey pdf) config False
+  case result of
+    Just errorMsg -> throwIO $ userError $ unpack errorMsg
+    Nothing -> return ()
