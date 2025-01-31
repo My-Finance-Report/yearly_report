@@ -44,17 +44,15 @@ import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, setHeader, text)
 
-processFileUpload user pdfId config activeJobs = do
+processFileUpload user pdfId config = do
   liftIO $ do
-    modifyIORef activeJobs (+ 1)
     _ <- Control.Concurrent.Async.async $ do
       processPdfFile user pdfId config False
-      modifyIORef activeJobs (subtract 1)
     return ()
   return ()
 
-registerUploadRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
-registerUploadRoutes pool activeJobs = do
+registerUploadRoutes :: ConnectionPool -> ScottyM ()
+registerUploadRoutes pool = do
   get "/upload" $ requireUser pool $ \user -> do
     content <- liftIO $ renderUploadPage user
     html $ renderPage (Just user) "Upload Page" content True
@@ -90,7 +88,7 @@ registerUploadRoutes pool activeJobs = do
         if null missingConfigs
           then do
             forM_ validConfigs $ \(pdfId, Just config) -> do
-              processFileUpload user pdfId config activeJobs
+              processFileUpload user pdfId config
             redirect "/dashboard"
           else do
             redirect $ "/select-account?pdfIds=" <> intercalate "," (map (Data.Text.Lazy.pack . show . fromSqlKey . fst) pdfIds)
@@ -126,7 +124,7 @@ registerUploadRoutes pool activeJobs = do
       maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
 
       case maybeConfig of
-        Just config -> processFileUpload user pdfId config activeJobs
+        Just config -> processFileUpload user pdfId config
         Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
 
     redirect "/dashboard"

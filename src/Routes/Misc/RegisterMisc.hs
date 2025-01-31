@@ -28,8 +28,8 @@ import HtmlGenerators.Layout (renderPage)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, get, html, post, redirect, setHeader)
 
-registerMiscRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
-registerMiscRoutes pool activeJobs = do
+registerMiscRoutes :: ConnectionPool -> ScottyM ()
+registerMiscRoutes pool = do
   get "/" $ do
     user <- getCurrentUser pool
     case user of
@@ -45,7 +45,7 @@ registerMiscRoutes pool activeJobs = do
     case onboardingStep of
       Just _ -> Web.Scotty.redirect "/onboarding"
       Nothing -> do
-        activeJobs <- liftIO $ readIORef activeJobs
+        let activeJobs = 0 -- TODO
         let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
         content <- liftIO $ renderHomePage user banner
         Web.Scotty.html $ renderPage (Just user) "Financial Summary" content True

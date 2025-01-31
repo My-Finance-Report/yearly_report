@@ -69,7 +69,6 @@ tryJob job = do
       return False
     Right _ -> return True
 
--- | Job execution logic based on job type
 runJob :: Job -> IO ()
 runJob job = case jobJobKind job of
   ParseTransactions -> putStrLn "Handling ParseTransactions..."

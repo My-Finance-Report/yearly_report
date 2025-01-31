@@ -30,9 +30,8 @@ import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, j
 deleteFileAndTransactions ::
   Entity User ->
   Key ProcessedFile ->
-  IORef Int ->
   Web.Scotty.ActionM ()
-deleteFileAndTransactions user processedFileId activeJobs = do
+deleteFileAndTransactions user processedFileId = do
   processedFile <- liftIO $ getProcessedFile user processedFileId
   let fileId = entityKey processedFile
   liftIO $ putStrLn "Deleting with a valid config"
@@ -46,9 +45,8 @@ deleteFileAndTransactions user processedFileId activeJobs = do
 reprocessFileUpload ::
   Entity User ->
   Key ProcessedFile ->
-  IORef Int ->
   Web.Scotty.ActionM ()
-reprocessFileUpload user processedFileId activeJobs = do
+reprocessFileUpload user processedFileId = do
   processedFile <- liftIO $ getProcessedFile user processedFileId
   let pdfId = processedFileUploadedPdfId $ entityVal processedFile
   let uploadConfigId = processedFileUploadConfigurationId $ entityVal processedFile
@@ -65,26 +63,24 @@ reprocessFileUpload user processedFileId activeJobs = do
         putStrLn $ "Reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
         putStrLn $ "Using upload config ID: " <> show (fromSqlKey validUploadConfigId)
 
-        modifyIORef activeJobs (+ 1)
         _ <- Control.Concurrent.Async.async $ do
           uploadConfig <- getUploadConfigById user validUploadConfigId
           removeTransactionByPdfId user validPdfId
           processPdfFile user validPdfId uploadConfig True
-          modifyIORef activeJobs (subtract 1)
           putStrLn $ "Finished reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
           return ()
         return ()
 
       text "Reprocessing started successfully!"
 
-registerFileRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
-registerFileRoutes pool activeJobs = do
+registerFileRoutes :: ConnectionPool -> ScottyM ()
+registerFileRoutes pool = do
   post "/reprocess-file/:fId" $ requireUser pool $ \user -> do
     fIdText <- Web.Scotty.pathParam "fId"
 
     let processedFileId = toSqlKey $ read fIdText
 
     liftIO $ print "reprocessing"
-    reprocessFileUpload user processedFileId activeJobs
+    reprocessFileUpload user processedFileId
 
     Web.Scotty.redirect "/dashboard"
