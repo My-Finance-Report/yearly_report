@@ -55,6 +55,7 @@ processNextJob pool = do
 maxAttempts :: Int
 maxAttempts = 5
 
+-- This code will all need to become generic, but for now this is probably acceptable
 fetchAndLockNextJob :: SqlPersistT IO (Maybe (Entity ProcessFileJob))
 fetchAndLockNextJob = do
   maybeJob <-
