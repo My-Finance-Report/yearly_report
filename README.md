@@ -25,27 +25,20 @@ and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
 
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
-# Blocking
-
-delete button in the table doesnt work
-
 # User feedback
+
+- delete button in the table doesnt work
+- there is deff some bugs with the workers
 
 - manually add transactions
 - budget and budget progress
 
-# Not Blocking
-
 - option to add a new source on the upload page after you drop in the file
-- update schema to remove nullability on processed file fields
+
+- update schema to remove processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger
 - there seems to be some general bug with the mobile presentation
-- filter by year when you look at dashboard
 - privacy policy
 - install a linter for extraneous imports
-
-# Bad UI
-
 - password dont match in wrong modal
-- let people know something is happening async
