@@ -10,9 +10,9 @@ import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.ConnectionPool
 import Database.Models
-import Database.Models (ProcessFileJob (ProcessFileJob))
 import Database.Persist
 import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, createPostgresqlPool, runSqlPool)
+import Parsers (processPdfFile)
 import System.Environment (lookupEnv)
 import System.IO (hFlush, stdout)
 
@@ -71,5 +71,21 @@ tryJob job = do
     Right _ -> return True
 
 runJob :: ProcessFileJob -> IO ()
-runJob job =
-  print "running job"
+runJob job = do
+  pool <- getConnectionPool
+  -- Fetch the PDF record
+  maybePdf <- runSqlPool (getEntity (processFileJobPdfId job)) pool
+  case maybePdf of
+    Nothing -> putStrLn "Error: PDF record not found!"
+    Just pdf -> do
+      -- Fetch the User record
+      maybeUser <- runSqlPool (getEntity (processFileJobUserId job)) pool
+      case maybeUser of
+        Nothing -> putStrLn "Error: User record not found!"
+        Just userEntity -> do
+          -- Fetch the Upload Configuration
+          maybeConfig <- runSqlPool (getEntity (processFileJobConfigId job)) pool
+          case maybeConfig of
+            Just config -> do
+              processPdfFile (entityVal userEntity) (entityKey pdf) config False
+            Nothing -> putStrLn "Error: Missing job configuration!"
