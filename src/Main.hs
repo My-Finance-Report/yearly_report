@@ -36,7 +36,7 @@ main :: IO ()
 main = do
   activeJobs <- newIORef 0
   openAiKey <- liftIO $ getRequiredEnv "OPENAI_API_KEY"
-  openAiKey <- liftIO $ getRequiredEnv "DATABASE_URL"
+  dbKey <- liftIO $ getRequiredEnv "DATABASE_URL"
   initializePool
   pool <- getConnectionPool
   migratePostgres
