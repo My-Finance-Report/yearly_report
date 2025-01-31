@@ -36,6 +36,7 @@ delete button in the table doesnt work
 
 # Not Blocking
 
+- option to add a new source on the upload page after you drop in the file
 - update schema to remove nullability on processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger

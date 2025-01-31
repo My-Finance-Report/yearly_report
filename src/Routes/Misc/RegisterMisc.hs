@@ -13,7 +13,8 @@ import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource)
 import Database.Configurations (saveSankeyConfig)
 import Database.Database (updateUserOnboardingStep)
-import Database.Models (User (userOnboardingStep))
+import Database.Jobs
+import Database.Models
 import Database.Persist
   ( Entity (entityKey, entityVal),
     PersistEntity (Key),
@@ -45,7 +46,7 @@ registerMiscRoutes pool = do
     case onboardingStep of
       Just _ -> Web.Scotty.redirect "/onboarding"
       Nothing -> do
-        let activeJobs = 0 -- TODO
+        activeJobs <- getFileJobsCount user Pending
         let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
         content <- liftIO $ renderHomePage user banner
         Web.Scotty.html $ renderPage (Just user) "Financial Summary" content True

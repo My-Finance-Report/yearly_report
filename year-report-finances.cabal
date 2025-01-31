@@ -16,6 +16,7 @@ library year-report-finances-lib
     Database.ConnectionPool
     Database.Models
     Database.Files
+    Database.Jobs
     Categorizer
     HtmlGenerators.HtmlGenerators
     HtmlGenerators.Components
@@ -45,6 +46,7 @@ library year-report-finances-lib
     Routes.Configuration.RegisterConfiguration
     Routes.Upload.RegisterUpload
     Routes.Crud.File.RegisterFile
+    Worker.ParseFileJob
     Auth
     Sankey
     ColumnChart

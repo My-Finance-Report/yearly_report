@@ -126,6 +126,7 @@ Transaction
     archived Bool default=False
     deriving Show Eq Generic Ord
 
+-- this shouldnt be used, use ProcessedFileJob instead
 ProcessedFile
     filename Text
     userId UserId
@@ -191,4 +192,5 @@ ProcessFileJob
    userId UserId
    configId UploadConfigurationId
    pdfId  UploadedPdfId
+   attemptCount Int default=0
 |]

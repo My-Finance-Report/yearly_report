@@ -22,10 +22,10 @@ import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource, removeTransactionByPdfId, updateTransactionCategory)
 import Database.TransactionSource (addTransactionSource, getAllTransactionSources, getTransactionSource, removeTransactionSource, updateTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs, getUploadConfigById)
-import Parsers (processPdfFile)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect, text)
+import Worker.ParseFileJob (asyncFileUpload)
 
 deleteFileAndTransactions ::
   Entity User ->
@@ -66,7 +66,7 @@ reprocessFileUpload user processedFileId = do
         _ <- Control.Concurrent.Async.async $ do
           uploadConfig <- getUploadConfigById user validUploadConfigId
           removeTransactionByPdfId user validPdfId
-          processPdfFile user validPdfId uploadConfig True
+          asyncFileUpload user validPdfId uploadConfig
           putStrLn $ "Finished reprocessing PDF ID: " <> show (fromSqlKey validPdfId)
           return ()
         return ()

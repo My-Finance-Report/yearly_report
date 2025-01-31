@@ -8,7 +8,7 @@ import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Text (unpack)
-import Data.Time.Clock (addUTCTime, getCurrentTime)
+import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.ConnectionPool
 import Database.Models
 import Database.Persist
@@ -52,13 +52,26 @@ processNextJob pool = do
       putStrLn $ "Job " ++ show jobId ++ " completed with status: " ++ show newStatus
     Nothing -> putStrLn "No jobs available."
 
+maxAttempts :: Int
+maxAttempts = 5
+
 fetchAndLockNextJob :: SqlPersistT IO (Maybe (Entity ProcessFileJob))
 fetchAndLockNextJob = do
-  maybeJob <- selectFirst [ProcessFileJobStatus ==. Pending] []
+  maybeJob <-
+    selectFirst
+      [ ProcessFileJobStatus ==. Pending,
+        ProcessFileJobAttemptCount <. maxAttempts
+      ]
+      []
   case maybeJob of
     Just (Entity jobId jobData) -> do
       now <- liftIO getCurrentTime
-      update jobId [ProcessFileJobStatus =. Processing, ProcessFileJobLastTriedAt =. Just now]
+      update
+        jobId
+        [ ProcessFileJobStatus =. Processing,
+          ProcessFileJobLastTriedAt =. Just now,
+          ProcessFileJobAttemptCount +=. 1
+        ]
       return $ Just (Entity jobId jobData)
     Nothing -> return Nothing
 
@@ -90,7 +103,7 @@ runJob job = do
     Nothing -> throwIO $ userError $ unpack "Missing job configuration!"
     Just entity -> return entity
 
-  result <- processPdfFile userEntity (entityKey pdf) config False
+  result <- processPdfFile userEntity (entityKey pdf) config True
   case result of
     Just errorMsg -> throwIO $ userError $ unpack errorMsg
     Nothing -> return ()
