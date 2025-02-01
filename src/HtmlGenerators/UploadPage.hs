@@ -69,7 +69,7 @@ renderUploadPage user = do
     makeToolBar
     generateProcessedFilesComponent files
 
-generateProcessedFilesComponent :: [Entity ProcessedFile] -> Html
+generateProcessedFilesComponent :: [(Entity ProcessFileJob, Entity UploadedPdf)] -> Html
 generateProcessedFilesComponent processedFiles = do
   H.div ! A.class_ "p-6 bg-white rounded-lg shadow-md" $ do
     if Data.List.null processedFiles
@@ -83,28 +83,28 @@ generateProcessedFilesComponent processedFiles = do
             H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Actions"
 
         -- Table Rows
-        H.tbody $ forM_ processedFiles $ \(Entity processedFileId processedFile) -> do
+        H.tbody $ forM_ processedFiles $ \(job, file) -> do
           H.tr ! A.class_ "table-row hover:bg-gray-50 transition" $ do
             -- Filename Column
             H.td ! A.class_ "table-cell px-4 py-3" $
-              toHtml (processedFileFilename processedFile)
+              toHtml (uploadedPdfFilename $ entityVal file)
 
             -- Status Column
             H.td ! A.class_ "table-cell px-4 py-3 font-medium text-gray-700" $
               toHtml $
-                show (processedFileStatus processedFile)
+                show (processFileJobStatus $ entityVal job)
 
             -- Actions Column
             H.td ! A.class_ "table-cell-center px-4 py-3 flex justify-center items-center gap-4" $ do
               -- Reprocess Button
               H.form
                 ! A.method "post"
-                ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey processedFileId))
+                ! A.action (H.toValue $ "/reprocess-file/" <> show (fromSqlKey $ entityKey job))
                 $ do
                   H.input
                     ! A.type_ "hidden"
                     ! A.name "fId"
-                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                    ! A.value (H.toValue $ show (fromSqlKey $ entityKey job))
                   H.button
                     ! A.type_ "submit"
                     ! A.class_ "secondary-button"
@@ -113,12 +113,12 @@ generateProcessedFilesComponent processedFiles = do
               -- Delete Button
               H.form
                 ! A.method "post"
-                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey processedFileId))
+                ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey $ entityKey job))
                 $ do
                   H.input
                     ! A.type_ "hidden"
                     ! A.name "fId"
-                    ! A.value (H.toValue $ show (fromSqlKey processedFileId))
+                    ! A.value (H.toValue $ show (fromSqlKey $ entityKey job))
                   H.button
                     ! A.type_ "submit"
                     ! A.class_ "secondary-danger-button"

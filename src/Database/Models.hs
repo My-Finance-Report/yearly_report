@@ -127,13 +127,13 @@ Transaction
     deriving Show Eq Generic Ord
 
 -- this shouldnt be used, use ProcessedFileJob instead
-ProcessedFile
+DeprecatedProcessedFile
     filename Text
     userId UserId
     uploadConfigurationId UploadConfigurationId Maybe -- todo remove this maybe
     uploadedPdfId UploadedPdfId Maybe --todo remove this maybe
     status JobStatus default='Completed'
-    UniqueProcessedFile filename userId
+    DeprecatedUniqueProcessedFile filename userId
     deriving Show Eq
 
 UploadedPdf

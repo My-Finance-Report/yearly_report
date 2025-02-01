@@ -28,15 +28,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - delete button in the table doesnt work
-
-- there is deff some bugs with the workers
-- processed files should come from the .. job? or the job maybe should just have an FK to file?
-
 - manually add transactions
 - budget and budget progress
-
 - option to add a new source on the upload page after you drop in the file
-
 - update schema to remove processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf
 - it seems like the text on mobile just needs to be bigger

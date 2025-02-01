@@ -35,6 +35,7 @@ generatePdfParsingPrompt pdfContent transactionSourceName =
     <> "structure the dates as MM/DD/YYYY"
     <> "Each transaction should have the fields: 'transactionDate', 'description', 'kind' and 'amount'\n\n"
     <> "For banks, withdrawal and deposit should be clear. for credit cards and debit cards, we consider a purchase"
+    <> "Do not update the transaction descriptions! just leave them as they appear on the statement"
     <> "to be a withdrawal and a payment on the card to be a deposit. This file is for a "
     <> transactionSourceName
     <> "\n\n\n"
@@ -86,6 +87,7 @@ parseRawTextToJson :: Text -> Text -> IO (Maybe [PartialTransaction])
 parseRawTextToJson pdfContent transactionSourceName = do
   let inputPrompt = generatePdfParsingPrompt pdfContent transactionSourceName
   let schema = generateTransactionSchema
+  print inputPrompt
 
   let messages = [ChatMessage {role = "user", content = inputPrompt}]
 
@@ -138,9 +140,10 @@ trimTrailingText pdfText keyword =
 
 extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
 extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
-  let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
+  -- for now we omit this as its somewhat error prone
+  -- let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
-  parsedTransactions <- parseRawTextToJson trimmedLines (transactionSourceName transactionSource)
+  parsedTransactions <- parseRawTextToJson rawText (transactionSourceName transactionSource)
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
@@ -151,8 +154,7 @@ processPdfFile user pdfId config allowReprocess = do
 
   let filename = uploadedPdfFilename $ entityVal uploadedFile
 
-  updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Processing
-  alreadyProcessed <- liftIO $ isFileProcessed user filename
+  alreadyProcessed <- liftIO $ isFileProcessed user uploadedFile
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
@@ -167,9 +169,8 @@ processPdfFile user pdfId config allowReprocess = do
       case result of
         Left err -> do
           let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
-          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Failed
           return $ Just errorMsg
         Right transactions -> do
+          print transactions
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Completed
           return Nothing

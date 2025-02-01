@@ -83,7 +83,7 @@ registerUploadRoutes pool = do
 
         if null missingConfigs
           then do
-            forM_ validConfigs $ \(pdfId, Just config) -> liftIO $ asyncFileUpload user pdfId config
+            forM_ validConfigs $ \(pdfId, Just config) -> liftIO $ asyncFileProcess user pdfId config
             redirect "/dashboard"
           else do
             redirect $ "/select-account?pdfIds=" <> intercalate "," (map (Data.Text.Lazy.pack . show . fromSqlKey . fst) pdfIds)
@@ -119,7 +119,7 @@ registerUploadRoutes pool = do
       maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
 
       case maybeConfig of
-        Just config -> liftIO $ asyncFileUpload user pdfId config
+        Just config -> liftIO $ asyncFileProcess user pdfId config
         Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
 
     redirect "/dashboard"

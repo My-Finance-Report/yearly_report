@@ -35,9 +35,23 @@ main = do
   pool <- getConnectionPool
   putStrLn "Starting worker-task..."
   forever $ do
-    threadDelay (5 * 1000000)
     putStrLn "Checking for new jobs..."
     processNextJob pool
+    runSqlPool resetStuckJobs pool
+    threadDelay pollInterval
+
+-- this should not reset the tries, otherwise we run this risk of infinite loop to open-ai...
+-- we should backstop on our budget, but thats not ideal
+resetStuckJobs :: SqlPersistT IO ()
+resetStuckJobs = do
+  now <- liftIO getCurrentTime
+  let timeout = 60 * 3 -- 3 minutes timeout
+  liftIO $ putStrLn "resetting stuck jobs"
+  updateWhere
+    [ ProcessFileJobStatus ==. Processing,
+      ProcessFileJobLastTriedAt <. Just (addUTCTime (negate timeout) now)
+    ]
+    [ProcessFileJobStatus =. Pending]
 
 processNextJob :: ConnectionPool -> IO ()
 processNextJob pool = do

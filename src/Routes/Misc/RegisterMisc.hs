@@ -46,7 +46,8 @@ registerMiscRoutes pool = do
     case onboardingStep of
       Just _ -> Web.Scotty.redirect "/onboarding"
       Nothing -> do
-        activeJobs <- getFileJobsCount user Pending
-        let banner = if activeJobs > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
+        pendingJobs <- getFileJobsCount user Pending
+        processingJobs <- getFileJobsCount user Processing
+        let banner = if (pendingJobs + processingJobs) > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
         content <- liftIO $ renderHomePage user banner
         Web.Scotty.html $ renderPage (Just user) "Financial Summary" content True
