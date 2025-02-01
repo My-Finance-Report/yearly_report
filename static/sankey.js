@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const options = {
       width: "100%",
-      height: "100%",
+      height: getChartHeight(),
       sankey: {
         iterations: 0,
         link: {
@@ -55,4 +55,14 @@ document.addEventListener("DOMContentLoaded", function () {
     sankeyContainer.style.fontSize = "18px";
     sankeyContainer.style.color = "#666";
   }
+});
+
+function getChartHeight() {
+  return window.innerWidth < 768 ? 300 : 500;  // Adjust height for mobile
+}
+
+
+window.addEventListener("resize", () => {
+  options.height = getChartHeight();
+  drawSankeyChart();  // Re-render chart function
 });
