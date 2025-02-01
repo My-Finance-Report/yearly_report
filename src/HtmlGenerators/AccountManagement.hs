@@ -61,7 +61,7 @@ renderAccountManagement user kinds transactions isOnboarding =
           -- The first tab is shown by default (style="display:block")
           forM_ (Prelude.zip [0 ..] allKinds) $ \(idx, kind) -> do
             H.div
-              ! A.class_ "tab-content w-full p-5 rounded-lg border border-primary max-w-3xl"
+              ! A.class_ "tab-content w-full p-5 rounded-lg max-w-3xl"
               ! A.id (toValue $ "tab-content-" <> Prelude.show idx)
               ! A.style (if idx == 0 then "display: block;" else "display: none;")
               $ do

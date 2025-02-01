@@ -25,5 +25,14 @@ services:
       - postgres
     restart: unless-stopped
 
+  worker-task:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: haskell_worker
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
 volumes:
   postgres_data:

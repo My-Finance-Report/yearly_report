@@ -35,6 +35,7 @@ generatePdfParsingPrompt pdfContent transactionSourceName =
     <> "structure the dates as MM/DD/YYYY"
     <> "Each transaction should have the fields: 'transactionDate', 'description', 'kind' and 'amount'\n\n"
     <> "For banks, withdrawal and deposit should be clear. for credit cards and debit cards, we consider a purchase"
+    <> "Do not update the transaction descriptions! just leave them as they appear on the statement"
     <> "to be a withdrawal and a payment on the card to be a deposit. This file is for a "
     <> transactionSourceName
     <> "\n\n\n"
@@ -86,6 +87,7 @@ parseRawTextToJson :: Text -> Text -> IO (Maybe [PartialTransaction])
 parseRawTextToJson pdfContent transactionSourceName = do
   let inputPrompt = generatePdfParsingPrompt pdfContent transactionSourceName
   let schema = generateTransactionSchema
+  print inputPrompt
 
   let messages = [ChatMessage {role = "user", content = inputPrompt}]
 
@@ -138,40 +140,37 @@ trimTrailingText pdfText keyword =
 
 extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
 extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
-  let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
+  -- for now we omit this as its somewhat error prone
+  -- let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
-  parsedTransactions <- parseRawTextToJson trimmedLines (transactionSourceName transactionSource)
+  parsedTransactions <- parseRawTextToJson rawText (transactionSourceName transactionSource)
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO [CategorizedTransaction]
+processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO (Maybe Text)
 processPdfFile user pdfId config allowReprocess = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
 
   let filename = uploadedPdfFilename $ entityVal uploadedFile
 
-  updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Processing
-  alreadyProcessed <- liftIO $ isFileProcessed user filename
+  alreadyProcessed <- liftIO $ isFileProcessed user uploadedFile
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
   if alreadyProcessed && not allowReprocess
     then do
-      putStrLn $ "File '" ++ show pdfId ++ "' has already been processed."
-      getTransactionsByFileId user pdfId
+      let msg = T.pack ("File '" ++ show pdfId ++ "' has already been processed.")
+      return $ Just msg
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
       result <- try (extractTransactionsFromLines (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
       case result of
         Left err -> do
-          let errorMsg = "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
-          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Failed
-          putStrLn errorMsg
-          return []
+          let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
+          return $ Just errorMsg
         Right transactions -> do
+          print transactions
           categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          updateProcessedFileStatus user filename (Just $ entityKey config) (Just pdfId) Completed
-          putStrLn $ "Extracted and categorized " ++ show (length categorizedTransactions) ++ " transactions from '" ++ T.unpack filename ++ "'."
-          return categorizedTransactions
+          return Nothing

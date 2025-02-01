@@ -21,20 +21,40 @@ import Database.Persist.Postgresql
 import Database.Persist.TH
 import GHC.Generics
 
-data JobStatus = Completed | Processing | Failed
+data JobStatus = Completed | Processing | Failed | Retrying | Pending
   deriving (Show, Eq, Ord, Generic, Bounded, Enum)
 
 instance PersistField JobStatus where
   toPersistValue Completed = PersistText "Completed"
+  toPersistValue Pending = PersistText "Pending"
   toPersistValue Processing = PersistText "Processing"
   toPersistValue Failed = PersistText "Failed"
+  toPersistValue Retrying = PersistText "Retrying"
 
   fromPersistValue (PersistText "Completed") = Right Completed
   fromPersistValue (PersistText "Processing") = Right Processing
+  fromPersistValue (PersistText "Pending") = Right Pending
   fromPersistValue (PersistText "Failed") = Right Failed
+  fromPersistValue (PersistText "Retrying") = Right Retrying
   fromPersistValue _ = Left "Invalid TransactionStatus"
 
 instance PersistFieldSql JobStatus where
+  sqlType _ = SqlString
+
+data JobKind = ParseTransactions | CategorizeTransactions | GenerateSankeyConfig
+  deriving (Show, Eq, Ord, Generic, Bounded, Enum)
+
+instance PersistField JobKind where
+  toPersistValue ParseTransactions = PersistText "ParseTransactions"
+  toPersistValue CategorizeTransactions = PersistText "CategorizeTransactions"
+  toPersistValue GenerateSankeyConfig = PersistText "GenerateSankeyConfig"
+
+  fromPersistValue (PersistText "ParseTransactions") = Right ParseTransactions
+  fromPersistValue (PersistText "CategorizeTransactions") = Right CategorizeTransactions
+  fromPersistValue (PersistText "GenerateSankeyConfig") = Right GenerateSankeyConfig
+  fromPersistValue _ = Left "Invalid JobKind"
+
+instance PersistFieldSql JobKind where
   sqlType _ = SqlString
 
 data TransactionKind = Withdrawal | Deposit
@@ -106,13 +126,14 @@ Transaction
     archived Bool default=False
     deriving Show Eq Generic Ord
 
-ProcessedFile
+-- this shouldnt be used, use ProcessedFileJob instead
+DeprecatedProcessedFile
     filename Text
     userId UserId
     uploadConfigurationId UploadConfigurationId Maybe -- todo remove this maybe
     uploadedPdfId UploadedPdfId Maybe --todo remove this maybe
     status JobStatus default='Completed'
-    UniqueProcessedFile filename userId
+    DeprecatedUniqueProcessedFile filename userId
     deriving Show Eq
 
 UploadedPdf
@@ -163,4 +184,13 @@ UserSession
     expiresAt UTCTime
     UniqueUserSession sessionToken
     deriving Show Eq
+
+ProcessFileJob
+   createdAt UTCTime
+   lastTriedAt UTCTime Maybe
+   status JobStatus
+   userId UserId
+   configId UploadConfigurationId
+   pdfId  UploadedPdfId
+   attemptCount Int default=0
 |]

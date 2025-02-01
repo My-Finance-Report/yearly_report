@@ -1,16 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-
 module Database.Files
   ( getAllFilenames,
     getPdfRecord,
     getPdfRecords,
     addPdfRecord,
     isFileProcessed,
-    updateProcessedFileStatus,
-    deleteProcessedFile,
     getAllProcessedFiles,
-    getProcessedFile,
   )
 where
 
@@ -80,66 +76,29 @@ addPdfRecord user filename rawContent uploadTime = do
             uploadedPdfUserId = entityKey user
           }
 
-isFileProcessed :: (MonadUnliftIO m) => Entity User -> Text -> m Bool
-isFileProcessed user filename = do
+isFileProcessed :: (MonadUnliftIO m) => Entity User -> Entity UploadedPdf -> m Bool
+isFileProcessed user file = do
   pool <- liftIO getConnectionPool
   result <- runSqlPool query pool
   return $ isJust result
   where
-    query = selectFirst 
-      [ ProcessedFileFilename ==. filename
-      , ProcessedFileUserId ==. entityKey user
-      , ProcessedFileStatus ==. Completed
-      ] []
+    query =
+      selectFirst
+        [ ProcessFileJobPdfId ==. entityKey file,
+          ProcessFileJobStatus ==. Completed
+        ]
+        []
 
-getProcessedFile :: (MonadUnliftIO m) => Entity User -> Key ProcessedFile -> m (Entity ProcessedFile)
-getProcessedFile user fileId = do
-  pool <- liftIO getConnectionPool
-  result <- runSqlPool queryProcessedFile pool
-  liftIO $ maybe (throwIO $ userError "Processed file not found") pure result
-  where
-    queryProcessedFile = selectFirst [ProcessedFileId ==. fileId] []
-
-deleteProcessedFile :: (MonadUnliftIO m) => Entity User -> Key ProcessedFile -> m ()
-deleteProcessedFile user fileId = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryDeleteProcessedFile pool
-  where
-    queryDeleteProcessedFile = do
-      maybeProcessedFile <- get fileId
-      case maybeProcessedFile of
-        Nothing -> liftIO $ putStrLn $ "Processed file not found: " ++ show (fromSqlKey fileId)
-        Just processedFile -> do
-          if processedFileUserId processedFile /= entityKey user
-            then liftIO $ putStrLn $ "Unauthorized attempt to delete processed file: " ++ show (fromSqlKey fileId)
-            else do
-              delete fileId
-              liftIO $ putStrLn $ "Deleted processed file: " ++ show (fromSqlKey fileId)
-
-updateProcessedFileStatus :: (MonadUnliftIO m) => Entity User -> Text -> Maybe (Key UploadConfiguration) -> Maybe (Key UploadedPdf) -> JobStatus -> m ()
-updateProcessedFileStatus user filename uploadConfigId uploadedFileId status = do
-  pool <- liftIO getConnectionPool
-  runSqlPool queryInsertOrUpdate pool
-  where
-    queryInsertOrUpdate = do
-      maybeExistingFile <- getBy $ UniqueProcessedFile filename (entityKey user)
-      case maybeExistingFile of
-        Nothing -> do
-          _ <- insert $ ProcessedFile filename (entityKey user) uploadConfigId uploadedFileId status
-          liftIO $ putStrLn $ "File processed: " <> unpack filename
-        Just (Entity fileId _) -> do
-          update
-            fileId
-            [ ProcessedFileUploadConfigurationId =. uploadConfigId,
-              ProcessedFileUploadedPdfId =. uploadedFileId,
-              ProcessedFileStatus =. status
-            ]
-          liftIO $ putStrLn $ "File updated: " <> unpack filename
-
-getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [Entity ProcessedFile]
+getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [(Entity ProcessFileJob, Entity UploadedPdf)]
 getAllProcessedFiles user = do
   pool <- liftIO getConnectionPool
-  runSqlPool (selectList [ProcessedFileUserId ==. entityKey user] [Asc ProcessedFileFilename]) pool
+  jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user] []) pool -- Fetch all jobs
+  let pdfIds = map (processFileJobPdfId . entityVal) jobs
 
+  pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds] []) pool
 
+  let pdfMap = Data.Map.fromList [(entityKey pdf, pdf) | pdf <- pdfs]
 
+  let results = [(job, pdf) | job <- jobs, Just pdf <- [Data.Map.lookup (processFileJobPdfId (entityVal job)) pdfMap]]
+
+  return results

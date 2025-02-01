@@ -34,25 +34,24 @@ getRequiredEnv key = do
 
 main :: IO ()
 main = do
-  activeJobs <- newIORef 0
   openAiKey <- liftIO $ getRequiredEnv "OPENAI_API_KEY"
-  openAiKey <- liftIO $ getRequiredEnv "DATABASE_URL"
+  dbKey <- liftIO $ getRequiredEnv "DATABASE_URL"
   initializePool
   pool <- getConnectionPool
   migratePostgres
   scotty 3000 $ do
-    middleware logStdoutDev
+    -- middleware logStdoutDev
     middleware $ staticPolicy (addBase "static")
 
     registerOnboardingRoutes pool
     registerLoginRoutes pool
-    registerMiscRoutes pool activeJobs
+    registerMiscRoutes pool
     registerVisualizationRoutes pool
     registerDemoRoutes pool
     registerSankeyRoutes pool
     registerConfigurationRoutes pool
-    registerUploadRoutes pool activeJobs
+    registerUploadRoutes pool
     registerCategoryRoutes pool
     registerTransactionRoutes pool
     registerTransactionSourceRoutes pool
-    registerFileRoutes pool activeJobs
+    registerFileRoutes pool

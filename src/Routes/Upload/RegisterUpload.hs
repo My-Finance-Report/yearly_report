@@ -24,13 +24,15 @@ import Data.Text.Lazy
     toStrict,
   )
 import qualified Data.Text.Lazy
+import Data.Time (UTCTime)
 import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
+import Database.ConnectionPool (getConnectionPool)
 import Database.Database (updateUserOnboardingStep)
 import Database.Files (addPdfRecord, getPdfRecord, getPdfRecords)
 import Database.Models
 import Database.Persist hiding (get)
-import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
+import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.TransactionSource (getAllTransactionSources, getTransactionSource)
 import Database.UploadConfiguration (addUploadConfigurationObject, getAllUploadConfigs, getUploadConfiguration, getUploadConfigurationFromPdf)
@@ -38,23 +40,15 @@ import ExampleFileParser (generateUploadConfiguration)
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
 import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
-import Parsers (extractTextFromPdf, processPdfFile)
+import Parsers (extractTextFromPdf)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, setHeader, text)
+import Worker.ParseFileJob
 
-processFileUpload user pdfId config activeJobs = do
-  liftIO $ do
-    modifyIORef activeJobs (+ 1)
-    _ <- Control.Concurrent.Async.async $ do
-      processPdfFile user pdfId config False
-      modifyIORef activeJobs (subtract 1)
-    return ()
-  return ()
-
-registerUploadRoutes :: ConnectionPool -> IORef Int -> ScottyM ()
-registerUploadRoutes pool activeJobs = do
+registerUploadRoutes :: ConnectionPool -> ScottyM ()
+registerUploadRoutes pool = do
   get "/upload" $ requireUser pool $ \user -> do
     content <- liftIO $ renderUploadPage user
     html $ renderPage (Just user) "Upload Page" content True
@@ -89,8 +83,7 @@ registerUploadRoutes pool activeJobs = do
 
         if null missingConfigs
           then do
-            forM_ validConfigs $ \(pdfId, Just config) -> do
-              processFileUpload user pdfId config activeJobs
+            forM_ validConfigs $ \(pdfId, Just config) -> liftIO $ asyncFileProcess user pdfId config
             redirect "/dashboard"
           else do
             redirect $ "/select-account?pdfIds=" <> intercalate "," (map (Data.Text.Lazy.pack . show . fromSqlKey . fst) pdfIds)
@@ -126,7 +119,7 @@ registerUploadRoutes pool activeJobs = do
       maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
 
       case maybeConfig of
-        Just config -> processFileUpload user pdfId config activeJobs
+        Just config -> liftIO $ asyncFileProcess user pdfId config
         Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
 
     redirect "/dashboard"
