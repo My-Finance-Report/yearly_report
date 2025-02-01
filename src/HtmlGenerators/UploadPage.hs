@@ -131,6 +131,17 @@ renderSelectAccountPage fileRecords transactionSources =
     H.h1 ! A.class_ "text-4xl font-bold text-primary mb-4" $ "Select a Transaction Source"
     H.p ! A.class_ "text-gray-600 text-lg mb-6" $ "Choose a transaction source for the uploaded files that need one."
 
+    -- Apply to All Dropdown
+    H.div ! A.class_ "mb-4 flex items-center justify-center gap-4" $ do
+      H.label ! A.for "apply-to-all" ! A.class_ "font-semibold" $ "Apply to all:"
+      H.select
+        ! A.id "apply-to-all"
+        ! A.class_ "border p-2 rounded w-auto"
+        $ do
+          H.option ! A.value "" $ "Select a source"
+          forM_ transactionSources $ \(Entity sourceId source) -> do
+            H.option ! A.value (H.toValue (fromSqlKey sourceId)) $ H.toHtml (transactionSourceName source)
+
     -- Selection Form
     H.form
       ! A.action "/assign-transaction-source"
@@ -157,7 +168,7 @@ renderSelectAccountPage fileRecords transactionSources =
                   -- Show the dropdown for missing configs
                   H.select
                     ! A.name (H.toValue $ "source-" <> show (fromSqlKey pdfId))
-                    ! A.class_ "border p-2 rounded w-full"
+                    ! A.class_ "border p-2 rounded w-full transaction-source-dropdown"
                     $ do
                       H.option ! A.value "" $ "Select a source"
                       forM_ transactionSources $ \(Entity sourceId source) -> do
@@ -167,3 +178,19 @@ renderSelectAccountPage fileRecords transactionSources =
         if any (\(_, maybeSource) -> maybeSource == Nothing) fileRecords
           then H.button ! A.type_ "submit" ! A.class_ "mt-4 primary-button" $ "Save Selection"
           else H.p ! A.class_ "text-gray-600 mt-4" $ "All files already have a transaction source assigned."
+
+    -- JavaScript to Apply Selection to All Dropdowns
+    H.script ! A.type_ "text/javascript" $
+      H.toHtml
+        ( unlines
+            [ "document.getElementById('apply-to-all').addEventListener('change', function() {",
+              "    var selectedValue = this.value;",
+              "    var dropdowns = document.querySelectorAll('.transaction-source-dropdown');",
+              "    dropdowns.forEach(function(dropdown) {",
+              "        if (dropdown.value === '') {",
+              "            dropdown.value = selectedValue;",
+              "        }",
+              "    });",
+              "});"
+            ]
+        )

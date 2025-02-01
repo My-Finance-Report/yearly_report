@@ -27,6 +27,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- shareable report
+- dont show snakey if there is a cycle in the chart, and alert?
+- can we just detect those before hand?
+- remove button on the sankey config doesnt work
+- failed initally when uploading alot of files
+- why is it so slow when i upload n files in the first pass?
+- we should save some error logs to the db when a job fails
+- need to preserve location in tab groups when navigating forms
 - update the demo data to be more anon
 - delete button in the table doesnt work
 - manually add transactions

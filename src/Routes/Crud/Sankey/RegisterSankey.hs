@@ -100,23 +100,20 @@ registerSankeyRoutes pool = do
 
   post "/remove-sankey-input" $ requireUser pool $ \user -> do
     sankeyConfigIdText <- formParam "sankeyConfigId"
-    inputSourceCategory <- formParam "inputSourceCategory"
+    inputCategoryIdText <- formParam "inputCategoryId"
+    inputSourceIdText <- formParam "inputSourceId"
 
-    let parseComposite keyValue =
-          case splitOn "-" keyValue of
-            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
-            _ -> Nothing
+    let inputCategoryId =  toSqlKey (read $ unpack inputCategoryIdText)
+    let inputSourceId =  toSqlKey (read $ unpack inputSourceIdText)
 
-    case parseComposite inputSourceCategory of
-      Just (inputSourceId, inputCategoryId) -> do
-        let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
 
-        liftIO $ removeSankeyInput user sankeyConfigId inputSourceId inputCategoryId
+    let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
 
-        referer <- header "Referer"
-        let redirectTo = fromMaybe "/dashboard" referer
-        redirect redirectTo
-      Nothing -> text "Invalid input format"
+    liftIO $ removeSankeyInput user sankeyConfigId inputSourceId inputCategoryId
+
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
+    redirect redirectTo
 
   post "/update-sankey-config" $ requireUser pool $ \user -> do
     allParams <- formParams

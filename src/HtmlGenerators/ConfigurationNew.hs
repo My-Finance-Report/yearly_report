@@ -74,7 +74,15 @@ renderInputForm configId sourceCategories maybeSelected = do
     case maybeSelected of
       Just (selectedSource, selectedCategory) -> do
         H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex-1" $ do
-          toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory)
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "inputSourceId"
+            ! A.value (toValue $ fromSqlKey (entityKey selectedSource))
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "inputCategoryId"
+            ! A.value (toValue $ fromSqlKey (entityKey selectedCategory))
+          H.toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory)
       Nothing -> return ()
 
     -- Remove Button
