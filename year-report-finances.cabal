@@ -88,6 +88,54 @@ library year-report-finances-lib
 executable year-report-finances
   main-is: Main.hs
   hs-source-dirs: src
+  other-modules:
+      Auth
+      Categorizer
+      ColumnChart
+      Database.Category
+      Database.Configurations
+      Database.ConnectionPool
+      Database.Database
+      Database.Files
+      Database.Jobs
+      Database.Models
+      Database.Transaction
+      Database.TransactionSource
+      Database.UploadConfiguration
+      ExampleFileParser
+      HtmlGenerators.AccountManagement
+      HtmlGenerators.AllFilesPage
+      HtmlGenerators.AuthPages
+      HtmlGenerators.Components
+      HtmlGenerators.ConfigurationNew
+      HtmlGenerators.HomePage
+      HtmlGenerators.HomePageHelpers
+      HtmlGenerators.HtmlGenerators
+      HtmlGenerators.LandingPage
+      HtmlGenerators.Layout
+      HtmlGenerators.OnboardingFour
+      HtmlGenerators.OnboardingOne
+      HtmlGenerators.OnboardingThree
+      HtmlGenerators.OnboardingTwo
+      HtmlGenerators.UploadPage
+      OpenAiUtils
+      Parsers
+      Routes.Api.Visualization.RegisterVisualization
+      Routes.Configuration.RegisterConfiguration
+      Routes.Crud.Category.RegisterCategory
+      Routes.Crud.File.RegisterFile
+      Routes.Crud.Sankey.RegisterSankey
+      Routes.Crud.Transaction.RegisterTransaction
+      Routes.Crud.TransactionSource.RegisterTransactionSource
+      Routes.Demo.RegisterDemo
+      Routes.Login.RegisterLogin
+      Routes.Misc.RegisterMisc
+      Routes.Onboarding.RegisterOnboarding
+      Routes.Upload.RegisterUpload
+      Sankey
+      SankeyConfiguration
+      Types
+      Worker.ParseFileJob
   build-depends:
       year-report-finances-lib,
       base >= 4.7 && < 5,
@@ -120,15 +168,26 @@ executable year-report-finances
       wai >= 3.2
   ghc-options: -threaded
   default-language: Haskell2010
-
 
 
 executable worker-task
   main-is: Worker/Main.hs
   hs-source-dirs: src
+  other-modules:
+      Categorizer
+      Database.Category
+      Database.ConnectionPool
+      Database.Database
+      Database.Files
+      Database.Models
+      Database.Transaction
+      Database.TransactionSource
+      OpenAiUtils
+      Parsers
+      Types
   build-depends:
-      base >= 4.7 && < 5,
       year-report-finances-lib,
+      base >= 4.7 && < 5,
       text >= 1.2 && < 2.2,
       containers,
       time,
@@ -158,3 +217,4 @@ executable worker-task
       wai >= 3.2
   ghc-options: -threaded
   default-language: Haskell2010
+

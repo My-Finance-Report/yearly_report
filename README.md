@@ -27,6 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- update the demo data to be more anon
 - delete button in the table doesnt work
 - manually add transactions
 - budget and budget progress
