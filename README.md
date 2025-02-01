@@ -31,9 +31,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - delete button in the table doesnt work
 - manually add transactions
 - budget and budget progress
+
 - option to add a new source on the upload page after you drop in the file
-- update schema to remove processed file fields
-- there seems to be some general bug with the mobile presentation
+
 - privacy policy
 - install a linter for extraneous imports
-- password dont match in wrong modal
