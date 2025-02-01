@@ -3,6 +3,7 @@
 module HtmlGenerators.Components
   ( navigationBar,
     mobileNavigationBar,
+makeAddTransactionsBanner,
     makeToolBar,
     makeDemoBanner,
     makeSimpleBanner,
@@ -112,3 +113,10 @@ makeDemoBanner =
   H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ do
     H.span "You are in demo mode. "
     H.a ! A.href "/login" ! A.class_ "underline" $ "Sign up now"
+
+makeAddTransactionsBanner :: Html
+makeAddTransactionsBanner =
+  H.div ! A.class_ "bg-yellow-500 text-black text-center p-3 rounded-md" $ do
+    H.span "You need to "
+    H.a ! A.href "/upload" ! A.class_ "underline" $ "add transactions"
+    H.span "  to get started."

@@ -14,7 +14,7 @@ import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey, toSqlKey)
 import Database.Transaction
 import Database.TransactionSource
-import HtmlGenerators.Components (makeSimpleBanner)
+import HtmlGenerators.Components (makeSimpleBanner, makeAddTransactionsBanner)
 import HtmlGenerators.HomePageHelpers
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
@@ -300,7 +300,7 @@ renderHomePage user banner = do
         Just existingBanner | not (Prelude.null banner) -> Just existingBanner
         _ ->
           if Data.List.null categorizedTransactions
-            then Just $ makeSimpleBanner "You need to add transactions to get started."
+            then Just makeAddTransactionsBanner
             else Nothing
 
   let tabs = generateTabsWithSubTabs transactionSources groupedBySource
