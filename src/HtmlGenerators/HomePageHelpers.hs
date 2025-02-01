@@ -17,7 +17,6 @@ module HtmlGenerators.HomePageHelpers
     subtabMappings,
     generateHeader,
     generateHistogramDiv,
-    generateSankeyDiv,
     makeCharts,
     loadScripts,
   )
@@ -164,19 +163,17 @@ generateHeader =
 
 makeCharts :: Html
 makeCharts =
-  H.div ! A.class_ "flex flex-col md:flex-row gap-6  rounded-md p-4" $ do
-    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+  H.div ! A.class_ "flex flex-col md:flex-row gap-6 rounded-md p-4" $ do
+    -- Sankey Chart
+    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[300px] md:min-h-[500px] w-full overflow-hidden" $ do
       H.div
         ! A.id "sankeyChart"
         ! A.class_ "sankey-chart w-full h-full"
         $ ""
 
-    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[500px]" $ do
+    -- Histogram Chart
+    H.div ! A.class_ "flex-1 border border-primary rounded-md p-4 shadow-md min-h-[300px] md:min-h-[500px] w-full overflow-hidden" $ do
       H.div
         ! A.id "histogram_chart"
         ! A.class_ "histogram-chart w-full h-full"
         $ ""
-
-generateSankeyDiv :: Html
-generateSankeyDiv =
-  H.div ! A.id "sankey_chart" $ mempty

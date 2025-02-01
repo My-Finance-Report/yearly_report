@@ -30,6 +30,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - delete button in the table doesnt work
 - manually add transactions
 - budget and budget progress
+- there still seems like some bug in the processing state, but may just be in local dev
 - option to add a new source on the upload page after you drop in the file
 - update schema to remove processed file fields
 - update schema to put processed file into transactions table, not uploaded pdf

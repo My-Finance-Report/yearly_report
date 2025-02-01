@@ -34,7 +34,7 @@ function drawHistogram(rows) {
 
   const options = {
     width: "100%",
-    height: "100%",
+    height: getChartHeight(),
     legend: { position: 'top', maxLines: 3 },
     isStacked: false, 
     bar: { 
@@ -75,3 +75,14 @@ function displayNoDataMessage() {
   chartContainer.style.fontSize = '18px';
   chartContainer.style.color = '#666';
 }
+
+
+function getChartHeight() {
+  return window.innerWidth < 768 ? 300 : 500;  // Adjust height for mobile
+}
+
+
+window.addEventListener("resize", () => {
+  options.height = getChartHeight();
+  drawSankeyChart();  
+});

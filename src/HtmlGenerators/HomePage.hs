@@ -64,10 +64,20 @@ generateTableHeader :: H.Html -> H.Html
 generateTableHeader header = do
   H.thead ! A.class_ "table-head" $ do
     H.tr $ do
+      -- Empty spacer column
       H.th ! A.class_ "table-cell w-6 text-center p-2 border-primary border-l border-b border-t" $ ""
+
+      -- Dynamic Column Headers
       H.th ! A.class_ "table-cell p-2 border-t border-b border-primary font-semibold" $ header
-      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Withdrawals"
-      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Deposits"
+
+      -- Desktop View (Withdrawals & Deposits)
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold hidden md:table-cell" $ "Withdrawals"
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold hidden md:table-cell" $ "Deposits"
+
+      -- Mobile View (Merged Amount Column)
+      H.th ! A.class_ "table-cell p-2 border border-primary font-semibold md:hidden" ! A.colspan "2" $ "Amount"
+
+      -- Balance Column (Always Visible)
       H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Balance"
 
 generateAggregatedSection ::
@@ -84,21 +94,40 @@ generateAggregatedSection key txns accHtml = do
 
 generateTotalsRow :: Text -> Text -> Text -> Html
 generateTotalsRow totalWithdrawals totalDeposits totalBalance = do
-  H.tr ! A.class_ "totals-row font-semibold" $ do
+  H.tr ! A.class_ "totals-row font-semibold text-sm md:text-lg" $ do
+    -- Totals label (spanning the first two columns)
     H.td ! A.colspan "2" ! A.class_ "p-2 border-t border-primary" $ "Totals"
-    H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalWithdrawals
-    H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalDeposits
+
+    -- Withdrawals & Deposits (Desktop Only)
+    H.td ! A.class_ "p-2 border-t border-primary hidden md:table-cell" $ toHtml totalWithdrawals
+    H.td ! A.class_ "p-2 border-t border-primary hidden md:table-cell" $ toHtml totalDeposits
+
+    -- Merged Amount Column (Mobile Only)
+    H.td ! A.class_ "p-2 border-t border-primary md:hidden" ! A.colspan "2" $
+      toHtml (totalWithdrawals <> " / " <> totalDeposits)
+
+    -- Balance Column (Always Visible)
     H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalBalance
 
 generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
 generateAggregateRow cat balance withdrawls deposits sectionId =
   H.tr ! A.class_ "expandable-row table-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "'); toggleArrow(this)") $ do
+    -- Expand arrow column
     H.td ! A.class_ "table-cell w-6 text-center transition-transform duration-200 ease-in-out" $
       H.span ! A.class_ "inline-block transform" $
         "▶"
+
+    -- Category Column
     H.td ! A.class_ "table-cell" $ toHtml cat
-    H.td ! A.class_ "table-cell" $ toHtml withdrawls
-    H.td ! A.class_ "table-cell" $ toHtml deposits
+
+    -- Withdrawals & Deposits (Desktop Only)
+    H.td ! A.class_ "table-cell hidden md:table-cell" $ toHtml withdrawls
+    H.td ! A.class_ "table-cell hidden md:table-cell" $ toHtml deposits
+
+    -- Merged Amount Column (Mobile Only)
+    H.td ! A.class_ "table-cell md:hidden" ! A.colspan "2" $ toHtml (withdrawls <> " / " <> deposits)
+
+    -- Balance Column (Always Visible)
     H.td ! A.class_ "table-cell" $ toHtml balance
 
 generateDetailRows ::
