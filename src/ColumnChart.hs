@@ -5,7 +5,6 @@ module ColumnChart (generateColChartData) where
 
 import Control.Exception (Exception, throw, throwIO)
 import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
-import Crypto.PubKey.RSA.Prim (dp)
 import Data.Aeson hiding (Key)
 import Data.Map (Map, elems, findWithDefault, fromListWith, keys, keysSet, singleton, toList, unionWith)
 import qualified Data.Map
@@ -137,10 +136,11 @@ sourcesFromConfig user config = do
 generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
 generateColChartData user transactions = do
   sourceMap <- fetchSourceMap user
-  config <- selectDefaultConfig user
-  allowedSources <- sourcesFromConfig user config
-  let filteredSourceMap = filterByAllowedSources allowedSources sourceMap
-  let grouped = groupBySourceAndMonth filteredSourceMap transactions
+  -- TODO enable col chart configs
+  -- config <- selectDefaultConfig user
+  -- allowedSources <- sourcesFromConfig user config
+  -- let filteredSourceMap = filterByAllowedSources allowedSources sourceMap
+  let grouped = groupBySourceAndMonth sourceMap transactions
   let allowedSourceNames = extractAllSourceNames grouped
   let matrix = buildMatrix allowedSourceNames grouped
   return matrix
