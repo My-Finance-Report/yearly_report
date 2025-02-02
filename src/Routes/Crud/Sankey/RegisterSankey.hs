@@ -57,26 +57,21 @@ registerSankeyRoutes pool = do
 
   post "/remove-sankey-linkage" $ requireUser pool $ \user -> do
     sankeyConfigIdText <- formParam "sankeyConfigId"
-    linkageSourceCategory <- formParam "linkageSourceCategory"
-    linkageTargetIdText <- formParam "linkageTargetId"
+    linkageSourceIdText <- formParam "inputSourceId"
+    linkageCategoryIdText <- formParam "inputCategoryId"
+    linkageTargetIdText <- formParam "targetSourceId"
 
-    let parseComposite keyValue =
-          case splitOn "-" keyValue of
-            [srcId, catId] -> Just (toSqlKey (read $ unpack srcId), toSqlKey (read $ unpack catId))
-            _ -> Nothing
+    let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+    let linkageSourceId = toSqlKey (read $ unpack linkageSourceIdText)
+    let linkageCategoryId = toSqlKey (read $ unpack linkageCategoryIdText)
+    let linkageTargetId = toSqlKey (read $ unpack linkageTargetIdText)
 
-    case parseComposite linkageSourceCategory of
-      Just (linkageSourceId, linkageCategoryId) -> do
-        let linkageTargetId = toSqlKey (read $ unpack linkageTargetIdText)
-            sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
+    liftIO $ removeSankeyLinkage user sankeyConfigId linkageSourceId linkageCategoryId linkageTargetId
 
-        liftIO $ removeSankeyLinkage user sankeyConfigId linkageSourceId linkageCategoryId linkageTargetId
-        referer <- header "Referer"
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
 
-        let redirectTo = fromMaybe "/dashboard" referer
-
-        redirect redirectTo
-      Nothing -> text "Invalid linkage format"
+    redirect redirectTo
 
   post "/add-sankey-input" $ requireUser pool $ \user -> do
     sankeyConfigIdText <- formParam "sankeyConfigId"
@@ -103,10 +98,8 @@ registerSankeyRoutes pool = do
     inputCategoryIdText <- formParam "inputCategoryId"
     inputSourceIdText <- formParam "inputSourceId"
 
-    let inputCategoryId =  toSqlKey (read $ unpack inputCategoryIdText)
-    let inputSourceId =  toSqlKey (read $ unpack inputSourceIdText)
-
-
+    let inputCategoryId = toSqlKey (read $ unpack inputCategoryIdText)
+    let inputSourceId = toSqlKey (read $ unpack inputSourceIdText)
     let sankeyConfigId = toSqlKey (read $ unpack sankeyConfigIdText)
 
     liftIO $ removeSankeyInput user sankeyConfigId inputSourceId inputCategoryId
