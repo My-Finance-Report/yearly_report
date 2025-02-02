@@ -24,7 +24,8 @@ enqueueFileProcessingJob user pdfId config now = do
         processFileJobUserId = entityKey user,
         processFileJobPdfId = pdfId,
         processFileJobConfigId = entityKey config,
-        processFileJobAttemptCount = 0
+        processFileJobAttemptCount = 0,
+        processFileJobArchived = False
       }
 
 resetFileProcessingJob :: (MonadUnliftIO m) => Entity User -> Key ProcessFileJob -> m ()
@@ -56,9 +57,8 @@ resetAllFileProcessingJobs user = do
   where
     updateJobsForUser now = do
       updateWhere
-        [ProcessFileJobUserId ==. entityKey user]
+        [ProcessFileJobUserId ==. entityKey user, ProcessFileJobArchived ==. False]
         [ ProcessFileJobStatus =. Pending,
           ProcessFileJobLastTriedAt =. Nothing,
           ProcessFileJobAttemptCount =. 0
         ]
-

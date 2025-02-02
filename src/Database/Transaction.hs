@@ -8,7 +8,7 @@ module Database.Transaction
     parseTransactionDate,
     groupTransactionsBySource,
     getAllTransactions,
-    removeTransactionByPdfId,
+    removeFileAndTransactions,
     updateTransaction,
     addTransaction,
   )
@@ -153,8 +153,8 @@ addTransaction user txnDescription txnAmount txnKind txnDate uploadedPdfKey txnS
       transactionKey <- insert newTransaction
       return $ Entity transactionKey newTransaction
 
-removeTransactionByPdfId :: Entity User -> Key UploadedPdf -> IO ()
-removeTransactionByPdfId user uploadedPdfId = do
+removeFileAndTransactions :: Entity User -> Key UploadedPdf -> IO ()
+removeFileAndTransactions user uploadedPdfId = do
   pool <- getConnectionPool
   runSqlPool queryArchiveTransactions pool
   where
@@ -169,6 +169,12 @@ removeTransactionByPdfId user uploadedPdfId = do
               updateWhere
                 [TransactionUploadedPdfId ==. Just uploadedPdfId]
                 [TransactionArchived =. True]
+              updateWhere
+                [UploadedPdfId ==. uploadedPdfId]
+                [UploadedPdfArchived =. True]
+              updateWhere
+                [ProcessFileJobPdfId ==. uploadedPdfId]
+                [ProcessFileJobArchived =. True]
 
               liftIO $ putStrLn $ "Transactions from PDF " ++ show (fromSqlKey uploadedPdfId) ++ " archived successfully."
 

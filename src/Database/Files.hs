@@ -72,6 +72,7 @@ addPdfRecord user filename rawContent uploadTime = do
         UploadedPdf
           { uploadedPdfFilename = filename,
             uploadedPdfRawContent = rawContent,
+            uploadedPdfArchived = False,
             uploadedPdfUploadTime = uploadTime,
             uploadedPdfUserId = entityKey user
           }
@@ -93,11 +94,11 @@ getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [(Entity ProcessFi
 getAllProcessedFiles user = do
   pool <- liftIO getConnectionPool
 
-  jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user] []) pool
-  
+  jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user, ProcessFileJobArchived ==. False] []) pool
+
   let pdfIds = map (processFileJobPdfId . entityVal) jobs
 
-  pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds] [Asc UploadedPdfFilename]) pool
+  pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds, UploadedPdfArchived ==. False] [Asc UploadedPdfFilename]) pool
 
   let pdfMap = Data.Map.fromList [(entityKey pdf, pdf) | pdf <- pdfs]
 

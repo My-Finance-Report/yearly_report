@@ -20,6 +20,7 @@ import Data.Time (UTCTime)
 import Database.Persist.Postgresql
 import Database.Persist.TH
 import GHC.Generics
+import Text.Blaze.Html4.FrameSet.Attributes (archive)
 
 data JobStatus = Completed | Processing | Failed | Retrying | Pending
   deriving (Show, Eq, Ord, Generic, Bounded, Enum)
@@ -141,6 +142,7 @@ UploadedPdf
     rawContent Text
     uploadTime Text
     userId UserId
+    archived Bool default=False
     deriving Show Eq
 
 UploadConfiguration
@@ -204,5 +206,6 @@ ProcessFileJob
    userId UserId
    configId UploadConfigurationId
    pdfId  UploadedPdfId
+   archived Bool default=false
    attemptCount Int default=0
 |]
