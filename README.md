@@ -27,7 +27,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
-- remove linkage button doesnt work
 - stacked column chart per cateogry
 - enable config of the barchart (categories to include + sources to include) (wip)
 - do we actually constrain a file from being uploaded twice without nuking the first results?
