@@ -1,4 +1,4 @@
-module Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob) where
+module Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFileProcessingJobs) where
 
 import Control.Exception (throwIO)
 import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
@@ -47,3 +47,18 @@ resetFileProcessingJob user jobId = do
                   ProcessFileJobLastTriedAt =. Nothing,
                   ProcessFileJobAttemptCount =. 0
                 ]
+
+resetAllFileProcessingJobs :: (MonadUnliftIO m) => Entity User -> m ()
+resetAllFileProcessingJobs user = do
+  pool <- liftIO getConnectionPool
+  now <- liftIO getCurrentTime
+  runSqlPool (updateJobsForUser now) pool
+  where
+    updateJobsForUser now = do
+      updateWhere
+        [ProcessFileJobUserId ==. entityKey user]
+        [ ProcessFileJobStatus =. Pending,
+          ProcessFileJobLastTriedAt =. Nothing,
+          ProcessFileJobAttemptCount =. 0
+        ]
+
