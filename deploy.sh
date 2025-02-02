@@ -70,7 +70,7 @@ fi
 
 # Step 6: Deploy on Remote Server
 echo "🚀 Running deployment script on ${REMOTE_SERVER}..."
-ssh ${REMOTE_SERVER} "cd ${REMOTE_DIR} && chmod +x deploy-server.sh && ./deploy-server.sh"
+ssh ${REMOTE_SERVER} "cd ${REMOTE_DIR} && chmod +x deploy_server.sh && ./deploy_server.sh"
 
 if [ $? -ne 0 ]; then
   echo "❌ Failed to deploy on ${REMOTE_SERVER}"

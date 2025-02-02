@@ -3,7 +3,9 @@
 
 module ColumnChart (generateColChartData) where
 
-import Control.Monad.IO.Unlift (MonadUnliftIO)
+import Control.Exception (Exception, throw, throwIO)
+import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
+import Crypto.PubKey.RSA.Prim (dp)
 import Data.Aeson hiding (Key)
 import Data.Map (Map, elems, findWithDefault, fromListWith, keys, keysSet, singleton, toList, unionWith)
 import qualified Data.Map
@@ -11,11 +13,10 @@ import Data.Set (Set, unions)
 import qualified Data.Set
 import Data.Text (Text, pack)
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, fromGregorian, parseTimeM, toGregorian)
+import Database.ConnectionPool (getConnectionPool)
 import Database.Models
 import Database.Persist
-  ( Entity (entityKey, entityVal),
-    PersistEntity (Key),
-  )
+import Database.Persist.Postgresql (SqlPersistT, runSqlPool)
 import Database.TransactionSource
 import GHC.Generics (Generic)
 import Types
@@ -92,10 +93,54 @@ buildRow ::
 buildRow allSourceNames (_, sources) =
   Prelude.map (\source -> findWithDefault 0 source sources) allSourceNames
 
+filterByAllowedSources :: [TransactionSource] -> Map (Key TransactionSource) TransactionSource -> Map (Key TransactionSource) TransactionSource
+filterByAllowedSources allowedSources = Data.Map.filter (`elem` allowedSources)
+
+setActiveConfigInner :: (MonadUnliftIO m) => Entity User -> Key ColChartConfig -> SqlPersistT m ()
+setActiveConfigInner user newActiveId = do
+  updateWhere
+    [ColChartConfigUserId ==. entityKey user, ColChartConfigActive ==. True]
+    [ColChartConfigActive =. False]
+
+  update newActiveId [ColChartConfigActive =. True]
+
+data ConfigNotFoundException = ConfigNotFoundException deriving (Show)
+
+instance Exception ConfigNotFoundException
+
+selectDefaultConfig :: (MonadUnliftIO m) => Entity User -> m (Entity ColChartConfig)
+selectDefaultConfig user = do
+  pool <- liftIO getConnectionPool
+  maybeConfig <- runSqlPool querySources pool
+  case maybeConfig of
+    Just config -> return config
+    Nothing -> throw ConfigNotFoundException -- Use a proper exception instead of a raw string
+  where
+    querySources = selectFirst [ColChartConfigUserId ==. entityKey user, ColChartConfigActive ==. True] []
+
+sourcesFromConfig :: (MonadUnliftIO m) => Entity User -> Entity ColChartConfig -> m [TransactionSource]
+sourcesFromConfig user config = do
+  pool <- liftIO getConnectionPool
+  runSqlPool querySources pool
+  where
+    querySources = do
+      -- Get all ColChartInput records for this config
+      colChartInputs <- selectList [ColchartInputConfigId ==. entityKey config] []
+
+      -- Extract TransactionSourceIds
+      let sourceIds = map (colchartInputSourceId . entityVal) colChartInputs
+
+      -- Fetch TransactionSources corresponding to those IDs
+      sources <- selectList [TransactionSourceId <-. sourceIds, TransactionSourceUserId ==. entityKey user] []
+      return $ map entityVal sources
+
 generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
 generateColChartData user transactions = do
   sourceMap <- fetchSourceMap user
-  let grouped = groupBySourceAndMonth sourceMap transactions
-  let allSourceNames = extractAllSourceNames grouped
-  let matrix = buildMatrix allSourceNames grouped
+  config <- selectDefaultConfig user
+  allowedSources <- sourcesFromConfig user config
+  let filteredSourceMap = filterByAllowedSources allowedSources sourceMap
+  let grouped = groupBySourceAndMonth filteredSourceMap transactions
+  let allowedSourceNames = extractAllSourceNames grouped
+  let matrix = buildMatrix allowedSourceNames grouped
   return matrix
