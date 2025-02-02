@@ -157,6 +157,18 @@ SankeyConfig
     userId UserId 
     deriving Show Eq
 
+ColChartConfig
+    name Text
+    userId UserId
+    active Bool 
+    UniqueActiveColChart userId active
+    deriving Show Eq
+
+ColchartInput
+    configId ColChartConfigId
+    sourceId TransactionSourceId
+    deriving Show Eq
+
 SankeyInput
     configId SankeyConfigId
     sourceId TransactionSourceId -- DEPRECATED: We don't need this anymore

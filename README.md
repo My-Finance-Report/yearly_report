@@ -27,20 +27,25 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- remove linkage button doesnt work
+- reprocess all button
+- stacked column chart per cateogry
+- enable config of the barchart (categories to include + sources to include)
+- do we actually constrain a file from being uploaded twice without nuking the first results
+- uploads fail if the transactions source does not have any categories
+  => constrain the db to prevent this
 - shareable report
+  - allow to select different charts
 - dont show snakey if there is a cycle in the chart, and alert?
-- can we just detect those before hand?
-- remove button on the sankey config doesnt work
-- failed initally when uploading alot of files
-- why is it so slow when i upload n files in the first pass?
-- we should save some error logs to the db when a job fails
 - need to preserve location in tab groups when navigating forms
+- release an admin page
+- why is it so slow when i upload n files in the first pass?
+  - probably some async code we dont need anymore
+- we should save some error logs to the db when a job fails
 - update the demo data to be more anon
 - delete button in the table doesnt work
 - manually add transactions
 - budget and budget progress
-
 - option to add a new source on the upload page after you drop in the file
-
 - privacy policy
 - install a linter for extraneous imports

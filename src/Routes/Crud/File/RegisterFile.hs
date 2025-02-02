@@ -24,7 +24,7 @@ import Database.UploadConfiguration (getAllUploadConfigs, getUploadConfigById)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect, text)
-import Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob)
+import Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFileProcessingJobs)
 
 deleteFileAndTransactions ::
   Entity User ->
@@ -43,4 +43,16 @@ registerFileRoutes pool = do
     liftIO $ print "reprocessing"
     resetFileProcessingJob user jobId
 
-    Web.Scotty.redirect "/dashboard"
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
+
+    redirect redirectTo
+
+  post "/reprocess-all/" $ requireUser pool $ \user -> do
+    liftIO $ print "reprocessing"
+    resetAllFileProcessingJobs user 
+
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
+
+    redirect redirectTo
