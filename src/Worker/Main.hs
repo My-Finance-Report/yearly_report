@@ -75,7 +75,8 @@ fetchAndLockNextJob = do
   maybeJob <-
     selectFirst
       [ ProcessFileJobStatus ==. Pending,
-        ProcessFileJobAttemptCount <. maxAttempts
+        ProcessFileJobAttemptCount <. maxAttempts,
+        ProcessFileJobArchived ==. False
       ]
       []
   case maybeJob of

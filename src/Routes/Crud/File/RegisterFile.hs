@@ -18,20 +18,13 @@ import Database.Database (updateUserOnboardingStep)
 import Database.Models (Category (Category), UploadedPdf, User (userOnboardingStep))
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, fromSqlKey, toSqlKey)
-import Database.Transaction (getAllTransactions, groupTransactionsBySource, removeTransactionByPdfId, updateTransactionCategory)
+import Database.Transaction (getAllTransactions, groupTransactionsBySource, removeFileAndTransactions, updateTransactionCategory)
 import Database.TransactionSource (addTransactionSource, getAllTransactionSources, getTransactionSource, removeTransactionSource, updateTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs, getUploadConfigById)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect, text)
-import Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFileProcessingJobs)
-
-deleteFileAndTransactions ::
-  Entity User ->
-  Key UploadedPdf ->
-  Web.Scotty.ActionM ()
-deleteFileAndTransactions user pdfId = do
-  liftIO $ removeTransactionByPdfId user pdfId
+import Worker.ParseFileJob (asyncFileProcess, resetAllFileProcessingJobs, resetFileProcessingJob)
 
 registerFileRoutes :: ConnectionPool -> ScottyM ()
 registerFileRoutes pool = do
@@ -48,9 +41,21 @@ registerFileRoutes pool = do
 
     redirect redirectTo
 
+  post "/delete-file/" $ requireUser pool $ \user -> do
+    fileIdText <- Web.Scotty.formParam "fId"
+
+    let fileId = toSqlKey $ read fileIdText
+
+    liftIO $ removeFileAndTransactions user fileId
+
+    referer <- header "Referer"
+    let redirectTo = fromMaybe "/dashboard" referer
+
+    redirect redirectTo
+
   post "/reprocess-all/" $ requireUser pool $ \user -> do
     liftIO $ print "reprocessing"
-    resetAllFileProcessingJobs user 
+    resetAllFileProcessingJobs user
 
     referer <- header "Referer"
     let redirectTo = fromMaybe "/dashboard" referer

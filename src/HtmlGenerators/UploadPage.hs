@@ -106,7 +106,7 @@ generateProcessedFilesComponent processedFiles = do
                     H.input
                       ! A.type_ "hidden"
                       ! A.name "fId"
-                      ! A.value (H.toValue $ show (fromSqlKey $ entityKey job))
+                      ! A.value (H.toValue $ show (fromSqlKey $ entityKey file))
                     H.button
                       ! A.type_ "submit"
                       ! A.class_ "secondary-button"
@@ -115,12 +115,12 @@ generateProcessedFilesComponent processedFiles = do
                 -- Delete Button
                 H.form
                   ! A.method "post"
-                  ! A.action (H.toValue $ "/delete-file/" <> show (fromSqlKey $ entityKey job))
+                  ! A.action "/delete-file/"
                   $ do
                     H.input
                       ! A.type_ "hidden"
                       ! A.name "fId"
-                      ! A.value (H.toValue $ show (fromSqlKey $ entityKey job))
+                      ! A.value (H.toValue $ show (fromSqlKey $ entityKey file))
                     H.button
                       ! A.type_ "submit"
                       ! A.class_ "secondary-danger-button"
@@ -136,9 +136,6 @@ generateProcessedFilesComponent processedFiles = do
               ! A.type_ "submit"
               ! A.class_ "primary-button"
               $ "Reprocess All Files"
-
-
-
 
 renderSelectAccountPage :: [(Entity UploadedPdf, Maybe (Entity TransactionSource))] -> [Entity TransactionSource] -> Html
 renderSelectAccountPage fileRecords transactionSources =

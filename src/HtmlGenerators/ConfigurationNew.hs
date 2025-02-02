@@ -141,6 +141,25 @@ renderLinkageForm configId sourceCategories maybeSelected = do
           toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory) <> " → " <> transactionSourceName (entityVal selectedTarget)
       Nothing -> return ()
 
+    case maybeSelected of
+      Just (selectedSource, selectedCategory, selectedTarget) -> do
+        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex-1" $ do
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "inputSourceId"
+            ! A.value (toValue $ fromSqlKey (entityKey selectedSource))
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "inputCategoryId"
+            ! A.value (toValue $ fromSqlKey (entityKey selectedCategory))
+          H.input
+            ! A.type_ "hidden"
+            ! A.name "targetSourceId"
+            ! A.value (toValue $ fromSqlKey (entityKey selectedTarget))
+          toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory) <> " → " <> transactionSourceName (entityVal selectedTarget)
+      Nothing -> return ()
+
+
     -- Remove Button
     H.input
       ! A.type_ "submit"

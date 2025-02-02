@@ -14,7 +14,7 @@ import Control.Exception (throwIO)
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
-import Data.List (nubBy)
+import Data.List (nubBy, sortOn)
 import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
 import Data.Maybe (isJust)
 import Data.Set (Set, empty, singleton, toList, union)
@@ -72,6 +72,7 @@ addPdfRecord user filename rawContent uploadTime = do
         UploadedPdf
           { uploadedPdfFilename = filename,
             uploadedPdfRawContent = rawContent,
+            uploadedPdfArchived = False,
             uploadedPdfUploadTime = uploadTime,
             uploadedPdfUserId = entityKey user
           }
@@ -92,13 +93,17 @@ isFileProcessed user file = do
 getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [(Entity ProcessFileJob, Entity UploadedPdf)]
 getAllProcessedFiles user = do
   pool <- liftIO getConnectionPool
-  jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user] []) pool -- Fetch all jobs
+
+  jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user, ProcessFileJobArchived ==. False] []) pool
+
   let pdfIds = map (processFileJobPdfId . entityVal) jobs
 
-  pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds] []) pool
+  pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds, UploadedPdfArchived ==. False] [Asc UploadedPdfFilename]) pool
 
   let pdfMap = Data.Map.fromList [(entityKey pdf, pdf) | pdf <- pdfs]
 
   let results = [(job, pdf) | job <- jobs, Just pdf <- [Data.Map.lookup (processFileJobPdfId (entityVal job)) pdfMap]]
 
-  return results
+  let sortedResults = Data.List.sortOn (uploadedPdfFilename . entityVal . snd) results
+
+  return sortedResults
