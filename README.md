@@ -28,9 +28,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - edit page is broken
+- regressed the category group by being selectd by default
 - why not be able to keep grouping by?
-- need to preserve location in tab groups when navigating forms
-- stacked column chart per cateogry
+- (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
 - do we actually constrain a file from being uploaded twice without nuking the first results?
 - uploads fail if the transactions source does not have any categories

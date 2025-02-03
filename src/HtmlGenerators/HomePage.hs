@@ -221,6 +221,7 @@ generateButtonRow transactionSources mappings =
                 ! A.type_ "button"
                 ! A.class_ "subtab-button secondary-button"
                 ! H.dataAttribute "subtab-index" (toValue $ Prelude.show subIdx)
+                ! H.dataAttribute "group-id" (toValue $ show subIdx)
                 ! A.onclick (toValue $ "showSubTab(" <> Prelude.show subIdx <> ")")
                 $ toHtml subName
 
