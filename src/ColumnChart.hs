@@ -61,9 +61,8 @@ resolveSourceCategoryName ::
   Text
 resolveSourceCategoryName sourceMap txn =
   let sourceId = categorySourceId $ entityVal $ category txn
-      sourceName = findWithDefault "Unknown" sourceId (Data.Map.map transactionSourceName sourceMap)
       catName = categoryName $ entityVal $ category txn
-   in sourceName <> " - " <> catName
+   in catName
 
 -- Group withdrawals by (Month, Source, Category)
 groupBySourceCategoryAndMonth ::

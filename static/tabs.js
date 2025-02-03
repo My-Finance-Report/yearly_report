@@ -35,6 +35,7 @@ function showTabWithSubtabs(tabIndex) {
     newUrl.searchParams.delete("sourceId");
   }
   window.history.pushState({}, "", newUrl);
+
   fetchAndDrawHistogram()
 
 }

@@ -27,6 +27,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- edit page is broken
+- why not be able to keep grouping by?
 - need to preserve location in tab groups when navigating forms
 - stacked column chart per cateogry
 - enable config of the barchart (categories to include + sources to include) (wip)
