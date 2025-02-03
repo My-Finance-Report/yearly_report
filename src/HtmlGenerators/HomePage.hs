@@ -227,13 +227,13 @@ generateDetailRows txs sectionId =
               H.span "No PDF ID"
 
 generateSubTabContent ::
-  Int -> -- Source index
-  Int -> -- Subtab index
-  Text -> -- Subtab name
-  GroupedTransactions -> -- Updated recursive grouped data
+  Int -> 
+  Int -> 
+  Text ->
+  GroupedTransactions ->
   H.Html
 generateSubTabContent srcIdx subIdx subtabName groupedData = do
-  let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx
+  let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx <> "-" <> unpack subtabName
   H.div
     ! A.id (toValue subtabId)
     ! A.class_ "subtab-content"
