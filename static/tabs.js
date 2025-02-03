@@ -35,6 +35,7 @@ function showTabWithSubtabs(tabIndex) {
     newUrl.searchParams.delete("sourceId");
   }
   window.history.pushState({}, "", newUrl);
+
   fetchAndDrawHistogram()
 
 }
@@ -73,6 +74,18 @@ function showSubTab(subtabIndex) {
   if (activeSubBtn) {
     activeSubBtn.setAttribute("disabled", "true");
   }
+
+
+    let selectedGroupId = activeSubBtn.getAttribute("data-group-id");
+    let newUrl = new URL(window.location);
+    if (selectedGroupId) {
+      newUrl.searchParams.set("groupId", selectedGroupId);
+    } else {
+      newUrl.searchParams.delete("groupId");
+    }
+    window.history.pushState({}, "", newUrl);
+
+
 }
 
 function toggleDetails(sectionId) {
@@ -104,6 +117,8 @@ function toggleArrow(clickedRow) {
 document.addEventListener("DOMContentLoaded", () => {
   let params = new URLSearchParams(window.location.search);
   let sourceId = params.get("sourceId");
+  let groupId = params.get("groupId");
+
   if (sourceId) {
     let matchingButton = document.querySelector(`.tab-button[data-source-id="${sourceId}"]`);
     if (matchingButton) {
@@ -111,7 +126,18 @@ document.addEventListener("DOMContentLoaded", () => {
       showTabWithSubtabs(tabIndex);
     }
   } else {
-    console.log("setting to index 0")
     showTabWithSubtabs(0);
   }
+
+  if (groupId) {
+    let matchingButton = document.querySelector(`.subtab-button[data-group-id="${groupId}"]`);
+    if (matchingButton) {
+      let tabIndex = matchingButton.getAttribute("data-subtab-index");
+      showSubTab(tabIndex);
+    }
+  } else {
+    showSubTab(0);
+  }
+
+
 });

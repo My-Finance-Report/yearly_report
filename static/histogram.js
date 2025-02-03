@@ -43,7 +43,16 @@ function drawHistogram(rows) {
   const options = {
     width: "100%",
     height: getChartHeight(),
-    legend: { position: 'top', maxLines: 3 },
+    legend: { 
+      position: 'top',  // Moves legend below the chart
+      maxLines: 4,  // Allows wrapping
+      textStyle: {
+        fontSize: 14,  // Increases font size
+        color: "#333", // Darker text color for better readability
+        bold: true,    // Makes text stand out
+      },
+      alignment: 'center' // Center the legend nicely
+    },
     isStacked: true, 
     bar: { 
       groupWidth: '75%',
