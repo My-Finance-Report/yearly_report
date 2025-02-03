@@ -9,6 +9,7 @@ module Types
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
+    GroupedTransactions(..),
     GroupingFunction,
     PdfParseException (..),
     CategorizationResponse (..),
@@ -117,3 +118,10 @@ data FullSankeyConfig = FullSankeyConfig
   deriving (Show, Generic)
 
 type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]
+
+type RecursiveGroupingFunction = [CategorizedTransaction] -> [GroupingFunction] -> Map.Map Text [CategorizedTransaction]
+
+data GroupedTransactions
+  = Leaf [CategorizedTransaction]
+  | Node (Map.Map Text GroupedTransactions)
+  deriving (Show, Eq)

@@ -795,6 +795,10 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.visible {
+  visibility: visible;
+}
+
 .static {
   position: static;
 }

@@ -3,6 +3,7 @@
 module HtmlGenerators.HomePageHelpers
   ( formatCurrency,
     formatSankeyRow,
+    applyGroupingLevels,
     groupByYearDescending,
     groupByMonthDescending,
     formatMonthYear,
@@ -49,12 +50,23 @@ formatSankeyRow (from, to, weight) =
 -- | Type alias for grouping function
 
 -- | Defines available grouping methods for transactions
-subtabMappings :: [(Text, GroupingFunction)]
+subtabMappings :: [(Text, [GroupingFunction])]
 subtabMappings =
-  [ ("Category", groupByBlah (categoryName . entityVal . category)),
-    ("Month", groupByMonthDescending),
-    ("Year", groupByYearDescending)
+  [ --("Category", [groupByCategory]),
+    ("Category → Month", [groupByCategory, groupByMonthDescending])
+    --("Month", [groupByMonthDescending]),
+    --("Year", [groupByYearDescending]),
+    --("Year → Month → Category", [groupByYearDescending, groupByMonthDescending, groupByCategory])
   ]
+
+applyGroupingLevels :: [CategorizedTransaction] -> [GroupingFunction] -> GroupedTransactions
+applyGroupingLevels txns [] = Leaf txns
+applyGroupingLevels txns (grpFunc : rest) =
+  Node $ Map.map (`applyGroupingLevels` rest) (grpFunc txns)
+
+groupByCategory :: GroupingFunction
+groupByCategory transactions = do
+  groupByBlah (categoryName . entityVal . category) transactions
 
 -- | Groups transactions by Year in descending order
 groupByYearDescending :: GroupingFunction

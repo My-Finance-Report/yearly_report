@@ -114,7 +114,7 @@ function toggleArrow(clickedRow) {
 
 
 
-document.addEventListener("DOMContentLoaded", () => {
+/* document.addEventListener("DOMContentLoaded", () => {
   let params = new URLSearchParams(window.location.search);
   let sourceId = params.get("sourceId");
   let groupId = params.get("groupId");
@@ -140,4 +140,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-});
+}); */
