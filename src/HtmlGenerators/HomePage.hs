@@ -14,7 +14,7 @@ import Database.Persist
 import Database.Persist.Postgresql (fromSqlKey, toSqlKey)
 import Database.Transaction
 import Database.TransactionSource
-import HtmlGenerators.Components (makeSimpleBanner, makeAddTransactionsBanner)
+import HtmlGenerators.Components (makeAddTransactionsBanner, makeSimpleBanner)
 import HtmlGenerators.HomePageHelpers
 import System.Directory (listDirectory)
 import System.FilePath ((</>))
@@ -175,12 +175,8 @@ generateButtonRow ::
   [(T.Text, GroupingFunction)] ->
   Html
 generateButtonRow transactionSources mappings =
-  let -- If you want them sorted in a particular order, do it here
-      sortedSources = transactionSources
-      -- Attach a global index to each source
+  let sortedSources = transactionSources
       indexedSources = Prelude.zip [0 ..] sortedSources
-
-      -- Group by the kind of the source
       groupedByKind =
         Data.List.groupBy
           ( \(_, entA) (_, entB) ->
@@ -189,7 +185,6 @@ generateButtonRow transactionSources mappings =
           )
           indexedSources
    in H.div ! A.class_ "flex flex-row flex-wrap gap-6" $ do
-        -- For each group of same-kind sources, render a fieldset
         forM_ groupedByKind $ \sameKindGroup ->
           case sameKindGroup of
             [] -> mempty
@@ -204,14 +199,15 @@ generateButtonRow transactionSources mappings =
                     toHtml (show kind) <> "s"
 
                   forM_ sameKindGroup $ \(idx, srcEnt) -> do
-                    let srcName = transactionSourceName (entityVal srcEnt)
+                    let srcId = entityKey srcEnt
+                        srcName = transactionSourceName (entityVal srcEnt)
                     H.button
                       ! A.type_ "button"
                       ! A.class_ "tab-button secondary-button"
                       ! H.dataAttribute "tab-index" (toValue $ Prelude.show idx)
+                      ! H.dataAttribute "source-id" (toValue $ show (fromSqlKey srcId))
                       ! A.onclick (toValue $ "showTabWithSubtabs(" <> Prelude.show idx <> ")")
                       $ toHtml srcName
-
         -- A separate fieldset for "Group By" buttons
         H.fieldset
           ! A.class_

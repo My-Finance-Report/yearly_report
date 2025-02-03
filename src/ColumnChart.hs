@@ -6,6 +6,7 @@ module ColumnChart (generateColChartData) where
 import Control.Exception (Exception, throw, throwIO)
 import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
 import Data.Aeson hiding (Key)
+import Data.List (sortOn)
 import Data.Map (Map, elems, findWithDefault, fromListWith, keys, keysSet, singleton, toList, unionWith)
 import qualified Data.Map
 import Data.Set (Set, unions)
@@ -29,68 +30,82 @@ data Matrix = Matrix
 
 instance ToJSON Matrix
 
+-- Truncate to the first day of the month
 truncateToMonth :: UTCTime -> UTCTime
 truncateToMonth utcTime =
   let (year, month, _) = toGregorian (utctDay utcTime)
    in UTCTime (fromGregorian year month 1) 0
 
+-- Format date as "MMM YYYY" (e.g., "Jan 2024")
 formatMonthYear :: UTCTime -> Text
 formatMonthYear utcTime = pack (formatTime defaultTimeLocale "%b %Y" utcTime)
 
+-- Check if transaction is a withdrawal
 isWithdrawal :: CategorizedTransaction -> Bool
 isWithdrawal txn =
   case transactionKind $ entityVal (transaction txn) of
     Deposit -> False
     Withdrawal -> True
 
+-- Get withdrawal amount (0 for deposits)
 getWithdrawalAmount :: CategorizedTransaction -> Double
 getWithdrawalAmount txn =
   case transactionKind $ entityVal (transaction txn) of
     Deposit -> 0
     Withdrawal -> transactionAmount $ entityVal $ transaction txn
 
-groupBySourceAndMonth ::
-  Map (Key TransactionSource) TransactionSource ->
-  [CategorizedTransaction] ->
-  Map UTCTime (Map Text Double)
-groupBySourceAndMonth sourceMap txns =
-  fromListWith
-    (unionWith (+))
-    [ ( truncateToMonth $ transactionDateOfTransaction $ entityVal $ transaction txn,
-        singleton (resolveSourceName sourceMap txn) (getWithdrawalAmount txn)
-      )
-      | txn <- txns,
-        isWithdrawal txn
-    ]
-
-resolveSourceName ::
+-- Generate the group key: (Source Name - Category Name)
+resolveSourceCategoryName ::
   Map (Key TransactionSource) TransactionSource ->
   CategorizedTransaction ->
   Text
-resolveSourceName sourceMap txn =
+resolveSourceCategoryName sourceMap txn =
   let sourceId = categorySourceId $ entityVal $ category txn
-   in findWithDefault "Unknown" sourceId (Data.Map.map transactionSourceName sourceMap) <> " Withdrawals"
+      sourceName = findWithDefault "Unknown" sourceId (Data.Map.map transactionSourceName sourceMap)
+      catName = categoryName $ entityVal $ category txn
+   in sourceName <> " - " <> catName
 
-extractAllSourceNames :: Map UTCTime (Map Text Double) -> [Text]
-extractAllSourceNames groupedData =
-  Data.Set.toList $ unions (Prelude.map keysSet $ elems groupedData)
+-- Group withdrawals by (Month, Source, Category)
+groupBySourceCategoryAndMonth ::
+  Maybe (Key TransactionSource) -> -- Optional filter for a specific source
+  Map (Key TransactionSource) TransactionSource ->
+  [CategorizedTransaction] ->
+  Map UTCTime (Map Text Double)
+groupBySourceCategoryAndMonth selectedSourceId sourceMap txns =
+  fromListWith
+    (unionWith (+))
+    [ ( truncateToMonth $ transactionDateOfTransaction $ entityVal $ transaction txn,
+        singleton (resolveSourceCategoryName sourceMap txn) (getWithdrawalAmount txn)
+      )
+      | txn <- txns,
+        isWithdrawal txn,
+        case selectedSourceId of
+          Just sourceId -> categorySourceId (entityVal (category txn)) == sourceId -- Filter by source
+          Nothing -> True -- No filtering, include all transactions
+    ]
 
+-- Extract all unique (Source, Category) pairs from grouped data
+extractAllSourceCategoryNames :: Map UTCTime (Map Text Double) -> [Text]
+extractAllSourceCategoryNames groupedData =
+  Data.Set.toList $ Data.Set.unions (map Data.Map.keysSet $ Data.Map.elems groupedData)
+
+-- Build matrix for stacked column chart
 buildMatrix ::
-  [Text] ->
-  Map UTCTime (Map Text Double) ->
+  [Text] -> -- All (Source, Category) pairs
+  Map UTCTime (Map Text Double) -> -- Grouped data by (Month, Source, Category)
   Matrix
-buildMatrix allSourceNames groupedData =
-  let columnHeaders = "Month" : allSourceNames
-      rowHeaders = Prelude.map formatMonthYear (keys groupedData)
-      dataRows = Prelude.map (buildRow allSourceNames) (toList groupedData)
+buildMatrix allSourceCategoryNames groupedData =
+  let columnHeaders = "Month" : allSourceCategoryNames
+      rowHeaders = map (formatMonthYear . fst) (sortOn fst (Data.Map.toList groupedData))
+      dataRows = map (buildRow allSourceCategoryNames) (sortOn fst (Data.Map.toList groupedData))
    in Matrix columnHeaders rowHeaders dataRows
 
 buildRow ::
-  [Text] ->
-  (UTCTime, Map Text Double) ->
+  [Text] -> -- All unique (Source, Category) pairs
+  (UTCTime, Map Text Double) -> -- Data for one month
   [Double]
-buildRow allSourceNames (_, sources) =
-  Prelude.map (\source -> findWithDefault 0 source sources) allSourceNames
+buildRow allSourceCategoryNames (_, sources) =
+  map (\sourceCategory -> findWithDefault 0 sourceCategory sources) allSourceCategoryNames
 
 filterByAllowedSources :: [TransactionSource] -> Map (Key TransactionSource) TransactionSource -> Map (Key TransactionSource) TransactionSource
 filterByAllowedSources allowedSources = Data.Map.filter (`elem` allowedSources)
@@ -133,14 +148,14 @@ sourcesFromConfig user config = do
       sources <- selectList [TransactionSourceId <-. sourceIds, TransactionSourceUserId ==. entityKey user] []
       return $ map entityVal sources
 
-generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> m Matrix
-generateColChartData user transactions = do
+generateColChartData :: (MonadUnliftIO m) => Entity User -> [CategorizedTransaction] -> Maybe (Key TransactionSource) -> m Matrix
+generateColChartData user transactions source = do
   sourceMap <- fetchSourceMap user
-  -- TODO enable col chart configs
+  -- TODO
   -- config <- selectDefaultConfig user
   -- allowedSources <- sourcesFromConfig user config
   -- let filteredSourceMap = filterByAllowedSources allowedSources sourceMap
-  let grouped = groupBySourceAndMonth sourceMap transactions
-  let allowedSourceNames = extractAllSourceNames grouped
+  let grouped = groupBySourceCategoryAndMonth source sourceMap transactions
+  let allowedSourceNames = extractAllSourceCategoryNames grouped
   let matrix = buildMatrix allowedSourceNames grouped
   return matrix

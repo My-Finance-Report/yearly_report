@@ -18,7 +18,7 @@ import Database.Persist
   ( Entity (entityKey, entityVal),
     PersistEntity (Key),
   )
-import Database.Persist.Postgresql (ConnectionPool)
+import Database.Persist.Postgresql (ConnectionPool, toSqlKey)
 import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.Components (makeDemoBanner)
@@ -27,7 +27,8 @@ import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
-import Web.Scotty (ActionM, ScottyM, formParam, get, html, json, post, redirect)
+import Text.Read (readMaybe)
+import Web.Scotty (ActionM, ScottyM, formParam, get, html, json, post, queryParamMaybe, redirect)
 
 registerDemoRoutes :: ConnectionPool -> ScottyM ()
 registerDemoRoutes pool = do
@@ -43,7 +44,11 @@ registerDemoRoutes pool = do
   get "/demo/api/histogram-data" $ do
     user <- getDemoUser
     transactions <- liftIO $ getAllTransactions user
-    histogramData <- generateColChartData user transactions
+
+    mSourceIdText <- queryParamMaybe "sourceId"
+    let mSourceId = fmap toSqlKey =<< (mSourceIdText >>= readMaybe)
+
+    histogramData <- generateColChartData user transactions mSourceId
     json histogramData
 
   get "/demo-account" $ do

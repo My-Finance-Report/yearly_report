@@ -2,9 +2,17 @@ google.charts.load('current', { packages: ['corechart'] });
 google.charts.setOnLoadCallback(fetchAndDrawHistogram);
 
 function fetchAndDrawHistogram() {
-   const apiEndpoint = window.location.pathname.includes('/demo-account')
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const sourceId = urlParams.get("sourceId");
+
+  let apiEndpoint = window.location.pathname.includes('/demo-account')
         ? '/demo/api/histogram-data'
         : '/api/column-data';
+
+  if (sourceId) {
+    apiEndpoint += `?sourceId=${sourceId}`;
+  }
 
 
   fetch(apiEndpoint)
@@ -36,7 +44,7 @@ function drawHistogram(rows) {
     width: "100%",
     height: getChartHeight(),
     legend: { position: 'top', maxLines: 3 },
-    isStacked: false, 
+    isStacked: true, 
     bar: { 
       groupWidth: '75%',
       spacing: 2 
@@ -85,4 +93,8 @@ function getChartHeight() {
 window.addEventListener("resize", () => {
   options.height = getChartHeight();
   drawSankeyChart();  
+});
+
+window.addEventListener("popstate", () => {
+  fetchAndDrawHistogram();
 });

@@ -23,6 +23,20 @@ function showTabWithSubtabs(tabIndex) {
   if (activeButton) {
     activeButton.setAttribute("disabled", "true");
   }
+
+  // (E) Update the URL without reloading the page
+  let selectedSourceId = activeButton.getAttribute("data-source-id");
+
+  // Update URL with the selected sourceId
+  let newUrl = new URL(window.location);
+  if (selectedSourceId) {
+    newUrl.searchParams.set("sourceId", selectedSourceId);
+  } else {
+    newUrl.searchParams.delete("sourceId");
+  }
+  window.history.pushState({}, "", newUrl);
+  fetchAndDrawHistogram()
+
 }
 
 function showSubTab(subtabIndex) {
@@ -85,7 +99,19 @@ function toggleArrow(clickedRow) {
   arrowEl.textContent = (arrowEl.textContent.trim() === "▶") ? "▼" : "▶";
 }
 
+
+
 document.addEventListener("DOMContentLoaded", () => {
-  showTabWithSubtabs(0);
-  showSubTab(0);
+  let params = new URLSearchParams(window.location.search);
+  let sourceId = params.get("sourceId");
+  if (sourceId) {
+    let matchingButton = document.querySelector(`.tab-button[data-source-id="${sourceId}"]`);
+    if (matchingButton) {
+      let tabIndex = matchingButton.getAttribute("data-tab-index");
+      showTabWithSubtabs(tabIndex);
+    }
+  } else {
+    console.log("setting to index 0")
+    showTabWithSubtabs(0);
+  }
 });

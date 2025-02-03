@@ -10,7 +10,7 @@ and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
 - generate reports
   - per month drill down
   - summary -> per transaction drill down
-  - configurable sankey nodes
+  - configurable sankey and column diagrams
 - allow for manually update transactions from a ui
 
 # Tech
@@ -27,6 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- need to preserve location in tab groups when navigating forms
 - stacked column chart per cateogry
 - enable config of the barchart (categories to include + sources to include) (wip)
 - do we actually constrain a file from being uploaded twice without nuking the first results?
@@ -35,7 +36,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - shareable report
   - allow to select different charts
 - dont show snakey if there is a cycle in the chart, and alert?
-- need to preserve location in tab groups when navigating forms
 - release an admin page
 - why is it so slow when i upload n files in the first pass?
   - probably some async code we dont need anymore

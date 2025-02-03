@@ -31,6 +31,8 @@ renderConfigurationPageNew configId sankeyConfig transactions uploaderConfigs tr
       H.h1 ! A.class_ "text-2xl font-bold text-gray-900 mb-4" $ "Flow Chart Configuration"
       renderEditSankeyConfigPage configId sankeyConfig transactions
 
+
+
 renderEditSankeyConfigPage ::
   Key SankeyConfig ->
   FullSankeyConfig ->
@@ -92,7 +94,6 @@ renderInputForm configId sourceCategories maybeSelected = do
       ! A.class_ "secondary-danger-button"
       ! A.formaction "/remove-sankey-input"
 
--- Individual Input Form
 renderNewInputForm ::
   Key SankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
