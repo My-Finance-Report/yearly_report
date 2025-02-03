@@ -1,5 +1,7 @@
 function showTabWithSubtabs(tabIndex) {
-  // (A) Re-enable all tab-button elements
+
+  console.log('show tab')
+
   let allTabButtons = document.querySelectorAll(".tab-button");
   for (let btn of allTabButtons) {
     btn.removeAttribute("disabled");
@@ -41,6 +43,8 @@ function showTabWithSubtabs(tabIndex) {
 }
 
 function showSubTab(subtabIndex) {
+  console.log('show sub tab')
+  console.log(subtabIndex)
   // Find the currently visible tab
   let visibleTab = document.querySelector('.tab-content[style*="display: block"]');
   if (!visibleTab) {
@@ -67,6 +71,8 @@ function showSubTab(subtabIndex) {
     chosenSub.style.display = "block";
   }
 
+  console.log(chosenSub)
+
   // (D) Disable the newly "active" subtab button
   //     (Assumes each subtab button has data-subtab-index="<subtabIndex>" in the visible tab)
   let activeSubBtn = document.querySelector('.subtab-button[data-subtab-index="' + subtabIndex + '"]');
@@ -89,32 +95,35 @@ function showSubTab(subtabIndex) {
 }
 
 function toggleDetails(sectionId) {
-  let row = document.getElementById(sectionId);
-  if (!row) {
-    return;
+  console.log(sectionId)
+  const section = document.getElementById(sectionId);
+  const row = document.querySelector(`[onclick="toggleDetails('${sectionId}')"]`);
+  if (section.classList.contains('hidden')) {
+    console.log('removing hidden')
+    section.classList.remove('hidden');
   }
+  
+  else {
+    console.log('adding hidden')
+    section.classList.add('hidden');
+  }
+}
 
-  // Toggle the "hidden" class
-  if (row.classList.contains("hidden")) {
-    row.classList.remove("hidden");
+function toggleArrow(row) {
+  const arrow = row.querySelector("td span"); // Find the arrow inside the row
+  if (!arrow) return;
+
+  if (row.dataset.rotated === "true") {
+    row.dataset.rotated = "false";
+    arrow.classList.remove("rotate-90");
   } else {
-    row.classList.add("hidden");
+    row.dataset.rotated = "true";
+    arrow.classList.add("rotate-90");
   }
 }
 
-function toggleArrow(clickedRow) {
-  let arrowEl = clickedRow.querySelector(".arrow");
-  if (!arrowEl) {
-    return;
-  }
 
-  // Switch arrow from ▶ to ▼ (and vice versa)
-  arrowEl.textContent = (arrowEl.textContent.trim() === "▶") ? "▼" : "▶";
-}
-
-
-
-/* document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   let params = new URLSearchParams(window.location.search);
   let sourceId = params.get("sourceId");
   let groupId = params.get("groupId");
@@ -140,4 +149,4 @@ function toggleArrow(clickedRow) {
   }
 
 
-}); */
+});

@@ -237,9 +237,8 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
   H.div
     ! A.id (toValue subtabId)
     ! A.class_ "subtab-content"
-    ! A.style "display: block;" -- Always keep visible for expandability
+    ! A.style "display: hidden;"
     $ case groupedData of
-      -- ✅ Final Level: Show Raw Transactions (No More Groups)
       Leaf transactions -> do
         let groupedTransactions = Map.singleton subtabName transactions
         generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedTransactions srcIdx subIdx
@@ -271,7 +270,7 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
 
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
-                      generateSubTabContent srcIdx (subIdx + 1) groupLabel nextLevel
+                      generateSubTabContent srcIdx (subIdx + 3) groupLabel nextLevel
   where
     isFinalGrouping :: Map.Map Text GroupedTransactions -> Bool
     isFinalGrouping deeperLevels =
@@ -283,24 +282,19 @@ generateTabsWithSubTabs ::
   H.Html
 generateTabsWithSubTabs transactionSources aggregatedBySource = do
   H.div ! A.class_ "tabs-container flex flex-col" $ do
-    -- The row of buttons:
     generateButtonRow transactionSources subtabMappings
 
-    -- The actual tab contents
     H.div ! A.class_ "border border-primary p-2 rounded-md mt-4" $ do
-      -- For each TransactionSource, create one "tab-content" block
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(srcIdx, sourceEnt) -> do
         let tabId = "tab-content-" <> show srcIdx
-            -- Filter down to only the transactions belonging to `sourceEnt`
             thisSourceData = Map.lookup sourceEnt aggregatedBySource
 
         H.div
           ! A.id (toValue tabId)
           ! A.class_ "tab-content"
-          ! A.style (if srcIdx == 0 then "display: block;" else "display: block;")
+          ! A.style (if srcIdx == 0 then "display: block;" else "display: hidden;")
           $ case thisSourceData of
             Just allTxs -> do
-              -- Loop through available grouping levels and generate subtabs
               forM_ (Prelude.zip [0 ..] subtabMappings) $ \(subIdx, (subName, groupFuncs)) -> do
                 let groupedData = applyGroupingLevels allTxs groupFuncs
                 generateSubTabContent srcIdx subIdx subName groupedData
