@@ -4,6 +4,7 @@ module HtmlGenerators.HomePageHelpers
   ( formatCurrency,
     formatSankeyRow,
     applyGroupingLevels,
+    extractAllTransactions,
     groupByYearDescending,
     groupByMonthDescending,
     formatMonthYear,
@@ -52,11 +53,11 @@ formatSankeyRow (from, to, weight) =
 -- | Defines available grouping methods for transactions
 subtabMappings :: [(Text, [GroupingFunction])]
 subtabMappings =
-  [ --("Category", [groupByCategory]),
+  [ -- ("Category", [groupByCategory]),
     ("Category → Month", [groupByCategory, groupByMonthDescending])
-    --("Month", [groupByMonthDescending]),
-    --("Year", [groupByYearDescending]),
-    --("Year → Month → Category", [groupByYearDescending, groupByMonthDescending, groupByCategory])
+    -- ("Month", [groupByMonthDescending]),
+    -- ("Year", [groupByYearDescending]),
+    -- ("Year → Month → Category", [groupByYearDescending, groupByMonthDescending, groupByCategory])
   ]
 
 applyGroupingLevels :: [CategorizedTransaction] -> [GroupingFunction] -> GroupedTransactions
@@ -125,6 +126,10 @@ computeGroupTotals txns =
     formatCurrency $ sum $ Prelude.map (computeWithdrawals . entityVal . transaction) txns,
     formatCurrency $ sum $ Prelude.map (computeDeposits . entityVal . transaction) txns
   )
+
+extractAllTransactions :: GroupedTransactions -> [CategorizedTransaction]
+extractAllTransactions (Leaf txns) = txns
+extractAllTransactions (Node groups) = concatMap extractAllTransactions (Map.elems groups)
 
 computeTotals :: Map.Map Text [CategorizedTransaction] -> (Text, Text, Text)
 computeTotals aggregated =

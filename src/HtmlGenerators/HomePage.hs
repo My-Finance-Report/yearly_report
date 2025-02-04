@@ -227,8 +227,8 @@ generateDetailRows txs sectionId =
               H.span "No PDF ID"
 
 generateSubTabContent ::
-  Int -> 
-  Int -> 
+  Int ->
+  Int ->
   Text ->
   GroupedTransactions ->
   H.Html
@@ -254,6 +254,7 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
 
               H.tbody $
                 forM_ (Prelude.zip [0 ..] (Map.toList deeperLevels)) $ \(localIdx, (groupLabel, nextLevel)) -> do
+                  let (balance, withdrawals, deposites) = computeGroupTotals $ extractAllTransactions nextLevel
                   let sectionId =
                         T.concat
                           [ "details-",
@@ -266,7 +267,7 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
                             T.pack (show localIdx) -- e.g. "0"
                           ]
 
-                  generateAggregateRow groupLabel "N/A" "N/A" "N/A" sectionId
+                  generateAggregateRow groupLabel balance withdrawals deposites sectionId
 
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
