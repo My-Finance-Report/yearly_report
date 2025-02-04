@@ -272,6 +272,10 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
                       generateSubTabContent srcIdx (subIdx + 3) groupLabel nextLevel
+
+              let (totalBalance, totalWithdrawals, totalDeposits) = computeGroupTotals $ extractAllTransactions groupedData
+              generateTotalsRow totalWithdrawals totalDeposits totalBalance
+
   where
     isFinalGrouping :: Map.Map Text GroupedTransactions -> Bool
     isFinalGrouping deeperLevels =
