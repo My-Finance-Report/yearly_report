@@ -106,9 +106,9 @@ generateAggregatedRowsWithExpandableDetails ::
   -- | Aggregated data
   Map.Map Text [CategorizedTransaction] ->
   Int ->
-  Int ->
+  Text ->
   H.Html
-generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subIdx = do
+generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subName = do
   let (totalBalance, totalWithdrawals, totalDeposits) = computeTotals aggregated
 
   H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
@@ -123,7 +123,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subIdx = do
               [ "details-",
                 T.pack (show srcIdx), -- e.g. "0"
                 "-",
-                T.pack (show subIdx), -- e.g. "1"
+                subName,
                 "-",
                 key, -- e.g. "Groceries"
                 "-",
@@ -241,12 +241,12 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
     $ case groupedData of
       Leaf transactions -> do
         let groupedTransactions = Map.singleton subtabName transactions
-        generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedTransactions srcIdx subIdx
+        generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedTransactions srcIdx subtabName
       Node deeperLevels -> do
         if isFinalGrouping deeperLevels
           then do
             let formattedData = Map.map (\case Leaf txs -> txs; _ -> []) deeperLevels
-            generateAggregatedRowsWithExpandableDetails (toHtml subtabName) formattedData srcIdx subIdx
+            generateAggregatedRowsWithExpandableDetails (toHtml subtabName) formattedData srcIdx subtabName
           else do
             -- Otherwise, recurse normally
             H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
