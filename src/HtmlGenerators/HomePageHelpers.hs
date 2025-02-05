@@ -54,10 +54,10 @@ formatSankeyRow (from, to, weight) =
 subtabMappings :: [(Text, [GroupingFunction])]
 subtabMappings =
   [ ("Category", [groupByCategory]),
-    ("Category → Month", [groupByCategory, groupByMonthDescending])
-    -- ("Month", [groupByMonthDescending]),
-    -- ("Year", [groupByYearDescending]),
-    -- ("Year → Month → Category", [groupByYearDescending, groupByMonthDescending, groupByCategory])
+    ("Month", [groupByMonthDescending]),
+    ("Year", [groupByYearDescending]),
+    ("Category → Month", [groupByCategory, groupByMonthDescending]),
+    ("Year → Category", [groupByYearDescending, groupByCategory])
   ]
 
 applyGroupingLevels :: [CategorizedTransaction] -> [GroupingFunction] -> GroupedTransactions

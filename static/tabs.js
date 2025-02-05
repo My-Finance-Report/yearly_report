@@ -81,56 +81,6 @@ function showSubTab(subTabIndex){
 
 }
 
-function showSubTabBlah(subtabIndex) {
-  console.log('show sub tab')
-  console.log(subtabIndex)
-  // Find the currently visible tab
-  let visibleTab = document.querySelector('.tab-content[style*="display: block"]');
-  if (!visibleTab) {
-    return;
-  }
-
-  // (A) Re-enable all subtab-button elements *within* the visible tab
-  let subtabButtons = document.querySelectorAll(".subtab-button");
-  for (let btn of subtabButtons) {
-    btn.removeAttribute("disabled");
-  }
-
-  // (B) Hide all .subtab-content sections in the visible tab
-  let subtabs = visibleTab.getElementsByClassName("subtab-content");
-  for (let s of subtabs) {
-    s.style.display = "none";
-  }
-
-  // (C) Show the requested subtab
-  let tabIndex = visibleTab.id.replace("tab-content-", "");
-  let subtabId = "subtab-content-" + tabIndex + "-" + subtabIndex;
-  let chosenSub = document.getElementById(subtabId);
-  if (chosenSub) {
-    chosenSub.style.display = "block";
-  }
-
-
-  // (D) Disable the newly "active" subtab button
-  //     (Assumes each subtab button has data-subtab-index="<subtabIndex>" in the visible tab)
-  let activeSubBtn = document.querySelector('.subtab-button[data-subtab-index="' + subtabIndex + '"]');
-
-  if (activeSubBtn) {
-    activeSubBtn.setAttribute("disabled", "true");
-  }
-
-
-    let selectedGroupId = activeSubBtn.getAttribute("data-group-id");
-    let newUrl = new URL(window.location);
-    if (selectedGroupId) {
-      newUrl.searchParams.set("groupId", selectedGroupId);
-    } else {
-      newUrl.searchParams.delete("groupId");
-    }
-    window.history.pushState({}, "", newUrl);
-
-
-}
 
 function toggleDetails(sectionId) {
   console.log(sectionId)
