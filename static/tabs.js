@@ -36,12 +36,16 @@ function showTabWithSubtabs(tabIndex) {
     newUrl.searchParams.delete("sourceId");
   }
   window.history.pushState({}, "", newUrl);
-
+  showSubTab()
   fetchAndDrawHistogram()
 
 }
 
 function showSubTab(subTabIndex){
+  if (subTabIndex == null | subTabIndex == undefined){
+    let params = new URLSearchParams(window.location.search);
+    subTabIndex = params.get("groupId");
+  }
 
   let subtabButtons = document.querySelectorAll(".subtab-button");
   for (let btn of subtabButtons) {
@@ -59,7 +63,9 @@ function showSubTab(subTabIndex){
 
   let subtabs = visibleTab.getElementsByClassName("subtab-content");
   for (let s of subtabs) {
-    s.style.display = "none";
+    if (s.id.length == 18){ // this is an insane hack to only hide first level components
+      s.style.display = "none";
+    }
   }
 
   let subtabId = "subtab-content-" + tabIndex + "-" + subTabIndex;
@@ -67,6 +73,10 @@ function showSubTab(subTabIndex){
   if (chosenSub) {
     chosenSub.style.display = "block";
   }
+
+  let newUrl = new URL(window.location);
+  newUrl.searchParams.set("groupId", subTabIndex);
+  window.history.pushState({}, "", newUrl);
 
 
 }

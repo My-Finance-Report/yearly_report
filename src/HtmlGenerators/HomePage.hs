@@ -271,7 +271,7 @@ generateNestedTable srcIdx subIdx subtabName groupedData = do
 
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
-                      generateNestedTable srcIdx (subIdx + 3) groupLabel nextLevel
+                      generateNestedTable srcIdx (read (show subIdx <> "1")) groupLabel nextLevel
 
               let (totalBalance, totalWithdrawals, totalDeposits) = computeGroupTotals $ extractAllTransactions groupedData
               generateTotalsRow totalWithdrawals totalDeposits totalBalance
