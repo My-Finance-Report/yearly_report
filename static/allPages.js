@@ -10,18 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-function toggleArrow(row) {
-  const arrow = row.querySelector("td span"); // Find the arrow inside the row
-  if (!arrow) return;
 
-  if (row.dataset.rotated === "true") {
-    row.dataset.rotated = "false";
-    arrow.classList.remove("rotate-90");
-  } else {
-    row.dataset.rotated = "true";
-    arrow.classList.add("rotate-90");
-  }
-}
 
 
 document.addEventListener("DOMContentLoaded", function () {

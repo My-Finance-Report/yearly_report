@@ -28,7 +28,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - edit page is broken
-- regressed the category group by being selectd by default
+- not sorting by month correctly in sub grouping
+- maybe reprocess when you update a category
 - why not be able to keep grouping by?
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)

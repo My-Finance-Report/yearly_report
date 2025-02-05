@@ -3,6 +3,8 @@
 module HtmlGenerators.HomePageHelpers
   ( formatCurrency,
     formatSankeyRow,
+    applyGroupingLevels,
+    extractAllTransactions,
     groupByYearDescending,
     groupByMonthDescending,
     formatMonthYear,
@@ -49,12 +51,23 @@ formatSankeyRow (from, to, weight) =
 -- | Type alias for grouping function
 
 -- | Defines available grouping methods for transactions
-subtabMappings :: [(Text, GroupingFunction)]
+subtabMappings :: [(Text, [GroupingFunction])]
 subtabMappings =
-  [ ("Category", groupByBlah (categoryName . entityVal . category)),
-    ("Month", groupByMonthDescending),
-    ("Year", groupByYearDescending)
+  [ ("Category", [groupByCategory]),
+    ("Month", [groupByMonthDescending]),
+    ("Year", [groupByYearDescending]),
+    ("Category → Month", [groupByCategory, groupByMonthDescending]),
+    ("Year → Category", [groupByYearDescending, groupByCategory])
   ]
+
+applyGroupingLevels :: [CategorizedTransaction] -> [GroupingFunction] -> GroupedTransactions
+applyGroupingLevels txns [] = Leaf txns
+applyGroupingLevels txns (grpFunc : rest) =
+  Node $ Map.map (`applyGroupingLevels` rest) (grpFunc txns)
+
+groupByCategory :: GroupingFunction
+groupByCategory transactions = do
+  groupByBlah (categoryName . entityVal . category) transactions
 
 -- | Groups transactions by Year in descending order
 groupByYearDescending :: GroupingFunction
@@ -113,6 +126,10 @@ computeGroupTotals txns =
     formatCurrency $ sum $ Prelude.map (computeWithdrawals . entityVal . transaction) txns,
     formatCurrency $ sum $ Prelude.map (computeDeposits . entityVal . transaction) txns
   )
+
+extractAllTransactions :: GroupedTransactions -> [CategorizedTransaction]
+extractAllTransactions (Leaf txns) = txns
+extractAllTransactions (Node groups) = concatMap extractAllTransactions (Map.elems groups)
 
 computeTotals :: Map.Map Text [CategorizedTransaction] -> (Text, Text, Text)
 computeTotals aggregated =

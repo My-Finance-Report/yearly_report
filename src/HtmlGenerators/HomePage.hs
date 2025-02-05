@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module HtmlGenerators.HomePage (renderHomePage) where
@@ -24,41 +25,60 @@ import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Types
 
-generateAggregatedRowsWithExpandableDetails ::
-  -- | Header for this group
-  H.Html ->
-  -- | Aggregated data
-  Map.Map Text [CategorizedTransaction] ->
-  Int ->
-  Int ->
-  H.Html
-generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subIdx = do
-  let (totalBalance, totalWithdrawals, totalDeposits) = computeTotals aggregated
+generateButtonRow ::
+  [Entity TransactionSource] ->
+  [(T.Text, [GroupingFunction])] ->
+  Html
+generateButtonRow transactionSources mappings =
+  let sortedSources = transactionSources
+      indexedSources = Prelude.zip [0 ..] sortedSources
+      groupedByKind =
+        Data.List.groupBy
+          ( \(_, entA) (_, entB) ->
+              transactionSourceSourceKind (entityVal entA)
+                == transactionSourceSourceKind (entityVal entB)
+          )
+          indexedSources
+   in H.div ! A.class_ "flex flex-row flex-wrap gap-6" $ do
+        forM_ groupedByKind $ \sameKindGroup ->
+          case sameKindGroup of
+            [] -> mempty
+            ((_, firstEnt) : _) -> do
+              let kind = transactionSourceSourceKind (entityVal firstEnt)
+              H.fieldset
+                ! A.class_
+                  "flex flex-row gap-2 text-primary border-primary \
+                  \rounded-md border-[1px] p-4 bg-white shadow-sm"
+                $ do
+                  H.legend ! A.class_ "text-lg font-semibold text-primary" $
+                    toHtml (show kind) <> "s"
 
-  H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
-    generateTableHeader header
+                  forM_ sameKindGroup $ \(idx, srcEnt) -> do
+                    let srcId = entityKey srcEnt
+                        srcName = transactionSourceName (entityVal srcEnt)
+                    H.button
+                      ! A.type_ "button"
+                      ! A.class_ "tab-button secondary-button"
+                      ! H.dataAttribute "tab-index" (toValue $ Prelude.show idx)
+                      ! H.dataAttribute "source-id" (toValue $ show (fromSqlKey srcId))
+                      ! A.onclick (toValue $ "showTabWithSubtabs(" <> Prelude.show idx <> ")")
+                      $ toHtml srcName
+        -- A separate fieldset for "Group By" buttons
+        H.fieldset
+          ! A.class_
+            "flex flex-row gap-2 text-primary border-primary \
+            \rounded-md border-[1px] p-4 bg-white shadow-sm"
+          $ do
+            H.legend ! A.class_ "text-lg font-semibold text-primary" $ "Group By"
 
-    forM_ (Prelude.zip [0 ..] (Map.toList aggregated)) $ \(localIdx, (key, txns)) -> do
-      let (balance, withdrawals, deposits) = computeGroupTotals txns
-          -- Create a *globally* unique ID for this row
-          -- e.g. "details-0-1-Groceries-0"
-          sectionId =
-            T.concat
-              [ "details-",
-                T.pack (show srcIdx), -- e.g. "0"
-                "-",
-                T.pack (show subIdx), -- e.g. "1"
-                "-",
-                key, -- e.g. "Groceries"
-                "-",
-                T.pack (show localIdx) -- e.g. "0"
-              ]
-
-      generateAggregateRow key balance withdrawals deposits sectionId
-      generateDetailRows txns sectionId
-
-    -- Finally, show the totals row
-    generateTotalsRow totalWithdrawals totalDeposits totalBalance
+            forM_ (Prelude.zip [0 ..] mappings) $ \(subIdx, (subName, _)) -> do
+              H.button
+                ! A.type_ "button"
+                ! A.class_ "subtab-button secondary-button"
+                ! H.dataAttribute "subtab-index" (toValue $ Prelude.show subIdx)
+                ! H.dataAttribute "group-id" (toValue $ show subIdx)
+                ! A.onclick (toValue $ "showSubTab(" <> Prelude.show subIdx <> ")")
+                $ toHtml subName
 
 generateTableHeader :: H.Html -> H.Html
 generateTableHeader header = do
@@ -79,6 +99,42 @@ generateTableHeader header = do
 
       -- Balance Column (Always Visible)
       H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Balance"
+
+generateAggregatedRowsWithExpandableDetails ::
+  -- | Header for this group
+  H.Html ->
+  -- | Aggregated data
+  Map.Map Text [CategorizedTransaction] ->
+  Int ->
+  Text ->
+  H.Html
+generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subName = do
+  let (totalBalance, totalWithdrawals, totalDeposits) = computeTotals aggregated
+
+  H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
+    generateTableHeader header
+
+    forM_ (Prelude.zip [0 ..] (Map.toList aggregated)) $ \(localIdx, (key, txns)) -> do
+      let (balance, withdrawals, deposits) = computeGroupTotals txns
+          -- Create a *globally* unique ID for this row
+          -- e.g. "details-0-1-Groceries-0"
+          sectionId =
+            T.concat
+              [ "details-",
+                T.pack (show srcIdx), -- e.g. "0"
+                "-",
+                subName,
+                "-",
+                key, -- e.g. "Groceries"
+                "-",
+                T.pack (show localIdx) -- e.g. "0"
+              ]
+
+      generateAggregateRow key balance withdrawals deposits sectionId
+      generateDetailRows txns sectionId
+
+    -- Finally, show the totals row
+    generateTotalsRow totalWithdrawals totalDeposits totalBalance
 
 generateAggregatedSection ::
   Text ->
@@ -170,106 +226,84 @@ generateDetailRows txs sectionId =
             Nothing ->
               H.span "No PDF ID"
 
-generateButtonRow ::
-  [Entity TransactionSource] ->
-  [(T.Text, GroupingFunction)] ->
-  Html
-generateButtonRow transactionSources mappings =
-  let sortedSources = transactionSources
-      indexedSources = Prelude.zip [0 ..] sortedSources
-      groupedByKind =
-        Data.List.groupBy
-          ( \(_, entA) (_, entB) ->
-              transactionSourceSourceKind (entityVal entA)
-                == transactionSourceSourceKind (entityVal entB)
-          )
-          indexedSources
-   in H.div ! A.class_ "flex flex-row flex-wrap gap-6" $ do
-        forM_ groupedByKind $ \sameKindGroup ->
-          case sameKindGroup of
-            [] -> mempty
-            ((_, firstEnt) : _) -> do
-              let kind = transactionSourceSourceKind (entityVal firstEnt)
-              H.fieldset
-                ! A.class_
-                  "flex flex-row gap-2 text-primary border-primary \
-                  \rounded-md border-[1px] p-4 bg-white shadow-sm"
-                $ do
-                  H.legend ! A.class_ "text-lg font-semibold text-primary" $
-                    toHtml (show kind) <> "s"
-
-                  forM_ sameKindGroup $ \(idx, srcEnt) -> do
-                    let srcId = entityKey srcEnt
-                        srcName = transactionSourceName (entityVal srcEnt)
-                    H.button
-                      ! A.type_ "button"
-                      ! A.class_ "tab-button secondary-button"
-                      ! H.dataAttribute "tab-index" (toValue $ Prelude.show idx)
-                      ! H.dataAttribute "source-id" (toValue $ show (fromSqlKey srcId))
-                      ! A.onclick (toValue $ "showTabWithSubtabs(" <> Prelude.show idx <> ")")
-                      $ toHtml srcName
-        -- A separate fieldset for "Group By" buttons
-        H.fieldset
-          ! A.class_
-            "flex flex-row gap-2 text-primary border-primary \
-            \rounded-md border-[1px] p-4 bg-white shadow-sm"
-          $ do
-            H.legend ! A.class_ "text-lg font-semibold text-primary" $ "Group By"
-
-            forM_ (Prelude.zip [0 ..] mappings) $ \(subIdx, (subName, _)) -> do
-              H.button
-                ! A.type_ "button"
-                ! A.class_ "subtab-button secondary-button"
-                ! H.dataAttribute "subtab-index" (toValue $ Prelude.show subIdx)
-                ! H.dataAttribute "group-id" (toValue $ show subIdx)
-                ! A.onclick (toValue $ "showSubTab(" <> Prelude.show subIdx <> ")")
-                $ toHtml subName
-
-generateSubTabContent ::
-  -- | The source's index
+generateNestedTable ::
   Int ->
-  -- | The subtab index
   Int ->
-  -- | The subtab's displayed name
   Text ->
-  -- | grouped data
-  Map.Map Text [CategorizedTransaction] ->
+  GroupedTransactions ->
   H.Html
-generateSubTabContent srcIdx subIdx subtabName groupedData = do
+generateNestedTable srcIdx subIdx subtabName groupedData = do
   let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx
   H.div
     ! A.id (toValue subtabId)
     ! A.class_ "subtab-content"
-    ! A.style (if subIdx == 0 then "display: block;" else "display: none;")
-    $ generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedData srcIdx subIdx
+    ! A.style "display: hidden;"
+    $ case groupedData of
+      Leaf transactions -> do
+        let groupedTransactions = Map.singleton subtabName transactions
+        generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedTransactions srcIdx subtabName
+      Node deeperLevels -> do
+        if isFinalGrouping deeperLevels
+          then do
+            let formattedData = Map.map (\case Leaf txs -> txs; _ -> []) deeperLevels
+            generateAggregatedRowsWithExpandableDetails (toHtml subtabName) formattedData srcIdx subtabName
+          else do
+            -- Otherwise, recurse normally
+            H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
+              generateTableHeader (toHtml subtabName)
 
-generateTabsWithSubTabs ::
+              H.tbody $
+                forM_ (Prelude.zip [0 ..] (Map.toList deeperLevels)) $ \(localIdx, (groupLabel, nextLevel)) -> do
+                  let (balance, withdrawals, deposites) = computeGroupTotals $ extractAllTransactions nextLevel
+                  let sectionId =
+                        T.concat
+                          [ "details-",
+                            T.pack (show srcIdx), -- e.g. "0"
+                            "-",
+                            T.pack (show subIdx), -- e.g. "1"
+                            "-",
+                            groupLabel, -- e.g. "Groceries"
+                            "-",
+                            T.pack (show localIdx) -- e.g. "0"
+                          ]
+
+                  generateAggregateRow groupLabel balance withdrawals deposites sectionId
+
+                  H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
+                    H.td ! A.colspan "5" $
+                      generateNestedTable srcIdx (read (show subIdx <> "1")) groupLabel nextLevel
+
+              let (totalBalance, totalWithdrawals, totalDeposits) = computeGroupTotals $ extractAllTransactions groupedData
+              generateTotalsRow totalWithdrawals totalDeposits totalBalance
+  where
+    isFinalGrouping :: Map.Map Text GroupedTransactions -> Bool
+    isFinalGrouping deeperLevels =
+      Prelude.all (\case Leaf _ -> True; _ -> False) (Map.elems deeperLevels)
+
+generateSourceTables ::
   [Entity TransactionSource] ->
   Map.Map (Entity TransactionSource) [CategorizedTransaction] ->
   H.Html
-generateTabsWithSubTabs transactionSources aggregatedBySource = do
+generateSourceTables transactionSources aggregatedBySource = do
   H.div ! A.class_ "tabs-container flex flex-col" $ do
-    -- The row of buttons:
     generateButtonRow transactionSources subtabMappings
 
-    -- The actual tab contents
     H.div ! A.class_ "border border-primary p-2 rounded-md mt-4" $ do
-      -- For each TransactionSource, create one "tab-content" block
       forM_ (Prelude.zip [0 ..] transactionSources) $ \(srcIdx, sourceEnt) -> do
         let tabId = "tab-content-" <> show srcIdx
-            -- Filter the big Map down to only the data belonging to `sourceEnt`
-            thisSourceData = Map.filterWithKey (\k _ -> k == sourceEnt) aggregatedBySource
+            thisSourceData = Map.lookup sourceEnt aggregatedBySource
 
         H.div
           ! A.id (toValue tabId)
+          ! H.dataAttribute "tab-index" (toValue srcIdx)
           ! A.class_ "tab-content"
-          ! A.style (if srcIdx == 0 then "display: block;" else "display: none;")
-          $ do
-            -- For each subtabMapping, we do a grouping
-            forM_ (Prelude.zip [0 ..] subtabMappings) $ \(subIdx, (subName, groupingFunc)) -> do
-              let allTxs = Prelude.concat (Map.elems thisSourceData)
-                  grouped = groupingFunc allTxs
-              generateSubTabContent srcIdx subIdx subName grouped
+          ! A.style (if srcIdx == 0 then "display: block;" else "display: hidden;")
+          $ case thisSourceData of
+            Just allTxs -> do
+              forM_ (Prelude.zip [0 ..] subtabMappings) $ \(subIdx, (subName, groupFuncs)) -> do
+                let groupedData = applyGroupingLevels allTxs groupFuncs
+                generateNestedTable srcIdx subIdx subName groupedData
+            Nothing -> H.p "No transactions for this source."
 
 generateHomapageHtml ::
   Maybe Html ->
@@ -300,6 +334,6 @@ renderHomePage user banner = do
             then Just makeAddTransactionsBanner
             else Nothing
 
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource
+  let tabs = generateSourceTables transactionSources groupedBySource
   let strictText = generateHomapageHtml updatedBanner tabs
   return strictText
