@@ -234,10 +234,11 @@ generateNestedTable ::
   H.Html
 generateNestedTable srcIdx subIdx subtabName groupedData = do
   let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx
+      style = "display: hidden; margin-left: " <> T.pack (show (20 * Prelude.length (show subIdx))) <> "px;"
   H.div
     ! A.id (toValue subtabId)
     ! A.class_ "subtab-content"
-    ! A.style "display: hidden;"
+    ! A.style (toValue style)
     $ case groupedData of
       Leaf transactions -> do
         let groupedTransactions = Map.singleton subtabName transactions

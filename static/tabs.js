@@ -1,34 +1,26 @@
 function showTabWithSubtabs(tabIndex) {
-
-
   let allTabButtons = document.querySelectorAll(".tab-button");
   for (let btn of allTabButtons) {
     btn.removeAttribute("disabled");
   }
 
-  // (B) Hide all tab-content elements
   let tabs = document.getElementsByClassName("tab-content");
   for (let t of tabs) {
     t.style.display = "none";
   }
 
-  // (C) Show the chosen tab
   let chosenTab = document.getElementById("tab-content-" + tabIndex);
   if (chosenTab) {
     chosenTab.style.display = "block";
   }
 
-  // (D) Disable the newly "active" button
-  //     (Assumes each button has data-tab-index="<idx>" to match tabIndex)
   let activeButton = document.querySelector('.tab-button[data-tab-index="' + tabIndex + '"]');
   if (activeButton) {
     activeButton.setAttribute("disabled", "true");
   }
 
-  // (E) Update the URL without reloading the page
   let selectedSourceId = activeButton.getAttribute("data-source-id");
 
-  // Update URL with the selected sourceId
   let newUrl = new URL(window.location);
   if (selectedSourceId) {
     newUrl.searchParams.set("sourceId", selectedSourceId);
@@ -98,7 +90,7 @@ function toggleDetails(sectionId) {
 }
 
 function toggleArrow(row) {
-  const arrow = row.querySelector("td span"); // Find the arrow inside the row
+  const arrow = row.querySelector("td span"); 
   if (!arrow) return;
 
   if (row.dataset.rotated === "true") {
