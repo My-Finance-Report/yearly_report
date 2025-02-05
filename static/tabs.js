@@ -1,6 +1,5 @@
 function showTabWithSubtabs(tabIndex) {
 
-  console.log('show tab')
 
   let allTabButtons = document.querySelectorAll(".tab-button");
   for (let btn of allTabButtons) {
@@ -42,7 +41,17 @@ function showTabWithSubtabs(tabIndex) {
 
 }
 
-function showSubTab(subtabIndex) {
+function showSubTab(subTabIndex){
+  let activeSubBtn = document.querySelector('.subtab-button[data-subtab-index="' + subTabIndex + '"]');
+  if (activeSubBtn) {
+    activeSubBtn.setAttribute("disabled", "true");
+  }
+
+
+
+}
+
+function showSubTabBlah(subtabIndex) {
   console.log('show sub tab')
   console.log(subtabIndex)
   // Find the currently visible tab
@@ -71,7 +80,6 @@ function showSubTab(subtabIndex) {
     chosenSub.style.display = "block";
   }
 
-  console.log(chosenSub)
 
   // (D) Disable the newly "active" subtab button
   //     (Assumes each subtab button has data-subtab-index="<subtabIndex>" in the visible tab)

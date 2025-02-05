@@ -226,13 +226,13 @@ generateDetailRows txs sectionId =
             Nothing ->
               H.span "No PDF ID"
 
-generateSubTabContent ::
+generateNestedTable ::
   Int ->
   Int ->
   Text ->
   GroupedTransactions ->
   H.Html
-generateSubTabContent srcIdx subIdx subtabName groupedData = do
+generateNestedTable srcIdx subIdx subtabName groupedData = do
   let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx <> "-" <> unpack subtabName
   H.div
     ! A.id (toValue subtabId)
@@ -271,21 +271,20 @@ generateSubTabContent srcIdx subIdx subtabName groupedData = do
 
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
-                      generateSubTabContent srcIdx (subIdx + 3) groupLabel nextLevel
+                      generateNestedTable srcIdx (subIdx + 3) groupLabel nextLevel
 
               let (totalBalance, totalWithdrawals, totalDeposits) = computeGroupTotals $ extractAllTransactions groupedData
               generateTotalsRow totalWithdrawals totalDeposits totalBalance
-
   where
     isFinalGrouping :: Map.Map Text GroupedTransactions -> Bool
     isFinalGrouping deeperLevels =
       Prelude.all (\case Leaf _ -> True; _ -> False) (Map.elems deeperLevels)
 
-generateTabsWithSubTabs ::
+generateSourceTables ::
   [Entity TransactionSource] ->
   Map.Map (Entity TransactionSource) [CategorizedTransaction] ->
   H.Html
-generateTabsWithSubTabs transactionSources aggregatedBySource = do
+generateSourceTables transactionSources aggregatedBySource = do
   H.div ! A.class_ "tabs-container flex flex-col" $ do
     generateButtonRow transactionSources subtabMappings
 
@@ -302,7 +301,7 @@ generateTabsWithSubTabs transactionSources aggregatedBySource = do
             Just allTxs -> do
               forM_ (Prelude.zip [0 ..] subtabMappings) $ \(subIdx, (subName, groupFuncs)) -> do
                 let groupedData = applyGroupingLevels allTxs groupFuncs
-                generateSubTabContent srcIdx subIdx subName groupedData
+                generateNestedTable srcIdx subIdx subName groupedData
             Nothing -> H.p "No transactions for this source."
 
 generateHomapageHtml ::
@@ -334,6 +333,6 @@ renderHomePage user banner = do
             then Just makeAddTransactionsBanner
             else Nothing
 
-  let tabs = generateTabsWithSubTabs transactionSources groupedBySource
+  let tabs = generateSourceTables transactionSources groupedBySource
   let strictText = generateHomapageHtml updatedBanner tabs
   return strictText
