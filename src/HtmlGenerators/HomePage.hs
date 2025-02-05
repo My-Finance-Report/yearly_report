@@ -206,21 +206,21 @@ generateDetailRows txs sectionId =
                 H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Amount"
                 H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Action"
             H.tbody $ do
-              forM_ (Prelude.zip [1 ..] txs) $ \(tid, catTrans) ->
-                detailRow tid (entityVal (transaction catTrans))
+              forM_ (Prelude.zip [1 ..] txs) $ \(localIdx, catTrans) ->
+                detailRow (transaction catTrans)
   where
-    detailRow :: Int -> Transaction -> H.Html
-    detailRow tid t =
+    detailRow :: Entity Transaction -> H.Html
+    detailRow t =
       H.tr ! A.class_ "border-b border-gray-200 hover:bg-gray-100 transition-all" $ do
-        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (transactionDescription t)
-        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml $ show $ transactionKind t
-        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatFullDate (transactionDateOfTransaction t))
-        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatCurrency (transactionAmount t))
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (transactionDescription $ entityVal t)
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml $ show $ transactionKind $ entityVal t
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatFullDate (transactionDateOfTransaction $ entityVal t))
+        H.td ! A.class_ "p-2 border border-gray-200" $ toHtml (formatCurrency (transactionAmount $ entityVal t))
         H.td ! A.class_ "p-2 border border-gray-200 text-center" $ do
-          case transactionUploadedPdfId t of
+          case transactionUploadedPdfId $ entityVal t of
             Just pdfId ->
               H.a
-                ! A.href (toValue $ "/transactions/" <> show pdfId <> "#tx-" <> show tid)
+                ! A.href (toValue $ "/transactions/" <> show (fromSqlKey pdfId) <> "#tx-" <> show (fromSqlKey $ entityKey t))
                 ! A.class_ "secondary-button px-3 py-1 text-sm"
                 $ "Edit"
             Nothing ->
