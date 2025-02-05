@@ -53,7 +53,7 @@ formatSankeyRow (from, to, weight) =
 -- | Defines available grouping methods for transactions
 subtabMappings :: [(Text, [GroupingFunction])]
 subtabMappings =
-  [ -- ("Category", [groupByCategory]),
+  [ ("Category", [groupByCategory]),
     ("Category → Month", [groupByCategory, groupByMonthDescending])
     -- ("Month", [groupByMonthDescending]),
     -- ("Year", [groupByYearDescending]),

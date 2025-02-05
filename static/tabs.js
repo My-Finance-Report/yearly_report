@@ -42,11 +42,31 @@ function showTabWithSubtabs(tabIndex) {
 }
 
 function showSubTab(subTabIndex){
+
+  let subtabButtons = document.querySelectorAll(".subtab-button");
+  for (let btn of subtabButtons) {
+    btn.removeAttribute("disabled");
+  }
+
   let activeSubBtn = document.querySelector('.subtab-button[data-subtab-index="' + subTabIndex + '"]');
   if (activeSubBtn) {
     activeSubBtn.setAttribute("disabled", "true");
   }
 
+  let visibleTab = document.querySelector('.tab-content[style*="display: block"]');
+
+  const tabIndex = visibleTab.dataset.tabIndex
+
+  let subtabs = visibleTab.getElementsByClassName("subtab-content");
+  for (let s of subtabs) {
+    s.style.display = "none";
+  }
+
+  let subtabId = "subtab-content-" + tabIndex + "-" + subTabIndex;
+  let chosenSub = document.getElementById(subtabId);
+  if (chosenSub) {
+    chosenSub.style.display = "block";
+  }
 
 
 }
@@ -141,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (matchingButton) {
       let tabIndex = matchingButton.getAttribute("data-tab-index");
       showTabWithSubtabs(tabIndex);
+      showSubTab(0,tabIndex)
     }
   } else {
     showTabWithSubtabs(0);

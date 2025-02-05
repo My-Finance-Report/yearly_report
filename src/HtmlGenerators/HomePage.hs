@@ -233,7 +233,7 @@ generateNestedTable ::
   GroupedTransactions ->
   H.Html
 generateNestedTable srcIdx subIdx subtabName groupedData = do
-  let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx <> "-" <> unpack subtabName
+  let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx
   H.div
     ! A.id (toValue subtabId)
     ! A.class_ "subtab-content"
@@ -295,6 +295,7 @@ generateSourceTables transactionSources aggregatedBySource = do
 
         H.div
           ! A.id (toValue tabId)
+          ! H.dataAttribute "tab-index" (toValue srcIdx)
           ! A.class_ "tab-content"
           ! A.style (if srcIdx == 0 then "display: block;" else "display: hidden;")
           $ case thisSourceData of
