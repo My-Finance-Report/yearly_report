@@ -5,7 +5,7 @@ module HtmlGenerators.HomePage (renderHomePage) where
 
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Data.List (groupBy, head, null, sortOn)
+import Data.List (groupBy, head, null)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Data.Text as T hiding (concatMap, elem)
@@ -249,7 +249,6 @@ generateNestedTable srcIdx subIdx subtabName groupedData = do
             let formattedData = Map.map (\case Leaf txs -> txs; _ -> []) deeperLevels
             generateAggregatedRowsWithExpandableDetails (toHtml subtabName) formattedData srcIdx subtabName
           else do
-            -- Otherwise, recurse normally
             H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
               generateTableHeader (toHtml subtabName)
 
