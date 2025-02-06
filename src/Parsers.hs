@@ -29,16 +29,17 @@ import System.FilePath (takeFileName)
 import System.Process (readProcess)
 import Types
 
-generatePdfParsingPrompt :: Text -> Text -> Text
-generatePdfParsingPrompt pdfContent transactionSourceName =
+generatePdfParsingPrompt :: Text -> Text -> Text -> Text
+generatePdfParsingPrompt filename pdfContent transactionSourceName =
   "Parse the following PDF content into a JSON array of transactions. "
     <> "structure the dates as MM/DD/YYYY"
     <> "Each transaction should have the fields: 'transactionDate', 'description', 'kind' and 'amount'\n\n"
     <> "For banks, withdrawal and deposit should be clear. for credit cards and debit cards, we consider a purchase"
-    <> "Do not update the transaction descriptions! just leave them as they appear on the statement"
     <> "to be a withdrawal and a payment on the card to be a deposit. This file is for a "
     <> transactionSourceName
-    <> "\n\n\n"
+    <> "\n\n"
+    <> filename
+    <> "\n"
     <> pdfContent
 
 -- TODO really we want to unify this with the type that we are parsing into in the api call
@@ -83,9 +84,9 @@ generateTransactionSchema =
           ]
     ]
 
-parseRawTextToJson :: Text -> Text -> IO (Maybe [PartialTransaction])
-parseRawTextToJson pdfContent transactionSourceName = do
-  let inputPrompt = generatePdfParsingPrompt pdfContent transactionSourceName
+parseRawTextToJson :: Text -> Text -> Text -> IO (Maybe [PartialTransaction])
+parseRawTextToJson filename pdfContent transactionSourceName = do
+  let inputPrompt = generatePdfParsingPrompt filename pdfContent transactionSourceName 
   let schema = generateTransactionSchema
   print inputPrompt
 
@@ -138,12 +139,12 @@ trimTrailingText pdfText keyword =
        in beforeTransactions
     Nothing -> pdfText
 
-extractTransactionsFromLines :: Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
-extractTransactionsFromLines rawText transactionSource startKeyword endKeyword = do
+extractTransactionsFromLines :: Text -> Text -> TransactionSource -> Maybe Text -> Maybe Text -> IO [PartialTransaction]
+extractTransactionsFromLines filename rawText transactionSource startKeyword endKeyword = do
   -- for now we omit this as its somewhat error prone
   -- let trimmedLines = trimTrailingText (trimLeadingText rawText startKeyword) endKeyword
 
-  parsedTransactions <- parseRawTextToJson rawText (transactionSourceName transactionSource)
+  parsedTransactions <- parseRawTextToJson filename rawText (transactionSourceName transactionSource)
   case parsedTransactions of
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
@@ -165,7 +166,7 @@ processPdfFile user pdfId config allowReprocess = do
     else do
       putStrLn $ "Processing file: " ++ T.unpack filename
 
-      result <- try (extractTransactionsFromLines (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
+      result <- try (extractTransactionsFromLines (uploadedPdfFilename $ entityVal uploadedFile) (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
       case result of
         Left err -> do
           let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
