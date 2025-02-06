@@ -27,12 +27,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- do we actually constrain a file from being uploaded twice without nuking the first results?
+  => it seems like there is a way to upload a file twice
 - auto add categories and accounts ?
 - not sorting by month correctly in sub grouping
 - maybe reprocess when you update a category
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
-- do we actually constrain a file from being uploaded twice without nuking the first results?
+
 - uploads fail if the transactions source does not have any categories
   => constrain the db to prevent this
 - shareable report

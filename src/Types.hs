@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -9,7 +10,8 @@ module Types
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
-    GroupedTransactions(..),
+    GroupedTransactions (..),
+    GroupKey (..),
     GroupingFunction,
     PdfParseException (..),
     CategorizationResponse (..),
@@ -117,11 +119,19 @@ data FullSankeyConfig = FullSankeyConfig
   }
   deriving (Show, Generic)
 
-type GroupingFunction = [CategorizedTransaction] -> Map.Map Text [CategorizedTransaction]
+data GroupKey = GroupKey
+  { keyDisplay :: Text,
+    keySort :: Either Text UTCTime
+  }
+  deriving (Show, Generic, Eq)
 
-type RecursiveGroupingFunction = [CategorizedTransaction] -> [GroupingFunction] -> Map.Map Text [CategorizedTransaction]
+instance Ord GroupKey where
+  compare :: GroupKey -> GroupKey -> Ordering
+  compare k1 k2 = compare (keySort k2) (keySort k1)
+
+type GroupingFunction = [CategorizedTransaction] -> Map.Map GroupKey [CategorizedTransaction]
 
 data GroupedTransactions
   = Leaf [CategorizedTransaction]
-  | Node (Map.Map Text GroupedTransactions)
-  deriving (Show, Eq)
+  | Node (Map GroupKey GroupedTransactions)
+  deriving (Show)

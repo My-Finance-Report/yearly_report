@@ -24,6 +24,7 @@ module HtmlGenerators.HomePageHelpers
   )
 where
 
+import Data.Aeson.Types (parse)
 import Data.List (groupBy, head, null, sortOn)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -32,6 +33,7 @@ import Data.Text as T hiding (concatMap, elem)
 import Data.Time
 import Database.Models
 import Database.Persist
+import Debug.Trace (trace)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Text.Printf (printf)
@@ -60,40 +62,96 @@ subtabMappings =
     ("Year → Category", [groupByYearDescending, groupByCategory])
   ]
 
-applyGroupingLevels :: [CategorizedTransaction] -> [GroupingFunction] -> GroupedTransactions
-applyGroupingLevels txns [] = Leaf txns
+applyGroupingLevels ::
+  [CategorizedTransaction] ->
+  [GroupingFunction] ->
+  GroupedTransactions
+applyGroupingLevels txns [] =
+  Leaf txns
 applyGroupingLevels txns (grpFunc : rest) =
-  Node $ Map.map (`applyGroupingLevels` rest) (grpFunc txns)
+  let groupedMap :: Map.Map GroupKey [CategorizedTransaction]
+      groupedMap = grpFunc txns
+   in -- For each sub-group, we recursively apply the next grouping function(s).
+      Node
+        ( Map.map
+            (`applyGroupingLevels` rest)
+            groupedMap
+        )
+
+makeSimpleGroupKey :: Text -> GroupKey
+makeSimpleGroupKey key = do
+  GroupKey {keyDisplay = key, keySort = Left key}
 
 groupByCategory :: GroupingFunction
 groupByCategory transactions = do
-  groupByBlah (categoryName . entityVal . category) transactions
+  groupByBlah (makeSimpleGroupKey . categoryName . entityVal . category) transactions
 
--- | Groups transactions by Year in descending order
 groupByYearDescending :: GroupingFunction
 groupByYearDescending transactions =
-  let grouped = groupByBlah (formatYear . transactionDateOfTransaction . entityVal . transaction) transactions
-   in Map.fromList $ sortOn fst (Map.toList grouped)
+  let grouped :: Map.Map UTCTime [CategorizedTransaction]
+      grouped =
+        groupByBlah
+          (transactionDateOfTransaction . entityVal . transaction)
+          transactions
 
--- | Groups transactions by Month in descending order
+      pairs :: [(GroupKey, [CategorizedTransaction])]
+      pairs =
+        [ let parsedTime = formatYear fullDate
+              key =
+                GroupKey
+                  { keyDisplay = parsedTime,
+                    keySort = Right (parseYear fullDate)
+                  }
+           in (key, txns)
+          | (fullDate, txns) <- Map.toList grouped
+        ]
+   in Map.fromList pairs
+
 groupByMonthDescending :: GroupingFunction
 groupByMonthDescending transactions =
-  let grouped = groupByBlah (formatMonthYear . transactionDateOfTransaction . entityVal . transaction) transactions
-   in Map.fromList $ sortOn (Down . parseMonthYear . fst) (Map.toList grouped)
+  let grouped :: Map.Map UTCTime [CategorizedTransaction]
+      grouped =
+        groupByBlah
+          (transactionDateOfTransaction . entityVal . transaction)
+          transactions
 
--- | Formats a date as "Month Year" (e.g., "January 2023")
+      pairs :: [(GroupKey, [CategorizedTransaction])]
+      pairs =
+        [ let formatted = formatMonthYear fullDate
+              key =
+                GroupKey
+                  { keyDisplay = formatted,
+                    keySort = Right (parseMonthYear fullDate)
+                  }
+           in (key, txns)
+          | (fullDate, txns) <- Map.toList grouped
+        ]
+   in Map.fromList pairs
+
 formatMonthYear :: UTCTime -> Text
 formatMonthYear utcTime = T.pack (formatTime defaultTimeLocale "%B %Y" utcTime)
 
--- | Formats a date as "YYYY"
 formatYear :: UTCTime -> Text
 formatYear utcTime = T.pack (formatTime defaultTimeLocale "%Y" utcTime)
 
--- | Parses a "Month Year" string into UTCTime
-parseMonthYear :: Text -> UTCTime
-parseMonthYear text =
+parseMonthYear :: UTCTime -> UTCTime
+parseMonthYear fullTime =
+  let day = utctDay fullTime
+      (y, m, _) = toGregorian day 
+      newDay = fromGregorian y m 1 
+   in UTCTime newDay 0 
+
+parseYear :: UTCTime -> UTCTime
+parseYear fullTime =
+  let day = utctDay fullTime
+      (y, _, _) = toGregorian day -- Extract year, month, and ignore day
+      newDay = fromGregorian y 1 1 -- Construct new Day with day=1
+   in UTCTime newDay 0 -- Convert back to UTCTime, setting time=0 (midnight)
+
+parseDate :: Text -> UTCTime
+parseDate text =
   fromMaybe (error "Invalid date format") $
-    parseTimeM True defaultTimeLocale "%B %Y" (T.unpack text)
+    parseTimeM True defaultTimeLocale "%m/$d/%Y" (T.unpack text)
 
 -- | Formats a full date as "MM/DD/YYYY"
 formatFullDate :: UTCTime -> Text
@@ -129,9 +187,10 @@ computeGroupTotals txns =
 
 extractAllTransactions :: GroupedTransactions -> [CategorizedTransaction]
 extractAllTransactions (Leaf txns) = txns
-extractAllTransactions (Node groups) = concatMap extractAllTransactions (Map.elems groups)
+extractAllTransactions (Node groups) =
+  concatMap extractAllTransactions (Map.elems groups)
 
-computeTotals :: Map.Map Text [CategorizedTransaction] -> (Text, Text, Text)
+computeTotals :: Map.Map GroupKey [CategorizedTransaction] -> (Text, Text, Text)
 computeTotals aggregated =
   let sumTransactions f =
         formatCurrency $

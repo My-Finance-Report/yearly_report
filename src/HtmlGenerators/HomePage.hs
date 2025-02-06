@@ -101,10 +101,8 @@ generateTableHeader header = do
       H.th ! A.class_ "table-cell p-2 border border-primary font-semibold" $ "Balance"
 
 generateAggregatedRowsWithExpandableDetails ::
-  -- | Header for this group
   H.Html ->
-  -- | Aggregated data
-  Map.Map Text [CategorizedTransaction] ->
+  Map.Map GroupKey [CategorizedTransaction] ->
   Int ->
   Text ->
   H.Html
@@ -125,7 +123,7 @@ generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subName = d
                 "-",
                 subName,
                 "-",
-                key, -- e.g. "Groceries"
+                keyDisplay key, -- e.g. "Groceries"
                 "-",
                 T.pack (show localIdx) -- e.g. "0"
               ]
@@ -137,13 +135,13 @@ generateAggregatedRowsWithExpandableDetails header aggregated srcIdx subName = d
     generateTotalsRow totalWithdrawals totalDeposits totalBalance
 
 generateAggregatedSection ::
-  Text ->
+  GroupKey ->
   [CategorizedTransaction] ->
   H.Html ->
   H.Html
 generateAggregatedSection key txns accHtml = do
   let (balance, withdrawals, deposits) = computeGroupTotals txns
-      sectionId = "details-" <> key
+      sectionId = "details-" <> keyDisplay key
   generateAggregateRow key balance withdrawals deposits sectionId
   generateDetailRows txns sectionId
   accHtml
@@ -165,8 +163,8 @@ generateTotalsRow totalWithdrawals totalDeposits totalBalance = do
     -- Balance Column (Always Visible)
     H.td ! A.class_ "p-2 border-t border-primary" $ toHtml totalBalance
 
-generateAggregateRow :: Text -> Text -> Text -> Text -> Text -> Html
-generateAggregateRow cat balance withdrawls deposits sectionId =
+generateAggregateRow :: GroupKey -> Text -> Text -> Text -> Text -> Html
+generateAggregateRow key balance withdrawls deposits sectionId =
   H.tr ! A.class_ "expandable-row table-row" ! A.onclick (H.toValue $ "toggleDetails('" <> sectionId <> "'); toggleArrow(this)") $ do
     -- Expand arrow column
     H.td ! A.class_ "table-cell w-6 text-center transition-transform duration-200 ease-in-out" $
@@ -174,7 +172,7 @@ generateAggregateRow cat balance withdrawls deposits sectionId =
         "▶"
 
     -- Category Column
-    H.td ! A.class_ "table-cell" $ toHtml cat
+    H.td ! A.class_ "table-cell" $ toHtml (keyDisplay key)
 
     -- Withdrawals & Deposits (Desktop Only)
     H.td ! A.class_ "table-cell hidden md:table-cell" $ toHtml withdrawls
@@ -229,10 +227,10 @@ generateDetailRows txs sectionId =
 generateNestedTable ::
   Int ->
   Int ->
-  Text ->
+  GroupKey ->
   GroupedTransactions ->
   H.Html
-generateNestedTable srcIdx subIdx subtabName groupedData = do
+generateNestedTable srcIdx subIdx subTab groupedData = do
   let subtabId = "subtab-content-" <> show srcIdx <> "-" <> show subIdx
       style = "display: hidden; margin-left: " <> T.pack (show (20 * Prelude.length (show subIdx))) <> "px;"
   H.div
@@ -241,19 +239,19 @@ generateNestedTable srcIdx subIdx subtabName groupedData = do
     ! A.style (toValue style)
     $ case groupedData of
       Leaf transactions -> do
-        let groupedTransactions = Map.singleton subtabName transactions
-        generateAggregatedRowsWithExpandableDetails (toHtml subtabName) groupedTransactions srcIdx subtabName
+        let groupedTransactions = Map.singleton subTab transactions
+        generateAggregatedRowsWithExpandableDetails (toHtml (keyDisplay subTab)) groupedTransactions srcIdx (keyDisplay subTab)
       Node deeperLevels -> do
         if isFinalGrouping deeperLevels
           then do
             let formattedData = Map.map (\case Leaf txs -> txs; _ -> []) deeperLevels
-            generateAggregatedRowsWithExpandableDetails (toHtml subtabName) formattedData srcIdx subtabName
+            generateAggregatedRowsWithExpandableDetails (toHtml (keyDisplay subTab)) formattedData srcIdx (keyDisplay subTab)
           else do
             H.table ! A.class_ "base-table hover-table striped-table w-full" $ do
-              generateTableHeader (toHtml subtabName)
+              generateTableHeader (toHtml (keyDisplay subTab))
 
               H.tbody $
-                forM_ (Prelude.zip [0 ..] (Map.toList deeperLevels)) $ \(localIdx, (groupLabel, nextLevel)) -> do
+                forM_ (Prelude.zip [0 ..] (Map.toList deeperLevels)) $ \(localIdx, (groupKey, nextLevel)) -> do
                   let (balance, withdrawals, deposites) = computeGroupTotals $ extractAllTransactions nextLevel
                   let sectionId =
                         T.concat
@@ -262,21 +260,21 @@ generateNestedTable srcIdx subIdx subtabName groupedData = do
                             "-",
                             T.pack (show subIdx), -- e.g. "1"
                             "-",
-                            groupLabel, -- e.g. "Groceries"
+                            keyDisplay groupKey, -- e.g. "Groceries"
                             "-",
                             T.pack (show localIdx) -- e.g. "0"
                           ]
 
-                  generateAggregateRow groupLabel balance withdrawals deposites sectionId
+                  generateAggregateRow groupKey balance withdrawals deposites sectionId
 
                   H.tr ! A.id (toValue sectionId) ! A.class_ "hidden" $ do
                     H.td ! A.colspan "5" $
-                      generateNestedTable srcIdx (read (show subIdx <> "1")) groupLabel nextLevel
+                      generateNestedTable srcIdx (read (show subIdx <> "1")) groupKey nextLevel
 
               let (totalBalance, totalWithdrawals, totalDeposits) = computeGroupTotals $ extractAllTransactions groupedData
               generateTotalsRow totalWithdrawals totalDeposits totalBalance
   where
-    isFinalGrouping :: Map.Map Text GroupedTransactions -> Bool
+    isFinalGrouping :: Map.Map GroupKey GroupedTransactions -> Bool
     isFinalGrouping deeperLevels =
       Prelude.all (\case Leaf _ -> True; _ -> False) (Map.elems deeperLevels)
 
@@ -302,7 +300,7 @@ generateSourceTables transactionSources aggregatedBySource = do
             Just allTxs -> do
               forM_ (Prelude.zip [0 ..] subtabMappings) $ \(subIdx, (subName, groupFuncs)) -> do
                 let groupedData = applyGroupingLevels allTxs groupFuncs
-                generateNestedTable srcIdx subIdx subName groupedData
+                generateNestedTable srcIdx subIdx (GroupKey {keyDisplay = subName, keySort = Left subName}) groupedData
             Nothing -> H.p "No transactions for this source."
 
 generateHomapageHtml ::
