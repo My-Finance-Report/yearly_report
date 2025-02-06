@@ -39,12 +39,12 @@ import Database.UploadConfiguration (addUploadConfigurationObject, getAllUploadC
 import ExampleFileParser (generateUploadConfiguration)
 import HtmlGenerators.Layout (renderPage)
 import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
-import Network.Wai.Parse (FileInfo (..), tempFileBackEnd)
+import Network.Wai.Parse (FileInfo (..), defaultParseRequestBodyOptions, lbsBackEnd, parseRequestBodyEx, setMaxRequestNumFiles, tempFileBackEnd)
 import Parsers (extractTextFromPdf)
 import Sankey (generateSankeyData)
 import SankeyConfiguration (generateSankeyConfig)
 import Types
-import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, setHeader, text)
+import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, request, setHeader, text)
 import Worker.ParseFileJob
 
 registerUploadRoutes :: ConnectionPool -> ScottyM ()
@@ -54,9 +54,15 @@ registerUploadRoutes pool = do
     html $ renderPage (Just user) "Upload Page" content True
 
   post "/upload" $ requireUser pool $ \user -> do
-    allFiles <- files
-    let uploadedFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") allFiles
-    case uploadedFiles of
+    req <- request
+
+    let options = setMaxRequestNumFiles 50 defaultParseRequestBodyOptions
+
+    (params, uploadedFiles) <- liftIO $ parseRequestBodyEx options lbsBackEnd req
+
+    let filteredFiles = Prelude.filter (\(k, _) -> k == "pdfFiles") uploadedFiles
+
+    case filteredFiles of
       [] -> text "No files were uploaded!"
       _ -> do
         fileConfigs <- forM uploadedFiles $ \(_, fileInfo) -> do

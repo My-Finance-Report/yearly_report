@@ -27,6 +27,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- auto add categories and accounts ?
 - not sorting by month correctly in sub grouping
 - maybe reprocess when you update a category
 - (still) need to preserve location in tab groups when navigating forms
