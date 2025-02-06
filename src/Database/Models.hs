@@ -140,6 +140,7 @@ DeprecatedProcessedFile
 UploadedPdf
     filename Text
     rawContent Text
+    rawContentHash Text Maybe
     uploadTime Text
     userId UserId
     archived Bool default=False

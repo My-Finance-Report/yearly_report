@@ -5,6 +5,7 @@ module Database.Files
     getPdfRecord,
     getPdfRecords,
     addPdfRecord,
+    migratePdfHashes,
     isFileProcessed,
     getAllProcessedFiles,
   )
@@ -14,11 +15,16 @@ import Control.Exception (throwIO)
 import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
+import Crypto.Hash (Digest, MD5, hash)
+import qualified Data.ByteString as B16
 import Data.List (nubBy, sortOn)
 import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
 import Data.Maybe (isJust)
 import Data.Set (Set, empty, singleton, toList, union)
 import Data.Text (Text, unpack)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as B16
+import qualified Data.Text.Encoding as TE
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import Database.Category
 import Database.ConnectionPool (getConnectionPool)
@@ -52,6 +58,19 @@ getPdfRecord user pdfId = do
         [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
         []
 
+getPdfRecordByHash :: (MonadUnliftIO m) => Entity User -> Maybe Text -> m (Entity UploadedPdf)
+getPdfRecordByHash user hash = do
+  pool <- liftIO getConnectionPool
+  result <- runSqlPool queryPdfRecord pool
+  case result of
+    Just pdf -> return pdf
+    Nothing -> liftIO $ error $ "No PDF found with hash=" ++ show hash ++ " for user id=" ++ show (fromSqlKey $ entityKey user)
+  where
+    queryPdfRecord =
+      selectFirst
+        [UploadedPdfRawContentHash ==. hash, UploadedPdfUserId ==. entityKey user]
+        []
+
 getPdfRecords :: (MonadUnliftIO m) => Entity User -> [Key UploadedPdf] -> m [Entity UploadedPdf]
 getPdfRecords user pdfIds = do
   pool <- liftIO getConnectionPool
@@ -64,18 +83,40 @@ getPdfRecords user pdfIds = do
 
 addPdfRecord :: (MonadUnliftIO m) => Entity User -> Text -> Text -> Text -> m (Key UploadedPdf)
 addPdfRecord user filename rawContent uploadTime = do
+  let rawContentHash = computeMD5 rawContent
   pool <- liftIO getConnectionPool
-  runSqlPool queryInsertPdfRecord pool
+  runSqlPool (queryInsertPdfRecord rawContentHash) pool
   where
-    queryInsertPdfRecord = do
+    queryInsertPdfRecord hash = do
       insert $
         UploadedPdf
           { uploadedPdfFilename = filename,
             uploadedPdfRawContent = rawContent,
+            uploadedPdfRawContentHash = Just hash,
             uploadedPdfArchived = False,
             uploadedPdfUploadTime = uploadTime,
             uploadedPdfUserId = entityKey user
           }
+
+computeMD5 :: Text -> Text
+computeMD5 txt =
+  let digest :: Digest MD5
+      digest = hash (TE.encodeUtf8 txt)
+   in T.pack (show digest)
+
+migratePdfHashes :: SqlPersistT IO ()
+migratePdfHashes = do
+  -- Fetch all PDFs that do not have a hash
+  pdfsWithoutHash <- selectList [UploadedPdfRawContentHash ==. Nothing] []
+
+  liftIO $ putStrLn $ "Updating " ++ show (length pdfsWithoutHash) ++ " PDFs with hash"
+
+  -- For each PDF without a hash, compute MD5 and update it
+  forM_ pdfsWithoutHash $ \(Entity pdfId pdf) -> do
+    let newHash = Just (computeMD5 (uploadedPdfRawContent pdf))
+    update pdfId [UploadedPdfRawContentHash =. newHash]
+
+  liftIO $ putStrLn "MD5 hash migration completed!"
 
 isFileProcessed :: (MonadUnliftIO m) => Entity User -> Entity UploadedPdf -> m Bool
 isFileProcessed user file = do

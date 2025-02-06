@@ -27,7 +27,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
-- something is broken in the listings
 - do we actually constrain a file from being uploaded twice without nuking the first results?
 - probably on the act of actually uploading (not a rerun)
   => it seems like there is a way to upload a file twice
