@@ -5,7 +5,6 @@ module Database.Files
     getPdfRecord,
     getPdfRecords,
     addPdfRecord,
-    migratePdfHashes,
     isFileProcessed,
     getAllProcessedFiles,
   )
@@ -58,7 +57,7 @@ getPdfRecord user pdfId = do
         [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
         []
 
-getPdfRecordByHash :: (MonadUnliftIO m) => Entity User -> Maybe Text -> m (Entity UploadedPdf)
+getPdfRecordByHash :: (MonadUnliftIO m) => Entity User -> Text -> m (Entity UploadedPdf)
 getPdfRecordByHash user hash = do
   pool <- liftIO getConnectionPool
   result <- runSqlPool queryPdfRecord pool
@@ -92,7 +91,7 @@ addPdfRecord user filename rawContent uploadTime = do
         UploadedPdf
           { uploadedPdfFilename = filename,
             uploadedPdfRawContent = rawContent,
-            uploadedPdfRawContentHash = Just hash,
+            uploadedPdfRawContentHash = hash,
             uploadedPdfArchived = False,
             uploadedPdfUploadTime = uploadTime,
             uploadedPdfUserId = entityKey user
@@ -103,20 +102,6 @@ computeMD5 txt =
   let digest :: Digest MD5
       digest = hash (TE.encodeUtf8 txt)
    in T.pack (show digest)
-
-migratePdfHashes :: SqlPersistT IO ()
-migratePdfHashes = do
-  -- Fetch all PDFs that do not have a hash
-  pdfsWithoutHash <- selectList [UploadedPdfRawContentHash ==. Nothing] []
-
-  liftIO $ putStrLn $ "Updating " ++ show (length pdfsWithoutHash) ++ " PDFs with hash"
-
-  -- For each PDF without a hash, compute MD5 and update it
-  forM_ pdfsWithoutHash $ \(Entity pdfId pdf) -> do
-    let newHash = Just (computeMD5 (uploadedPdfRawContent pdf))
-    update pdfId [UploadedPdfRawContentHash =. newHash]
-
-  liftIO $ putStrLn "MD5 hash migration completed!"
 
 isFileProcessed :: (MonadUnliftIO m) => Entity User -> Entity UploadedPdf -> m Bool
 isFileProcessed user file = do
