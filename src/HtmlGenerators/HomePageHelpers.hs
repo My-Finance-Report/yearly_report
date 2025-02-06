@@ -91,7 +91,7 @@ groupByYearDescending transactions =
   let grouped :: Map.Map UTCTime [CategorizedTransaction]
       grouped =
         groupByBlah
-          (transactionDateOfTransaction . entityVal . transaction)
+          (parseYear . transactionDateOfTransaction . entityVal . transaction)
           transactions
 
       pairs :: [(GroupKey, [CategorizedTransaction])]
@@ -100,7 +100,7 @@ groupByYearDescending transactions =
               key =
                 GroupKey
                   { keyDisplay = parsedTime,
-                    keySort = Right (parseYear fullDate)
+                    keySort = Right fullDate
                   }
            in (key, txns)
           | (fullDate, txns) <- Map.toList grouped
@@ -112,7 +112,7 @@ groupByMonthDescending transactions =
   let grouped :: Map.Map UTCTime [CategorizedTransaction]
       grouped =
         groupByBlah
-          (transactionDateOfTransaction . entityVal . transaction)
+          (parseMonthYear . transactionDateOfTransaction . entityVal . transaction)
           transactions
 
       pairs :: [(GroupKey, [CategorizedTransaction])]
@@ -121,7 +121,7 @@ groupByMonthDescending transactions =
               key =
                 GroupKey
                   { keyDisplay = formatted,
-                    keySort = Right (parseMonthYear fullDate)
+                    keySort = Right fullDate
                   }
            in (key, txns)
           | (fullDate, txns) <- Map.toList grouped
@@ -137,27 +137,25 @@ formatYear utcTime = T.pack (formatTime defaultTimeLocale "%Y" utcTime)
 parseMonthYear :: UTCTime -> UTCTime
 parseMonthYear fullTime =
   let day = utctDay fullTime
-      (y, m, _) = toGregorian day 
-      newDay = fromGregorian y m 1 
-   in UTCTime newDay 0 
+      (y, m, _) = toGregorian day
+      newDay = fromGregorian y m 1
+   in UTCTime newDay 0
 
 parseYear :: UTCTime -> UTCTime
 parseYear fullTime =
   let day = utctDay fullTime
-      (y, _, _) = toGregorian day -- Extract year, month, and ignore day
-      newDay = fromGregorian y 1 1 -- Construct new Day with day=1
-   in UTCTime newDay 0 -- Convert back to UTCTime, setting time=0 (midnight)
+      (y, _, _) = toGregorian day
+      newDay = fromGregorian y 1 1
+   in UTCTime newDay 0
 
 parseDate :: Text -> UTCTime
 parseDate text =
   fromMaybe (error "Invalid date format") $
     parseTimeM True defaultTimeLocale "%m/$d/%Y" (T.unpack text)
 
--- | Formats a full date as "MM/DD/YYYY"
 formatFullDate :: UTCTime -> Text
 formatFullDate utcTime = T.pack (formatTime defaultTimeLocale "%m/%d/%Y" utcTime)
 
--- | Computes the balance impact of a transaction
 computeBalance :: Transaction -> Double
 computeBalance txn =
   case transactionKind txn of

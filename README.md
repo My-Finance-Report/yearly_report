@@ -27,10 +27,13 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- something is broken in the listings
 - do we actually constrain a file from being uploaded twice without nuking the first results?
+- probably on the act of actually uploading (not a rerun)
   => it seems like there is a way to upload a file twice
+  -> i actually dont even think there is a constraint that prevents this
+
 - auto add categories and accounts ?
-- not sorting by month correctly in sub grouping
 - maybe reprocess when you update a category
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
@@ -50,3 +53,4 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - option to add a new source on the upload page after you drop in the file
 - privacy policy
 - install a linter for extraneous imports
+- memoize llm calls to preserve existing data save costs
