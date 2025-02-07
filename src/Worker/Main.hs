@@ -60,7 +60,7 @@ processNextJob pool = do
   case maybeJob of
     Just (Entity jobId jobData) -> do
       putStrLn $ "Processing job: " ++ show jobId
-      success <- tryJob jobData
+      success <- tryJob (Entity jobId jobData) 
       now <- getCurrentTime
       let newStatus = if success then Completed else Failed
       runSqlPool (update jobId [ProcessFileJobStatus =. newStatus, ProcessFileJobLastTriedAt =. Just now]) pool
@@ -92,7 +92,7 @@ fetchAndLockNextJob = do
       return $ Just (Entity jobId jobData)
     Nothing -> return Nothing
 
-tryJob :: ProcessFileJob -> IO Bool
+tryJob :: Entity ProcessFileJob -> IO Bool
 tryJob job = do
   result <- try (runJob job) :: IO (Either SomeException ())
   case result of
@@ -101,8 +101,11 @@ tryJob job = do
       return False
     Right _ -> return True
 
-runJob :: ProcessFileJob -> IO ()
-runJob job = do
+runJob :: Entity ProcessFileJob -> IO ()
+runJob entityJob = do
+
+  let job = entityVal entityJob
+
   pool <- getConnectionPool
 
   maybePdf <- runSqlPool (getEntity (processFileJobPdfId job)) pool
@@ -115,7 +118,7 @@ runJob job = do
     Nothing -> throwIO $ userError $ unpack "User record not found!"
     Just entity -> return entity
 
-  result <- processPdfFile userEntity (entityKey pdf) (processFileJobConfigId job)
+  result <- processPdfFile userEntity  (entityKey entityJob) (entityKey pdf) (processFileJobConfigId job)
 
   case result of
     Just errorMsg -> throwIO $ userError $ unpack errorMsg

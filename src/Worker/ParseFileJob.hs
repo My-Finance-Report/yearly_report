@@ -1,6 +1,7 @@
-module Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFileProcessingJobs) where
+module Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFileProcessingJobs, resetFileProcessingJobBySource) where
 
 import Control.Exception (throwIO)
+import Control.Monad (forM_)
 import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (UTCTime, getCurrentTime)
@@ -56,6 +57,43 @@ resetFileProcessingJob user jobId = do
                   ProcessFileJobLastTriedAt =. Nothing,
                   ProcessFileJobAttemptCount =. 0
                 ]
+
+resetFileProcessingJobBySource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> m ()
+resetFileProcessingJobBySource user sourceId = do
+  pool <- liftIO getConnectionPool
+  now <- liftIO getCurrentTime
+  runSqlPool (updateJobsForSource sourceId now) pool
+  where
+    updateJobsForSource srcId now = do
+      -- Find all configurations associated with the given TransactionSource
+      configs <- selectList [UploadConfigurationTransactionSourceId ==. srcId] []
+      liftIO $ print configs
+
+      -- Extract configuration IDs
+      let configIds = map entityKey configs
+
+      liftIO $ print (Prelude.length configIds)
+
+      -- Find all jobs that belong to this user and are linked to the transaction source
+      jobs <-
+        selectList
+          [ ProcessFileJobConfigId <-. map Just configIds,
+            ProcessFileJobUserId ==. entityKey user
+          ]
+          []
+
+      liftIO $ print (Prelude.length jobs)
+
+      -- Reset all matching jobs
+      forM_ jobs $ \(Entity jobId _) -> do
+        update
+          jobId
+          [ ProcessFileJobStatus =. Pending,
+            ProcessFileJobLastTriedAt =. Nothing,
+            ProcessFileJobAttemptCount =. 0
+          ]
+
+      liftIO $ putStrLn $ "Reset " ++ show (length jobs) ++ " jobs for Transaction Source ID: " ++ show srcId
 
 resetAllFileProcessingJobs :: (MonadUnliftIO m) => Entity User -> m ()
 resetAllFileProcessingJobs user = do

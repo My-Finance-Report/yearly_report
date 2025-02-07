@@ -176,8 +176,8 @@ createAndReturnUploadConfiguration user pdf = do
             Just config -> return config
             Nothing -> throwIO $ PdfParseException "Failed to generate upload configuration."
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Maybe (Key UploadConfiguration) -> IO (Maybe Text)
-processPdfFile user pdfId maybeConfigId = do
+processPdfFile :: Entity User -> Key ProcessFileJob -> Key UploadedPdf -> Maybe (Key UploadConfiguration) -> IO (Maybe Text)
+processPdfFile user jobId pdfId maybeConfigId = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
   let filename = uploadedPdfFilename $ entityVal uploadedFile
   alreadyProcessed <- liftIO $ isFileProcessed user uploadedFile
@@ -190,7 +190,7 @@ processPdfFile user pdfId maybeConfigId = do
         Just validConfig -> return (entityVal validConfig)
         Nothing -> do
           blahConfig <- liftIO $ createAndReturnUploadConfiguration user uploadedFile
-          liftIO $ addUploadConfigurationObject user blahConfig
+          liftIO $ addUploadConfigurationObject user blahConfig jobId
           return blahConfig
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId config)

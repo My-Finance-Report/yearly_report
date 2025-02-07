@@ -88,8 +88,8 @@ addUploadConfiguration user startKeyword endKeyword txnSourceId filenameRegex = 
         Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
         Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)
 
-addUploadConfigurationObject :: (MonadUnliftIO m) => Entity User -> UploadConfiguration -> m ()
-addUploadConfigurationObject user config = do
+addUploadConfigurationObject :: (MonadUnliftIO m) => Entity User -> UploadConfiguration -> Key ProcessFileJob -> m ()
+addUploadConfigurationObject user config jobId = do
   let userIdInConfig = uploadConfigurationUserId config
   let passedUserId = entityKey user
 
@@ -104,9 +104,11 @@ addUploadConfigurationObject user config = do
   runSqlPool queryPersistUploadConfiguration pool
   where
     queryPersistUploadConfiguration = do
-      result <-
-        insertUnique config
+      result <- insertUnique config
 
       case result of
-        Just _ -> liftIO $ putStrLn "UploadConfiguration added successfully"
+        Just configId -> do
+          liftIO $ putStrLn "UploadConfiguration added successfully"
+          update jobId [ProcessFileJobConfigId =. Just configId]
+          liftIO $ putStrLn $ "Updated ProcessFileJob " ++ show (fromSqlKey jobId) ++ " with config ID " ++ show (fromSqlKey configId)
         Nothing -> liftIO $ putStrLn $ "UploadConfiguration already exists for user " ++ show (fromSqlKey $ entityKey user)

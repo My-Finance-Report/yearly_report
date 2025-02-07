@@ -92,64 +92,6 @@ registerUploadRoutes pool = do
         forM_ pdfIds $ \(pdfId, config) -> liftIO $ asyncFileProcess user pdfId (fmap entityKey config)
         redirect "/dashboard"
 
-  post "/assign-transaction-source" $ requireUser pool $ \user -> do
-    params <- formParams
-
-    let selections =
-          [ (toSqlKey (read $ unpack (Data.Text.drop 7 key)) :: Key UploadedPdf, toSqlKey (read $ unpack val) :: Key TransactionSource)
-            | (key, val) <- params,
-              "source-" `isPrefixOf` key
-          ]
-
-    -- Process each selected transaction source
-    forM_ selections $ \(pdfId, sourceId) -> do
-      pdfRecord <- liftIO $ getPdfRecord user pdfId
-
-      -- Ensure we have a valid file path to use for generating config
-      let tempFilePath = "/tmp/" <> uploadedPdfFilename (entityVal pdfRecord)
-
-      -- Generate and store the UploadConfiguration
-      uploadConfig <- liftIO $ generateUploadConfiguration user sourceId tempFilePath
-      case uploadConfig of
-        Just config -> liftIO $ addUploadConfigurationObject user config
-        Nothing -> liftIO $ putStrLn "Failed to generate UploadConfiguration."
-
-    liftIO $ print "created the upload config"
-
-    -- Reprocess all uploaded files
-    forM_ selections $ \(pdfId, sourceId) -> do
-      pdfRecord <- liftIO $ getPdfRecord user pdfId
-      let extractedText = uploadedPdfRawContent (entityVal pdfRecord)
-      maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
-
-      liftIO $ asyncFileProcess user pdfId (fmap entityKey maybeConfig)
-
-    redirect "/dashboard"
-
-  post "/upload-example-file/:sourceId" $ requireUser pool $ \user -> do
-    liftIO $ print "***DEPRECATED, NO LONGER TO BE USED***"
-    sourceIdText <- pathParam "sourceId" :: ActionM Text
-    let sourceId = toSqlKey (read $ unpack sourceIdText) :: Key TransactionSource
-
-    files <- files
-    case lookup "exampleFile" files of
-      Just fileInfo -> do
-        let uploadedBytes = fileContent fileInfo
-        let originalName = decodeUtf8 $ fileName fileInfo
-        let tempFilePath = "/tmp/" <> originalName
-        liftIO $ Data.ByteString.Lazy.writeFile (unpack tempFilePath) uploadedBytes
-
-        liftIO $ do
-          uploadConfig <- generateUploadConfiguration user sourceId tempFilePath
-          case uploadConfig of
-            Just config -> addUploadConfigurationObject user config
-            Nothing -> putStrLn "Failed to generate UploadConfiguration from the example file."
-
-        referer <- header "Referer"
-        let redirectTo = fromMaybe "/dashboard" referer
-        redirect redirectTo
-      Nothing -> text "No file provided in the request"
-
   get "/select-account" $ requireUser pool $ \user -> do
     pdfIdsParam <- queryParam "pdfIds"
 
