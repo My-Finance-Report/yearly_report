@@ -51,7 +51,7 @@ getTransactionSource user sourceId = do
 
 defaultCategoriesForSource :: SourceKind -> [Text]
 defaultCategoriesForSource Account =
-  ["Income", "Investments", "Credit Card Payments", "Transfers"]
+  ["Income", "Investments", "Credit Card Payments", "Transfers", "Housing"]
 defaultCategoriesForSource Card =
   ["Groceries", "Travel", "Gas", "Insurance", "Misc", "Subscriptions", "Credit Card Payments", "Entertainment"]
 defaultCategoriesForSource Investment =
@@ -107,7 +107,7 @@ addTransactionSourceWithCategories user sourceName kind categoriesToAdd = do
           Nothing -> do
             insert_ $ Category categoryName sourceId (entityKey user) False
 
-addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Either Text (Key TransactionSource))
+addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Maybe (Key TransactionSource))
 addTransactionSource user sourceName kind = do
   pool <- getConnectionPool
   runSqlPool queryAddTransactionSource pool
@@ -120,16 +120,15 @@ addTransactionSource user sourceName kind = do
           | transactionSourceArchived archivedSource -> do
               update sourceId [TransactionSourceArchived =. False]
 
-              -- Ensure default categories exist
               let defaultCategories = defaultCategoriesForSource kind
               forM_ defaultCategories $ \categoryName -> do
                 _ <- queryAddOrUnarchiveCategory categoryName sourceId
                 return ()
 
-              return (Right sourceId)
+              return (Just sourceId)
 
         -- If the source exists and is not archived, return an error
-        Just _ -> return (Left "A transaction source with this name already exists.")
+        Just _ -> return (fmap entityKey maybeSource)
         -- Otherwise, create a new transaction source
         Nothing -> do
           newSourceId <-
@@ -147,7 +146,7 @@ addTransactionSource user sourceName kind = do
             _ <- queryAddOrUnarchiveCategory categoryName newSourceId
             return ()
 
-          return (Right newSourceId)
+          return (Just newSourceId)
 
     -- Add category if it does not exist, otherwise unarchive it
     queryAddOrUnarchiveCategory categoryName sourceId = do

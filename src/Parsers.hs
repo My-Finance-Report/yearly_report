@@ -24,7 +24,7 @@ import Database.Persist
 import Database.Persist.TH (persistUpperCase)
 import Database.Transaction
 import Database.TransactionSource
-import Database.UploadConfiguration (getUploadConfigById, getUploadConfigurationFromPdf)
+import Database.UploadConfiguration (addUploadConfigurationObject, getUploadConfigById, getUploadConfigurationFromPdf)
 import ExampleFileParser (generateAccountAndCategories, generateUploadConfiguration)
 import GHC.Generics (Generic)
 import OpenAiUtils
@@ -159,14 +159,12 @@ createAndReturnUploadConfiguration user pdf = do
   case mAcctCatConfig of
     Nothing -> throwIO $ PdfParseException "Failed to extract accounts and categories from the PDF."
     Just acctCatConfig -> do
-      -- Step 2: Create transaction source and associated categories
       let sourceKind = fromMaybe Account (parseSourceKind (partialKind acctCatConfig))
       txnSourceResult <-
-        addTransactionSourceWithCategories
+        addTransactionSource
           user
           (partialName acctCatConfig)
           sourceKind
-          (partialCategories acctCatConfig)
 
       case txnSourceResult of
         Nothing -> throwIO $ PdfParseException "Failed to create transaction source"
@@ -187,10 +185,13 @@ processPdfFile user pdfId maybeConfigId = do
   config <- case maybeConfigId of
     Just configId -> entityVal <$> liftIO (getUploadConfigById user configId)
     Nothing -> do
-      existingConfig <- getUploadConfigurationFromPdf user pdfId
-      case existingConfig of
+      newConfig <- getUploadConfigurationFromPdf user pdfId
+      case newConfig of
         Just validConfig -> return (entityVal validConfig)
-        Nothing -> liftIO $ createAndReturnUploadConfiguration user uploadedFile
+        Nothing -> do
+          blahConfig <- liftIO $ createAndReturnUploadConfiguration user uploadedFile
+          liftIO $ addUploadConfigurationObject user blahConfig
+          return blahConfig
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId config)
 
