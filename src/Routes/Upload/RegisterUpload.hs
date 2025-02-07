@@ -29,7 +29,7 @@ import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.ConnectionPool (getConnectionPool)
 import Database.Database (updateUserOnboardingStep)
-import Database.Files (addPdfRecord, getPdfRecord, getPdfRecords)
+import Database.Files (addPdfRecord, computeMD5, getPdfRecord, getPdfRecordByHash, getPdfRecords)
 import Database.Models
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
@@ -75,15 +75,20 @@ registerUploadRoutes pool = do
             liftIO $ try (extractTextFromPdf (unpack tempFilePath)) :: ActionM (Either SomeException Text)
 
           case extractedTextOrError of
-            Left err -> return (fileInfo, Nothing, Nothing)
+            Left err -> return (fileInfo, Nothing, Nothing, Nothing)
             Right extractedText -> do
+              maybeUploadedPdf <- liftIO $ getPdfRecordByHash user (computeMD5 extractedText)
               maybeConfig <- liftIO $ getUploadConfiguration user originalName extractedText
-              return (fileInfo, maybeConfig, Just extractedText)
 
-        pdfIds <- forM fileConfigs $ \(fileInfo, maybeConfig, maybeExtractedText) -> do
-          let originalName = decodeUtf8 $ fileName fileInfo
-          pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "pending"
-          return (pdfId, maybeConfig)
+              return (fileInfo, maybeConfig, maybeUploadedPdf, Just extractedText)
+
+        pdfIds <- forM fileConfigs $ \(fileInfo, maybeConfig, maybeUploadedPdf, maybeExtractedText) -> do
+          case maybeUploadedPdf of
+            Nothing -> do
+              let originalName = decodeUtf8 $ fileName fileInfo
+              pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "pending"
+              return (pdfId, maybeConfig)
+            Just exisitingPdf -> return (entityKey exisitingPdf, maybeConfig)
 
         let (missingConfigs, validConfigs) = Data.List.partition (isNothing . snd) pdfIds
 

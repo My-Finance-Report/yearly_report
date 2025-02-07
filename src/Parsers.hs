@@ -8,7 +8,7 @@ where
 
 import Categorizer (categorizeTransaction)
 import Control.Exception
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson hiding (Key)
 import Data.Aeson.KeyMap (mapMaybe)
@@ -86,7 +86,7 @@ generateTransactionSchema =
 
 parseRawTextToJson :: Text -> Text -> Text -> IO (Maybe [PartialTransaction])
 parseRawTextToJson filename pdfContent transactionSourceName = do
-  let inputPrompt = generatePdfParsingPrompt filename pdfContent transactionSourceName 
+  let inputPrompt = generatePdfParsingPrompt filename pdfContent transactionSourceName
   let schema = generateTransactionSchema
   print inputPrompt
 
@@ -149,8 +149,8 @@ extractTransactionsFromLines filename rawText transactionSource startKeyword end
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> Bool -> IO (Maybe Text)
-processPdfFile user pdfId config allowReprocess = do
+processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO (Maybe Text)
+processPdfFile user pdfId config = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
 
   let filename = uploadedPdfFilename $ entityVal uploadedFile
@@ -159,19 +159,16 @@ processPdfFile user pdfId config allowReprocess = do
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
 
-  if alreadyProcessed && not allowReprocess
-    then do
-      let msg = T.pack ("File '" ++ show pdfId ++ "' has already been processed.")
-      return $ Just msg
-    else do
-      putStrLn $ "Processing file: " ++ T.unpack filename
+  when alreadyProcessed $ removeTransactions user pdfId
 
-      result <- try (extractTransactionsFromLines (uploadedPdfFilename $ entityVal uploadedFile) (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
-      case result of
-        Left err -> do
-          let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
-          return $ Just errorMsg
-        Right transactions -> do
-          print transactions
-          categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
-          return Nothing
+  putStrLn $ "Processing file: " ++ T.unpack filename
+
+  result <- try (extractTransactionsFromLines (uploadedPdfFilename $ entityVal uploadedFile) (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
+  case result of
+    Left err -> do
+      let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err
+      return $ Just errorMsg
+    Right transactions -> do
+      print transactions
+      categorizedTransactions <- mapM (\txn -> categorizeTransaction user txn pdfId (entityKey transactionSource)) transactions
+      return Nothing

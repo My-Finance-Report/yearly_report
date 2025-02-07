@@ -16,17 +16,24 @@ asyncFileProcess user pdfId config = do
 
 enqueueFileProcessingJob :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> UTCTime -> SqlPersistT IO ()
 enqueueFileProcessingJob user pdfId config now = do
-  insert_
-    ProcessFileJob
-      { processFileJobStatus = Pending,
-        processFileJobCreatedAt = now,
-        processFileJobLastTriedAt = Nothing,
-        processFileJobUserId = entityKey user,
-        processFileJobPdfId = pdfId,
-        processFileJobConfigId = entityKey config,
-        processFileJobAttemptCount = 0,
-        processFileJobArchived = False
-      }
+  existingJob <- selectFirst [ProcessFileJobPdfId ==. pdfId] []
+  case existingJob of
+    Just (Entity jobId job) -> do
+      liftIO $ putStrLn $ "Resetting job for PDF ID: " ++ show pdfId
+      resetFileProcessingJob user jobId
+    Nothing -> do
+      liftIO $ putStrLn $ "Enqueuing new job for PDF ID: " ++ show pdfId
+      insert_
+        ProcessFileJob
+          { processFileJobStatus = Pending,
+            processFileJobCreatedAt = now,
+            processFileJobLastTriedAt = Nothing,
+            processFileJobUserId = entityKey user,
+            processFileJobPdfId = pdfId,
+            processFileJobConfigId = entityKey config,
+            processFileJobAttemptCount = 0,
+            processFileJobArchived = False
+          }
 
 resetFileProcessingJob :: (MonadUnliftIO m) => Entity User -> Key ProcessFileJob -> m ()
 resetFileProcessingJob user jobId = do

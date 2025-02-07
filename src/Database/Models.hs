@@ -144,6 +144,7 @@ UploadedPdf
     uploadTime Text
     userId UserId
     archived Bool default=False
+    UniqueUserContent rawContentHash userId
     deriving Show Eq
 
 UploadConfiguration
@@ -206,7 +207,8 @@ ProcessFileJob
    status JobStatus
    userId UserId
    configId UploadConfigurationId
-   pdfId  UploadedPdfId
+   pdfId  UploadedPdfId 
    archived Bool default=false
    attemptCount Int default=0
+   --TODO add unique on pdfId
 |]

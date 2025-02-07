@@ -3,10 +3,12 @@
 module Database.Files
   ( getAllFilenames,
     getPdfRecord,
+    getPdfRecordByHash,
     getPdfRecords,
     addPdfRecord,
     isFileProcessed,
     getAllProcessedFiles,
+    computeMD5,
   )
 where
 
@@ -57,13 +59,13 @@ getPdfRecord user pdfId = do
         [UploadedPdfId ==. pdfId, UploadedPdfUserId ==. entityKey user]
         []
 
-getPdfRecordByHash :: (MonadUnliftIO m) => Entity User -> Text -> m (Entity UploadedPdf)
+getPdfRecordByHash :: (MonadUnliftIO m) => Entity User -> Text -> m (Maybe (Entity UploadedPdf))
 getPdfRecordByHash user hash = do
   pool <- liftIO getConnectionPool
   result <- runSqlPool queryPdfRecord pool
   case result of
-    Just pdf -> return pdf
-    Nothing -> liftIO $ error $ "No PDF found with hash=" ++ show hash ++ " for user id=" ++ show (fromSqlKey $ entityKey user)
+    Just pdf -> return (Just pdf)
+    Nothing -> return Nothing
   where
     queryPdfRecord =
       selectFirst

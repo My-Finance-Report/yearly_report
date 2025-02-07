@@ -27,7 +27,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
-- do we actually constrain a file from being uploaded twice without nuking the first results?
+- the site seems sluggish
+- make sure we have jobs for all files after migration
 - probably on the act of actually uploading (not a rerun)
   => it seems like there is a way to upload a file twice
   -> i actually dont even think there is a constraint that prevents this
@@ -53,3 +54,71 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - privacy policy
 - install a linter for extraneous imports
 - memoize llm calls to preserve existing data save costs
+
+DROP TABLE IF EXISTS processed_file;
+
+ALTER TABLE process_file_job
+DROP CONSTRAINT process_file_job_pdf_id_fkey,
+ADD CONSTRAINT process_file_job_pdf_id_fkey
+FOREIGN KEY (pdf_id)
+REFERENCES uploaded_pdf (id)
+ON DELETE CASCADE;
+
+SELECT raw*content_hash, user_id, COUNT(*)
+FROM uploaded*pdf
+GROUP BY raw_content_hash, user_id
+HAVING COUNT(*) > 1;
+
+WITH ranked AS (
+SELECT
+id,
+MIN(id) OVER (PARTITION BY raw_content_hash, user_id) AS master_id
+FROM uploaded_pdf
+)
+UPDATE transaction
+SET uploaded_pdf_id = ranked.master_id
+FROM ranked
+WHERE transaction.uploaded_pdf_id = ranked.id
+AND ranked.id <> ranked.master_id;
+
+WITH ranked AS (
+SELECT
+id,
+ROW_NUMBER() OVER (
+PARTITION BY raw_content_hash, user_id
+ORDER BY id ASC
+) AS row_num
+FROM uploaded_pdf
+)
+DELETE FROM uploaded_pdf
+WHERE id IN (
+SELECT id
+FROM ranked
+WHERE row_num > 1
+);
+
+INSERT INTO process_file_job (
+createdAt,
+lastTriedAt,
+status,
+userId,
+configId,
+pdfId,
+archived,
+attemptCount
+)
+SELECT
+NOW() AS createdAt,
+NULL AS lastTriedAt,
+'Completed' AS status, -- or 'Completed', depending on your enum
+up.userId,
+123 AS configId, -- pick a real config or default
+up.id AS pdfId,
+FALSE AS archived,
+0 AS attemptCount
+FROM uploaded_pdf up
+LEFT JOIN process_file_job pfj
+ON pfj.pdfId = up.id
+AND pfj.userId = up.userId
+WHERE pfj.id IS NULL
+;

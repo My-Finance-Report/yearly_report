@@ -119,7 +119,7 @@ runJob job = do
     Nothing -> throwIO $ userError $ unpack "Missing job configuration!"
     Just entity -> return entity
 
-  result <- processPdfFile userEntity (entityKey pdf) config True
+  result <- processPdfFile userEntity (entityKey pdf) config
   case result of
     Just errorMsg -> throwIO $ userError $ unpack errorMsg
     Nothing -> return ()
