@@ -31,17 +31,15 @@ renderConfigurationPageNew configId sankeyConfig transactions uploaderConfigs tr
       H.h1 ! A.class_ "text-2xl font-bold text-gray-900 mb-4" $ "Flow Chart Configuration"
       renderEditSankeyConfigPage configId sankeyConfig transactions
 
-
-
 renderEditSankeyConfigPage ::
   Key SankeyConfig ->
   FullSankeyConfig ->
   Map (Entity TransactionSource) [Entity Category] ->
   Html
 renderEditSankeyConfigPage configId config sourceCategories =
-  H.div ! A.class_ "space-y-6" $ do
+  H.div ! A.class_ "flex flex-col sm:flex-row gap-2 justify-center" $ do
     -- Inputs Section
-    H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
+    H.fieldset ! A.class_ "flex flex-col border border-gray-300 rounded-md p-4 max-w-[220px]" $ do
       H.legend ! A.class_ "font-semibold text-gray-700" $ "Inputs"
 
       H.p "These are the ways you get paid -- for example you both consult and have a day job "
@@ -51,7 +49,7 @@ renderEditSankeyConfigPage configId config sourceCategories =
       renderNewInputForm configId sourceCategories Nothing
 
     -- Linkages Section
-    H.fieldset ! A.class_ "border border-gray-300 rounded-md p-4" $ do
+    H.fieldset ! A.class_ "flex flex-col border border-gray-300 rounded-md p-4 max-w-[220px]" $ do
       H.legend ! A.class_ "font-semibold text-gray-700" $ "Linkages"
       H.p "Describes when money flows from one account to another, such as paying a credit card bill from a bank account"
       mapM_ (renderLinkageForm configId sourceCategories . Just) (linkages config)
@@ -138,7 +136,7 @@ renderLinkageForm configId sourceCategories maybeSelected = do
     -- Display the Source - Category - Target as Read-Only
     case maybeSelected of
       Just (selectedSource, selectedCategory, selectedTarget) -> do
-        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md flex-1" $ do
+        H.div ! A.class_ "bg-gray-100 text-gray-800 px-3 py-2 rounded-md" $ do
           toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory) <> " → " <> transactionSourceName (entityVal selectedTarget)
       Nothing -> return ()
 
@@ -157,9 +155,7 @@ renderLinkageForm configId sourceCategories maybeSelected = do
             ! A.type_ "hidden"
             ! A.name "targetSourceId"
             ! A.value (toValue $ fromSqlKey (entityKey selectedTarget))
-          toHtml $ transactionSourceName (entityVal selectedSource) <> " - " <> categoryName (entityVal selectedCategory) <> " → " <> transactionSourceName (entityVal selectedTarget)
       Nothing -> return ()
-
 
     -- Remove Button
     H.input
