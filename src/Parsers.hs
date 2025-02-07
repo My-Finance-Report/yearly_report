@@ -24,7 +24,7 @@ import Database.Persist
 import Database.Persist.TH (persistUpperCase)
 import Database.Transaction
 import Database.TransactionSource
-import Database.UploadConfiguration (getUploadConfigById)
+import Database.UploadConfiguration (getUploadConfigById, getUploadConfigurationFromPdf)
 import ExampleFileParser (generateAccountAndCategories, generateUploadConfiguration)
 import GHC.Generics (Generic)
 import OpenAiUtils
@@ -154,7 +154,6 @@ extractTransactionsFromLines filename rawText transactionSource startKeyword end
 
 createAndReturnUploadConfiguration :: Entity User -> Entity UploadedPdf -> IO UploadConfiguration
 createAndReturnUploadConfiguration user pdf = do
-  -- Step 1: Generate account category config from the PDF content
   mAcctCatConfig <- generateAccountAndCategories user (uploadedPdfRawContent $ entityVal pdf)
 
   case mAcctCatConfig of
@@ -187,7 +186,11 @@ processPdfFile user pdfId maybeConfigId = do
 
   config <- case maybeConfigId of
     Just configId -> entityVal <$> liftIO (getUploadConfigById user configId)
-    Nothing -> liftIO $ createAndReturnUploadConfiguration user uploadedFile
+    Nothing -> do
+      existingConfig <- getUploadConfigurationFromPdf user pdfId
+      case existingConfig of
+        Just validConfig -> return (entityVal validConfig)
+        Nothing -> liftIO $ createAndReturnUploadConfiguration user uploadedFile
 
   transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId config)
 
