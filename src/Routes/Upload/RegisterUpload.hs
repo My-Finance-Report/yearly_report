@@ -86,7 +86,7 @@ registerUploadRoutes pool = do
           case maybeUploadedPdf of
             Nothing -> do
               let originalName = decodeUtf8 $ fileName fileInfo
-              pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "pending"
+              pdfId <- liftIO $ addPdfRecord user originalName (fromMaybe "" maybeExtractedText) "todo"
               return (pdfId, maybeConfig)
             Just exisitingPdf -> return (entityKey exisitingPdf, maybeConfig)
 

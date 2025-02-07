@@ -7,6 +7,7 @@ import Control.Exception (SomeException (SomeException), throw, throwIO, try)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.IO.Unlift (MonadUnliftIO)
+import Data.Maybe (fromMaybe)
 import Data.Text (unpack)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.ConnectionPool
@@ -114,12 +115,8 @@ runJob job = do
     Nothing -> throwIO $ userError $ unpack "User record not found!"
     Just entity -> return entity
 
-  maybeConfig <- runSqlPool (getEntity (processFileJobConfigId job)) pool
-  config <- case maybeConfig of
-    Nothing -> throwIO $ userError $ unpack "Missing job configuration!"
-    Just entity -> return entity
+  result <- processPdfFile userEntity (entityKey pdf) (processFileJobConfigId job)
 
-  result <- processPdfFile userEntity (entityKey pdf) config
   case result of
     Just errorMsg -> throwIO $ userError $ unpack errorMsg
     Nothing -> return ()

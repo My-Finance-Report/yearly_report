@@ -2,6 +2,7 @@
 
 module Database.TransactionSource
   ( addTransactionSource,
+    addTransactionSourceWithCategories,
     getTransactionSource,
     updateTransactionSource,
     ensureTransactionSourceExists,
@@ -15,6 +16,7 @@ import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Data.Map (Map, fromList)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text, unpack)
 import Database.ConnectionPool (getConnectionPool)
 import Database.Models
@@ -54,6 +56,56 @@ defaultCategoriesForSource Card =
   ["Groceries", "Travel", "Gas", "Insurance", "Misc", "Subscriptions", "Credit Card Payments", "Entertainment"]
 defaultCategoriesForSource Investment =
   ["Stocks", "Bonds", "Real Estate", "Crypto", "Index Funds"]
+
+addTransactionSourceWithCategories ::
+  Entity User ->
+  Text ->
+  SourceKind ->
+  [Text] ->
+  IO (Maybe (Key TransactionSource))
+addTransactionSourceWithCategories user sourceName kind categoriesToAdd = do
+  pool <- getConnectionPool
+  runSqlPool queryAddTransactionSource pool
+  where
+    queryAddTransactionSource = do
+      maybeSource <- getBy (UniqueTransactionSource (entityKey user) sourceName)
+      case maybeSource of
+        -- If the source exists but is archived, unarchive it
+        Just (Entity sourceId archivedSource)
+          | transactionSourceArchived archivedSource -> do
+              update sourceId [TransactionSourceArchived =. False]
+              addOrUnarchiveCategories categoriesToAdd sourceId
+              return (Just sourceId)
+
+        -- If the source exists and is not archived, return an error
+        Just _ -> return Nothing
+        -- Otherwise, create a new transaction source
+        Nothing -> do
+          newSourceId <-
+            insert $
+              TransactionSource
+                { transactionSourceUserId = entityKey user,
+                  transactionSourceName = sourceName,
+                  transactionSourceArchived = False,
+                  transactionSourceSourceKind = kind
+                }
+
+          -- Insert provided + default categories
+          addOrUnarchiveCategories categoriesToAdd newSourceId
+
+          return (Just newSourceId)
+
+    -- \| Inserts or unarchives categories for a source
+    addOrUnarchiveCategories :: [Text] -> Key TransactionSource -> SqlPersistT IO ()
+    addOrUnarchiveCategories categoryNames sourceId =
+      forM_ categoryNames $ \categoryName -> do
+        maybeCategory <- getBy $ UniqueCategory categoryName sourceId
+        case maybeCategory of
+          Just (Entity categoryId category) -> do
+            when (categoryArchived category) $
+              update categoryId [CategoryArchived =. False]
+          Nothing -> do
+            insert_ $ Category categoryName sourceId (entityKey user) False
 
 addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Either Text (Key TransactionSource))
 addTransactionSource user sourceName kind = do

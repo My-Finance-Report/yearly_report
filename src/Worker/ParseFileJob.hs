@@ -30,7 +30,7 @@ enqueueFileProcessingJob user pdfId config now = do
             processFileJobLastTriedAt = Nothing,
             processFileJobUserId = entityKey user,
             processFileJobPdfId = pdfId,
-            processFileJobConfigId = entityKey config,
+            processFileJobConfigId = Just (entityKey config),
             processFileJobAttemptCount = 0,
             processFileJobArchived = False
           }
