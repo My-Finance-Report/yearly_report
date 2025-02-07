@@ -28,6 +28,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - the site seems sluggish
+- sankey generation will have to come from somewhere now that no onboarding
 - make sure we have jobs for all files after migration
 - probably on the act of actually uploading (not a rerun)
   => it seems like there is a way to upload a file twice

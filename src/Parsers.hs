@@ -152,7 +152,7 @@ extractTransactionsFromLines filename rawText transactionSource startKeyword end
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-createAndReturnUploadConfiguration :: Entity User -> Entity UploadedPdf -> IO (UploadConfiguration)
+createAndReturnUploadConfiguration :: Entity User -> Entity UploadedPdf -> IO UploadConfiguration
 createAndReturnUploadConfiguration user pdf = do
   -- Step 1: Generate account category config from the PDF content
   mAcctCatConfig <- generateAccountAndCategories user (uploadedPdfRawContent $ entityVal pdf)

@@ -29,7 +29,6 @@ import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, html, json, post, redirect, setHeader)
 

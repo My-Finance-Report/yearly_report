@@ -42,7 +42,6 @@ import HtmlGenerators.UploadPage (renderSelectAccountPage, renderUploadPage)
 import Network.Wai.Parse (FileInfo (..), defaultParseRequestBodyOptions, lbsBackEnd, parseRequestBodyEx, setMaxRequestNumFiles, tempFileBackEnd)
 import Parsers (extractTextFromPdf)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, files, formParam, formParams, get, header, html, json, pathParam, post, queryParam, redirect, request, setHeader, text)
 import Worker.ParseFileJob
@@ -90,14 +89,8 @@ registerUploadRoutes pool = do
               return (pdfId, maybeConfig)
             Just exisitingPdf -> return (entityKey exisitingPdf, maybeConfig)
 
-        let (missingConfigs, validConfigs) = Data.List.partition (isNothing . snd) pdfIds
-
-        if null missingConfigs
-          then do
-            forM_ validConfigs $ \(pdfId, Just config) -> liftIO $ asyncFileProcess user pdfId config
-            redirect "/dashboard"
-          else do
-            redirect $ "/select-account?pdfIds=" <> intercalate "," (map (Data.Text.Lazy.pack . show . fromSqlKey . fst) pdfIds)
+        forM_ pdfIds $ \(pdfId, config) -> liftIO $ asyncFileProcess user pdfId (fmap entityKey config)
+        redirect "/dashboard"
 
   post "/assign-transaction-source" $ requireUser pool $ \user -> do
     params <- formParams
@@ -129,9 +122,7 @@ registerUploadRoutes pool = do
       let extractedText = uploadedPdfRawContent (entityVal pdfRecord)
       maybeConfig <- liftIO $ getUploadConfigurationFromPdf user pdfId
 
-      case maybeConfig of
-        Just config -> liftIO $ asyncFileProcess user pdfId config
-        Nothing -> liftIO $ putStrLn "Failed to retrieve configuration for reprocessing."
+      liftIO $ asyncFileProcess user pdfId (fmap entityKey maybeConfig)
 
     redirect "/dashboard"
 

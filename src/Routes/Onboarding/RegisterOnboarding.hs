@@ -28,40 +28,6 @@ import Web.Scotty (ActionM, ScottyM, get, html, post, redirect)
 
 registerOnboardingRoutes :: ConnectionPool -> ScottyM ()
 registerOnboardingRoutes pool = do
-  -- Main onboarding route (redirects based on current step)
-  get "/onboarding" $ requireUser pool $ \user -> do
-    let currentStep = userOnboardingStep $ entityVal user
-    case currentStep of
-      Just 0 -> redirect "/onboarding/step-1"
-      Just 1 -> redirect "/onboarding/step-2"
-      _ -> redirect "/dashboard"
-
-  -- Step 1 of onboarding
-  get "/onboarding/step-1" $ requireUser pool $ \user -> do
-    transactionSources <- liftIO $ getAllTransactionSources user
-    let content = renderOnboardingOne user transactionSources True
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
-
-  post "/onboarding/step-2" $ requireUser pool $ \user -> do
-    liftIO $ updateUserOnboardingStep user Nothing
-    redirect "/onboarding/step-2"
-
-  post "/onboarding/step-1" $ requireUser pool $ \user -> do
-    liftIO $ updateUserOnboardingStep user (Just 1)
-    redirect "/onboarding/step-2"
-
-  get "/onboarding/step-2" $ requireUser pool $ \user -> do
-    liftIO $ print "we are in step 2"
-    categoriesBySource <- liftIO $ getCategoriesAndSources user
-    let content = renderOnboardingTwo user categoriesBySource True
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
-
-  get "/add-account/step-3" $ requireUser pool $ \user -> do
-    transactionSources <- liftIO $ getAllTransactionSources user
-    uploadConfigs <- liftIO $ getAllUploadConfigs user
-    let content = renderOnboardingThree user transactionSources (map entityVal uploadConfigs) False
-    Web.Scotty.html $ renderPage (Just user) "User Onboarding" content False
-
   post "/onboarding/finalize" $ requireUser pool $ \user -> do
     categoriesBySource <- liftIO $ getCategoriesAndSources user
 

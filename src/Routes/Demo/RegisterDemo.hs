@@ -26,7 +26,6 @@ import HtmlGenerators.HomePage (renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.Layout (renderPage)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Text.Read (readMaybe)
 import Web.Scotty (ActionM, ScottyM, formParam, get, html, json, post, queryParamMaybe, redirect)
 

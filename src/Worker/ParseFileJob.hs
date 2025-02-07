@@ -2,20 +2,21 @@ module Worker.ParseFileJob (asyncFileProcess, resetFileProcessingJob, resetAllFi
 
 import Control.Exception (throwIO)
 import Control.Monad.IO.Unlift (MonadIO (liftIO), MonadUnliftIO)
+import Data.Maybe (fromMaybe)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.ConnectionPool (getConnectionPool)
 import Database.Models
 import Database.Persist hiding (get)
 import Database.Persist.Postgresql (ConnectionPool, SqlPersistT, get, runSqlPool)
 
-asyncFileProcess :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO ()
-asyncFileProcess user pdfId config = do
+asyncFileProcess :: Entity User -> Key UploadedPdf -> Maybe (Key UploadConfiguration) -> IO ()
+asyncFileProcess user pdfId configId = do
   now <- getCurrentTime
   pool <- getConnectionPool
-  runSqlPool (enqueueFileProcessingJob user pdfId config now) pool
+  runSqlPool (enqueueFileProcessingJob user pdfId configId now) pool
 
-enqueueFileProcessingJob :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> UTCTime -> SqlPersistT IO ()
-enqueueFileProcessingJob user pdfId config now = do
+enqueueFileProcessingJob :: Entity User -> Key UploadedPdf -> Maybe (Key UploadConfiguration) -> UTCTime -> SqlPersistT IO ()
+enqueueFileProcessingJob user pdfId configId now = do
   existingJob <- selectFirst [ProcessFileJobPdfId ==. pdfId] []
   case existingJob of
     Just (Entity jobId job) -> do
@@ -30,7 +31,7 @@ enqueueFileProcessingJob user pdfId config now = do
             processFileJobLastTriedAt = Nothing,
             processFileJobUserId = entityKey user,
             processFileJobPdfId = pdfId,
-            processFileJobConfigId = Just (entityKey config),
+            processFileJobConfigId = configId,
             processFileJobAttemptCount = 0,
             processFileJobArchived = False
           }
