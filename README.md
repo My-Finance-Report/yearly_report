@@ -27,19 +27,20 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+- sankey generation will have to come from somewhere now that no onboarding
 - the site seems sluggish
-- make sure we have jobs for all files after migration
-- probably on the act of actually uploading (not a rerun)
-  => it seems like there is a way to upload a file twice
-  -> i actually dont even think there is a constraint that prevents this
 
-- auto add categories and accounts ?
-- maybe reprocess when you update a category
-- (still) need to preserve location in tab groups when navigating forms
-- enable config of the barchart (categories to include + sources to include) (wip)
+- make sure we have jobs for all files after migration
+
+- constrain only one hash per user
+- constrain all file uploads jobs have corresponding file processing jobs
 
 - uploads fail if the transactions source does not have any categories
   => constrain the db to prevent this
+
+- (still) need to preserve location in tab groups when navigating forms
+- enable config of the barchart (categories to include + sources to include) (wip)
+
 - shareable report
   - allow to select different charts
 - dont show snakey if there is a cycle in the chart, and alert?
@@ -48,77 +49,19 @@ this is mainly a project through which I will learn more about haskell, but I ex
   - probably some async code we dont need anymore
 - we should save some error logs to the db when a job fails
 - update the demo data to be more anon
+
 - manually add transactions
 - budget and budget progress
-- option to add a new source on the upload page after you drop in the file
+
 - privacy policy
 - install a linter for extraneous imports
 - memoize llm calls to preserve existing data save costs
 
-DROP TABLE IF EXISTS processed_file;
+## for newsletter
 
-ALTER TABLE process_file_job
-DROP CONSTRAINT process_file_job_pdf_id_fkey,
-ADD CONSTRAINT process_file_job_pdf_id_fkey
-FOREIGN KEY (pdf_id)
-REFERENCES uploaded_pdf (id)
-ON DELETE CASCADE;
-
-SELECT raw*content_hash, user_id, COUNT(*)
-FROM uploaded*pdf
-GROUP BY raw_content_hash, user_id
-HAVING COUNT(*) > 1;
-
-WITH ranked AS (
-SELECT
-id,
-MIN(id) OVER (PARTITION BY raw_content_hash, user_id) AS master_id
-FROM uploaded_pdf
-)
-UPDATE transaction
-SET uploaded_pdf_id = ranked.master_id
-FROM ranked
-WHERE transaction.uploaded_pdf_id = ranked.id
-AND ranked.id <> ranked.master_id;
-
-WITH ranked AS (
-SELECT
-id,
-ROW_NUMBER() OVER (
-PARTITION BY raw_content_hash, user_id
-ORDER BY id ASC
-) AS row_num
-FROM uploaded_pdf
-)
-DELETE FROM uploaded_pdf
-WHERE id IN (
-SELECT id
-FROM ranked
-WHERE row_num > 1
-);
-
-INSERT INTO process_file_job (
-createdAt,
-lastTriedAt,
-status,
-userId,
-configId,
-pdfId,
-archived,
-attemptCount
-)
-SELECT
-NOW() AS createdAt,
-NULL AS lastTriedAt,
-'Completed' AS status, -- or 'Completed', depending on your enum
-up.userId,
-123 AS configId, -- pick a real config or default
-up.id AS pdfId,
-FALSE AS archived,
-0 AS attemptCount
-FROM uploaded_pdf up
-LEFT JOIN process_file_job pfj
-ON pfj.pdfId = up.id
-AND pfj.userId = up.userId
-WHERE pfj.id IS NULL
-;
+-> nested selection
+--> proper sorting in the listings
+-> 0 onboarding flow
+--> removed file upload limit (actually just made it 50 files)
+--> rerun when you alter a category
+-> stacked barchart

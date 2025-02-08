@@ -26,7 +26,6 @@ import HtmlGenerators.HomePage (renderHomePage)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.LandingPage (renderLandingPage)
 import HtmlGenerators.Layout (renderPage)
-import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, get, html, post, redirect, setHeader)
 
 registerMiscRoutes :: ConnectionPool -> ScottyM ()
@@ -42,12 +41,8 @@ registerMiscRoutes pool = do
     html $ renderPage user "Help Me" renderSupportPage False
 
   get "/dashboard" $ requireUser pool $ \user -> do
-    let onboardingStep = userOnboardingStep $ entityVal user
-    case onboardingStep of
-      Just _ -> Web.Scotty.redirect "/onboarding"
-      Nothing -> do
-        pendingJobs <- getFileJobsCount user Pending
-        processingJobs <- getFileJobsCount user Processing
-        let banner = if (pendingJobs + processingJobs) > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
-        content <- liftIO $ renderHomePage user banner
-        Web.Scotty.html $ renderPage (Just user) "Financial Summary" content True
+    pendingJobs <- getFileJobsCount user Pending
+    processingJobs <- getFileJobsCount user Processing
+    let banner = if (pendingJobs + processingJobs) > 0 then Just $ makeSimpleBanner "Processing transactions, check back soon!" else Nothing
+    content <- liftIO $ renderHomePage user banner
+    Web.Scotty.html $ renderPage (Just user) "Financial Summary" content True

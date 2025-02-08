@@ -22,7 +22,6 @@ import Database.Transaction (getAllTransactions, groupTransactionsBySource, remo
 import Database.TransactionSource (addTransactionSource, getAllTransactionSources, getTransactionSource, removeTransactionSource, updateTransactionSource)
 import Database.UploadConfiguration (getAllUploadConfigs, getUploadConfigById)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, pathParam, post, redirect, text)
 import Worker.ParseFileJob (asyncFileProcess, resetAllFileProcessingJobs, resetFileProcessingJob)
 

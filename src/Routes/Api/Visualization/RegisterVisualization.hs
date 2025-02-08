@@ -23,7 +23,6 @@ import Database.Transaction (getAllTransactions, groupTransactionsBySource)
 import Database.TransactionSource (getAllTransactionSources)
 import Database.UploadConfiguration (getAllUploadConfigs)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Text.Read (readMaybe)
 import Types
 import Web.Scotty (ActionM, ScottyM, get, json, post, queryParam, queryParamMaybe, redirect, setHeader)

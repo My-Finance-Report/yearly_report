@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HtmlGenerators.UploadPage (renderUploadPage, renderSelectAccountPage) where
+module HtmlGenerators.UploadPage (renderUploadPage, renderSelectAccountPage, makeUploadDropzone) where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (MonadIO (liftIO))
@@ -13,8 +13,8 @@ import Database.Persist.Postgresql (fromSqlKey)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
-makeToolBar :: Html
-makeToolBar =
+makeUploadDropzone :: Html
+makeUploadDropzone =
   H.div ! A.class_ "w-full max-w-3xl mx-auto text-center" $ do
     H.script ! A.type_ "text/javascript" ! A.src "/upload.js" $ mempty
 
@@ -66,7 +66,7 @@ renderUploadPage user = do
   files <- getAllProcessedFiles user
 
   return $ H.div $ do
-    makeToolBar
+    makeUploadDropzone
     generateProcessedFilesComponent files
 
 generateProcessedFilesComponent :: [(Entity ProcessFileJob, Entity UploadedPdf)] -> Html

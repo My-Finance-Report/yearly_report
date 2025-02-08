@@ -7,6 +7,7 @@ import Data.Text (Text)
 import Database.Models
 import Database.Persist (Entity (..))
 import Database.Persist.Postgresql (fromSqlKey)
+import HtmlGenerators.UploadPage (makeUploadDropzone)
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 
@@ -123,32 +124,4 @@ renderCustomAccountForm kind placeholderText = do
 
 renderOnboardingOne :: Entity User -> [Entity TransactionSource] -> Bool -> Html
 renderOnboardingOne user transactionSources isOnboarding =
-  let nextUrl =
-        if isOnboarding
-          then "/onboarding/step-2"
-          else "/add-account/step-2"
-      method =
-        if isOnboarding
-          then "post"
-          else "get"
-   in H.div ! A.class_ "bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center p-6" $ do
-        -- Page Header
-        H.div ! A.class_ "w-full max-w-3xl text-center mb-8" $ do
-          when isOnboarding $ do
-            H.h1 ! A.class_ "text-4xl font-bold text-primary" $ "Onboarding"
-            H.h2 ! A.class_ "text-lg text-gray-700 mt-2" $ "Step 1 of 2"
-          H.h2 ! A.class_ "text-xl font-semibold text-gray-900 mt-4" $ "Let us know which cards, bank and investment accounts you use"
-
-        -- Account List & Input
-        newSourceComponent transactionSources isOnboarding
-
-        -- Navigation Button
-        H.div ! A.class_ "flex flex-col sm:flex-row gap-4 mt-12 justify-center" $ do
-          H.form
-            ! A.method method
-            ! A.action nextUrl
-            $ do
-              H.input
-                ! A.type_ "submit"
-                ! A.value "Next"
-                ! A.class_ "primary-button"
+  makeUploadDropzone

@@ -141,7 +141,7 @@ UploadedPdf
     filename Text
     rawContent Text
     rawContentHash Text
-    uploadTime Text
+    uploadTime Text -- TODO this is weird that its text
     userId UserId
     archived Bool default=False
     UniqueUserContent rawContentHash userId
@@ -206,7 +206,7 @@ ProcessFileJob
    lastTriedAt UTCTime Maybe
    status JobStatus
    userId UserId
-   configId UploadConfigurationId
+   configId UploadConfigurationId Maybe
    pdfId  UploadedPdfId 
    archived Bool default=false
    attemptCount Int default=0

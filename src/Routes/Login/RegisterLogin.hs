@@ -26,7 +26,6 @@ import HtmlGenerators.OnboardingFour (renderOnboardingFour)
 import HtmlGenerators.OnboardingOne
 import HtmlGenerators.OnboardingThree (renderOnboardingThree)
 import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
-import SankeyConfiguration (generateSankeyConfig)
 import Web.Scotty (ActionM, ScottyM, formParam, get, html, post, redirect, setHeader)
 
 registerLoginRoutes :: ConnectionPool -> ScottyM ()

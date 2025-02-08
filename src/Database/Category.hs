@@ -14,16 +14,15 @@ import Control.Monad (forM, forM_)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.IO.Unlift (MonadUnliftIO, UnliftIO (unliftIO))
 import Control.Monad.Trans.Reader (ReaderT)
+import Data.Map (Map, fromList, toList)
 import Data.Text (Text)
-
-import Data.Map (Map, toList, fromList)
 import Database.ConnectionPool
 import Database.Models
 import Database.Persist (Entity (..), Filter)
 import Database.Persist.Postgresql (insert, rawSql, runSqlPool, selectFirst, (==.))
 import Database.Persist.Sql
-import Types
 import Database.TransactionSource (getAllTransactionSources)
+import Types
 
 getCategoriesBySource :: (MonadUnliftIO m) => Entity User -> Key TransactionSource -> m [Entity Category]
 getCategoriesBySource user sourceId = do
@@ -54,7 +53,7 @@ getCategory user categoryId = do
             Nothing -> liftIO $ fail $ "No transaction source found for category id=" ++ show (fromSqlKey categoryId) ++ " and user id=" ++ show (fromSqlKey $ entityKey user)
             Just sourceEntity -> return (categoryEntity, sourceEntity)
 
-addCategory :: (MonadUnliftIO m) => Entity User -> Text -> Key TransactionSource -> m (Key Category)
+addCategory :: (MonadUnliftIO m) => Entity User -> Text -> Key TransactionSource -> m (Entity Category)
 addCategory user categoryName sourceId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryAddOrUnarchiveCategory pool
@@ -64,14 +63,20 @@ addCategory user categoryName sourceId = do
       case maybeCategory of
         Just (Entity categoryId category)
           | categoryArchived category -> do
-              -- Unarchive the category
               update categoryId [CategoryArchived =. False]
-              return categoryId
-        _ -> do
-          -- Insert a new category
-          insert $ Category categoryName sourceId (entityKey user) False
+              updatedCategory <- get categoryId
+              case updatedCategory of
+                Just cat -> return (Entity categoryId cat)
+                Nothing -> error "Unexpected: Category just updated but not found!"
+        Just entityCategory -> return entityCategory
+        Nothing -> do
+          newCategoryId <- insert $ Category categoryName sourceId (entityKey user) False
+          newCategory <- get newCategoryId
+          case newCategory of
+            Just cat -> return (Entity newCategoryId cat)
+            Nothing -> error "Unexpected: Newly inserted category not found!"
 
-removeCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> m ()
+removeCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> m (Maybe (Key TransactionSource))
 removeCategory user categoryId = do
   pool <- liftIO getConnectionPool
   runSqlPool queryArchiveCategory pool
@@ -79,13 +84,18 @@ removeCategory user categoryId = do
     queryArchiveCategory = do
       maybeCategory <- get categoryId
       case maybeCategory of
-        Nothing -> liftIO $ putStrLn $ "Category not found: " ++ show (fromSqlKey categoryId)
-        Just category -> do
+        Nothing -> do
+          liftIO $ putStrLn $ "Category not found: " ++ show (fromSqlKey categoryId)
+          return Nothing
+        Just category ->
           if categoryUserId category /= entityKey user
-            then liftIO $ putStrLn $ "Unauthorized attempt to archive category: " ++ show (fromSqlKey categoryId)
+            then do
+              liftIO $ putStrLn $ "Unauthorized attempt to archive category: " ++ show (fromSqlKey categoryId)
+              return Nothing
             else do
               update categoryId [CategoryArchived =. True]
               liftIO $ putStrLn $ "Category " ++ show (fromSqlKey categoryId) ++ " archived successfully."
+              return (Just $ categorySourceId category) -- Return the TransactionSource ID
 
 updateCategory :: (MonadUnliftIO m) => Entity User -> Key Category -> Text -> m ()
 updateCategory user categoryId newName = do
@@ -128,4 +138,3 @@ getCategoriesAndSources user = do
   transactionSources <- getAllTransactionSources user
   categoriesBySource <- mapM (getCategoriesBySource user . entityKey) transactionSources
   return $ fromList $ zip transactionSources categoriesBySource
-

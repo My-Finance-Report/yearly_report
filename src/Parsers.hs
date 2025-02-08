@@ -13,6 +13,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson hiding (Key)
 import Data.Aeson.KeyMap (mapMaybe)
 import qualified Data.ByteString.Lazy as B
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
@@ -23,6 +24,8 @@ import Database.Persist
 import Database.Persist.TH (persistUpperCase)
 import Database.Transaction
 import Database.TransactionSource
+import Database.UploadConfiguration (addUploadConfigurationObject, getUploadConfigById, getUploadConfigurationFromPdf)
+import ExampleFileParser (generateAccountAndCategories, generateUploadConfiguration)
 import GHC.Generics (Generic)
 import OpenAiUtils
 import System.FilePath (takeFileName)
@@ -149,21 +152,54 @@ extractTransactionsFromLines filename rawText transactionSource startKeyword end
     Nothing -> throwIO $ PdfParseException "Failed to parse transactions from extracted text."
     Just transactions -> return transactions
 
-processPdfFile :: Entity User -> Key UploadedPdf -> Entity UploadConfiguration -> IO (Maybe Text)
-processPdfFile user pdfId config = do
+createAndReturnUploadConfiguration :: Entity User -> Entity UploadedPdf -> IO UploadConfiguration
+createAndReturnUploadConfiguration user pdf = do
+  mAcctCatConfig <- generateAccountAndCategories user (uploadedPdfRawContent $ entityVal pdf)
+
+  case mAcctCatConfig of
+    Nothing -> throwIO $ PdfParseException "Failed to extract accounts and categories from the PDF."
+    Just acctCatConfig -> do
+      let sourceKind = fromMaybe Account (parseSourceKind (partialKind acctCatConfig))
+      txnSourceResult <-
+        addTransactionSource
+          user
+          (partialName acctCatConfig)
+          sourceKind
+
+      case txnSourceResult of
+        Nothing -> throwIO $ PdfParseException "Failed to create transaction source"
+        Just txnSourceId -> do
+          -- Step 3: Generate the upload configuration
+          uploadConfig <- generateUploadConfiguration user txnSourceId (uploadedPdfRawContent $ entityVal pdf)
+
+          case uploadConfig of
+            Just config -> return config
+            Nothing -> throwIO $ PdfParseException "Failed to generate upload configuration."
+
+processPdfFile :: Entity User -> Key ProcessFileJob -> Key UploadedPdf -> Maybe (Key UploadConfiguration) -> IO (Maybe Text)
+processPdfFile user jobId pdfId maybeConfigId = do
   uploadedFile <- liftIO $ getPdfRecord user pdfId
-
   let filename = uploadedPdfFilename $ entityVal uploadedFile
-
   alreadyProcessed <- liftIO $ isFileProcessed user uploadedFile
 
-  transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId $ entityVal config)
+  config <- case maybeConfigId of
+    Just configId -> entityVal <$> liftIO (getUploadConfigById user configId)
+    Nothing -> do
+      newConfig <- getUploadConfigurationFromPdf user pdfId
+      case newConfig of
+        Just validConfig -> return (entityVal validConfig)
+        Nothing -> do
+          blahConfig <- liftIO $ createAndReturnUploadConfiguration user uploadedFile
+          liftIO $ addUploadConfigurationObject user blahConfig jobId
+          return blahConfig
+
+  transactionSource <- getTransactionSource user (uploadConfigurationTransactionSourceId config)
 
   when alreadyProcessed $ removeTransactions user pdfId
 
   putStrLn $ "Processing file: " ++ T.unpack filename
 
-  result <- try (extractTransactionsFromLines (uploadedPdfFilename $ entityVal uploadedFile) (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword $ entityVal config) (uploadConfigurationEndKeyword $ entityVal config)) :: IO (Either SomeException [PartialTransaction])
+  result <- try (extractTransactionsFromLines (uploadedPdfFilename $ entityVal uploadedFile) (uploadedPdfRawContent $ entityVal uploadedFile) (entityVal transactionSource) (uploadConfigurationStartKeyword config) (uploadConfigurationEndKeyword config)) :: IO (Either SomeException [PartialTransaction])
   case result of
     Left err -> do
       let errorMsg = T.pack $ "Error processing file '" ++ T.unpack filename ++ "': " ++ show err

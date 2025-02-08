@@ -24,7 +24,6 @@ import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import HtmlGenerators.OnboardingOne (renderOnboardingOne)
 import HtmlGenerators.OnboardingTwo (renderOnboardingTwo)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, pathParam, post, redirect, text)
 

@@ -7,6 +7,7 @@ module Types
   ( CategorizedTransaction (..),
     AggregatedTransactions,
     PartialUploadConfig (..),
+    PartialAccountCategoryConfig (..),
     TransactionKind (..),
     TransactionsWrapper (..),
     FullSankeyConfig (..),
@@ -76,6 +77,21 @@ instance FromJSON TransactionKind
 instance FromJSON Transaction
 
 instance FromJSON TransactionsWrapper
+
+data PartialAccountCategoryConfig = PartialAccountCategoryConfig
+  { partialName :: Text, -- "name" field
+    partialKind :: Text, -- "kind" field (must be one of: "investment", "card", "account")
+    partialCategories :: [Text] -- List of category names
+  }
+  deriving (Show, Generic)
+
+-- JSON Parsing for PartialAccountCategoryConfig
+instance FromJSON PartialAccountCategoryConfig where
+  parseJSON = withObject "PartialAccountCategoryConfig" $ \v -> do
+    partialName <- v .: "name"
+    partialKind <- v .: "kind"
+    partialCategories <- v .: "categories"
+    return PartialAccountCategoryConfig {..}
 
 data PartialUploadConfig
   = PartialUploadConfig {partialFilenameRegex :: Text, partialStartKeyword :: Text, partialEndKeyword :: Text}

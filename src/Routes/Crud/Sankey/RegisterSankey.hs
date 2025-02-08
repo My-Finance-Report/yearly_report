@@ -27,7 +27,6 @@ import Database.UploadConfiguration (getAllUploadConfigs)
 import HtmlGenerators.ConfigurationNew (renderConfigurationPageNew)
 import HtmlGenerators.HtmlGenerators (renderSupportPage)
 import Sankey (generateSankeyData)
-import SankeyConfiguration (generateSankeyConfig)
 import Types
 import Web.Scotty (ActionM, ScottyM, formParam, formParams, get, header, html, json, post, redirect, setHeader, text)
 
