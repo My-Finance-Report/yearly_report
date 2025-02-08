@@ -31,14 +31,16 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - the site seems sluggish
 
 - make sure we have jobs for all files after migration
+
 - constrain only one hash per user
 - constrain all file uploads jobs have corresponding file processing jobs
+
+- uploads fail if the transactions source does not have any categories
+  => constrain the db to prevent this
 
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
 
-- uploads fail if the transactions source does not have any categories
-  => constrain the db to prevent this
 - shareable report
   - allow to select different charts
 - dont show snakey if there is a cycle in the chart, and alert?
@@ -47,9 +49,10 @@ this is mainly a project through which I will learn more about haskell, but I ex
   - probably some async code we dont need anymore
 - we should save some error logs to the db when a job fails
 - update the demo data to be more anon
+
 - manually add transactions
 - budget and budget progress
-- option to add a new source on the upload page after you drop in the file
+
 - privacy policy
 - install a linter for extraneous imports
 - memoize llm calls to preserve existing data save costs
@@ -62,12 +65,3 @@ this is mainly a project through which I will learn more about haskell, but I ex
 --> removed file upload limit (actually just made it 50 files)
 --> rerun when you alter a category
 -> stacked barchart
-
-Hello Friends, 
-
-Busy week at MyFinance, with some new features shipped!
-
-- Nested group-by clauses to breakdown your expenses by category, then by month.
-
-
-
