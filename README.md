@@ -28,10 +28,10 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 -> files processed table needs to be grouped by source and collapsolable
+-> google sheets doesnt allow for cycles in the sankey
 
 - the site seems sluggish
 
-- constrain only one hash per user
 
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
