@@ -89,27 +89,7 @@ registerUploadRoutes pool = do
             Just exisitingPdf -> return (entityKey exisitingPdf, maybeConfig)
 
         forM_ pdfIds $ \(pdfId, config) -> liftIO $ asyncFileProcess user pdfId (fmap entityKey config)
-        redirect "/dashboard"
 
-  get "/select-account" $ requireUser pool $ \user -> do
-    pdfIdsParam <- queryParam "pdfIds"
-
-    let pdfIds = map (toSqlKey . read . unpack) pdfIdsParam :: [Key UploadedPdf]
-    fileRecords <- liftIO $ getPdfRecords user pdfIds
-
-    liftIO $ print pdfIds
-
-    transactionSources <- liftIO $ getAllTransactionSources user
-
-    let txnLookup = Map.fromList [(entityKey txn, txn) | txn <- transactionSources]
-
-    liftIO $ print txnLookup
-
-    pdfsWithSources <- forM fileRecords $ \record -> do
-      maybeConfig <- liftIO $ getUploadConfigurationFromPdf user (entityKey record)
-      let maybeTxnSource = maybeConfig >>= \(Entity _ config) -> Map.lookup (uploadConfigurationTransactionSourceId config) txnLookup
-      return (record, maybeTxnSource)
-
-    transactionSources <- liftIO $ getAllTransactionSources user
-
-    html $ renderPage (Just user) "Adjust Transactions" (renderSelectAccountPage pdfsWithSources transactionSources) True
+        referer <- header "Referer"
+        let redirectTo = fromMaybe "/dashboard" referer
+        redirect redirectTo

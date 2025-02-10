@@ -27,17 +27,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
--> remove the add account in the manage accoounts page
+-> files processed table needs to be grouped by source and collapsolable
+
 - the site seems sluggish
 
 - constrain only one hash per user
-
-
 
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
 
 - shareable report
+
   - allow to select different charts
 
 - release an admin page
