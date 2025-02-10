@@ -9,7 +9,6 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map
 import Database.Category (getCategoriesAndSources, getCategoriesBySource)
 import Database.Configurations (saveSankeyConfig)
-import Database.Database (updateUserOnboardingStep)
 import Database.Models
 import Database.Persist
   ( Entity (entityKey, entityVal),
@@ -39,5 +38,4 @@ registerOnboardingRoutes pool = do
             saveSankeyConfig user con
             return ()
           Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
-    liftIO $ updateUserOnboardingStep user Nothing
     Web.Scotty.redirect "/dashboard"

@@ -210,5 +210,5 @@ ProcessFileJob
    pdfId  UploadedPdfId 
    archived Bool default=false
    attemptCount Int default=0
-   --TODO add unique on pdfId
+   UniquePdfJob pdfId  
 |]

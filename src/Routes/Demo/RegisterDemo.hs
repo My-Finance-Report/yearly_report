@@ -12,7 +12,7 @@ import Data.Text (Text)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
-import Database.Database (getDemoUser, updateUserOnboardingStep)
+import Database.Database (getDemoUser)
 import Database.Models (User (userOnboardingStep))
 import Database.Persist
   ( Entity (entityKey, entityVal),

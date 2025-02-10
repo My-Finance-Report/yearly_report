@@ -12,7 +12,6 @@ import Data.Text (Text)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource)
 import Database.Configurations (saveSankeyConfig)
-import Database.Database (updateUserOnboardingStep)
 import Database.Jobs
 import Database.Models
 import Database.Persist

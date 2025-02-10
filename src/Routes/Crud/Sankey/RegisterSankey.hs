@@ -14,7 +14,6 @@ import Data.Text (Text, splitOn, unpack)
 import Data.Text.Lazy (fromStrict, toStrict)
 import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (addSankeyInput, addSankeyLinkage, getFirstSankeyConfig, removeSankeyInput, removeSankeyLinkage, saveSankeyConfig)
-import Database.Database (updateUserOnboardingStep)
 import Database.Models (User (userOnboardingStep))
 import Database.Persist
   ( Entity (entityKey, entityVal),

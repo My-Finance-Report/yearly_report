@@ -17,6 +17,8 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
+import Database.Category (getCategoriesAndSources)
+import Database.Configurations (saveSankeyConfig)
 import Database.Database
 import Database.Files
 import Database.Models
@@ -28,6 +30,7 @@ import Database.UploadConfiguration (addUploadConfigurationObject, getUploadConf
 import ExampleFileParser (generateAccountAndCategories, generateUploadConfiguration)
 import GHC.Generics (Generic)
 import OpenAiUtils
+import SankeyConfiguration (generateSankeyConfig)
 import System.FilePath (takeFileName)
 import System.Process (readProcess)
 import Types
@@ -169,7 +172,14 @@ createAndReturnUploadConfiguration user pdf = do
       case txnSourceResult of
         Nothing -> throwIO $ PdfParseException "Failed to create transaction source"
         Just txnSourceId -> do
-          -- Step 3: Generate the upload configuration
+          categoriesBySource <- liftIO $ getCategoriesAndSources user
+          config <- generateSankeyConfig user categoriesBySource
+          case config of
+            Just con -> do
+              saveSankeyConfig user con
+              return ()
+            Nothing -> putStrLn "Error: Failed to generate Sankey configuration."
+
           uploadConfig <- generateUploadConfiguration user txnSourceId (uploadedPdfRawContent $ entityVal pdf)
 
           case uploadConfig of

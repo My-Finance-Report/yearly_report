@@ -28,9 +28,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback
 
 - sankey generation will have to come from somewhere now that no onboarding
-- the site seems sluggish
 
-- make sure we have jobs for all files after migration
+- the site seems sluggish
 
 - constrain only one hash per user
 - constrain all file uploads jobs have corresponding file processing jobs

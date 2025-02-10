@@ -12,7 +12,6 @@ import Data.Text (Text)
 import Data.Text.Lazy (fromStrict, toStrict, unpack)
 import Database.Category (getCategoriesBySource)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
-import Database.Database (updateUserOnboardingStep)
 import Database.Models (Category (categorySourceId), User (userOnboardingStep))
 import Database.Persist
   ( Entity (entityKey, entityVal),

@@ -168,8 +168,6 @@ executable year-report-finances
       wai >= 3.2
   ghc-options: -threaded
   default-language: Haskell2010
-
-
 executable worker-task
   main-is: Worker/Main.hs
   hs-source-dirs: src
@@ -182,6 +180,8 @@ executable worker-task
       Database.Models
       Database.Transaction
       Database.TransactionSource
+      Database.UploadConfiguration  
+      ExampleFileParser             
       OpenAiUtils
       Parsers
       Types

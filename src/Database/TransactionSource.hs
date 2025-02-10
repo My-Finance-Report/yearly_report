@@ -111,6 +111,8 @@ addTransactionSource :: Entity User -> Text -> SourceKind -> IO (Maybe (Key Tran
 addTransactionSource user sourceName kind = do
   pool <- getConnectionPool
   runSqlPool queryAddTransactionSource pool
+
+
   where
     queryAddTransactionSource = do
       maybeSource <- getBy (UniqueTransactionSource (entityKey user) sourceName)

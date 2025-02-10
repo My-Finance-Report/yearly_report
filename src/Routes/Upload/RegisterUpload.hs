@@ -28,7 +28,6 @@ import Data.Time (UTCTime)
 import Database.Category (getCategoriesBySource, getCategory)
 import Database.Configurations (getFirstSankeyConfig, saveSankeyConfig)
 import Database.ConnectionPool (getConnectionPool)
-import Database.Database (updateUserOnboardingStep)
 import Database.Files (addPdfRecord, computeMD5, getPdfRecord, getPdfRecordByHash, getPdfRecords)
 import Database.Models
 import Database.Persist hiding (get)
