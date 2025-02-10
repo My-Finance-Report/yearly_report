@@ -27,22 +27,19 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
-- sankey generation will have to come from somewhere now that no onboarding
-
+-> remove the add account in the manage accoounts page
 - the site seems sluggish
 
 - constrain only one hash per user
-- constrain all file uploads jobs have corresponding file processing jobs
 
-- uploads fail if the transactions source does not have any categories
-  => constrain the db to prevent this
+
 
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
 
 - shareable report
   - allow to select different charts
-- dont show snakey if there is a cycle in the chart, and alert?
+
 - release an admin page
 - why is it so slow when i upload n files in the first pass?
   - probably some async code we dont need anymore

@@ -65,10 +65,6 @@ renderAccountManagement user kinds transactions isOnboarding =
               ! A.id (toValue $ "tab-content-" <> Prelude.show idx)
               ! A.style (if idx == 0 then "display: block;" else "display: none;")
               $ do
-                -- (a) A form for creating a new account of this kind
-                renderNewAccountForm kind
-
-                -- (b) Display each existing TransactionSource + categories
                 let sources = fromMaybe [] (Data.Map.lookup kind groupedTransactions)
                 H.div ! A.class_ "flex flex-col gap-2 items-center" $ do
                   forM_ sources $ \sourceEntity@(Entity sourceId source) -> do
@@ -84,27 +80,6 @@ renderAccountManagement user kinds transactions isOnboarding =
 
                       -- Button or form for new category
                       renderNewCategoryForm sourceId
-
-renderNewAccountForm :: SourceKind -> Html
-renderNewAccountForm kind = do
-  H.form
-    ! A.method "post"
-    ! A.action "/add-transaction-source"
-    ! A.class_ "flex items-center gap-2 border border-primary p-3 rounded-md cursor-pointer my-2"
-  $ do
-    H.input
-      ! A.type_ "text"
-      ! A.name "newSource"
-      ! A.placeholder ("New " <> toValue (show kind))
-      ! A.class_ "min-w-96 border border-gray-300 rounded-md p-2 flex-1"
-    H.input
-      ! A.type_ "hidden"
-      ! A.name "newKind"
-      ! A.value (toValue $ show kind)
-    H.input
-      ! A.type_ "submit"
-      ! A.value ("Add New " <> toValue (show kind))
-      ! A.class_ "primary-button text-s"
 
 renderTransactionSourceForm :: Entity TransactionSource -> [SourceKind] -> Html
 renderTransactionSourceForm source kinds = do
