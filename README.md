@@ -27,18 +27,21 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+food -> dining in categories
+faq
+addative upload
+
+
 -> files processed table needs to be grouped by source and collapsolable
 -> files dont reprocess when you change a source / category
 -> changing a source name caused me to repopulate that source when i reran the upload
-  -> no way to merge when this happens
+-> no way to merge when this happens
 -> no way to delete transactions
 -> sankey config doesnt filter off archived sources
-
 
 -> google sheets doesnt allow for cycles in the sankey
 
 - the site seems sluggish
-
 
 - (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
@@ -59,12 +62,3 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - privacy policy
 - install a linter for extraneous imports
 - memoize llm calls to preserve existing data save costs
-
-## for newsletter
-
--> nested selection
---> proper sorting in the listings
--> 0 onboarding flow
---> removed file upload limit (actually just made it 50 files)
---> rerun when you alter a category
--> stacked barchart

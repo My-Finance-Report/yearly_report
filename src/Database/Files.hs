@@ -20,7 +20,7 @@ import Crypto.Hash (Digest, MD5, hash)
 import qualified Data.ByteString as B16
 import Data.List (nubBy, sortOn)
 import Data.Map (Map, findWithDefault, fromList, fromListWith, lookup, mapKeys)
-import Data.Maybe (isJust)
+import Data.Maybe (catMaybes, isJust, isNothing, mapMaybe)
 import Data.Set (Set, empty, singleton, toList, union)
 import Data.Text (Text, unpack)
 import qualified Data.Text as T
@@ -118,20 +118,52 @@ isFileProcessed user file = do
         ]
         []
 
-getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [(Entity ProcessFileJob, Entity UploadedPdf)]
+getAllProcessedFiles :: (MonadUnliftIO m) => Entity User -> m [(Entity ProcessFileJob, Entity UploadedPdf, Maybe (Entity TransactionSource))]
 getAllProcessedFiles user = do
   pool <- liftIO getConnectionPool
 
+  -- Fetch all jobs for the given user
   jobs <- runSqlPool (selectList [ProcessFileJobUserId ==. entityKey user, ProcessFileJobArchived ==. False] []) pool
 
+  -- Extract pdfIds from jobs
   let pdfIds = map (processFileJobPdfId . entityVal) jobs
 
+  -- Fetch corresponding PDFs
   pdfs <- runSqlPool (selectList [UploadedPdfId <-. pdfIds, UploadedPdfArchived ==. False] [Asc UploadedPdfFilename]) pool
 
+  -- Extract configIds from jobs (some may be Nothing)
+  let configIds = mapMaybe (processFileJobConfigId . entityVal) jobs
+
+  -- Fetch associated UploadConfigurations
+  configs <- runSqlPool (selectList [UploadConfigurationId <-. configIds] []) pool
+
+  -- Extract transactionSourceIds from configurations
+  let configMap = Data.Map.fromList [(entityKey cfg, cfg) | cfg <- configs]
+
+  -- Fetch associated TransactionSources
+  transactionSources <- runSqlPool (selectList [TransactionSourceArchived ==. False, TransactionSourceUserId ==. entityKey user] []) pool
+
+  -- Create lookup maps for fast retrieval
   let pdfMap = Data.Map.fromList [(entityKey pdf, pdf) | pdf <- pdfs]
+  let transactionSourceMap = Data.Map.fromList [(entityKey ts, ts) | ts <- transactionSources]
 
-  let results = [(job, pdf) | job <- jobs, Just pdf <- [Data.Map.lookup (processFileJobPdfId (entityVal job)) pdfMap]]
+  let results =
+        [ (job, pdf, maybeTransactionSource)
+          | job <- jobs,
+            let pdfId = processFileJobPdfId (entityVal job),
+            let maybeConfig =
+                  processFileJobConfigId (entityVal job)
+                    >>= (`Data.Map.lookup` configMap),
+            let maybeTransactionSource =
+                  maybeConfig
+                    >>= ( flip Data.Map.lookup transactionSourceMap
+                            . uploadConfigurationTransactionSourceId
+                            . entityVal
+                        ),
+            Just pdf <- [Data.Map.lookup pdfId pdfMap]
+        ]
 
-  let sortedResults = Data.List.sortOn (uploadedPdfFilename . entityVal . snd) results
-
-  return sortedResults
+  return $ Data.List.sortOn sortingKey results
+  where
+    sortingKey (job, file, maybeSource) =
+      (isNothing maybeSource, fmap entityKey maybeSource, uploadedPdfFilename (entityVal file))
