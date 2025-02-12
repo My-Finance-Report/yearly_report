@@ -27,10 +27,8 @@ import { useQuery } from "@tanstack/react-query"
 import { TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 
-// Assume that your client code provides a type alias for the aggregated response.
 import type {
   TransactionsGetAggregatedTransactionsResponse,
-  // Also assume AggregatedGroup is defined in your client types:
   AggregatedGroup,
 } from "../../client"
 
@@ -41,11 +39,10 @@ export enum GroupByOption {
   year = "year",
 }
 
-// Available options in a fixed order.
 const availableOptions: GroupByOption[] = [
   GroupByOption.category,
-  GroupByOption.month,
   GroupByOption.year,
+  GroupByOption.month,
 ]
 
 export const Route = createFileRoute("/_layout/transactions")({
