@@ -183,13 +183,32 @@ class TransactionGroup(BaseModel):
     total_balance: float
     transactions: list[TransactionOut]
 
+
+class AggregatedGroup(BaseModel):
+    # Use a generic name for the grouping key and value.
+    group_id: int| str
+    group_name: str
+    total_withdrawals: float
+    total_deposits: float
+    total_balance: float
+    # For non-leaf groups, these will be populated.
+    subgroups: list["AggregatedGroup"] = []
+    # For leaf groups, this is a list of transactions.
+    transactions: list[TransactionOut] = []
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+AggregatedGroup.update_forward_refs()
+
 class TransactionSourceGroup(BaseModel):
     transaction_source_id: int
     transaction_source_name: str
     total_withdrawals: float
     total_deposits: float
     total_balance: float
-    groups: list[TransactionGroup]
+    groups: list[AggregatedGroup]
 
     class Config:
         orm_mode = True
@@ -200,3 +219,7 @@ class AggregatedTransactions(BaseModel):
     overall_withdrawals: float
     overall_deposits: float
     overall_balance: float
+
+    class Config:
+        orm_mode = True
+        from_attributes = True

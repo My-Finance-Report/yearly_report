@@ -186,7 +186,7 @@ export class TransactionsService {
   /**
    * Get Aggregated Transactions
    * @param data The data for the request.
-   * @param data.groupBy Group transactions by category, month, or year
+   * @param data.groupBy List of grouping options in order (e.g. category, month)
    * @returns AggregatedTransactions Successful Response
    * @throws ApiError
    */

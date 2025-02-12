@@ -30,50 +30,161 @@ import { isLoggedIn } from "../../hooks/useAuth"
 // Assume that your client code provides a type alias for the aggregated response.
 import type {
   TransactionsGetAggregatedTransactionsResponse,
+  // Also assume AggregatedGroup is defined in your client types:
+  AggregatedGroup,
 } from "../../client"
 
-// Define the group-by options. (This might also be imported from your API types.)
+// Define the group-by options.
 export enum GroupByOption {
   category = "category",
   month = "month",
   year = "year",
 }
 
+// Available options in a fixed order.
+const availableOptions: GroupByOption[] = [
+  GroupByOption.category,
+  GroupByOption.month,
+  GroupByOption.year,
+]
+
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
 })
 
 function Transactions() {
-  // State to track which group rows are expanded.
-  // Keys are composite: `${sourceId}-${groupId}`
+  // State for expanded rows; keys are composite: `${sourceId}-${groupId}-${path}`
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>(
     {}
   )
 
-  // State for the grouping option (default to grouping by category)
-  const [groupingOption, setGroupingOption] = useState<GroupByOption>(
-    GroupByOption.category
-  )
+  // State for the grouping options; default is just category.
+  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
+    GroupByOption.category,
+  ])
 
-  const toggleGroup = (sourceId: number, groupId: number) => {
-    const key = `${sourceId}-${groupId}`
+  // Toggle a grouping option on/off.
+  const toggleGroupingOption = (option: GroupByOption) => {
+    setGroupingOptions((prev) => {
+      // Ensure at least one option remains selected.
+      if (prev.includes(option)) {
+        if (prev.length === 1) return prev
+        return prev.filter((o) => o !== option)
+      } else {
+        // Add the option. The final order will follow availableOptions.
+        const newOptions = [...prev, option]
+        return availableOptions.filter((o) => newOptions.includes(o))
+      }
+    })
+  }
+
+  // Toggle expand for a given composite key.
+  const toggleGroup = (sourceId: number, groupKey: string) => {
+    const key = `${sourceId}-${groupKey}`
     setExpandedGroups((prev) => ({
       ...prev,
       [key]: !prev[key],
     }))
   }
 
+  // Query the aggregated endpoint.
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
-    queryKey: ["aggregatedTransactions", groupingOption],
+    queryKey: ["aggregatedTransactions", groupingOptions],
     queryFn: () =>
-      TransactionsService.getAggregatedTransactions({ groupBy: groupingOption }),
+      // Pass the array of grouping options to your service.
+      TransactionsService.getAggregatedTransactions({ groupBy: groupingOptions }),
     enabled: isLoggedIn(),
   })
 
   console.log(data)
+
+  // Recursive function to render nested groups.
+  const renderGroups = (
+    groups: AggregatedGroup[],
+    sourceId: number,
+    pathPrefix: string = ""
+  ) => {
+    return groups.map((group, idx) => {
+      // Create a composite key for this group.
+      // We'll use the group's own id (assumed to be group.group_id) for toggling.
+      const groupKey = pathPrefix ? `${pathPrefix}-${group.group_id}` : `${group.group_id}`
+      const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
+
+      return (
+        <React.Fragment key={groupKey}>
+          {/* Aggregated row for this group */}
+          <Tr
+            onClick={() => toggleGroup(sourceId, groupKey)}
+            style={{ cursor: "pointer" }}
+          >
+            <Td pl={pathPrefix ? Number(pathPrefix.split("-").length) * 4 : 0}>
+              {isExpanded ? <TriangleDownIcon /> : <TriangleUpIcon />}
+            </Td>
+            <Td>{group.group_name}</Td>
+            <Td isNumeric>{group.total_withdrawals}</Td>
+            <Td isNumeric>{group.total_deposits}</Td>
+            <Td isNumeric>{group.total_balance}</Td>
+          </Tr>
+          <Tr>
+            <Td colSpan={5} p={0}>
+              <Collapse in={isExpanded} animateOpacity>
+                <Box pl={4}>
+                  {group.subgroups && group.subgroups.length > 0 ? (
+                    // Recursively render subgroups.
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th></Th>
+                          <Th>Group</Th>
+                          <Th isNumeric>Withdrawals</Th>
+                          <Th isNumeric>Deposits</Th>
+                          <Th isNumeric>Balance</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>{renderGroups(group.subgroups, sourceId, groupKey)}</Tbody>
+                    </Table>
+                  ) : (
+                    // Leaf group: render the transactions.
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>ID</Th>
+                          <Th>Description</Th>
+                          <Th>Date</Th>
+                          <Th isNumeric>Amount</Th>
+                          <Th>Kind</Th>
+                          <Th>Archived</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {group.transactions?.map((transaction) => (
+                          <Tr key={transaction.id}>
+                            <Td>{transaction.id}</Td>
+                            <Td>{transaction.description}</Td>
+                            <Td>
+                              {new Date(
+                                transaction.date_of_transaction
+                              ).toLocaleDateString()}
+                            </Td>
+                            <Td isNumeric>{transaction.amount}</Td>
+                            <Td>{transaction.kind}</Td>
+                            <Td>{transaction.archived ? "Yes" : "No"}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  )}
+                </Box>
+              </Collapse>
+            </Td>
+          </Tr>
+        </React.Fragment>
+      )
+    })
+  }
 
   return (
     <Container maxW="full" py={8}>
@@ -81,28 +192,17 @@ function Transactions() {
         Transactions
       </Heading>
 
-      {/* Button group to select the grouping option */}
+      {/* Button group to toggle multiple grouping options */}
       <ButtonGroup mb={6} isAttached variant="outline">
-        <Button
-          onClick={() => setGroupingOption(GroupByOption.category)}
-          colorScheme={
-            groupingOption === GroupByOption.category ? "blue" : "gray"
-          }
-        >
-          Category
-        </Button>
-        <Button
-          onClick={() => setGroupingOption(GroupByOption.month)}
-          colorScheme={groupingOption === GroupByOption.month ? "blue" : "gray"}
-        >
-          Month
-        </Button>
-        <Button
-          onClick={() => setGroupingOption(GroupByOption.year)}
-          colorScheme={groupingOption === GroupByOption.year ? "blue" : "gray"}
-        >
-          Year
-        </Button>
+        {availableOptions.map((option) => (
+          <Button
+            key={option}
+            onClick={() => toggleGroupingOption(option)}
+            colorScheme={groupingOptions.includes(option) ? "blue" : "gray"}
+          >
+            {option.charAt(0).toUpperCase() + option.slice(1)}
+          </Button>
+        ))}
       </ButtonGroup>
 
       {isLoading ? (
@@ -133,80 +233,10 @@ function Transactions() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {sourceGroup.groups.map((group) => (
-                        <React.Fragment key={group.category_id}>
-                          {/* Aggregated row */}
-                          <Tr
-                            onClick={() =>
-                              toggleGroup(
-                                sourceGroup.transaction_source_id,
-                                group.category_id
-                              )
-                            }
-                            style={{ cursor: "pointer" }}
-                          >
-                            <Td>
-                              {expandedGroups[
-                                `${sourceGroup.transaction_source_id}-${group.category_id}`
-                              ] ? (
-                                <TriangleDownIcon />
-                              ) : (
-                                <TriangleUpIcon />
-                              )}
-                            </Td>
-                            <Td>{group.category_name}</Td>
-                            <Td isNumeric>{group.total_withdrawals}</Td>
-                            <Td isNumeric>{group.total_deposits}</Td>
-                            <Td isNumeric>{group.total_balance}</Td>
-                          </Tr>
-                          {/* Detail row: nested table of individual transactions */}
-                          <Tr>
-                            <Td colSpan={5} p={0}>
-                              <Collapse
-                                in={
-                                  expandedGroups[
-                                    `${sourceGroup.transaction_source_id}-${group.category_id}`
-                                  ]
-                                }
-                                animateOpacity
-                              >
-                                <Box p={4}>
-                                  <Table variant="simple" size="sm">
-                                    <Thead>
-                                      <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Description</Th>
-                                        <Th>Date</Th>
-                                        <Th isNumeric>Amount</Th>
-                                        <Th>Kind</Th>
-                                        <Th>Archived</Th>
-                                      </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                      {group.transactions.map((transaction) => (
-                                        <Tr key={transaction.id}>
-                                          <Td>{transaction.id}</Td>
-                                          <Td>{transaction.description}</Td>
-                                          <Td>
-                                            {new Date(
-                                              transaction.date_of_transaction
-                                            ).toLocaleDateString()}
-                                          </Td>
-                                          <Td isNumeric>{transaction.amount}</Td>
-                                          <Td>{transaction.kind}</Td>
-                                          <Td>
-                                            {transaction.archived ? "Yes" : "No"}
-                                          </Td>
-                                        </Tr>
-                                      ))}
-                                    </Tbody>
-                                  </Table>
-                                </Box>
-                              </Collapse>
-                            </Td>
-                          </Tr>
-                        </React.Fragment>
-                      ))}
+                      {renderGroups(
+                        sourceGroup.groups,
+                        sourceGroup.transaction_source_id
+                      )}
                       {/* Overall totals for this transaction source */}
                       <Tr fontWeight="bold">
                         <Td colSpan={2}>Source Totals</Td>
