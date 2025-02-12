@@ -177,13 +177,26 @@ class ProcessFileJobOut(ProcessFileJobBase):
 
 class TransactionGroup(BaseModel):
     category_id: int
+    category_name: str
     total_withdrawals: float
     total_deposits: float
     total_balance: float
     transactions: list[TransactionOut]
 
-class AggregatedTransactions(BaseModel):
+class TransactionSourceGroup(BaseModel):
+    transaction_source_id: int
+    transaction_source_name: str
+    total_withdrawals: float
+    total_deposits: float
+    total_balance: float
     groups: list[TransactionGroup]
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+class AggregatedTransactions(BaseModel):
+    groups: list[TransactionSourceGroup]
     overall_withdrawals: float
     overall_deposits: float
     overall_balance: float

@@ -16,6 +16,7 @@ import type {
   PrivateCreateUserData,
   PrivateCreateUserResponse,
   TransactionsGetTransactionsResponse,
+  TransactionsGetAggregatedTransactionsData,
   TransactionsGetAggregatedTransactionsResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
@@ -184,13 +185,23 @@ export class TransactionsService {
 
   /**
    * Get Aggregated Transactions
+   * @param data The data for the request.
+   * @param data.groupBy Group transactions by category, month, or year
    * @returns AggregatedTransactions Successful Response
    * @throws ApiError
    */
-  public static getAggregatedTransactions(): CancelablePromise<TransactionsGetAggregatedTransactionsResponse> {
+  public static getAggregatedTransactions(
+    data: TransactionsGetAggregatedTransactionsData = {},
+  ): CancelablePromise<TransactionsGetAggregatedTransactionsResponse> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/transactions/aggregated",
+      query: {
+        group_by: data.groupBy,
+      },
+      errors: {
+        422: "Validation Error",
+      },
     })
   }
 }
