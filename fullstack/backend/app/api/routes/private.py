@@ -1,9 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.api.deps import SessionDep
+from app.db import get_db, Session
 from app.core.security import get_password_hash
 from app.models import (
     User,
@@ -21,7 +21,7 @@ class PrivateUserCreate(BaseModel):
 
 
 @router.post("/users/", response_model=UserOut)
-def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
+def create_user(user_in: PrivateUserCreate, session: Session= Depends(get_db)) -> Any:
     """
     Create a new user.
     """

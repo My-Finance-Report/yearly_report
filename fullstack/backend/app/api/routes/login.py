@@ -6,7 +6,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.db import get_db, Session
+from app.api.deps import  get_current_active_superuser, get_current_user
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
@@ -17,13 +18,14 @@ from app.utils import (
     send_email,
     verify_password_reset_token,
 )
+from app.models import User
 
 router = APIRouter(tags=["login"])
 
 
 @router.post("/login/access-token")
 def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session=Depends(get_db)
 ) -> Token:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -31,6 +33,7 @@ def login_access_token(
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
+
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
@@ -44,7 +47,7 @@ def login_access_token(
 
 
 @router.post("/login/test-token", response_model=UserOut)
-def test_token(current_user: CurrentUser) -> Any:
+def test_token(current_user: User = Depends(get_current_user)) -> User:
     """
     Test access token
     """
@@ -52,7 +55,7 @@ def test_token(current_user: CurrentUser) -> Any:
 
 
 @router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep) -> Message:
+def recover_password(email: str, session: Session= Depends(get_db)) -> Message:
     """
     Password Recovery
     """
@@ -76,7 +79,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
 
 @router.post("/reset-password/")
-def reset_password(session: SessionDep, body: NewPassword) -> Message:
+def reset_password( body: NewPassword,session: Session= Depends(get_db)) -> Message:
     """
     Reset password
     """
@@ -103,7 +106,7 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     dependencies=[Depends(get_current_active_superuser)],
     response_class=HTMLResponse,
 )
-def recover_password_html_content(email: str, session: SessionDep) -> Any:
+def recover_password_html_content(email: str, session: Session= Depends(get_db)) -> Any:
     """
     HTML Content for Password Recovery
     """

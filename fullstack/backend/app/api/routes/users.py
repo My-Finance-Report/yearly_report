@@ -6,9 +6,8 @@ from sqlalchemy import func
 
 from app import crud
 from app.api.deps import (
-    CurrentUser,
-    SessionDep,
     get_current_active_superuser,
+    get_current_user,
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
@@ -50,7 +49,7 @@ def read_users(session:Session  =  Depends(get_db), skip: int = 0, limit: int = 
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserOut
 )
-def create_user(*, session: SessionDep, user_in: UserRegister) -> Any:
+def create_user(*, session: Session= Depends(get_db), user_in: UserRegister) -> Any:
     """
     Create a new user.
     """
@@ -76,7 +75,7 @@ def create_user(*, session: SessionDep, user_in: UserRegister) -> Any:
 
 @router.patch("/me", response_model=UserOut)
 def update_user_me(
-    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
+    *, session: Session= Depends(get_db), user_in: UserUpdateMe, current_user: User =Depends(get_current_user)
 ) -> Any:
     """
     Update own user.
@@ -95,7 +94,7 @@ def update_user_me(
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UserNewPassword, current_user: CurrentUser
+    *, session: Session= Depends(get_db), body: UserNewPassword, current_user:  User =Depends(get_current_user)
 ) -> Any:
     """
     Update own password.
@@ -113,7 +112,7 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserOut)
-def read_user_me(current_user: CurrentUser) -> User:
+def read_user_me(current_user: User = Depends(get_current_user)) -> User:
     """
     Get current user.
     """
@@ -121,7 +120,7 @@ def read_user_me(current_user: CurrentUser) -> User:
 
 
 @router.delete("/me", response_model=Message)
-def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
+def delete_user_me(session: Session= Depends(get_db), current_user:User =   Depends(get_current_user)) -> Any:
     """
     Delete own user.
     """
@@ -136,7 +135,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
 
 
 @router.post("/signup", response_model=UserOut)
-def register_user(session: SessionDep, user_in: UserRegister) -> User:
+def register_user(user_in: UserRegister, session: Session= Depends(get_db)) -> User:
     """
     Create new user without the need to be logged in.
     """
@@ -156,7 +155,7 @@ def register_user(session: SessionDep, user_in: UserRegister) -> User:
 
 @router.get("/{user_id}", response_model=UserOut)
 def read_user_by_id(
-    user_id: uuid.UUID, session: SessionDep, current_user: CurrentUser
+    user_id: uuid.UUID, session: Session= Depends(get_db), current_user:User = Depends(get_current_user) 
 ) -> Any:
     """
     Get a specific user by id.
@@ -179,7 +178,7 @@ def read_user_by_id(
 )
 def update_user(
     *,
-    session: SessionDep,
+    session: Session= Depends(get_db),
     user_id: uuid.UUID,
     user_in: UserUpdate,
 ) -> Any:
@@ -207,7 +206,7 @@ def update_user(
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
-    session: SessionDep, current_user: CurrentUser, user_id: int
+    user_id: int,session: Session= Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> Message:
     """
     Delete a user.
