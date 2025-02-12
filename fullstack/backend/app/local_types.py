@@ -104,14 +104,13 @@ class TransactionBase(BaseModel):
     archived: bool = False
 
     class Config:
+        from_attributes = True 
         orm_mode = True
 
 class TransactionOut(TransactionBase):
     id: int
 
-# ------------------------------------
-# UploadedPdf
-# ------------------------------------
+
 class UploadedPdfBase(BaseModel):
     filename: str
     raw_content: str
@@ -126,9 +125,6 @@ class UploadedPdfBase(BaseModel):
 class UploadedPdfOut(UploadedPdfBase):
     id: int
 
-# ------------------------------------
-# UploadConfiguration
-# ------------------------------------
 class UploadConfigurationBase(BaseModel):
     filename_regex:None |str = None
     start_keyword:None |str = None
@@ -142,9 +138,6 @@ class UploadConfigurationBase(BaseModel):
 class UploadConfigurationOut(UploadConfigurationBase):
     id: int
 
-# ------------------------------------
-# SankeyConfig
-# ------------------------------------
 class SankeyConfigBase(BaseModel):
     name: str
     user_id: int
@@ -155,9 +148,6 @@ class SankeyConfigBase(BaseModel):
 class SankeyConfigOut(SankeyConfigBase):
     id: int
 
-# ------------------------------------
-# ColChartConfig
-# ------------------------------------
 class ColChartConfigBase(BaseModel):
     name: str
     user_id: int
@@ -169,9 +159,6 @@ class ColChartConfigBase(BaseModel):
 class ColChartConfigOut(ColChartConfigBase):
     id: int
 
-# ------------------------------------
-# ProcessFileJob
-# ------------------------------------
 class ProcessFileJobBase(BaseModel):
     created_at: datetime
     last_tried_at: None |datetime = None
@@ -187,3 +174,16 @@ class ProcessFileJobBase(BaseModel):
 
 class ProcessFileJobOut(ProcessFileJobBase):
     id: int
+
+class TransactionGroup(BaseModel):
+    category_id: int
+    total_withdrawals: float
+    total_deposits: float
+    total_balance: float
+    transactions: list[TransactionOut]
+
+class AggregatedTransactions(BaseModel):
+    groups: list[TransactionGroup]
+    overall_withdrawals: float
+    overall_deposits: float
+    overall_balance: float

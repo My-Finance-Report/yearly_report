@@ -8,6 +8,7 @@ import type { UserOut } from "../../client"
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
+  { icon: FiBriefcase, title: "Transactions", path: "/transactions" },
 ]
 
 interface SidebarItemsProps {

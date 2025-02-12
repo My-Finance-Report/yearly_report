@@ -2,7 +2,7 @@ import { Box, Container, Text } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import useAuth, { isLoggedIn } from "../../hooks/useAuth"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { TransactionOut, TransactionsService } from "../../client"
 
 export const Route = createFileRoute("/_layout/")({

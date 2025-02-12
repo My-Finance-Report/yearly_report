@@ -25,8 +25,8 @@ class SourceKind(str, enum.Enum):
 
 
 class TransactionKind(str, enum.Enum):
-    withdrawal = "Withdrawal"
-    deposit = "Deposit"
+    withdrawal = "withdrawal"
+    deposit = "deposit"
 
 
 class JobStatus(str, enum.Enum):

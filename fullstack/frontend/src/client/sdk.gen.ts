@@ -16,6 +16,7 @@ import type {
   PrivateCreateUserData,
   PrivateCreateUserResponse,
   TransactionsGetTransactionsResponse,
+  TransactionsGetAggregatedTransactionsResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -178,6 +179,18 @@ export class TransactionsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/transactions/",
+    })
+  }
+
+  /**
+   * Get Aggregated Transactions
+   * @returns AggregatedTransactions Successful Response
+   * @throws ApiError
+   */
+  public static getAggregatedTransactions(): CancelablePromise<TransactionsGetAggregatedTransactionsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/transactions/aggregated",
     })
   }
 }
