@@ -10,10 +10,10 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     return user
 
 
-def create_user(*, session: Session, user: UserRegister) -> User | None:
+def create_user(*, session: Session, user: UserRegister) -> User:
     existing_user = session.query(User).filter(User.email == user.email).first()
     if existing_user:
-        raise IndexError("this shouldnt happen")
+        return existing_user
 
     new_user = User(
         full_name=user.full_name,

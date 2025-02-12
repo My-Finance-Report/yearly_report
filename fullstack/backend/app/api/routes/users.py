@@ -12,6 +12,7 @@ from app.api.deps import (
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app.db import Session, get_db
 from app.models import (
     User,
 )
@@ -35,7 +36,7 @@ router = APIRouter(prefix="/users", tags=["users"])
     dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
-def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
+def read_users(session:Session  =  Depends(get_db), skip: int = 0, limit: int = 100) -> Any:
     """
     Retrieve users.
     """
@@ -60,7 +61,7 @@ def create_user(*, session: SessionDep, user_in: UserRegister) -> Any:
             detail="The user with this email already exists in the system.",
         )
 
-    user = crud.create_user(session=session, user_create=user_in)
+    user = crud.create_user(session=session, user=user_in)
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password
