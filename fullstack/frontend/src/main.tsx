@@ -9,6 +9,8 @@ import { OpenAPI } from "./client"
 import theme from "./theme"
 
 OpenAPI.BASE = import.meta.env.VITE_API_URL
+
+console.log(OpenAPI.BASE)
 OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }

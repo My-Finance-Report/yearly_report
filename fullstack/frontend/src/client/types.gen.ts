@@ -34,6 +34,21 @@ export type Token = {
   token_type?: string
 }
 
+export type TransactionKind = "withdrawal" | "deposit"
+
+export type TransactionOut = {
+  description: string
+  category_id: number
+  date_of_transaction: string
+  amount: number
+  transaction_source_id: number
+  kind: TransactionKind
+  uploaded_pdf_id?: number | null
+  user_id: number
+  archived?: boolean
+  id: number
+}
+
 export type UserNewPassword = {
   new_password: string
   old_password: string
@@ -104,6 +119,8 @@ export type PrivateCreateUserData = {
 }
 
 export type PrivateCreateUserResponse = UserOut
+
+export type TransactionsGetTransactionsResponse = TransactionOut
 
 export type UsersReadUsersData = {
   limit?: number

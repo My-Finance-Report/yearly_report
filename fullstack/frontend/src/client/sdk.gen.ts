@@ -15,6 +15,7 @@ import type {
   LoginRecoverPasswordHtmlContentResponse,
   PrivateCreateUserData,
   PrivateCreateUserResponse,
+  TransactionsGetTransactionsResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -163,6 +164,20 @@ export class PrivateService {
       errors: {
         422: "Validation Error",
       },
+    })
+  }
+}
+
+export class TransactionsService {
+  /**
+   * Get Transactions
+   * @returns TransactionOut Successful Response
+   * @throws ApiError
+   */
+  public static getTransactions(): CancelablePromise<TransactionsGetTransactionsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/transactions/",
     })
   }
 }

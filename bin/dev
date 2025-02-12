@@ -1,0 +1,3 @@
+cd fullstack
+cd backend
+uvicorn app.main:app --reload --port 8003 --log-level debug
