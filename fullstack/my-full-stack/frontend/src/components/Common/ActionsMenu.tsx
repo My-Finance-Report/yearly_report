@@ -9,14 +9,13 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { ItemPublic, UserPublic } from "../../client"
+import type { UserOut } from "../../client"
 import EditUser from "../Admin/EditUser"
-import EditItem from "../Items/EditItem"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: ItemPublic | UserPublic
+  value: UserOut
   disabled?: boolean
 }
 
@@ -50,17 +49,11 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         </MenuList>
         {type === "User" ? (
           <EditUser
-            user={value as UserPublic}
+            user={value as UserOut}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
-        ) : (
-          <EditItem
-            item={value as ItemPublic}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
-          />
-        )}
+        ) : null}
         <Delete
           type={type}
           id={value.id}

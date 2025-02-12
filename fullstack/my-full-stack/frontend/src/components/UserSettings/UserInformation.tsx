@@ -17,7 +17,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type UserPublic,
+  type UserOut,
   type UserUpdateMe,
   UsersService,
 } from "../../client"
@@ -37,7 +37,7 @@ const UserInformation = () => {
     reset,
     getValues,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<UserPublic>({
+  } = useForm<UserOut>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {

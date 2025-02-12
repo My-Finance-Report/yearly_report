@@ -87,9 +87,6 @@ def update_user_me(
                 status_code=409, detail="User with this email already exists"
             )
 
-    for key, value in user_in.dict(exclude_unset=True).items():
-        setattr(current_user, key, value)
-
     session.commit()
     session.refresh(current_user)
     return current_user
@@ -202,9 +199,6 @@ def update_user(
                 status_code=409, detail="User with this email already exists"
             )
 
-    for key, value in user_in.dict(exclude_unset=True).items():
-        setattr(db_user, key, value)
-
     session.commit()
     session.refresh(db_user)
     return db_user
@@ -212,7 +206,7 @@ def update_user(
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
-    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
+    session: SessionDep, current_user: CurrentUser, user_id: int
 ) -> Message:
     """
     Delete a user.

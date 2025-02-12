@@ -13,35 +13,20 @@ export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
-export type ItemCreate = {
-  title: string
-  description?: string | null
-}
-
-export type ItemPublic = {
-  title: string
-  description?: string | null
-  id: string
-  owner_id: string
-}
-
-export type ItemsPublic = {
-  data: Array<ItemPublic>
-  count: number
-}
-
-export type ItemUpdate = {
-  title?: string | null
-  description?: string | null
-}
-
 export type Message = {
   message: string
 }
 
 export type NewPassword = {
-  token: string
+  token: Token
   new_password: string
+}
+
+export type PrivateUserCreate = {
+  email: string
+  password: string
+  full_name: string
+  is_verified?: boolean
 }
 
 export type Token = {
@@ -49,49 +34,37 @@ export type Token = {
   token_type?: string
 }
 
-export type UpdatePassword = {
-  current_password: string
+export type UserNewPassword = {
   new_password: string
+  old_password: string
 }
 
-export type UserCreate = {
+export type UserOut = {
+  full_name: string
   email: string
   is_active?: boolean
   is_superuser?: boolean
-  full_name?: string | null
-  password: string
-}
-
-export type UserPublic = {
-  email: string
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
-  id: string
+  id: number
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export type UserRegister = {
   email: string
   password: string
-  full_name?: string | null
+  full_name: string
 }
 
 export type UsersPublic = {
-  data: Array<UserPublic>
-  count: number
+  [key: string]: unknown
 }
 
 export type UserUpdate = {
-  email?: string | null
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
-  password?: string | null
+  [key: string]: unknown
 }
 
 export type UserUpdateMe = {
-  full_name?: string | null
-  email?: string | null
+  [key: string]: unknown
 }
 
 export type ValidationError = {
@@ -100,45 +73,13 @@ export type ValidationError = {
   type: string
 }
 
-export type ItemsReadItemsData = {
-  limit?: number
-  skip?: number
-}
-
-export type ItemsReadItemsResponse = ItemsPublic
-
-export type ItemsCreateItemData = {
-  requestBody: ItemCreate
-}
-
-export type ItemsCreateItemResponse = ItemPublic
-
-export type ItemsReadItemData = {
-  id: string
-}
-
-export type ItemsReadItemResponse = ItemPublic
-
-export type ItemsUpdateItemData = {
-  id: string
-  requestBody: ItemUpdate
-}
-
-export type ItemsUpdateItemResponse = ItemPublic
-
-export type ItemsDeleteItemData = {
-  id: string
-}
-
-export type ItemsDeleteItemResponse = Message
-
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token
 }
 
 export type LoginLoginAccessTokenResponse = Token
 
-export type LoginTestTokenResponse = UserPublic
+export type LoginTestTokenResponse = UserOut
 
 export type LoginRecoverPasswordData = {
   email: string
@@ -158,6 +99,12 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = string
 
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate
+}
+
+export type PrivateCreateUserResponse = UserOut
+
 export type UsersReadUsersData = {
   limit?: number
   skip?: number
@@ -166,12 +113,12 @@ export type UsersReadUsersData = {
 export type UsersReadUsersResponse = UsersPublic
 
 export type UsersCreateUserData = {
-  requestBody: UserCreate
+  requestBody: UserRegister
 }
 
-export type UsersCreateUserResponse = UserPublic
+export type UsersCreateUserResponse = UserOut
 
-export type UsersReadUserMeResponse = UserPublic
+export type UsersReadUserMeResponse = UserOut
 
 export type UsersDeleteUserMeResponse = Message
 
@@ -179,10 +126,10 @@ export type UsersUpdateUserMeData = {
   requestBody: UserUpdateMe
 }
 
-export type UsersUpdateUserMeResponse = UserPublic
+export type UsersUpdateUserMeResponse = UserOut
 
 export type UsersUpdatePasswordMeData = {
-  requestBody: UpdatePassword
+  requestBody: UserNewPassword
 }
 
 export type UsersUpdatePasswordMeResponse = Message
@@ -191,23 +138,23 @@ export type UsersRegisterUserData = {
   requestBody: UserRegister
 }
 
-export type UsersRegisterUserResponse = UserPublic
+export type UsersRegisterUserResponse = UserOut
 
 export type UsersReadUserByIdData = {
   userId: string
 }
 
-export type UsersReadUserByIdResponse = UserPublic
+export type UsersReadUserByIdResponse = UserOut
 
 export type UsersUpdateUserData = {
   requestBody: UserUpdate
   userId: string
 }
 
-export type UsersUpdateUserResponse = UserPublic
+export type UsersUpdateUserResponse = UserOut
 
 export type UsersDeleteUserData = {
-  userId: string
+  userId: number
 }
 
 export type UsersDeleteUserResponse = Message

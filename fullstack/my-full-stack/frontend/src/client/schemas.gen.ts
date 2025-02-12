@@ -291,7 +291,7 @@ export const UserCreateSchema = {
   title: "UserCreate",
 } as const
 
-export const UserPublicSchema = {
+export const UserOutSchema = {
   properties: {
     email: {
       type: "string",
@@ -329,7 +329,7 @@ export const UserPublicSchema = {
   },
   type: "object",
   required: ["email", "id"],
-  title: "UserPublic",
+  title: "UserOut",
 } as const
 
 export const UserRegisterSchema = {
@@ -455,7 +455,7 @@ export const UsersPublicSchema = {
   properties: {
     data: {
       items: {
-        $ref: "#/components/schemas/UserPublic",
+        $ref: "#/components/schemas/UserOut",
       },
       type: "array",
       title: "Data",

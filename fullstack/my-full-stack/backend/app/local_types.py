@@ -30,6 +30,7 @@ class UserBase(BaseModel):
     full_name: str
     email: str
     is_active: bool = True
+    is_superuser: bool = False
 
     class Config:
         orm_mode = True

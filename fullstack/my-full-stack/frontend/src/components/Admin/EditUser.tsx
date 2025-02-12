@@ -19,7 +19,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type UserPublic,
+  type UserOut,
   type UserUpdate,
   UsersService,
 } from "../../client"
@@ -27,7 +27,7 @@ import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern, handleError } from "../../utils"
 
 interface EditUserProps {
-  user: UserPublic
+  user: UserOut
   isOpen: boolean
   onClose: () => void
 }
