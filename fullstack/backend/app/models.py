@@ -129,8 +129,8 @@ class UploadedPdf(Base):
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content_hash: Mapped[str] = mapped_column(Text, nullable=False)
     upload_time: Mapped[str] = mapped_column(
-        DateTime, nullable=False
-    )  # Consider changing to DateTime
+        Text, nullable=False
+    )  
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 

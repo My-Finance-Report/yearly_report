@@ -18,6 +18,9 @@ import type {
   TransactionsGetTransactionsResponse,
   TransactionsGetAggregatedTransactionsData,
   TransactionsGetAggregatedTransactionsResponse,
+  UploadsGetUploadsResponse,
+  UploadsUploadFilesData,
+  UploadsUploadFilesResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -199,6 +202,44 @@ export class TransactionsService {
       query: {
         group_by: data.groupBy,
       },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
+
+export class UploadsService {
+  /**
+   * Get Uploads
+   * @returns UploadedPdfOut Successful Response
+   * @throws ApiError
+   */
+  public static getUploads(): CancelablePromise<UploadsGetUploadsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/uploads/",
+    })
+  }
+
+  /**
+   * Upload Files
+   * Upload one or more files. For each file, check if a file with the same
+   * content hash already exists. If it does, return that; otherwise, generate
+   * a new UploadedPdf record.
+   * @param data The data for the request.
+   * @param data.formData
+   * @returns UploadedPdfOut Successful Response
+   * @throws ApiError
+   */
+  public static uploadFiles(
+    data: UploadsUploadFilesData,
+  ): CancelablePromise<UploadsUploadFilesResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/uploads/",
+      formData: data.formData,
+      mediaType: "multipart/form-data",
       errors: {
         422: "Validation Error",
       },

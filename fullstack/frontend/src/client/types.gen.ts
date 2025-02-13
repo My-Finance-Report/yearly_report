@@ -26,6 +26,10 @@ export type Body_login_login_access_token = {
   client_secret?: string | null
 }
 
+export type Body_uploads_upload_files = {
+  files: Array<Blob | File>
+}
+
 export type GroupByOption = "category" | "month" | "year"
 
 export type HTTPValidationError = {
@@ -75,6 +79,16 @@ export type TransactionSourceGroup = {
   total_deposits: number
   total_balance: number
   groups: Array<AggregatedGroup>
+}
+
+export type UploadedPdfOut = {
+  filename: string
+  raw_content: string
+  raw_content_hash: string
+  upload_time: string
+  user_id: number
+  archived?: boolean
+  id: number
 }
 
 export type UserNewPassword = {
@@ -159,6 +173,14 @@ export type TransactionsGetAggregatedTransactionsData = {
 
 export type TransactionsGetAggregatedTransactionsResponse =
   AggregatedTransactions
+
+export type UploadsGetUploadsResponse = Array<UploadedPdfOut>
+
+export type UploadsUploadFilesData = {
+  formData: Body_uploads_upload_files
+}
+
+export type UploadsUploadFilesResponse = Array<UploadedPdfOut>
 
 export type UsersReadUsersData = {
   limit?: number

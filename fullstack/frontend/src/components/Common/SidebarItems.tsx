@@ -9,6 +9,7 @@ const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
   { icon: FiBriefcase, title: "Transactions", path: "/transactions" },
+  { icon: FiBriefcase, title: "Uploads", path: "/upload-files" },
 ]
 
 interface SidebarItemsProps {

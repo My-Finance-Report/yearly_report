@@ -115,12 +115,13 @@ class UploadedPdfBase(BaseModel):
     filename: str
     raw_content: str
     raw_content_hash: str
-    upload_time: datetime  # your model uses DateTime; if it were a string, adjust here.
+    upload_time:str 
     user_id: int
     archived: bool = False
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 class UploadedPdfOut(UploadedPdfBase):
     id: int
