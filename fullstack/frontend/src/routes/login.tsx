@@ -20,7 +20,6 @@ import {
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import Logo from "/assets/images/fastapi-logo.svg"
 import type { Body_login_login_access_token as AccessToken } from "../client"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 import { emailPattern } from "../utils"
@@ -76,14 +75,6 @@ function Login() {
         gap={4}
         centerContent
       >
-        <Image
-          src={Logo}
-          alt="FastAPI logo"
-          height="auto"
-          maxW="2xs"
-          alignSelf="center"
-          mb={4}
-        />
         <FormControl id="username" isInvalid={!!errors.username || !!error}>
           <Input
             id="username"
