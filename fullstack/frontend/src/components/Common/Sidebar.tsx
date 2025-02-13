@@ -34,7 +34,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile */}
       <IconButton
         onClick={onOpen}
         display={{ base: "flex", md: "none" }}

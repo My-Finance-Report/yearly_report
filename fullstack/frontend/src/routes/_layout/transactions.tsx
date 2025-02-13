@@ -1,8 +1,11 @@
+"use client"
+
 import React, { useState } from "react"
 import {
   Container,
   Heading,
   Box,
+  Flex,
   Table,
   TableContainer,
   Thead,
@@ -21,12 +24,14 @@ import {
   ButtonGroup,
   Button,
 } from "@chakra-ui/react"
-import {BarChartLocal} from "@/components/Charting/BarChart"
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
+import { GenericPieChart } from "@/components/Charting/PieChart"
+// (You can still import your BarChart if needed)
+// import { BarChartLocal } from "@/components/Charting/BarChart"
 
 import type {
   TransactionsGetAggregatedTransactionsResponse,
@@ -46,20 +51,22 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.month,
 ]
 
+// Our route definition.
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
 })
 
 function Transactions() {
-  // State for expanded rows; keys are composite: `${sourceId}-${groupId}-${path}`
+  // State for expanded rows; keys are composite: `${sourceId}-${groupId}`
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>(
     {}
   )
-
   // State for the grouping options; default is just category.
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.category,
   ])
+  // State to track the active (hovered) pie slice per transaction source.
+  const [activeSlice, setActiveSlice] = useState<{ [sourceId: number]: number }>({})
 
   // Toggle a grouping option on/off.
   const toggleGroupingOption = (option: GroupByOption) => {
@@ -78,10 +85,9 @@ function Transactions() {
 
   // Toggle expand for a given composite key.
   const toggleGroup = (sourceId: number, groupKey: string) => {
-    const key = `${sourceId}-${groupKey}`
     setExpandedGroups((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
     }))
   }
 
@@ -97,6 +103,8 @@ function Transactions() {
     enabled: isLoggedIn(),
   })
 
+  // Define a simple config for the GenericPieChart.
+ 
 
   // Recursive function to render nested groups.
   const renderGroups = (
@@ -105,17 +113,24 @@ function Transactions() {
     pathPrefix: string = ""
   ) => {
     return groups.map((group, idx) => {
-      // Create a composite key for this group.
-      // We'll use the group's own id (assumed to be group.group_id) for toggling.
       const groupKey = pathPrefix ? `${pathPrefix}-${group.group_id}` : `${group.group_id}`
       const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
 
       return (
         <React.Fragment key={groupKey}>
-          {/* Aggregated row for this group */}
           <Tr
             onClick={() => toggleGroup(sourceId, groupKey)}
             style={{ cursor: "pointer" }}
+            onMouseEnter={() => {
+              if (!pathPrefix) {
+                setActiveSlice((prev) => ({ ...prev, [sourceId]: idx }))
+              }
+            }}
+            onMouseLeave={() => {
+              if (!pathPrefix) {
+                setActiveSlice((prev) => ({ ...prev, [sourceId]: 0 }))
+              }
+            }}
           >
             <Td pl={pathPrefix ? Number(pathPrefix.split("-").length) * 4 : 0}>
               {isExpanded ? <TriangleDownIcon /> : <TriangleUpIcon />}
@@ -130,7 +145,6 @@ function Transactions() {
               <Collapse in={isExpanded} animateOpacity>
                 <Box pl={4}>
                   {group.subgroups && group.subgroups.length > 0 ? (
-                    // Recursively render subgroups.
                     <Table variant="simple" size="sm">
                       <Thead>
                         <Tr>
@@ -144,7 +158,6 @@ function Transactions() {
                       <Tbody>{renderGroups(group.subgroups, sourceId, groupKey)}</Tbody>
                     </Table>
                   ) : (
-                    // Leaf group: render the transactions.
                     <Table variant="simple" size="sm">
                       <Thead>
                         <Tr>
@@ -189,7 +202,6 @@ function Transactions() {
         Transactions
       </Heading>
 
-
       <ButtonGroup mb={6} isAttached variant="outline">
         {availableOptions.map((option) => (
           <Button
@@ -217,8 +229,37 @@ function Transactions() {
           </TabList>
           <TabPanels>
             {data.groups.map((sourceGroup) => (
-
               <TabPanel key={sourceGroup.transaction_source_id}>
+             {groupingOptions.length === 1 && (
+    <Flex gap={4}>
+      <Box flex="1">
+        <GenericPieChart
+          data={sourceGroup.groups.map((group) => ({
+            group: group.group_name,
+            visitors: group.total_deposits, 
+          }))}
+          dataKey="visitors"
+          nameKey="group"
+          title="Deposits"
+          config={null}
+          activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
+        />
+      </Box>
+      <Box flex="1">
+        <GenericPieChart
+          data={sourceGroup.groups.map((group) => ({
+            group: group.group_name,
+            visitors: group.total_withdrawals, 
+          }))}
+          dataKey="visitors"
+          nameKey="group"
+          title="Withdrawals"
+          config={null}
+          activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
+        />
+      </Box>
+    </Flex>
+  )} 
 
                 <TableContainer>
                   <Table variant="simple">

@@ -13,9 +13,15 @@ function Dashboard() {
 
 
   return (
-    <div className="bg-blue-500 p-4 text-white">
-  This should have a blue background.
-    </div>
-    
+    <>
+      <Container maxW="full">
+        <Box pt={12} m={4}>
+          <Text fontSize="2xl">
+            Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
+          </Text>
+          <Text>Welcome back, nice to see you again!</Text>
+        </Box>
+      </Container>
+    </>
   )
 }
