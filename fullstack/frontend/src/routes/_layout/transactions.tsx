@@ -21,6 +21,7 @@ import {
   ButtonGroup,
   Button,
 } from "@chakra-ui/react"
+import {BarChartLocal} from "@/components/Charting/BarChart"
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -96,7 +97,6 @@ function Transactions() {
     enabled: isLoggedIn(),
   })
 
-  console.log(data)
 
   // Recursive function to render nested groups.
   const renderGroups = (
@@ -189,7 +189,7 @@ function Transactions() {
         Transactions
       </Heading>
 
-      {/* Button group to toggle multiple grouping options */}
+
       <ButtonGroup mb={6} isAttached variant="outline">
         {availableOptions.map((option) => (
           <Button
@@ -217,7 +217,9 @@ function Transactions() {
           </TabList>
           <TabPanels>
             {data.groups.map((sourceGroup) => (
+
               <TabPanel key={sourceGroup.transaction_source_id}>
+
                 <TableContainer>
                   <Table variant="simple">
                     <Thead>
