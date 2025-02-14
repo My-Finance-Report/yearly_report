@@ -1,7 +1,7 @@
 import os
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -9,13 +9,11 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
 from app.models import ProcessFileJob, UploadedPdf, User
-from app.parsers import process_pdf_file
+from app.parsers import InProcessFile, process_pdf_file
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database setup
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
@@ -25,11 +23,8 @@ MAX_ATTEMPTS = 5
 
 
 async def reset_stuck_jobs(session: AsyncSession):
-    """
-    Resets jobs that have been stuck for more than 3 minutes.
-    """
     timeout = timedelta(minutes=3)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     logger.info("Resetting stuck jobs...")
     await session.execute(
@@ -44,9 +39,6 @@ async def reset_stuck_jobs(session: AsyncSession):
 
 
 async def fetch_and_lock_next_job(session: AsyncSession) -> Optional[ProcessFileJob]:
-    """
-    Fetch the next pending job and lock it for processing.
-    """
     async with session.begin():
         result = await session.execute(
             select(ProcessFileJob)
@@ -70,9 +62,6 @@ async def fetch_and_lock_next_job(session: AsyncSession) -> Optional[ProcessFile
 
 
 async def process_next_job():
-    """
-    Fetch and process the next available job.
-    """
     async with SessionLocal() as session:
         job = await fetch_and_lock_next_job(session)
 
@@ -93,9 +82,6 @@ async def process_next_job():
 
 
 async def try_job(session: AsyncSession, job: ProcessFileJob) -> bool:
-    """
-    Attempt to run a job and catch any errors.
-    """
     try:
         await run_job(session, job)
         return True
@@ -105,31 +91,23 @@ async def try_job(session: AsyncSession, job: ProcessFileJob) -> bool:
 
 
 async def run_job(session: AsyncSession, job: ProcessFileJob):
-    """
-    Execute the PDF processing job.
-    """
     async with session.begin():
-        # Fetch the PDF record
         pdf = await session.get(UploadedPdf, job.pdf_id)
         if not pdf:
             raise ValueError("PDF record not found!")
 
-        # Fetch the User record
         user = await session.get(User, job.user_id)
         if not user:
             raise ValueError("User record not found!")
 
-    # Process the PDF file
-    result = await process_pdf_file(user, job.id, pdf.id, job.config_id)
+    in_process = InProcessFile(session=session, user=user, file=pdf, job=job)
+    result = process_pdf_file(in_process=in_process)
 
     if result:
         raise ValueError(result)
 
 
 async def worker():
-    """
-    Worker process that continuously processes jobs.
-    """
     logger.info("Starting worker task...")
 
     while True:
