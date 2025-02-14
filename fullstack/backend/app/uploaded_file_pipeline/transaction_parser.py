@@ -2,11 +2,10 @@ from dataclasses import  replace
 import logging
 import subprocess
 
-from fullstack.backend.app.open_ai_utils import ChatMessage, Prompt, make_chat_request
-from fullstack.backend.app.uploaded_file_pipeline.categorizer import PdfParseException
-from fullstack.backend.app.uploaded_file_pipeline.configuration_creator import create_configurations
-from fullstack.backend.app.uploaded_file_pipeline.local_types import InProcessFile, TransactionsWrapper
-from fullstack.backend.func_utils import make_batches, safe_pipe
+from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
+from app.uploaded_file_pipeline.categorizer import PdfParseException
+from app.uploaded_file_pipeline.configuration_creator import create_configurations
+from app.uploaded_file_pipeline.local_types import InProcessFile, TransactionsWrapper
 from sqlalchemy import select, text
 
 

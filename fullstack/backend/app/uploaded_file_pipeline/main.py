@@ -6,13 +6,10 @@ from func_utils import  safe_pipe
 from typing import List
 
 
-
-
-# Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def process_pdf_file(in_process: InProcessFile) -> List[CategorizedTransaction]:
+def uploaded_file_pipeline(in_process: InProcessFile) -> List[CategorizedTransaction]:
 
     return safe_pipe(
         in_process,

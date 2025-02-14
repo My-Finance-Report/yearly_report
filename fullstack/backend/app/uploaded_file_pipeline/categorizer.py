@@ -1,9 +1,9 @@
 import logging
 from typing import  List, Type 
 
-from fullstack.backend.app.open_ai_utils import ChatMessage, Prompt, make_chat_request
-from fullstack.backend.app.uploaded_file_pipeline.local_types import InProcessFile
-from fullstack.backend.func_utils import make_batches
+from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
+from app.uploaded_file_pipeline.local_types import InProcessFile
+from func_utils import make_batches
 from pydantic import BaseModel, Field, create_model
 from typing import List, Literal
 

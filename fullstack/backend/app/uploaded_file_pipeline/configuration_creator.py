@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-from fullstack.backend.app.uploaded_file_pipeline.local_types import InProcessFile, PartialAccountCategoryConfig, PartialUploadConfig
+from app.uploaded_file_pipeline.local_types import InProcessFile, PartialAccountCategoryConfig, PartialUploadConfig
 from sqlalchemy.orm import Session
 from app.open_ai_utils import ChatMessage, make_chat_request
 from app.models import Category, UploadConfiguration, User, TransactionSource

@@ -22,8 +22,7 @@ from app.local_types import (
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 
-class PdfParseException(Exception):
-    pass
+
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     command = "pdftotext"
