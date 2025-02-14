@@ -23,7 +23,7 @@ POLL_INTERVAL = 10
 MAX_ATTEMPTS = 5
 
 
-def reset_stuck_jobs(session: Session):
+def reset_stuck_jobs(session: Session)->None:
     timeout = timedelta(minutes=3)
     now = datetime.now(timezone.utc)
 
@@ -56,7 +56,7 @@ def fetch_and_lock_next_job(session: Session) -> Optional[ProcessFileJob]:
     return None
 
 
-def process_next_job(session: Session):
+def process_next_job(session: Session)->None:
     job = fetch_and_lock_next_job(session)
 
     if not job:
@@ -82,7 +82,7 @@ def try_job(session: Session, job: ProcessFileJob) -> bool:
         return False
 
 
-def run_job(session: Session, job: ProcessFileJob):
+def run_job(session: Session, job: ProcessFileJob)-> None:
     pdf = session.get(UploadedPdf, job.pdf_id)
     if not pdf:
         raise ValueError("PDF record not found!")
@@ -98,7 +98,7 @@ def run_job(session: Session, job: ProcessFileJob):
         raise ValueError(result)
 
 
-def worker():
+def worker()-> None:
     logger.info("Starting worker task...")
 
     while True:

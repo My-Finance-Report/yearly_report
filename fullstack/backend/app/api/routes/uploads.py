@@ -1,6 +1,5 @@
 import hashlib
 import os
-import subprocess
 import tempfile
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from datetime import datetime, timezone
@@ -11,62 +10,69 @@ from app.api.deps import (
 )
 from app.db import Session, get_db
 from app.models import (
+    ProcessFileJob,
     UploadedPdf,
     User,
 )
 
 from app.local_types import (
+    ProcessFileJobOut,
     UploadedPdfOut
 )
+from app.uploaded_file_pipeline.transaction_parser import extract_text_from_pdf
+from app.uploaded_file_pipeline.local_types import PdfParseException
+from ...worker.enqueue_job import  enqueue_or_reset_job
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
+   
 
+def uploaded_pdf_from_raw_content(session:Session,user: User,file)->UploadedPdf:
+    content_bytes = file.file.read()
+    raw_hash = hashlib.md5(content_bytes).hexdigest()
 
-
-def extract_text_from_pdf(pdf_path: str) -> str:
-    command = "pdftotext"
-    args = ["-layout", pdf_path, "-"]
-    try:
-        result = subprocess.run(
-            [command] + args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-            text=True  
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        raise PdfParseException(f"Failed to extract text from PDF: {e.stderr}") from e
-
-def generate_from_raw_content(session,user,filename,content_bytes,raw_hash)->UploadedPdf:
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        tmp.write(content_bytes)
-        tmp_path = tmp.name
-
-    try:
-        extracted_text = extract_text_from_pdf(tmp_path)
-    except PdfParseException as e:
-        os.remove(tmp_path)
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-    
-
-    new_pdf = UploadedPdf(
-        filename=filename,
-        raw_content=extracted_text,
-        raw_content_hash=raw_hash,
-        upload_time=datetime.now(timezone.utc),
-        user_id=user.id,
-        archived=False,
+    existing_file = (
+        session.query(UploadedPdf)
+        .filter(UploadedPdf.user_id == user.id, UploadedPdf.raw_content_hash == raw_hash)
+        .one_or_none()
     )
-    session.add(new_pdf)
-    session.commit()
-    session.refresh(new_pdf)
+    uploaded_file: UploadedPdf
+    if existing_file:
+        uploaded_file = existing_file
+    else:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(content_bytes)
+            tmp_path = tmp.name
 
-    return UploadedPdfOut.from_orm(new_pdf)
+        try:
+            extracted_text = extract_text_from_pdf(tmp_path)
+        except PdfParseException as e:
+            os.remove(tmp_path)
+            raise HTTPException(status_code=400, detail=str(e))
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        
+
+        new_file = UploadedPdf(
+            filename=file.filename,
+            raw_content=extracted_text,
+            raw_content_hash=raw_hash,
+            upload_time=datetime.now(timezone.utc),
+            user_id=user.id,
+            archived=False,
+        )
+        session.add(new_file)
+        session.commit()
+        session.refresh(new_file)
+        uploaded_file = new_file
+
+
+    print("enqueue the job")
+    job=enqueue_or_reset_job(session, user.id,uploaded_file.id)
+
+    return UploadedPdfOut.from_orm(uploaded_file).copy(update={"job": ProcessFileJobOut.from_orm(job)})
+
 
 
 @router.get(
@@ -74,9 +80,20 @@ def generate_from_raw_content(session,user,filename,content_bytes,raw_hash)->Upl
     dependencies=[Depends(get_current_user)],
     response_model=list[UploadedPdfOut],
 )
-def get_uploads(session:Session =Depends(get_db), user: User = Depends(get_current_user)) -> list[UploadedPdf  ]:
-    val =  session.query(UploadedPdf).filter(UploadedPdf.user_id == user.id).all()
-    return val
+def get_uploads(session: Session = Depends(get_db), user: User = Depends(get_current_user)) -> list[UploadedPdfOut]:
+    """Retrieve user uploads along with their associated jobs."""
+    
+    files = session.query(UploadedPdf).filter(UploadedPdf.user_id == user.id).all()
+    file_ids = [file.id for file in files]
+
+    jobs = session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id.in_(file_ids)).all()
+    job_lookup = {job.pdf_id: ProcessFileJobOut.from_orm(job) for job in jobs}
+
+    return [
+        UploadedPdfOut.from_orm(file).copy(update={"job": job_lookup.get(file.id)})
+        for file in files
+    ]
+
  
   
 @router.post("/", response_model=list[UploadedPdfOut])
@@ -84,26 +101,11 @@ def upload_files(
     files: list[UploadFile] = File(...),
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-)-> list[UploadedPdf]:
-    """
-    Upload one or more files. For each file, check if a file with the same
-    content hash already exists. If it does, return that; otherwise, generate
-    a new UploadedPdf record.
-    """
-    results:list[UploadedPdf] = []
+)-> list[UploadedPdfOut]:
+
+
+    out:list[UploadedPdfOut] = []
     for file in files:
-        content_bytes = file.file.read()
-        raw_hash = hashlib.md5(content_bytes).hexdigest()
-
-        existing_file = (
-            session.query(UploadedPdf)
-            .filter(UploadedPdf.user_id == user.id, UploadedPdf.raw_content_hash == raw_hash)
-            .one_or_none()
-        )
-
-        if existing_file:
-            results.append(existing_file)
-        else:
-            new_pdf = generate_from_raw_content(session, user, file.filename, content_bytes, raw_hash)
-            results.append(new_pdf)
-    return results
+        pdf = uploaded_pdf_from_raw_content(session, user, file)
+        out.append(pdf)
+    return out

@@ -3,16 +3,13 @@ import logging
 import subprocess
 
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
-from app.uploaded_file_pipeline.categorizer import PdfParseException
 from app.uploaded_file_pipeline.configuration_creator import create_configurations
-from app.uploaded_file_pipeline.local_types import InProcessFile, TransactionsWrapper
+from app.uploaded_file_pipeline.local_types import InProcessFile, PdfParseException, TransactionsWrapper
 from sqlalchemy import select, text
 
 
 
-from app.models import JobStatus, ProcessFileJob, TransactionSource, UploadedPdf, User, UploadConfiguration
-
-# Logging setup
+from app.models import JobStatus, ProcessFileJob, TransactionSource,  UploadConfiguration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

@@ -113,19 +113,17 @@ function UploadFiles() {
           <Table variant="simple">
             <Thead>
               <Tr>
-                <Th>ID</Th>
                 <Th>Filename</Th>
                 <Th>Upload Time</Th>
-                <Th>Archived</Th>
+                <Th>Status</Th>
               </Tr>
             </Thead>
             <Tbody>
               {data.map((pdf) => (
                 <Tr key={pdf.id}>
-                  <Td>{pdf.id}</Td>
                   <Td>{pdf.filename}</Td>
                   <Td>{new Date(pdf.upload_time).toLocaleString()}</Td>
-                  <Td>{pdf.archived ? "Yes" : "No"}</Td>
+                  <Td>{pdf.job?.status || "Unknown"}</Td>
                 </Tr>
               ))}
             </Tbody>

@@ -123,9 +123,6 @@ class UploadedPdfBase(BaseModel):
         orm_mode = True
         from_attributes = True
 
-class UploadedPdfOut(UploadedPdfBase):
-    id: int
-
 class UploadConfigurationBase(BaseModel):
     filename_regex:None |str = None
     start_keyword:None |str = None
@@ -172,9 +169,15 @@ class ProcessFileJobBase(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 class ProcessFileJobOut(ProcessFileJobBase):
     id: int
+
+class UploadedPdfOut(UploadedPdfBase):
+    id: int
+    job: ProcessFileJobOut | None = None
+
 
 class TransactionGroup(BaseModel):
     category_id: int

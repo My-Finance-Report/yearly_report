@@ -224,9 +224,6 @@ export class UploadsService {
 
   /**
    * Upload Files
-   * Upload one or more files. For each file, check if a file with the same
-   * content hash already exists. If it does, return that; otherwise, generate
-   * a new UploadedPdf record.
    * @param data The data for the request.
    * @param data.formData
    * @returns UploadedPdfOut Successful Response

@@ -36,6 +36,8 @@ export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
+export type JobStatus = "completed" | "pending" | "processing" | "failed"
+
 export type Message = {
   message: string
 }
@@ -50,6 +52,18 @@ export type PrivateUserCreate = {
   password: string
   full_name: string
   is_verified?: boolean
+}
+
+export type ProcessFileJobOut = {
+  created_at: string
+  last_tried_at?: string | null
+  status: JobStatus
+  user_id: number
+  config_id?: number | null
+  pdf_id: number
+  archived?: boolean
+  attempt_count?: number
+  id: number
 }
 
 export type Token = {
@@ -89,6 +103,7 @@ export type UploadedPdfOut = {
   user_id: number
   archived?: boolean
   id: number
+  job: ProcessFileJobOut | null
 }
 
 export type UserNewPassword = {
