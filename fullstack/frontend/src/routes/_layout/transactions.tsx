@@ -30,15 +30,12 @@ import { useQuery } from "@tanstack/react-query"
 import { TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 import { GenericPieChart } from "@/components/Charting/PieChart"
-// (You can still import your BarChart if needed)
-// import { BarChartLocal } from "@/components/Charting/BarChart"
 
 import type {
   TransactionsGetAggregatedTransactionsResponse,
   AggregatedGroup,
 } from "../../client"
 
-// Define the group-by options.
 export enum GroupByOption {
   category = "category",
   month = "month",
@@ -51,39 +48,31 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.month,
 ]
 
-// Our route definition.
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
 })
 
 function Transactions() {
-  // State for expanded rows; keys are composite: `${sourceId}-${groupId}`
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>(
     {}
   )
-  // State for the grouping options; default is just category.
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.category,
   ])
-  // State to track the active (hovered) pie slice per transaction source.
   const [activeSlice, setActiveSlice] = useState<{ [sourceId: number]: number }>({})
 
-  // Toggle a grouping option on/off.
   const toggleGroupingOption = (option: GroupByOption) => {
     setGroupingOptions((prev) => {
-      // Ensure at least one option remains selected.
       if (prev.includes(option)) {
         if (prev.length === 1) return prev
         return prev.filter((o) => o !== option)
       } else {
-        // Add the option. The final order will follow availableOptions.
         const newOptions = [...prev, option]
         return availableOptions.filter((o) => newOptions.includes(o))
       }
     })
   }
 
-  // Toggle expand for a given composite key.
   const toggleGroup = (sourceId: number, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
@@ -91,22 +80,18 @@ function Transactions() {
     }))
   }
 
-  // Query the aggregated endpoint.
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
     queryKey: ["aggregatedTransactions", groupingOptions],
     queryFn: () =>
-      // Pass the array of grouping options to your service.
       TransactionsService.getAggregatedTransactions({ groupBy: groupingOptions }),
     enabled: isLoggedIn(),
   })
 
-  // Define a simple config for the GenericPieChart.
  
 
-  // Recursive function to render nested groups.
   const renderGroups = (
     groups: AggregatedGroup[],
     sourceId: number,

@@ -11,7 +11,7 @@ print(f"****** {DATABASE_URL}")
 engine = create_engine(DATABASE_URL, echo=True)
 
 session_maker = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Session = orm.Session
+type Session = orm.Session
 
 
 def get_db():
