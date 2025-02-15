@@ -67,7 +67,6 @@ class UserUpdateMe(BaseModel):
 
 class TransactionSourceBase(BaseModel):
     name: str
-    user_id: int
     archived: bool = False
     source_kind: SourceKind = SourceKind.account
 
@@ -81,7 +80,6 @@ class TransactionSourceOut(TransactionSourceBase):
 class CategoryBase(BaseModel):
     name: str
     source_id: int
-    user_id: int
     archived: bool = False
 
     class Config:

@@ -197,7 +197,6 @@ export class AccountsService {
 
   /**
    * Update Category
-   * Update an existing category.
    * @param data The data for the request.
    * @param data.categoryId
    * @param data.requestBody

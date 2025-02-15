@@ -33,14 +33,12 @@ export type Body_uploads_upload_files = {
 export type CategoryBase = {
   name: string
   source_id: number
-  user_id: number
   archived?: boolean
 }
 
 export type CategoryOut = {
   name: string
   source_id: number
-  user_id: number
   archived?: boolean
   id: number
 }
@@ -105,7 +103,6 @@ export type TransactionOut = {
 
 export type TransactionSourceBase = {
   name: string
-  user_id: number
   archived?: boolean
   source_kind?: SourceKind
 }
@@ -121,7 +118,6 @@ export type TransactionSourceGroup = {
 
 export type TransactionSourceOut = {
   name: string
-  user_id: number
   archived?: boolean
   source_kind?: SourceKind
   id: number

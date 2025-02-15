@@ -21,10 +21,9 @@ import { EditIcon, CheckIcon, CloseIcon, DeleteIcon } from "@chakra-ui/icons"
 
 interface CategoriesManagerProps {
   accountId: number
-  userId: number // Pass userId to ensure we include it in requests
 }
 
-export const CategoriesManager = ({ accountId, userId }: CategoriesManagerProps) => {
+export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
   const queryClient = useQueryClient()
   const [newCategory, setNewCategory] = useState("")
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null)
@@ -41,10 +40,10 @@ export const CategoriesManager = ({ accountId, userId }: CategoriesManagerProps)
   })
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ categoryId, name, sourceId, userId }: { categoryId: number; name: string; sourceId: number; userId: number }) =>
+    mutationFn: ({ categoryId, name, sourceId }: { categoryId: number; name: string; sourceId: number}) =>
       AccountsService.updateCategory({ 
         categoryId, 
-        requestBody: { name, source_id: sourceId, user_id: userId } 
+        requestBody: { name, source_id: sourceId} 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
@@ -54,7 +53,7 @@ export const CategoriesManager = ({ accountId, userId }: CategoriesManagerProps)
 
   const addCategoryMutation = useMutation({
     mutationFn: () => 
-      AccountsService.createCategory({ sourceId: accountId, requestBody: { source_id: accountId, name: newCategory, user_id: userId } }),
+      AccountsService.createCategory({ sourceId: accountId, requestBody: { source_id: accountId, name: newCategory } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
       setNewCategory("")
@@ -110,7 +109,6 @@ export const CategoriesManager = ({ accountId, userId }: CategoriesManagerProps)
                               categoryId: category.id,
                               name: editingCategory.name,
                               sourceId: accountId,
-                              userId: userId
                             })
                           }
                         />
