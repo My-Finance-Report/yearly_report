@@ -4,6 +4,21 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
+  AccountsGetTransactionSourcesResponse,
+  AccountsCreateTransactionSourceData,
+  AccountsCreateTransactionSourceResponse,
+  AccountsUpdateTransactionSourceData,
+  AccountsUpdateTransactionSourceResponse,
+  AccountsDeleteTransactionSourceData,
+  AccountsDeleteTransactionSourceResponse,
+  AccountsGetCategoriesData,
+  AccountsGetCategoriesResponse,
+  AccountsCreateCategoryData,
+  AccountsCreateCategoryResponse,
+  AccountsUpdateCategoryData,
+  AccountsUpdateCategoryResponse,
+  AccountsDeleteCategoryData,
+  AccountsDeleteCategoryResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -45,6 +60,190 @@ import type {
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
 } from "./types.gen"
+
+export class AccountsService {
+  /**
+   * Get Transaction Sources
+   * Retrieve all transaction sources (accounts) for the current user.
+   * @returns TransactionSourceOut Successful Response
+   * @throws ApiError
+   */
+  public static getTransactionSources(): CancelablePromise<AccountsGetTransactionSourcesResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/accounts/",
+    })
+  }
+
+  /**
+   * Create Transaction Source
+   * Create a new transaction source (account).
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns TransactionSourceOut Successful Response
+   * @throws ApiError
+   */
+  public static createTransactionSource(
+    data: AccountsCreateTransactionSourceData,
+  ): CancelablePromise<AccountsCreateTransactionSourceResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/accounts/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Update Transaction Source
+   * Update an existing transaction source (account).
+   * @param data The data for the request.
+   * @param data.sourceId
+   * @param data.requestBody
+   * @returns TransactionSourceOut Successful Response
+   * @throws ApiError
+   */
+  public static updateTransactionSource(
+    data: AccountsUpdateTransactionSourceData,
+  ): CancelablePromise<AccountsUpdateTransactionSourceResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/accounts/{source_id}",
+      path: {
+        source_id: data.sourceId,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete Transaction Source
+   * Delete an existing transaction source (account).
+   * @param data The data for the request.
+   * @param data.sourceId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static deleteTransactionSource(
+    data: AccountsDeleteTransactionSourceData,
+  ): CancelablePromise<AccountsDeleteTransactionSourceResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/accounts/{source_id}",
+      path: {
+        source_id: data.sourceId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Get Categories
+   * Retrieve all categories for a given transaction source (account).
+   * @param data The data for the request.
+   * @param data.sourceId
+   * @returns CategoryOut Successful Response
+   * @throws ApiError
+   */
+  public static getCategories(
+    data: AccountsGetCategoriesData,
+  ): CancelablePromise<AccountsGetCategoriesResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/accounts/{source_id}/categories",
+      path: {
+        source_id: data.sourceId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Create Category
+   * Create a new category within a transaction source (account).
+   * @param data The data for the request.
+   * @param data.sourceId
+   * @param data.requestBody
+   * @returns CategoryOut Successful Response
+   * @throws ApiError
+   */
+  public static createCategory(
+    data: AccountsCreateCategoryData,
+  ): CancelablePromise<AccountsCreateCategoryResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/accounts/{source_id}/categories",
+      path: {
+        source_id: data.sourceId,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Update Category
+   * Update an existing category.
+   * @param data The data for the request.
+   * @param data.categoryId
+   * @param data.requestBody
+   * @returns CategoryOut Successful Response
+   * @throws ApiError
+   */
+  public static updateCategory(
+    data: AccountsUpdateCategoryData,
+  ): CancelablePromise<AccountsUpdateCategoryResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/accounts/categories/{category_id}",
+      path: {
+        category_id: data.categoryId,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete Category
+   * Delete an existing category.
+   * @param data The data for the request.
+   * @param data.categoryId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static deleteCategory(
+    data: AccountsDeleteCategoryData,
+  ): CancelablePromise<AccountsDeleteCategoryResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/accounts/categories/{category_id}",
+      path: {
+        category_id: data.categoryId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
 
 export class LoginService {
   /**

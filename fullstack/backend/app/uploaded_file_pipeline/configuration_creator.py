@@ -59,7 +59,7 @@ def extract_account_and_categories(session: Session, user: User, pdf_content: st
         return None
 
 
-def extract_upload_configuration(session: Session, user: User, transaction_source: TransactionSource, pdf_content: str) -> Optional[UploadConfiguration]:
+def generate_upload_configuration(session: Session, user: User, transaction_source: TransactionSource, pdf_content: str) -> Optional[UploadConfiguration]:
     prompt = generate_upload_config_prompt(pdf_content)
 
     messages = [ChatMessage(role="user", content=prompt)]
@@ -106,20 +106,15 @@ def create_configurations(process: InProcessFile)-> UploadConfiguration:
     user = process.user
     pdf_content = process.file.raw_content
 
-    try:
-        account_config = extract_account_and_categories(session, user, pdf_content)
-        if not account_config:
-            raise ValueError("Failed to extract account information.")
+    account_config = extract_account_and_categories(session, user, pdf_content)
+    if not account_config:
+        raise ValueError("Failed to extract account information.")
 
-        transaction_source = save_account_config(session, user, account_config)
+    transaction_source = save_account_config(session, user, account_config)
 
-        upload_config = extract_upload_configuration(session, user, transaction_source, pdf_content)
-        if not upload_config:
-            raise ValueError("Failed to extract upload configuration.")
+    upload_config = generate_upload_configuration(session, user, transaction_source, pdf_content)
+    if not upload_config:
+        raise ValueError("Failed to extract upload configuration.")
 
-        return upload_config
+    return upload_config
 
-    except Exception as e:
-        session.rollback()  # Rollback changes on failure
-        logger.error(f"Error creating configurations: {e}")
-        raise

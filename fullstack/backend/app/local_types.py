@@ -70,7 +70,6 @@ class TransactionSourceBase(BaseModel):
     user_id: int
     archived: bool = False
     source_kind: SourceKind = SourceKind.account
-    amount: float
 
     class Config:
         orm_mode = True
@@ -204,7 +203,7 @@ class AggregatedGroup(BaseModel):
         orm_mode = True
         from_attributes = True
 
-AggregatedGroup.update_forward_refs()
+AggregatedGroup.model_rebuild()
 
 class TransactionSourceGroup(BaseModel):
     transaction_source_id: int

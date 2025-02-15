@@ -30,6 +30,21 @@ export type Body_uploads_upload_files = {
   files: Array<Blob | File>
 }
 
+export type CategoryBase = {
+  name: string
+  source_id: number
+  user_id: number
+  archived?: boolean
+}
+
+export type CategoryOut = {
+  name: string
+  source_id: number
+  user_id: number
+  archived?: boolean
+  id: number
+}
+
 export type GroupByOption = "category" | "month" | "year"
 
 export type HTTPValidationError = {
@@ -66,6 +81,8 @@ export type ProcessFileJobOut = {
   id: number
 }
 
+export type SourceKind = "account" | "investment" | "card"
+
 export type Token = {
   access_token: string
   token_type?: string
@@ -86,6 +103,13 @@ export type TransactionOut = {
   id: number
 }
 
+export type TransactionSourceBase = {
+  name: string
+  user_id: number
+  archived?: boolean
+  source_kind?: SourceKind
+}
+
 export type TransactionSourceGroup = {
   transaction_source_id: number
   transaction_source_name: string
@@ -93,6 +117,14 @@ export type TransactionSourceGroup = {
   total_deposits: number
   total_balance: number
   groups: Array<AggregatedGroup>
+}
+
+export type TransactionSourceOut = {
+  name: string
+  user_id: number
+  archived?: boolean
+  source_kind?: SourceKind
+  id: number
 }
 
 export type UploadedPdfOut = {
@@ -144,6 +176,53 @@ export type ValidationError = {
   msg: string
   type: string
 }
+
+export type AccountsGetTransactionSourcesResponse = Array<TransactionSourceOut>
+
+export type AccountsCreateTransactionSourceData = {
+  requestBody: TransactionSourceBase
+}
+
+export type AccountsCreateTransactionSourceResponse = TransactionSourceOut
+
+export type AccountsUpdateTransactionSourceData = {
+  requestBody: TransactionSourceBase
+  sourceId: number
+}
+
+export type AccountsUpdateTransactionSourceResponse = TransactionSourceOut
+
+export type AccountsDeleteTransactionSourceData = {
+  sourceId: number
+}
+
+export type AccountsDeleteTransactionSourceResponse = unknown
+
+export type AccountsGetCategoriesData = {
+  sourceId: number
+}
+
+export type AccountsGetCategoriesResponse = Array<CategoryOut>
+
+export type AccountsCreateCategoryData = {
+  requestBody: CategoryBase
+  sourceId: number
+}
+
+export type AccountsCreateCategoryResponse = CategoryOut
+
+export type AccountsUpdateCategoryData = {
+  categoryId: number
+  requestBody: CategoryBase
+}
+
+export type AccountsUpdateCategoryResponse = CategoryOut
+
+export type AccountsDeleteCategoryData = {
+  categoryId: number
+}
+
+export type AccountsDeleteCategoryResponse = unknown
 
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token

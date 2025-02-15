@@ -77,7 +77,6 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
         blah = f"{process.file.filename} {process.file.raw_content}".lower()
         for id, filename_regex in reg_lookup.items():
             if filename_regex in blah:
-                logger.info("found a config")
                 config = lookup[id]
 
 

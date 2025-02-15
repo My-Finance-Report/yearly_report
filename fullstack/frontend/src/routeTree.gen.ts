@@ -20,6 +20,7 @@ import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutUploadFilesImport } from './routes/_layout/upload-files'
 import { Route as LayoutTransactionsImport } from './routes/_layout/transactions'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
+import { Route as LayoutManageAccountsImport } from './routes/_layout/manage-accounts'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
@@ -69,6 +70,11 @@ const LayoutSettingsRoute = LayoutSettingsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutManageAccountsRoute = LayoutManageAccountsImport.update({
+  path: '/manage-accounts',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutAdminRoute = LayoutAdminImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
@@ -102,6 +108,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/manage-accounts': {
+      preLoaderRoute: typeof LayoutManageAccountsImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/settings': {
       preLoaderRoute: typeof LayoutSettingsImport
       parentRoute: typeof LayoutImport
@@ -126,6 +136,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
+    LayoutManageAccountsRoute,
     LayoutSettingsRoute,
     LayoutTransactionsRoute,
     LayoutUploadFilesRoute,
