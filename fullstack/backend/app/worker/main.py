@@ -5,38 +5,50 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.uploaded_file_pipeline.main import uploaded_file_pipeline
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from app.models import ProcessFileJob, UploadedPdf, User
-from app.uploaded_file_pipeline.transaction_parser import InProcessFile
+from app.models import JobStatus, ProcessFileJob, UploadedPdf, User
+from app.uploaded_file_pipeline.local_types import InProcessFile
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL, echo=True)
+DATABASE_URL = os.environ["DATABASE_URL"]
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 POLL_INTERVAL = 10 
 MAX_ATTEMPTS = 5
 
-
-def reset_stuck_jobs(session: Session)->None:
+def reset_stuck_jobs(session: Session) -> None:
     timeout = timedelta(minutes=3)
     now = datetime.now(timezone.utc)
 
     logger.info("Resetting stuck jobs...")
-    session.execute(
-        ProcessFileJob.__table__.update()
-        .where(
+
+    # Fetch stuck jobs
+    stuck_jobs = (
+        session.query(ProcessFileJob)
+        .filter(
             ProcessFileJob.status == "processing",
-            ProcessFileJob.last_tried_at < now - timeout,
+            ProcessFileJob.last_tried_at < now - timeout
         )
-        .values(status="pending")
+        .all()
     )
+
+    if not stuck_jobs:
+        logger.info("No stuck jobs found.")
+        return
+
+    for job in stuck_jobs:
+        job.status = JobStatus.pending
+
     session.commit()
+
+    logger.info(f"Reset {len(stuck_jobs)} stuck jobs.")
+
 
 
 def fetch_and_lock_next_job(session: Session) -> Optional[ProcessFileJob]:
@@ -47,8 +59,8 @@ def fetch_and_lock_next_job(session: Session) -> Optional[ProcessFileJob]:
     ).first()
 
     if job:
-        job.status = "processing"
-        job.last_tried_at = datetime.utcnow()
+        job.status = JobStatus.processing
+        job.last_tried_at = datetime.now(timezone.utc)
         job.attempt_count += 1
         session.commit()
 
@@ -66,7 +78,7 @@ def process_next_job(session: Session)->None:
     logger.info(f"Processing job: {job.id}")
     success = try_job(session, job)
 
-    job.status = "completed" if success else "failed"
+    job.status = JobStatus.completed if success else JobStatus.failed
     job.last_tried_at = datetime.utcnow()
     session.commit()
 
@@ -78,6 +90,11 @@ def try_job(session: Session, job: ProcessFileJob) -> bool:
         run_job(session, job)
         return True
     except Exception as e:
+        error_message = f"{job.error_messages or ''}\n{e}"
+        job.error_messages = error_message.strip()
+        session.add(job)
+        session.commit()
+
         logger.error(f"Job {job.id} failed: {e}")
         return False
 
@@ -92,14 +109,12 @@ def run_job(session: Session, job: ProcessFileJob)-> None:
         raise ValueError("User record not found!")
 
     in_process = InProcessFile(session=session, user=user, file=pdf, job=job)
-    result = uploaded_file_pipeline(in_process=in_process)
+    
+    uploaded_file_pipeline(in_process=in_process)
 
-    if result:
-        raise ValueError(result)
 
 
 def worker()-> None:
-    logger.info("Starting worker task...")
 
     while True:
         with SessionLocal() as session:

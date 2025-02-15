@@ -115,7 +115,7 @@ class UploadedPdfBase(BaseModel):
     filename: str
     raw_content: str
     raw_content_hash: str
-    upload_time:str 
+    upload_time: datetime
     user_id: int
     archived: bool = False
 

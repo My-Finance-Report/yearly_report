@@ -35,7 +35,7 @@ def generate_account_category_prompt(pdf_content: str) -> str:
     ### Expected JSON Format:
     {{
       "name": "<Descriptive name>",
-      "kind": "Investment" | "Card" | "Account",
+      "kind": "investment" | "card" | "account",
       "categories": ["<Category1>", "<Category2>", "<Category3>"]
     }}
 
@@ -83,7 +83,13 @@ def extract_upload_configuration(session: Session, user: User, transaction_sourc
 
 
 def save_account_config(session: Session, user: User, account_config: PartialAccountCategoryConfig) -> TransactionSource:
-    transaction_source = TransactionSource(kind=account_config.kind, name=account_config.name, user_id=user.id)
+
+    existing = session.query(TransactionSource).filter(TransactionSource.name==account_config.name).one_or_none()
+    if existing:
+        return existing
+    
+
+    transaction_source = TransactionSource(source_kind=account_config.kind, name=account_config.name, user_id=user.id)
     session.add(transaction_source)
     session.commit()  
 
@@ -96,7 +102,6 @@ def save_account_config(session: Session, user: User, account_config: PartialAcc
     
 
 def create_configurations(process: InProcessFile)-> UploadConfiguration:
-    # TODO just pass the process object around
     session = process.session
     user = process.user
     pdf_content = process.file.raw_content

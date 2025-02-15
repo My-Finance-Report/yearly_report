@@ -73,6 +73,24 @@ def uploaded_pdf_from_raw_content(session:Session,user: User,file)->UploadedPdf:
 
     return UploadedPdfOut.from_orm(uploaded_file).copy(update={"job": ProcessFileJobOut.from_orm(job)})
 
+@router.post("/reprocess/{job_id}", response_model=ProcessFileJobOut)
+def reprocess_file(
+    job_id: int,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Reprocess an uploaded file by job ID."""
+    job = session.query(ProcessFileJob).filter(
+        ProcessFileJob.id == job_id, ProcessFileJob.user_id == user.id
+    ).one_or_none()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = enqueue_or_reset_job(session, user.id, job.pdf_id)
+
+    return ProcessFileJobOut.from_orm(job)
+
 
 
 @router.get(

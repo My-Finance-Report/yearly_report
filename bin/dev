@@ -2,17 +2,17 @@
 
 cd fullstack/backend
 
-# Kill any previous tmux session with the same name
+# Kill previous tmux session
 tmux kill-session -t backend 2>/dev/null
 
-# Create a new tmux session named 'backend' and run the web server
-tmux new-session -d -s backend 'uvicorn app.main:app --reload --port 8003 --log-level debug'
+# Start new tmux session for the backend
+tmux new-session -d -s backend './backend
 
-# Split the window vertically and run the worker, keeping the pane open on errors
-tmux split-window -v 'python -m app.worker.main || echo "Worker crashed. Press Enter to exit." && read'
+# Split the window and start worker with watch mode
+tmux split-window -v './worker || echo "Worker crashed. Press Enter to exit." && read'
 
-# Select the first pane (FastAPI) to be active by default
+# Select the first pane (FastAPI) as active
 tmux select-pane -t 0
 
-# Attach to the tmux session so you can see logs
+# Attach to the session
 tmux attach-session -t backend

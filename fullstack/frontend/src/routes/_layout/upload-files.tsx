@@ -17,6 +17,7 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/react"
+import {ReprocessButton} from "@/components/Common/ReprocessButton"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { UploadsService } from "../../client"
@@ -65,7 +66,7 @@ function UploadFiles() {
   })
 
   // Query to fetch uploaded files.
-  const { data, isLoading, error } = useQuery<UploadedPdfOut[], Error>({
+  const { data, isLoading, error, refetch } = useQuery<UploadedPdfOut[], Error>({
     queryKey: ["uploadedFiles"],
     queryFn: () => UploadsService.getUploads(),
     enabled: isLoggedIn(),
@@ -83,6 +84,10 @@ function UploadFiles() {
       uploadMutation.mutate(selectedFiles)
     }
   }
+
+  const handleJobUpdate = () => {
+    refetch()
+  };
 
   return (
     <Container maxW="full" py={8}>
@@ -116,15 +121,18 @@ function UploadFiles() {
                 <Th>Filename</Th>
                 <Th>Upload Time</Th>
                 <Th>Status</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
               {data.map((pdf) => (
-                <Tr key={pdf.id}>
+                pdf.job && 
+                (<Tr key={pdf.id}>
                   <Td>{pdf.filename}</Td>
                   <Td>{new Date(pdf.upload_time).toLocaleString()}</Td>
                   <Td>{pdf.job?.status || "Unknown"}</Td>
-                </Tr>
+                  <Td><ReprocessButton jobId={pdf.job.id} onReprocess={handleJobUpdate}/></Td>
+                </Tr>)
               ))}
             </Tbody>
           </Table>

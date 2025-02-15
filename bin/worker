@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Load environment variables
+export $(grep -v '^#' .env | xargs)
+
+# Navigate to backend directory
+cd fullstack/backend
+
+# Start worker with watch mode and forward signals
+exec watchfiles "python -m app.worker.main" --filter python --sigint

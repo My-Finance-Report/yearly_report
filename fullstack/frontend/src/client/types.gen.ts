@@ -103,7 +103,7 @@ export type UploadedPdfOut = {
   user_id: number
   archived?: boolean
   id: number
-  job: ProcessFileJobOut | null
+  job?: ProcessFileJobOut | null
 }
 
 export type UserNewPassword = {
@@ -188,6 +188,12 @@ export type TransactionsGetAggregatedTransactionsData = {
 
 export type TransactionsGetAggregatedTransactionsResponse =
   AggregatedTransactions
+
+export type UploadsReprocessFileData = {
+  jobId: number
+}
+
+export type UploadsReprocessFileResponse = ProcessFileJobOut
 
 export type UploadsGetUploadsResponse = Array<UploadedPdfOut>
 

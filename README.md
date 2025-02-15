@@ -62,3 +62,8 @@ addative upload
 - privacy policy
 - install a linter for extraneous imports
 - memoize llm calls to preserve existing data save costs
+
+# migration to python
+
+get worker working..
+there is a bug if you have a valid token but arent logged in

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Load environment variables
+export $(grep -v '^#' .env | xargs)
+
+# Navigate to backend directory
+cd fullstack/backend
+
+# Start the FastAPI backend
+uvicorn app.main:app --reload --port 8003 --log-level debug

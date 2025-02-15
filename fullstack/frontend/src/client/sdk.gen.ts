@@ -18,6 +18,8 @@ import type {
   TransactionsGetTransactionsResponse,
   TransactionsGetAggregatedTransactionsData,
   TransactionsGetAggregatedTransactionsResponse,
+  UploadsReprocessFileData,
+  UploadsReprocessFileResponse,
   UploadsGetUploadsResponse,
   UploadsUploadFilesData,
   UploadsUploadFilesResponse,
@@ -211,7 +213,31 @@ export class TransactionsService {
 
 export class UploadsService {
   /**
+   * Reprocess File
+   * Reprocess an uploaded file by job ID.
+   * @param data The data for the request.
+   * @param data.jobId
+   * @returns ProcessFileJobOut Successful Response
+   * @throws ApiError
+   */
+  public static reprocessFile(
+    data: UploadsReprocessFileData,
+  ): CancelablePromise<UploadsReprocessFileResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/uploads/reprocess/{job_id}",
+      path: {
+        job_id: data.jobId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
    * Get Uploads
+   * Retrieve user uploads along with their associated jobs.
    * @returns UploadedPdfOut Successful Response
    * @throws ApiError
    */

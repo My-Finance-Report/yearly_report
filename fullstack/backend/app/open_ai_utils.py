@@ -1,8 +1,11 @@
 import os
-import requests
+import logging
+import openai
 from typing import List, Optional, Type, TypeVar
 from pydantic import BaseModel
 
+
+logger = logging.getLogger(__name__)
 
 class ChatMessage(BaseModel):
     role: str
@@ -10,55 +13,38 @@ class ChatMessage(BaseModel):
 
 type Prompt = list[ChatMessage]
 
-
-class ChatRequest(BaseModel):
-    model: str = "gpt-4o"
-    messages: List[ChatMessage]
-    response_format: dict
-    temperature: float = 0.0
-    max_tokens: int = 9000
-
-
-class ChatChoice(BaseModel):
-    message: ChatMessage
-
-
-class ChatResponse(BaseModel):
-    choices: List[ChatChoice]
-
-
-# Generic Pydantic Model Type
 T = TypeVar("T", bound=BaseModel)
 
 
 def make_chat_request(model: Type[T], messages: List[ChatMessage]) -> Optional[T]:
+    """Send a chat request to OpenAI and return the response as a Pydantic model."""
 
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("Environment variable 'OPENAI_API_KEY' not set.")
 
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
-    }
+    client = openai.OpenAI(api_key=api_key)
 
-    schema = model.model_json_schema()
 
-    chat_request = ChatRequest(
-        messages=messages,
-        response_format=schema
-    )
+
+    messages = [msg.model_dump() for msg in messages]
 
     try:
-        response = requests.post(url, headers=headers, json=chat_request.dict(), timeout=120)
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=messages,
+            response_format=model,
+            temperature=0.0,
+            max_tokens=9000,
+        )
 
-        if response.status_code != 200:
-            raise ValueError(f"OpenAI API error: {response.status_code} - {response.text}")
+        if not response.choices:
+            raise ValueError("No response choices received from OpenAI.")
 
-        response_data = response.json()
-        return model.model_validate(response_data)
 
-    except requests.RequestException as e:
-        print(f"HTTP Error: {e}")
+        val = response.choices[0].message.parsed
+        return val
+
+    except openai.OpenAIError as e:
+        print(f"OpenAI API error: {e}")
         return None

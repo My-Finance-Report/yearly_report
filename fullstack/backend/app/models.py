@@ -143,7 +143,7 @@ class UploadConfiguration(Base):
     __tablename__ = "upload_configuration"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    filename_regex: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    filename_regex: Mapped[str] = mapped_column(Text, nullable=False)
     start_keyword: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     end_keyword: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     transaction_source_id: Mapped[int] = mapped_column(
@@ -193,5 +193,6 @@ class ProcessFileJob(Base):
     pdf_id: Mapped[int] = mapped_column(ForeignKey("uploaded_pdf.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    error_messages: Mapped[str] = mapped_column(Text, nullable=True)
 
     __table_args__ = (UniqueConstraint("pdf_id", name="uq_process_file_job"),)

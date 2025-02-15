@@ -1,20 +1,19 @@
-import logging
-from app.uploaded_file_pipeline.categorizer import CategorizedTransaction, categorize_extracted_transactions
+from app.uploaded_file_pipeline.categorizer import categorize_extracted_transactions, insert_categorized_transactions
 from app.uploaded_file_pipeline.local_types import InProcessFile
 from app.uploaded_file_pipeline.transaction_parser import apply_upload_config, remove_transactions_if_necessary, request_llm_parse_of_transactions
-from func_utils import  safe_pipe
-from typing import List
+from func_utils import  pipe
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-def uploaded_file_pipeline(in_process: InProcessFile) -> List[CategorizedTransaction]:
+def uploaded_file_pipeline(in_process: InProcessFile) -> None:
 
-    return safe_pipe(
+    pipe(
         in_process,
         apply_upload_config,
         remove_transactions_if_necessary,
         request_llm_parse_of_transactions,
-        final=categorize_extracted_transactions
+        categorize_extracted_transactions,
+        final=insert_categorized_transactions
     ) 
+
+

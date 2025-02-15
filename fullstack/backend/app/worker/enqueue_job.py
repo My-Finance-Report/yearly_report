@@ -17,6 +17,7 @@ def enqueue_or_reset_job(
 
     if existing_job:
         existing_job.status = JobStatus.pending
+        existing_job.attempt_count=0
         print("updatating the status")
         session.add(existing_job)
         session.commit()
