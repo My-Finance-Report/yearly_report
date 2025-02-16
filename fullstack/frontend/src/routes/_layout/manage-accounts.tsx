@@ -14,17 +14,15 @@ import {
   Box,
   Spinner,
 } from "@chakra-ui/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 
-// Main Manage Accounts Page
 export const Route = createFileRoute("/_layout/manage-accounts")({
   component: ManageAccounts,
 })
 
 function ManageAccounts() {
-  const queryClient = useQueryClient()
 
   const { data: accounts, isLoading, isError } = useQuery({
     queryKey: ["accounts"],

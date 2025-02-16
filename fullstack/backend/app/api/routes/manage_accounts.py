@@ -16,9 +16,6 @@ def get_transaction_sources(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TransactionSource]:
-    """
-    Retrieve all transaction sources (accounts) for the current user.
-    """
     return session.query(TransactionSource).filter(TransactionSource.user_id == user.id).all()
 
 
@@ -28,13 +25,10 @@ def create_transaction_source(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> TransactionSource:
-    """
-    Create a new transaction source (account).
-    """
     existing_source = (
         session.query(TransactionSource)
         .filter(TransactionSource.user_id == user.id, TransactionSource.name == transaction_source.name)
-        .first()
+        .one()
     )
     if existing_source:
         raise HTTPException(status_code=400, detail="An account with this name already exists.")
@@ -54,9 +48,6 @@ def update_transaction_source(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> TransactionSource:
-    """
-    Update an existing transaction source (account).
-    """
     db_source = session.query(TransactionSource).filter(
         TransactionSource.id == source_id,
         TransactionSource.user_id == user.id
@@ -79,9 +70,6 @@ def delete_transaction_source(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
-    """
-    Delete an existing transaction source (account).
-    """
     db_source = session.query(TransactionSource).filter(
         TransactionSource.id == source_id,
         TransactionSource.user_id == user.id
@@ -95,9 +83,6 @@ def delete_transaction_source(
 
 
 
-# -------------------------
-# CATEGORIES
-# -------------------------
 
 @router.get("/{source_id}/categories", response_model=List[CategoryOut])
 def get_categories(
@@ -105,9 +90,6 @@ def get_categories(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Category]:
-    """
-    Retrieve all categories for a given transaction source (account).
-    """
     source = session.query(TransactionSource).filter(
         TransactionSource.id == source_id,
         TransactionSource.user_id == user.id
@@ -126,9 +108,6 @@ def create_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Category:
-    """
-    Create a new category within a transaction source (account).
-    """
     source = session.query(TransactionSource).filter(
         TransactionSource.id == source_id,
         TransactionSource.user_id == user.id
@@ -182,9 +161,6 @@ def delete_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
-    """
-    Delete an existing category.
-    """
     db_category = session.query(Category).filter(
         Category.id == category_id,
         Category.user_id == user.id
