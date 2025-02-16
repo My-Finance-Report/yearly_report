@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.models import JobStatus, ProcessFileJob, UploadedPdf
+from app.models import JobKind, JobStatus, ProcessFileJob 
 from sqlalchemy.orm import Session
 
 
@@ -8,13 +8,12 @@ def enqueue_or_reset_job(
     session: Session,
     user_id: int,
     pdf_id: int,
+    job_kind: JobKind,
 ) -> ProcessFileJob:
-    print("in the enqueue func")
 
     existing_job = session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id == pdf_id).one_or_none()
+
     job: ProcessFileJob
-
-
     if existing_job:
         existing_job.status = JobStatus.pending
         existing_job.attempt_count=0
@@ -29,6 +28,7 @@ def enqueue_or_reset_job(
             status=JobStatus.pending,  
             user_id=user_id,
             config_id=None,
+            job_kind=job_kind,
             pdf_id=pdf_id,
             archived=False,
             attempt_count=0,
@@ -45,10 +45,11 @@ def enqueue_or_reset_jobs(
     session: Session,
     user_id: int,
     pdf_ids:list[int],
+    job_kind: JobKind,
 ) -> list[ProcessFileJob]:
 
     out = []
     for pdf_id in pdf_ids:
-        out.append(enqueue_or_reset_job(session, user_id, pdf_id))
+        out.append(enqueue_or_reset_job(session, user_id, pdf_id, job_kind=job_kind))
     return out
     

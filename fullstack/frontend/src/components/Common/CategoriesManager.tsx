@@ -159,6 +159,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
             >
               Add Category
             </Button>
+            <Heading size={'sm'}>Note: if you add or remove a category we will recategorize your transactions</Heading>
           </HStack>
         </VStack>
       )}

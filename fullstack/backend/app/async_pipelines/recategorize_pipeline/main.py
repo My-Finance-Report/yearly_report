@@ -39,8 +39,6 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
     return replace(process, config=config, transaction_source=transaction_source, categories=categories)
 
 
-
-
 def recategorize_pipeline(in_process: InProcessFile) -> None:
 
     pipe(

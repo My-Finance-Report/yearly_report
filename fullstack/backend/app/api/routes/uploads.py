@@ -10,6 +10,7 @@ from app.api.deps import (
 )
 from app.db import Session, get_db
 from app.models import (
+    JobKind,
     ProcessFileJob,
     UploadedPdf,
     User,
@@ -19,15 +20,15 @@ from app.local_types import (
     ProcessFileJobOut,
     UploadedPdfOut
 )
-from app.uploaded_file_pipeline.transaction_parser import extract_text_from_pdf
-from app.uploaded_file_pipeline.local_types import PdfParseException
-from ...worker.enqueue_job import  enqueue_or_reset_job
+from app.async_pipelines.uploaded_file_pipeline.transaction_parser import extract_text_from_pdf
+from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException
+from app.worker.enqueue_job import  enqueue_or_reset_job
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
    
 
-def uploaded_pdf_from_raw_content(session:Session,user: User,file)->UploadedPdf:
+def uploaded_pdf_from_raw_content(session:Session,user: User,file:UploadFile)->UploadedPdfOut:
     content_bytes = file.file.read()
     raw_hash = hashlib.md5(content_bytes).hexdigest()
 
@@ -67,18 +68,17 @@ def uploaded_pdf_from_raw_content(session:Session,user: User,file)->UploadedPdf:
         session.refresh(new_file)
         uploaded_file = new_file
 
-
     print("enqueue the job")
-    job=enqueue_or_reset_job(session, user.id,uploaded_file.id)
+    job=enqueue_or_reset_job(session, user.id,uploaded_file.id, job_kind=JobKind.full_upload)
 
-    return UploadedPdfOut.from_orm(uploaded_file).copy(update={"job": ProcessFileJobOut.from_orm(job)})
+    return UploadedPdfOut.model_validate(uploaded_file).model_copy(update={"job": ProcessFileJobOut.model_validate(job)})
 
 @router.post("/reprocess/{job_id}", response_model=ProcessFileJobOut)
 def reprocess_file(
     job_id: int,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-):
+)->ProcessFileJobOut:
     """Reprocess an uploaded file by job ID."""
     job = session.query(ProcessFileJob).filter(
         ProcessFileJob.id == job_id, ProcessFileJob.user_id == user.id
@@ -87,10 +87,9 @@ def reprocess_file(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    job = enqueue_or_reset_job(session, user.id, job.pdf_id)
+    job = enqueue_or_reset_job(session, user.id, job.pdf_id, job_kind=JobKind.recategorize)
 
-    return ProcessFileJobOut.from_orm(job)
-
+    return ProcessFileJobOut.model_validate(job)
 
 
 @router.get(
@@ -111,7 +110,6 @@ def get_uploads(session: Session = Depends(get_db), user: User = Depends(get_cur
         UploadedPdfOut.from_orm(file).copy(update={"job": job_lookup.get(file.id)})
         for file in files
     ]
-
  
   
 @router.post("/", response_model=list[UploadedPdfOut])
