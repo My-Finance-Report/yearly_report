@@ -3,12 +3,12 @@ import logging
 import subprocess
 
 from app.open_ai_utils import ChatMessage, make_chat_request
-from app.uploaded_file_pipeline.configuration_creator import create_configurations
-from app.uploaded_file_pipeline.local_types import InProcessFile, PdfParseException, TransactionsWrapper
+from app.async_pipelines.uploaded_file_pipeline.configuration_creator import create_configurations
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PdfParseException, TransactionsWrapper
 
 
 
-from app.models import Category, JobStatus, ProcessFileJob, TransactionSource,  UploadConfiguration, UploadedPdf
+from app.models import Category, JobStatus, ProcessFileJob, Transaction, TransactionSource,  UploadConfiguration, UploadedPdf
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -74,9 +74,9 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
         lookup = {u.id:u for u in query}
 
 
-        blah = f"{process.file.filename} {process.file.raw_content}".lower()
+        raw_content = f"{process.file.filename} {process.file.raw_content}".lower()
         for id, filename_regex in reg_lookup.items():
-            if filename_regex in blah:
+            if filename_regex in raw_content:
                 config = lookup[id]
 
 
@@ -85,16 +85,24 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
 
     assert config, "Should have generated a config by now"
 
+
     transaction_source = process.session.query(TransactionSource).filter(TransactionSource.id == config.transaction_source_id).one()
     categories = process.session.query(Category).filter(Category.source_id == config.transaction_source_id).all()
 
     return replace(process, config=config, transaction_source=transaction_source, categories=categories)
 
-def remove_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
+def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
     """Remove existing transactions if the file has been processed before."""
     if already_processed(process):
         logger.info(f"Removing previous transactions for file: {process.file.filename}")
-        process.session.query(ProcessFileJob).filter()
+        assert process.config, "must have"
+        query = process.session.query(Transaction).filter(Transaction.transaction_source_id == process.config.transaction_source_id, Transaction.user_id == process.user.id)
+
+        for row in query:
+            row.archived = True
+            process.session.add(row)
+        process.session.commit()
+
     return process
 
 

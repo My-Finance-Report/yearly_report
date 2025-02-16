@@ -2,14 +2,15 @@ import os
 import logging
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Callable, Optional
 
-from app.uploaded_file_pipeline.main import uploaded_file_pipeline
+from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from app.models import JobStatus, ProcessFileJob, UploadedPdf, User
-from app.uploaded_file_pipeline.local_types import InProcessFile
+from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
+from ..async_pipelines.recategorize_pipeline.main import recategorize_pipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,6 +100,12 @@ def try_job(session: Session, job: ProcessFileJob) -> bool:
         return False
 
 
+FUNC_LOOKUP: dict[JobKind, Callable[[InProcessFile],None]] = {
+    JobKind.full_upload: uploaded_file_pipeline,
+    JobKind.recategorize: recategorize_pipeline,
+}
+
+
 def run_job(session: Session, job: ProcessFileJob)-> None:
     pdf = session.get(UploadedPdf, job.pdf_id)
     if not pdf:
@@ -109,8 +116,9 @@ def run_job(session: Session, job: ProcessFileJob)-> None:
         raise ValueError("User record not found!")
 
     in_process = InProcessFile(session=session, user=user, file=pdf, job=job)
-    
-    uploaded_file_pipeline(in_process=in_process)
+
+    callable = FUNC_LOOKUP[job.kind]
+    callable(in_process)
 
 
 

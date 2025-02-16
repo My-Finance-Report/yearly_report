@@ -35,6 +35,11 @@ class JobStatus(str, enum.Enum):
     processing = "processing"
     failed = "failed"
 
+class JobKind(str, enum.Enum):
+    full_upload = "full_upload"
+    recategorize = "recategorize"
+
+
 
 class User(Base):
     __tablename__ = "user"
@@ -194,5 +199,6 @@ class ProcessFileJob(Base):
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)
     error_messages: Mapped[str] = mapped_column(Text, nullable=True)
+    kind: Mapped[JobKind] = mapped_column(Enum(JobKind), nullable=False)
 
     __table_args__ = (UniqueConstraint("pdf_id", name="uq_process_file_job"),)

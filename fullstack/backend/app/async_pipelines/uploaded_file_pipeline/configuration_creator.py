@@ -1,9 +1,9 @@
 import logging
 from typing import Optional
-from app.uploaded_file_pipeline.local_types import InProcessFile, PartialAccountCategoryConfig, PartialUploadConfig
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PartialAccountCategoryConfig, PartialUploadConfig
 from sqlalchemy.orm import Session
 from app.open_ai_utils import ChatMessage, make_chat_request
-from app.models import Category, UploadConfiguration, User, TransactionSource
+from app.models import Category, SourceKind, UploadConfiguration, User, TransactionSource
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -81,6 +81,13 @@ def generate_upload_configuration(session: Session, user: User, transaction_sour
     session.commit()
     return upload_config
 
+  
+HARDCODED_CATEGORIES: dict[SourceKind, list[str]] = {
+    SourceKind.account: ["Income", "Investments", "Credit Card Payments", "Transfers", "Housing"],
+    SourceKind.card: ["Groceries", "Travel", "Gas", "Insurance", "Misc", "Subscriptions", "Credit Card Payments", "Entertainment"],
+    SourceKind.investment: ["Stocks", "Bonds", "Index Funds"]
+}
+USE_HARDCODED=True
 
 def save_account_config(session: Session, user: User, account_config: PartialAccountCategoryConfig) -> TransactionSource:
 
@@ -93,7 +100,9 @@ def save_account_config(session: Session, user: User, account_config: PartialAcc
     session.add(transaction_source)
     session.commit()  
 
-    categories = [Category(name=cat, source_id=transaction_source.id, user_id=user.id) for cat in account_config.categories]
+    cats_to_use = HARDCODED_CATEGORIES[transaction_source.source_kind] if USE_HARDCODED else account_config.categories
+
+    categories = [Category(name=cat, source_id=transaction_source.id, user_id=user.id) for cat in cats_to_use]
     session.add_all(categories) 
     session.commit()  
 

@@ -3,10 +3,10 @@ from dataclasses import replace
 from datetime import datetime
 from typing import cast
 
-from ..models import Transaction
+from app.models import Transaction
 
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
-from app.uploaded_file_pipeline.local_types import CategorizedTransaction, InProcessFile, PartialTransaction, create_categorized_transactions_wrapper
+from app.async_pipelines.uploaded_file_pipeline.local_types import CategorizedTransaction, InProcessFile, PartialTransaction, create_categorized_transactions_wrapper
 from func_utils import make_batches
 
 logging.basicConfig(level=logging.INFO)

@@ -129,6 +129,8 @@ def create_category(
     session.commit()
     session.refresh(new_category)
 
+    enqueue_recategorization(new_category.source_id)
+
     return new_category
 
 
@@ -171,4 +173,6 @@ def delete_category(
 
     session.delete(db_category)
     session.commit()
+
+    enqueue_recategorization(db_category.source_id)
 
