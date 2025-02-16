@@ -65,5 +65,4 @@ addative upload
 
 # migration to python
 
-get worker working..
-there is a bug if you have a valid token but arent logged in
+make sure offer more reasonable options if you want to delete a category

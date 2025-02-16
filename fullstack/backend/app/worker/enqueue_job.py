@@ -1,8 +1,23 @@
 from datetime import datetime, timezone
 
-from app.models import JobKind, JobStatus, ProcessFileJob 
+from app.models import JobKind, JobStatus, ProcessFileJob, UploadConfiguration 
 from sqlalchemy.orm import Session
 
+def enqueue_recategorization(
+    session: Session,
+    user_id: int,
+    transaction_source_id: int,
+) -> None:
+
+    query = session.query(ProcessFileJob).filter(ProcessFileJob.user_id == user_id, ProcessFileJob.status == JobStatus.completed).join(UploadConfiguration, UploadConfiguration.id == ProcessFileJob.config_id).filter(UploadConfiguration.transaction_source_id == transaction_source_id)
+
+    for job in query:
+        job.kind = JobKind.recategorize
+        job.attempt_count = 0
+        job.status = JobStatus.pending
+        session.add(job)
+
+    session.commit()
 
 def enqueue_or_reset_job(
     session: Session,
@@ -16,6 +31,7 @@ def enqueue_or_reset_job(
     job: ProcessFileJob
     if existing_job:
         existing_job.status = JobStatus.pending
+        existing_job.kind = job_kind
         existing_job.attempt_count=0
         session.add(existing_job)
         session.commit()
@@ -53,3 +69,4 @@ def enqueue_or_reset_jobs(
         out.append(enqueue_or_reset_job(session, user_id, pdf_id, job_kind=job_kind))
     return out
     
+

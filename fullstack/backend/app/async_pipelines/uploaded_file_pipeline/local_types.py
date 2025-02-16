@@ -33,7 +33,7 @@ class CategorizedTransaction(PartialTransaction):
 
 
 class TransactionsWrapper(BaseModel):
-    transactions: list[PartialTransaction] | list[Transaction]
+    transactions: list[PartialTransaction]
     
 
 def create_categorized_transaction_model(categories: List[str]) -> Type[BaseModel]:

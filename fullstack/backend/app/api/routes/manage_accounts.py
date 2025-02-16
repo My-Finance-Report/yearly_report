@@ -7,6 +7,7 @@ from app.api.deps import get_current_user
 from app.db import get_db
 from app.models import TransactionSource, Category, User
 from app.local_types import TransactionSourceBase, TransactionSourceOut, CategoryBase, CategoryOut
+from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
@@ -108,6 +109,7 @@ def create_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Category:
+
     source = session.query(TransactionSource).filter(
         TransactionSource.id == source_id,
         TransactionSource.user_id == user.id
@@ -129,7 +131,7 @@ def create_category(
     session.commit()
     session.refresh(new_category)
 
-    enqueue_recategorization(new_category.source_id)
+    enqueue_recategorization(session=session, user_id = user.id, transaction_source_id=new_category.source_id)
 
     return new_category
 
@@ -174,5 +176,5 @@ def delete_category(
     session.delete(db_category)
     session.commit()
 
-    enqueue_recategorization(db_category.source_id)
+    enqueue_recategorization(session=session, user_id = user.id, transaction_source_id=db_category.source_id)
 
