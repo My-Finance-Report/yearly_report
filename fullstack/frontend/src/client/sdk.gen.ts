@@ -64,7 +64,6 @@ import type {
 export class AccountsService {
   /**
    * Get Transaction Sources
-   * Retrieve all transaction sources (accounts) for the current user.
    * @returns TransactionSourceOut Successful Response
    * @throws ApiError
    */
@@ -77,7 +76,6 @@ export class AccountsService {
 
   /**
    * Create Transaction Source
-   * Create a new transaction source (account).
    * @param data The data for the request.
    * @param data.requestBody
    * @returns TransactionSourceOut Successful Response
@@ -99,7 +97,6 @@ export class AccountsService {
 
   /**
    * Update Transaction Source
-   * Update an existing transaction source (account).
    * @param data The data for the request.
    * @param data.sourceId
    * @param data.requestBody
@@ -125,7 +122,6 @@ export class AccountsService {
 
   /**
    * Delete Transaction Source
-   * Delete an existing transaction source (account).
    * @param data The data for the request.
    * @param data.sourceId
    * @returns unknown Successful Response
@@ -148,7 +144,6 @@ export class AccountsService {
 
   /**
    * Get Categories
-   * Retrieve all categories for a given transaction source (account).
    * @param data The data for the request.
    * @param data.sourceId
    * @returns CategoryOut Successful Response
@@ -171,7 +166,6 @@ export class AccountsService {
 
   /**
    * Create Category
-   * Create a new category within a transaction source (account).
    * @param data The data for the request.
    * @param data.sourceId
    * @param data.requestBody
@@ -222,7 +216,6 @@ export class AccountsService {
 
   /**
    * Delete Category
-   * Delete an existing category.
    * @param data The data for the request.
    * @param data.categoryId
    * @returns unknown Successful Response

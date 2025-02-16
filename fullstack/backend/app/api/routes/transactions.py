@@ -140,12 +140,10 @@ def get_transactions(session:Session =Depends(get_db), user: User = Depends(get_
     response_model=AggregatedTransactions,
 )
 def get_aggregated_transactions(
-    # Accept multiple group_by options. They can be passed as multiple query parameters.
     group_by: list[GroupByOption] = Query([GroupByOption.category], description="List of grouping options in order (e.g. category, month)"),
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-    # Query all transactions for the user.
     transactions = session.query(Transaction).filter(Transaction.user_id == user.id).all()
     if not transactions:
         return AggregatedTransactions(

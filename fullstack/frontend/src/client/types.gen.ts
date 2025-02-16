@@ -96,7 +96,6 @@ export type TransactionOut = {
   transaction_source_id: number
   kind: TransactionKind
   uploaded_pdf_id?: number | null
-  user_id: number
   archived?: boolean
   id: number
 }

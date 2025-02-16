@@ -97,7 +97,6 @@ class TransactionBase(BaseModel):
     transaction_source_id: int
     kind: TransactionKind 
     uploaded_pdf_id: None|int  = None
-    user_id: int
     archived: bool = False
 
     class Config:

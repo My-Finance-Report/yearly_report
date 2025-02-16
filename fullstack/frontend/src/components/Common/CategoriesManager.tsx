@@ -143,7 +143,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
             </Tbody>
           </Table>
 
-          {/* Add New Category */}
           <HStack w="full">
             <Input
               size="sm"
@@ -152,7 +151,8 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
               onChange={(e) => setNewCategory(e.target.value)}
             />
             <Button
-              size="sm"
+              margin={2}
+              padding={8}
               colorScheme="blue"
               onClick={() => addCategoryMutation.mutate()}
               isDisabled={!newCategory.trim()}

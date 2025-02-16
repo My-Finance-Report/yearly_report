@@ -61,18 +61,6 @@ function ManageAccounts() {
               <TabPanel key={account.id}>
                 <VStack spacing={6} align="start">
                   <CategoriesManager accountId={account.id} />
-
-                  <Box>
-                    <Button colorScheme="blue" size="sm" mr={2}>
-                      Add New Account
-                    </Button>
-                    <Button colorScheme="yellow" size="sm" mr={2}>
-                      Edit Account
-                    </Button>
-                    <Button colorScheme="red" size="sm">
-                      Remove Account
-                    </Button>
-                  </Box>
                 </VStack>
               </TabPanel>
             ))}

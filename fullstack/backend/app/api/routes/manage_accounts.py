@@ -124,7 +124,7 @@ def create_category(
     if existing_category:
         raise HTTPException(status_code=400, detail="Category with this name already exists.")
 
-    new_category = Category(**category.dict(), user_id=user.id, source_id=source_id)
+    new_category = Category(**category.model_dump(), user_id=user.id)
     session.add(new_category)
     session.commit()
     session.refresh(new_category)
