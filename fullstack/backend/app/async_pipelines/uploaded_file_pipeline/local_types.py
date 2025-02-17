@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Literal, Type
 from app.db import Session
 from pydantic import BaseModel, Field, create_model
-from app.models import  Category, ProcessFileJob, Transaction, TransactionSource, UploadedPdf, User, UploadConfiguration
+from app.models import  Category, ProcessFileJob,  TransactionSource, UploadedPdf, User, UploadConfiguration
 
 
 class PdfParseException(Exception):
@@ -56,7 +56,7 @@ def create_categorized_transactions_wrapper(categories: List[str]) -> Type[BaseM
 
     return create_model(
         "CategorizedTransactionsWrapper",
-        transactions=(List[StrictCategorizedTransaction], Field(..., description="List of categorized transactions")),
+        transactions=(List[StrictCategorizedTransaction], Field(..., description="List of categorized transactions")), #type: ignore[valid-type]
     )
 
 

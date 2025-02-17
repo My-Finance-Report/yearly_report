@@ -25,7 +25,7 @@ router = APIRouter(tags=["login"])
 
 @router.post("/login/access-token")
 def login_access_token(
-     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session=Depends(get_db)
+     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: Session=Depends(get_db)
 ) -> Token:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -83,7 +83,7 @@ def reset_password( body: NewPassword,session: Session= Depends(get_db)) -> Mess
     """
     Reset password
     """
-    email = verify_password_reset_token(token=body.token)
+    email = verify_password_reset_token(token=body.token.access_token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
     user = crud.get_user_by_email(session=session, email=email)

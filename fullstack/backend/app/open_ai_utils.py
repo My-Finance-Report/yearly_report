@@ -27,12 +27,11 @@ def make_chat_request(model: Type[T], messages: List[ChatMessage]) -> Optional[T
 
 
 
-    messages = [msg.model_dump() for msg in messages]
 
     try:
         response = client.beta.chat.completions.parse(
             model="gpt-4o",
-            messages=messages,
+            messages=[msg.model_dump() for msg in messages], #type: ignore[misc]
             response_format=model,
             temperature=0.0,
             max_tokens=9000,

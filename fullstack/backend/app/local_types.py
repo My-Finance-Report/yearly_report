@@ -1,4 +1,4 @@
-from app.models import JobStatus, SourceKind, TransactionKind
+from app.models import JobStatus, SourceKind, TransactionKind, User
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -54,15 +54,16 @@ class UserRegister(BaseModel):
 
 
 class UsersPublic(BaseModel):
-    pass
+    data: list[User]
+    count: int
 
 
 class UserUpdate(BaseModel):
-    pass
+    email: str
 
 
 class UserUpdateMe(BaseModel):
-    pass
+    email: str
 
 
 class TransactionSourceBase(BaseModel):
