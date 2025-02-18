@@ -1,28 +1,29 @@
+"use client";
+
 import {
   Box,
   Button,
   Container,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
   Input,
-  useColorModeValue,
-} from "@chakra-ui/react"
-import { useMutation } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
+  Field,
+} from "@chakra-ui/react";
+import { useMutation } from "@tanstack/react-query";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
-import { type ApiError, type UpdatePassword, UsersService } from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
-import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
+import {useColorModeValue} from "@/components/ui/color-mode"
 
-interface UpdatePasswordForm extends UpdatePassword {
-  confirm_password: string
+import { type ApiError, type UsersUpdatePasswordMeData, UsersService } from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { confirmPasswordRules, handleError, passwordRules } from "../../utils";
+
+interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
+  confirm_password: string;
 }
 
 const ChangePassword = () => {
-  const color = useColorModeValue("inherit", "ui.light")
-  const showToast = useCustomToast()
+  const color = useColorModeValue("inherit", "ui.light");
+  const showToast = useCustomToast();
   const {
     register,
     handleSubmit,
@@ -32,91 +33,84 @@ const ChangePassword = () => {
   } = useForm<UpdatePasswordForm>({
     mode: "onBlur",
     criteriaMode: "all",
-  })
+  });
 
   const mutation = useMutation({
     mutationFn: (data: UpdatePassword) =>
       UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Password updated successfully.", "success")
-      reset()
+      showToast("Success!", "Password updated successfully.", "success");
+      reset();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<UpdatePasswordForm> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   return (
-    <>
-      <Container maxW="full">
-        <Heading size="sm" py={4}>
-          Change Password
-        </Heading>
-        <Box
-          w={{ sm: "full", md: "50%" }}
-          as="form"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <FormControl isRequired isInvalid={!!errors.current_password}>
-            <FormLabel color={color} htmlFor="current_password">
-              Current Password
-            </FormLabel>
-            <Input
-              id="current_password"
-              {...register("current_password")}
-              placeholder="Password"
-              type="password"
-              w="auto"
-            />
-            {errors.current_password && (
-              <FormErrorMessage>
-                {errors.current_password.message}
-              </FormErrorMessage>
-            )}
-          </FormControl>
-          <FormControl mt={4} isRequired isInvalid={!!errors.new_password}>
-            <FormLabel htmlFor="password">Set Password</FormLabel>
-            <Input
-              id="password"
-              {...register("new_password", passwordRules())}
-              placeholder="Password"
-              type="password"
-              w="auto"
-            />
-            {errors.new_password && (
-              <FormErrorMessage>{errors.new_password.message}</FormErrorMessage>
-            )}
-          </FormControl>
-          <FormControl mt={4} isRequired isInvalid={!!errors.confirm_password}>
-            <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
-            <Input
-              id="confirm_password"
-              {...register("confirm_password", confirmPasswordRules(getValues))}
-              placeholder="Password"
-              type="password"
-              w="auto"
-            />
-            {errors.confirm_password && (
-              <FormErrorMessage>
-                {errors.confirm_password.message}
-              </FormErrorMessage>
-            )}
-          </FormControl>
-          <Button
-            variant="primary"
-            mt={4}
-            type="submit"
-            isLoading={isSubmitting}
-          >
-            Save
-          </Button>
-        </Box>
-      </Container>
-    </>
-  )
-}
-export default ChangePassword
+    <Container maxW="full">
+      <Heading size="sm" py={4}>
+        Change Password
+      </Heading>
+      <Box
+        w={{ sm: "full", md: "50%" }}
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <Field.Root invalid={!!errors.current_password}>
+          <Field.Label color={color} htmlFor="current_password">
+            Current Password
+          </Field.Label>
+          <Input
+            id="current_password"
+            {...register("current_password")}
+            placeholder="Password"
+            type="password"
+            w="auto"
+          />
+          {errors.current_password && (
+            <Field.ErrorText>{errors.current_password.message}</Field.ErrorText>
+          )}
+        </Field.Root>
+
+        <Field.Root mt={4} invalid={!!errors.new_password}>
+          <Field.Label htmlFor="password">Set Password</Field.Label>
+          <Input
+            id="password"
+            {...register("new_password", passwordRules())}
+            placeholder="Password"
+            type="password"
+            w="auto"
+          />
+          {errors.new_password && (
+            <Field.ErrorText>{errors.new_password.message}</Field.ErrorText>
+          )}
+        </Field.Root>
+
+        <Field.Root mt={4} invalid={!!errors.confirm_password}>
+          <Field.Label htmlFor="confirm_password">Confirm Password</Field.Label>
+          <Input
+            id="confirm_password"
+            {...register("confirm_password", confirmPasswordRules(getValues))}
+            placeholder="Password"
+            type="password"
+            w="auto"
+          />
+          {errors.confirm_password && (
+            <Field.ErrorText>{errors.confirm_password.message}</Field.ErrorText>
+          )}
+        </Field.Root>
+
+        <Button variant="primary" mt={4} type="submit" isLoading={isSubmitting}>
+          Save
+        </Button>
+      </Box>
+    </Container>
+  );
+};
+
+export default ChangePassword;

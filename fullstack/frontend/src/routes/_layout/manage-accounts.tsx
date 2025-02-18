@@ -4,14 +4,8 @@ import { CategoriesManager} from "@/components/Common/CategoriesManager"
 import {
   Container,
   Heading,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
   Tabs,
-  Button,
   VStack,
-  Box,
   Spinner,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -49,23 +43,21 @@ function ManageAccounts() {
       {isLoading ? (
         <Spinner size="lg" />
       ) : (
-        <Tabs variant="enclosed">
-          <TabList>
+        <Tabs.Root variant="enclosed">
+          <Tabs.List>
             {accounts?.map((account) => (
-              <Tab key={account.id}>{account.name}</Tab>
+              <Tabs.Trigger value={account.id.toString()}>{account.name}</Tabs.Trigger>
             ))}
-          </TabList>
+          </Tabs.List>
 
-          <TabPanels>
             {accounts?.map((account) => (
-              <TabPanel key={account.id}>
+              <Tabs.Content value={account.id.toString()}>
                 <VStack spacing={6} align="start">
                   <CategoriesManager accountId={account.id} />
                 </VStack>
-              </TabPanel>
+              </Tabs.Content>
             ))}
-          </TabPanels>
-        </Tabs>
+        </Tabs.Root>
       )}
     </Container>
   )

@@ -1,20 +1,17 @@
-import { useToast } from "@chakra-ui/react"
+import { toaster } from "@/components/ui/toaster"
 import { useCallback } from "react"
 
 const useCustomToast = () => {
-  const toast = useToast()
-
   const showToast = useCallback(
     (title: string, description: string, status: "success" | "error") => {
-      toast({
+      toaster.create({
         title,
         description,
-        status,
-        isClosable: true,
-        position: "bottom-right",
+        type: status, 
+        meta: { closable: true },
       })
     },
-    [toast],
+    [],
   )
 
   return showToast

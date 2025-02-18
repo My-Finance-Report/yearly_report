@@ -1,10 +1,6 @@
 import {
   Container,
   Heading,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
   Tabs,
 } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -39,20 +35,18 @@ function UserSettings() {
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
         User Settings
       </Heading>
-      <Tabs variant="enclosed">
-        <TabList>
+      <Tabs.Root variant="enclosed">
+        <Tabs.List>
           {finalTabs.map((tab, index) => (
-            <Tab key={index}>{tab.title}</Tab>
+            <Tabs.Trigger value={index.toString()}>{tab.title}</Tabs.Trigger>
           ))}
-        </TabList>
-        <TabPanels>
+        </Tabs.List>
           {finalTabs.map((tab, index) => (
-            <TabPanel key={index}>
+            <Tabs.Content value={index.toString()}>
               <tab.component />
-            </TabPanel>
+            </Tabs.Content>
           ))}
-        </TabPanels>
-      </Tabs>
+      </Tabs.Root>
     </Container>
   )
 }

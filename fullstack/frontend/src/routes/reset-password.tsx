@@ -1,12 +1,12 @@
+"use client"
+
 import {
   Button,
   Container,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
   Input,
   Text,
+  Field,
 } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
@@ -90,8 +90,9 @@ function ResetPassword() {
       <Text textAlign="center">
         Please enter your new password and confirm it to reset your password.
       </Text>
-      <FormControl mt={4} isInvalid={!!errors.new_password}>
-        <FormLabel htmlFor="password">Set Password</FormLabel>
+      
+      <Field.Root invalid={!!errors.new_password} mt={4}>
+        <Field.Label>Set Password</Field.Label>
         <Input
           id="password"
           {...register("new_password", passwordRules())}
@@ -99,11 +100,12 @@ function ResetPassword() {
           type="password"
         />
         {errors.new_password && (
-          <FormErrorMessage>{errors.new_password.message}</FormErrorMessage>
+          <Field.ErrorText>{errors.new_password.message}</Field.ErrorText>
         )}
-      </FormControl>
-      <FormControl mt={4} isInvalid={!!errors.confirm_password}>
-        <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
+      </Field.Root>
+
+      <Field.Root invalid={!!errors.confirm_password} mt={4}>
+        <Field.Label>Confirm Password</Field.Label>
         <Input
           id="confirm_password"
           {...register("confirm_password", confirmPasswordRules(getValues))}
@@ -111,12 +113,15 @@ function ResetPassword() {
           type="password"
         />
         {errors.confirm_password && (
-          <FormErrorMessage>{errors.confirm_password.message}</FormErrorMessage>
+          <Field.ErrorText>{errors.confirm_password.message}</Field.ErrorText>
         )}
-      </FormControl>
+      </Field.Root>
+
       <Button variant="primary" type="submit">
         Reset Password
       </Button>
     </Container>
   )
 }
+
+export default ResetPassword

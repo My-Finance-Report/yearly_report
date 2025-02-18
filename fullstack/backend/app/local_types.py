@@ -54,7 +54,7 @@ class UserRegister(BaseModel):
 
 
 class UsersPublic(BaseModel):
-    data: list[User]
+    data: list[UserBase]
     count: int
 
 

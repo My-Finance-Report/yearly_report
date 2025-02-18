@@ -7,7 +7,6 @@ import {
   DrawerOverlay,
   Flex,
   IconButton,
-  Image,
   Text,
   useColorModeValue,
   useDisclosure,

@@ -1,36 +1,36 @@
+"use client";
+
 import {
   Box,
   Button,
   Container,
   Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
   Input,
   Text,
-  useColorModeValue,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
-import { type SubmitHandler, useForm } from "react-hook-form"
+  Field,
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
 import {
   type ApiError,
   type UserOut,
   type UserUpdateMe,
   UsersService,
-} from "../../client"
-import useAuth from "../../hooks/useAuth"
-import useCustomToast from "../../hooks/useCustomToast"
-import { emailPattern, handleError } from "../../utils"
+} from "../../client";
+import useAuth from "../../hooks/useAuth";
+import useCustomToast from "../../hooks/useCustomToast";
+import { emailPattern, handleError } from "../../utils";
+import {useColorModeValue} from "@/components/ui/color-mode"
 
 const UserInformation = () => {
-  const queryClient = useQueryClient()
-  const color = useColorModeValue("inherit", "ui.light")
-  const showToast = useCustomToast()
-  const [editMode, setEditMode] = useState(false)
-  const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient();
+  const color = useColorModeValue("inherit", "ui.light");
+  const showToast = useCustomToast();
+  const [editMode, setEditMode] = useState(false);
+  const { user: currentUser } = useAuth();
   const {
     register,
     handleSubmit,
@@ -44,114 +44,102 @@ const UserInformation = () => {
       full_name: currentUser?.full_name,
       email: currentUser?.email,
     },
-  })
+  });
 
   const toggleEditMode = () => {
-    setEditMode(!editMode)
-  }
+    setEditMode(!editMode);
+  };
 
   const mutation = useMutation({
     mutationFn: (data: UserUpdateMe) =>
       UsersService.updateUserMe({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "User updated successfully.", "success")
+      showToast("Success!", "User updated successfully.", "success");
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries();
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<UserUpdateMe> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   const onCancel = () => {
-    reset()
-    toggleEditMode()
-  }
+    reset();
+    toggleEditMode();
+  };
 
   return (
-    <>
-      <Container maxW="full">
-        <Heading size="sm" py={4}>
-          User Information
-        </Heading>
-        <Box
-          w={{ sm: "full", md: "50%" }}
-          as="form"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <FormControl>
-            <FormLabel color={color} htmlFor="name">
-              Full name
-            </FormLabel>
-            {editMode ? (
-              <Input
-                id="name"
-                {...register("full_name", { maxLength: 30 })}
-                type="text"
-                size="md"
-                w="auto"
-              />
-            ) : (
-              <Text
-                size="md"
-                py={2}
-                color={!currentUser?.full_name ? "ui.dim" : "inherit"}
-                isTruncated
-                maxWidth="250px"
-              >
-                {currentUser?.full_name || "N/A"}
-              </Text>
-            )}
-          </FormControl>
-          <FormControl mt={4} isInvalid={!!errors.email}>
-            <FormLabel color={color} htmlFor="email">
-              Email
-            </FormLabel>
-            {editMode ? (
-              <Input
-                id="email"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: emailPattern,
-                })}
-                type="email"
-                size="md"
-                w="auto"
-              />
-            ) : (
-              <Text size="md" py={2} isTruncated maxWidth="250px">
-                {currentUser?.email}
-              </Text>
-            )}
-            {errors.email && (
-              <FormErrorMessage>{errors.email.message}</FormErrorMessage>
-            )}
-          </FormControl>
-          <Flex mt={4} gap={3}>
-            <Button
-              variant="primary"
-              onClick={toggleEditMode}
-              type={editMode ? "button" : "submit"}
-              isLoading={editMode ? isSubmitting : false}
-              isDisabled={editMode ? !isDirty || !getValues("email") : false}
-            >
-              {editMode ? "Save" : "Edit"}
-            </Button>
-            {editMode && (
-              <Button onClick={onCancel} isDisabled={isSubmitting}>
-                Cancel
-              </Button>
-            )}
-          </Flex>
-        </Box>
-      </Container>
-    </>
-  )
-}
+    <Container maxW="full">
+      <Heading size="sm" py={4}>
+        User Information
+      </Heading>
+      <Box w={{ sm: "full", md: "50%" }} as="form" onSubmit={handleSubmit(onSubmit)}>
+        <Field.Root>
+          <Field.Label color={color} htmlFor="name">
+            Full Name
+          </Field.Label>
+          {editMode ? (
+            <Input
+              id="name"
+              {...register("full_name", { maxLength: 30 })}
+              type="text"
+              size="md"
+              w="auto"
+            />
+          ) : (
+            <Text size="md" py={2} color={!currentUser?.full_name ? "ui.dim" : "inherit"} isTruncated maxWidth="250px">
+              {currentUser?.full_name || "N/A"}
+            </Text>
+          )}
+        </Field.Root>
 
-export default UserInformation
+        <Field.Root mt={4} invalid={!!errors.email}>
+          <Field.Label color={color} htmlFor="email">
+            Email
+          </Field.Label>
+          {editMode ? (
+            <Input
+              id="email"
+              {...register("email", {
+                required: "Email is required",
+                pattern: emailPattern,
+              })}
+              type="email"
+              size="md"
+              w="auto"
+            />
+          ) : (
+            <Text size="md" py={2} isTruncated maxWidth="250px">
+              {currentUser?.email}
+            </Text>
+          )}
+          {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
+        </Field.Root>
+
+        <Flex mt={4} gap={3}>
+          <Button
+            variant="primary"
+            onClick={toggleEditMode}
+            type={editMode ? "button" : "submit"}
+            isLoading={editMode ? isSubmitting : false}
+            isDisabled={editMode ? !isDirty || !getValues("email") : false}
+          >
+            {editMode ? "Save" : "Edit"}
+          </Button>
+          {editMode && (
+            <Button onClick={onCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+          )}
+        </Flex>
+      </Box>
+    </Container>
+  );
+};
+
+export default UserInformation;

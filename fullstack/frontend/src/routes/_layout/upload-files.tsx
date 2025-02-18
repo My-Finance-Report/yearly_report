@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+"use client"
 
+import React, { useState } from "react";
 import {
   Container,
   Heading,
@@ -7,86 +8,76 @@ import {
   Button,
   Input,
   Table,
-  TableContainer,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
   Spinner,
   Text,
-  useToast,
-} from "@chakra-ui/react"
-import {ReprocessButton} from "@/components/Common/ReprocessButton"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import { UploadsService } from "../../client"
-import { isLoggedIn } from "../../hooks/useAuth"
-
-import type { UploadedPdfOut } from "../../client"
+  Field,
+} from "@chakra-ui/react";
+import { ReprocessButton } from "@/components/Common/ReprocessButton";
+import FileDropzone from "@/components/Common/Dropzone";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { UploadsService } from "../../client";
+import { isLoggedIn } from "../../hooks/useAuth";
+import type { UploadedPdfOut } from "../../client";
+import useCustomToast from "@/hooks/useCustomToast";
 
 export const Route = createFileRoute("/_layout/upload-files")({
   component: UploadFiles,
-})
+});
 
 function UploadFiles() {
-  const toast = useToast()
-  const queryClient = useQueryClient()
-  // Now selectedFiles is an array of File objects.
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  // Mutation for uploading multiple files.
   const uploadMutation = useMutation<UploadedPdfOut[], Error, File[]>({
     mutationFn: (files: File[]) => {
-      const data = { formData: {files} }
-      return UploadsService.uploadFiles(data)
+      const data = { formData: { files } };
+      return UploadsService.uploadFiles(data);
     },
     onSuccess: () => {
-      toast({
-        title: "Files uploaded",
-        description: "The files were processed successfully.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      })
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
+      toast(
+        "Files uploaded",
+         "The files were processed successfully.",
+        "success");
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
     },
     onError: () => {
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading the files.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      })
+      toast(
+         "Upload failed",
+         "There was an error uploading the files.",
+         "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
     },
-  })
+  });
 
-  // Query to fetch uploaded files.
   const { data, isLoading, error, refetch } = useQuery<UploadedPdfOut[], Error>({
     queryKey: ["uploadedFiles"],
     queryFn: () => UploadsService.getUploads(),
     enabled: isLoggedIn(),
-  })
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      // Convert FileList to an array.
-      setSelectedFiles(Array.from(e.target.files))
+      setSelectedFiles(Array.from(e.target.files));
     }
-  }
+  };
 
   const handleUpload = () => {
     if (selectedFiles.length > 0) {
-      uploadMutation.mutate(selectedFiles)
+      uploadMutation.mutate(selectedFiles);
     }
-  }
+  };
 
   const handleJobUpdate = () => {
-    refetch()
+    refetch();
   };
 
   return (
@@ -98,9 +89,13 @@ function UploadFiles() {
         <Heading size="md" mb={4}>
           Upload New Files
         </Heading>
+        <FileDropzone />
 
-        <Input type="file" multiple onChange={handleFileChange} mb={4} />
-        <Button onClick={handleUpload} isLoading={uploadMutation.isLoading}>
+        <Field.Root>
+          <Field.Label>Upload Files</Field.Label>
+          <Input type="file" multiple onChange={handleFileChange} mb={4} />
+        </Field.Root>
+        <Button onClick={handleUpload} loading={uploadMutation.isLoading}>
           Upload
         </Button>
       </Box>
@@ -114,35 +109,39 @@ function UploadFiles() {
       ) : error ? (
         <Text color="red.500">Error loading files.</Text>
       ) : data && data.length > 0 ? (
-        <TableContainer>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Filename</Th>
-                <Th>Upload Time</Th>
-                <Th>Status</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {data.map((pdf) => (
-                pdf.job && 
-                (<Tr key={pdf.id}>
-                  <Td>{pdf.filename}</Td>
-                  <Td>{new Date(pdf.upload_time).toLocaleString()}</Td>
-                  <Td>{pdf.job?.status || "Unknown"}</Td>
-                  <Td><ReprocessButton jobId={pdf.job.id} onReprocess={handleJobUpdate}/></Td>
-                </Tr>)
-              ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
+        <Table.Root variant="outline">
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeader>Filename</TableColumnHeader>
+              <TableColumnHeader>Upload Time</TableColumnHeader>
+              <TableColumnHeader>Status</TableColumnHeader>
+              <TableColumnHeader>Actions</TableColumnHeader>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map(
+              (pdf) =>
+                pdf.job && (
+                  <TableRow key={pdf.id}>
+                    <TableCell>{pdf.filename}</TableCell>
+                    <TableCell>{new Date(pdf.upload_time).toLocaleString()}</TableCell>
+                    <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
+                    <TableCell>
+                      <ReprocessButton
+                        jobId={pdf.job.id}
+                        onReprocess={handleJobUpdate}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+            )}
+          </TableBody>
+        </Table.Root>
       ) : (
         <Text>No files uploaded yet.</Text>
       )}
     </Container>
-  )
+  );
 }
 
-export default UploadFiles
-
+export default UploadFiles;

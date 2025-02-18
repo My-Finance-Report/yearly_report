@@ -1,64 +1,62 @@
-import { AccountsService } from "@/client"
+"use client";
+
+import { AccountsService } from "@/client";
 import {
   Box,
   Button,
   Heading,
   Spinner,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Input,
   IconButton,
   VStack,
   HStack,
-} from "@chakra-ui/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
-import { EditIcon, CheckIcon, CloseIcon, DeleteIcon } from "@chakra-ui/icons"
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
+} from "@chakra-ui/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { EditIcon, CheckIcon, CloseIcon, DeleteIcon } from "@chakra-ui/icons";
 
 interface CategoriesManagerProps {
-  accountId: number
+  accountId: number;
 }
 
 export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
-  const queryClient = useQueryClient()
-  const [newCategory, setNewCategory] = useState("")
-  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null)
+  const queryClient = useQueryClient();
+  const [newCategory, setNewCategory] = useState("");
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories", accountId],
     queryFn: () => AccountsService.getCategories({ sourceId: accountId }),
-  })
+  });
 
   const deleteCategoryMutation = useMutation({
-    mutationFn: (categoryId: number) =>
-      AccountsService.deleteCategory({ categoryId }),
+    mutationFn: (categoryId: number) => AccountsService.deleteCategory({ categoryId }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories", accountId] }),
-  })
+  });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ categoryId, name, sourceId }: { categoryId: number; name: string; sourceId: number}) =>
-      AccountsService.updateCategory({ 
-        categoryId, 
-        requestBody: { name, source_id: sourceId} 
-      }),
+    mutationFn: ({ categoryId, name, sourceId }: { categoryId: number; name: string; sourceId: number }) =>
+      AccountsService.updateCategory({ categoryId, requestBody: { name, source_id: sourceId } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
-      setEditingCategory(null)
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
+      setEditingCategory(null);
     },
-  })
+  });
 
   const addCategoryMutation = useMutation({
-    mutationFn: () => 
+    mutationFn: () =>
       AccountsService.createCategory({ sourceId: accountId, requestBody: { source_id: accountId, name: newCategory } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
-      setNewCategory("")
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
+      setNewCategory("");
     },
-  })
+  });
 
   return (
     <Box>
@@ -71,17 +69,17 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
       ) : (
         <VStack align="start" spacing={4} w="full">
           {/* Categories Table */}
-          <Table size="sm" variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Name</Th>
-                <Th textAlign="right">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
+          <TableRoot size="sm" variant="outline">
+            <TableHeader>
+              <TableRow>
+                <TableColumnHeader>Name</TableColumnHeader>
+                <TableColumnHeader textAlign="right">Actions</TableColumnHeader>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {categories?.map((category) => (
-                <Tr key={category.id}>
-                  <Td>
+                <TableRow key={category.id}>
+                  <TableCell>
                     {editingCategory?.id === category.id ? (
                       <Input
                         size="sm"
@@ -95,8 +93,8 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                     ) : (
                       category.name
                     )}
-                  </Td>
-                  <Td textAlign="right">
+                  </TableCell>
+                  <TableCell textAlign="right">
                     {editingCategory?.id === category.id ? (
                       <HStack spacing={2} justify="flex-end">
                         <IconButton
@@ -137,11 +135,11 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                         />
                       </HStack>
                     )}
-                  </Td>
-                </Tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Tbody>
-          </Table>
+            </TableBody>
+          </TableRoot>
 
           <HStack w="full">
             <Input
@@ -155,14 +153,14 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
               padding={8}
               colorScheme="blue"
               onClick={() => addCategoryMutation.mutate()}
-              isDisabled={!newCategory.trim()}
+              disabled={!newCategory.trim()}
             >
               Add Category
             </Button>
-            <Heading size={'sm'}>Note: if you add or remove a category we will recategorize your transactions</Heading>
+            <Heading size="sm">Note: if you add or remove a category we will recategorize your transactions</Heading>
           </HStack>
         </VStack>
       )}
     </Box>
-  )
-}
+  );
+};

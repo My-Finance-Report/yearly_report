@@ -1,8 +1,9 @@
+"use client"
+
 import {
   Button,
   Container,
-  FormControl,
-  FormErrorMessage,
+  Field,
   Heading,
   Input,
   Text,
@@ -52,7 +53,7 @@ function RecoverPassword() {
       showToast(
         "Email sent.",
         "We sent an email with a link to get back into your account.",
-        "success",
+        "success"
       )
       reset()
     },
@@ -82,7 +83,9 @@ function RecoverPassword() {
       <Text align="center">
         A password recovery email will be sent to the registered account.
       </Text>
-      <FormControl isInvalid={!!errors.email}>
+
+      <Field.Root>
+        <Field.Label>Email</Field.Label>
         <Input
           id="email"
           {...register("email", {
@@ -92,13 +95,14 @@ function RecoverPassword() {
           placeholder="Email"
           type="email"
         />
-        {errors.email && (
-          <FormErrorMessage>{errors.email.message}</FormErrorMessage>
-        )}
-      </FormControl>
+        {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
+      </Field.Root>
+
       <Button variant="primary" type="submit" isLoading={isSubmitting}>
         Continue
       </Button>
     </Container>
   )
 }
+
+export default RecoverPassword

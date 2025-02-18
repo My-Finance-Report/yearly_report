@@ -1,9 +1,7 @@
 import {
   Button,
   Menu,
-  MenuButton,
   MenuItem,
-  MenuList,
   useDisclosure,
 } from "@chakra-ui/react"
 import { BsThreeDotsVertical } from "react-icons/bs"
