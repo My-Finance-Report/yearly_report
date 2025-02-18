@@ -1,15 +1,5 @@
-import {
-  Box,
-  IconButton,
-  Button,
-} from "@chakra-ui/react";
-import {
-  MenuRoot,
-  MenuTrigger,
-  MenuContent,
-  MenuItem,
-} from "@/components/ui/menu";
-import { Link } from "@tanstack/react-router";
+import { Box, Text, Button, Menu, MenuItem, HStack } from "@chakra-ui/react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { FaUserAstronaut } from "react-icons/fa";
 import { FiLogOut, FiUser } from "react-icons/fi";
 
@@ -18,47 +8,50 @@ import useAuth from "../../hooks/useAuth";
 const UserMenu = () => {
   const { logout } = useAuth();
 
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     logout();
   };
 
   return (
     <>
-      {/* Desktop */}
-      <Box
-        display={{ base: "none", md: "block" }}
-        position="fixed"
-        top={4}
-        right={4}
-      >
-        <MenuRoot>
-          <MenuTrigger asChild>
-            <IconButton
-              aria-label="Options"
-              icon={<FaUserAstronaut color="white" fontSize="18px" />}
+      <Box display={{ base: "none", md: "block" }}>
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Button
+              aria-label="User Menu"
               bg="ui.main"
-              isRound
+              color="white"
               data-testid="user-menu"
-            />
-          </MenuTrigger>
-          <MenuContent>
-            <MenuItem asChild>
-              <Link to="settings">
-                <Button variant="ghost" leftIcon={<FiUser fontSize="18px" />}>
-                  My profile
-                </Button>
+            >
+              <FaUserAstronaut />
+            </Button>
+          </Menu.Trigger>
+          <Menu.Content>
+            <MenuItem value="settings"
+              onClick={() => navigate({to: "/settings"})}
+              >
+              <Link title="My Profile" href="/settings">
+                <HStack>
+                  <FiUser />
+                  <Text>My Profile</Text>
+                </HStack>
               </Link>
             </MenuItem>
             <MenuItem
+              value="logout"
               onClick={handleLogout}
               color="ui.danger"
               fontWeight="bold"
-              icon={<FiLogOut fontSize="18px" />}
             >
-              Log out
+              <HStack>
+                <FiLogOut />
+                <Text>Log Out</Text>
+              </HStack>
             </MenuItem>
-          </MenuContent>
-        </MenuRoot>
+          </Menu.Content>
+        </Menu.Root>
       </Box>
     </>
   );
