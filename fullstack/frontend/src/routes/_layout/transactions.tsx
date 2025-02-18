@@ -8,7 +8,8 @@ import {
   TableRow,
   TableColumnHeader,
   TableCell,
-  Collapsible
+  Collapsible,
+  useTabs
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 
@@ -191,6 +192,8 @@ function Transactions() {
     [sourceId: number]: number;
   }>({});
 
+  
+
   const toggleGroupingOption = (option: GroupByOption) => {
     setGroupingOptions((prev) => {
       if (prev.includes(option)) {
@@ -209,6 +212,9 @@ function Transactions() {
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
     }));
   };
+  const tabs = useTabs({
+    defaultValue: "0",
+  })
 
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -245,16 +251,16 @@ function Transactions() {
       ) : error ? (
         <Text color="red.500">Error loading transactions.</Text>
       ) : data && data.groups && data.groups.length > 0 ? (
-        <Tabs.Root variant="enclosed">
+        <Tabs.RootProvider variant="enclosed" value={tabs}>
           <Tabs.List>
             {data.groups.map((sourceGroup, index) => (
-              <Tabs.Trigger value={sourceGroup.transaction_source_id.toString()}>
+              <Tabs.Trigger value={index.toString()}>
                 {sourceGroup.transaction_source_name}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
-            {data.groups.map((sourceGroup) => (
-              <Tabs.Content value={sourceGroup.transaction_source_id.toString()}>
+            {data.groups.map((sourceGroup, index) => (
+              <Tabs.Content value={index.toString()}>
                 {groupingOptions.length === 1 && (
                   <Flex gap={4}>
                     <Box flex="1">
@@ -309,7 +315,6 @@ function Transactions() {
                         setActiveSlice,
                         expandedGroups,
                       })}
-                      {/* Overall totals for this transaction source */}
                       <TableRow fontWeight="bold">
                         <TableCell colSpan={2}>Source Totals</TableCell>
                         <TableCell textAlign="end">{sourceGroup.total_withdrawals}</TableCell>
@@ -320,7 +325,7 @@ function Transactions() {
                   </Table.Root>
               </Tabs.Content>
             ))}
-        </Tabs.Root>
+        </Tabs.RootProvider>
       ) : (
         <Text>No transactions found.</Text>
       )}
