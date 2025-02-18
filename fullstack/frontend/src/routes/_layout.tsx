@@ -19,7 +19,9 @@ function Layout() {
   const { isLoading } = useAuth()
 
   return (
+    
     <Flex maxW="large" h="auto" position="relative">
+      <SegmentedNavigation/>
       {isLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">
           <Spinner size="xl" color="ui.main" />

@@ -19,7 +19,6 @@ export function SegmentedNavigation() {
   const matchRoute = useMatchRoute()
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
 
-  // Add admin section if the user is a superuser
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : navigationItems
@@ -34,12 +33,12 @@ export function SegmentedNavigation() {
         value,
         label: (
           <HStack>
-            {icon && <icon.type />}
+            {icon()}
             {label}
           </HStack>
         ),
       }))}
-      onValueChange={(value) => navigate({ to: value })}
+      onValueChange={(value) => {console.log(value); navigate({ to: value.value })}}
     />
   )
 }
