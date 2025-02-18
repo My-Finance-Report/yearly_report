@@ -1,6 +1,5 @@
 import { Flex, Spinner } from "@chakra-ui/react"
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
-
 import {SegmentedNavigation} from "@/components/Common/SegmentedNavigation"
 import UserMenu from "../components/Common/UserMenu"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
@@ -32,3 +31,4 @@ function Layout() {
     </Flex>
   )
 }
+
