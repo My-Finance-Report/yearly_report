@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -6,7 +6,6 @@ import {
   Heading,
   Box,
   Button,
-  Input,
   Table,
   TableHeader,
   TableBody,
@@ -15,7 +14,6 @@ import {
   TableCell,
   Spinner,
   Text,
-  Field,
 } from "@chakra-ui/react";
 import { ReprocessButton } from "@/components/Common/ReprocessButton";
 import FileDropzone from "@/components/Common/Dropzone";
@@ -41,20 +39,12 @@ function UploadFiles() {
       return UploadsService.uploadFiles(data);
     },
     onSuccess: () => {
-      toast(
-        "Files uploaded",
-         "The files were processed successfully.",
-        "success");
+      toast("Files uploaded", "The files were processed successfully.", "success");
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
+      setSelectedFiles([]); // ✅ Clear selected files after upload
     },
     onError: () => {
-      toast(
-         "Upload failed",
-         "There was an error uploading the files.",
-         "error")
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
+      toast("Upload failed", "There was an error uploading the files.", "error");
     },
   });
 
@@ -64,10 +54,8 @@ function UploadFiles() {
     enabled: isLoggedIn(),
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFiles(Array.from(e.target.files));
-    }
+  const handleFileSelect = (files: File[]) => {
+    setSelectedFiles(files);
   };
 
   const handleUpload = () => {
@@ -84,25 +72,19 @@ function UploadFiles() {
     <Container maxW="full" py={8}>
       <Heading mb={6}>File Uploads</Heading>
 
-      {/* Upload form */}
       <Box mb={8} p={4} borderWidth={1} borderRadius="md">
         <Heading size="md" mb={4}>
           Upload New Files
         </Heading>
-        <FileDropzone />
 
-        <Field.Root>
-          <Field.Label>Upload Files</Field.Label>
-          <Input type="file" multiple onChange={handleFileChange} mb={4} />
-        </Field.Root>
-        <Button onClick={handleUpload} loading={uploadMutation.isLoading}>
+        <FileDropzone onFilesSelected={handleFileSelect} />
+
+        <Button onClick={handleUpload} loading={uploadMutation.isLoading} mt={4}>
           Upload
         </Button>
       </Box>
 
-      <Heading size="md" mb={4}>
-        Previously Uploaded Files
-      </Heading>
+      <Heading size="md" mb={4}>Previously Uploaded Files</Heading>
 
       {isLoading ? (
         <Spinner />

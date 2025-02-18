@@ -247,7 +247,7 @@ function Transactions() {
       ) : data && data.groups && data.groups.length > 0 ? (
         <Tabs.Root variant="enclosed">
           <Tabs.List>
-            {data.groups.map((sourceGroup) => (
+            {data.groups.map((sourceGroup, index) => (
               <Tabs.Trigger value={sourceGroup.transaction_source_id.toString()}>
                 {sourceGroup.transaction_source_name}
               </Tabs.Trigger>

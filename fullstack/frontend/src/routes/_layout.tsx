@@ -1,7 +1,6 @@
 import { Flex, Spinner } from "@chakra-ui/react"
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 import {SegmentedNavigation} from "@/components/Common/SegmentedNavigation"
-import UserMenu from "../components/Common/UserMenu"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
