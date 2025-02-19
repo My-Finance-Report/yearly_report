@@ -7,8 +7,6 @@ import {
   Spinner,
   Text,
   Tabs,
-  ButtonGroup,
-  Button,
 } from "@chakra-ui/react";
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -17,23 +15,11 @@ import { TransactionsService } from "../../client";
 import { isLoggedIn } from "../../hooks/useAuth";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPannel";
-import {GroupingConfig}  from "@/components/Common/GroupingConfig";
+import {GroupByOption, GroupingConfig}  from "@/components/Common/GroupingConfig";
 
 import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client";
-
-export enum GroupByOption {
-  category = "category",
-  month = "month",
-  year = "year",
-}
-
-const availableOptions: GroupByOption[] = [
-  GroupByOption.category,
-  GroupByOption.year,
-  GroupByOption.month,
-];
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
@@ -45,17 +31,7 @@ function Transactions() {
   const [activeSlice, setActiveSlice] = useState<{ [sourceId: number]: number }>({});
   const [activeGroup, setActiveGroup] = useState<number>(0);
 
-  const toggleGroupingOption = (option: GroupByOption) => {
-    setGroupingOptions((prev) => {
-      if (prev.includes(option)) {
-        if (prev.length === 1) return prev;
-        return prev.filter((o) => o !== option);
-      } else {
-        const newOptions = [...prev, option];
-        return availableOptions.filter((o) => newOptions.includes(o));
-      }
-    });
-  };
+
 
   const toggleGroup = (sourceId: number, groupKey: string) => {
     setExpandedGroups((prev) => ({
@@ -94,7 +70,6 @@ function Transactions() {
       <GroupingConfig
         groupingOptions={groupingOptions}
         setGroupingOptions={setGroupingOptions}
-        availableOptions={availableOptions}
       />
 
       {isLoading ? (

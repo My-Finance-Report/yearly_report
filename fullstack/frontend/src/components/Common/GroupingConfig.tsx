@@ -30,26 +30,33 @@ export enum GroupByOption {
   year = "year",
 }
 
+const availableOptions: GroupByOption[] = [
+  GroupByOption.category,
+  GroupByOption.year,
+  GroupByOption.month,
+];
+
 interface GroupingConfigProps {
   groupingOptions: GroupByOption[];
-  setGroupingOptions: (options: GroupByOption[]) => void;
-  availableOptions: GroupByOption[];
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
 }
 
 export function GroupingConfig({
   groupingOptions,
   setGroupingOptions,
-  availableOptions,
 }: GroupingConfigProps) {
+
   const handleToggleOption = (option: GroupByOption) => {
-    setGroupingOptions((prev) =>
-      prev.includes(option)
+
+    setGroupingOptions((prev: GroupByOption[]) => {
+      return prev.includes(option)
         ? prev.length > 1
-          ? prev.filter((o) => o !== option)
+          ? prev.filter((o) => o !== option) 
           : prev
-        : [...prev, option]
-    );
+        : [...prev, option]; 
+    });
   };
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -111,7 +118,6 @@ export function GroupingConfig({
   );
 }
 
-// --- Sortable Draggable Tag Component ---
 const SortableItem = ({
   option,
   onRemove,

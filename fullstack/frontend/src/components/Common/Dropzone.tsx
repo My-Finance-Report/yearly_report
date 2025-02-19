@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { HiUpload } from "react-icons/hi";
 
 interface FileDropzoneProps {
-  onFilesSelected: (files: File[]) => void;
+  onFilesSelected: React.Dispatch<React.SetStateAction<File[]>>
 }
 
 export default function FileDropzone({ onFilesSelected }: FileDropzoneProps) {
@@ -25,13 +25,14 @@ export default function FileDropzone({ onFilesSelected }: FileDropzoneProps) {
 
   useEffect(() => {
     if (fileUpload.acceptedFiles.length > 0) {
-      onFilesSelected(fileUpload.acceptedFiles.map(f => f.file));
+      onFilesSelected(fileUpload.acceptedFiles);
     }
+    console.log(fileUpload.acceptedFiles)
   }, [fileUpload.acceptedFiles, onFilesSelected]);
 
   return (
     <FileUploadRootProvider value={fileUpload} alignItems={'stretch'}>
-      <Stack spacing={4} align="center" w="full">
+      <Stack align="center" w="full">
         <FileUploadHiddenInput />
         
         <FileUploadDropzone

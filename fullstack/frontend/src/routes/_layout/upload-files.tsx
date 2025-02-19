@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   Container,
   Heading,
@@ -41,7 +41,7 @@ function UploadFiles() {
     onSuccess: () => {
       toast("Files uploaded", "The files were processed successfully.", "success");
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
-      setSelectedFiles([]); // ✅ Clear selected files after upload
+      setSelectedFiles([]); 
     },
     onError: () => {
       toast("Upload failed", "There was an error uploading the files.", "error");
@@ -54,9 +54,6 @@ function UploadFiles() {
     enabled: isLoggedIn(),
   });
 
-  const handleFileSelect = (files: File[]) => {
-    setSelectedFiles(files);
-  };
 
   const handleUpload = () => {
     if (selectedFiles.length > 0) {
@@ -77,7 +74,7 @@ function UploadFiles() {
           Upload New Files
         </Heading>
 
-        <FileDropzone onFilesSelected={handleFileSelect} />
+        <FileDropzone onFilesSelected={setSelectedFiles} />
 
         <Button onClick={handleUpload} loading={uploadMutation.isLoading} mt={4}>
           Upload
