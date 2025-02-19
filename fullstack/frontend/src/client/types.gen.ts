@@ -3,6 +3,7 @@
 export type AggregatedGroup = {
   group_id: number | string
   group_name: string
+  groupby_kind: GroupByOption | null
   total_withdrawals: number
   total_deposits: number
   total_balance: number
@@ -133,6 +134,13 @@ export type UploadedPdfOut = {
   job?: ProcessFileJobOut | null
 }
 
+export type UserBase = {
+  full_name: string
+  email: string
+  is_active?: boolean
+  is_superuser?: boolean
+}
+
 export type UserNewPassword = {
   new_password: string
   old_password: string
@@ -155,15 +163,16 @@ export type UserRegister = {
 }
 
 export type UsersPublic = {
-  [key: string]: unknown
+  data: Array<UserBase>
+  count: number
 }
 
 export type UserUpdate = {
-  [key: string]: unknown
+  email: string
 }
 
 export type UserUpdateMe = {
-  [key: string]: unknown
+  email: string
 }
 
 export type ValidationError = {

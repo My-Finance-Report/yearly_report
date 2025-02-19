@@ -1,4 +1,5 @@
 from app.models import JobStatus, SourceKind, TransactionKind, User
+from enum import Enum
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -74,6 +75,7 @@ class TransactionSourceBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class TransactionSourceOut(TransactionSourceBase):
     id: int
 
@@ -86,6 +88,7 @@ class CategoryBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class CategoryOut(CategoryBase):
     id: int
 
@@ -94,15 +97,16 @@ class TransactionBase(BaseModel):
     description: str
     category_id: int
     date_of_transaction: datetime
-    amount: float  
+    amount: float
     transaction_source_id: int
-    kind: TransactionKind 
-    uploaded_pdf_id: None|int  = None
+    kind: TransactionKind
+    uploaded_pdf_id: None | int = None
     archived: bool = False
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
         orm_mode = True
+
 
 class TransactionOut(TransactionBase):
     id: int
@@ -120,18 +124,21 @@ class UploadedPdfBase(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
 class UploadConfigurationBase(BaseModel):
-    filename_regex:None |str = None
-    start_keyword:None |str = None
-    end_keyword: None |str = None
+    filename_regex: None | str = None
+    start_keyword: None | str = None
+    end_keyword: None | str = None
     transaction_source_id: int
     user_id: int
 
     class Config:
         orm_mode = True
 
+
 class UploadConfigurationOut(UploadConfigurationBase):
     id: int
+
 
 class SankeyConfigBase(BaseModel):
     name: str
@@ -140,8 +147,10 @@ class SankeyConfigBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class SankeyConfigOut(SankeyConfigBase):
     id: int
+
 
 class ColChartConfigBase(BaseModel):
     name: str
@@ -151,15 +160,17 @@ class ColChartConfigBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class ColChartConfigOut(ColChartConfigBase):
     id: int
 
+
 class ProcessFileJobBase(BaseModel):
     created_at: datetime
-    last_tried_at: None |datetime = None
-    status: JobStatus 
+    last_tried_at: None | datetime = None
+    status: JobStatus
     user_id: int
-    config_id: None |int = None
+    config_id: None | int = None
     pdf_id: int
     archived: bool = False
     attempt_count: int = 0
@@ -168,8 +179,10 @@ class ProcessFileJobBase(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
 class ProcessFileJobOut(ProcessFileJobBase):
     id: int
+
 
 class UploadedPdfOut(UploadedPdfBase):
     id: int
@@ -185,10 +198,17 @@ class TransactionGroup(BaseModel):
     transactions: list[TransactionOut]
 
 
+class GroupByOption(str, Enum):
+    category = "category"
+    month = "month"
+    year = "year"
+
+
 class AggregatedGroup(BaseModel):
     # Use a generic name for the grouping key and value.
-    group_id: int| str
+    group_id: int | str
     group_name: str
+    groupby_kind: GroupByOption | None  # only set on leaves
     total_withdrawals: float
     total_deposits: float
     total_balance: float
@@ -201,7 +221,9 @@ class AggregatedGroup(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
 AggregatedGroup.model_rebuild()
+
 
 class TransactionSourceGroup(BaseModel):
     transaction_source_id: int
@@ -214,6 +236,7 @@ class TransactionSourceGroup(BaseModel):
     class Config:
         orm_mode = True
         from_attributes = True
+
 
 class AggregatedTransactions(BaseModel):
     groups: list[TransactionSourceGroup]

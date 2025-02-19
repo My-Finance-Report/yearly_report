@@ -3,7 +3,6 @@ import { useTabs } from "@chakra-ui/react";
 
 import {
   Container,
-  Heading,
   Spinner,
   Text,
   Tabs,
@@ -58,14 +57,9 @@ function Transactions() {
   });
 
   return (
-    <Container maxW="full" py={8}>
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
-        Transactions
-      </Heading>
+    <Container maxW="large" py={8}>
 
-      {data?.groups && data.groups.length > 0 && (
-        <VisualizationPanel activeSlice={activeSlice} sourceGroup={data.groups[activeGroup]} />
-      )}
+      <VisualizationPanel activeSlice={activeSlice} sourceGroup={data?.groups[activeGroup]} isLoading={isLoading} />
 
       <GroupingConfig
         groupingOptions={groupingOptions}

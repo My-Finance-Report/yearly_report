@@ -2,7 +2,6 @@ from typing import Callable, Union, overload
 from fastapi import APIRouter, Depends, Query
 from itertools import groupby
 
-from enum import Enum
 
 from app.api.deps import (
     get_current_user,
@@ -18,17 +17,13 @@ from app.models import (
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,
+    GroupByOption,
     TransactionOut,
-    TransactionSourceGroup
+    TransactionSourceGroup,
 )
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
-
-class GroupByOption(str, Enum):
-    category = "category"
-    month = "month"
-    year = "year"
 
 CategoryLookup = dict[int, Category]
 
@@ -37,24 +32,31 @@ GroupByKeyFunc = Callable[[Transaction], GroupKeyType]
 GroupByNameFunc = Callable[[GroupKeyType, CategoryLookup], str]
 GroupByIdFunc = Callable[[GroupKeyType], int]
 
+
 # Helper functions
 def get_category_key(transaction: Transaction) -> int:
     return transaction.category_id
 
+
 def get_month_key(transaction: Transaction) -> tuple[int, int]:
     return (transaction.date_of_transaction.year, transaction.date_of_transaction.month)
+
 
 def get_year_key(transaction: Transaction) -> int:
     return transaction.date_of_transaction.year
 
+
 def get_category_name(key: int, lookup: CategoryLookup) -> str:
     return lookup[key].name if key in lookup else str(key)
+
 
 def get_month_name(key: tuple[int, int], _: CategoryLookup) -> str:
     return f"{key[0]}-{key[1]:02d}"
 
+
 def get_year_name(key: int, _: CategoryLookup) -> str:
     return str(key)
+
 
 # Overloaded function for correct type checking
 @overload
@@ -62,23 +64,28 @@ def get_category_id(key: int) -> int: ...
 @overload
 def get_category_id(key: tuple[int, int]) -> int: ...
 
+
 def get_category_id(key: Union[int, tuple[int, int]]) -> int:
     if isinstance(key, tuple):
         raise ValueError("Category ID should not be a tuple")
     return key
+
 
 @overload
 def get_month_id(key: tuple[int, int]) -> int: ...
 @overload
 def get_month_id(key: int) -> int: ...
 
+
 def get_month_id(key: Union[int, tuple[int, int]]) -> int:
     if isinstance(key, int):
         raise ValueError("Month ID should be a tuple")
     return key[0] * 100 + key[1]  # Converts (YYYY, MM) to YYYYMM integer
 
+
 def get_year_id(key: int) -> int:
     return key
+
 
 # Mapping from GroupByOption to functions
 group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
@@ -90,16 +97,17 @@ group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
 # TODO update to make sure this is actually typed correctly
 
 group_by_name_funcs: dict[GroupByOption, GroupByNameFunc] = {
-    GroupByOption.category: get_category_name, #type: ignore
-    GroupByOption.month: get_month_name,#type: ignore
-    GroupByOption.year: get_year_name,#type: ignore
+    GroupByOption.category: get_category_name,  # type: ignore
+    GroupByOption.month: get_month_name,  # type: ignore
+    GroupByOption.year: get_year_name,  # type: ignore
 }
 
 group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
-    GroupByOption.category: get_category_id,#type: ignore
-    GroupByOption.month: get_month_id,#type: ignore
-    GroupByOption.year: get_year_id,#type: ignore
+    GroupByOption.category: get_category_id,  # type: ignore
+    GroupByOption.month: get_month_id,  # type: ignore
+    GroupByOption.year: get_year_id,  # type: ignore
 }
+
 
 def recursive_group(
     txns: list[Transaction],
@@ -110,10 +118,12 @@ def recursive_group(
         # Should not happen normally; if no grouping remains, return a single leaf group.
         total_withdrawals = sum(t.amount for t in txns if t.kind == "withdrawal")
         total_deposits = sum(t.amount for t in txns if t.kind == "deposit")
+        print("##### unexpected thing ######## ")
         return [
             AggregatedGroup(
                 group_id="all",
                 group_name="All",
+                groupby_kind=None,
                 total_withdrawals=total_withdrawals,
                 total_deposits=total_deposits,
                 total_balance=total_deposits - total_withdrawals,
@@ -136,7 +146,9 @@ def recursive_group(
         group_deposits = sum(t.amount for t in group_list if t.kind == "deposit")
         balance = group_deposits - group_withdrawals
         group_id = id_fn(key)
-        group_name = name_fn(key, category_lookup if current == GroupByOption.category else {})
+        group_name = name_fn(
+            key, category_lookup if current == GroupByOption.category else {}
+        )
 
         if len(group_options) > 1:
             subgroups = recursive_group(group_list, group_options[1:], category_lookup)
@@ -144,6 +156,7 @@ def recursive_group(
                 AggregatedGroup(
                     group_id=group_id,
                     group_name=group_name,
+                    groupby_kind=current,
                     total_withdrawals=group_withdrawals,
                     total_deposits=group_deposits,
                     total_balance=balance,
@@ -156,6 +169,7 @@ def recursive_group(
                 AggregatedGroup(
                     group_id=group_id,
                     group_name=group_name,
+                    groupby_kind=current,
                     total_withdrawals=group_withdrawals,
                     total_deposits=group_deposits,
                     total_balance=balance,
@@ -166,17 +180,16 @@ def recursive_group(
     return groups
 
 
-
-
 @router.get(
     "/",
     dependencies=[Depends(get_current_user)],
     response_model=list[TransactionOut],
 )
-def get_transactions(session:Session =Depends(get_db), user: User = Depends(get_current_user)) -> list[Transaction]:
-    val =  session.query(Transaction).filter(Transaction.user_id == user.id).all()
+def get_transactions(
+    session: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> list[Transaction]:
+    val = session.query(Transaction).filter(Transaction.user_id == user.id).all()
     return val
-    
 
 
 @router.get(
@@ -185,11 +198,16 @@ def get_transactions(session:Session =Depends(get_db), user: User = Depends(get_
     response_model=AggregatedTransactions,
 )
 def get_aggregated_transactions(
-    group_by: list[GroupByOption] = Query([GroupByOption.category], description="List of grouping options in order (e.g. category, month)"),
+    group_by: list[GroupByOption] = Query(
+        [GroupByOption.category],
+        description="List of grouping options in order (e.g. category, month)",
+    ),
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-    transactions = session.query(Transaction).filter(Transaction.user_id == user.id).all()
+    transactions = (
+        session.query(Transaction).filter(Transaction.user_id == user.id).all()
+    )
     if not transactions:
         return AggregatedTransactions(
             groups=[],
@@ -202,7 +220,8 @@ def get_aggregated_transactions(
     if GroupByOption.category in group_by:
         category_ids = {txn.category_id for txn in transactions}
         category_lookup = {
-            c.id: c for c in session.query(Category).filter(Category.id.in_(category_ids))
+            c.id: c
+            for c in session.query(Category).filter(Category.id.in_(category_ids))
         }
     else:
         category_lookup = {}
@@ -210,7 +229,10 @@ def get_aggregated_transactions(
     # Build lookup for transaction sources.
     ts_ids = {txn.transaction_source_id for txn in transactions}
     ts_lookup = {
-        ts.id: ts for ts in session.query(TransactionSource).filter(TransactionSource.id.in_(ts_ids))
+        ts.id: ts
+        for ts in session.query(TransactionSource).filter(
+            TransactionSource.id.in_(ts_ids)
+        )
     }
 
     overall_withdrawals = 0.0
@@ -219,7 +241,9 @@ def get_aggregated_transactions(
 
     # Group transactions by transaction_source_id.
     transactions.sort(key=lambda t: t.transaction_source_id)
-    for ts_id, ts_txns_iter in groupby(transactions, key=lambda t: t.transaction_source_id):
+    for ts_id, ts_txns_iter in groupby(
+        transactions, key=lambda t: t.transaction_source_id
+    ):
         ts_txns = list(ts_txns_iter)
         # Compute source-level totals.
         ts_withdrawals = sum(t.amount for t in ts_txns if t.kind == "withdrawal")
