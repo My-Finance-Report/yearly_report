@@ -167,9 +167,8 @@ function PieBox({
 function SankeyBox({ sourceGroup, showDeposits }: { sourceGroup: TransactionSourceGroup; showDeposits: boolean }) {
   const nodes: { name: string; id: number }[] = [];
   const links: { source: number; target: number; value: number }[] = [];
-  const nodeIndexMap = new Map<string, number>(); // Maps group names to node IDs
+  const nodeIndexMap = new Map<string, number>();
 
-  // Add deposits and withdrawals as starting nodes
   ["deposits", "withdrawals"].forEach((name, idx) => {
     nodes.push({ name, id: idx });
     nodeIndexMap.set(name, idx);

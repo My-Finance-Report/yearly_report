@@ -73,10 +73,7 @@ export function GenericBarChart({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) =>
-                new Date(value).toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "numeric",
-                })
+                value
               }
             />
             <ChartTooltip
@@ -85,10 +82,7 @@ export function GenericBarChart({
                   className="w-[150px]"
                   nameKey="date"
                   labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })
+                    value
                   }
                 />
               }

@@ -1,4 +1,4 @@
-from typing import Callable, Union, overload
+from typing import Callable
 from fastapi import APIRouter, Depends, Query
 from itertools import groupby
 
@@ -27,63 +27,45 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 CategoryLookup = dict[int, Category]
 
-GroupKeyType = int | tuple[int, int]
-GroupByKeyFunc = Callable[[Transaction], GroupKeyType]
-GroupByNameFunc = Callable[[GroupKeyType, CategoryLookup], str]
-GroupByIdFunc = Callable[[GroupKeyType], int]
+GroupByKeyFunc = Callable[[Transaction, CategoryLookup], str]
+GroupByNameFunc = Callable[[str], str]
+GroupByIdFunc = Callable[[str], str]
 
 
 # Helper functions
-def get_category_key(transaction: Transaction) -> int:
-    return transaction.category_id
+def get_category_key(transaction: Transaction, lookup: CategoryLookup) -> str:
+    return lookup[transaction.category_id].name
 
 
-def get_month_key(transaction: Transaction) -> tuple[int, int]:
-    return (transaction.date_of_transaction.year, transaction.date_of_transaction.month)
+def get_month_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
+    return transaction.date_of_transaction.strftime("%B %Y")
 
 
-def get_year_key(transaction: Transaction) -> int:
-    return transaction.date_of_transaction.year
+def get_year_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
+    return str(transaction.date_of_transaction.year)
 
 
-def get_category_name(key: int, lookup: CategoryLookup) -> str:
-    return lookup[key].name if key in lookup else str(key)
-
-
-def get_month_name(key: tuple[int, int], _: CategoryLookup) -> str:
-    return f"{key[0]}-{key[1]:02d}"
-
-
-def get_year_name(key: int, _: CategoryLookup) -> str:
-    return str(key)
-
-
-# Overloaded function for correct type checking
-@overload
-def get_category_id(key: int) -> int: ...
-@overload
-def get_category_id(key: tuple[int, int]) -> int: ...
-
-
-def get_category_id(key: Union[int, tuple[int, int]]) -> int:
-    if isinstance(key, tuple):
-        raise ValueError("Category ID should not be a tuple")
+def get_category_name(key: str) -> str:
     return key
 
 
-@overload
-def get_month_id(key: tuple[int, int]) -> int: ...
-@overload
-def get_month_id(key: int) -> int: ...
+def get_month_name(key: str) -> str:
+    return key
 
 
-def get_month_id(key: Union[int, tuple[int, int]]) -> int:
-    if isinstance(key, int):
-        raise ValueError("Month ID should be a tuple")
-    return key[0] * 100 + key[1]  # Converts (YYYY, MM) to YYYYMM integer
+def get_year_name(key: str) -> str:
+    return key
 
 
-def get_year_id(key: int) -> int:
+def get_category_id(key: str) -> str:
+    return key
+
+
+def get_month_id(key: str) -> str:
+    return key
+
+
+def get_year_id(key: str) -> str:
     return key
 
 
@@ -94,18 +76,17 @@ group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
     GroupByOption.year: get_year_key,
 }
 
-# TODO update to make sure this is actually typed correctly
 
 group_by_name_funcs: dict[GroupByOption, GroupByNameFunc] = {
-    GroupByOption.category: get_category_name,  # type: ignore
-    GroupByOption.month: get_month_name,  # type: ignore
-    GroupByOption.year: get_year_name,  # type: ignore
+    GroupByOption.category: get_category_name,
+    GroupByOption.month: get_month_name,
+    GroupByOption.year: get_year_name,
 }
 
 group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
-    GroupByOption.category: get_category_id,  # type: ignore
-    GroupByOption.month: get_month_id,  # type: ignore
-    GroupByOption.year: get_year_id,  # type: ignore
+    GroupByOption.category: get_category_id,
+    GroupByOption.month: get_month_id,
+    GroupByOption.year: get_year_id,
 }
 
 
@@ -133,11 +114,12 @@ def recursive_group(
         ]
 
     current = group_options[0]
-    key_fn = group_by_key_funcs[current]
+
+    # use a lambda to make a "partial"
+    key_fn = lambda txns: group_by_key_funcs[current](txns, category_lookup)
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
 
-    # Sort by current grouping key.
     txns.sort(key=key_fn)
     groups = []
     for key, group_iter in groupby(txns, key=key_fn):
@@ -146,9 +128,7 @@ def recursive_group(
         group_deposits = sum(t.amount for t in group_list if t.kind == "deposit")
         balance = group_deposits - group_withdrawals
         group_id = id_fn(key)
-        group_name = name_fn(
-            key, category_lookup if current == GroupByOption.category else {}
-        )
+        group_name = name_fn(key)
 
         if len(group_options) > 1:
             subgroups = recursive_group(group_list, group_options[1:], category_lookup)
