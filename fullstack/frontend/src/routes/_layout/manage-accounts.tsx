@@ -1,16 +1,17 @@
 import { AccountsService } from "@/client"
 import { isLoggedIn } from "@/hooks/useAuth"
-import { CategoriesManager} from "@/components/Common/CategoriesManager"
+import { CategoriesManager } from "@/components/Common/CategoriesManager"
 import {
   Container,
   Heading,
   Tabs,
   VStack,
   Spinner,
+  useTabs,
+  Flex,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-
 
 export const Route = createFileRoute("/_layout/manage-accounts")({
   component: ManageAccounts,
@@ -24,6 +25,10 @@ function ManageAccounts() {
     enabled: isLoggedIn(),
   })
 
+  const tabs = useTabs({
+    defaultValue: "0",
+  });
+
   if (isError) {
     return (
       <Container maxW="full">
@@ -35,29 +40,29 @@ function ManageAccounts() {
   }
 
   return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
-        Manage Accounts
-      </Heading>
-
+    <Container mt={24} maxW="large">
       {isLoading ? (
         <Spinner size="lg" />
       ) : (
-        <Tabs.Root variant="enclosed">
-          <Tabs.List>
-            {accounts?.map((account) => (
-              <Tabs.Trigger value={account.id.toString()}>{account.name}</Tabs.Trigger>
-            ))}
-          </Tabs.List>
+        <Tabs.RootProvider variant="enclosed" value={tabs}>
+          <Flex justifyContent="center">
+            <Tabs.List>
+              {accounts?.map((account, index) => (
+                <Tabs.Trigger key={account.id} value={index.toString()}>
+                  {account.name}
+                </Tabs.Trigger>
+              ))}
+            </Tabs.List>
+          </Flex>
 
-            {accounts?.map((account) => (
-              <Tabs.Content value={account.id.toString()}>
-                <VStack spacing={6} align="start">
-                  <CategoriesManager accountId={account.id} />
-                </VStack>
-              </Tabs.Content>
-            ))}
-        </Tabs.Root>
+          {accounts?.map((account, index) => (
+            <Tabs.Content key={account.id} value={index.toString()}>
+              <VStack spaceX={6}>
+                <CategoriesManager accountId={account.id} />
+              </VStack>
+            </Tabs.Content>
+          ))}
+        </Tabs.RootProvider>
       )}
     </Container>
   )

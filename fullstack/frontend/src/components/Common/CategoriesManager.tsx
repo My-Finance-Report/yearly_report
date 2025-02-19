@@ -1,13 +1,11 @@
-"use client";
-
 import { AccountsService } from "@/client";
+
 import {
   Box,
   Button,
   Heading,
   Spinner,
   Input,
-  IconButton,
   VStack,
   HStack,
   TableRoot,
@@ -20,6 +18,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { EditIcon, CheckIcon, CloseIcon, DeleteIcon } from "@chakra-ui/icons";
+import { FaPlus } from "react-icons/fa";
 
 interface CategoriesManagerProps {
   accountId: number;
@@ -60,26 +59,21 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
 
   return (
     <Box>
-      <Heading size="md" mb={4}>
-        Categories
-      </Heading>
-
       {isLoading ? (
         <Spinner />
       ) : (
-        <VStack align="start" spacing={4} w="full">
-          {/* Categories Table */}
-          <TableRoot size="sm" variant="outline">
+        <VStack gap={4}>
+          <TableRoot variant="outline">
             <TableHeader>
               <TableRow>
-                <TableColumnHeader>Name</TableColumnHeader>
-                <TableColumnHeader textAlign="right">Actions</TableColumnHeader>
+                <TableColumnHeader>Category</TableColumnHeader>
+                <TableColumnHeader>Actions</TableColumnHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories?.map((category) => (
+              {categories?.sort().map((category) => (
                 <TableRow key={category.id}>
-                  <TableCell>
+                  <TableCell minW={60}>
                     {editingCategory?.id === category.id ? (
                       <Input
                         size="sm"
@@ -96,11 +90,9 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                   </TableCell>
                   <TableCell textAlign="right">
                     {editingCategory?.id === category.id ? (
-                      <HStack spacing={2} justify="flex-end">
-                        <IconButton
+                      <HStack>
+                        <Button
                           size="sm"
-                          colorScheme="green"
-                          icon={<CheckIcon />}
                           aria-label="Save"
                           onClick={() =>
                             updateCategoryMutation.mutate({
@@ -109,30 +101,36 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                               sourceId: accountId,
                             })
                           }
-                        />
-                        <IconButton
+                        > <CheckIcon />
+                          Save
+                        </Button>
+                        <Button
                           size="sm"
-                          colorScheme="gray"
-                          icon={<CloseIcon />}
                           aria-label="Cancel"
                           onClick={() => setEditingCategory(null)}
-                        />
+                        >
+                          <CloseIcon />
+
+                        </Button>
                       </HStack>
                     ) : (
-                      <HStack spacing={2} justify="flex-end">
-                        <IconButton
+                      <HStack>
+                        <Button
                           size="sm"
-                          icon={<EditIcon />}
                           aria-label="Edit"
                           onClick={() => setEditingCategory({ id: category.id, name: category.name })}
-                        />
-                        <IconButton
+                        >
+                          <EditIcon /> Edit
+                        </Button>
+                        <Button
                           size="sm"
                           colorScheme="red"
-                          icon={<DeleteIcon />}
                           aria-label="Delete"
                           onClick={() => deleteCategoryMutation.mutate(category.id)}
-                        />
+                        >
+                          <DeleteIcon />
+                          Delete
+                        </Button>
                       </HStack>
                     )}
                   </TableCell>
@@ -143,24 +141,24 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
 
           <HStack w="full">
             <Input
-              size="sm"
               placeholder="New category name"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
             />
             <Button
-              margin={2}
-              padding={8}
-              colorScheme="blue"
+              size="sm"
               onClick={() => addCategoryMutation.mutate()}
               disabled={!newCategory.trim()}
             >
+              <FaPlus />
               Add Category
             </Button>
-            <Heading size="sm">Note: if you add or remove a category we will recategorize your transactions</Heading>
           </HStack>
+          <Heading size="sm">Note: if you add or remove a category we will recategorize your transactions</Heading>
         </VStack>
       )}
     </Box>
   );
 };
+
+
