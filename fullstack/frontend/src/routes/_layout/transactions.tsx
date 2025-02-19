@@ -1,27 +1,23 @@
-"use client";
-
 import { useState } from "react";
-import {
-  useTabs
-} from "@chakra-ui/react";
+import { useTabs } from "@chakra-ui/react";
 
 import {
   Container,
   Heading,
-  Box,
-  Flex,
   Spinner,
   Text,
   Tabs,
   ButtonGroup,
   Button,
 } from "@chakra-ui/react";
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { TransactionsService } from "../../client";
 import { isLoggedIn } from "../../hooks/useAuth";
-import { GenericPieChart } from "@/components/Charting/PieChart";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
+import { VisualizationPanel } from "@/components/Common/VisualizationPannel";
+import {GroupingConfig}  from "@/components/Common/GroupingConfig";
 
 import type {
   TransactionsGetAggregatedTransactionsResponse,
@@ -39,24 +35,15 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.month,
 ];
 
-
-
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
 });
 
 function Transactions() {
-  const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
-    GroupByOption.category,
-  ]);
-  const [activeSlice, setActiveSlice] = useState<{
-    [sourceId: number]: number;
-  }>({});
-
-  
+  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
+  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.category]);
+  const [activeSlice, setActiveSlice] = useState<{ [sourceId: number]: number }>({});
+  const [activeGroup, setActiveGroup] = useState<number>(0);
 
   const toggleGroupingOption = (option: GroupByOption) => {
     setGroupingOptions((prev) => {
@@ -76,9 +63,11 @@ function Transactions() {
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
     }));
   };
+
   const tabs = useTabs({
     defaultValue: "0",
-  })
+    onFocusChange: (value) => setActiveGroup(Number(value.focusedValue)),
+  });
 
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -98,17 +87,15 @@ function Transactions() {
         Transactions
       </Heading>
 
-      <ButtonGroup mb={6} attached variant="outline">
-        {availableOptions.map((option) => (
-          <Button
-            key={option}
-            onClick={() => toggleGroupingOption(option)}
-            colorScheme={groupingOptions.includes(option) ? "blue" : "gray"}
-          >
-            {option.charAt(0).toUpperCase() + option.slice(1)}
-          </Button>
-        ))}
-      </ButtonGroup>
+      {data?.groups && data.groups.length > 0 && (
+        <VisualizationPanel activeSlice={activeSlice} sourceGroup={data.groups[activeGroup]} />
+      )}
+
+      <GroupingConfig
+        groupingOptions={groupingOptions}
+        setGroupingOptions={setGroupingOptions}
+        availableOptions={availableOptions}
+      />
 
       {isLoading ? (
         <Spinner />
@@ -116,52 +103,24 @@ function Transactions() {
         <Text color="red.500">Error loading transactions.</Text>
       ) : data && data.groups && data.groups.length > 0 ? (
         <Tabs.RootProvider variant="enclosed" value={tabs}>
+
           <Tabs.List>
             {data.groups.map((sourceGroup, index) => (
-              <Tabs.Trigger value={index.toString()}>
+              <Tabs.Trigger key={index} value={index.toString()}>
                 {sourceGroup.transaction_source_name}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
-            {data.groups.map((sourceGroup, index) => (
-              <Tabs.Content value={index.toString()}>
-                {groupingOptions.length === 1 && (
-                  <Flex gap={4}>
-                    <Box flex="1">
-                      <GenericPieChart
-                        data={sourceGroup.groups.map((group) => ({
-                          group: group.group_name,
-                          visitors: group.total_deposits,
-                        }))}
-                        dataKey="visitors"
-                        nameKey="group"
-                        title="Deposits"
-                        config={null}
-                        activeIndex={
-                          activeSlice[sourceGroup.transaction_source_id] ?? 0
-                        }
-                      />
-                    </Box>
-                    <Box flex="1">
-                      <GenericPieChart
-                        data={sourceGroup.groups.map((group) => ({
-                          group: group.group_name,
-                          visitors: group.total_withdrawals,
-                        }))}
-                        dataKey="visitors"
-                        nameKey="group"
-                        title="Withdrawals"
-                        config={null}
-                        activeIndex={
-                          activeSlice[sourceGroup.transaction_source_id] ?? 0
-                        }
-                      />
-                    </Box>
-                  </Flex>
-                )}
-                <TransactionsTable toggleGroup={toggleGroup}  sourceGroup={sourceGroup} setActiveSlice={setActiveSlice} expandedGroups={expandedGroups} />
-              </Tabs.Content>
-            ))}
+          {data.groups.map((sourceGroup, index) => (
+            <Tabs.Content key={index} value={index.toString()}>
+              <TransactionsTable
+                toggleGroup={toggleGroup}
+                sourceGroup={sourceGroup}
+                setActiveSlice={setActiveSlice}
+                expandedGroups={expandedGroups}
+              />
+            </Tabs.Content>
+          ))}
         </Tabs.RootProvider>
       ) : (
         <Text>No transactions found.</Text>

@@ -1,4 +1,3 @@
-"use client"
 
 import { Pie, PieChart, Sector, Cell } from "recharts"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
