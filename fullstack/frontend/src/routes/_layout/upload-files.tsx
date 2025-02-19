@@ -1,6 +1,6 @@
 "use client";
 
-import  { useState } from "react";
+import { useState } from "react";
 import {
   Container,
   Heading,
@@ -40,8 +40,9 @@ function UploadFiles() {
     },
     onSuccess: () => {
       toast("Files uploaded", "The files were processed successfully.", "success");
+      console.log('toasted')
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
-      setSelectedFiles([]); 
+      setSelectedFiles([]);
     },
     onError: () => {
       toast("Upload failed", "There was an error uploading the files.", "error");
@@ -54,10 +55,9 @@ function UploadFiles() {
     enabled: isLoggedIn(),
   });
 
-
-  const handleUpload = () => {
-    if (selectedFiles.length > 0) {
-      uploadMutation.mutate(selectedFiles);
+  const handleUpload = (files: File[]) => {
+    if (files.length > 0) {
+      uploadMutation.mutate(files);
     }
   };
 
@@ -66,29 +66,16 @@ function UploadFiles() {
   };
 
   return (
-    <Container maxW="full" py={8}>
-      <Heading mb={6}>File Uploads</Heading>
+    <Container maxW="large" py={8}>
+      <FileDropzone handleUpload={handleUpload} isLoading={uploadMutation.isPending} />
 
-      <Box mb={8} p={4} borderWidth={1} borderRadius="md">
-        <Heading size="md" mb={4}>
-          Upload New Files
-        </Heading>
-
-        <FileDropzone onFilesSelected={setSelectedFiles} />
-
-        <Button onClick={handleUpload} loading={uploadMutation.isLoading} mt={4}>
-          Upload
-        </Button>
-      </Box>
-
-      <Heading size="md" mb={4}>Previously Uploaded Files</Heading>
 
       {isLoading ? (
         <Spinner />
       ) : error ? (
         <Text color="red.500">Error loading files.</Text>
       ) : data && data.length > 0 ? (
-        <Table.Root variant="outline">
+        <Table.Root variant="outline" mt={24}>
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Filename</TableColumnHeader>

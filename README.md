@@ -65,4 +65,4 @@ addative upload
 
 # migration to python
 
-make sure offer more reasonable options if you want to delete a category
+toasts are broken

@@ -14,8 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { TransactionsService } from "../../client";
 import { isLoggedIn } from "../../hooks/useAuth";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
-import { VisualizationPanel } from "@/components/Common/VisualizationPannel";
-import {GroupByOption, GroupingConfig}  from "@/components/Common/GroupingConfig";
+import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
+import { GroupByOption, GroupingConfig } from "@/components/Common/GroupingConfig";
 
 import type {
   TransactionsGetAggregatedTransactionsResponse,
