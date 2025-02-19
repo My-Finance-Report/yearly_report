@@ -1,8 +1,4 @@
-import {
-  Container,
-  Heading,
-  Tabs,
-} from "@chakra-ui/react"
+import { Container, Heading, Tabs } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -41,11 +37,11 @@ function UserSettings() {
             <Tabs.Trigger value={index.toString()}>{tab.title}</Tabs.Trigger>
           ))}
         </Tabs.List>
-          {finalTabs.map((tab, index) => (
-            <Tabs.Content value={index.toString()}>
-              <tab.component />
-            </Tabs.Content>
-          ))}
+        {finalTabs.map((tab, index) => (
+          <Tabs.Content value={index.toString()}>
+            <tab.component />
+          </Tabs.Content>
+        ))}
       </Tabs.Root>
     </Container>
   )

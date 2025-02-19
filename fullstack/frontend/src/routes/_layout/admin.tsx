@@ -1,11 +1,4 @@
-import {
-  Badge,
-  Box,
-  Container,
-  Flex,
-  Heading,
-  Table,
-} from "@chakra-ui/react"
+import { Badge, Box, Container, Flex, Heading, Table } from "@chakra-ui/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
@@ -42,7 +35,9 @@ function UsersTable() {
   const { page } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const setPage = (page: number) =>
-    navigate({ search: (prev: { [key: string]: string }) => ({ ...prev, page }) })
+    navigate({
+      search: (prev: { [key: string]: string }) => ({ ...prev, page }),
+    })
 
   const {
     data: users,

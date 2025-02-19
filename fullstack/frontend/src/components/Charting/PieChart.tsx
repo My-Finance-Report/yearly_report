@@ -1,27 +1,24 @@
-import { Pie, PieChart, Sector, Cell } from "recharts";
-import { PieSectorDataItem } from "recharts/types/polar/Pie";
+import { Cell, Pie, PieChart, Sector } from "recharts"
+import type { PieSectorDataItem } from "recharts/types/polar/Pie"
 
+import { CardContent, CardFooter } from "@/components/ui/card"
 import {
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Box } from "@chakra-ui/react";
+} from "@/components/ui/chart"
+import { Box } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
 
 export interface GenericPieChartProps {
-  data: Array<Record<string, any>>;
-  dataKey: string;
-  nameKey: string;
-  config?: ChartConfig | null;
-  innerRadius?: number;
-  activeIndex?: number;
-  activeShape?: (props: PieSectorDataItem) => JSX.Element;
+  data: Array<Record<string, any>>
+  dataKey: string
+  nameKey: string
+  config?: ChartConfig | null
+  innerRadius?: number
+  activeIndex?: number
+  activeShape?: (props: PieSectorDataItem) => JSX.Element
 }
 
 export function GenericPieChart({
@@ -35,34 +32,52 @@ export function GenericPieChart({
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
 }: GenericPieChartProps) {
-  const theme = useTheme();
+  const theme = useTheme()
 
-  const lightModePalette = ["#3182CE", "#38A169", "#E53E3E", "#DD6B20", "#805AD5"];
-  const darkModePalette = ["#63B3ED", "#68D391", "#FC8181", "#F6AD55", "#B794F4"];
+  const lightModePalette = [
+    "#3182CE",
+    "#38A169",
+    "#E53E3E",
+    "#DD6B20",
+    "#805AD5",
+  ]
+  const darkModePalette = [
+    "#63B3ED",
+    "#68D391",
+    "#FC8181",
+    "#F6AD55",
+    "#B794F4",
+  ]
 
-  const colorPalette = theme.theme === "dark" ? darkModePalette : lightModePalette;
+  const colorPalette =
+    theme.theme === "dark" ? darkModePalette : lightModePalette
 
-
-  let finalConfig: ChartConfig;
+  let finalConfig: ChartConfig
   if (!config) {
-    const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])));
+    const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])))
     finalConfig = uniqueNames.reduce((acc, name, index) => {
       acc[name] = {
         label: String(name),
         color: colorPalette[index % colorPalette.length],
-      };
-      return acc;
-    }, {} as ChartConfig);
+      }
+      return acc
+    }, {} as ChartConfig)
   } else {
-    finalConfig = config;
+    finalConfig = config
   }
 
   return (
     <Box className="flex flex-col">
       <CardContent className="flex-1 pb-0">
-        <ChartContainer config={finalConfig} className="aspect-square max-h-[250px]">
+        <ChartContainer
+          config={finalConfig}
+          className="aspect-square max-h-[250px]"
+        >
           <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
             <Pie
               data={data}
               dataKey={dataKey}
@@ -85,7 +100,7 @@ export function GenericPieChart({
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm"></CardFooter>
+      <CardFooter className="flex-col gap-2 text-sm" />
     </Box>
-  );
+  )
 }

@@ -1,6 +1,6 @@
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
 import { Flex, Spinner } from "@chakra-ui/react"
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
-import {SegmentedNavigation} from "@/components/Common/SegmentedNavigation"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -19,7 +19,7 @@ function Layout() {
 
   return (
     <div>
-      <SegmentedNavigation/>
+      <SegmentedNavigation />
       {isLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">
           <Spinner size="xl" color="ui.main" />
@@ -30,4 +30,3 @@ function Layout() {
     </div>
   )
 }
-

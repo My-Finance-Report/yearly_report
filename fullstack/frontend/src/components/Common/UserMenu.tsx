@@ -1,20 +1,24 @@
-import { Box, Text, Button, Menu, MenuItem, HStack } from "@chakra-ui/react";
-import { useNavigate } from "@tanstack/react-router";
-import { FaUserAstronaut } from "react-icons/fa";
-import { FiLogOut, FiUser } from "react-icons/fi";
+import { Box, Button, HStack, Menu, MenuItem, Text } from "@chakra-ui/react"
+import { useNavigate } from "@tanstack/react-router"
+import { FaUserAstronaut } from "react-icons/fa"
+import { FiLogOut, FiUser } from "react-icons/fi"
 
-import useAuth from "../../hooks/useAuth";
+import useAuth from "../../hooks/useAuth"
 
 const UserMenu = () => {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+  const { logout } = useAuth()
+  const navigate = useNavigate()
 
   const handleLogout = async () => {
-    logout();
-  };
+    logout()
+  }
 
   return (
-    <Box position="relative" display={{ base: "none", md: "block" }} marginRight={12}>
+    <Box
+      position="relative"
+      display={{ base: "none", md: "block" }}
+      marginRight={12}
+    >
       <Menu.Root>
         <Menu.Trigger asChild>
           <Button
@@ -37,7 +41,10 @@ const UserMenu = () => {
           borderRadius="md"
           zIndex={10}
         >
-          <MenuItem value="settings" onClick={() => navigate({ to: "/settings" })}>
+          <MenuItem
+            value="settings"
+            onClick={() => navigate({ to: "/settings" })}
+          >
             <HStack spaceX={2}>
               <FiUser />
               <Text>My Profile</Text>
@@ -57,7 +64,7 @@ const UserMenu = () => {
         </Menu.Content>
       </Menu.Root>
     </Box>
-  );
-};
+  )
+}
 
-export default UserMenu;
+export default UserMenu

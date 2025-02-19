@@ -1,61 +1,76 @@
-import { AccountsService } from "@/client";
+import { AccountsService } from "@/client"
 
+import { CheckIcon, CloseIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
-  Heading,
-  Spinner,
-  Input,
-  VStack,
   HStack,
-  TableRoot,
-  TableHeader,
+  Heading,
+  Input,
+  Spinner,
   TableBody,
-  TableRow,
-  TableColumnHeader,
   TableCell,
-} from "@chakra-ui/react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { EditIcon, CheckIcon, CloseIcon, DeleteIcon } from "@chakra-ui/icons";
-import { FaPlus } from "react-icons/fa";
+  TableColumnHeader,
+  TableHeader,
+  TableRoot,
+  TableRow,
+  VStack,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
+import { FaPlus } from "react-icons/fa"
 
 interface CategoriesManagerProps {
-  accountId: number;
+  accountId: number
 }
 
 export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
-  const queryClient = useQueryClient();
-  const [newCategory, setNewCategory] = useState("");
-  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null);
+  const queryClient = useQueryClient()
+  const [newCategory, setNewCategory] = useState("")
+  const [editingCategory, setEditingCategory] = useState<{
+    id: number
+    name: string
+  } | null>(null)
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories", accountId],
     queryFn: () => AccountsService.getCategories({ sourceId: accountId }),
-  });
+  })
 
   const deleteCategoryMutation = useMutation({
-    mutationFn: (categoryId: number) => AccountsService.deleteCategory({ categoryId }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories", accountId] }),
-  });
+    mutationFn: (categoryId: number) =>
+      AccountsService.deleteCategory({ categoryId }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] }),
+  })
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ categoryId, name, sourceId }: { categoryId: number; name: string; sourceId: number }) =>
-      AccountsService.updateCategory({ categoryId, requestBody: { name, source_id: sourceId } }),
+    mutationFn: ({
+      categoryId,
+      name,
+      sourceId,
+    }: { categoryId: number; name: string; sourceId: number }) =>
+      AccountsService.updateCategory({
+        categoryId,
+        requestBody: { name, source_id: sourceId },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
-      setEditingCategory(null);
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
+      setEditingCategory(null)
     },
-  });
+  })
 
   const addCategoryMutation = useMutation({
     mutationFn: () =>
-      AccountsService.createCategory({ sourceId: accountId, requestBody: { source_id: accountId, name: newCategory } }),
+      AccountsService.createCategory({
+        sourceId: accountId,
+        requestBody: { source_id: accountId, name: newCategory },
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
-      setNewCategory("");
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
+      setNewCategory("")
     },
-  });
+  })
 
   return (
     <Box>
@@ -80,7 +95,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                         value={editingCategory.name}
                         onChange={(e) =>
                           setEditingCategory((prev) =>
-                            prev ? { ...prev, name: e.target.value } : null
+                            prev ? { ...prev, name: e.target.value } : null,
                           )
                         }
                       />
@@ -101,7 +116,9 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                               sourceId: accountId,
                             })
                           }
-                        > <CheckIcon />
+                        >
+                          {" "}
+                          <CheckIcon />
                           Save
                         </Button>
                         <Button
@@ -110,7 +127,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           onClick={() => setEditingCategory(null)}
                         >
                           <CloseIcon />
-
                         </Button>
                       </HStack>
                     ) : (
@@ -118,7 +134,12 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                         <Button
                           size="sm"
                           aria-label="Edit"
-                          onClick={() => setEditingCategory({ id: category.id, name: category.name })}
+                          onClick={() =>
+                            setEditingCategory({
+                              id: category.id,
+                              name: category.name,
+                            })
+                          }
                         >
                           <EditIcon /> Edit
                         </Button>
@@ -126,7 +147,9 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           size="sm"
                           colorScheme="red"
                           aria-label="Delete"
-                          onClick={() => deleteCategoryMutation.mutate(category.id)}
+                          onClick={() =>
+                            deleteCategoryMutation.mutate(category.id)
+                          }
                         >
                           <DeleteIcon />
                           Delete
@@ -154,11 +177,12 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
               Add Category
             </Button>
           </HStack>
-          <Heading size="sm">Note: if you add or remove a category we will recategorize your transactions</Heading>
+          <Heading size="sm">
+            Note: if you add or remove a category we will recategorize your
+            transactions
+          </Heading>
         </VStack>
       )}
     </Box>
-  );
-};
-
-
+  )
+}

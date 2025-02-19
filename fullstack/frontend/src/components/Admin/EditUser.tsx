@@ -1,9 +1,4 @@
-import {
-  Button,
-  Checkbox,
-  Flex,
-  Input,
-} from "@chakra-ui/react"
+import { Button, Checkbox, Flex, Input } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 

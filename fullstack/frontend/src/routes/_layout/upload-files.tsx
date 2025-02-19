@@ -1,74 +1,82 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import FileDropzone from "@/components/Common/Dropzone"
+import { ReprocessButton } from "@/components/Common/ReprocessButton"
+import useCustomToast from "@/hooks/useCustomToast"
 import {
-  Container,
-  Heading,
   Box,
   Button,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableColumnHeader,
-  TableCell,
+  Container,
+  Heading,
   Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
   Text,
-} from "@chakra-ui/react";
-import { ReprocessButton } from "@/components/Common/ReprocessButton";
-import FileDropzone from "@/components/Common/Dropzone";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { UploadsService } from "../../client";
-import { isLoggedIn } from "../../hooks/useAuth";
-import type { UploadedPdfOut } from "../../client";
-import useCustomToast from "@/hooks/useCustomToast";
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { useState } from "react"
+import { UploadsService } from "../../client"
+import type { UploadedPdfOut } from "../../client"
+import { isLoggedIn } from "../../hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/upload-files")({
   component: UploadFiles,
-});
+})
 
 function UploadFiles() {
-  const toast = useCustomToast();
-  const queryClient = useQueryClient();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const toast = useCustomToast()
+  const queryClient = useQueryClient()
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const uploadMutation = useMutation<UploadedPdfOut[], Error, File[]>({
     mutationFn: (files: File[]) => {
-      const data = { formData: { files } };
-      return UploadsService.uploadFiles(data);
+      const data = { formData: { files } }
+      return UploadsService.uploadFiles(data)
     },
     onSuccess: () => {
-      toast("Files uploaded", "The files were processed successfully.", "success");
-      console.log('toasted')
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
-      setSelectedFiles([]);
+      toast(
+        "Files uploaded",
+        "The files were processed successfully.",
+        "success",
+      )
+      console.log("toasted")
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
+      setSelectedFiles([])
     },
     onError: () => {
-      toast("Upload failed", "There was an error uploading the files.", "error");
+      toast("Upload failed", "There was an error uploading the files.", "error")
     },
-  });
+  })
 
-  const { data, isLoading, error, refetch } = useQuery<UploadedPdfOut[], Error>({
-    queryKey: ["uploadedFiles"],
-    queryFn: () => UploadsService.getUploads(),
-    enabled: isLoggedIn(),
-  });
+  const { data, isLoading, error, refetch } = useQuery<UploadedPdfOut[], Error>(
+    {
+      queryKey: ["uploadedFiles"],
+      queryFn: () => UploadsService.getUploads(),
+      enabled: isLoggedIn(),
+    },
+  )
 
   const handleUpload = (files: File[]) => {
     if (files.length > 0) {
-      uploadMutation.mutate(files);
+      uploadMutation.mutate(files)
     }
-  };
+  }
 
   const handleJobUpdate = () => {
-    refetch();
-  };
+    refetch()
+  }
 
   return (
     <Container maxW="large" py={8}>
-      <FileDropzone handleUpload={handleUpload} isLoading={uploadMutation.isPending} />
-
+      <FileDropzone
+        handleUpload={handleUpload}
+        isLoading={uploadMutation.isPending}
+      />
 
       {isLoading ? (
         <Spinner />
@@ -90,7 +98,9 @@ function UploadFiles() {
                 pdf.job && (
                   <TableRow key={pdf.id}>
                     <TableCell>{pdf.filename}</TableCell>
-                    <TableCell>{new Date(pdf.upload_time).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {new Date(pdf.upload_time).toLocaleString()}
+                    </TableCell>
                     <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
                     <TableCell>
                       <ReprocessButton
@@ -99,7 +109,7 @@ function UploadFiles() {
                       />
                     </TableCell>
                   </TableRow>
-                )
+                ),
             )}
           </TableBody>
         </Table.Root>
@@ -107,7 +117,7 @@ function UploadFiles() {
         <Text>No files uploaded yet.</Text>
       )}
     </Container>
-  );
+  )
 }
 
-export default UploadFiles;
+export default UploadFiles

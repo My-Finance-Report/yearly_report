@@ -7,7 +7,7 @@ const useCustomToast = () => {
       toaster.create({
         title,
         description,
-        type: status, 
+        type: status,
         meta: { closable: true },
       })
     },

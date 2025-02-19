@@ -1,10 +1,5 @@
-import {
-  Badge,
-  Container,
-  Heading,
-  Stack,
-} from "@chakra-ui/react"
-import {useColorMode} from "@/components/ui/color-mode"
+import { useColorMode } from "@/components/ui/color-mode"
+import { Badge, Container, Heading, Stack } from "@chakra-ui/react"
 
 import { Radio, RadioGroup } from "@/components/ui/radio"
 

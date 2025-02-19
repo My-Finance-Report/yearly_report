@@ -3,11 +3,11 @@
 import {
   Button,
   Container,
+  Field,
   Flex,
   Input,
   Link,
   Text,
-  Field,
 } from "@chakra-ui/react"
 import {
   Link as RouterLink,
@@ -122,7 +122,9 @@ function SignUp() {
               type="password"
             />
             {errors.confirm_password && (
-              <Field.ErrorText>{errors.confirm_password.message}</Field.ErrorText>
+              <Field.ErrorText>
+                {errors.confirm_password.message}
+              </Field.ErrorText>
             )}
           </Field.Root>
 

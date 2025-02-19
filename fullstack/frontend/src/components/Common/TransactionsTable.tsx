@@ -1,17 +1,17 @@
-import React from "react";
-import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableColumnHeader,
-  TableCell,
   Box,
   Collapsible,
-} from "@chakra-ui/react";
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+} from "@chakra-ui/react"
+import React from "react"
 
-import type { AggregatedGroup, TransactionSourceGroup } from "../../client";
+import type { AggregatedGroup, TransactionSourceGroup } from "../../client"
 
 export function TransactionsTable({
   sourceGroup,
@@ -19,19 +19,21 @@ export function TransactionsTable({
   expandedGroups,
   setActiveSlice,
 }: {
-  sourceGroup: TransactionSourceGroup;
-  toggleGroup: (sourceId: number, groupKey: string) => void;
+  sourceGroup: TransactionSourceGroup
+  toggleGroup: (sourceId: number, groupKey: string) => void
   setActiveSlice: React.Dispatch<
     React.SetStateAction<{ [sourceId: number]: number }>
-  >;
-  expandedGroups: { [key: string]: boolean };
+  >
+  expandedGroups: { [key: string]: boolean }
 }) {
   return (
     <Table.Root variant="outline">
       <TableHeader>
         <TableRow>
-          <TableColumnHeader></TableColumnHeader>
-          <TableColumnHeader>{sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}</TableColumnHeader>
+          <TableColumnHeader />
+          <TableColumnHeader>
+            {sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}
+          </TableColumnHeader>
           <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
           <TableColumnHeader textAlign="end">DEPOSITS</TableColumnHeader>
           <TableColumnHeader textAlign="end">BALANCE</TableColumnHeader>
@@ -54,7 +56,7 @@ export function TransactionsTable({
         </TableRow>
       </TableBody>
     </Table.Root>
-  );
+  )
 }
 
 function renderGroups({
@@ -65,20 +67,20 @@ function renderGroups({
   toggleGroup,
   setActiveSlice,
 }: {
-  groups: AggregatedGroup[];
-  sourceId: number;
-  pathPrefix: string;
-  toggleGroup: (sourceId: number, groupKey: string) => void;
+  groups: AggregatedGroup[]
+  sourceId: number
+  pathPrefix: string
+  toggleGroup: (sourceId: number, groupKey: string) => void
   setActiveSlice: React.Dispatch<
     React.SetStateAction<{ [sourceId: number]: number }>
-  >;
-  expandedGroups: { [key: string]: boolean };
+  >
+  expandedGroups: { [key: string]: boolean }
 }) {
   return groups.map((group, idx) => {
     const groupKey = pathPrefix
       ? `${pathPrefix}-${group.group_id}`
-      : `${group.group_id}`;
-    const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false;
+      : `${group.group_id}`
+    const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
 
     return (
       <React.Fragment key={groupKey}>
@@ -86,12 +88,12 @@ function renderGroups({
           style={{ cursor: "pointer" }}
           onMouseEnter={() => {
             if (!pathPrefix) {
-              setActiveSlice((prev) => ({ ...prev, [sourceId]: idx }));
+              setActiveSlice((prev) => ({ ...prev, [sourceId]: idx }))
             }
           }}
           onMouseLeave={() => {
             if (!pathPrefix) {
-              setActiveSlice((prev) => ({ ...prev, [sourceId]: 0 }));
+              setActiveSlice((prev) => ({ ...prev, [sourceId]: 0 }))
             }
           }}
           onClick={() => toggleGroup(sourceId, groupKey)}
@@ -115,11 +117,19 @@ function renderGroups({
                     <Table.Root variant="outline" size="sm">
                       <TableHeader>
                         <TableRow>
-                          <TableColumnHeader></TableColumnHeader>
-                          <TableColumnHeader>{group.subgroups[0].groupby_kind?.toLocaleUpperCase()}</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">DEPOSITS</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">BALANCE</TableColumnHeader>
+                          <TableColumnHeader />
+                          <TableColumnHeader>
+                            {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
+                          </TableColumnHeader>
+                          <TableColumnHeader textAlign="end">
+                            WITHDRAWALS
+                          </TableColumnHeader>
+                          <TableColumnHeader textAlign="end">
+                            DEPOSITS
+                          </TableColumnHeader>
+                          <TableColumnHeader textAlign="end">
+                            BALANCE
+                          </TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -140,7 +150,9 @@ function renderGroups({
                           <TableColumnHeader>ID</TableColumnHeader>
                           <TableColumnHeader>DESCRIPTION</TableColumnHeader>
                           <TableColumnHeader>DATE</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">AMOUNT</TableColumnHeader>
+                          <TableColumnHeader textAlign="end">
+                            AMOUNT
+                          </TableColumnHeader>
                           <TableColumnHeader>KIND</TableColumnHeader>
                           <TableColumnHeader>ARCHIVED</TableColumnHeader>
                         </TableRow>
@@ -151,11 +163,17 @@ function renderGroups({
                             <TableCell>{transaction.id}</TableCell>
                             <TableCell>{transaction.description}</TableCell>
                             <TableCell>
-                              {new Date(transaction.date_of_transaction).toLocaleDateString()}
+                              {new Date(
+                                transaction.date_of_transaction,
+                              ).toLocaleDateString()}
                             </TableCell>
-                            <TableCell textAlign="end">{transaction.amount}</TableCell>
+                            <TableCell textAlign="end">
+                              {transaction.amount}
+                            </TableCell>
                             <TableCell>{transaction.kind}</TableCell>
-                            <TableCell>{transaction.archived ? "Yes" : "No"}</TableCell>
+                            <TableCell>
+                              {transaction.archived ? "Yes" : "No"}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -167,6 +185,6 @@ function renderGroups({
           </TableRow>
         </Collapsible.Root>
       </React.Fragment>
-    );
-  });
+    )
+  })
 }

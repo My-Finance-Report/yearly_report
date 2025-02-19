@@ -1,20 +1,23 @@
-import { Box, Flex, Spinner, Text, Button, ButtonGroup } from "@chakra-ui/react";
-import { useState } from "react";
-import { GenericPieChart } from "../Charting/PieChart";
-import { GenericBarChart } from "../Charting/BarChart";
-import type { TransactionSourceGroup, GroupByOption, AggregatedGroup } from "../../client";
-
+import { Box, Button, ButtonGroup, Flex, Spinner, Text } from "@chakra-ui/react"
+import { useState } from "react"
+import type {
+  AggregatedGroup,
+  GroupByOption,
+  TransactionSourceGroup,
+} from "../../client"
+import { GenericBarChart } from "../Charting/BarChart"
+import { GenericPieChart } from "../Charting/PieChart"
 
 interface VisualizationProps {
-  activeSlice: { [sourceId: number]: number };
-  sourceGroup: TransactionSourceGroup | undefined;
-  isLoading: boolean;
+  activeSlice: { [sourceId: number]: number }
+  sourceGroup: TransactionSourceGroup | undefined
+  isLoading: boolean
 }
 
 interface ValidatedVisualizationProps {
-  activeSlice: { [sourceId: number]: number };
-  sourceGroup: TransactionSourceGroup;
-  showDeposits: boolean;
+  activeSlice: { [sourceId: number]: number }
+  sourceGroup: TransactionSourceGroup
+  showDeposits: boolean
 }
 
 export function VisualizationPanel({
@@ -22,10 +25,16 @@ export function VisualizationPanel({
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
-  const [showDeposits, setShowDeposits] = useState(true);
+  const [showDeposits, setShowDeposits] = useState(true)
 
   return (
-    <Flex direction="column" gap={4} minH="300px" align="center" justify="center">
+    <Flex
+      direction="column"
+      gap={4}
+      minH="300px"
+      align="center"
+      justify="center"
+    >
       <ButtonGroup size="sm" attached variant="outline" mb={2}>
         <Button
           onClick={() => setShowDeposits(true)}
@@ -45,84 +54,107 @@ export function VisualizationPanel({
         <Spinner size="lg" />
       ) : (
         <Flex gap={4} w="100%" justify="center">
-          <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
-          <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          <PieBox
+            sourceGroup={sourceGroup}
+            activeSlice={activeSlice}
+            showDeposits={showDeposits}
+          />
+          <BarChart
+            sourceGroup={sourceGroup}
+            activeSlice={activeSlice}
+            showDeposits={showDeposits}
+          />
         </Flex>
       )}
     </Flex>
-  );
+  )
 }
 
-
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-  const TIME_OPTIONS: GroupByOption[] = ["month", "year"];
+  const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
     if (group.groupby_kind && TIME_OPTIONS.includes(group.groupby_kind)) {
-      return true;
+      return true
     }
-    return group.subgroups?.some(hasTimeGrouping) || false;
-  };
+    return group.subgroups?.some(hasTimeGrouping) || false
+  }
 
-  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping);
+  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping)
 
-  const categoryKeys = new Set<string>();
+  const categoryKeys = new Set<string>()
   sourceGroup.groups.forEach((group) => {
-    group.subgroups?.forEach((subgroup) => categoryKeys.add(subgroup.group_name));
-  });
+    group.subgroups?.forEach((subgroup) =>
+      categoryKeys.add(subgroup.group_name),
+    )
+  })
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-      const base: Record<string, number | string> = { date: group.group_id.toString() };
+        const base: Record<string, number | string> = {
+          date: group.group_id.toString(),
+        }
 
-      group.subgroups?.forEach((subgroup) => {
-        base[subgroup.group_name] = showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals;
-      });
+        group.subgroups?.forEach((subgroup) => {
+          base[subgroup.group_name] = showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals
+        })
 
-      return base;
-    })
-    : [];
-
+        return base
+      })
+    : []
 
   return (
     <Box flex="1" minW="50%">
       {hasValidTimeGrouping ? (
-        <GenericBarChart
-          data={chartData}
-          dataKey="date"
-          nameKey="date"
-        />
+        <GenericBarChart data={chartData} dataKey="date" nameKey="date" />
       ) : (
         <Box textAlign="center" p={4}>
           <Text fontSize="lg" color="gray.500">
-            This grouping configuration does not support a bar chart. Please include a time-based grouping (e.g., month or year).
+            This grouping configuration does not support a bar chart. Please
+            include a time-based grouping (e.g., month or year).
           </Text>
         </Box>
       )}
     </Box>
-  );
+  )
 }
 
-function PieBox({ sourceGroup, activeSlice, showDeposits }: ValidatedVisualizationProps) {
-  const chartDataMap = sourceGroup.groups.flatMap((group) =>
-    group.subgroups?.map((subgroup) => ({
-      group: subgroup.group_name,
-      amount: showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals,
-    })) || [
-      {
-        group: group.group_name,
-        amount: showDeposits ? group.total_deposits : group.total_withdrawals,
+function PieBox({
+  sourceGroup,
+  activeSlice,
+  showDeposits,
+}: ValidatedVisualizationProps) {
+  const chartDataMap = sourceGroup.groups
+    .flatMap(
+      (group) =>
+        group.subgroups?.map((subgroup) => ({
+          group: subgroup.group_name,
+          amount: showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals,
+        })) || [
+          {
+            group: group.group_name,
+            amount: showDeposits
+              ? group.total_deposits
+              : group.total_withdrawals,
+          },
+        ],
+    )
+    .reduce(
+      (acc, { group, amount }) => {
+        acc[group] = (acc[group] || 0) + amount // Sum amounts for duplicate keys
+        return acc
       },
-    ]
-  ).reduce((acc, { group, amount }) => {
-    acc[group] = (acc[group] || 0) + amount; // Sum amounts for duplicate keys
-    return acc;
-  }, {} as Record<string, number>);
+      {} as Record<string, number>,
+    )
 
   const chartData = Object.entries(chartDataMap).map(([group, amount]) => ({
     group,
     amount,
-  }));
+  }))
 
   return (
     <Box flex="1" minW="50%">
@@ -134,5 +166,5 @@ function PieBox({ sourceGroup, activeSlice, showDeposits }: ValidatedVisualizati
         activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
       />
     </Box>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { ChakraProvider } from "@chakra-ui/react"
 import {
   ColorModeProvider,
   type ColorModeProviderProps,
 } from "@/components/ui/color-mode"
+import { ChakraProvider } from "@chakra-ui/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import ReactDOM from "react-dom/client"
@@ -10,8 +10,8 @@ import { routeTree } from "./routeTree.gen"
 
 import { StrictMode } from "react"
 import { OpenAPI } from "./client"
+import "./index.css"
 import theme from "./theme"
-import './index.css'
 
 OpenAPI.BASE = import.meta.env.VITE_API_URL
 
@@ -32,7 +32,7 @@ declare module "@tanstack/react-router" {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ChakraProvider value={theme}>
-      <ColorModeProvider/>
+      <ColorModeProvider />
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

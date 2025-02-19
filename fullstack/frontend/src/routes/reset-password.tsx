@@ -3,10 +3,10 @@
 import {
   Button,
   Container,
+  Field,
   Heading,
   Input,
   Text,
-  Field,
 } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
@@ -90,7 +90,7 @@ function ResetPassword() {
       <Text textAlign="center">
         Please enter your new password and confirm it to reset your password.
       </Text>
-      
+
       <Field.Root invalid={!!errors.new_password} mt={4}>
         <Field.Label>Set Password</Field.Label>
         <Input

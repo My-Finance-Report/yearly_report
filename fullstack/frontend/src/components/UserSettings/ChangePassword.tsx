@@ -1,29 +1,26 @@
-"use client";
+"use client"
+
+import { Box, Button, Container, Field, Heading, Input } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { type SubmitHandler, useForm } from "react-hook-form"
+
+import { useColorModeValue } from "@/components/ui/color-mode"
 
 import {
-  Box,
-  Button,
-  Container,
-  Heading,
-  Input,
-  Field,
-} from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { type SubmitHandler, useForm } from "react-hook-form";
-
-import {useColorModeValue} from "@/components/ui/color-mode"
-
-import { type ApiError, type UsersUpdatePasswordMeData, UsersService } from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
-import { confirmPasswordRules, handleError, passwordRules } from "../../utils";
+  type ApiError,
+  UsersService,
+  type UsersUpdatePasswordMeData,
+} from "../../client"
+import useCustomToast from "../../hooks/useCustomToast"
+import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
 
 interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
-  confirm_password: string;
+  confirm_password: string
 }
 
 const ChangePassword = () => {
-  const color = useColorModeValue("inherit", "ui.light");
-  const showToast = useCustomToast();
+  const color = useColorModeValue("inherit", "ui.light")
+  const showToast = useCustomToast()
   const {
     register,
     handleSubmit,
@@ -33,23 +30,23 @@ const ChangePassword = () => {
   } = useForm<UpdatePasswordForm>({
     mode: "onBlur",
     criteriaMode: "all",
-  });
+  })
 
   const mutation = useMutation({
     mutationFn: (data: UpdatePassword) =>
       UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Password updated successfully.", "success");
-      reset();
+      showToast("Success!", "Password updated successfully.", "success")
+      reset()
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast);
+      handleError(err, showToast)
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<UpdatePasswordForm> = async (data) => {
-    mutation.mutate(data);
-  };
+    mutation.mutate(data)
+  }
 
   return (
     <Container maxW="full">
@@ -110,7 +107,7 @@ const ChangePassword = () => {
         </Button>
       </Box>
     </Container>
-  );
-};
+  )
+}
 
-export default ChangePassword;
+export default ChangePassword

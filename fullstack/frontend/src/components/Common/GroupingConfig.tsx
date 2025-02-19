@@ -1,28 +1,28 @@
+import { AddIcon } from "@chakra-ui/icons"
 import {
   Box,
+  CloseButton,
+  HStack,
+  Icon,
   Tag,
   TagLabel,
-  HStack,
   Text,
-  CloseButton,
-  Icon,
-} from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+} from "@chakra-ui/react"
 import {
   DndContext,
+  KeyboardSensor,
+  PointerSensor,
   closestCenter,
   useSensor,
   useSensors,
-  PointerSensor,
-  KeyboardSensor,
-} from "@dnd-kit/core";
+} from "@dnd-kit/core"
 import {
   SortableContext,
-  useSortable,
   arrayMove,
   horizontalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+  useSortable,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 export enum GroupByOption {
   category = "category",
@@ -34,10 +34,10 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.category,
   GroupByOption.year,
   GroupByOption.month,
-];
+]
 
 interface GroupingConfigProps {
-  groupingOptions: GroupByOption[];
+  groupingOptions: GroupByOption[]
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
 }
 
@@ -45,47 +45,51 @@ export function GroupingConfig({
   groupingOptions,
   setGroupingOptions,
 }: GroupingConfigProps) {
-
   const handleToggleOption = (option: GroupByOption) => {
-
     setGroupingOptions((prev: GroupByOption[]) => {
       return prev.includes(option)
         ? prev.length > 1
-          ? prev.filter((o) => o !== option) 
+          ? prev.filter((o) => o !== option)
           : prev
-        : [...prev, option]; 
-    });
-  };
-
+        : [...prev, option]
+    })
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
-  );
+    useSensor(KeyboardSensor),
+  )
 
   const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    const { active, over } = event
+    if (!over || active.id === over.id) return
 
-    const oldIndex = groupingOptions.indexOf(active.id as GroupByOption);
-    const newIndex = groupingOptions.indexOf(over.id as GroupByOption);
-    setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex));
-  };
+    const oldIndex = groupingOptions.indexOf(active.id as GroupByOption)
+    const newIndex = groupingOptions.indexOf(over.id as GroupByOption)
+    setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex))
+  }
 
   return (
     <Box p={4} borderWidth={1} borderRadius="md">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
         <HStack spaceX={2} wrap="nowrap">
-            {availableOptions.map((option) => (
+          {availableOptions.map((option) => (
             <Tag.Root
               key={option}
               colorScheme="blue"
-              cursor={groupingOptions.includes(option) ? "not-allowed" : "pointer"}
+              cursor={
+                groupingOptions.includes(option) ? "not-allowed" : "pointer"
+              }
               opacity={groupingOptions.includes(option) ? 0.5 : 1}
               p={2}
               borderRadius="md"
-              onClick={() => !groupingOptions.includes(option) && handleToggleOption(option)}
+              onClick={() =>
+                !groupingOptions.includes(option) && handleToggleOption(option)
+              }
             >
               <Icon as={AddIcon} mr={1} />
               <TagLabel>
@@ -93,10 +97,13 @@ export function GroupingConfig({
               </TagLabel>
             </Tag.Root>
           ))}
-            <Box borderRight={3} borderColor={'#ffffff'}/>
+          <Box borderRight={3} borderColor={"#ffffff"} />
 
           <Text>Group by</Text>
-          <SortableContext items={groupingOptions} strategy={horizontalListSortingStrategy}>
+          <SortableContext
+            items={groupingOptions}
+            strategy={horizontalListSortingStrategy}
+          >
             {groupingOptions.map((option, index) => (
               <SortableItem
                 key={option}
@@ -104,18 +111,18 @@ export function GroupingConfig({
                 noX={groupingOptions.length === 1}
                 onRemove={handleToggleOption}
               >
-              {index !== groupingOptions.length -1 &&
-                <Text mx={1} color="gray.500">
+                {index !== groupingOptions.length - 1 && (
+                  <Text mx={1} color="gray.500">
                     then
-                </Text>
-              }
+                  </Text>
+                )}
               </SortableItem>
             ))}
           </SortableContext>
         </HStack>
       </DndContext>
     </Box>
-  );
+  )
 }
 
 const SortableItem = ({
@@ -124,27 +131,32 @@ const SortableItem = ({
   noX,
   children,
 }: {
-  option: GroupByOption;
-  noX: boolean,
-  onRemove: (option: GroupByOption) => void;
+  option: GroupByOption
+  noX: boolean
+  onRemove: (option: GroupByOption) => void
   children: any
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: option,
-  });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: option,
+    })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+  }
 
   return (
     <>
       <Tag.Root ref={setNodeRef} style={style} {...attributes} {...listeners}>
-        <Text cursor="grab">{option.charAt(0).toUpperCase() + option.slice(1)}</Text>
-        {!noX && <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />}
+        <Text cursor="grab">
+          {option.charAt(0).toUpperCase() + option.slice(1)}
+        </Text>
+        {!noX && (
+          <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
+        )}
       </Tag.Root>
       {children}
     </>
-  );
-};
+  )
+}

@@ -1,14 +1,14 @@
 import { AccountsService } from "@/client"
-import { isLoggedIn } from "@/hooks/useAuth"
 import { CategoriesManager } from "@/components/Common/CategoriesManager"
+import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Container,
+  Flex,
   Heading,
+  Spinner,
   Tabs,
   VStack,
-  Spinner,
   useTabs,
-  Flex,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -18,8 +18,11 @@ export const Route = createFileRoute("/_layout/manage-accounts")({
 })
 
 function ManageAccounts() {
-
-  const { data: accounts, isLoading, isError } = useQuery({
+  const {
+    data: accounts,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["accounts"],
     queryFn: AccountsService.getTransactionSources,
     enabled: isLoggedIn(),
@@ -27,7 +30,7 @@ function ManageAccounts() {
 
   const tabs = useTabs({
     defaultValue: "0",
-  });
+  })
 
   if (isError) {
     return (

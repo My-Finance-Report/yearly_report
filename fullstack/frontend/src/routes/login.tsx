@@ -1,22 +1,26 @@
-import { Button, Container, Input, Field, Link, Text } from "@chakra-ui/react";
-import {PasswordInput} from '@/components/ui/password-input'
-import { createFileRoute, redirect, Link as RouterLink } from "@tanstack/react-router";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { Body_login_login_access_token as AccessToken } from "../client";
-import useAuth, { isLoggedIn } from "../hooks/useAuth";
-import { emailPattern } from "../utils";
+import { PasswordInput } from "@/components/ui/password-input"
+import { Button, Container, Field, Input, Link, Text } from "@chakra-ui/react"
+import {
+  Link as RouterLink,
+  createFileRoute,
+  redirect,
+} from "@tanstack/react-router"
+import { type SubmitHandler, useForm } from "react-hook-form"
+import type { Body_login_login_access_token as AccessToken } from "../client"
+import useAuth, { isLoggedIn } from "../hooks/useAuth"
+import { emailPattern } from "../utils"
 
 export const Route = createFileRoute("/login")({
   component: Login,
   beforeLoad: async () => {
     if (isLoggedIn()) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: "/" })
     }
   },
-});
+})
 
 function Login() {
-  const { loginMutation, error, resetError } = useAuth();
+  const { loginMutation, error, resetError } = useAuth()
   const {
     register,
     handleSubmit,
@@ -28,17 +32,17 @@ function Login() {
       username: "",
       password: "",
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<AccessToken> = async (data) => {
-    if (isSubmitting) return;
-    resetError();
+    if (isSubmitting) return
+    resetError()
     try {
-      await loginMutation.mutateAsync(data);
+      await loginMutation.mutateAsync(data)
     } catch {
       // error is handled by useAuth hook
     }
-  };
+  }
 
   return (
     <Container
@@ -95,7 +99,7 @@ function Login() {
         </Link>
       </Text>
     </Container>
-  );
+  )
 }
 
-export default Login;
+export default Login

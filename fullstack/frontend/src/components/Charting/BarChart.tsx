@@ -1,56 +1,70 @@
-import * as React from "react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { useTheme } from "next-themes";
+import { Card, CardContent } from "@/components/ui/card"
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/ui/chart"
+import { useTheme } from "next-themes"
+import * as React from "react"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 export interface GenericBarChartProps {
-  data: Array<Record<string, any>>;
-  dataKey: string;
-  nameKey: string;
-  config?: ChartConfig | null;
+  data: Array<Record<string, any>>
+  dataKey: string
+  nameKey: string
+  config?: ChartConfig | null
 }
 
-export function GenericBarChart({ data, nameKey, config }: GenericBarChartProps) {
-  const theme = useTheme();
+export function GenericBarChart({
+  data,
+  nameKey,
+  config,
+}: GenericBarChartProps) {
+  const theme = useTheme()
 
-  const lightModePalette = ["#3182CE", "#38A169", "#E53E3E", "#DD6B20", "#805AD5"];
-  const darkModePalette = ["#63B3ED", "#68D391", "#FC8181", "#F6AD55", "#B794F4"];
+  const lightModePalette = [
+    "#3182CE",
+    "#38A169",
+    "#E53E3E",
+    "#DD6B20",
+    "#805AD5",
+  ]
+  const darkModePalette = [
+    "#63B3ED",
+    "#68D391",
+    "#FC8181",
+    "#F6AD55",
+    "#B794F4",
+  ]
 
-  const colorPalette = theme.theme === "dark" ? darkModePalette : lightModePalette;
+  const colorPalette =
+    theme.theme === "dark" ? darkModePalette : lightModePalette
 
   const uniqueKeys = Object.keys(data[0] || {}).filter(
-    (key) => key !== nameKey && key !== "date"
-  );
+    (key) => key !== nameKey && key !== "date",
+  )
 
   const computedConfig: ChartConfig = React.useMemo(() => {
-    if (config) return config;
+    if (config) return config
 
     return uniqueKeys.reduce((acc, key, index) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
         color: colorPalette[index % colorPalette.length],
-      };
-      return acc;
-    }, {} as ChartConfig);
-  }, [data, config, theme, nameKey]);
+      }
+      return acc
+    }, {} as ChartConfig)
+  }, [data, config, theme, nameKey])
 
   return (
     <Card>
       <CardContent className="px-2 sm:p-6">
-        <ChartContainer config={computedConfig} className="aspect-auto h-[250px] w-full">
-          <BarChart
-            data={data}
-            margin={{ left: 12, right: 12 }}
-          >
+        <ChartContainer
+          config={computedConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <BarChart data={data} margin={{ left: 12, right: 12 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -85,12 +99,14 @@ export function GenericBarChart({ data, nameKey, config }: GenericBarChartProps)
                 dataKey={key}
                 stackId="a"
                 fill={computedConfig[key]?.color || "gray"}
-                radius={index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                radius={
+                  index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
+                }
               />
             ))}
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -53,7 +53,7 @@ function RecoverPassword() {
       showToast(
         "Email sent.",
         "We sent an email with a link to get back into your account.",
-        "success"
+        "success",
       )
       reset()
     },
@@ -95,7 +95,9 @@ function RecoverPassword() {
           placeholder="Email"
           type="email"
         />
-        {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
+        {errors.email && (
+          <Field.ErrorText>{errors.email.message}</Field.ErrorText>
+        )}
       </Field.Root>
 
       <Button variant="primary" type="submit" isLoading={isSubmitting}>

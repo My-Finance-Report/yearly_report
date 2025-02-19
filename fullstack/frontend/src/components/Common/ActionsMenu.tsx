@@ -1,9 +1,4 @@
-import {
-  Button,
-  Menu,
-  MenuItem,
-  useDisclosure,
-} from "@chakra-ui/react"
+import { Button, Menu, MenuItem, useDisclosure } from "@chakra-ui/react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
