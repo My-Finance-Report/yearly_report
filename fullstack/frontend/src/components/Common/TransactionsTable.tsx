@@ -31,10 +31,10 @@ export function TransactionsTable({
       <TableHeader>
         <TableRow>
           <TableColumnHeader></TableColumnHeader>
-          <TableColumnHeader>Group</TableColumnHeader>
-          <TableColumnHeader textAlign="end">Withdrawals</TableColumnHeader>
-          <TableColumnHeader textAlign="end">Deposits</TableColumnHeader>
-          <TableColumnHeader textAlign="end">Balance</TableColumnHeader>
+          <TableColumnHeader>{sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}</TableColumnHeader>
+          <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
+          <TableColumnHeader textAlign="end">DEPOSITS</TableColumnHeader>
+          <TableColumnHeader textAlign="end">BALANCE</TableColumnHeader>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -82,7 +82,6 @@ function renderGroups({
 
     return (
       <React.Fragment key={groupKey}>
-        {/* Expandable row */}
         <TableRow
           style={{ cursor: "pointer" }}
           onMouseEnter={() => {
@@ -117,10 +116,10 @@ function renderGroups({
                       <TableHeader>
                         <TableRow>
                           <TableColumnHeader></TableColumnHeader>
-                          <TableColumnHeader>Group</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">Withdrawals</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">Deposits</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">Balance</TableColumnHeader>
+                          <TableColumnHeader>{group.subgroups[0].groupby_kind?.toLocaleUpperCase()}</TableColumnHeader>
+                          <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
+                          <TableColumnHeader textAlign="end">DEPOSITS</TableColumnHeader>
+                          <TableColumnHeader textAlign="end">BALANCE</TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -139,11 +138,11 @@ function renderGroups({
                       <TableHeader>
                         <TableRow>
                           <TableColumnHeader>ID</TableColumnHeader>
-                          <TableColumnHeader>Description</TableColumnHeader>
-                          <TableColumnHeader>Date</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">Amount</TableColumnHeader>
-                          <TableColumnHeader>Kind</TableColumnHeader>
-                          <TableColumnHeader>Archived</TableColumnHeader>
+                          <TableColumnHeader>DESCRIPTION</TableColumnHeader>
+                          <TableColumnHeader>DATE</TableColumnHeader>
+                          <TableColumnHeader textAlign="end">AMOUNT</TableColumnHeader>
+                          <TableColumnHeader>KIND</TableColumnHeader>
+                          <TableColumnHeader>ARCHIVED</TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
