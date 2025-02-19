@@ -1,8 +1,8 @@
-import { Box, Flex, Spinner, Text } from "@chakra-ui/react";
+import { Box, Flex, Spinner, Text, Button, ButtonGroup } from "@chakra-ui/react";
+import { useState } from "react";
 import { GenericPieChart } from "../Charting/PieChart";
 import { GenericBarChart } from "../Charting/BarChart";
 import type { TransactionSourceGroup, GroupByOption, AggregatedGroup } from "../../client";
-
 
 
 interface VisualizationProps {
@@ -13,8 +13,8 @@ interface VisualizationProps {
 
 interface ValidatedVisualizationProps {
   activeSlice: { [sourceId: number]: number };
-  sourceGroup: TransactionSourceGroup
-  isLoading: boolean;
+  sourceGroup: TransactionSourceGroup;
+  showDeposits: boolean;
 }
 
 export function VisualizationPanel({
@@ -22,92 +22,114 @@ export function VisualizationPanel({
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
+  const [showDeposits, setShowDeposits] = useState(true);
+
   return (
-    <Flex gap={4} minH="300px" align="center" justify="center">
+    <Flex direction="column" gap={4} minH="300px" align="center" justify="center">
+      <ButtonGroup size="sm" attached variant="outline" mb={2}>
+        <Button
+          onClick={() => setShowDeposits(true)}
+          colorScheme={showDeposits ? "blue" : "gray"}
+        >
+          Deposits
+        </Button>
+        <Button
+          onClick={() => setShowDeposits(false)}
+          colorScheme={!showDeposits ? "red" : "gray"}
+        >
+          Withdrawals
+        </Button>
+      </ButtonGroup>
+
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
-        <>
-          <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} isLoading={isLoading} />
-          <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} isLoading={isLoading} />
-        </>
+        <Flex gap={4} w="100%" justify="center">
+          <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+        </Flex>
       )}
     </Flex>
   );
 }
 
 
-function BarChart({ sourceGroup }: ValidatedVisualizationProps) {
-  const TIME_OPTIONS: GroupByOption[] = ['month', 'year']
+function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
+  const TIME_OPTIONS: GroupByOption[] = ["month", "year"];
+
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
     if (group.groupby_kind && TIME_OPTIONS.includes(group.groupby_kind)) {
       return true;
     }
-
     return group.subgroups?.some(hasTimeGrouping) || false;
   };
 
   const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping);
 
+  const categoryKeys = new Set<string>();
+  sourceGroup.groups.forEach((group) => {
+    group.subgroups?.forEach((subgroup) => categoryKeys.add(subgroup.group_name));
+  });
 
   const chartData = hasValidTimeGrouping
-    ? sourceGroup.groups.map((group) => ({
-      date: group.group_id.toString(),
-      deposits: group.total_deposits,
-      withdrawals: group.total_withdrawals,
-    }))
+    ? sourceGroup.groups.map((group) => {
+      const base = { date: group.group_id.toString() };
+      group.subgroups?.forEach((subgroup) => {
+        base[subgroup.group_name] = showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals;
+      });
+      return base;
+    })
     : [];
 
-  return hasValidTimeGrouping ? (
-    <GenericBarChart
-      data={chartData}
-      dataKey="deposits"
-      nameKey="date"
-      title={`Deposits & Withdrawals for ${sourceGroup.transaction_source_name}`}
-      config={{
-        deposits: { label: "Deposits", color: "blue.400" },
-        withdrawals: { label: "Withdrawals", color: "red.400" },
-      }}
-    />
-  ) : (
-    <Box textAlign="center" p={4}>
-      <Text fontSize="lg" color="gray.500">
-        This grouping configuration does not support a bar chart. Please include a time-based grouping (e.g., month or year).
-      </Text>
+  return (
+    <Box flex="1" minW="50%">
+      {hasValidTimeGrouping ? (
+        <GenericBarChart
+          data={chartData}
+          dataKey="date"
+          nameKey="date"
+        />
+      ) : (
+        <Box textAlign="center" p={4}>
+          <Text fontSize="lg" color="gray.500">
+            This grouping configuration does not support a bar chart. Please include a time-based grouping (e.g., month or year).
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 }
 
-function PieBox({ sourceGroup, activeSlice }: ValidatedVisualizationProps) {
+function PieBox({ sourceGroup, activeSlice, showDeposits }: ValidatedVisualizationProps) {
+  const chartDataMap = sourceGroup.groups.flatMap((group) =>
+    group.subgroups?.map((subgroup) => ({
+      group: subgroup.group_name,
+      amount: showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals,
+    })) || [
+      {
+        group: group.group_name,
+        amount: showDeposits ? group.total_deposits : group.total_withdrawals,
+      },
+    ]
+  ).reduce((acc, { group, amount }) => {
+    acc[group] = (acc[group] || 0) + amount; // Sum amounts for duplicate keys
+    return acc;
+  }, {} as Record<string, number>);
+
+  const chartData = Object.entries(chartDataMap).map(([group, amount]) => ({
+    group,
+    amount,
+  }));
 
   return (
-    <>
-      <Box flex="1">
-        <GenericPieChart
-          data={sourceGroup.groups.map((group) => ({
-            group: group.group_name,
-            amount: group.total_deposits,
-          }))}
-          dataKey="visitors"
-          nameKey="group"
-          title="Deposits"
-          config={null}
-          activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
-        />
-      </Box>
-      <Box flex="1">
-        <GenericPieChart
-          data={sourceGroup.groups.map((group) => ({
-            group: group.group_name,
-            visitors: group.total_withdrawals,
-          }))}
-          dataKey="visitors"
-          nameKey="group"
-          title="Withdrawals"
-          config={null}
-          activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
-        />
-      </Box>
-    </>
-  )
+    <Box flex="1" minW="50%">
+      <GenericPieChart
+        data={chartData}
+        dataKey="amount"
+        nameKey="group"
+        config={null}
+        activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
+      />
+    </Box>
+  );
 }

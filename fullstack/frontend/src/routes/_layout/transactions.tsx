@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_layout/transactions")({
 
 function Transactions() {
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
-  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.category]);
+  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.category, GroupByOption.month]);
   const [activeSlice, setActiveSlice] = useState<{ [sourceId: number]: number }>({});
   const [activeGroup, setActiveGroup] = useState<number>(0);
 

@@ -2,10 +2,8 @@ import { Pie, PieChart, Sector, Cell } from "recharts";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
 
 import {
-  CardHeader,
   CardContent,
   CardFooter,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -20,7 +18,6 @@ export interface GenericPieChartProps {
   data: Array<Record<string, any>>;
   dataKey: string;
   nameKey: string;
-  title: string;
   config?: ChartConfig | null;
   innerRadius?: number;
   activeIndex?: number;
@@ -31,7 +28,6 @@ export function GenericPieChart({
   data,
   dataKey,
   nameKey,
-  title,
   config,
   innerRadius = 60,
   activeIndex = 0,
@@ -63,9 +59,6 @@ export function GenericPieChart({
 
   return (
     <Box className="flex flex-col">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer config={finalConfig} className="aspect-square max-h-[250px]">
           <PieChart>
