@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, Flex, Spinner, Text } from "@chakra-ui/react"
+import { Box, Button, ButtonGroup, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
 import { useState } from "react"
 import type {
   AggregatedGroup,
@@ -7,6 +7,7 @@ import type {
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
+import { GenericSankeyChart } from "../Charting/SankeyChart"
 
 interface VisualizationProps {
   activeSlice: { [sourceId: number]: number }
@@ -53,18 +54,12 @@ export function VisualizationPanel({
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
-        <Flex gap={4} w="100%" justify="center">
-          <PieBox
-            sourceGroup={sourceGroup}
-            activeSlice={activeSlice}
-            showDeposits={showDeposits}
-          />
-          <BarChart
-            sourceGroup={sourceGroup}
-            activeSlice={activeSlice}
-            showDeposits={showDeposits}
-          />
-        </Flex>
+        <Grid templateColumns="repeat(2, 1fr)" gap={4} w="100%">
+          <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
+        </Grid>
+
       )}
     </Flex>
   )
@@ -91,18 +86,18 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-        const base: Record<string, number | string> = {
-          date: group.group_id.toString(),
-        }
+      const base: Record<string, number | string> = {
+        date: group.group_id.toString(),
+      }
 
-        group.subgroups?.forEach((subgroup) => {
-          base[subgroup.group_name] = showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals
-        })
-
-        return base
+      group.subgroups?.forEach((subgroup) => {
+        base[subgroup.group_name] = showDeposits
+          ? subgroup.total_deposits
+          : subgroup.total_withdrawals
       })
+
+      return base
+    })
     : []
 
   return (
@@ -167,4 +162,52 @@ function PieBox({
       />
     </Box>
   )
+}
+
+function SankeyBox({ sourceGroup, showDeposits }: { sourceGroup: TransactionSourceGroup; showDeposits: boolean }) {
+  const nodes: { name: string; id: number }[] = [];
+  const links: { source: number; target: number; value: number }[] = [];
+  const nodeIndexMap = new Map<string, number>(); // Maps group names to node IDs
+
+  // Add deposits and withdrawals as starting nodes
+  ["deposits", "withdrawals"].forEach((name, idx) => {
+    nodes.push({ name, id: idx });
+    nodeIndexMap.set(name, idx);
+  });
+
+  let nextNodeId = nodes.length;
+
+  // Generate nodes and links
+  sourceGroup.groups.forEach((group) => {
+    const parentId = nodeIndexMap.get(group.group_name);
+
+    if (parentId === undefined) {
+      nodes.push({ name: group.group_name, id: nextNodeId });
+      nodeIndexMap.set(group.group_name, nextNodeId);
+      nextNodeId++;
+    }
+
+    group.subgroups?.forEach((subgroup) => {
+      let subgroupId = nodeIndexMap.get(subgroup.group_name);
+
+      if (subgroupId === undefined) {
+        nodes.push({ name: subgroup.group_name, id: nextNodeId });
+        nodeIndexMap.set(subgroup.group_name, nextNodeId);
+        subgroupId = nextNodeId;
+        nextNodeId++;
+      }
+
+      links.push({
+        source: parentId!,
+        target: subgroupId,
+        value: showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals,
+      });
+    });
+  });
+
+  return (
+    <Box flex="1" minW="50%">
+      <GenericSankeyChart data={{ nodes, links }} />
+    </Box>
+  );
 }
