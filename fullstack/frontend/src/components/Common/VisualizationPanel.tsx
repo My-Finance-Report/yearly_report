@@ -176,7 +176,6 @@ function SankeyBox({ sourceGroup, showDeposits }: { sourceGroup: TransactionSour
 
   let nextNodeId = nodes.length;
 
-  // Generate nodes and links
   sourceGroup.groups.forEach((group) => {
     const parentId = nodeIndexMap.get(group.group_name);
 
