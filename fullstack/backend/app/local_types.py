@@ -52,6 +52,8 @@ class UserRegister(BaseModel):
     email: str
     password: str
     full_name: str
+    is_superuser: bool = False
+    is_active: bool = True
 
 
 class UsersPublic(BaseModel):
