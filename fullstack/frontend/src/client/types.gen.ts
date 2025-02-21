@@ -160,6 +160,8 @@ export type UserRegister = {
   email: string
   password: string
   full_name: string
+  is_superuser?: boolean
+  is_active?: boolean
 }
 
 export type UsersPublic = {
@@ -168,7 +170,9 @@ export type UsersPublic = {
 }
 
 export type UserUpdate = {
+  password: string
   email: string
+  is_superuser?: boolean
 }
 
 export type UserUpdateMe = {

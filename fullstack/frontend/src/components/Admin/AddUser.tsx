@@ -18,7 +18,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { type UserCreate, UsersService } from "../../client"
+import { type UserRegister, UsersService } from "../../client"
 import type { ApiError } from "../../client/core/ApiError"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern, handleError } from "../../utils"
@@ -28,7 +28,7 @@ interface AddUserProps {
   onClose: () => void
 }
 
-interface UserCreateForm extends UserCreate {
+interface UserCreateForm extends UserRegister {
   confirm_password: string
 }
 
@@ -55,7 +55,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UserCreate) =>
+    mutationFn: (data: UserRegister) =>
       UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User created successfully.", "success")
@@ -77,14 +77,14 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose}>
       <DialogBackdrop />
-      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)} size="md">
+      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogHeader>
           <DialogTitle>Add User</DialogTitle>
           <DialogCloseTrigger />
         </DialogHeader>
 
         <DialogBody>
-          <Field.Root invalid={!!errors.email} isRequired>
+          <Field.Root invalid={!!errors.email} required>
             <Field.Label htmlFor="email">Email</Field.Label>
             <Input
               id="email"
@@ -113,7 +113,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
             )}
           </Field.Root>
 
-          <Field.Root mt={4} invalid={!!errors.password} isRequired>
+          <Field.Root mt={4} invalid={!!errors.password} required>
             <Field.Label htmlFor="password">Set Password</Field.Label>
             <Input
               id="password"
@@ -132,7 +132,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
             )}
           </Field.Root>
 
-          <Field.Root mt={4} invalid={!!errors.confirm_password} isRequired>
+          <Field.Root mt={4} invalid={!!errors.confirm_password} required>
             <Field.Label htmlFor="confirm_password">
               Confirm Password
             </Field.Label>
@@ -155,17 +155,17 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
           </Field.Root>
 
           <Flex mt={4} gap={4}>
-            <Checkbox {...register("is_superuser")} colorScheme="teal">
+            <Checkbox.Root {...register("is_superuser")} colorScheme="teal">
               Is superuser?
-            </Checkbox>
-            <Checkbox {...register("is_active")} colorScheme="teal">
+            </Checkbox.Root>
+            <Checkbox.Root {...register("is_active")} colorScheme="teal">
               Is active?
-            </Checkbox>
+            </Checkbox.Root>
           </Flex>
         </DialogBody>
 
         <DialogFooter gap={3}>
-          <Button variant="primary" type="submit" isLoading={isSubmitting}>
+          <Button variant="outline" type="submit" loading={isSubmitting}>
             Save
           </Button>
           <DialogCloseTrigger asChild>

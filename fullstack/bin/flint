@@ -5,4 +5,4 @@ set -x
 
 
 cd frontend
-npm run lint
+npm run lint 

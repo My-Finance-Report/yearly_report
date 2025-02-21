@@ -1,9 +1,9 @@
-import { ColorModeProvider } from "./components/ui/color-mode"
 import { ChakraProvider } from "@chakra-ui/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import React from "react"
 import ReactDOM from "react-dom/client"
+import { ColorModeProvider } from "./components/ui/color-mode"
 import { routeTree } from "./routeTree.gen"
 
 import { StrictMode } from "react"
@@ -26,8 +26,13 @@ declare module "@tanstack/react-router" {
   }
 }
 
-// biome-ignore lint/style/noNonNullAssertion: <explanation>
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root")
+
+if (!root) {
+  throw "im not sure why this would happen"
+}
+
+ReactDOM.createRoot(root).render(
   <StrictMode>
     <ChakraProvider value={theme}>
       <ColorModeProvider />

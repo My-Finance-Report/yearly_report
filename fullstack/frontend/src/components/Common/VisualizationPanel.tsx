@@ -103,20 +103,20 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-      const base: Record<string, number | string> = {
-        date: group.group_id.toString(),
-      }
-
-      if (group.subgroups) {
-        for (const subgroup of group.subgroups) {
-          base[subgroup.group_name] = showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals
+        const base: Record<string, number | string> = {
+          date: group.group_id.toString(),
         }
-      }
 
-      return base
-    })
+        if (group.subgroups) {
+          for (const subgroup of group.subgroups) {
+            base[subgroup.group_name] = showDeposits
+              ? subgroup.total_deposits
+              : subgroup.total_withdrawals
+          }
+        }
+
+        return base
+      })
     : []
 
   return (
@@ -134,7 +134,6 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     </Box>
   )
 }
-
 
 function PieBox({
   sourceGroup,
