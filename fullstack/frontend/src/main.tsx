@@ -1,6 +1,6 @@
+import React from "react"
 import {
   ColorModeProvider,
-  type ColorModeProviderProps,
 } from "@/components/ui/color-mode"
 import { ChakraProvider } from "@chakra-ui/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -15,7 +15,6 @@ import theme from "./theme"
 
 OpenAPI.BASE = import.meta.env.VITE_API_URL
 
-console.log(OpenAPI.BASE)
 OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }

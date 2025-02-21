@@ -1,4 +1,5 @@
 import secrets
+import os
 import warnings
 from typing import Annotated, Any, Literal
 
@@ -34,8 +35,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
-    FRONTEND_HOST: str = "http://localhost:5173"
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    FRONTEND_HOST: str = os.environ["FRONTEND_HOST"]
+
+    ENVIRONMENT: Literal["local", "staging", "production"] = os.environ["ENVIRONMENT"]  # type: ignore[assignment]
 
     BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
         []
@@ -66,7 +68,7 @@ class Settings(BaseSettings):
             host=self.POSTGRES_SERVER,
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
-        )
+        )  # type: ignore
 
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False

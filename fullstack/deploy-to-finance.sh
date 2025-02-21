@@ -28,7 +28,7 @@ echo "🐳 Building Backend Image..."
 docker build --platform linux/amd64 -t finance-backend:${IMAGE_TAG} -f backend/Dockerfile backend/
 
 echo "🐳 Building Frontend Image..."
-docker build --platform linux/amd64 -t finance-frontend:${IMAGE_TAG} -f frontend/Dockerfile frontend/
+docker build --platform linux/amd64 --build-arg VITE_API_URL=$VITE_API_URL -t finance-frontend:${IMAGE_TAG} -f frontend/Dockerfile frontend/
 
 echo "🏷️ Tagging Images..."
 docker tag finance-backend:${IMAGE_TAG} ${ECR_BACKEND_URL}
