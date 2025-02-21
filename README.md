@@ -66,3 +66,5 @@ addative upload
 # migration to python
 
 toasts are broken
+no worker queue on app
+no db loaded on app (probably url)
