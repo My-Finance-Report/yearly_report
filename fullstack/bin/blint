@@ -3,7 +3,7 @@
 set -e
 set -x
 
-cd fullstack/backend
+cd backend
 
 mypy app --exclude app/alembic
 ruff check --fix  app

@@ -96,9 +96,9 @@ def create_categorized_transactions_wrapper(categories: list[str]) -> type[BaseM
     return create_model(
         "CategorizedTransactionsWrapper",
         transactions=(
-            list[StrictCategorizedTransaction],
+            list[StrictCategorizedTransaction],  # type: ignore[valid-type]
             Field(..., description="List of categorized transactions"),
-        ),  # type: ignore[valid-type]
+        ),
     )
 
 
