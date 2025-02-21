@@ -5,6 +5,7 @@ from app.async_pipelines.uploaded_file_pipeline.categorizer import (
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessFile,
+    PartialTransaction,
     TransactionsWrapper,
 )
 from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
@@ -23,7 +24,19 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
     )
     return replace(
         in_process,
-        transactions=TransactionsWrapper(transactions=[row for row in query]),
+        transactions=TransactionsWrapper(
+            transactions=[
+                PartialTransaction(
+                    partialTransactionAmount=row.amount,
+                    partialTransactionDescription=row.description,
+                    partialTransactionDateOfTransaction=row.date_of_transaction.strftime(
+                        "%d/%m/%Y"
+                    ),
+                    partialTransactionKind=row.kind.value,
+                )
+                for row in query
+            ]
+        ),
     )
 
 
