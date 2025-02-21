@@ -1,10 +1,12 @@
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from app import crud
 from app.core.config import settings
 from app.models import User
-from ..local_types import UserRegister
+
 from ..db import Session
+from ..local_types import UserRegister
 
 # Create SQLAlchemy engine
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True)

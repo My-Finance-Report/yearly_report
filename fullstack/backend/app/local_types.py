@@ -1,7 +1,9 @@
-from app.models import JobStatus, SourceKind, TransactionKind, User
-from enum import Enum
-from pydantic import BaseModel
 from datetime import datetime
+from enum import Enum
+
+from pydantic import BaseModel
+
+from app.models import JobStatus, SourceKind, TransactionKind
 
 
 class Token(BaseModel):
@@ -38,10 +40,6 @@ class UserBase(BaseModel):
         orm_mode = True
 
 
-class UserCreate(UserBase):
-    password: str
-
-
 class UserOut(UserBase):
     id: int
     created_at: None | datetime = None
@@ -62,7 +60,9 @@ class UsersPublic(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    password: str
     email: str
+    is_superuser: bool = False
 
 
 class UserUpdateMe(BaseModel):

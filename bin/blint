@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+cd fullstack/backend
+
+mypy app --exclude app/alembic
+ruff check --fix  app
+ruff format app 
+

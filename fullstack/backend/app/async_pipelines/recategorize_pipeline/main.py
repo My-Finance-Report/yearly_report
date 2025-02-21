@@ -1,4 +1,5 @@
 from dataclasses import replace
+
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
     insert_categorized_transactions,
@@ -11,8 +12,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
 from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     archive_transactions_if_necessary,
 )
-from app.models import Category, Transaction, TransactionSource, UploadConfiguration
 from app.func_utils import pipe
+from app.models import Category, Transaction, TransactionSource, UploadConfiguration
 
 
 def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
@@ -85,7 +86,6 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
 
 
 def recategorize_pipeline(in_process: InProcessFile) -> None:
-
     pipe(
         in_process,
         apply_upload_config_no_create,

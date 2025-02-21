@@ -3,9 +3,6 @@ from dataclasses import replace
 from datetime import datetime
 from typing import cast
 
-from app.models import Transaction
-
-from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
     InProcessFile,
@@ -13,6 +10,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     create_categorized_transactions_wrapper,
 )
 from app.func_utils import make_batches
+from app.models import Transaction
+from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +20,6 @@ logger = logging.getLogger(__name__)
 def generate_categorization_prompt(
     categories: list[str], transactions: list[PartialTransaction]
 ) -> Prompt:
-
     return [
         ChatMessage(
             role="user",

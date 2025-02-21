@@ -1,7 +1,6 @@
 import logging
 
-from sqlalchemy import create_engine, text, Engine
-from db import engine
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
@@ -25,7 +24,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     before=before_log(logger, logging.INFO),
     after=after_log(logger, logging.WARN),
 )
-def init(db_engine: Engine) -> None:
+def init() -> None:
     """Attempt to create a database session to check if the DB is awake."""
     try:
         with SessionLocal() as session:
@@ -38,7 +37,7 @@ def init(db_engine: Engine) -> None:
 
 def main() -> None:
     logger.info("Initializing service...")
-    init(engine)
+    init()
     logger.info("Service finished initializing.")
 
 

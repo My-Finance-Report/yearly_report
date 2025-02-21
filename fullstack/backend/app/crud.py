@@ -1,8 +1,7 @@
-from app.db import Session
-
 from app.core.security import get_password_hash, verify_password
+from app.db import Session
+from app.local_types import UserRegister, UserUpdate
 from app.models import User
-from app.local_types import UserRegister
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -23,6 +22,13 @@ def create_user(*, session: Session, user: UserRegister) -> User:
     session.add(new_user)
     session.commit()
     return new_user
+
+
+def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
+    db_user.hashed_password = get_password_hash(user_in.password)
+    session.add(db_user)
+    session.commit()
+    return db_user
 
 
 def authenticate(*, session: Session, email: str, password: str) -> User | None:

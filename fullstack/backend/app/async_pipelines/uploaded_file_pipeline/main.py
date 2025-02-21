@@ -24,7 +24,6 @@ def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
 
 
 def uploaded_file_pipeline(in_process: InProcessFile) -> None:
-
     pipe(
         in_process,
         apply_upload_config,

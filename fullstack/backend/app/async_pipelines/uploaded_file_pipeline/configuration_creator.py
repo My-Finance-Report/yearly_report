@@ -1,9 +1,20 @@
 import logging
-from typing import Optional
-from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PartialAccountCategoryConfig, PartialUploadConfig
+
 from sqlalchemy.orm import Session
+
+from app.async_pipelines.uploaded_file_pipeline.local_types import (
+    InProcessFile,
+    PartialAccountCategoryConfig,
+    PartialUploadConfig,
+)
+from app.models import (
+    Category,
+    SourceKind,
+    TransactionSource,
+    UploadConfiguration,
+    User,
+)
 from app.open_ai_utils import ChatMessage, make_chat_request
-from app.models import Category, SourceKind, UploadConfiguration, User, TransactionSource
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +29,7 @@ def generate_upload_config_prompt(pdf_content: str) -> str:
     - Identify stable keywords that will work across multiple months.
     - Extract start and end keywords that isolate this month's transactions.
     - Avoid including summary sections.
-    
+
     ### PDF Content:
     {pdf_content}
     """.strip()
@@ -44,9 +55,9 @@ def generate_account_category_prompt(pdf_content: str) -> str:
     """.strip()
 
 
-
-
-def extract_account_and_categories(session: Session, user: User, pdf_content: str) -> Optional[PartialAccountCategoryConfig]:
+def extract_account_and_categories(
+    pdf_content: str,
+) -> PartialAccountCategoryConfig | None:
     prompt = generate_account_category_prompt(pdf_content)
 
     messages = [ChatMessage(role="user", content=prompt)]
@@ -59,7 +70,12 @@ def extract_account_and_categories(session: Session, user: User, pdf_content: st
         return None
 
 
-def generate_upload_configuration(session: Session, user: User, transaction_source: TransactionSource, pdf_content: str) -> Optional[UploadConfiguration]:
+def generate_upload_configuration(
+    session: Session,
+    user: User,
+    transaction_source: TransactionSource,
+    pdf_content: str,
+) -> UploadConfiguration | None:
     prompt = generate_upload_config_prompt(pdf_content)
 
     messages = [ChatMessage(role="user", content=prompt)]
@@ -76,54 +92,83 @@ def generate_upload_configuration(session: Session, user: User, transaction_sour
         transaction_source_id=transaction_source.id,
         user_id=user.id,
     )
-    
+
     session.add(upload_config)
     session.commit()
     return upload_config
 
-  
+
 HARDCODED_CATEGORIES: dict[SourceKind, list[str]] = {
-    SourceKind.account: ["Income", "Investments", "Credit Card Payments", "Transfers", "Housing"],
-    SourceKind.card: ["Groceries", "Travel", "Gas", "Insurance", "Misc", "Subscriptions", "Credit Card Payments", "Entertainment"],
-    SourceKind.investment: ["Stocks", "Bonds", "Index Funds"]
+    SourceKind.account: [
+        "Income",
+        "Investments",
+        "Credit Card Payments",
+        "Transfers",
+        "Housing",
+    ],
+    SourceKind.card: [
+        "Groceries",
+        "Travel",
+        "Gas",
+        "Insurance",
+        "Misc",
+        "Subscriptions",
+        "Credit Card Payments",
+        "Entertainment",
+    ],
+    SourceKind.investment: ["Stocks", "Bonds", "Index Funds"],
 }
-USE_HARDCODED=True
+USE_HARDCODED = True
 
-def save_account_config(session: Session, user: User, account_config: PartialAccountCategoryConfig) -> TransactionSource:
 
-    existing = session.query(TransactionSource).filter(TransactionSource.name==account_config.name).one_or_none()
+def save_account_config(
+    session: Session, user: User, account_config: PartialAccountCategoryConfig
+) -> TransactionSource:
+    existing = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.name == account_config.name)
+        .one_or_none()
+    )
     if existing:
         return existing
-    
 
-    transaction_source = TransactionSource(source_kind=account_config.kind, name=account_config.name, user_id=user.id)
+    transaction_source = TransactionSource(
+        source_kind=account_config.kind, name=account_config.name, user_id=user.id
+    )
     session.add(transaction_source)
-    session.commit()  
+    session.commit()
 
-    cats_to_use = HARDCODED_CATEGORIES[transaction_source.source_kind] if USE_HARDCODED else account_config.categories
+    cats_to_use = (
+        HARDCODED_CATEGORIES[transaction_source.source_kind]
+        if USE_HARDCODED
+        else account_config.categories
+    )
 
-    categories = [Category(name=cat, source_id=transaction_source.id, user_id=user.id) for cat in cats_to_use]
-    session.add_all(categories) 
-    session.commit()  
+    categories = [
+        Category(name=cat, source_id=transaction_source.id, user_id=user.id)
+        for cat in cats_to_use
+    ]
+    session.add_all(categories)
+    session.commit()
 
     return transaction_source
 
-    
 
-def create_configurations(process: InProcessFile)-> UploadConfiguration:
+def create_configurations(process: InProcessFile) -> UploadConfiguration:
     session = process.session
     user = process.user
     pdf_content = process.file.raw_content
 
-    account_config = extract_account_and_categories(session, user, pdf_content)
+    account_config = extract_account_and_categories(pdf_content)
     if not account_config:
         raise ValueError("Failed to extract account information.")
 
     transaction_source = save_account_config(session, user, account_config)
 
-    upload_config = generate_upload_configuration(session, user, transaction_source, pdf_content)
+    upload_config = generate_upload_configuration(
+        session, user, transaction_source, pdf_content
+    )
     if not upload_config:
         raise ValueError("Failed to extract upload configuration.")
 
     return upload_config
-

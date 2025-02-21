@@ -1,23 +1,30 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db import get_db
-from app.models import TransactionSource, Category, User
-from app.local_types import TransactionSourceBase, TransactionSourceOut, CategoryBase, CategoryOut
+from app.local_types import (
+    CategoryBase,
+    CategoryOut,
+    TransactionSourceBase,
+    TransactionSourceOut,
+)
+from app.models import Category, TransactionSource, User
 from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 
-@router.get("/", response_model=List[TransactionSourceOut])
+@router.get("/", response_model=list[TransactionSourceOut])
 def get_transaction_sources(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TransactionSource]:
-    return session.query(TransactionSource).filter(TransactionSource.user_id == user.id).all()
+    return (
+        session.query(TransactionSource)
+        .filter(TransactionSource.user_id == user.id)
+        .all()
+    )
 
 
 @router.post("/", response_model=TransactionSourceOut)
@@ -28,11 +35,16 @@ def create_transaction_source(
 ) -> TransactionSource:
     existing_source = (
         session.query(TransactionSource)
-        .filter(TransactionSource.user_id == user.id, TransactionSource.name == transaction_source.name)
+        .filter(
+            TransactionSource.user_id == user.id,
+            TransactionSource.name == transaction_source.name,
+        )
         .one()
     )
     if existing_source:
-        raise HTTPException(status_code=400, detail="An account with this name already exists.")
+        raise HTTPException(
+            status_code=400, detail="An account with this name already exists."
+        )
 
     new_source = TransactionSource(**transaction_source.model_dump(), user_id=user.id)
     session.add(new_source)
@@ -49,10 +61,11 @@ def update_transaction_source(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> TransactionSource:
-    db_source = session.query(TransactionSource).filter(
-        TransactionSource.id == source_id,
-        TransactionSource.user_id == user.id
-    ).first()
+    db_source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
 
     if not db_source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
@@ -71,10 +84,11 @@ def delete_transaction_source(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
-    db_source = session.query(TransactionSource).filter(
-        TransactionSource.id == source_id,
-        TransactionSource.user_id == user.id
-    ).first()
+    db_source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
 
     if not db_source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
@@ -83,18 +97,17 @@ def delete_transaction_source(
     session.commit()
 
 
-
-
-@router.get("/{source_id}/categories", response_model=List[CategoryOut])
+@router.get("/{source_id}/categories", response_model=list[CategoryOut])
 def get_categories(
     source_id: int,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Category]:
-    source = session.query(TransactionSource).filter(
-        TransactionSource.id == source_id,
-        TransactionSource.user_id == user.id
-    ).first()
+    source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
 
     if not source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
@@ -109,29 +122,34 @@ def create_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Category:
-
-    source = session.query(TransactionSource).filter(
-        TransactionSource.id == source_id,
-        TransactionSource.user_id == user.id
-    ).first()
+    source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
 
     if not source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
 
-    existing_category = session.query(Category).filter(
-        Category.source_id == source_id,
-        Category.name == category.name
-    ).first()
+    existing_category = (
+        session.query(Category)
+        .filter(Category.source_id == source_id, Category.name == category.name)
+        .first()
+    )
 
     if existing_category:
-        raise HTTPException(status_code=400, detail="Category with this name already exists.")
+        raise HTTPException(
+            status_code=400, detail="Category with this name already exists."
+        )
 
     new_category = Category(**category.model_dump(), user_id=user.id)
     session.add(new_category)
     session.commit()
     session.refresh(new_category)
 
-    enqueue_recategorization(session=session, user_id = user.id, transaction_source_id=new_category.source_id)
+    enqueue_recategorization(
+        session=session, user_id=user.id, transaction_source_id=new_category.source_id
+    )
 
     return new_category
 
@@ -143,10 +161,11 @@ def update_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Category:
-    db_category = session.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == user.id
-    ).first()
+    db_category = (
+        session.query(Category)
+        .filter(Category.id == category_id, Category.user_id == user.id)
+        .first()
+    )
 
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found.")
@@ -165,10 +184,11 @@ def delete_category(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
-    db_category = session.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == user.id
-    ).first()
+    db_category = (
+        session.query(Category)
+        .filter(Category.id == category_id, Category.user_id == user.id)
+        .first()
+    )
 
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found.")
@@ -176,5 +196,6 @@ def delete_category(
     session.delete(db_category)
     session.commit()
 
-    enqueue_recategorization(session=session, user_id = user.id, transaction_source_id=db_category.source_id)
-
+    enqueue_recategorization(
+        session=session, user_id=user.id, transaction_source_id=db_category.source_id
+    )

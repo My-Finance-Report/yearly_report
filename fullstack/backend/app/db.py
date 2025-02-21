@@ -1,8 +1,10 @@
 import os
-from typing import Generator, Any
+from collections.abc import Generator
+from typing import Any
+
+import sqlalchemy.orm as orm
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-import sqlalchemy.orm as orm
 
 load_dotenv()
 

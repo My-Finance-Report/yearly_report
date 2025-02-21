@@ -1,25 +1,24 @@
-from typing import Callable
-from fastapi import APIRouter, Depends, Query
+from collections.abc import Callable
 from itertools import groupby
 
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import (
     get_current_user,
 )
 from app.db import Session, get_db
-from app.models import (
-    Category,
-    Transaction,
-    TransactionSource,
-    User,
-)
-
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,
     GroupByOption,
     TransactionOut,
     TransactionSourceGroup,
+)
+from app.models import (
+    Category,
+    Transaction,
+    TransactionSource,
+    User,
 )
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -115,8 +114,10 @@ def recursive_group(
 
     current = group_options[0]
 
-    # use a lambda to make a "partial"
-    key_fn = lambda txns: group_by_key_funcs[current](txns, category_lookup)
+    # make a "partial"
+    def key_fn(txn: Transaction) -> str:
+        return group_by_key_funcs[current](txn, category_lookup)
+
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
 

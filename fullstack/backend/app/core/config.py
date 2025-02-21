@@ -1,5 +1,5 @@
-import secrets
 import os
+import secrets
 import warnings
 from typing import Annotated, Any, Literal
 
@@ -39,9 +39,9 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: Literal["local", "staging", "production"] = os.environ["ENVIRONMENT"]  # type: ignore[assignment]
 
-    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
-        []
-    )
+    BACKEND_CORS_ORIGINS: Annotated[
+        list[AnyUrl] | str, BeforeValidator(parse_cors)
+    ] = []
 
     @computed_field  # type: ignore[prop-decorator]
     @property

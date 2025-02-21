@@ -12,18 +12,18 @@ from app.api.deps import (
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.db import Session, get_db
-from app.models import (
-    User,
-)
-
 from app.local_types import (
     Message,
-    UserOut,
+    UserBase,
     UserNewPassword,
+    UserOut,
     UserRegister,
     UsersPublic,
-    UserUpdateMe,
     UserUpdate,
+    UserUpdateMe,
+)
+from app.models import (
+    User,
 )
 from app.utils import generate_new_account_email, send_email
 
@@ -35,7 +35,9 @@ router = APIRouter(prefix="/users", tags=["users"])
     dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
-def read_users(session:Session  =  Depends(get_db), skip: int = 0, limit: int = 100) -> Any:
+def read_users(
+    session: Session = Depends(get_db), skip: int = 0, limit: int = 100
+) -> UsersPublic:
     """
     Retrieve users.
     """
@@ -43,13 +45,15 @@ def read_users(session:Session  =  Depends(get_db), skip: int = 0, limit: int = 
 
     users = session.query(User).offset(skip).limit(limit).all()
 
-    return UsersPublic(data=users, count=count)
+    return UsersPublic(
+        data=[UserBase.model_validate(user) for user in users], count=count
+    )
 
 
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserOut
 )
-def create_user(*, session: Session= Depends(get_db), user_in: UserRegister) -> Any:
+def create_user(*, session: Session = Depends(get_db), user_in: UserRegister) -> Any:
     """
     Create a new user.
     """
@@ -75,7 +79,10 @@ def create_user(*, session: Session= Depends(get_db), user_in: UserRegister) -> 
 
 @router.patch("/me", response_model=UserOut)
 def update_user_me(
-    *, session: Session= Depends(get_db), user_in: UserUpdateMe, current_user: User =Depends(get_current_user)
+    *,
+    session: Session = Depends(get_db),
+    user_in: UserUpdateMe,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update own user.
@@ -94,7 +101,10 @@ def update_user_me(
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: Session= Depends(get_db), body: UserNewPassword, current_user:  User =Depends(get_current_user)
+    *,
+    session: Session = Depends(get_db),
+    body: UserNewPassword,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update own password.
@@ -120,7 +130,9 @@ def read_user_me(current_user: User = Depends(get_current_user)) -> User:
 
 
 @router.delete("/me", response_model=Message)
-def delete_user_me(session: Session= Depends(get_db), current_user:User =   Depends(get_current_user)) -> Any:
+def delete_user_me(
+    session: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+) -> Any:
     """
     Delete own user.
     """
@@ -135,7 +147,7 @@ def delete_user_me(session: Session= Depends(get_db), current_user:User =   Depe
 
 
 @router.post("/signup", response_model=UserOut)
-def register_user(user_in: UserRegister, session: Session= Depends(get_db)) -> User:
+def register_user(user_in: UserRegister, session: Session = Depends(get_db)) -> User:
     """
     Create new user without the need to be logged in.
     """
@@ -155,7 +167,9 @@ def register_user(user_in: UserRegister, session: Session= Depends(get_db)) -> U
 
 @router.get("/{user_id}", response_model=UserOut)
 def read_user_by_id(
-    user_id: uuid.UUID, session: Session= Depends(get_db), current_user:User = Depends(get_current_user) 
+    user_id: uuid.UUID,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get a specific user by id.
@@ -178,7 +192,7 @@ def read_user_by_id(
 )
 def update_user(
     *,
-    session: Session= Depends(get_db),
+    session: Session = Depends(get_db),
     user_id: uuid.UUID,
     user_in: UserUpdate,
 ) -> Any:
@@ -206,7 +220,9 @@ def update_user(
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
-    user_id: int,session: Session= Depends(get_db), current_user: User = Depends(get_current_user)
+    user_id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Message:
     """
     Delete a user.

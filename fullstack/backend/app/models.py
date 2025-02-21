@@ -1,17 +1,17 @@
+import enum
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Boolean,
-    Text,
     DateTime,
-    Integer,
-    String,
     Enum,
     ForeignKey,
+    Integer,
+    String,
+    Text,
     UniqueConstraint,
 )
-from typing import Optional, List
-from datetime import datetime, timezone
-import enum
-from sqlalchemy.orm import DeclarativeBase, relationship, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -35,10 +35,10 @@ class JobStatus(str, enum.Enum):
     processing = "processing"
     failed = "failed"
 
+
 class JobKind(str, enum.Enum):
     full_upload = "full_upload"
     recategorize = "recategorize"
-
 
 
 class User(Base):
@@ -49,7 +49,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(
         String, nullable=False
     )  # Renamed for clarity
-    full_name: Mapped[Optional[str]] = mapped_column(
+    full_name: Mapped[str | None] = mapped_column(
         String, nullable=True
     )  # From the other model
     is_active: Mapped[bool] = mapped_column(
@@ -61,9 +61,9 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-    onboarding_step: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    onboarding_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    sessions: Mapped[List["UserSession"]] = relationship(back_populates="user")
+    sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
 
 
 class UserSession(Base):
@@ -119,7 +119,7 @@ class Transaction(Base):
         ForeignKey("transaction_source.id"), nullable=False
     )
     kind: Mapped[TransactionKind] = mapped_column(Enum(TransactionKind), nullable=False)
-    uploaded_pdf_id: Mapped[Optional[int]] = mapped_column(
+    uploaded_pdf_id: Mapped[int | None] = mapped_column(
         ForeignKey("uploaded_pdf.id"), nullable=True
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
@@ -133,9 +133,7 @@ class UploadedPdf(Base):
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    upload_time: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False
-    )  
+    upload_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -149,8 +147,8 @@ class UploadConfiguration(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     filename_regex: Mapped[str] = mapped_column(Text, nullable=False)
-    start_keyword: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    end_keyword: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    start_keyword: Mapped[str | None] = mapped_column(Text, nullable=True)
+    end_keyword: Mapped[str | None] = mapped_column(Text, nullable=True)
     transaction_source_id: Mapped[int] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
@@ -189,10 +187,10 @@ class ProcessFileJob(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-    last_tried_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_tried_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[JobStatus] = mapped_column(Enum(JobStatus), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    config_id: Mapped[Optional[int]] = mapped_column(
+    config_id: Mapped[int | None] = mapped_column(
         ForeignKey("upload_configuration.id"), nullable=True
     )
     pdf_id: Mapped[int] = mapped_column(ForeignKey("uploaded_pdf.id"), nullable=False)

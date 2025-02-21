@@ -1,15 +1,16 @@
-import os
 import logging
+import os
 import time
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Optional
 
-from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
-from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
+from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
+from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+
 from ..async_pipelines.recategorize_pipeline.main import recategorize_pipeline
 
 logging.basicConfig(level=logging.INFO)
@@ -20,8 +21,9 @@ engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-POLL_INTERVAL = 10 
+POLL_INTERVAL = 10
 MAX_ATTEMPTS = 5
+
 
 def reset_stuck_jobs(session: Session) -> None:
     timeout = timedelta(minutes=3)
@@ -34,7 +36,7 @@ def reset_stuck_jobs(session: Session) -> None:
         session.query(ProcessFileJob)
         .filter(
             ProcessFileJob.status == "processing",
-            ProcessFileJob.last_tried_at < now - timeout
+            ProcessFileJob.last_tried_at < now - timeout,
         )
         .all()
     )
@@ -51,13 +53,16 @@ def reset_stuck_jobs(session: Session) -> None:
     logger.info(f"Reset {len(stuck_jobs)} stuck jobs.")
 
 
-
-def fetch_and_lock_next_job(session: Session) -> Optional[ProcessFileJob]:
-    job = session.query(ProcessFileJob).filter(
-        ProcessFileJob.status == "pending",
-        ProcessFileJob.attempt_count < MAX_ATTEMPTS,
-        ProcessFileJob.archived.is_(False),
-    ).first()
+def fetch_and_lock_next_job(session: Session) -> ProcessFileJob | None:
+    job = (
+        session.query(ProcessFileJob)
+        .filter(
+            ProcessFileJob.status == "pending",
+            ProcessFileJob.attempt_count < MAX_ATTEMPTS,
+            ProcessFileJob.archived.is_(False),
+        )
+        .first()
+    )
 
     if job:
         job.status = JobStatus.processing
@@ -69,7 +74,7 @@ def fetch_and_lock_next_job(session: Session) -> Optional[ProcessFileJob]:
     return None
 
 
-def process_next_job(session: Session)->None:
+def process_next_job(session: Session) -> None:
     job = fetch_and_lock_next_job(session)
 
     if not job:
@@ -100,13 +105,13 @@ def try_job(session: Session, job: ProcessFileJob) -> bool:
         return False
 
 
-FUNC_LOOKUP: dict[JobKind, Callable[[InProcessFile],None]] = {
+FUNC_LOOKUP: dict[JobKind, Callable[[InProcessFile], None]] = {
     JobKind.full_upload: uploaded_file_pipeline,
     JobKind.recategorize: recategorize_pipeline,
 }
 
 
-def run_job(session: Session, job: ProcessFileJob)-> None:
+def run_job(session: Session, job: ProcessFileJob) -> None:
     pdf = session.get(UploadedPdf, job.pdf_id)
     if not pdf:
         raise ValueError("PDF record not found!")
@@ -121,14 +126,12 @@ def run_job(session: Session, job: ProcessFileJob)-> None:
     callable(in_process)
 
 
-
-def worker()-> None:
-
+def worker() -> None:
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
             process_next_job(session)
-        time.sleep(POLL_INTERVAL)  
+        time.sleep(POLL_INTERVAL)
 
 
 if __name__ == "__main__":
