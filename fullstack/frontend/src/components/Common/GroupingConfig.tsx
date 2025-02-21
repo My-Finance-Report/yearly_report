@@ -60,7 +60,7 @@ export function GroupingConfig({
     useSensor(KeyboardSensor),
   )
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -134,7 +134,7 @@ const SortableItem = ({
   option: GroupByOption
   noX: boolean
   onRemove: (option: GroupByOption) => void
-  children: any
+  children: React.ReactNode
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({

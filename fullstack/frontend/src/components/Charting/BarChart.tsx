@@ -8,11 +8,12 @@ import {
 import { useTheme } from "next-themes"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import type { GenericChartDataItem } from "./PieChart"
 
 export interface GenericBarChartProps {
-  data: Array<Record<string, any>>
-  dataKey: string
-  nameKey: string
+  data: GenericChartDataItem[]
+  dataKey: keyof GenericChartDataItem
+  nameKey: keyof GenericChartDataItem
   config?: ChartConfig | null
 }
 
@@ -55,7 +56,7 @@ export function GenericBarChart({
       }
       return acc
     }, {} as ChartConfig)
-  }, [data, config, theme, nameKey])
+  }, [config, colorPalette, uniqueKeys])
 
   return (
     <Card>
@@ -72,18 +73,14 @@ export function GenericBarChart({
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tickFormatter={(value) =>
-                value
-              }
+              tickFormatter={(value) => value}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   className="w-[150px]"
                   nameKey="date"
-                  labelFormatter={(value) =>
-                    value
-                  }
+                  labelFormatter={(value) => value}
                 />
               }
             />

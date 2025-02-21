@@ -4,6 +4,5 @@ set -e
 set -x
 
 
-
-cd fullstack/frontend
+cd frontend
 npm run lint

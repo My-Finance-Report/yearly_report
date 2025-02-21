@@ -1,8 +1,20 @@
-import { Sankey, Tooltip } from "recharts";
-import { Box } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
-import React from "react";
-import { Layer } from "recharts";
+import React from "react"
+import { Sankey, Tooltip } from "recharts"
+import { Layer } from "recharts"
+
+interface CustomLinkProps {
+    sourceX: number
+    targetX: number
+    sourceY: number
+    targetY: number
+    sourceControlX: number
+    targetControlX: number
+    linkWidth: number
+    index: number
+    linkColor: string
+}
 
 const CustomLink = ({
     sourceX,
@@ -14,8 +26,8 @@ const CustomLink = ({
     linkWidth,
     index,
     linkColor,
-}: any) => {
-    const [fill, setFill] = React.useState(linkColor);
+}: CustomLinkProps) => {
+    const [fill, setFill] = React.useState(linkColor)
 
     return (
         <Layer key={`CustomLink${index}`}>
@@ -38,22 +50,23 @@ const CustomLink = ({
                 onMouseLeave={() => setFill(linkColor)}
             />
         </Layer>
-    );
-};
-
-
+    )
+}
 
 export interface SankeyChartProps {
     data: {
-        nodes: { name: string }[];
-        links: { source: number; target: number; value: number }[];
-    };
-    width?: number;
-    height?: number;
+        nodes: { name: string }[]
+        links: { source: number; target: number; value: number }[]
+    }
+    width?: number
+    height?: number
 }
 
-export function GenericSankeyChart({ data, width = 960, height = 600 }: SankeyChartProps) {
-
+export function GenericSankeyChart({
+    data,
+    width = 960,
+    height = 600,
+}: SankeyChartProps) {
     const testData = {
         nodes: [
             { name: "Deposits", id: 0 },
@@ -71,7 +84,7 @@ export function GenericSankeyChart({ data, width = 960, height = 600 }: SankeyCh
             { source: 1, target: 4, value: 2000 },
             { source: 1, target: 5, value: 500 },
         ],
-    };
+    }
 
     const lightModePalette = [
         "#3182CE",
@@ -92,9 +105,6 @@ export function GenericSankeyChart({ data, width = 960, height = 600 }: SankeyCh
     const colorPalette =
         theme.theme === "dark" ? darkModePalette : lightModePalette
 
-
-
-
     return (
         <Box borderWidth={1} borderRadius="md" p={4}>
             <Sankey
@@ -105,11 +115,15 @@ export function GenericSankeyChart({ data, width = 960, height = 600 }: SankeyCh
                 nodePadding={20}
                 linkCurvature={0.5}
                 iterations={32}
-                link={(props) => <CustomLink {...props} linkColor={colorPalette[props.index % colorPalette.length]} />}
+                link={(props) => (
+                    <CustomLink
+                        {...props}
+                        linkColor={colorPalette[props.index % colorPalette.length]}
+                    />
+                )}
             >
                 <Tooltip />
             </Sankey>
         </Box>
-    );
+    )
 }
-

@@ -11,10 +11,14 @@ import {
 import { Box } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
 
+export interface GenericChartDataItem {
+  [key: string]: string | number
+}
+
 export interface GenericPieChartProps {
-  data: Array<Record<string, any>>
-  dataKey: string
-  nameKey: string
+  data: GenericChartDataItem[]
+  dataKey: keyof GenericChartDataItem
+  nameKey: keyof GenericChartDataItem
   config?: ChartConfig | null
   innerRadius?: number
   activeIndex?: number
@@ -89,7 +93,7 @@ export function GenericPieChart({
             >
               {data.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${index.toString()}`}
                   fill={
                     finalConfig[entry[nameKey]]?.color ||
                     colorPalette[index % colorPalette.length]

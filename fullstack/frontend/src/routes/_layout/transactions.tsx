@@ -78,13 +78,13 @@ function Transactions() {
         <Tabs.RootProvider variant="enclosed" value={tabs}>
           <Tabs.List>
             {data.groups.map((sourceGroup, index) => (
-              <Tabs.Trigger key={index} value={index.toString()}>
+              <Tabs.Trigger key={index.toString()} value={index.toString()}>
                 {sourceGroup.transaction_source_name}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
           {data.groups.map((sourceGroup, index) => (
-            <Tabs.Content key={index} value={index.toString()}>
+            <Tabs.Content key={index.toString()} value={index.toString()}>
               <TransactionsTable
                 toggleGroup={toggleGroup}
                 sourceGroup={sourceGroup}
