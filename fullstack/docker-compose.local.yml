@@ -1,5 +1,7 @@
 version: "3.8"
 
+# WARNING = this doesn't actually get used in the current build process, see deploy-to-finance.sh
+
 services:
   db:
     image: postgres:12
@@ -29,6 +31,21 @@ services:
       - .env.production
     ports:
       - "8000:8000"
+  worker:
+    build:
+      context: .
+      dockerfile: fullstack/backend/Dockerfile.worker
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    env_file:
+      - .env.production
+    networks:
+      - default
+
   frontend:
     build:
       context: ./frontend
