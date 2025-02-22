@@ -1,21 +1,22 @@
 import {
   Box,
-  Button,
-  ButtonGroup,
   Flex,
   Grid,
+  HStack,
   Spinner,
   Text,
 } from "@chakra-ui/react"
-import { useState } from "react"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import type {
   AggregatedGroup,
   GroupByOption,
   TransactionSourceGroup,
 } from "../../client"
+import { FiUpload, FiDownload, FiArrowDown, FiArrowUp, FiInbox, FiLogOut, FiLogIn } from "react-icons/fi"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
+import { useState } from "react"
 
 interface VisualizationProps {
   activeSlice: { [sourceId: number]: number }
@@ -34,7 +35,31 @@ export function VisualizationPanel({
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
-  const [showDeposits, setShowDeposits] = useState(true)
+
+  const [showDeposits, setShowDeposits] = useState(false)
+
+
+
+  const items =
+    [
+
+      {
+        value: "deposits", label:
+          (<HStack>
+            <Box as={FiLogIn} />
+            Deposits
+          </HStack>
+          )
+      },
+      {
+        value: "withdrawals", label:
+          (<HStack>
+            <Box as={FiLogOut} />
+            Withdrawals
+          </HStack>
+          )
+      }
+    ]
 
   return (
     <Flex
@@ -44,20 +69,12 @@ export function VisualizationPanel({
       align="center"
       justify="center"
     >
-      <ButtonGroup size="sm" attached variant="outline" mb={2}>
-        <Button
-          onClick={() => setShowDeposits(true)}
-          colorScheme={showDeposits ? "blue" : "gray"}
-        >
-          Deposits
-        </Button>
-        <Button
-          onClick={() => setShowDeposits(false)}
-          colorScheme={!showDeposits ? "red" : "gray"}
-        >
-          Withdrawals
-        </Button>
-      </ButtonGroup>
+      <SegmentedControl
+        defaultValue={'withdrawals'}
+        value={showDeposits ? "deposits" : "withdrawals"}
+        items={items}
+        onValueChange={(value) => setShowDeposits(value.value === 'deposits')}
+      />
 
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
@@ -79,6 +96,8 @@ export function VisualizationPanel({
     </Flex>
   )
 }
+
+
 
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
@@ -103,20 +122,20 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-        const base: Record<string, number | string> = {
-          date: group.group_id.toString(),
-        }
+      const base: Record<string, number | string> = {
+        date: group.group_id.toString(),
+      }
 
-        if (group.subgroups) {
-          for (const subgroup of group.subgroups) {
-            base[subgroup.group_name] = showDeposits
-              ? subgroup.total_deposits
-              : subgroup.total_withdrawals
-          }
+      if (group.subgroups) {
+        for (const subgroup of group.subgroups) {
+          base[subgroup.group_name] = showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals
         }
+      }
 
-        return base
-      })
+      return base
+    })
     : []
 
   return (

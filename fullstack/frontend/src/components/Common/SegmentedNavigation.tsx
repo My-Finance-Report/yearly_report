@@ -32,7 +32,10 @@ export function SegmentedNavigation() {
 
       <SegmentedControl
         defaultValue={"/transactions"}
-        value={finalItems.find(({ value }) => location.pathname.startsWith(value))?.value || "/transactions"}
+        value={
+          finalItems.find(({ value }) => location.pathname.startsWith(value))
+            ?.value || "/transactions"
+        }
         items={finalItems.map(({ value, label, icon }) => ({
           value,
           label: (

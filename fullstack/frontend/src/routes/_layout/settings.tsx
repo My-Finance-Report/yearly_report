@@ -1,4 +1,4 @@
-import { Container, Heading, Tabs } from "@chakra-ui/react"
+import { Container, Heading, Tabs, useTabs } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -21,28 +21,37 @@ export const Route = createFileRoute("/_layout/settings")({
 
 function UserSettings() {
   const queryClient = useQueryClient()
+  const tabs = useTabs({
+    defaultValue: "0",
+  })
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
   const finalTabs = currentUser?.is_superuser
     ? tabsConfig.slice(0, 3)
     : tabsConfig
 
   return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
-        User Settings
-      </Heading>
-      <Tabs.Root variant="enclosed">
-        <Tabs.List>
+    <Container
+      maxW="lg"
+      my={8}
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Tabs.RootProvider variant="enclosed" value={tabs} w="full">
+        <Tabs.List justifyContent="center">
           {finalTabs.map((tab, index) => (
-            <Tabs.Trigger value={index.toString()}>{tab.title}</Tabs.Trigger>
+            <Tabs.Trigger key={index.toString()} value={index.toString()}>
+              {tab.title}
+            </Tabs.Trigger>
           ))}
         </Tabs.List>
         {finalTabs.map((tab, index) => (
-          <Tabs.Content value={index.toString()}>
+          <Tabs.Content key={index.toString()} value={index.toString()}>
             <tab.component />
           </Tabs.Content>
         ))}
-      </Tabs.Root>
+      </Tabs.RootProvider>
     </Container>
   )
 }
