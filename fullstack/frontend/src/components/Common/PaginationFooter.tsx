@@ -23,12 +23,12 @@ export function PaginationFooter({
     >
       <Button
         onClick={() => onChangePage(page - 1)}
-        isDisabled={!hasPreviousPage || page <= 1}
+        disabled={!hasPreviousPage || page <= 1}
       >
         Previous
       </Button>
       <span>Page {page}</span>
-      <Button isDisabled={!hasNextPage} onClick={() => onChangePage(page + 1)}>
+      <Button disabled={!hasNextPage} onClick={() => onChangePage(page + 1)}>
         Next
       </Button>
     </Flex>

@@ -1,5 +1,3 @@
-"use client"
-
 import type { ButtonProps, RecipeProps } from "@chakra-ui/react"
 import {
   Button,
@@ -131,7 +129,7 @@ export const FileUploadList = React.forwardRef<
 type Assign<T, U> = Omit<T, keyof U> & U
 
 interface FileInputProps extends Assign<ButtonProps, RecipeProps<"input">> {
-  placeholder?: React.ReactNode
+  placeholder?: string
 }
 
 export const FileInput = React.forwardRef<HTMLButtonElement, FileInputProps>(

@@ -128,7 +128,7 @@ function SignUp() {
             )}
           </Field.Root>
 
-          <Button variant="primary" type="submit" isLoading={isSubmitting}>
+          <Button variant="outline" type="submit" loading={isSubmitting}>
             Sign Up
           </Button>
           <Text>

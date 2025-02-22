@@ -64,7 +64,7 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose}>
       <DialogBackdrop />
-      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)} size="md">
+      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogHeader>
           <DialogTitle>Confirmation Required</DialogTitle>
           <DialogCloseTrigger />
@@ -86,7 +86,7 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
         </DialogBody>
 
         <DialogFooter gap={3}>
-          <Button variant="danger" type="submit" isLoading={isSubmitting}>
+          <Button variant="outline" type="submit" loading={isSubmitting}>
             Confirm
           </Button>
           <DialogCloseTrigger asChild>

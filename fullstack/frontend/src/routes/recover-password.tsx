@@ -80,7 +80,7 @@ function RecoverPassword() {
       <Heading size="xl" color="ui.main" textAlign="center" mb={2}>
         Password Recovery
       </Heading>
-      <Text align="center">
+      <Text>
         A password recovery email will be sent to the registered account.
       </Text>
 
@@ -100,7 +100,7 @@ function RecoverPassword() {
         )}
       </Field.Root>
 
-      <Button variant="primary" type="submit" isLoading={isSubmitting}>
+      <Button variant="outline" type="submit" loading={isSubmitting}>
         Continue
       </Button>
     </Container>

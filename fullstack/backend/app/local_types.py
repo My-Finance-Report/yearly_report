@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -55,14 +56,17 @@ class UserRegister(BaseModel):
 
 
 class UsersPublic(BaseModel):
-    data: list[UserBase]
+    data: list[UserOut]
     count: int
 
 
 class UserUpdate(BaseModel):
-    password: str
+    id: int
+    password: None | str
+    full_name: str
     email: str
     is_superuser: bool = False
+    is_active: bool = True
 
 
 class UserUpdateMe(BaseModel):

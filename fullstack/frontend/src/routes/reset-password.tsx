@@ -12,7 +12,12 @@ import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { type ApiError, LoginService, type NewPassword } from "../client"
+import {
+  type ApiError,
+  LoginService,
+  type NewPassword,
+  type Token,
+} from "../client"
 import { isLoggedIn } from "../hooks/useAuth"
 import useCustomToast from "../hooks/useCustomToast"
 import { confirmPasswordRules, handleError, passwordRules } from "../utils"
@@ -53,7 +58,10 @@ function ResetPassword() {
     const token = new URLSearchParams(window.location.search).get("token")
     if (!token) return
     await LoginService.resetPassword({
-      requestBody: { new_password: data.new_password, token: token },
+      requestBody: {
+        new_password: data.new_password,
+        token: { access_token: token },
+      },
     })
   }
 
@@ -117,7 +125,7 @@ function ResetPassword() {
         )}
       </Field.Root>
 
-      <Button variant="primary" type="submit">
+      <Button variant="outline" type="submit">
         Reset Password
       </Button>
     </Container>

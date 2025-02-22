@@ -1,4 +1,11 @@
-import { Button } from "@chakra-ui/react"
+import {
+  Button,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+} from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { useForm } from "react-hook-form"
@@ -59,44 +66,35 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   }
 
   return (
-    <>
-      <AlertDialog
-        isOpen={isOpen}
-        onClose={onClose}
-        leastDestructiveRef={cancelRef}
-        size={{ base: "sm", md: "md" }}
-        isCentered
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
-            <AlertDialogHeader>Delete {type}</AlertDialogHeader>
+    <Dialog.Root
+      open={isOpen}
+      onExitComplete={onClose}
+      role="alertdialog"
+      size={{ base: "sm", md: "md" }}
+    >
+      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogHeader>Delete {type}</DialogHeader>
 
-            <AlertDialogBody>
-              {type === "User" && (
-                <span>
-                  All items associated with this user will also be{" "}
-                  <strong>permanently deleted. </strong>
-                </span>
-              )}
-              Are you sure? You will not be able to undo this action.
-            </AlertDialogBody>
+        <DialogBody>
+          {type === "User" && (
+            <span>
+              All items associated with this user will also be{" "}
+              <strong>permanently deleted. </strong>
+            </span>
+          )}
+          Are you sure? You will not be able to undo this action.
+        </DialogBody>
 
-            <AlertDialogFooter gap={3}>
-              <Button variant="danger" type="submit" isLoading={isSubmitting}>
-                Delete
-              </Button>
-              <Button
-                ref={cancelRef}
-                onClick={onClose}
-                isDisabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </>
+        <DialogFooter gap={3}>
+          <Button colorScheme="red" type="submit" loading={isSubmitting}>
+            Delete
+          </Button>
+          <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog.Root>
   )
 }
 

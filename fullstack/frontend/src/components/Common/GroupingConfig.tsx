@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react"
 import {
   DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   closestCenter,
@@ -60,7 +61,7 @@ export function GroupingConfig({
     useSensor(KeyboardSensor),
   )
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 

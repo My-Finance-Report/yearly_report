@@ -15,6 +15,8 @@ import useCustomToast from "../../hooks/useCustomToast"
 import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
 
 interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
+  old_password: string
+  new_password: string
   confirm_password: string
 }
 
@@ -33,7 +35,7 @@ const ChangePassword = () => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UpdatePassword) =>
+    mutationFn: (data: UpdatePasswordForm) =>
       UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "Password updated successfully.", "success")
@@ -58,19 +60,19 @@ const ChangePassword = () => {
         as="form"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <Field.Root invalid={!!errors.current_password}>
+        <Field.Root invalid={!!errors.old_password}>
           <Field.Label color={color} htmlFor="current_password">
             Current Password
           </Field.Label>
           <Input
             id="current_password"
-            {...register("current_password")}
+            {...register("old_password")}
             placeholder="Password"
             type="password"
             w="auto"
           />
-          {errors.current_password && (
-            <Field.ErrorText>{errors.current_password.message}</Field.ErrorText>
+          {errors.old_password && (
+            <Field.ErrorText>{errors.old_password.message}</Field.ErrorText>
           )}
         </Field.Root>
 
@@ -102,7 +104,7 @@ const ChangePassword = () => {
           )}
         </Field.Root>
 
-        <Button variant="primary" mt={4} type="submit" isLoading={isSubmitting}>
+        <Button variant="outline" mt={4} type="submit" loading={isSubmitting}>
           Save
         </Button>
       </Box>

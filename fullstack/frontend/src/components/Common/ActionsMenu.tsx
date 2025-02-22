@@ -1,4 +1,4 @@
-import { Button, Menu, MenuItem, useDisclosure } from "@chakra-ui/react"
+import { Button, Menu, useDisclosure } from "@chakra-ui/react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
@@ -18,42 +18,32 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
 
   return (
     <>
-      <Menu>
-        <MenuButton
-          isDisabled={disabled}
-          as={Button}
-          rightIcon={<BsThreeDotsVertical />}
-          variant="unstyled"
-        />
-        <MenuList>
-          <MenuItem
-            onClick={editUserModal.onOpen}
-            icon={<FiEdit fontSize="16px" />}
-          >
-            Edit {type}
-          </MenuItem>
-          <MenuItem
-            onClick={deleteModal.onOpen}
-            icon={<FiTrash fontSize="16px" />}
-            color="ui.danger"
-          >
-            Delete {type}
-          </MenuItem>
-        </MenuList>
+      <Menu.Root>
+        <Button disabled={disabled} as={Button} variant="outline">
+          <BsThreeDotsVertical />
+        </Button>
+        <Menu.Item value={type} onClick={editUserModal.onOpen}>
+          <FiEdit fontSize="16px" />
+          Edit {type}
+        </Menu.Item>
+        <Menu.Item onClick={deleteModal.onOpen} color="ui.danger" value={type}>
+          <FiTrash fontSize="16px" />
+          Delete {type}
+        </Menu.Item>
         {type === "User" ? (
           <EditUser
             user={value as UserOut}
-            isOpen={editUserModal.isOpen}
+            isOpen={editUserModal.open}
             onClose={editUserModal.onClose}
           />
         ) : null}
         <Delete
           type={type}
           id={value.id}
-          isOpen={deleteModal.isOpen}
+          isOpen={deleteModal.open}
           onClose={deleteModal.onClose}
         />
-      </Menu>
+      </Menu.Root>
     </>
   )
 }

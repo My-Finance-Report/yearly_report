@@ -88,7 +88,7 @@ function Login() {
         Forgot password?
       </Link>
 
-      <Button variant="primary" type="submit" isLoading={isSubmitting}>
+      <Button variant="outline" type="submit" loading={isSubmitting}>
         Log In
       </Button>
 

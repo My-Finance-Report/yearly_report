@@ -1,4 +1,12 @@
-import { Badge, Box, Container, Flex, Heading, Table } from "@chakra-ui/react"
+import {
+  Badge,
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Skeleton,
+  Table,
+} from "@chakra-ui/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
@@ -59,35 +67,34 @@ function UsersTable() {
 
   return (
     <>
-      <TableContainer>
-        <Table size={{ base: "sm", md: "md" }}>
-          <Thead>
-            <Tr>
-              <Th width="20%">Full name</Th>
-              <Th width="50%">Email</Th>
-              <Th width="10%">Role</Th>
-              <Th width="10%">Status</Th>
-              <Th width="10%">Actions</Th>
-            </Tr>
-          </Thead>
-          {isPending ? (
-            <Tbody>
-              <Tr>
-                {new Array(4).fill(null).map((_, index) => (
-                  <Td key={index}>
-                    <SkeletonText noOfLines={1} paddingBlock="16px" />
-                  </Td>
+      <Box overflowX="auto">
+        <Table.Root variant="outline">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Full name</Table.ColumnHeader>
+              <Table.ColumnHeader>Email</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="center">Role</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="center">Status</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="center">
+                Actions
+              </Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {isPending ? (
+              <Table.Row>
+                {new Array(5).fill(null).map((_, index) => (
+                  <Table.Cell key={index.toString()}>
+                    <Skeleton maxLines={3} paddingBlock="16px" />
+                  </Table.Cell>
                 ))}
-              </Tr>
-            </Tbody>
-          ) : (
-            <Tbody>
-              {users?.data.map((user) => (
-                <Tr key={user.id}>
-                  <Td
-                    color={!user.full_name ? "ui.dim" : "inherit"}
-                    isTruncated
-                    maxWidth="150px"
+              </Table.Row>
+            ) : (
+              users?.data.map((user) => (
+                <Table.Row key={user.email}>
+                  <Table.Cell
+                    color={!user.full_name ? "gray.500" : "inherit"}
+                    truncate
                   >
                     {user.full_name || "N/A"}
                     {currentUser?.id === user.id && (
@@ -95,36 +102,42 @@ function UsersTable() {
                         You
                       </Badge>
                     )}
-                  </Td>
-                  <Td isTruncated maxWidth="150px">
-                    {user.email}
-                  </Td>
-                  <Td>{user.is_superuser ? "Superuser" : "User"}</Td>
-                  <Td>
-                    <Flex gap={2}>
+                  </Table.Cell>
+                  <Table.Cell truncate>{user.email}</Table.Cell>
+                  <Table.Cell textAlign="center">
+                    {user.is_superuser ? "Superuser" : "User"}
+                  </Table.Cell>
+                  <Table.Cell textAlign="center">
+                    <Flex gap={2} justifyContent="center">
                       <Box
                         w="2"
                         h="2"
                         borderRadius="50%"
-                        bg={user.is_active ? "ui.success" : "ui.danger"}
-                        alignSelf="center"
+                        bg={user.is_active ? "green.500" : "red.500"}
                       />
                       {user.is_active ? "Active" : "Inactive"}
                     </Flex>
-                  </Td>
-                  <Td>
+                  </Table.Cell>
+                  <Table.Cell textAlign="center">
                     <ActionsMenu
                       type="User"
                       value={user}
                       disabled={currentUser?.id === user.id}
                     />
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          )}
-        </Table>
-      </TableContainer>
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            )}
+            {!isPending && (
+              <Table.Row fontWeight="bold">
+                <Table.Cell colSpan={5} textAlign="center">
+                  Showing {users?.data.length || 0} users
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        </Table.Root>
+      </Box>
       <PaginationFooter
         onChangePage={setPage}
         page={page}

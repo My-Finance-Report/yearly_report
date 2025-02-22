@@ -97,10 +97,9 @@ const UserInformation = () => {
             />
           ) : (
             <Text
-              size="md"
               py={2}
               color={!currentUser?.full_name ? "ui.dim" : "inherit"}
-              isTruncated
+              truncate
               maxWidth="250px"
             >
               {currentUser?.full_name || "N/A"}
@@ -124,7 +123,7 @@ const UserInformation = () => {
               w="auto"
             />
           ) : (
-            <Text size="md" py={2} isTruncated maxWidth="250px">
+            <Text py={2} truncate maxWidth="250px">
               {currentUser?.email}
             </Text>
           )}
@@ -135,11 +134,11 @@ const UserInformation = () => {
 
         <Flex mt={4} gap={3}>
           <Button
-            variant="primary"
+            variant="outline"
             onClick={toggleEditMode}
             type={editMode ? "button" : "submit"}
-            isLoading={editMode ? isSubmitting : false}
-            isDisabled={editMode ? !isDirty || !getValues("email") : false}
+            loading={editMode ? isSubmitting : false}
+            disabled={editMode ? !isDirty || !getValues("email") : false}
           >
             {editMode ? "Save" : "Edit"}
           </Button>

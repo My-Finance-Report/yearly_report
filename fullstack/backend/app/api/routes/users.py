@@ -46,7 +46,7 @@ def read_users(
     users = session.query(User).offset(skip).limit(limit).all()
 
     return UsersPublic(
-        data=[UserBase.model_validate(user) for user in users], count=count
+        data=[UserOut.model_validate(user) for user in users], count=count
     )
 
 

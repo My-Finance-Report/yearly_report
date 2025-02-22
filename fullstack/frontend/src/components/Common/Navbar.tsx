@@ -23,14 +23,14 @@ const Navbar = ({ type, addModalAs }: NavbarProps) => {
                     <Input type='text' placeholder='Search' fontSize={{ base: 'sm', md: 'inherit' }} borderRadius='8px' />
                 </InputGroup> */}
         <Button
-          variant="primary"
+          variant="outline"
           gap={1}
           fontSize={{ base: "sm", md: "inherit" }}
           onClick={addModal.onOpen}
         >
           <Icon as={FaPlus} /> Add {type}
         </Button>
-        <AddModal isOpen={addModal.isOpen} onClose={addModal.onClose} />
+        <AddModal isOpen={addModal.open} onClose={addModal.onClose} />
       </Flex>
     </>
   )

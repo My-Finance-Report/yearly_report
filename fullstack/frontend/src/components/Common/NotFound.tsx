@@ -23,16 +23,16 @@ const NotFound = () => {
         </Text>
         <Text fontSize="md">Oops!</Text>
         <Text fontSize="md">Page not found.</Text>
-        <Button
-          as={Link}
-          to="/"
-          color="ui.main"
-          borderColor="ui.main"
-          variant="outline"
-          mt={4}
-        >
-          Go back
-        </Button>
+        <Link href="/">
+          <Button
+            color="ui.main"
+            borderColor="ui.main"
+            variant="outline"
+            mt={4}
+          >
+            Go back
+          </Button>
+        </Link>
       </Container>
     </>
   )
