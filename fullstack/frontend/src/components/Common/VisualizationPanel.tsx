@@ -1,14 +1,10 @@
 import { SegmentedControl } from "@/components/ui/segmented-control"
-import { Box, Flex, Grid, HStack, Spinner, Text } from "@chakra-ui/react"
+import { Box, Button, Flex, Grid, HStack, Spinner, Text } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
+import { FiMinimize2, FiMaximize2 } from "react-icons/fi"
 import {
-  FiArrowDown,
-  FiArrowUp,
-  FiDownload,
-  FiInbox,
   FiLogIn,
   FiLogOut,
-  FiUpload,
 } from "react-icons/fi"
 import type {
   AggregatedGroup,
@@ -37,6 +33,8 @@ export function VisualizationPanel({
   isLoading,
 }: VisualizationProps) {
   const [showDeposits, setShowDeposits] = useState(false)
+
+
 
   const items = [
     {
@@ -86,18 +84,23 @@ export function VisualizationPanel({
           w="100%"
         >
           <Box gridArea="pie">
-            <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+            <PieBox
+              sourceGroup={sourceGroup}
+              activeSlice={activeSlice}
+              showDeposits={showDeposits}
+            />
           </Box>
-
           <Box gridArea="bar">
-            <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+            <BarChart
+              sourceGroup={sourceGroup}
+              activeSlice={activeSlice}
+              showDeposits={showDeposits}
+            />
           </Box>
-
-          <Box gridArea="sankey" width="100%">
+          <Box gridArea="sankey" width="100%" position="relative">
             <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
         </Grid>
-
       )}
     </Flex>
   )
@@ -182,7 +185,7 @@ function PieBox({
     )
     .reduce(
       (acc, { group, amount }) => {
-        acc[group] = (acc[group] || 0) + amount // Sum amounts for duplicate keys
+        acc[group] = (acc[group] || 0) + amount
         return acc
       },
       {} as Record<string, number>,
@@ -255,6 +258,7 @@ function SankeyBox({
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [chartWidth, setChartWidth] = useState<number>(0)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   useEffect(() => {
     const updateWidth = () => {
@@ -272,11 +276,18 @@ function SankeyBox({
   }, [])
 
 
-  console.log(chartWidth)
-
   return (
-    <Box flex="1" minW="50%" borderWidth={1} borderRadius="md" ref={containerRef}>
-      <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />
+    <Box
+      flex="1"
+      minW="50%"
+      borderWidth={1}
+      borderRadius="md"
+      ref={containerRef}
+    >
+      <Button variant={'outline'} onClick={() => setIsExpanded((prev) => !prev)}>
+        {isExpanded ? 'Collapse' : 'Expand'} Flowchart
+      </Button>
+      {isExpanded && <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />}
     </Box>
   )
 }
