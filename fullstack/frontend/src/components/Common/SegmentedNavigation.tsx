@@ -1,7 +1,7 @@
 import { SegmentedControl } from "@/components/ui/segmented-control"
 import { Box, Flex, HStack, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useMatchRoute, useNavigate } from "@tanstack/react-router"
+import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { FiBriefcase, FiHome, FiSettings, FiUsers } from "react-icons/fi"
 
 import type { UserOut } from "../../client"
@@ -17,16 +17,12 @@ const navigationItems = [
 export function SegmentedNavigation() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const matchRoute = useMatchRoute()
+  const location = useRouterState().location
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
 
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : navigationItems
-
-  const activeValue =
-    finalItems.find(({ value }) => matchRoute({ to: value }))?.value ||
-    "/transactions"
 
   return (
     <Flex align="center" justify="space-between" py={4} mr={24}>
@@ -35,7 +31,8 @@ export function SegmentedNavigation() {
       </Text>
 
       <SegmentedControl
-        defaultValue={activeValue}
+        defaultValue={"/transactions"}
+        value={finalItems.find(({ value }) => location.pathname.startsWith(value))?.value || "/transactions"}
         items={finalItems.map(({ value, label, icon }) => ({
           value,
           label: (

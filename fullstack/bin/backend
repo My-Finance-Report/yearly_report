@@ -4,7 +4,7 @@
 export $(grep -v '^#' .env | xargs)
 
 # Navigate to backend directory
-cd fullstack/backend
+cd backend
 
 # Start the FastAPI backend
 uvicorn app.main:app --reload --port 8003 --log-level debug

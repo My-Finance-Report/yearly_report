@@ -25,8 +25,8 @@ function Transactions() {
     [key: string]: boolean
   }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
-    GroupByOption.category,
     GroupByOption.month,
+    GroupByOption.category,
   ])
   const [activeSlice, setActiveSlice] = useState<{
     [sourceId: number]: number
