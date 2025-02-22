@@ -81,7 +81,6 @@ export function GroupingConfig({
           {availableOptions.map((option) => (
             <Tag.Root
               key={option}
-              colorScheme="blue"
               cursor={
                 groupingOptions.includes(option) ? "not-allowed" : "pointer"
               }
@@ -98,9 +97,8 @@ export function GroupingConfig({
               </TagLabel>
             </Tag.Root>
           ))}
-          <Box borderRight={3} borderColor={"#ffffff"} />
-
-          <Text>Group by</Text>
+          <Box borderWidth={1} minH={10} borderRight="3px solid" borderColor="gray.300" />
+          <Text>Grouped by</Text>
           <SortableContext
             items={groupingOptions}
             strategy={horizontalListSortingStrategy}
@@ -149,7 +147,7 @@ const SortableItem = ({
 
   return (
     <>
-      <Tag.Root ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Tag.Root ref={setNodeRef} py={noX ? 2 : 0} px={2} style={style} {...attributes} {...listeners}>
         <Text cursor="grab">
           {option.charAt(0).toUpperCase() + option.slice(1)}
         </Text>

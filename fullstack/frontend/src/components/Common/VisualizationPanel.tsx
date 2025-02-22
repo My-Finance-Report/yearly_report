@@ -1,11 +1,13 @@
-import { SegmentedControl } from "@/components/ui/segmented-control"
-import { Box, Button, Flex, Grid, HStack, Spinner, Text } from "@chakra-ui/react"
-import { useEffect, useRef, useState } from "react"
-import { FiMinimize2, FiMaximize2 } from "react-icons/fi"
 import {
-  FiLogIn,
-  FiLogOut,
-} from "react-icons/fi"
+  Box,
+  Button,
+  Flex,
+  Grid,
+  HStack,
+  Spinner,
+  Text,
+} from "@chakra-ui/react"
+import { useEffect, useRef, useState } from "react"
 import type {
   AggregatedGroup,
   GroupByOption,
@@ -19,6 +21,7 @@ interface VisualizationProps {
   activeSlice: { [sourceId: number]: number }
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
+  showDeposits: boolean
 }
 
 interface ValidatedVisualizationProps {
@@ -29,33 +32,11 @@ interface ValidatedVisualizationProps {
 
 export function VisualizationPanel({
   activeSlice,
+  showDeposits,
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
-  const [showDeposits, setShowDeposits] = useState(false)
 
-
-
-  const items = [
-    {
-      value: "deposits",
-      label: (
-        <HStack>
-          <Box as={FiLogIn} />
-          Deposits
-        </HStack>
-      ),
-    },
-    {
-      value: "withdrawals",
-      label: (
-        <HStack>
-          <Box as={FiLogOut} />
-          Withdrawals
-        </HStack>
-      ),
-    },
-  ]
 
   return (
     <Flex
@@ -65,12 +46,7 @@ export function VisualizationPanel({
       align="center"
       justify="center"
     >
-      <SegmentedControl
-        defaultValue={"withdrawals"}
-        value={showDeposits ? "deposits" : "withdrawals"}
-        items={items}
-        onValueChange={(value) => setShowDeposits(value.value === "deposits")}
-      />
+
 
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
@@ -275,7 +251,6 @@ function SankeyBox({
     }
   }, [])
 
-
   return (
     <Box
       flex="1"
@@ -284,10 +259,15 @@ function SankeyBox({
       borderRadius="md"
       ref={containerRef}
     >
-      <Button variant={'outline'} onClick={() => setIsExpanded((prev) => !prev)}>
-        {isExpanded ? 'Collapse' : 'Expand'} Flowchart
+      <Button
+        variant={"outline"}
+        onClick={() => setIsExpanded((prev) => !prev)}
+      >
+        {isExpanded ? "Collapse" : "Expand"} Flowchart
       </Button>
-      {isExpanded && <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />}
+      {isExpanded && (
+        <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />
+      )}
     </Box>
   )
 }
