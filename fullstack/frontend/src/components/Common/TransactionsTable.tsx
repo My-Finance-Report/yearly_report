@@ -147,7 +147,6 @@ function renderGroups({
                     <Table.Root variant="outline" size="sm">
                       <TableHeader>
                         <TableRow>
-                          <TableColumnHeader>ID</TableColumnHeader>
                           <TableColumnHeader>DESCRIPTION</TableColumnHeader>
                           <TableColumnHeader>DATE</TableColumnHeader>
                           <TableColumnHeader textAlign="end">
@@ -160,7 +159,6 @@ function renderGroups({
                       <TableBody>
                         {group.transactions?.map((transaction) => (
                           <TableRow key={transaction.id}>
-                            <TableCell>{transaction.id}</TableCell>
                             <TableCell>{transaction.description}</TableCell>
                             <TableCell>
                               {new Date(
