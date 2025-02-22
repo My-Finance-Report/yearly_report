@@ -64,7 +64,7 @@ export interface SankeyChartProps {
 
 export function GenericSankeyChart({
   data,
-  width = 960,
+  width = 950,
   height = 600,
 }: SankeyChartProps) {
   const testData = {
@@ -106,7 +106,7 @@ export function GenericSankeyChart({
     theme.theme === "dark" ? darkModePalette : lightModePalette
 
   return (
-    <Box borderWidth={1} borderRadius="md" p={4}>
+    <Box p={4}>
       <Sankey
         width={width}
         height={height}

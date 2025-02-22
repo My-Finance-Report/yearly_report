@@ -1,22 +1,23 @@
-import {
-  Box,
-  Flex,
-  Grid,
-  HStack,
-  Spinner,
-  Text,
-} from "@chakra-ui/react"
 import { SegmentedControl } from "@/components/ui/segmented-control"
+import { Box, Flex, Grid, HStack, Spinner, Text } from "@chakra-ui/react"
+import { useEffect, useRef, useState } from "react"
+import {
+  FiArrowDown,
+  FiArrowUp,
+  FiDownload,
+  FiInbox,
+  FiLogIn,
+  FiLogOut,
+  FiUpload,
+} from "react-icons/fi"
 import type {
   AggregatedGroup,
   GroupByOption,
   TransactionSourceGroup,
 } from "../../client"
-import { FiUpload, FiDownload, FiArrowDown, FiArrowUp, FiInbox, FiLogOut, FiLogIn } from "react-icons/fi"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
-import { useState } from "react"
 
 interface VisualizationProps {
   activeSlice: { [sourceId: number]: number }
@@ -35,31 +36,28 @@ export function VisualizationPanel({
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
-
   const [showDeposits, setShowDeposits] = useState(false)
 
-
-
-  const items =
-    [
-
-      {
-        value: "deposits", label:
-          (<HStack>
-            <Box as={FiLogIn} />
-            Deposits
-          </HStack>
-          )
-      },
-      {
-        value: "withdrawals", label:
-          (<HStack>
-            <Box as={FiLogOut} />
-            Withdrawals
-          </HStack>
-          )
-      }
-    ]
+  const items = [
+    {
+      value: "deposits",
+      label: (
+        <HStack>
+          <Box as={FiLogIn} />
+          Deposits
+        </HStack>
+      ),
+    },
+    {
+      value: "withdrawals",
+      label: (
+        <HStack>
+          <Box as={FiLogOut} />
+          Withdrawals
+        </HStack>
+      ),
+    },
+  ]
 
   return (
     <Flex
@@ -70,34 +68,40 @@ export function VisualizationPanel({
       justify="center"
     >
       <SegmentedControl
-        defaultValue={'withdrawals'}
+        defaultValue={"withdrawals"}
         value={showDeposits ? "deposits" : "withdrawals"}
         items={items}
-        onValueChange={(value) => setShowDeposits(value.value === 'deposits')}
+        onValueChange={(value) => setShowDeposits(value.value === "deposits")}
       />
 
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
-        <Grid templateColumns="repeat(2, 1fr)" gap={4} w="100%">
-          <PieBox
-            sourceGroup={sourceGroup}
-            activeSlice={activeSlice}
-            showDeposits={showDeposits}
-          />
-          <BarChart
-            sourceGroup={sourceGroup}
-            activeSlice={activeSlice}
-            showDeposits={showDeposits}
-          />
-          <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
+        <Grid
+          templateAreas={`"pie bar bar bar"
+                  "sankey sankey sankey sankey"`}
+          templateColumns="1fr 1fr 1fr 1fr"
+          templateRows="auto auto"
+          gap={4}
+          w="100%"
+        >
+          <Box gridArea="pie">
+            <PieBox sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          </Box>
+
+          <Box gridArea="bar">
+            <BarChart sourceGroup={sourceGroup} activeSlice={activeSlice} showDeposits={showDeposits} />
+          </Box>
+
+          <Box gridArea="sankey" width="100%">
+            <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
+          </Box>
         </Grid>
+
       )}
     </Flex>
   )
 }
-
-
 
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
@@ -139,7 +143,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     : []
 
   return (
-    <Box flex="1" minW="50%">
+    <Box flex="1" minW="50%" borderWidth={1} borderRadius="md">
       {hasValidTimeGrouping ? (
         <GenericBarChart data={chartData} dataKey="date" nameKey="date" />
       ) : (
@@ -190,7 +194,7 @@ function PieBox({
   }))
 
   return (
-    <Box flex="1" minW="50%">
+    <Box flex="1" minW="50%" borderWidth={1} borderRadius="md">
       <GenericPieChart
         data={chartData}
         dataKey="amount"
@@ -210,7 +214,6 @@ function SankeyBox({
   const links: { source: number; target: number; value: number }[] = []
   const nodeIndexMap = new Map<string, number>()
 
-  // Initialize the first nodes
   for (const [idx, name] of ["deposits", "withdrawals"].entries()) {
     nodes.push({ name, id: idx })
     nodeIndexMap.set(name, idx)
@@ -250,9 +253,30 @@ function SankeyBox({
     }
   }
 
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [chartWidth, setChartWidth] = useState<number>(0)
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setChartWidth(containerRef.current.offsetWidth - 30)
+      }
+    }
+
+    updateWidth()
+    window.addEventListener("resize", updateWidth)
+
+    return () => {
+      window.removeEventListener("resize", updateWidth)
+    }
+  }, [])
+
+
+  console.log(chartWidth)
+
   return (
-    <Box flex="1" minW="50%">
-      <GenericSankeyChart data={{ nodes, links }} />
+    <Box flex="1" minW="50%" borderWidth={1} borderRadius="md" ref={containerRef}>
+      <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />
     </Box>
   )
 }
