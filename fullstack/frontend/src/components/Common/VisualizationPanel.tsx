@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Spinner,
-  Text,
-} from "@chakra-ui/react"
+import { Box, Button, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
 import type {
   AggregatedGroup,
@@ -32,8 +25,6 @@ export function VisualizationPanel({
   sourceGroup,
   isLoading,
 }: VisualizationProps) {
-
-
   return (
     <Flex
       direction="column"
@@ -42,8 +33,6 @@ export function VisualizationPanel({
       align="center"
       justify="center"
     >
-
-
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
@@ -56,16 +45,10 @@ export function VisualizationPanel({
           w="100%"
         >
           <Box gridArea="pie">
-            <PieBox
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-            />
+            <PieBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
           <Box gridArea="bar">
-            <BarChart
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-            />
+            <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
           <Box gridArea="sankey" width="100%" position="relative">
             <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
@@ -99,20 +82,20 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-      const base: Record<string, number | string> = {
-        date: group.group_id.toString(),
-      }
-
-      if (group.subgroups) {
-        for (const subgroup of group.subgroups) {
-          base[subgroup.group_name] = showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals
+        const base: Record<string, number | string> = {
+          date: group.group_id.toString(),
         }
-      }
 
-      return base
-    })
+        if (group.subgroups) {
+          for (const subgroup of group.subgroups) {
+            base[subgroup.group_name] = showDeposits
+              ? subgroup.total_deposits
+              : subgroup.total_withdrawals
+          }
+        }
+
+        return base
+      })
     : []
 
   return (
@@ -131,10 +114,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-function PieBox({
-  sourceGroup,
-  showDeposits,
-}: ValidatedVisualizationProps) {
+function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.groups
     .flatMap(
       (group) =>

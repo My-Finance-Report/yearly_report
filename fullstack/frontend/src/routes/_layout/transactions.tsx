@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react"
 
-import { Box, Container, Spinner, Text } from "@chakra-ui/react"
+import { Box, Container, Span, Spinner, Text } from "@chakra-ui/react"
 
 import {
   GroupByOption,
   GroupingConfig,
 } from "@/components/Common/GroupingConfig"
-import { WithdrawDepositSelector } from '@/components/Common/WithdrawDepositSelector'
-import { TransactionSourceSelector } from '@/components/Common/TransactionSourceSelector'
+import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector"
 import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
+import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import { TransactionsService, type TransactionSourceGroup } from "../../client"
+import { createFileRoute, Link } from "@tanstack/react-router"
+import { type TransactionSourceGroup, TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
@@ -51,7 +51,8 @@ function Transactions() {
     enabled: isLoggedIn(),
   })
 
-  const [activeTransactionSource, setActiveTransactionSource] = useState<TransactionSourceGroup | null>(null)
+  const [activeTransactionSource, setActiveTransactionSource] =
+    useState<TransactionSourceGroup | null>(null)
 
   useEffect(() => {
     if (data?.groups.length) {
@@ -61,7 +62,6 @@ function Transactions() {
 
   return (
     <Container maxW="large" py={8}>
-
       {isLoading ? (
         <Spinner />
       ) : error ? (
@@ -74,8 +74,15 @@ function Transactions() {
             showDeposits={showDeposits}
           />
           <Box borderWidth={1} padding={2}>
-            <WithdrawDepositSelector setShowDeposits={setShowDeposits} showDeposits={showDeposits} />
-            <TransactionSourceSelector activeTransactionSource={activeTransactionSource} setActiveTransactionSource={setActiveTransactionSource} allTransactionSources={data.groups} />
+            <WithdrawDepositSelector
+              setShowDeposits={setShowDeposits}
+              showDeposits={showDeposits}
+            />
+            <TransactionSourceSelector
+              activeTransactionSource={activeTransactionSource}
+              setActiveTransactionSource={setActiveTransactionSource}
+              allTransactionSources={data.groups}
+            />
             <GroupingConfig
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
@@ -88,7 +95,15 @@ function Transactions() {
           />
         </>
       ) : (
-        <Text>No transactions found.</Text>
+        <Link href="/upload-files">
+          <Text>
+            No transactions found.{" "}
+            <Text as="span" textDecoration="underline" color="blue.500">
+              Click here
+            </Text>{" "}
+            to upload files.
+          </Text>
+        </Link>
       )}
     </Container>
   )
