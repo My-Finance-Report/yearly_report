@@ -3,7 +3,6 @@ import {
   Button,
   Flex,
   Grid,
-  HStack,
   Spinner,
   Text,
 } from "@chakra-ui/react"
@@ -18,20 +17,17 @@ import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
 
 interface VisualizationProps {
-  activeSlice: { [sourceId: number]: number }
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
   showDeposits: boolean
 }
 
 interface ValidatedVisualizationProps {
-  activeSlice: { [sourceId: number]: number }
   sourceGroup: TransactionSourceGroup
   showDeposits: boolean
 }
 
 export function VisualizationPanel({
-  activeSlice,
   showDeposits,
   sourceGroup,
   isLoading,
@@ -62,14 +58,12 @@ export function VisualizationPanel({
           <Box gridArea="pie">
             <PieBox
               sourceGroup={sourceGroup}
-              activeSlice={activeSlice}
               showDeposits={showDeposits}
             />
           </Box>
           <Box gridArea="bar">
             <BarChart
               sourceGroup={sourceGroup}
-              activeSlice={activeSlice}
               showDeposits={showDeposits}
             />
           </Box>
@@ -139,7 +133,6 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
 function PieBox({
   sourceGroup,
-  activeSlice,
   showDeposits,
 }: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.groups
@@ -179,7 +172,6 @@ function PieBox({
         dataKey="amount"
         nameKey="group"
         config={null}
-        activeIndex={activeSlice[sourceGroup.transaction_source_id] ?? 0}
       />
     </Box>
   )

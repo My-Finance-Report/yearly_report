@@ -1,4 +1,3 @@
-import { AddIcon } from "@chakra-ui/icons"
 import { FiLogIn, FiLogOut } from "react-icons/fi"
 import {
     Box,

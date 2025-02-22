@@ -17,13 +17,9 @@ export function TransactionsTable({
   sourceGroup,
   toggleGroup,
   expandedGroups,
-  setActiveSlice,
 }: {
   sourceGroup: TransactionSourceGroup
   toggleGroup: (sourceId: number, groupKey: string) => void
-  setActiveSlice: React.Dispatch<
-    React.SetStateAction<{ [sourceId: number]: number }>
-  >
   expandedGroups: { [key: string]: boolean }
 }) {
   return (
@@ -45,7 +41,6 @@ export function TransactionsTable({
           sourceId: sourceGroup.transaction_source_id,
           pathPrefix: "",
           toggleGroup,
-          setActiveSlice,
           expandedGroups,
         })}
         <TableRow fontWeight="bold">
@@ -65,15 +60,11 @@ function renderGroups({
   pathPrefix,
   expandedGroups,
   toggleGroup,
-  setActiveSlice,
 }: {
   groups: AggregatedGroup[]
   sourceId: number
   pathPrefix: string
   toggleGroup: (sourceId: number, groupKey: string) => void
-  setActiveSlice: React.Dispatch<
-    React.SetStateAction<{ [sourceId: number]: number }>
-  >
   expandedGroups: { [key: string]: boolean }
 }) {
   return groups.map((group, idx) => {
@@ -86,16 +77,6 @@ function renderGroups({
       <React.Fragment key={groupKey}>
         <TableRow
           style={{ cursor: "pointer" }}
-          onMouseEnter={() => {
-            if (!pathPrefix) {
-              setActiveSlice((prev) => ({ ...prev, [sourceId]: idx }))
-            }
-          }}
-          onMouseLeave={() => {
-            if (!pathPrefix) {
-              setActiveSlice((prev) => ({ ...prev, [sourceId]: 0 }))
-            }
-          }}
           onClick={() => toggleGroup(sourceId, groupKey)}
         >
           <TableCell>
@@ -138,7 +119,6 @@ function renderGroups({
                           sourceId,
                           pathPrefix: groupKey,
                           toggleGroup,
-                          setActiveSlice,
                           expandedGroups,
                         })}
                       </TableBody>
