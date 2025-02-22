@@ -107,7 +107,13 @@ def test_update_user(db: Session) -> None:
     )
     user = crud.create_user(session=db, user=user_in)
     new_password = random_lower_string()
-    user_in_update = UserUpdate(password=new_password, is_superuser=True, email=email)
+    user_in_update = UserUpdate(
+        password=new_password,
+        is_superuser=True,
+        email=email,
+        full_name="catt",
+        id=user.id,
+    )
     if user.id is not None:
         crud.update_user(session=db, db_user=user, user_in=user_in_update)
     user_2 = db.get(User, user.id)

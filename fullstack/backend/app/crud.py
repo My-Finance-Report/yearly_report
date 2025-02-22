@@ -25,7 +25,12 @@ def create_user(*, session: Session, user: UserRegister) -> User:
 
 
 def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
-    db_user.hashed_password = get_password_hash(user_in.password)
+    if user_in.password:
+        db_user.hashed_password = get_password_hash(user_in.password)
+
+    db_user.full_name = user_in.full_name
+    db_user.email = user_in.email
+
     session.add(db_user)
     session.commit()
     return db_user

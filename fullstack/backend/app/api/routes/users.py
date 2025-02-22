@@ -14,7 +14,6 @@ from app.core.security import get_password_hash, verify_password
 from app.db import Session, get_db
 from app.local_types import (
     Message,
-    UserBase,
     UserNewPassword,
     UserOut,
     UserRegister,

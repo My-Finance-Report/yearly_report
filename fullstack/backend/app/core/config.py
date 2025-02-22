@@ -37,8 +37,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     FRONTEND_HOST: str = os.getenv("FRONTEND_HOST") or "localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = (
-        os.getenv("ENVIRONMENT") or "local"
-    )  # type: ignore[assignment]
+        os.getenv("ENVIRONMENT") or "local"  # type: ignore[assignment]
+    )
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
