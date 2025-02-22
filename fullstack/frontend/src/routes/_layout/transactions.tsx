@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { Box, Container, Span, Spinner, Text } from "@chakra-ui/react"
+import { Box, Container, Spinner, Text } from "@chakra-ui/react"
 
 import {
   GroupByOption,
@@ -72,6 +72,7 @@ function Transactions() {
             sourceGroup={activeTransactionSource}
             isLoading={isLoading}
             showDeposits={showDeposits}
+            data={data}
           />
           <Box borderWidth={1} padding={2}>
             <WithdrawDepositSelector

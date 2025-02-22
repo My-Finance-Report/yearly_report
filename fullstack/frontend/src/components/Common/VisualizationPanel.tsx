@@ -2,6 +2,7 @@ import { Box, Button, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
 import type {
   AggregatedGroup,
+  AggregatedTransactions,
   GroupByOption,
   TransactionSourceGroup,
 } from "../../client"
@@ -13,6 +14,7 @@ interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
   showDeposits: boolean
+  data: AggregatedTransactions
 }
 
 interface ValidatedVisualizationProps {
@@ -24,6 +26,7 @@ export function VisualizationPanel({
   showDeposits,
   sourceGroup,
   isLoading,
+  data,
 }: VisualizationProps) {
   return (
     <Flex
@@ -51,7 +54,7 @@ export function VisualizationPanel({
             <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
           <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
+            <SankeyBox data={data} />
           </Box>
         </Grid>
       )}
@@ -82,20 +85,20 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-        const base: Record<string, number | string> = {
-          date: group.group_id.toString(),
-        }
+      const base: Record<string, number | string> = {
+        date: group.group_id.toString(),
+      }
 
-        if (group.subgroups) {
-          for (const subgroup of group.subgroups) {
-            base[subgroup.group_name] = showDeposits
-              ? subgroup.total_deposits
-              : subgroup.total_withdrawals
-          }
+      if (group.subgroups) {
+        for (const subgroup of group.subgroups) {
+          base[subgroup.group_name] = showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals
         }
+      }
 
-        return base
-      })
+      return base
+    })
     : []
 
   return (
@@ -157,52 +160,73 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-function SankeyBox({
-  sourceGroup,
-  showDeposits,
-}: { sourceGroup: TransactionSourceGroup; showDeposits: boolean }) {
+function generateSankeyData(data: AggregatedTransactions, config: any) {
   const nodes: { name: string; id: number }[] = []
   const links: { source: number; target: number; value: number }[] = []
   const nodeIndexMap = new Map<string, number>()
 
-  for (const [idx, name] of ["deposits", "withdrawals"].entries()) {
-    nodes.push({ name, id: idx })
-    nodeIndexMap.set(name, idx)
-  }
+  let nextNodeId = 0
 
-  let nextNodeId = nodes.length
-
-  for (const group of sourceGroup.groups) {
-    let parentId = nodeIndexMap.get(group.group_name)
-
-    if (parentId === undefined) {
-      nodes.push({ name: group.group_name, id: nextNodeId })
-      nodeIndexMap.set(group.group_name, nextNodeId)
-      parentId = nextNodeId
+  // Add sources as nodes
+  data.groups.forEach((sourceGroup) => {
+    if (!nodeIndexMap.has(sourceGroup.transaction_source_name)) {
+      nodeIndexMap.set(sourceGroup.transaction_source_name, nextNodeId)
+      nodes.push({ name: sourceGroup.transaction_source_name, id: nextNodeId })
       nextNodeId++
     }
 
-    if (group.subgroups) {
-      for (const subgroup of group.subgroups) {
-        let subgroupId = nodeIndexMap.get(subgroup.group_name)
-
-        if (subgroupId === undefined) {
-          nodes.push({ name: subgroup.group_name, id: nextNodeId })
-          nodeIndexMap.set(subgroup.group_name, nextNodeId)
-          subgroupId = nextNodeId
+    // Add direct inputs from config
+    config.inputs.forEach(({ source, target }) => {
+      if (sourceGroup.transaction_source_name === source) {
+        if (!nodeIndexMap.has(target)) {
+          nodeIndexMap.set(target, nextNodeId)
+          nodes.push({ name: target, id: nextNodeId })
           nextNodeId++
         }
 
         links.push({
-          source: parentId,
-          target: subgroupId,
-          value: showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals,
+          source: nodeIndexMap.get(source)!,
+          target: nodeIndexMap.get(target)!,
+          value: sourceGroup.total_deposits,
         })
       }
+    })
+  })
+
+  config.linkages.forEach(({ source, intermediary, target }) => {
+    if (!nodeIndexMap.has(source)) return
+    if (!nodeIndexMap.has(intermediary)) {
+      nodeIndexMap.set(intermediary, nextNodeId)
+      nodes.push({ name: intermediary, id: nextNodeId })
+      nextNodeId++
     }
-  }
+    if (!nodeIndexMap.has(target)) {
+      nodeIndexMap.set(target, nextNodeId)
+      nodes.push({ name: target, id: nextNodeId })
+      nextNodeId++
+    }
+
+    links.push({
+      source: nodeIndexMap.get(source)!,
+      target: nodeIndexMap.get(intermediary)!,
+      value: data.overall_deposits / 2,
+    })
+
+    links.push({
+      source: nodeIndexMap.get(intermediary)!,
+      target: nodeIndexMap.get(target)!,
+      value: data.overall_deposits / 2,
+    })
+  })
+
+  return { nodes, links }
+}
+
+function SankeyBox({
+  data,
+}: { data: AggregatedTransactions }) {
+  const { nodes, links } = generateSankeyData(data)
+
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [chartWidth, setChartWidth] = useState<number>(0)
