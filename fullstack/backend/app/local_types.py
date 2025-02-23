@@ -252,3 +252,41 @@ class AggregatedTransactions(BaseModel):
     class Config:
         orm_mode = True
         from_attributes = True
+
+
+class SankeyNode(BaseModel):
+    id: int
+    name: str
+
+
+class SankeyLink(BaseModel):
+    source: int
+    target: int
+    value: float
+
+
+class SankeyData(BaseModel):
+    nodes: list[SankeyNode]
+    links: list[SankeyLink]
+
+
+class SankeyInputCreate(BaseModel):
+    category_id: int
+    category_name: str
+
+
+class SankeyLinkageCreate(BaseModel):
+    category_id: int
+    category_name: str
+    source_id: int
+    source_name: str
+
+
+class SankeyConfigInfo(BaseModel):
+    possible_inputs: list[SankeyInputCreate]
+    possible_links: list[SankeyLinkageCreate]
+
+
+class SankeyConfigCreatePayload(BaseModel):
+    inputs: list[SankeyInputCreate]
+    links: list[SankeyLinkageCreate]

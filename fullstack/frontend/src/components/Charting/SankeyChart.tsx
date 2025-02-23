@@ -1,3 +1,4 @@
+import type { SankeyData } from "@/client"
 import { Box } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
 import React from "react"
@@ -54,10 +55,7 @@ const CustomLink = ({
 }
 
 export interface SankeyChartProps {
-  data: {
-    nodes: { name: string }[]
-    links: { source: number; target: number; value: number }[]
-  }
+  data: SankeyData
   width?: number
   height?: number
 }

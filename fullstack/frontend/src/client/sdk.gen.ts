@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -284,6 +284,52 @@ export class PrivateService {
             errors: {
                 422: 'Validation Error'
             }
+        });
+    }
+    
+}
+
+export class SankeyService {
+    /**
+     * Get Sankey Data
+     * @returns SankeyData Successful Response
+     * @throws ApiError
+     */
+    public static getSankeyData(): CancelablePromise<SankeyGetSankeyDataResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/sankey/'
+        });
+    }
+    
+    /**
+     * Create Sankey Config
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns boolean Successful Response
+     * @throws ApiError
+     */
+    public static createSankeyConfig(data: SankeyCreateSankeyConfigData): CancelablePromise<SankeyCreateSankeyConfigResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/sankey/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Sankey Config Info
+     * @returns SankeyConfigInfo Successful Response
+     * @throws ApiError
+     */
+    public static getSankeyConfigInfo(): CancelablePromise<SankeyGetSankeyConfigInfoResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/sankey/config-info'
         });
     }
     

@@ -80,6 +80,44 @@ export type ProcessFileJobOut = {
     id: number;
 };
 
+export type SankeyConfigCreatePayload = {
+    inputs: Array<SankeyInputCreate>;
+    links: Array<SankeyLinkageCreate>;
+};
+
+export type SankeyConfigInfo = {
+    possible_inputs: Array<SankeyInputCreate>;
+    possible_links: Array<SankeyLinkageCreate>;
+};
+
+export type SankeyData = {
+    nodes: Array<SankeyNode>;
+    links: Array<SankeyLink>;
+};
+
+export type SankeyInputCreate = {
+    category_id: number;
+    category_name: string;
+};
+
+export type SankeyLink = {
+    source: number;
+    target: number;
+    value: number;
+};
+
+export type SankeyLinkageCreate = {
+    category_id: number;
+    category_name: string;
+    source_id: number;
+    source_name: string;
+};
+
+export type SankeyNode = {
+    id: number;
+    name: string;
+};
+
 export type SourceKind = 'account' | 'investment' | 'card';
 
 export type Token = {
@@ -259,6 +297,18 @@ export type PrivateCreateUserData = {
 };
 
 export type PrivateCreateUserResponse = (UserOut);
+
+export type SankeyGetSankeyDataResponse = (SankeyData);
+
+export type SankeyCreateSankeyConfigData = {
+    requestBody: SankeyConfigCreatePayload;
+};
+
+export type SankeyCreateSankeyConfigResponse = ({
+    [key: string]: (boolean);
+});
+
+export type SankeyGetSankeyConfigInfoResponse = (SankeyConfigInfo);
 
 export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 

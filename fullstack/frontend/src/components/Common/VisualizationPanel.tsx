@@ -1,20 +1,23 @@
-import { Box, Button, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
+import { Box, Button, Center, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
-import type {
-  AggregatedGroup,
-  AggregatedTransactions,
-  GroupByOption,
-  TransactionSourceGroup,
+import {
+  type SankeyGetSankeyDataResponse,
+  SankeyService,
+  type AggregatedGroup,
+  type AggregatedTransactions,
+  type GroupByOption,
+  type TransactionSourceGroup,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
+import { useQuery } from "@tanstack/react-query"
+import { isLoggedIn } from "@/hooks/useAuth"
 
 interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
   showDeposits: boolean
-  data: AggregatedTransactions
 }
 
 interface ValidatedVisualizationProps {
@@ -26,7 +29,6 @@ export function VisualizationPanel({
   showDeposits,
   sourceGroup,
   isLoading,
-  data,
 }: VisualizationProps) {
   return (
     <Flex
@@ -54,7 +56,7 @@ export function VisualizationPanel({
             <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
           <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox data={data} />
+            <SankeyBox />
           </Box>
         </Grid>
       )}
@@ -160,73 +162,12 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-function generateSankeyData(data: AggregatedTransactions, config: any) {
-  const nodes: { name: string; id: number }[] = []
-  const links: { source: number; target: number; value: number }[] = []
-  const nodeIndexMap = new Map<string, number>()
-
-  let nextNodeId = 0
-
-  // Add sources as nodes
-  data.groups.forEach((sourceGroup) => {
-    if (!nodeIndexMap.has(sourceGroup.transaction_source_name)) {
-      nodeIndexMap.set(sourceGroup.transaction_source_name, nextNodeId)
-      nodes.push({ name: sourceGroup.transaction_source_name, id: nextNodeId })
-      nextNodeId++
-    }
-
-    // Add direct inputs from config
-    config.inputs.forEach(({ source, target }) => {
-      if (sourceGroup.transaction_source_name === source) {
-        if (!nodeIndexMap.has(target)) {
-          nodeIndexMap.set(target, nextNodeId)
-          nodes.push({ name: target, id: nextNodeId })
-          nextNodeId++
-        }
-
-        links.push({
-          source: nodeIndexMap.get(source)!,
-          target: nodeIndexMap.get(target)!,
-          value: sourceGroup.total_deposits,
-        })
-      }
-    })
+function SankeyBox() {
+  const { data, isLoading, error } = useQuery<SankeyGetSankeyDataResponse, Error>({
+    queryKey: ["sankeyData"],
+    queryFn: () => SankeyService.getSankeyData(),
+    enabled: isLoggedIn(),
   })
-
-  config.linkages.forEach(({ source, intermediary, target }) => {
-    if (!nodeIndexMap.has(source)) return
-    if (!nodeIndexMap.has(intermediary)) {
-      nodeIndexMap.set(intermediary, nextNodeId)
-      nodes.push({ name: intermediary, id: nextNodeId })
-      nextNodeId++
-    }
-    if (!nodeIndexMap.has(target)) {
-      nodeIndexMap.set(target, nextNodeId)
-      nodes.push({ name: target, id: nextNodeId })
-      nextNodeId++
-    }
-
-    links.push({
-      source: nodeIndexMap.get(source)!,
-      target: nodeIndexMap.get(intermediary)!,
-      value: data.overall_deposits / 2,
-    })
-
-    links.push({
-      source: nodeIndexMap.get(intermediary)!,
-      target: nodeIndexMap.get(target)!,
-      value: data.overall_deposits / 2,
-    })
-  })
-
-  return { nodes, links }
-}
-
-function SankeyBox({
-  data,
-}: { data: AggregatedTransactions }) {
-  const { nodes, links } = generateSankeyData(data)
-
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [chartWidth, setChartWidth] = useState<number>(0)
@@ -254,16 +195,31 @@ function SankeyBox({
       borderWidth={1}
       borderRadius="md"
       ref={containerRef}
+      minH={isExpanded ? "400px" : undefined}
+      display="flex"
+      flexDirection="column"
     >
-      <Button
-        variant={"outline"}
-        onClick={() => setIsExpanded((prev) => !prev)}
-      >
+      <Button variant="outline" onClick={() => setIsExpanded((prev) => !prev)} alignSelf="start">
         {isExpanded ? "Collapse" : "Expand"} Flowchart
       </Button>
-      {isExpanded && (
-        <GenericSankeyChart data={{ nodes, links }} width={chartWidth} />
-      )}
+
+      <Button variant="outline" onClick={() => setIsExpanded((prev) => !prev)} alignSelf="start">
+        Settings
+      </Button>
+
+      {isLoading ? (
+        <Center flex="1">
+          <Spinner size="lg" />
+        </Center>
+      ) : error ? (
+        <Center flex="1">
+          <Text color="red.500">Failed to load Sankey data. Have you created a config?</Text>
+        </Center>
+      ) : isExpanded && data ? (
+        <GenericSankeyChart data={data} width={chartWidth} />
+      ) : null}
     </Box>
   )
 }
+
+

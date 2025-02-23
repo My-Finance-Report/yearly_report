@@ -72,7 +72,6 @@ function Transactions() {
             sourceGroup={activeTransactionSource}
             isLoading={isLoading}
             showDeposits={showDeposits}
-            data={data}
           />
           <Box borderWidth={1} padding={2}>
             <WithdrawDepositSelector

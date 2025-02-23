@@ -95,7 +95,6 @@ def recursive_group(
     category_lookup: CategoryLookup,
 ) -> list[AggregatedGroup]:
     if not group_options:
-        # Should not happen normally; if no grouping remains, return a single leaf group.
         total_withdrawals = sum(t.amount for t in txns if t.kind == "withdrawal")
         total_deposits = sum(t.amount for t in txns if t.kind == "deposit")
         print("##### unexpected thing ######## ")
@@ -114,7 +113,6 @@ def recursive_group(
 
     current = group_options[0]
 
-    # make a "partial"
     def key_fn(txn: Transaction) -> str:
         return group_by_key_funcs[current](txn, category_lookup)
 
