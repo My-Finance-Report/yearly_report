@@ -17,6 +17,7 @@ from ...local_types import (
     ExistingSankeyLinkage,
     SankeyLink,
     SankeyNode,
+    SankeySibling,
 )
 from ...models import (
     Category,
@@ -159,7 +160,7 @@ def get_sankey_config_info(
         )
 
     category_query = (
-        session.query(Category.id, Category.name)
+        session.query(Category.id, Category.name, Category.source_id)
         .filter(Category.user_id == user.id)
         .all()
     )
@@ -169,8 +170,30 @@ def get_sankey_config_info(
         .all()
     )
 
+    siblings_by_source_id = defaultdict(list)
+    for row in category_query:
+        siblings_by_source_id[row.source_id].append(
+            SankeySibling(
+                category_id=row.id,
+                category_name=row.name,
+                source_id=row.source_id,
+            )
+        )
+
+    def get_siblings(source_id: int, category_id: int) -> list[SankeySibling]:
+        return [
+            sib
+            for sib in siblings_by_source_id.get(source_id, [])
+            if sib.category_id != category_id
+        ]
+
     possible_inputs = [
-        PossibleSankeyInput(category_id=row.id, category_name=row.name)
+        PossibleSankeyInput(
+            category_id=row.id,
+            category_name=row.name,
+            source_id=row.source_id,
+            siblings=get_siblings(row.source_id, row.id),
+        )
         for row in category_query
     ]
 

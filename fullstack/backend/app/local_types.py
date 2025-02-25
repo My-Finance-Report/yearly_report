@@ -279,9 +279,17 @@ class SankeyLinkageCreate(BaseModel):
     target_source_id: int
 
 
-class PossibleSankeyInput(BaseModel):
+class SankeySibling(BaseModel):
     category_id: int
     category_name: str
+    source_id: int
+
+
+class PossibleSankeyInput(BaseModel):
+    category_id: int
+    source_id: int
+    category_name: str
+    siblings: list[SankeySibling]
 
 
 class PossibleSankeyLinkage(BaseModel):

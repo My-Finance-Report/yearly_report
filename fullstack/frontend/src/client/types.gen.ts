@@ -75,7 +75,9 @@ export type NewPassword = {
 
 export type PossibleSankeyInput = {
     category_id: number;
+    source_id: number;
     category_name: string;
+    siblings: Array<SankeySibling>;
 };
 
 export type PossibleSankeyLinkage = {
@@ -139,6 +141,12 @@ export type SankeyLinkageCreate = {
 export type SankeyNode = {
     id: number;
     name: string;
+};
+
+export type SankeySibling = {
+    category_id: number;
+    category_name: string;
+    source_id: number;
 };
 
 export type SourceKind = 'account' | 'investment' | 'card';
