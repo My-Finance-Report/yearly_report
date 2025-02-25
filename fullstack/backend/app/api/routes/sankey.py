@@ -59,22 +59,27 @@ def get_sankey_data(
     linkages = (
         session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).all()
     )
+    # this code is awful, TODO refactor
     for linkage in linkages:
-        source = (
-            session.query(TransactionSource)
-            .filter(TransactionSource.id == linkage.source_id)
-            .first()
-        )
         category = (
             session.query(Category).filter(Category.id == linkage.category_id).first()
         )
+        if not category:
+            continue
+
+        source = (
+            session.query(TransactionSource)
+            .filter(TransactionSource.id == category.source_id)
+            .first()
+        )
+
         target_source = (
             session.query(TransactionSource)
             .filter(TransactionSource.id == linkage.target_source_id)
             .first()
         )
 
-        if not source or not category or not target_source:
+        if not source or not target_source:
             continue
 
         if source.name not in node_index_map:
