@@ -291,9 +291,23 @@ class PossibleSankeyLinkage(BaseModel):
     target_source_name: str
 
 
+class ExistingSankeyInput(BaseModel):
+    category_id: int
+    category_name: str
+
+
+class ExistingSankeyLinkage(BaseModel):
+    category_id: int
+    category_name: str
+    target_source_id: int
+    target_source_name: str
+
+
 class SankeyConfigInfo(BaseModel):
     possible_inputs: list[PossibleSankeyInput]
     possible_links: list[PossibleSankeyLinkage]
+    existing_inputs: list[ExistingSankeyInput]
+    existing_links: list[ExistingSankeyLinkage]
 
 
 class SankeyConfigCreatePayload(BaseModel):

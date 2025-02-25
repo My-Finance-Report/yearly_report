@@ -304,6 +304,8 @@ export class SankeyService {
     
     /**
      * Create Sankey Config
+     * Fully replace the user's Sankey configuration (inputs & linkages).
+     * If no config exists, create it; otherwise update the existing one.
      * @param data The data for the request.
      * @param data.requestBody
      * @returns boolean Successful Response
@@ -323,6 +325,12 @@ export class SankeyService {
     
     /**
      * Get Sankey Config Info
+     * Returns:
+     * SankeyConfigInfo containing:
+     * - possible_inputs
+     * - possible_links
+     * - existing_inputs
+     * - existing_links
      * @returns SankeyConfigInfo Successful Response
      * @throws ApiError
      */

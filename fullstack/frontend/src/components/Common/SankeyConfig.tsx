@@ -1,6 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createListCollection } from "@chakra-ui/react"
-import "reactflow/dist/style.css"
 import {
     Box,
     Button,
@@ -27,38 +26,80 @@ import {
 } from "../../client"
 import { isLoggedIn } from "@/hooks/useAuth"
 
-type blah = { label: string, value: string | number }
+/**
+ * A generic type for the "item" shape we store in local state
+ * (selectedInputs, selectedLinkages). We store a string/number
+ * for value, plus a label for display.
+ */
+type Blah = { label: string; value: string | number }
 
 export function SankeyConfigPage() {
-    const [selectedInputs, setSelectedInputs] = useState<blah[]>([])
-    const [selectedLinkages, setSelectedLinkages] = useState<blah[]>([])
-    const [selectedInput, setSelectedInput] = useState<blah | null>(null)
-    const [selectedLinkage, setSelectedLinkage] = useState<blah | null>(null)
+    // Local state for "currently selected" items
+    const [selectedInputs, setSelectedInputs] = useState<Blah[]>([])
+    const [selectedLinkages, setSelectedLinkages] = useState<Blah[]>([])
 
+    // Local state for "active pick" from each select
+    const [selectedInput, setSelectedInput] = useState<Blah | null>(null)
+    const [selectedLinkage, setSelectedLinkage] = useState<Blah | null>(null)
+
+    // Fetch from server
     const { data, isLoading } = useQuery({
         queryKey: ["sankeyData"],
-        queryFn: async () => {
-            return SankeyService.getSankeyConfigInfo()
-        },
+        queryFn: SankeyService.getSankeyConfigInfo,
         enabled: isLoggedIn(),
     })
 
-    const makeKeyFromLink = (link: SankeyLinkageCreate) => (
-        `${link.category_id}+${link.target_source_id}`
-    )
-    const parseLinkFromKey = (key: blah) => {
-        const [category_idStr, source_idStr] = key.value.toString().split("+")
-        const category_id = Number(category_idStr)
-        const target_source_id = Number(source_idStr)
+    /**
+     * Convert a SankeyLinkageCreate to a unique string key, e.g. "categoryId+targetSourceId"
+     */
+    const makeKeyFromLink = (link: SankeyLinkageCreate) => {
+        return `${link.category_id}+${link.target_source_id}`
+    }
+
+    /**
+     * Parse that string key back into { category_id, target_source_id }
+     */
+    const parseLinkFromKey = (item: Blah) => {
+        const [categoryIdStr, sourceIdStr] = item.value.toString().split("+")
         return {
-            category_id,
-            target_source_id,
+            category_id: Number(categoryIdStr),
+            target_source_id: Number(sourceIdStr),
         }
     }
 
+    /**
+     * 1) On initial load (once data is fetched),
+     *    populate selectedInputs and selectedLinkages from the server’s `existing_*`.
+     * 2) If you only want to do this once, you can add a guard so that you don’t overwrite user picks
+     *    (e.g., track that you’ve done the init with a `didInit` boolean).
+     */
+    useEffect(() => {
+        if (!isLoading && data) {
+            // existing_inputs => transform to Blah[] with { label, value }
+            const initInputs: Blah[] =
+                data.existing_inputs?.map((inp) => ({
+                    label: inp.category_name,
+                    value: inp.category_id,
+                })) || []
 
-    const selectedCategoryNames = new Set(selectedInputs.map((input) => input.value))
+            // existing_links => transform to Blah[] with { label, value: "categoryId+targetSourceId" }
+            const initLinks: Blah[] =
+                data.existing_links?.map((lk) => ({
+                    label: `${lk.category_name} -> ${lk.target_source_name}`,
+                    value: `${lk.category_id}+${lk.target_source_id}`,
+                })) || []
 
+            setSelectedInputs(initInputs)
+            setSelectedLinkages(initLinks)
+        }
+    }, [data, isLoading])
+
+    // Derive which categories have already been selected
+    const selectedCategoryIds = new Set(
+        selectedInputs.map((input) => input.value),
+    )
+
+    // Build "possible inputs" for the select
     const collectionOfInputs = {
         items:
             data?.possible_inputs?.map((input) => ({
@@ -67,53 +108,40 @@ export function SankeyConfigPage() {
             })) || [],
     }
 
+    // Build "possible linkages" for the select,
+    // filtered by which categories are selected.
     const collectionOfLinkages = {
         items:
             data?.possible_links
-                ?.filter((link) => selectedCategoryNames.has(link.category_id))
+                ?.filter((link) => selectedCategoryIds.has(link.category_id))
                 .map((link) => ({
                     label: `${link.category_name} -> ${link.target_source_name}`,
                     value: makeKeyFromLink(link),
                 })) || [],
     }
 
+    // Handlers
     const addInput = () => {
-        if (
-            selectedInput &&
-            !selectedInputs.some((i) => i.value === selectedInput.value)
-        ) {
-
-            setSelectedInputs([...selectedInputs, selectedInput])
+        if (selectedInput && !selectedInputs.some((i) => i.value === selectedInput.value)) {
+            setSelectedInputs((prev) => [...prev, selectedInput])
             setSelectedInput(null)
         }
     }
 
-
     const addLinkage = () => {
-        if (
-            selectedLinkage &&
-            !selectedLinkages.some(
-                (l) => l.value === selectedLinkage.value
-            )
-        ) {
-            setSelectedLinkages([...selectedLinkages, selectedLinkage])
+        if (selectedLinkage && !selectedLinkages.some((l) => l.value === selectedLinkage.value)) {
+            setSelectedLinkages((prev) => [...prev, selectedLinkage])
             setSelectedLinkage(null)
         }
     }
 
-    const removeInput = (inputToRemove: blah) => {
-        setSelectedInputs(
-            selectedInputs.filter(
-                (input) => input.value !== inputToRemove.value,
-            ),
-        )
+    const removeInput = (inputToRemove: Blah) => {
+        setSelectedInputs((prev) => prev.filter((input) => input.value !== inputToRemove.value))
     }
 
-    const removeLinkage = (linkToRemove: blah) => {
-        setSelectedLinkages(
-            selectedLinkages.filter(
-                (link) => !(link.value === linkToRemove.value)
-            ),
+    const removeLinkage = (linkToRemove: Blah) => {
+        setSelectedLinkages((prev) =>
+            prev.filter((link) => link.value !== linkToRemove.value),
         )
     }
 
@@ -125,14 +153,15 @@ export function SankeyConfigPage() {
                         category_id: Number(input.value),
                     })),
                     links: selectedLinkages.map((link) => parseLinkFromKey(link)),
-                }
+                },
             }
             return SankeyService.createSankeyConfig(sankeyConfig)
         },
         onSuccess: () => {
             alert("Sankey Configuration Saved!")
         },
-        onError: () => {
+        onError: (err) => {
+            console.error(err)
             alert("Error saving configuration")
         },
     })
@@ -140,12 +169,13 @@ export function SankeyConfigPage() {
     return (
         <Flex direction="column" p={4} h="100vh">
             <VStack align="start" spaceX={4} width="100%">
+                {/* Selected Inputs */}
                 <Box>
                     <Text fontWeight="bold">Selected Inputs:</Text>
                     <HStack wrap="wrap">
                         {selectedInputs.map((input) => (
                             <HStack
-                                key={input.label}
+                                key={input.value}
                                 px={2}
                                 py={1}
                                 borderRadius="md"
@@ -160,6 +190,7 @@ export function SankeyConfigPage() {
                     </HStack>
                 </Box>
 
+                {/* Selected Linkages */}
                 <Box>
                     <Text fontWeight="bold">Selected Linkages:</Text>
                     <HStack wrap="wrap">
@@ -171,9 +202,7 @@ export function SankeyConfigPage() {
                                 borderRadius="md"
                                 spaceX={2}
                             >
-                                <Text>
-                                    {link.label}
-                                </Text>
+                                <Text>{link.label}</Text>
                                 <Button size="xs" onClick={() => removeLinkage(link)}>
                                     Remove
                                 </Button>
@@ -182,6 +211,7 @@ export function SankeyConfigPage() {
                     </HStack>
                 </Box>
 
+                {/* Input Select */}
                 <Box>
                     {isLoading ? (
                         <Spinner />
@@ -189,10 +219,11 @@ export function SankeyConfigPage() {
                         <HStack>
                             <SelectRoot
                                 onValueChange={(selectedItems) => {
-                                    setSelectedInput(selectedItems.items[0])
-                                    console.log(selectedInput)
-                                }
-                                }
+                                    // In single-select, we only have one item
+                                    if (selectedItems.items[0]) {
+                                        setSelectedInput(selectedItems.items[0])
+                                    }
+                                }}
                                 collection={createListCollection(collectionOfInputs)}
                                 size="sm"
                                 width="320px"
@@ -216,14 +247,17 @@ export function SankeyConfigPage() {
                     )}
                 </Box>
 
+                {/* Linkage Select */}
                 <Box>
                     {isLoading ? (
                         <Spinner />
                     ) : (
                         <HStack>
                             <SelectRoot
-                                onValueChange={(input) => {
-                                    setSelectedLinkage(input.items[0])
+                                onValueChange={(selectedItems) => {
+                                    if (selectedItems.items[0]) {
+                                        setSelectedLinkage(selectedItems.items[0])
+                                    }
                                 }}
                                 collection={createListCollection(collectionOfLinkages)}
                                 size="sm"
@@ -234,10 +268,7 @@ export function SankeyConfigPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {collectionOfLinkages.items.map((link) => (
-                                        <SelectItem
-                                            item={link}
-                                            key={link.value}
-                                        >
+                                        <SelectItem item={link} key={link.value}>
                                             {link.label}
                                         </SelectItem>
                                     ))}
@@ -251,6 +282,7 @@ export function SankeyConfigPage() {
                     )}
                 </Box>
 
+                {/* Save */}
                 <Button
                     colorScheme="blue"
                     onClick={() => saveSankeyConfig.mutate()}
@@ -259,6 +291,6 @@ export function SankeyConfigPage() {
                     Save Configuration
                 </Button>
             </VStack>
-        </Flex >
+        </Flex>
     )
 }

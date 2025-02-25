@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -7,14 +8,14 @@ from app.api.deps import (
 
 from app.db import Session, get_db
 from ...local_types import (
+    ExistingSankeyInput,
     PossibleSankeyInput,
     PossibleSankeyLinkage,
     SankeyConfigCreatePayload,
     SankeyConfigInfo,
     SankeyData,
-    SankeyInputCreate,
+    ExistingSankeyLinkage,
     SankeyLink,
-    SankeyLinkageCreate,
     SankeyNode,
 )
 from ...models import (
@@ -41,76 +42,46 @@ def get_sankey_data(
 
     nodes: list[SankeyNode] = []
     links: list[SankeyLink] = []
-    node_index_map: dict[str, int] = {}
-    next_node_id = 0
 
     inputs = session.query(SankeyInput).filter(SankeyInput.config_id == config.id).all()
-    for input_entry in inputs:
-        category = (
-            session.query(Category)
-            .filter(Category.id == input_entry.category_id)
-            .first()
-        )
-        if category and category.name not in node_index_map:
-            node_index_map[category.name] = next_node_id
-            nodes.append(SankeyNode(id=next_node_id, name=category.name))
-            next_node_id += 1
-
     linkages = (
         session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).all()
     )
-    # this code is awful, TODO refactor
-    for linkage in linkages:
-        category = (
-            session.query(Category).filter(Category.id == linkage.category_id).first()
-        )
-        if not category:
-            continue
 
-        source = (
-            session.query(TransactionSource)
-            .filter(TransactionSource.id == category.source_id)
-            .first()
-        )
+    linkages_by_category = defaultdict(list)
+    for row in linkages:
+        linkages_by_category[row.category_id].append(row)
 
-        target_source = (
-            session.query(TransactionSource)
-            .filter(TransactionSource.id == linkage.target_source_id)
-            .first()
-        )
+    transaction_sources = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.user_id == user.id)
+        .all()
+    )
+    transaction_source_lookup = {row.id: row for row in transaction_sources}
+    categories = session.query(Category).filter(Category.user_id == user.id).all()
 
-        if not source or not target_source:
-            continue
+    categories_by_transaction_source = defaultdict(list)
+    category_lookup = {}
+    for cat in categories:
+        category_lookup[cat.id] = cat
+        categories_by_transaction_source[cat.source_id].append(cat)
 
-        if source.name not in node_index_map:
-            node_index_map[source.name] = next_node_id
-            nodes.append(SankeyNode(id=next_node_id, name=source.name))
-            next_node_id += 1
+    for input in inputs:
+        category = category_lookup[input.category_id]
+        links_from_category = linkages_by_category.get(row.category_id, [])
 
-        if category.name not in node_index_map:
-            node_index_map[category.name] = next_node_id
-            nodes.append(SankeyNode(id=next_node_id, name=category.name))
-            next_node_id += 1
+        sibling_categories = [
+            cat
+            for cat in categories_by_transaction_source[category.source_id]
+            if cat.id != category.id
+        ]
 
-        if target_source.name not in node_index_map:
-            node_index_map[target_source.name] = next_node_id
-            nodes.append(SankeyNode(id=next_node_id, name=target_source.name))
-            next_node_id += 1
-
-        links.append(
-            SankeyLink(
-                source=node_index_map[source.name],
-                target=node_index_map[category.name],
-                value=5000,
-            )
-        )
-        links.append(
-            SankeyLink(
-                source=node_index_map[category.name],
-                target=node_index_map[target_source.name],
-                value=5000,
-            )
-        )
+        source = SankeyNode(id=0, name=category.name)
+        nodes.append(source)
+        for index, cat in enumerate(sibling_categories, start=1):
+            target = SankeyNode(id=index, name=cat.name)
+            nodes.append(target)
+            links.append(SankeyLink(source=source.id, target=target.id, value=500))
 
     return SankeyData(nodes=nodes, links=links)
 
@@ -121,6 +92,11 @@ def create_sankey_config(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> dict[str, bool]:
+    """
+    Fully replace the user's Sankey configuration (inputs & linkages).
+    If no config exists, create it; otherwise update the existing one.
+    """
+    # 1. Fetch or create the user's config
     config = (
         session.query(SankeyConfig)
         .filter(SankeyConfig.user_id == user.id)
@@ -128,19 +104,24 @@ def create_sankey_config(
     )
     if not config:
         config = SankeyConfig(user_id=user.id, name="Custom Sankey Config")
+        session.add(config)
+        session.commit()
 
-    session.add(config)
+    session.query(SankeyInput).filter(SankeyInput.config_id == config.id).delete()
+    session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).delete()
     session.commit()
 
-    for input in sankey_config.inputs:
-        session.add(SankeyInput(config_id=config.id, category_id=input.category_id))
+    for input_data in sankey_config.inputs:
+        session.add(
+            SankeyInput(config_id=config.id, category_id=input_data.category_id)
+        )
 
-    for link in sankey_config.links:
+    for link_data in sankey_config.links:
         session.add(
             SankeyLinkage(
                 config_id=config.id,
-                category_id=link.category_id,
-                target_source_id=link.target_source_id,
+                category_id=link_data.category_id,
+                target_source_id=link_data.target_source_id,
             )
         )
 
@@ -153,27 +134,50 @@ def get_sankey_config_info(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SankeyConfigInfo:
+    """
+    Returns:
+      SankeyConfigInfo containing:
+        - possible_inputs
+        - possible_links
+        - existing_inputs
+        - existing_links
+    """
+
+    config = (
+        session.query(SankeyConfig)
+        .filter(SankeyConfig.user_id == user.id)
+        .order_by(SankeyConfig.id.desc())
+        .first()
+    )
+
+    if not config:
+        return SankeyConfigInfo(
+            possible_inputs=[],
+            possible_links=[],
+            existing_inputs=[],
+            existing_links=[],
+        )
 
     category_query = (
         session.query(Category.id, Category.name)
         .filter(Category.user_id == user.id)
         .all()
     )
-
-    source_query = session.query(TransactionSource.id, TransactionSource.name).filter(
-        TransactionSource.user_id == user.id
+    source_query = (
+        session.query(TransactionSource.id, TransactionSource.name)
+        .filter(TransactionSource.user_id == user.id)
+        .all()
     )
 
-    inputs = [
+    possible_inputs = [
         PossibleSankeyInput(category_id=row.id, category_name=row.name)
         for row in category_query
     ]
 
-    linkages = []
+    possible_links = []
     for source in source_query:
-
         for category in category_query:
-            linkages.append(
+            possible_links.append(
                 PossibleSankeyLinkage(
                     category_id=category.id,
                     category_name=category.name,
@@ -182,4 +186,48 @@ def get_sankey_config_info(
                 )
             )
 
-    return SankeyConfigInfo(possible_inputs=inputs, possible_links=linkages)
+    existing_inputs_rows = (
+        session.query(
+            SankeyInput.category_id.label("category_id"),
+            Category.name.label("category_name"),
+        )
+        .join(Category, Category.id == SankeyInput.category_id)
+        .filter(SankeyInput.config_id == config.id)
+        .all()
+    )
+    existing_inputs = [
+        ExistingSankeyInput(
+            category_id=row.category_id,
+            category_name=row.category_name,
+        )
+        for row in existing_inputs_rows
+    ]
+
+    existing_links_rows = (
+        session.query(
+            SankeyLinkage.category_id.label("category_id"),
+            Category.name.label("category_name"),
+            SankeyLinkage.target_source_id.label("target_source_id"),
+            TransactionSource.name.label("target_source_name"),
+        )
+        .join(Category, Category.id == SankeyLinkage.category_id)
+        .join(TransactionSource, TransactionSource.id == SankeyLinkage.target_source_id)
+        .filter(SankeyLinkage.config_id == config.id)
+        .all()
+    )
+    existing_links = [
+        ExistingSankeyLinkage(
+            category_id=row.category_id,
+            category_name=row.category_name,
+            target_source_id=row.target_source_id,
+            target_source_name=row.target_source_name,
+        )
+        for row in existing_links_rows
+    ]
+
+    return SankeyConfigInfo(
+        possible_inputs=possible_inputs,
+        possible_links=possible_links,
+        existing_inputs=existing_inputs,
+        existing_links=existing_links,
+    )
