@@ -184,9 +184,6 @@ class SankeyLinkage(Base):
     config_id: Mapped[int] = mapped_column(
         ForeignKey("sankey_config.id"), nullable=False
     )
-    source_id: Mapped[int] = mapped_column(
-        ForeignKey("transaction_source.id"), nullable=False
-    )
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
     target_source_id: Mapped[int] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False

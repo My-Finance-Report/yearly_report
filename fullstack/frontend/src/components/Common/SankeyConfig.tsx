@@ -15,7 +15,6 @@ import {
     SelectRoot,
     SelectContent,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValueText,
 } from "@/components/ui/select"
@@ -28,7 +27,7 @@ import {
 } from "../../client"
 import { isLoggedIn } from "@/hooks/useAuth"
 
-type blah = { label: string, value: string }
+type blah = { label: string, value: string | number }
 
 export function SankeyConfigPage() {
     const [selectedInputs, setSelectedInputs] = useState<blah[]>([])
@@ -45,27 +44,35 @@ export function SankeyConfigPage() {
     })
 
     const makeKeyFromLink = (link: SankeyLinkageCreate) => (
-        `${link.category_id}+${link.source_id}`
+        `${link.category_id}+${link.target_source_id}`
     )
+    const parseLinkFromKey = (key: blah) => {
+        const [category_idStr, source_idStr] = key.value.toString().split("+")
+        const category_id = Number(category_idStr)
+        const target_source_id = Number(source_idStr)
+        return {
+            category_id,
+            target_source_id,
+        }
+    }
 
 
     const selectedCategoryNames = new Set(selectedInputs.map((input) => input.value))
-    console.log(selectedCategoryNames)
 
     const collectionOfInputs = {
         items:
             data?.possible_inputs?.map((input) => ({
                 label: input.category_name,
-                value: input.category_name,
+                value: input.category_id,
             })) || [],
     }
 
     const collectionOfLinkages = {
         items:
             data?.possible_links
-                ?.filter((link) => selectedCategoryNames.has(link.category_name))
+                ?.filter((link) => selectedCategoryNames.has(link.category_id))
                 .map((link) => ({
-                    label: `${link.category_name} -> ${link.source_name}`,
+                    label: `${link.category_name} -> ${link.target_source_name}`,
                     value: makeKeyFromLink(link),
                 })) || [],
     }
@@ -80,6 +87,7 @@ export function SankeyConfigPage() {
             setSelectedInput(null)
         }
     }
+
 
     const addLinkage = () => {
         if (
@@ -112,13 +120,12 @@ export function SankeyConfigPage() {
     const saveSankeyConfig = useMutation({
         mutationFn: async () => {
             const sankeyConfig = {
-                inputs: selectedInputs.map((input) => ({
-                    category_name: input.category_name,
-                })),
-                linkages: selectedLinkages.map((link) => ({
-                    source_name: link.source_name,
-                    category_name: link.category_name,
-                })),
+                requestBody: {
+                    inputs: selectedInputs.map((input) => ({
+                        category_id: Number(input.value),
+                    })),
+                    links: selectedLinkages.map((link) => parseLinkFromKey(link)),
+                }
             }
             return SankeyService.createSankeyConfig(sankeyConfig)
         },

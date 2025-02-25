@@ -7,6 +7,8 @@ from app.api.deps import (
 
 from app.db import Session, get_db
 from ...local_types import (
+    PossibleSankeyInput,
+    PossibleSankeyLinkage,
     SankeyConfigCreatePayload,
     SankeyConfigInfo,
     SankeyData,
@@ -133,7 +135,7 @@ def create_sankey_config(
             SankeyLinkage(
                 config_id=config.id,
                 category_id=link.category_id,
-                target_source_id=link.source_id,
+                target_source_id=link.target_source_id,
             )
         )
 
@@ -158,7 +160,7 @@ def get_sankey_config_info(
     )
 
     inputs = [
-        SankeyInputCreate(category_id=row.id, category_name=row.name)
+        PossibleSankeyInput(category_id=row.id, category_name=row.name)
         for row in category_query
     ]
 
@@ -167,11 +169,11 @@ def get_sankey_config_info(
 
         for category in category_query:
             linkages.append(
-                SankeyLinkageCreate(
+                PossibleSankeyLinkage(
                     category_id=category.id,
                     category_name=category.name,
-                    source_id=source.id,
-                    source_name=source.name,
+                    target_source_id=source.id,
+                    target_source_name=source.name,
                 )
             )
 
