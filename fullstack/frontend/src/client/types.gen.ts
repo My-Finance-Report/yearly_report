@@ -44,18 +44,6 @@ export type CategoryOut = {
     id: number;
 };
 
-export type ExistingSankeyInput = {
-    category_id: number;
-    category_name: string;
-};
-
-export type ExistingSankeyLinkage = {
-    category_id: number;
-    category_name: string;
-    target_source_id: number;
-    target_source_name: string;
-};
-
 export type GroupByOption = 'category' | 'month' | 'year';
 
 export type HTTPValidationError = {
@@ -114,8 +102,8 @@ export type SankeyConfigCreatePayload = {
 export type SankeyConfigInfo = {
     possible_inputs: Array<PossibleSankeyInput>;
     possible_links: Array<PossibleSankeyLinkage>;
-    existing_inputs: Array<ExistingSankeyInput>;
-    existing_links: Array<ExistingSankeyLinkage>;
+    existing_inputs: Array<PossibleSankeyInput>;
+    existing_links: Array<PossibleSankeyLinkage>;
 };
 
 export type SankeyData = {

@@ -95,7 +95,7 @@ function Transactions() {
           />
         </>
       ) : (
-        <Link href="/upload-files">
+        <Link to="/upload-files" href="/upload-files">
           <Text>
             No transactions found.{" "}
             <Text as="span" textDecoration="underline" color="blue.500">

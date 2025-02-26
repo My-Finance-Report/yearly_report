@@ -13,6 +13,7 @@ import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
 import { useQuery } from "@tanstack/react-query"
 import { isLoggedIn } from "@/hooks/useAuth"
+import { Link } from "@tanstack/react-router"
 
 interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
@@ -162,7 +163,7 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-function SankeyBox() {
+export function SankeyBox() {
   const { data, isLoading, error } = useQuery<SankeyGetSankeyDataResponse, Error>({
     queryKey: ["sankeyData"],
     queryFn: () => SankeyService.getSankeyData(),
@@ -203,9 +204,11 @@ function SankeyBox() {
         {isExpanded ? "Collapse" : "Expand"} Flowchart
       </Button>
 
-      <Button variant="outline" onClick={() => setIsExpanded((prev) => !prev)} alignSelf="start">
-        Settings
-      </Button>
+      <Link to="/sankey-config" href="/sankey-config/">
+        <Button variant="outline" alignSelf="start">
+          Settings
+        </Button>
+      </Link>
 
       {isLoading ? (
         <Center flex="1">

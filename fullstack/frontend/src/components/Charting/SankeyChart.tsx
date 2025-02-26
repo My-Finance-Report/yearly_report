@@ -65,7 +65,6 @@ export function GenericSankeyChart({
   width = 950,
   height = 600,
 }: SankeyChartProps) {
-  console.log(data)
   const testData = {
     nodes: [
       { name: "Deposits", id: 0 },

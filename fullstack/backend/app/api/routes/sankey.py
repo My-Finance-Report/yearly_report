@@ -1,6 +1,5 @@
 from collections import defaultdict
-from decimal import Decimal
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import (
     get_current_user,
@@ -8,13 +7,11 @@ from app.api.deps import (
 
 from app.db import Session, get_db
 from ...local_types import (
-    ExistingSankeyInput,
     PossibleSankeyInput,
     PossibleSankeyLinkage,
     SankeyConfigCreatePayload,
     SankeyConfigInfo,
     SankeyData,
-    ExistingSankeyLinkage,
     SankeyLink,
     SankeyNode,
     SankeySibling,
@@ -213,13 +210,16 @@ def get_sankey_config_info(
         session.query(
             SankeyInput.category_id.label("category_id"),
             Category.name.label("category_name"),
+            Category.source_id.label("source_id"),
         )
         .join(Category, Category.id == SankeyInput.category_id)
         .filter(SankeyInput.config_id == config.id)
         .all()
     )
     existing_inputs = [
-        ExistingSankeyInput(
+        PossibleSankeyInput(
+            siblings=get_siblings(row.source_id, row.category_id),
+            source_id=row.source_id,
             category_id=row.category_id,
             category_name=row.category_name,
         )
@@ -239,7 +239,7 @@ def get_sankey_config_info(
         .all()
     )
     existing_links = [
-        ExistingSankeyLinkage(
+        PossibleSankeyLinkage(
             category_id=row.category_id,
             category_name=row.category_name,
             target_source_id=row.target_source_id,
