@@ -288,6 +288,7 @@ class SankeySibling(BaseModel):
 class PossibleSankeyInput(BaseModel):
     category_id: int
     source_id: int
+    source_name: str
     category_name: str
     siblings: list[SankeySibling]
 

@@ -157,7 +157,8 @@ def get_sankey_config_info(
         )
 
     category_query = (
-        session.query(Category.id, Category.name, Category.source_id)
+        session.query(Category.id, Category.name, Category.source_id, TransactionSource.name.label("source_name"))
+        .join(TransactionSource, TransactionSource.id == Category.source_id)
         .filter(Category.user_id == user.id)
         .all()
     )
@@ -188,6 +189,7 @@ def get_sankey_config_info(
         PossibleSankeyInput(
             category_id=row.id,
             category_name=row.name,
+            source_name=row.source_name,
             source_id=row.source_id,
             siblings=get_siblings(row.source_id, row.id),
         )
@@ -211,8 +213,10 @@ def get_sankey_config_info(
             SankeyInput.category_id.label("category_id"),
             Category.name.label("category_name"),
             Category.source_id.label("source_id"),
+            TransactionSource.name.label("source_name"),
         )
         .join(Category, Category.id == SankeyInput.category_id)
+        .join(TransactionSource, TransactionSource.id == Category.source_id)
         .filter(SankeyInput.config_id == config.id)
         .all()
     )
@@ -220,6 +224,7 @@ def get_sankey_config_info(
         PossibleSankeyInput(
             siblings=get_siblings(row.source_id, row.category_id),
             source_id=row.source_id,
+            source_name=row.source_name,
             category_id=row.category_id,
             category_name=row.category_name,
         )

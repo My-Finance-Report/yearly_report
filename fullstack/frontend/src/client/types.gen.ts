@@ -64,6 +64,7 @@ export type NewPassword = {
 export type PossibleSankeyInput = {
     category_id: number;
     source_id: number;
+    source_name: string;
     category_name: string;
     siblings: Array<SankeySibling>;
 };
