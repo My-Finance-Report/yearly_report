@@ -215,13 +215,6 @@ export function SankeyBox() {
             <FiSettings />
           </Button>
         </Link>
-        <Button
-          variant="outline"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          alignSelf="start"
-        >
-          {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
-        </Button>
       </HStack>
 
       {isLoading ? (

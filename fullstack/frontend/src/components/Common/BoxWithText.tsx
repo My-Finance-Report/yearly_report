@@ -1,5 +1,7 @@
-import React from "react";
-import { Box } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Box, Button } from "@chakra-ui/react";
+import { Link } from "@tanstack/react-router";
+import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 
 interface LabeledBoxProps {
   text: string;
@@ -18,6 +20,8 @@ export default function LabeledBox({
   minW = "50%",
   containerRef,
 }: LabeledBoxProps) {
+
+ const [isExpanded, setIsExpanded] = useState(true);
   const labelStyles = {
     position: "absolute",
     backgroundColor: "black",
@@ -61,12 +65,21 @@ export default function LabeledBox({
       display="flex"
       flexDirection="column"
       position="relative"
-      p={4}
+      p={2}
     >
       <Box {...labelStyles} {...positionStyles[position]}>
         {text}
       </Box>
-      {children}
+        <Button
+          variant="outline"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          alignSelf="start"
+        >
+          {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
+        </Button>
+      {isExpanded && (
+        <Box flex="1">{children}</Box>
+      )}
     </Box>
   );
 }
