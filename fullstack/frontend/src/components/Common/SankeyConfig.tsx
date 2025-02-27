@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createListCollection } from "@chakra-ui/react";
+import { createListCollection, Icon } from "@chakra-ui/react";
 import {
   Box,
   Button,
@@ -8,6 +8,8 @@ import {
   Text,
   Spinner,
   HStack,
+  Tag,
+  TagLabel,
 } from "@chakra-ui/react";
 
 import {
@@ -27,6 +29,7 @@ import {
 } from "../../client";
 import { isLoggedIn } from "@/hooks/useAuth";
 import { SankeyBox } from "./VisualizationPanel";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 type Blah = { label: string; value: number };
 
@@ -146,11 +149,11 @@ export function SankeyConfigPage() {
     },
   });
 
-  const hasLinkage = (sibling: SankeySibling) => {
-    const val = selectedLinkages.some(
+  const getLinkage = (sibling: SankeySibling): PossibleSankeyLinkage | null => {
+    const linkage = selectedLinkages.find(
       (l) => l.category_id === sibling.category_id
     );
-    return val;
+    return linkage ? linkage : null;
   };
 
   if (isLoading) {
@@ -168,38 +171,32 @@ export function SankeyConfigPage() {
               py={1}
               borderRadius="md"
               spaceX={2}
-              borderLeftWidth={2}
-              borderLeftColor="gray.300"
               ml={4}
             >
               <HStack>
-                <Text>{input.category_name}</Text>
-                <Button size="xs" onClick={() => removeInput(input)}>
-                  Remove
-                </Button>
+                <SimpleTag
+                  name={input.category_name}
+                  onRemove={() => removeInput(input)}
+                  showRemove={true}
+                  showAdd={false}
+                  onAdd={() => {}}
+                />
               </HStack>
               {findInputFromId && (
                 <VStack align={"flex-start"} ml={4}>
-                  <Text>{input.source_name}</Text>
+                  <SimpleTag name={input.source_name} />
                   <Box ml={4}>
                     {findInputFromId[input.category_id as number].siblings.map(
                       (sibling: SankeySibling, inner) => (
-                        <HStack key={inner.toString()} ml={4}>
-                          <Text key={inner.toString()}>
-                            {sibling.category_name}
-                          </Text>
-                          {hasLinkage(sibling) ? (
-                            <Text>has linkage</Text>
-                          ) : (
-                            <Selector
-                              collection={collectionOfLinkages}
-                              selected={null}
-                              setSelected={setSelectedLinkage}
-                              onAdd={() => addLinkage(sibling)}
-                              title="Link to"
-                            />
-                          )}
-                        </HStack>
+                        <LinkageDisplay
+                          key={inner.toString()}
+                          sibling={sibling}
+                          addLinkage={addLinkage}
+                          removeLinkage={removeLinkage}
+                          linkage={getLinkage(sibling)}
+                          setSelectedLinkage={setSelectedLinkage}
+                          collectionOfLinkages={collectionOfLinkages}
+                        />
                       )
                     )}
                   </Box>
@@ -232,11 +229,93 @@ export function SankeyConfigPage() {
   );
 }
 
+interface LinkageDisplayProps {
+  sibling: SankeySibling;
+  linkage: PossibleSankeyLinkage | null;
+  addLinkage: (sibling: SankeySibling) => void;
+  removeLinkage: (linkage: PossibleSankeyLinkage) => void;
+  setSelectedLinkage: React.Dispatch<React.SetStateAction<Blah | null>>;
+  collectionOfLinkages: { items: Blah[] };
+}
+
+const LinkageDisplay: React.FC<LinkageDisplayProps> = ({
+  sibling,
+  addLinkage,
+  removeLinkage,
+  collectionOfLinkages,
+  setSelectedLinkage,
+  linkage,
+}) => {
+  const [showSelector, setShowSelector] = useState(false);
+
+  return (
+    <HStack key={sibling.category_name} ml={4}>
+      {linkage ? (
+        <>
+          <SimpleTag
+            name={sibling.category_name}
+            onAdd={() => addLinkage(sibling)}
+          />
+          <Text>has linkage to</Text>
+          <SimpleTag
+            name={linkage.target_source_name!}
+            onRemove={() => {removeLinkage(linkage); setShowSelector(false)}}
+            showRemove
+          />
+        </>
+      ) : (
+        <>
+          <SimpleTag
+            name={sibling.category_name}
+            showAdd={!showSelector}
+            onAdd={() => setShowSelector(true)}
+          />
+          {showSelector && (
+            <Selector
+              collection={collectionOfLinkages}
+              selected={null}
+              setSelected={setSelectedLinkage}
+              onAdd={() => addLinkage(sibling)}
+              onRemove={() => setShowSelector(false)}
+              title="Link to"
+            />
+          )}
+        </>
+      )}
+    </HStack>
+  );
+};
+
+interface SimpleTagProps {
+  name: string;
+  onRemove?: () => void;
+  onAdd?: () => void;
+  showRemove?: boolean;
+  showAdd?: boolean;
+}
+
+function SimpleTag({
+  name,
+  onRemove,
+  onAdd,
+  showRemove = false,
+  showAdd = false,
+}: SimpleTagProps) {
+  return (
+    <Tag.Root key={name} p={2} borderRadius="md">
+      <TagLabel>{name}</TagLabel>
+      {showRemove && <Icon as={DeleteIcon} mr={1} onClick={onRemove} />}
+      {showAdd && <Icon as={AddIcon} mr={1} onClick={onAdd} />}
+    </Tag.Root>
+  );
+}
+
 function Selector(props: {
   collection: { items: Blah[] };
   selected: Blah | null;
   setSelected: (selected: Blah | null) => void;
-  onAdd: () => void;
+  onAdd?: () => void;
+  onRemove?: () => void;
   title: string;
 }) {
   return (
@@ -262,7 +341,7 @@ function Selector(props: {
           ))}
         </SelectContent>
       </SelectRoot>
-      <Button onClick={props.onAdd}>Add</Button>
+      <SimpleTag name={""} showAdd={!!props.onAdd} onAdd={props.onAdd} showRemove={!!props.onRemove} onRemove={props.onRemove}/>
     </HStack>
   );
 }

@@ -108,7 +108,7 @@ export function GenericSankeyChart({
       <Sankey
         width={width}
         height={height}
-        data={data}
+        data={testData}
         nodeWidth={10}
         nodePadding={20}
         linkCurvature={0.5}
