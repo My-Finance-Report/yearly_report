@@ -106,9 +106,15 @@ def get_sankey_data(
             linkages = linkages_by_category[cat.id]
             for linkage in linkages:
                 target_source = transaction_source_lookup[linkage.target_source_id]
-                link_target_node = SankeyNode(id=get_id(node_lookup), name=target_source.name)
-                node_lookup[link_target_node.id] = link_target_node
-                links.append(SankeyLink(source=target.id, target=link_target_node.id, value=500))
+
+                sibling_cats = [
+                        cat
+                        for cat in categories_by_transaction_source[target_source.id]
+                    ]
+                for sibling in sibling_cats:
+                    sibling_node = SankeyNode(id=get_id(node_lookup), name=sibling.name)
+                    node_lookup[sibling_node.id] = sibling_node
+                    links.append(SankeyLink(source=target.id, target=sibling_node.id, value=500))
 
     return SankeyData(nodes=list(node_lookup.values()), links=links)
 
