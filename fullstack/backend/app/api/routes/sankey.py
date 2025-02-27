@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.api.deps import (
     get_current_user,
@@ -97,12 +97,11 @@ def make_lookups_for_sankey(
         totals_lookup=dict(totals_lookup),
     )
 
-def get_or_create_sankey_config(
-    session: Session, user: User
-) -> SankeyConfig:
+
+def get_or_create_sankey_config(session: Session, user: User) -> SankeyConfig:
     config = session.query(SankeyConfig).filter(SankeyConfig.user_id == user.id).first()
     if not config:
-        config = SankeyConfig(user_id=user.id)
+        config = SankeyConfig(user_id=user.id, name="Default")
         session.add(config)
         session.commit()
     return config
@@ -189,7 +188,6 @@ def create_sankey_config(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> dict[str, bool]:
-
     config = get_or_create_sankey_config(session, user)
 
     session.query(SankeyInput).filter(SankeyInput.config_id == config.id).delete()
@@ -219,7 +217,6 @@ def get_sankey_config_info(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SankeyConfigInfo:
-
     config = get_or_create_sankey_config(session, user)
 
     category_query = (

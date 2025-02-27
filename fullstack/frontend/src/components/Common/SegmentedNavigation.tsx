@@ -34,7 +34,7 @@ export function SegmentedNavigation() {
         defaultValue={"/transactions"}
         value={
           finalItems.find(({ value }) => location.pathname.startsWith(value))
-            ?.value || "/transactions"
+            ?.value || null
         }
         items={finalItems.map(({ value, label, icon }) => ({
           value,

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/login")({
   component: Login,
   beforeLoad: async () => {
     if (isLoggedIn()) {
-      throw redirect({ to: "/" })
+      throw redirect({ to: "/transactions" })
     }
   },
 })
