@@ -1,3 +1,4 @@
+import BoxWithText from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Box,
@@ -23,7 +24,6 @@ import {
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
-import  BoxWithText  from "@/components/Common/BoxWithText"
 
 interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
@@ -77,6 +77,8 @@ export function VisualizationPanel({
 }
 
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
+
+  const [isExpanded, setIsExpanded] = useState(true)
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
@@ -116,7 +118,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     : []
 
   return (
-    <BoxWithText text="Bar Chart">
+    <BoxWithText text="Bar Chart" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
       {hasValidTimeGrouping ? (
         <GenericBarChart data={chartData} dataKey="date" nameKey="date" />
       ) : (
@@ -132,6 +134,8 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 }
 
 function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
+
+  const [isExpanded, setIsExpanded] = useState(true)
   const chartDataMap = sourceGroup.groups
     .flatMap(
       (group) =>
@@ -163,7 +167,7 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   }))
 
   return (
-    <BoxWithText text="Pie Chart">
+    <BoxWithText text="Pie Chart" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
       <GenericPieChart
         data={chartData}
         dataKey="amount"
@@ -208,7 +212,13 @@ export function SankeyBox() {
   }
 
   return (
-    <BoxWithText text="Sankey Visualization" containerRef={containerRef} minH={isExpanded ? 300 : undefined}>
+    <BoxWithText
+      text="Sankey Visualization"
+      containerRef={containerRef}
+      isExpanded={isExpanded}
+      setIsExpanded={setIsExpanded}
+      minH={isExpanded ? 300 : undefined}
+    >
       <HStack gap={0}>
         <Link to="/sankey-config" href="/sankey-config/">
           <Button variant="outline" alignSelf="start">
@@ -230,7 +240,6 @@ export function SankeyBox() {
       ) : isExpanded && data ? (
         <GenericSankeyChart data={data} width={chartWidth} />
       ) : null}
-</BoxWithText>
+    </BoxWithText>
   )
 }
-

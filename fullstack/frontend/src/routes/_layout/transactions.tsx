@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import { Container, Spinner, Text } from "@chakra-ui/react"
 
+import BoxWithText from "@/components/Common/BoxWithText"
 import {
   GroupByOption,
   GroupingConfig,
@@ -13,7 +14,6 @@ import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSele
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
-import  BoxWithText  from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
@@ -54,6 +54,7 @@ function Transactions() {
 
   const [activeTransactionSource, setActiveTransactionSource] =
     useState<TransactionSourceGroup | null>(null)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   useEffect(() => {
     if (data?.groups.length) {
@@ -74,7 +75,7 @@ function Transactions() {
             isLoading={isLoading}
             showDeposits={showDeposits}
           />
-          <BoxWithText text="Selection">
+          <BoxWithText text="Filters" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
@@ -88,7 +89,7 @@ function Transactions() {
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
             />
-        </BoxWithText>
+          </BoxWithText>
           <TransactionsTable
             toggleGroup={toggleGroup}
             sourceGroup={activeTransactionSource}

@@ -1,27 +1,28 @@
-import React, { useState } from "react";
-import { Box, Button } from "@chakra-ui/react";
-import { Link } from "@tanstack/react-router";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { Box, Button } from "@chakra-ui/react"
+import type React from "react"
+import { FiChevronDown, FiChevronRight } from "react-icons/fi"
 
 interface LabeledBoxProps {
-  text: string;
-  position?: "top" | "bottom" | "left" | "right"; 
-  children: React.ReactNode;
-  minH?: number;
-  minW?: number | string;
-  containerRef?: React.RefObject<HTMLDivElement>;
+  text: string
+  position?: "top" | "bottom" | "left" | "right"
+  children: React.ReactNode
+  minH?: number
+  minW?: number | string
+  containerRef?: React.RefObject<HTMLDivElement>
+  isExpanded?: boolean
+  setIsExpanded?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function LabeledBox({
   text,
   position = "top",
   children,
+  isExpanded,
+  setIsExpanded,
   minH,
   minW = "50%",
   containerRef,
 }: LabeledBoxProps) {
-
- const [isExpanded, setIsExpanded] = useState(true);
   const labelStyles = {
     position: "absolute",
     backgroundColor: "black",
@@ -29,7 +30,7 @@ export default function LabeledBox({
     px: 2,
     fontSize: "sm",
     whiteSpace: "nowrap",
-  };
+  }
 
   const positionStyles = {
     top: {
@@ -52,7 +53,7 @@ export default function LabeledBox({
       top: "50%",
       transform: "translateY(-50%) rotate(90deg)",
     },
-  };
+  }
 
   return (
     <Box
@@ -70,16 +71,14 @@ export default function LabeledBox({
       <Box {...labelStyles} {...positionStyles[position]}>
         {text}
       </Box>
-        <Button
-          variant="outline"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          alignSelf="start"
-        >
-          {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
-        </Button>
-      {isExpanded && (
-        <Box flex="1">{children}</Box>
-      )}
+      <Button
+        variant="outline"
+        onClick={() => {setIsExpanded && setIsExpanded((prev) => !prev)}}
+        alignSelf="start"
+      >
+        {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
+      </Button>
+      {isExpanded && <Box flex="1">{children}</Box>}
     </Box>
-  );
+  )
 }
