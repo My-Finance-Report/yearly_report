@@ -1,46 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
-import { Box, Spinner, Text } from "@chakra-ui/react";
+import { Box, Spinner, Text } from "@chakra-ui/react"
 
-import BoxWithText from "@/components/Common/BoxWithText";
+import BoxWithText from "@/components/Common/BoxWithText"
 import {
   GroupByOption,
   GroupingConfig,
-} from "@/components/Common/GroupingConfig";
-import { Legend } from "@/components/Common/Legend";
-import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector";
-import { TransactionsTable } from "@/components/Common/TransactionsTable";
-import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
-import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector";
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { type TransactionSourceGroup, TransactionsService } from "../../client";
-import { isLoggedIn } from "../../hooks/useAuth";
+} from "@/components/Common/GroupingConfig"
+import { Legend } from "@/components/Common/Legend"
+import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector"
+import { TransactionsTable } from "@/components/Common/TransactionsTable"
+import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
+import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
+import { useQuery } from "@tanstack/react-query"
+import { Link, createFileRoute } from "@tanstack/react-router"
+import { type TransactionSourceGroup, TransactionsService } from "../../client"
+import { isLoggedIn } from "../../hooks/useAuth"
 
-import { useColorPalette } from "@/hooks/useColor";
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client";
+import { useColorPalette } from "@/hooks/useColor"
+import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
-});
+})
 
 function Transactions() {
   const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean;
-  }>({});
+    [key: string]: boolean
+  }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.month,
     GroupByOption.category,
-  ]);
+  ])
 
-  const [showDeposits, setShowDeposits] = useState<boolean>(false);
+  const [showDeposits, setShowDeposits] = useState<boolean>(false)
 
   const toggleGroup = (sourceId: number, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
-    }));
-  };
+    }))
+  }
 
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -52,36 +52,36 @@ function Transactions() {
         groupBy: groupingOptions,
       }),
     enabled: isLoggedIn(),
-  });
+  })
 
-  const { getColorForName } = useColorPalette();
+  const { getColorForName } = useColorPalette()
   data?.groups.map((group) => {
     group.groups?.map((subgroup) => {
-      getColorForName(subgroup.group_name);
+      getColorForName(subgroup.group_name)
       subgroup.subgroups?.map((subsubgroup) => {
-        getColorForName(subsubgroup.group_name);
-      });
-    });
-  });
+        getColorForName(subsubgroup.group_name)
+      })
+    })
+  })
 
   const [activeTransactionSource, setActiveTransactionSource] =
-    useState<TransactionSourceGroup | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+    useState<TransactionSourceGroup | null>(null)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   useEffect(() => {
     if (data?.groups.length) {
-      setActiveTransactionSource(data.groups[0]);
+      setActiveTransactionSource(data.groups[0])
     }
-  }, [data?.groups]);
+  }, [data?.groups])
 
   const namesForLegends = data?.groups
     .flatMap((group) => group.groups.map((subgroup) => subgroup.subgroups))
     .flatMap((subgroup) =>
-      subgroup?.map((subsubgroup) => subsubgroup.group_name)
-    );
+      subgroup?.map((subsubgroup) => subsubgroup.group_name),
+    )
 
   return (
-    <div style={{ alignItems: "center" }} className="flex flex-row gap-4">
+    <div style={{ alignItems: "center", marginRight: 48 }} className="flex flex-row gap-4">
       <div className="sticky top-0 mt-4">
         <Legend toShowNames={namesForLegends} />
       </div>
@@ -138,7 +138,7 @@ function Transactions() {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default Transactions;
+export default Transactions
