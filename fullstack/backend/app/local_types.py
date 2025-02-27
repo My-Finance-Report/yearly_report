@@ -300,7 +300,6 @@ class PossibleSankeyLinkage(BaseModel):
     target_source_name: str
 
 
-
 class SankeyConfigInfo(BaseModel):
     possible_inputs: list[PossibleSankeyInput]
     possible_links: list[PossibleSankeyLinkage]

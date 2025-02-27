@@ -1,84 +1,84 @@
-import { useState, useEffect } from "react";
-import { createListCollection, Icon } from "@chakra-ui/react";
+import { Icon, createListCollection } from "@chakra-ui/react"
 import {
   Box,
   Button,
   Flex,
-  VStack,
-  Text,
-  Spinner,
   HStack,
+  Spinner,
   Tag,
   TagLabel,
-} from "@chakra-ui/react";
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { useEffect, useState } from "react"
 
 import {
-  SelectRoot,
   SelectContent,
   SelectItem,
+  SelectRoot,
   SelectTrigger,
   SelectValueText,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { isLoggedIn } from "@/hooks/useAuth"
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   type PossibleSankeyInput,
-  PossibleSankeyLinkage,
+  type PossibleSankeyLinkage,
   SankeyService,
   type SankeySibling,
-} from "../../client";
-import { isLoggedIn } from "@/hooks/useAuth";
-import { SankeyBox } from "./VisualizationPanel";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+} from "../../client"
+import { SankeyBox } from "./VisualizationPanel"
 
-type Blah = { label: string; value: number };
+type Blah = { label: string; value: number }
 
 export function SankeyConfigPage() {
   const [selectedInputs, setSelectedInputs] = useState<PossibleSankeyInput[]>(
-    []
-  );
+    [],
+  )
   const [selectedLinkages, setSelectedLinkages] = useState<
     PossibleSankeyLinkage[]
-  >([]);
+  >([])
 
-  const [selectedInput, setSelectedInput] = useState<Blah | null>(null);
-  const [selectedLinkage, setSelectedLinkage] = useState<Blah | null>(null);
+  const [selectedInput, setSelectedInput] = useState<Blah | null>(null)
+  const [selectedLinkage, setSelectedLinkage] = useState<Blah | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ["sankeyConfigInfo"],
     queryFn: SankeyService.getSankeyConfigInfo,
     enabled: isLoggedIn(),
-  });
+  })
 
   const findInputFromId: Record<number, PossibleSankeyInput> | undefined =
     data?.possible_inputs.reduce(
       (acc, item) => {
-        acc[item.category_id] = item;
-        return acc;
+        acc[item.category_id] = item
+        return acc
       },
-      {} as Record<number, PossibleSankeyInput>
-    );
+      {} as Record<number, PossibleSankeyInput>,
+    )
   const findLinkageFromId:
     | Record<number, Record<number, PossibleSankeyLinkage>>
     | undefined = data?.possible_links.reduce(
     (acc, item) => {
-      acc[item.category_id] = acc[item.category_id] || {};
-      acc[item.category_id][item.target_source_id] = item;
-      return acc;
+      acc[item.category_id] = acc[item.category_id] || {}
+      acc[item.category_id][item.target_source_id] = item
+      return acc
     },
-    {} as Record<number, Record<number, PossibleSankeyLinkage>>
-  );
+    {} as Record<number, Record<number, PossibleSankeyLinkage>>,
+  )
 
   useEffect(() => {
     if (!isLoading && data) {
-      setSelectedInputs(data.existing_inputs || []);
-      setSelectedLinkages(data.existing_links || []);
+      setSelectedInputs(data.existing_inputs || [])
+      setSelectedLinkages(data.existing_links || [])
     }
-  }, [data, isLoading]);
+  }, [data, isLoading])
 
   const selectedCategoryIds = new Set(
-    selectedInputs.map((input) => input.category_id)
-  );
+    selectedInputs.map((input) => input.category_id),
+  )
 
   const collectionOfInputs = {
     items:
@@ -86,7 +86,7 @@ export function SankeyConfigPage() {
         label: input.category_name,
         value: input.category_id,
       })) || [],
-  };
+  }
 
   const collectionOfLinkages = {
     items:
@@ -96,39 +96,39 @@ export function SankeyConfigPage() {
           label: link.target_source_name,
           value: link.target_source_id,
         })) || [],
-  };
+  }
 
   const addInput = () => {
     if (selectedInput && findInputFromId) {
       setSelectedInputs((prev) => [
         ...prev,
         findInputFromId[selectedInput.value],
-      ]);
-      setSelectedInput(null);
+      ])
+      setSelectedInput(null)
     }
-  };
+  }
 
   const addLinkage = (sibling: SankeySibling) => {
     if (selectedLinkage && findLinkageFromId) {
       setSelectedLinkages((prev) => [
         ...prev,
         findLinkageFromId[sibling.category_id][selectedLinkage.value],
-      ]);
-      setSelectedLinkage(null);
+      ])
+      setSelectedLinkage(null)
     }
-  };
+  }
 
   const removeInput = (inputToRemove: PossibleSankeyInput) => {
     setSelectedInputs((prev) =>
-      prev.filter((input) => input.category_id !== inputToRemove.category_id)
-    );
-  };
+      prev.filter((input) => input.category_id !== inputToRemove.category_id),
+    )
+  }
 
   const removeLinkage = (linkToRemove: PossibleSankeyLinkage) => {
     setSelectedLinkages((prev) =>
-      prev.filter((link) => link.category_id !== linkToRemove.category_id)
-    );
-  };
+      prev.filter((link) => link.category_id !== linkToRemove.category_id),
+    )
+  }
 
   const saveSankeyConfig = useMutation({
     mutationFn: async () => {
@@ -137,27 +137,27 @@ export function SankeyConfigPage() {
           inputs: selectedInputs,
           links: selectedLinkages,
         },
-      };
-      return SankeyService.createSankeyConfig(sankeyConfig);
+      }
+      return SankeyService.createSankeyConfig(sankeyConfig)
     },
     onSuccess: () => {
-      alert("Sankey Configuration Saved!");
+      alert("Sankey Configuration Saved!")
     },
     onError: (err) => {
-      console.error(err);
-      alert("Error saving configuration");
+      console.error(err)
+      alert("Error saving configuration")
     },
-  });
+  })
 
   const getLinkage = (sibling: SankeySibling): PossibleSankeyLinkage | null => {
     const linkage = selectedLinkages.find(
-      (l) => l.category_id === sibling.category_id
-    );
-    return linkage ? linkage : null;
-  };
+      (l) => l.category_id === sibling.category_id,
+    )
+    return linkage ? linkage : null
+  }
 
   if (isLoading) {
-    return <Spinner />;
+    return <Spinner />
   }
 
   return (
@@ -197,7 +197,7 @@ export function SankeyConfigPage() {
                           setSelectedLinkage={setSelectedLinkage}
                           collectionOfLinkages={collectionOfLinkages}
                         />
-                      )
+                      ),
                     )}
                   </Box>
                 </VStack>
@@ -224,16 +224,16 @@ export function SankeyConfigPage() {
       </VStack>
       <SankeyBox />
     </Flex>
-  );
+  )
 }
 
 interface LinkageDisplayProps {
-  sibling: SankeySibling;
-  linkage: PossibleSankeyLinkage | null;
-  addLinkage: (sibling: SankeySibling) => void;
-  removeLinkage: (linkage: PossibleSankeyLinkage) => void;
-  setSelectedLinkage: React.Dispatch<React.SetStateAction<Blah | null>>;
-  collectionOfLinkages: { items: Blah[] };
+  sibling: SankeySibling
+  linkage: PossibleSankeyLinkage | null
+  addLinkage: (sibling: SankeySibling) => void
+  removeLinkage: (linkage: PossibleSankeyLinkage) => void
+  setSelectedLinkage: React.Dispatch<React.SetStateAction<Blah | null>>
+  collectionOfLinkages: { items: Blah[] }
 }
 
 const LinkageDisplay: React.FC<LinkageDisplayProps> = ({
@@ -244,7 +244,7 @@ const LinkageDisplay: React.FC<LinkageDisplayProps> = ({
   setSelectedLinkage,
   linkage,
 }) => {
-  const [showSelector, setShowSelector] = useState(false);
+  const [showSelector, setShowSelector] = useState(false)
 
   return (
     <HStack key={sibling.category_name} ml={4}>
@@ -257,7 +257,10 @@ const LinkageDisplay: React.FC<LinkageDisplayProps> = ({
           <Text>has linkage to</Text>
           <SimpleTag
             name={linkage.target_source_name!}
-            onRemove={() => {removeLinkage(linkage); setShowSelector(false)}}
+            onRemove={() => {
+              removeLinkage(linkage)
+              setShowSelector(false)
+            }}
             showRemove
           />
         </>
@@ -281,15 +284,15 @@ const LinkageDisplay: React.FC<LinkageDisplayProps> = ({
         </>
       )}
     </HStack>
-  );
-};
+  )
+}
 
 interface SimpleTagProps {
-  name: string;
-  onRemove?: () => void;
-  onAdd?: () => void;
-  showRemove?: boolean;
-  showAdd?: boolean;
+  name: string
+  onRemove?: () => void
+  onAdd?: () => void
+  showRemove?: boolean
+  showAdd?: boolean
 }
 
 function SimpleTag({
@@ -305,23 +308,23 @@ function SimpleTag({
       {showRemove && <Icon as={DeleteIcon} mr={1} onClick={onRemove} />}
       {showAdd && <Icon as={AddIcon} mr={1} onClick={onAdd} />}
     </Tag.Root>
-  );
+  )
 }
 
 function Selector(props: {
-  collection: { items: Blah[] };
-  selected: Blah | null;
-  setSelected: (selected: Blah | null) => void;
-  onAdd?: () => void;
-  onRemove?: () => void;
-  title: string;
+  collection: { items: Blah[] }
+  selected: Blah | null
+  setSelected: (selected: Blah | null) => void
+  onAdd?: () => void
+  onRemove?: () => void
+  title: string
 }) {
   return (
     <HStack>
       <SelectRoot
         onValueChange={(selectedItems) => {
           if (selectedItems.items[0]) {
-            props.setSelected(selectedItems.items[0]);
+            props.setSelected(selectedItems.items[0])
           }
         }}
         collection={createListCollection(props.collection)}
@@ -339,7 +342,13 @@ function Selector(props: {
           ))}
         </SelectContent>
       </SelectRoot>
-      <SimpleTag name={""} showAdd={!!props.onAdd} onAdd={props.onAdd} showRemove={!!props.onRemove} onRemove={props.onRemove}/>
+      <SimpleTag
+        name={""}
+        showAdd={!!props.onAdd}
+        onAdd={props.onAdd}
+        showRemove={!!props.onRemove}
+        onRemove={props.onRemove}
+      />
     </HStack>
-  );
+  )
 }

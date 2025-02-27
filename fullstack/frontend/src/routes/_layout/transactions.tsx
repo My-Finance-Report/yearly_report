@@ -11,7 +11,7 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
 import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 

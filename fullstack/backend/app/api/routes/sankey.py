@@ -1,11 +1,13 @@
 from collections import defaultdict
+from dataclasses import dataclass
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import (
     get_current_user,
 )
-
 from app.db import Session, get_db
+
 from ...local_types import (
     PossibleSankeyInput,
     PossibleSankeyLinkage,
@@ -18,10 +20,13 @@ from ...local_types import (
 )
 from ...models import (
     Category,
+    CategoryId,
     SankeyConfig,
     SankeyInput,
     SankeyLinkage,
+    Transaction,
     TransactionSource,
+    TransactionSourceId,
     User,
 )
 
@@ -29,38 +34,68 @@ router = APIRouter(prefix="/sankey", tags=["sankey"])
 
 
 def get_id(lookup: dict[int, SankeyNode]) -> int:
-    ''' in the future probably want to look for existiing key'''
-    return len(lookup.keys())
+    """
+    Get the next available node ID by using the current length of the node lookup.
+    In the future, we might want to ensure we do not re-create the same node
+    multiple times if it already exists.
+    """
+    return len(lookup)
 
-def make_lookups_for_sankey(session: Session, config: SankeyConfig, user: User):
-        inputs = session.query(SankeyInput).filter(SankeyInput.config_id == config.id).all()
-        linkages = (
-            session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).all()
+
+@dataclass(frozen=True, kw_only=True)
+class SankeyLookups:
+    inputs: list[SankeyInput]
+    category_lookup: dict[CategoryId, Category]
+    categories_by_transaction_source: dict[TransactionSourceId, list[Category]]
+    transaction_source_lookup: dict[TransactionSourceId, TransactionSource]
+    linkages_by_category: dict[CategoryId, list[SankeyLinkage]]
+    totals_lookup: dict[CategoryId, float]
+
+
+def make_lookups_for_sankey(
+    session: Session, config: SankeyConfig, user: User
+) -> SankeyLookups:
+    inputs = session.query(SankeyInput).filter(SankeyInput.config_id == config.id).all()
+
+    all_linkages = (
+        session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).all()
+    )
+
+    linkages_by_category: dict[CategoryId, list[SankeyLinkage]] = defaultdict(list)
+    for row in all_linkages:
+        linkages_by_category[row.category_id].append(row)
+
+    transaction_sources = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.user_id == user.id)
+        .all()
+    )
+    transaction_source_lookup = {row.id: row for row in transaction_sources}
+
+    categories = session.query(Category).filter(Category.user_id == user.id).all()
+    category_lookup = {}
+    categories_by_transaction_source = defaultdict(list)
+    for cat in categories:
+        category_lookup[cat.id] = cat
+        categories_by_transaction_source[cat.source_id].append(cat)
+
+    totals_lookup: dict[CategoryId, float] = defaultdict(float)
+    transactions = (
+        session.query(Transaction).filter(Transaction.user_id == user.id).all()
+    )
+    for transaction in transactions:
+        totals_lookup[transaction.category_id] = (
+            totals_lookup[transaction.category_id] + transaction.amount
         )
 
-        linkages_by_category = defaultdict(list)
-        for row in linkages:
-            linkages_by_category[row.category_id].append(row)
-
-        transaction_sources = (
-            session.query(TransactionSource)
-            .filter(TransactionSource.user_id == user.id)
-            .all()
-        )
-        transaction_source_lookup = {row.id: row for row in transaction_sources}
-        categories = session.query(Category).filter(Category.user_id == user.id).all()
-
-        categories_by_transaction_source = defaultdict(list)
-        category_lookup = {}
-        for cat in categories:
-            category_lookup[cat.id] = cat
-            categories_by_transaction_source[cat.source_id].append(cat)
-
-        return (inputs, category_lookup, categories_by_transaction_source, transaction_source_lookup, linkages_by_category)
-
-    
-
-
+    return SankeyLookups(
+        inputs=inputs,
+        category_lookup=category_lookup,
+        categories_by_transaction_source=categories_by_transaction_source,
+        transaction_source_lookup=transaction_source_lookup,
+        linkages_by_category=linkages_by_category,
+        totals_lookup=dict(totals_lookup),
+    )
 
 
 @router.get("/", response_model=SankeyData)
@@ -68,53 +103,74 @@ def get_sankey_data(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SankeyData:
-
-
     config = session.query(SankeyConfig).filter(SankeyConfig.user_id == user.id).first()
-
     if not config:
         raise HTTPException(status_code=404, detail="No Sankey configuration found.")
 
-
-    links: list[SankeyLink] = []
+    lookups = make_lookups_for_sankey(session, config, user)
 
     node_lookup: dict[int, SankeyNode] = {}
 
-    inputs, category_lookup, categories_by_transaction_source, transaction_source_lookup, linkages_by_category = make_lookups_for_sankey(session, config, user)
+    links: list[SankeyLink] = []
 
-    for input in inputs:
-        category = category_lookup[input.category_id]
+    def create_node(name: str) -> SankeyNode:
+        node_id = get_id(node_lookup)
+        node = SankeyNode(id=node_id, name=name)
+        node_lookup[node_id] = node
+        return node
 
-        sibling_categories = [
+    for sankey_input in lookups.inputs:
+        category = lookups.category_lookup[sankey_input.category_id]
+
+        base_node = create_node(category.name)
+        source_node = create_node(
+            lookups.transaction_source_lookup[category.source_id].name
+        )
+
+        value = lookups.totals_lookup.get(category.id)
+
+        if value:
+            links.append(
+                SankeyLink(source=base_node.id, target=source_node.id, value=value)
+            )
+
+        siblings = [
             cat
-            for cat in categories_by_transaction_source[category.source_id]
+            for cat in lookups.categories_by_transaction_source[category.source_id]
             if cat.id != category.id
         ]
 
-        base = SankeyNode(id=get_id(node_lookup), name=category.name)
-        node_lookup[base.id] =base 
+        for sibling_cat in siblings:
+            sibling_node = create_node(sibling_cat.name)
+            value = lookups.totals_lookup.get(sibling_cat.id)
+            if value:
+                links.append(
+                    SankeyLink(
+                        source=source_node.id, target=sibling_node.id, value=value
+                    )
+                )
 
-        first = SankeyNode(id=get_id(node_lookup), name=transaction_source_lookup[category.source_id].name)
-        links.append(SankeyLink(source=base.id, target=first.id, value=500))
-        node_lookup[first.id] =first 
-        # these link a category to its siblings
-        for cat in sibling_categories:
-            target = SankeyNode(id=get_id(node_lookup), name=cat.name)
-            node_lookup[target.id] = target
-            links.append(SankeyLink(source=first.id, target=target.id, value=500))
+            sibling_linkages = lookups.linkages_by_category[sibling_cat.id]
 
-            linkages = linkages_by_category[cat.id]
-            for linkage in linkages:
-                target_source = transaction_source_lookup[linkage.target_source_id]
+            for linkage in sibling_linkages:
+                target_source = lookups.transaction_source_lookup[
+                    linkage.target_source_id
+                ]
 
-                sibling_cats = [
-                        cat
-                        for cat in categories_by_transaction_source[target_source.id]
-                    ]
-                for sibling in sibling_cats:
-                    sibling_node = SankeyNode(id=get_id(node_lookup), name=sibling.name)
-                    node_lookup[sibling_node.id] = sibling_node
-                    links.append(SankeyLink(source=target.id, target=sibling_node.id, value=500))
+                target_sibling_cats = lookups.categories_by_transaction_source[
+                    target_source.id
+                ]
+                for cat_in_target_source in target_sibling_cats:
+                    target_sibling_node = create_node(cat_in_target_source.name)
+                    value = lookups.totals_lookup.get(cat_in_target_source.id)
+                    if value:
+                        links.append(
+                            SankeyLink(
+                                source=sibling_node.id,
+                                target=target_sibling_node.id,
+                                value=value,
+                            )
+                        )
 
     return SankeyData(nodes=list(node_lookup.values()), links=links)
 
@@ -125,7 +181,6 @@ def create_sankey_config(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> dict[str, bool]:
-
     config = (
         session.query(SankeyConfig)
         .filter(SankeyConfig.user_id == user.id)
@@ -179,7 +234,12 @@ def get_sankey_config_info(
         )
 
     category_query = (
-        session.query(Category.id, Category.name, Category.source_id, TransactionSource.name.label("source_name"))
+        session.query(
+            Category.id,
+            Category.name,
+            Category.source_id,
+            TransactionSource.name.label("source_name"),
+        )
         .join(TransactionSource, TransactionSource.id == Category.source_id)
         .filter(Category.user_id == user.id)
         .all()

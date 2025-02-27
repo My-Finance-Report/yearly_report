@@ -104,7 +104,6 @@ export function GenericSankeyChart({
     theme.theme === "dark" ? darkModePalette : lightModePalette
 
   console.log(data)
-  console.log(testData)
 
   return (
     <Box p={4}>

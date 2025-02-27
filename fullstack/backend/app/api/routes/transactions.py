@@ -16,6 +16,7 @@ from app.local_types import (
 )
 from app.models import (
     Category,
+    CategoryId,
     Transaction,
     TransactionSource,
     User,
@@ -24,7 +25,7 @@ from app.models import (
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
-CategoryLookup = dict[int, Category]
+CategoryLookup = dict[CategoryId, Category]
 
 GroupByKeyFunc = Callable[[Transaction, CategoryLookup], str]
 GroupByNameFunc = Callable[[str], str]
@@ -97,7 +98,6 @@ def recursive_group(
     if not group_options:
         total_withdrawals = sum(t.amount for t in txns if t.kind == "withdrawal")
         total_deposits = sum(t.amount for t in txns if t.kind == "deposit")
-        print("##### unexpected thing ######## ")
         return [
             AggregatedGroup(
                 group_id="all",

@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime, timezone
+from typing import NewType
 
 from sqlalchemy import (
     Boolean,
@@ -77,10 +78,16 @@ class UserSession(Base):
     user: Mapped["User"] = relationship(back_populates="sessions")
 
 
+CategoryId = NewType("CategoryId", int)
+TransactionSourceId = NewType("TransactionSourceId", int)
+
+
 class TransactionSource(Base):
     __tablename__ = "transaction_source"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[TransactionSourceId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -96,9 +103,11 @@ class TransactionSource(Base):
 class Category(Base):
     __tablename__ = "category"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[CategoryId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    source_id: Mapped[int] = mapped_column(
+    source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
@@ -112,10 +121,12 @@ class Transaction(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    category_id: Mapped[CategoryId] = mapped_column(
+        ForeignKey("category.id"), nullable=False
+    )
     date_of_transaction: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     amount: Mapped[float] = mapped_column(Integer, nullable=False)
-    transaction_source_id: Mapped[int] = mapped_column(
+    transaction_source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
     kind: Mapped[TransactionKind] = mapped_column(Enum(TransactionKind), nullable=False)
@@ -174,7 +185,9 @@ class SankeyInput(Base):
     config_id: Mapped[int] = mapped_column(
         ForeignKey("sankey_config.id"), nullable=False
     )
-    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    category_id: Mapped[CategoryId] = mapped_column(
+        ForeignKey("category.id"), nullable=False
+    )
 
 
 class SankeyLinkage(Base):
@@ -184,8 +197,10 @@ class SankeyLinkage(Base):
     config_id: Mapped[int] = mapped_column(
         ForeignKey("sankey_config.id"), nullable=False
     )
-    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
-    target_source_id: Mapped[int] = mapped_column(
+    category_id: Mapped[CategoryId] = mapped_column(
+        ForeignKey("category.id"), nullable=False
+    )
+    target_source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
 

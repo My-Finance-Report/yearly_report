@@ -1,19 +1,27 @@
-import { Box, Button, Center, Flex, Grid, Spinner, Text } from "@chakra-ui/react"
+import { isLoggedIn } from "@/hooks/useAuth"
+import {
+  Box,
+  Button,
+  Center,
+  Flex,
+  Grid,
+  Spinner,
+  Text,
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import {
-  type SankeyGetSankeyDataResponse,
-  SankeyService,
   type AggregatedGroup,
   type AggregatedTransactions,
   type GroupByOption,
+  type SankeyGetSankeyDataResponse,
+  SankeyService,
   type TransactionSourceGroup,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
-import { useQuery } from "@tanstack/react-query"
-import { isLoggedIn } from "@/hooks/useAuth"
-import { Link } from "@tanstack/react-router"
 
 interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
@@ -88,20 +96,20 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const chartData = hasValidTimeGrouping
     ? sourceGroup.groups.map((group) => {
-      const base: Record<string, number | string> = {
-        date: group.group_id.toString(),
-      }
-
-      if (group.subgroups) {
-        for (const subgroup of group.subgroups) {
-          base[subgroup.group_name] = showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals
+        const base: Record<string, number | string> = {
+          date: group.group_id.toString(),
         }
-      }
 
-      return base
-    })
+        if (group.subgroups) {
+          for (const subgroup of group.subgroups) {
+            base[subgroup.group_name] = showDeposits
+              ? subgroup.total_deposits
+              : subgroup.total_withdrawals
+          }
+        }
+
+        return base
+      })
     : []
 
   return (
@@ -164,7 +172,10 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 }
 
 export function SankeyBox() {
-  const { data, isLoading, error } = useQuery<SankeyGetSankeyDataResponse, Error>({
+  const { data, isLoading, error } = useQuery<
+    SankeyGetSankeyDataResponse,
+    Error
+  >({
     queryKey: ["sankeyData"],
     queryFn: () => SankeyService.getSankeyData(),
     enabled: isLoggedIn(),
@@ -200,7 +211,11 @@ export function SankeyBox() {
       display="flex"
       flexDirection="column"
     >
-      <Button variant="outline" onClick={() => setIsExpanded((prev) => !prev)} alignSelf="start">
+      <Button
+        variant="outline"
+        onClick={() => setIsExpanded((prev) => !prev)}
+        alignSelf="start"
+      >
         {isExpanded ? "Collapse" : "Expand"} Flowchart
       </Button>
 
@@ -216,7 +231,9 @@ export function SankeyBox() {
         </Center>
       ) : error ? (
         <Center flex="1">
-          <Text color="red.500">Failed to load Sankey data. Have you created a config?</Text>
+          <Text color="red.500">
+            Failed to load Sankey data. Have you created a config?
+          </Text>
         </Center>
       ) : isExpanded && data ? (
         <GenericSankeyChart data={data} width={chartWidth} />
@@ -224,5 +241,3 @@ export function SankeyBox() {
     </Box>
   )
 }
-
-
