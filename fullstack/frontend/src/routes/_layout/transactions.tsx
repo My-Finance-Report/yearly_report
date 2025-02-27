@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react"
 
-import { Box, Spinner, Text } from "@chakra-ui/react"
+import {  Spinner, Text } from "@chakra-ui/react"
 
-import BoxWithText from "@/components/Common/BoxWithText"
 import {
   GroupByOption,
-  GroupingConfig,
 } from "@/components/Common/GroupingConfig"
 import { Legend } from "@/components/Common/Legend"
-import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector"
 import { TransactionsTable } from "@/components/Common/TransactionsTable"
+import { FilterGroup } from "@/components/Common/FilterGroup"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
-import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
@@ -102,25 +99,13 @@ function Transactions() {
               isLoading={isLoading}
               showDeposits={showDeposits}
             />
-            <BoxWithText
-              text="Filters"
-              isExpanded={isExpanded}
-              setIsExpanded={setIsExpanded}
-            >
-              <WithdrawDepositSelector
-                setShowDeposits={setShowDeposits}
-                showDeposits={showDeposits}
-              />
-              <TransactionSourceSelector
-                activeTransactionSource={activeTransactionSource}
-                setActiveTransactionSource={setActiveTransactionSource}
-                allTransactionSources={data.groups}
-              />
-              <GroupingConfig
-                groupingOptions={groupingOptions}
-                setGroupingOptions={setGroupingOptions}
-              />
-            </BoxWithText>
+            <FilterGroup
+              activeTransactionSource={activeTransactionSource}
+              setActiveTransactionSource={setActiveTransactionSource}
+              data={data}
+              groupingOptions={groupingOptions}
+              setGroupingOptions={setGroupingOptions}
+            />
             <TransactionsTable
               toggleGroup={toggleGroup}
               sourceGroup={activeTransactionSource}
@@ -145,3 +130,4 @@ function Transactions() {
 }
 
 export default Transactions
+

@@ -131,7 +131,6 @@ const ChartTooltipContent = React.forwardRef<
     },
     ref,
   ) => {
-
     const { config } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
