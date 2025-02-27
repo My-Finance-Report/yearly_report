@@ -54,6 +54,18 @@ const CustomLink = ({
   )
 }
 
+function isValidateData(data: SankeyData) {
+
+  if (!data) return false
+  if (!data.nodes) return false
+  if (!data.links) return false
+  if (data.nodes.length == 0) return false
+  if (data.links.length == 0) return false
+
+  return true
+  
+}
+
 export interface SankeyChartProps {
   data: SankeyData
   width?: number
@@ -65,25 +77,6 @@ export function GenericSankeyChart({
   width = 950,
   height = 600,
 }: SankeyChartProps) {
-  const testData = {
-    nodes: [
-      { name: "Deposits", id: 0 },
-      { name: "Withdrawals", id: 1 },
-      { name: "Salary", id: 2 },
-      { name: "Investments", id: 3 },
-      { name: "Bills", id: 4 },
-      { name: "Groceries", id: 5 },
-    ],
-    links: [
-      { source: 2, target: 0, value: 5000 },
-      { source: 3, target: 0, value: 2000 },
-      { source: 0, target: 4, value: 1000 },
-      { source: 0, target: 5, value: 1500 },
-      { source: 1, target: 4, value: 2000 },
-      { source: 1, target: 5, value: 500 },
-    ],
-  }
-
   const lightModePalette = [
     "#3182CE",
     "#38A169",
@@ -103,7 +96,9 @@ export function GenericSankeyChart({
   const colorPalette =
     theme.theme === "dark" ? darkModePalette : lightModePalette
 
-  console.log(data)
+  if (!isValidateData(data)) {
+    return null
+  }
 
   return (
     <Box p={4}>
