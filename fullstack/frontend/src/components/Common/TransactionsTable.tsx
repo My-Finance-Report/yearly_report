@@ -2,29 +2,30 @@ import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
   Collapsible,
+  HStack,
   Table,
   TableBody,
   TableCell,
   TableColumnHeader,
   TableHeader,
   TableRow,
-  HStack,
 } from "@chakra-ui/react"
 import React from "react"
 
-import type { AggregatedGroup, TransactionSourceGroup } from "../../client"
 import { useColorPalette } from "@/hooks/useColor"
+import type { AggregatedGroup, TransactionSourceGroup } from "../../client"
 
 export function TransactionsTable({
   sourceGroup,
   toggleGroup,
   expandedGroups,
+  toShowNames,
 }: {
   sourceGroup: TransactionSourceGroup
   toggleGroup: (sourceId: number, groupKey: string) => void
+  toShowNames?: (string| undefined)[] | undefined
   expandedGroups: { [key: string]: boolean }
 }) {
-  const { getColorForName } = useColorPalette()
 
   return (
     <Table.Root variant="outline">
@@ -32,7 +33,6 @@ export function TransactionsTable({
         <TableRow>
           <TableColumnHeader />
           <TableColumnHeader>
-         
             {sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}
           </TableColumnHeader>
           <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
@@ -45,6 +45,7 @@ export function TransactionsTable({
           groups: sourceGroup.groups,
           sourceId: sourceGroup.transaction_source_id,
           pathPrefix: "",
+          toShowNames,
           toggleGroup,
           expandedGroups,
         })}
@@ -65,12 +66,14 @@ function renderGroups({
   pathPrefix,
   expandedGroups,
   toggleGroup,
+  toShowNames,
 }: {
   groups: AggregatedGroup[]
   sourceId: number
   pathPrefix: string
   toggleGroup: (sourceId: number, groupKey: string) => void
   expandedGroups: { [key: string]: boolean }
+  toShowNames?: (string| undefined)[] | undefined
 }) {
   return groups.map((group, idx) => {
     const groupKey = pathPrefix
@@ -78,7 +81,7 @@ function renderGroups({
       : `${group.group_id}`
     const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
 
-    const {getColorForName} = useColorPalette()
+    const { getColorForName } = useColorPalette()
 
     return (
       <React.Fragment key={groupKey}>
@@ -91,17 +94,20 @@ function renderGroups({
           </TableCell>
           <TableCell>
             <HStack>
-            <Box
-              width="16px"
-            borderWidth={1}
-            padding={3}
-            height="16px"
-            borderRadius="50%"
-            backgroundColor={getColorForName(group.group_name)}
-                />
-            {group.group_name}
-  </HStack>
-</TableCell>
+              {toShowNames?.includes(group.group_name) && (
+              <Box
+                width="16px"
+                borderWidth={1}
+                padding={3}
+                height="16px"
+                borderRadius="50%"
+                backgroundColor={getColorForName(group.group_name)}
+              />
+              )
+              }
+              {group.group_name}
+            </HStack>
+          </TableCell>
           <TableCell textAlign="end">{group.total_withdrawals}</TableCell>
           <TableCell textAlign="end">{group.total_deposits}</TableCell>
           <TableCell textAlign="end">{group.total_balance}</TableCell>
@@ -139,6 +145,7 @@ function renderGroups({
                           pathPrefix: groupKey,
                           toggleGroup,
                           expandedGroups,
+                          toShowNames,
                         })}
                       </TableBody>
                     </Table.Root>
