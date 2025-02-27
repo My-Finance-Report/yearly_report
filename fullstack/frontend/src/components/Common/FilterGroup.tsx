@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Text, Tag, HStack , CloseButton } from "@chakra-ui/react";
+import { Text, Tag, HStack, CloseButton, Box } from "@chakra-ui/react";
 import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 import { TransactionSourceSelector } from "./TransactionSourceSelector";
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector";
@@ -52,9 +52,9 @@ export function FilterGroup({
         ? prev.length > 1
           ? prev.filter((o) => o !== option)
           : prev
-        : [...prev, option]
-    })
-  }
+        : [...prev, option];
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -77,57 +77,55 @@ export function FilterGroup({
         isExpanded={isExpanded}
         setIsExpanded={setIsExpanded}
       >
-        <HStack>
-        <WithdrawDepositSelector
-          setShowDeposits={setShowDeposits}
-          showDeposits={showDeposits}
-        />
-        <TransactionSourceSelector
-          activeTransactionSource={activeTransactionSource}
-          setActiveTransactionSource={setActiveTransactionSource}
-          allTransactionSources={data.groups}
-        />
-        <GroupingConfig
-          groupingOptions={groupingOptions}
-          setGroupingOptions={setGroupingOptions}
-        />
-</HStack>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <HStack>
-            <Text>showing</Text>
-            <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
-              <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
-            </Tag.Root>
-            <Text>from</Text>
-            <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
-              <Text>{activeTransactionSource.transaction_source_name}</Text>
-            </Tag.Root>
-            <Text>Grouped by</Text>
-            <SortableContext
-              items={groupingOptions}
-              strategy={horizontalListSortingStrategy}
-            >
-              {groupingOptions.map((option, index) => (
-                <SortableItem
-                  key={option}
-                  option={option}
-                  noX={groupingOptions.length === 1}
-                  onRemove={handleToggleOption}
-                >
-                  {index !== groupingOptions.length - 1 && (
-                    <Text mx={1} color="gray.500">
-                      then
-                    </Text>
-                  )}
-                </SortableItem>
-              ))}
-            </SortableContext>
-          </HStack>
-        </DndContext>
+        <HStack gap={4}>
+          <WithdrawDepositSelector
+            setShowDeposits={setShowDeposits}
+            showDeposits={showDeposits}
+          />
+          <TransactionSourceSelector
+            activeTransactionSource={activeTransactionSource}
+            setActiveTransactionSource={setActiveTransactionSource}
+            allTransactionSources={data.groups}
+          />
+          <GroupingConfig
+            groupingOptions={groupingOptions}
+            setGroupingOptions={setGroupingOptions}
+          />
+        </HStack>
+        <Box mt={4}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <HStack>
+              <Text>showing</Text>
+              <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
+                <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
+              </Tag.Root>
+              <Text>from</Text>
+              <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
+                <Text>{activeTransactionSource.transaction_source_name}</Text>
+              </Tag.Root>
+              <Text>Grouped by</Text>
+              <SortableContext
+                items={groupingOptions}
+                strategy={horizontalListSortingStrategy}
+              >
+                {groupingOptions.map((option, index) => (
+                  <SortableItem
+                    key={option}
+                    option={option}
+                    noX={groupingOptions.length === 1}
+                    onRemove={handleToggleOption}
+                  >
+                    {index !== groupingOptions.length - 1 && <Text>then</Text>}
+                  </SortableItem>
+                ))}
+              </SortableContext>
+            </HStack>
+          </DndContext>
+        </Box>
       </BoxWithText>
     </>
   );

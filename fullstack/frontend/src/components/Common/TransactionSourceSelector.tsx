@@ -15,7 +15,7 @@ export function TransactionSourceSelector({
   >
 }) {
   return (
-    <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={2}>
+    <Box borderWidth={1} borderRadius="md" p={2}>
       <HStack>
         {allTransactionSources.map((sourceGroup, index) => {
           const isActive =

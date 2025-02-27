@@ -41,7 +41,7 @@ export function GroupingConfig({
   }
 
   return (
-    <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={2}>
+    <Box borderWidth={1} borderRadius="md" p={2}>
         <HStack spaceX={2} wrap="nowrap">
           {availableOptions.map((option) => (
             <Tag.Root

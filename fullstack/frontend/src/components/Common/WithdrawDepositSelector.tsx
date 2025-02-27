@@ -12,7 +12,7 @@ export function WithdrawDepositSelector({
   const availableOptions = ["deposits", "withdrawals"]
 
   return (
-    <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={2}>
+    <Box borderWidth={1} borderRadius="md" p={2}>
       <HStack spaceX={4} wrap="nowrap" align="center">
         {availableOptions.map((option) => {
           const isActive = showDeposits === (option === "deposits")
