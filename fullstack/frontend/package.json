@@ -11,6 +11,7 @@
     "generate-client": "openapi-ts"
   },
   "dependencies": {
+    "vite": "^5.4.14",
     "@chakra-ui/icons": "2.1.1",
     "@chakra-ui/react": "^3.8.0",
     "@dnd-kit/core": "^6.3.1",

@@ -42,10 +42,20 @@ class JobKind(str, enum.Enum):
     recategorize = "recategorize"
 
 
+UserId = NewType("UserId", int)
+TransactionId = NewType("TransactionId", int)
+CategoryId = NewType("CategoryId", int)
+TransactionSourceId = NewType("TransactionSourceId", int)
+UploadConfigurationId = NewType("UploadConfigurationId", int)
+ProcessFileJobId = NewType("ProcessFileJobId", int)
+UploadedPdfId = NewType("UploadedPdfId", int)
+ColChartConfigId = NewType("ColChartConfigId", int)
+
+
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[UserId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(
         String, nullable=False
@@ -71,15 +81,11 @@ class UserSession(Base):
     __tablename__ = "user_session"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     session_token: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="sessions")
-
-
-CategoryId = NewType("CategoryId", int)
-TransactionSourceId = NewType("TransactionSourceId", int)
 
 
 class TransactionSource(Base):
@@ -89,7 +95,7 @@ class TransactionSource(Base):
         Integer, primary_key=True, autoincrement=True
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     source_kind: Mapped[SourceKind] = mapped_column(
         Enum(SourceKind), default=SourceKind.account
@@ -110,7 +116,7 @@ class Category(Base):
     source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
     __table_args__ = (UniqueConstraint("name", "source_id", name="uq_category"),)
@@ -119,7 +125,9 @@ class Category(Base):
 class Transaction(Base):
     __tablename__ = "transaction"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[TransactionId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     description: Mapped[str] = mapped_column(Text, nullable=False)
     category_id: Mapped[CategoryId] = mapped_column(
         ForeignKey("category.id"), nullable=False
@@ -133,19 +141,21 @@ class Transaction(Base):
     uploaded_pdf_id: Mapped[int | None] = mapped_column(
         ForeignKey("uploaded_pdf.id"), nullable=True
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class UploadedPdf(Base):
     __tablename__ = "uploaded_pdf"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[UploadedPdfId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content_hash: Mapped[str] = mapped_column(Text, nullable=False)
     upload_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
     __table_args__ = (
@@ -156,14 +166,16 @@ class UploadedPdf(Base):
 class UploadConfiguration(Base):
     __tablename__ = "upload_configuration"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[UploadConfigurationId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     filename_regex: Mapped[str] = mapped_column(Text, nullable=False)
     start_keyword: Mapped[str | None] = mapped_column(Text, nullable=True)
     end_keyword: Mapped[str | None] = mapped_column(Text, nullable=True)
-    transaction_source_id: Mapped[int] = mapped_column(
+    transaction_source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
 
     __table_args__ = (
         UniqueConstraint("transaction_source_id", name="uq_upload_configuration"),
@@ -175,7 +187,7 @@ class SankeyConfig(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
 
 
 class SankeyInput(Base):
@@ -208,9 +220,11 @@ class SankeyLinkage(Base):
 class ColChartConfig(Base):
     __tablename__ = "col_chart_config"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[ColChartConfigId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     __table_args__ = (
@@ -221,17 +235,21 @@ class ColChartConfig(Base):
 class ProcessFileJob(Base):
     __tablename__ = "process_file_job"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[ProcessFileJobId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
     last_tried_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[JobStatus] = mapped_column(Enum(JobStatus), nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    config_id: Mapped[int | None] = mapped_column(
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    config_id: Mapped[UploadConfigurationId | None] = mapped_column(
         ForeignKey("upload_configuration.id"), nullable=True
     )
-    pdf_id: Mapped[int] = mapped_column(ForeignKey("uploaded_pdf.id"), nullable=False)
+    pdf_id: Mapped[UploadedPdfId] = mapped_column(
+        ForeignKey("uploaded_pdf.id"), nullable=False
+    )
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)
     error_messages: Mapped[str] = mapped_column(Text, nullable=True)
