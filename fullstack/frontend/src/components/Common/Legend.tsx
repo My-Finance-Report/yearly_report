@@ -17,17 +17,19 @@ export function Legend({
   )
 
   return (
+    <div className="w-[300px] ">
     <BoxWithText
       text="Legend"
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}
     >
-      <Flex margin={3} gap={3} direction="row" wrap="wrap" spaceX={3}>
+      <Flex margin={3} gap={3} direction="column">
         {toShowColors.map(([name, color], index) => {
           return <LegendItem key={index.toString()} name={name} color={color} />
         })}
       </Flex>
     </BoxWithText>
+</div>
   )
 }
 

@@ -7,8 +7,10 @@ interface LabeledBoxProps {
   position?: "top" | "bottom" | "left" | "right"
   children: React.ReactNode
   minH?: number
+  maxW?: number | string
   minW?: number | string
   containerRef?: React.RefObject<HTMLDivElement>
+  width?: number | string
   isExpanded?: boolean
   setIsExpanded?: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -20,6 +22,8 @@ export default function LabeledBox({
   isExpanded,
   setIsExpanded,
   minH,
+  width,
+  maxW,
   minW = "50%",
   containerRef,
 }: LabeledBoxProps) {
@@ -58,7 +62,9 @@ export default function LabeledBox({
   return (
     <Box
       flex="1"
+      width={width}
       minH={minH}
+      maxW={maxW}
       minW={minW}
       borderWidth={1}
       borderRadius="md"
