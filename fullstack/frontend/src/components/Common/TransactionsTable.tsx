@@ -23,10 +23,9 @@ export function TransactionsTable({
 }: {
   sourceGroup: TransactionSourceGroup
   toggleGroup: (sourceId: number, groupKey: string) => void
-  toShowNames?: (string| undefined)[] | undefined
+  toShowNames?: (string | undefined)[] | undefined
   expandedGroups: { [key: string]: boolean }
 }) {
-
   return (
     <Table.Root variant="outline">
       <TableHeader>
@@ -73,7 +72,7 @@ function renderGroups({
   pathPrefix: string
   toggleGroup: (sourceId: number, groupKey: string) => void
   expandedGroups: { [key: string]: boolean }
-  toShowNames?: (string| undefined)[] | undefined
+  toShowNames?: (string | undefined)[] | undefined
 }) {
   return groups.map((group, idx) => {
     const groupKey = pathPrefix
@@ -95,16 +94,15 @@ function renderGroups({
           <TableCell>
             <HStack>
               {toShowNames?.includes(group.group_name) && (
-              <Box
-                width="16px"
-                borderWidth={1}
-                padding={3}
-                height="16px"
-                borderRadius="50%"
-                backgroundColor={getColorForName(group.group_name)}
-              />
-              )
-              }
+                <Box
+                  width="16px"
+                  borderWidth={1}
+                  padding={3}
+                  height="16px"
+                  borderRadius="50%"
+                  backgroundColor={getColorForName(group.group_name)}
+                />
+              )}
               {group.group_name}
             </HStack>
           </TableCell>

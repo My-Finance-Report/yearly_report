@@ -75,11 +75,10 @@ function Transactions() {
   }, [data?.groups])
 
   const namesForLegends = data?.groups
-    .map((group) => group.groups.map((subgroup) => subgroup.subgroups))
-    .flat()
-    .map((subgroup) => subgroup?.map((subsubgroup) => subsubgroup.group_name))
-    .flat()
-
+    .flatMap((group) => group.groups.map((subgroup) => subgroup.subgroups))
+    .flatMap((subgroup) =>
+      subgroup?.map((subsubgroup) => subsubgroup.group_name),
+    )
 
   return (
     <Container maxW="large" py={8}>
@@ -89,9 +88,7 @@ function Transactions() {
         <Text color="red.500">Error loading transactions.</Text>
       ) : data?.groups && data.groups.length > 0 && activeTransactionSource ? (
         <>
-          <Legend
-            toShowNames={namesForLegends}
-          />
+          <Legend toShowNames={namesForLegends} />
           <VisualizationPanel
             sourceGroup={activeTransactionSource}
             isLoading={isLoading}

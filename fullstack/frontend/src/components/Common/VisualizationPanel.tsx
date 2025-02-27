@@ -117,7 +117,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     : []
 
   const description = `${sourceGroup.transaction_source_name} ${
-    showDeposits ? "deposits" : "withdrawrls"
+    showDeposits ? "deposits" : "withdrawals"
   }, by ${sourceGroup.groups[0].groupby_kind} then ${
     sourceGroup.groups[0].subgroups![0].groupby_kind
   } `

@@ -4,13 +4,17 @@ import { useState } from "react"
 import { useColorPalette } from "../../hooks/useColor"
 import BoxWithText from "./BoxWithText"
 
-export function Legend({toShowNames}: {toShowNames: (string| undefined)[] | undefined}) {
+export function Legend({
+  toShowNames,
+}: { toShowNames: (string | undefined)[] | undefined }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const { getAssignedColors } = useColorPalette()
 
   const colors = getAssignedColors()
 
-  const toShowColors = Object.entries(colors).filter(([name,]) =>  toShowNames?.includes(name))
+  const toShowColors = Object.entries(colors).filter(([name]) =>
+    toShowNames?.includes(name),
+  )
 
   return (
     <BoxWithText
