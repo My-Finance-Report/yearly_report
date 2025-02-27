@@ -1,4 +1,4 @@
-import { Box, Button } from "@chakra-ui/react"
+import { Box, Button, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiChevronDown, FiChevronRight } from "react-icons/fi"
 
@@ -69,7 +69,7 @@ export default function LabeledBox({
       p={2}
     >
       <Box {...labelStyles} {...positionStyles[position]}>
-        {text}
+        <Text fontSize={18} fontWeight="semi-bold">{text}</Text>
       </Box>
       <Button
         variant="outline"

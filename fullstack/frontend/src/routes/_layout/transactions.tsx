@@ -10,6 +10,7 @@ import {
 import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector"
 import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
+import { Legend } from "@/components/Common/Legend"
 import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
@@ -17,6 +18,7 @@ import { type TransactionSourceGroup, TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
+import { useColorPalette } from "@/hooks/useColor"
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
@@ -52,6 +54,16 @@ function Transactions() {
     enabled: isLoggedIn(),
   })
 
+  const { getColorForName } = useColorPalette()
+  data?.groups.forEach(group => {
+    group.groups?.forEach(subgroup => {
+      getColorForName(subgroup.group_name)
+      subgroup.subgroups?.forEach(subsubgroup => {
+        getColorForName(subsubgroup.group_name)
+      })
+    })
+  })
+
   const [activeTransactionSource, setActiveTransactionSource] =
     useState<TransactionSourceGroup | null>(null)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -70,6 +82,7 @@ function Transactions() {
         <Text color="red.500">Error loading transactions.</Text>
       ) : data?.groups && data.groups.length > 0 && activeTransactionSource ? (
         <>
+        <Legend /> 
           <VisualizationPanel
             sourceGroup={activeTransactionSource}
             isLoading={isLoading}
@@ -112,3 +125,4 @@ function Transactions() {
 }
 
 export default Transactions
+

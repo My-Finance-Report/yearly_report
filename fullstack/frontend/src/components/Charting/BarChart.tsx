@@ -5,7 +5,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { useColorPalette } from "@/hooks/useColorPalette"
+import { useColorPalette } from "@/hooks/useColor"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
@@ -22,7 +22,7 @@ export function GenericBarChart({
   nameKey,
   config,
 }: GenericBarChartProps) {
-  const colorPalette = useColorPalette()
+  const { getColorForName } = useColorPalette();
 
   const uniqueKeys = Object.keys(data[0] || {}).filter(
     (key) => key !== nameKey && key !== "date",
@@ -34,11 +34,11 @@ export function GenericBarChart({
     return uniqueKeys.reduce((acc, key, index) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
-        color: colorPalette[index % colorPalette.length],
+        color: getColorForName(key),
       }
       return acc
     }, {} as ChartConfig)
-  }, [config, colorPalette, uniqueKeys])
+  }, [config, getColorForName, uniqueKeys])
 
   return (
     <Card>

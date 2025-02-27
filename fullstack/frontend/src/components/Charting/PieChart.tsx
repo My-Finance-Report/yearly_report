@@ -8,7 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { useColorPalette } from "@/hooks/useColorPalette"
+import { useColorPalette } from "@/hooks/useColor"
 import { Box } from "@chakra-ui/react"
 
 export interface GenericChartDataItem {
@@ -36,15 +36,15 @@ export function GenericPieChart({
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
 }: GenericPieChartProps) {
-  const colorPalette = useColorPalette()
+  const { getColorForName } = useColorPalette()
 
   let finalConfig: ChartConfig
   if (!config) {
     const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])))
     finalConfig = uniqueNames.reduce((acc, name, index) => {
-      acc[name] = {
+      acc[String(name)] = {
         label: String(name),
-        color: colorPalette[index % colorPalette.length],
+        color: getColorForName(String(name)),
       }
       return acc
     }, {} as ChartConfig)
@@ -77,8 +77,7 @@ export function GenericPieChart({
                 <Cell
                   key={`cell-${index.toString()}`}
                   fill={
-                    finalConfig[entry[nameKey]]?.color ||
-                    colorPalette[index % colorPalette.length]
+                    getColorForName(String(entry[nameKey]))
                   }
                 />
               ))}

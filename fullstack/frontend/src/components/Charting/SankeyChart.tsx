@@ -1,5 +1,5 @@
 import type { SankeyData } from "@/client"
-import { useColorPalette } from "@/hooks/useColorPalette"
+import { useColorPalette } from "@/hooks/useColor"
 import { Box } from "@chakra-ui/react"
 import React from "react"
 import { Sankey, Tooltip } from "recharts"
@@ -75,11 +75,12 @@ export function GenericSankeyChart({
   width = 950,
   height = 600,
 }: SankeyChartProps) {
-  const colorPalette = useColorPalette()
+  const { getColorForName } = useColorPalette()
 
   if (!isValidateData(data)) {
     return null
   }
+
 
   return (
     <Box p={4}>
@@ -91,12 +92,13 @@ export function GenericSankeyChart({
         nodePadding={20}
         linkCurvature={0.5}
         iterations={32}
-        link={(props) => (
-          <CustomLink
+        link={(props) => {
+        console.log(props)
+         return ( <CustomLink
             {...props}
-            linkColor={colorPalette[props.index % colorPalette.length]}
-          />
-        )}
+            linkColor={()=>getColorForName(props.payload.target.name)}
+          />)
+        }}
       >
         <Tooltip />
       </Sankey>
