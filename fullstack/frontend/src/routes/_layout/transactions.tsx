@@ -7,18 +7,18 @@ import {
   GroupByOption,
   GroupingConfig,
 } from "@/components/Common/GroupingConfig"
+import { Legend } from "@/components/Common/Legend"
 import { TransactionSourceSelector } from "@/components/Common/TransactionSourceSelector"
 import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
-import { Legend } from "@/components/Common/Legend"
 import { WithdrawDepositSelector } from "@/components/Common/WithdrawDepositSelector"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 import { useColorPalette } from "@/hooks/useColor"
+import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
@@ -55,10 +55,10 @@ function Transactions() {
   })
 
   const { getColorForName } = useColorPalette()
-  data?.groups.forEach(group => {
-    group.groups?.forEach(subgroup => {
+  data?.groups.map((group) => {
+    group.groups?.map((subgroup) => {
       getColorForName(subgroup.group_name)
-      subgroup.subgroups?.forEach(subsubgroup => {
+      subgroup.subgroups?.map((subsubgroup) => {
         getColorForName(subsubgroup.group_name)
       })
     })
@@ -82,13 +82,17 @@ function Transactions() {
         <Text color="red.500">Error loading transactions.</Text>
       ) : data?.groups && data.groups.length > 0 && activeTransactionSource ? (
         <>
-        <Legend /> 
+          <Legend />
           <VisualizationPanel
             sourceGroup={activeTransactionSource}
             isLoading={isLoading}
             showDeposits={showDeposits}
           />
-          <BoxWithText text="Filters" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
+          <BoxWithText
+            text="Filters"
+            isExpanded={isExpanded}
+            setIsExpanded={setIsExpanded}
+          >
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
@@ -125,4 +129,3 @@ function Transactions() {
 }
 
 export default Transactions
-

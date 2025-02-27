@@ -69,11 +69,15 @@ export default function LabeledBox({
       p={2}
     >
       <Box {...labelStyles} {...positionStyles[position]}>
-        <Text fontSize={18} fontWeight="semi-bold">{text}</Text>
+        <Text fontSize={18} fontWeight="semi-bold">
+          {text}
+        </Text>
       </Box>
       <Button
         variant="outline"
-        onClick={() => {setIsExpanded && setIsExpanded((prev) => !prev)}}
+        onClick={() => {
+          setIsExpanded?.((prev) => !prev)
+        }}
         alignSelf="start"
       >
         {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}

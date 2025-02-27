@@ -22,7 +22,7 @@ export function GenericBarChart({
   nameKey,
   config,
 }: GenericBarChartProps) {
-  const { getColorForName } = useColorPalette();
+  const { getColorForName } = useColorPalette()
 
   const uniqueKeys = Object.keys(data[0] || {}).filter(
     (key) => key !== nameKey && key !== "date",

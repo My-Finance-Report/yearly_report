@@ -76,9 +76,7 @@ export function GenericPieChart({
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index.toString()}`}
-                  fill={
-                    getColorForName(String(entry[nameKey]))
-                  }
+                  fill={getColorForName(String(entry[nameKey]))}
                 />
               ))}
             </Pie>

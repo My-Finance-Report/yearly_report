@@ -38,9 +38,9 @@ ReactDOM.createRoot(root).render(
     <ChakraProvider value={theme}>
       <ColorModeProvider />
       <ChartColorProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
       </ChartColorProvider>
     </ChakraProvider>
   </StrictMode>,

@@ -81,7 +81,6 @@ export function GenericSankeyChart({
     return null
   }
 
-
   return (
     <Box p={4}>
       <Sankey
@@ -92,13 +91,12 @@ export function GenericSankeyChart({
         nodePadding={20}
         linkCurvature={0.5}
         iterations={32}
-        link={(props) => {
-        console.log(props)
-         return ( <CustomLink
+        link={(props) => (
+          <CustomLink
             {...props}
-            linkColor={()=>getColorForName(props.payload.target.name)}
-          />)
-        }}
+            linkColor={() => getColorForName(props.payload.target.name)}
+          />
+        )}
       >
         <Tooltip />
       </Sankey>

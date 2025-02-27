@@ -77,7 +77,6 @@ export function VisualizationPanel({
 }
 
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-
   const [isExpanded, setIsExpanded] = useState(true)
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
@@ -118,7 +117,11 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     : []
 
   return (
-    <BoxWithText text="Bar Chart" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
+    <BoxWithText
+      text="Bar Chart"
+      isExpanded={isExpanded}
+      setIsExpanded={setIsExpanded}
+    >
       {hasValidTimeGrouping ? (
         <GenericBarChart data={chartData} dataKey="date" nameKey="date" />
       ) : (
@@ -134,7 +137,6 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 }
 
 function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-
   const [isExpanded, setIsExpanded] = useState(true)
   const chartDataMap = sourceGroup.groups
     .flatMap(
@@ -167,7 +169,11 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   }))
 
   return (
-    <BoxWithText text="Pie Chart" isExpanded={isExpanded} setIsExpanded={setIsExpanded}>
+    <BoxWithText
+      text="Pie Chart"
+      isExpanded={isExpanded}
+      setIsExpanded={setIsExpanded}
+    >
       <GenericPieChart
         data={chartData}
         dataKey="amount"
