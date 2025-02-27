@@ -1,6 +1,7 @@
 import type { TransactionSourceGroup } from "@/client"
-import { Box, HStack, Tag, Text } from "@chakra-ui/react"
+import {  HStack, Tag , Box } from "@chakra-ui/react"
 import type React from "react"
+import BoxWithText from "./BoxWithText"
 
 export function TransactionSourceSelector({
   allTransactionSources,
@@ -14,8 +15,8 @@ export function TransactionSourceSelector({
   >
 }) {
   return (
-    <Box p={4} borderWidth={1} borderRadius="md">
-      <HStack spaceX={4} wrap="nowrap" align="center">
+    <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={2}>
+      <HStack>
         {allTransactionSources.map((sourceGroup, index) => {
           const isActive =
             activeTransactionSource.transaction_source_id ===
@@ -31,23 +32,11 @@ export function TransactionSourceSelector({
                 setActiveTransactionSource(sourceGroup)
               }}
             >
-              {sourceGroup.transaction_source_name}
+              <Tag.Label>{sourceGroup.transaction_source_name}</Tag.Label>
             </Tag.Root>
           )
         })}
-
-        <Box
-          borderWidth={1}
-          minH={10}
-          borderRight="3px solid"
-          borderColor="gray.300"
-        />
-
-        <Text>From</Text>
-        <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
-          <Text>{activeTransactionSource.transaction_source_name}</Text>
-        </Tag.Root>
       </HStack>
-    </Box>
+  </Box>
   )
 }

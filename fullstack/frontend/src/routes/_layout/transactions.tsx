@@ -63,7 +63,6 @@ function Transactions() {
 
   const [activeTransactionSource, setActiveTransactionSource] =
     useState<TransactionSourceGroup | null>(null)
-  const [isExpanded, setIsExpanded] = useState(true)
 
   useEffect(() => {
     if (data?.groups.length) {
@@ -79,7 +78,7 @@ function Transactions() {
 
   return (
     <div
-      style={{ alignItems: "center", marginRight: 48 }}
+      style={{ alignItems: "center", marginRight: 48, marginBottom: 48 }}
       className="flex flex-row gap-4"
     >
       <div className="sticky top-0 mt-4">
@@ -102,6 +101,8 @@ function Transactions() {
             <FilterGroup
               activeTransactionSource={activeTransactionSource}
               setActiveTransactionSource={setActiveTransactionSource}
+              setShowDeposits={setShowDeposits}
+              showDeposits={showDeposits}
               data={data}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}

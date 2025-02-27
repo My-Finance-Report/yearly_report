@@ -1,4 +1,5 @@
-import { Box, HStack, Icon, Tag, TagLabel, Text } from "@chakra-ui/react"
+import {  HStack, Icon, Tag, TagLabel, Box } from "@chakra-ui/react"
+import BoxWithText from "./BoxWithText"
 import { FiLogIn, FiLogOut } from "react-icons/fi"
 
 export function WithdrawDepositSelector({
@@ -11,7 +12,7 @@ export function WithdrawDepositSelector({
   const availableOptions = ["deposits", "withdrawals"]
 
   return (
-    <Box p={4} borderWidth={1} borderRadius="md">
+    <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={2}>
       <HStack spaceX={4} wrap="nowrap" align="center">
         {availableOptions.map((option) => {
           const isActive = showDeposits === (option === "deposits")
@@ -33,18 +34,6 @@ export function WithdrawDepositSelector({
             </Tag.Root>
           )
         })}
-
-        <Box
-          borderWidth={1}
-          minH={10}
-          borderRight="3px solid"
-          borderColor="gray.300"
-        />
-
-        <Text>Showing</Text>
-        <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
-          <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
-        </Tag.Root>
       </HStack>
     </Box>
   )

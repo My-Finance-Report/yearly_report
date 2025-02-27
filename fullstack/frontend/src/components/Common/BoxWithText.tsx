@@ -9,6 +9,7 @@ interface LabeledBoxProps {
   minH?: number
   maxW?: number | string
   minW?: number | string
+  expandable?: boolean
   containerRef?: React.RefObject<HTMLDivElement>
   width?: number | string
   isExpanded?: boolean
@@ -20,6 +21,7 @@ export default function LabeledBox({
   position = "top",
   children,
   isExpanded,
+  expandable = true,
   setIsExpanded,
   minH,
   width,
@@ -86,9 +88,10 @@ export default function LabeledBox({
         }}
         alignSelf="start"
       >
-        {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
+        {!isExpanded && expandable && <FiChevronRight />}
+        {isExpanded && expandable && <FiChevronDown />}
       </Button>
-      {isExpanded && <Box flex="1">{children}</Box>}
+      {isExpanded && expandable && <Box flex="1">{children}</Box>}
     </Box>
   )
 }
