@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Box } from "@chakra-ui/react"
-import { useTheme } from "next-themes"
+import useColorPalette from "@/hooks/useColorPalette"
 
 export interface GenericChartDataItem {
   [key: string]: string | number
@@ -36,25 +36,8 @@ export function GenericPieChart({
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
 }: GenericPieChartProps) {
-  const theme = useTheme()
 
-  const lightModePalette = [
-    "#3182CE",
-    "#38A169",
-    "#E53E3E",
-    "#DD6B20",
-    "#805AD5",
-  ]
-  const darkModePalette = [
-    "#63B3ED",
-    "#68D391",
-    "#FC8181",
-    "#F6AD55",
-    "#B794F4",
-  ]
-
-  const colorPalette =
-    theme.theme === "dark" ? darkModePalette : lightModePalette
+  const colorPalette = useColorPalette()
 
   let finalConfig: ChartConfig
   if (!config) {

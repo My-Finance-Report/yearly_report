@@ -9,6 +9,7 @@ import { useTheme } from "next-themes"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
+import useColorPalette from "@/hooks/useColorPalette"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
@@ -22,25 +23,7 @@ export function GenericBarChart({
   nameKey,
   config,
 }: GenericBarChartProps) {
-  const theme = useTheme()
-
-  const lightModePalette = [
-    "#3182CE",
-    "#38A169",
-    "#E53E3E",
-    "#DD6B20",
-    "#805AD5",
-  ]
-  const darkModePalette = [
-    "#63B3ED",
-    "#68D391",
-    "#FC8181",
-    "#F6AD55",
-    "#B794F4",
-  ]
-
-  const colorPalette =
-    theme.theme === "dark" ? darkModePalette : lightModePalette
+  const colorPalette = useColorPalette()
 
   const uniqueKeys = Object.keys(data[0] || {}).filter(
     (key) => key !== nameKey && key !== "date",

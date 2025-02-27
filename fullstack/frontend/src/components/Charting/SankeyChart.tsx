@@ -1,4 +1,5 @@
 import type { SankeyData } from "@/client"
+import useColorPalette from "@/hooks/useColorPalette"
 import { Box } from "@chakra-ui/react"
 import { useTheme } from "next-themes"
 import React from "react"
@@ -55,15 +56,13 @@ const CustomLink = ({
 }
 
 function isValidateData(data: SankeyData) {
-
   if (!data) return false
   if (!data.nodes) return false
   if (!data.links) return false
-  if (data.nodes.length == 0) return false
-  if (data.links.length == 0) return false
+  if (data.nodes.length === 0) return false
+  if (data.links.length === 0) return false
 
   return true
-  
 }
 
 export interface SankeyChartProps {
@@ -77,24 +76,7 @@ export function GenericSankeyChart({
   width = 950,
   height = 600,
 }: SankeyChartProps) {
-  const lightModePalette = [
-    "#3182CE",
-    "#38A169",
-    "#E53E3E",
-    "#DD6B20",
-    "#805AD5",
-  ]
-  const darkModePalette = [
-    "#63B3ED",
-    "#68D391",
-    "#FC8181",
-    "#F6AD55",
-    "#B794F4",
-  ]
-
-  const theme = useTheme()
-  const colorPalette =
-    theme.theme === "dark" ? darkModePalette : lightModePalette
+  const colorPalette = useColorPalette()
 
   if (!isValidateData(data)) {
     return null
