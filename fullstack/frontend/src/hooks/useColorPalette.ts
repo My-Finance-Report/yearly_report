@@ -1,7 +1,7 @@
 import { useTheme } from "next-themes"
 
 export const useColorPalette = () => {
-  const theme = useTheme();
+  const theme = useTheme()
 
   const lightModePalette = [
     "#3182CE", // Blue
@@ -12,8 +12,7 @@ export const useColorPalette = () => {
     "#D69E2E", // Yellow
     "#319795", // Teal
     "#B83280", // Pink
-    "#4A5568", // Gray
-  ];
+  ]
 
   const darkModePalette = [
     "#63B3ED", // Light Blue
@@ -25,7 +24,7 @@ export const useColorPalette = () => {
     "#81E6D9", // Light Teal
     "#F687B3", // Light Pink
     "#A0AEC0", // Light Gray
-  ];
+  ]
 
-  return theme.theme === "dark" ? darkModePalette : lightModePalette;
-};
+  return theme.theme === "dark" ? darkModePalette : lightModePalette
+}

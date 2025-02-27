@@ -1,7 +1,6 @@
 import type { SankeyData } from "@/client"
-import useColorPalette from "@/hooks/useColorPalette"
+import { useColorPalette } from "@/hooks/useColorPalette"
 import { Box } from "@chakra-ui/react"
-import { useTheme } from "next-themes"
 import React from "react"
 import { Sankey, Tooltip } from "recharts"
 import { Layer } from "recharts"

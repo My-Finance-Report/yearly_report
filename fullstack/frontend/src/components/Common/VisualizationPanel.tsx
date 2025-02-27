@@ -1,16 +1,17 @@
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isLoggedIn } from "@/hooks/useAuth";
 import {
   Box,
   Button,
   Center,
   Flex,
   Grid,
+  HStack,
   Spinner,
   Text,
-} from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState } from "react"
+} from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   type AggregatedGroup,
   type AggregatedTransactions,
@@ -18,20 +19,21 @@ import {
   type SankeyGetSankeyDataResponse,
   SankeyService,
   type TransactionSourceGroup,
-} from "../../client"
-import { GenericBarChart } from "../Charting/BarChart"
-import { GenericPieChart } from "../Charting/PieChart"
-import { GenericSankeyChart } from "../Charting/SankeyChart"
+} from "../../client";
+import { GenericBarChart } from "../Charting/BarChart";
+import { GenericPieChart } from "../Charting/PieChart";
+import { GenericSankeyChart } from "../Charting/SankeyChart";
+import { FiChevronDown, FiChevronRight, FiSettings } from "react-icons/fi";
 
 interface VisualizationProps {
-  sourceGroup: TransactionSourceGroup | undefined
-  isLoading: boolean
-  showDeposits: boolean
+  sourceGroup: TransactionSourceGroup | undefined;
+  isLoading: boolean;
+  showDeposits: boolean;
 }
 
 interface ValidatedVisualizationProps {
-  sourceGroup: TransactionSourceGroup
-  showDeposits: boolean
+  sourceGroup: TransactionSourceGroup;
+  showDeposits: boolean;
 }
 
 export function VisualizationPanel({
@@ -51,45 +53,45 @@ export function VisualizationPanel({
         <Spinner size="lg" />
       ) : (
         <Grid
-          templateAreas={`"pie bar bar bar"
-                  "sankey sankey sankey sankey"`}
+          templateAreas={`"sankey sankey sankey sankey"
+                  "pie bar bar bar"`}
           templateColumns="1fr 1fr 1fr 1fr"
           templateRows="auto auto"
           gap={4}
           w="100%"
         >
+          <Box gridArea="sankey" width="100%" position="relative">
+            <SankeyBox />
+          </Box>
           <Box gridArea="pie">
             <PieBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
           <Box gridArea="bar">
             <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} />
           </Box>
-          <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox />
-          </Box>
         </Grid>
       )}
     </Flex>
-  )
+  );
 }
 
 function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-  const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
+  const TIME_OPTIONS: GroupByOption[] = ["month", "year"];
 
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
     if (group.groupby_kind && TIME_OPTIONS.includes(group.groupby_kind)) {
-      return true
+      return true;
     }
-    return group.subgroups?.some(hasTimeGrouping) || false
-  }
+    return group.subgroups?.some(hasTimeGrouping) || false;
+  };
 
-  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping)
+  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping);
 
-  const categoryKeys = new Set<string>()
+  const categoryKeys = new Set<string>();
   for (const group of sourceGroup.groups) {
     if (group.subgroups) {
       for (const subgroup of group.subgroups) {
-        categoryKeys.add(subgroup.group_name)
+        categoryKeys.add(subgroup.group_name);
       }
     }
   }
@@ -98,19 +100,19 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     ? sourceGroup.groups.map((group) => {
         const base: Record<string, number | string> = {
           date: group.group_id.toString(),
-        }
+        };
 
         if (group.subgroups) {
           for (const subgroup of group.subgroups) {
             base[subgroup.group_name] = showDeposits
               ? subgroup.total_deposits
-              : subgroup.total_withdrawals
+              : subgroup.total_withdrawals;
           }
         }
 
-        return base
+        return base;
       })
-    : []
+    : [];
 
   return (
     <Box flex="1" minW="50%" borderWidth={1} borderRadius="md">
@@ -125,7 +127,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
         </Box>
       )}
     </Box>
-  )
+  );
 }
 
 function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
@@ -144,20 +146,20 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
               ? group.total_deposits
               : group.total_withdrawals,
           },
-        ],
+        ]
     )
     .reduce(
       (acc, { group, amount }) => {
-        acc[group] = (acc[group] || 0) + amount
-        return acc
+        acc[group] = (acc[group] || 0) + amount;
+        return acc;
       },
-      {} as Record<string, number>,
-    )
+      {} as Record<string, number>
+    );
 
   const chartData = Object.entries(chartDataMap).map(([group, amount]) => ({
     group,
     amount,
-  }))
+  }));
 
   return (
     <Box flex="1" minW="50%" borderWidth={1} borderRadius="md">
@@ -168,7 +170,7 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
         config={null}
       />
     </Box>
-  )
+  );
 }
 
 export function SankeyBox() {
@@ -179,29 +181,29 @@ export function SankeyBox() {
     queryKey: ["sankeyData"],
     queryFn: () => SankeyService.getSankeyData(),
     enabled: isLoggedIn(),
-  })
+  });
 
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [chartWidth, setChartWidth] = useState<number>(0)
-  const [isExpanded, setIsExpanded] = useState(true)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [chartWidth, setChartWidth] = useState<number>(0);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setChartWidth(containerRef.current.offsetWidth - 30)
+        setChartWidth(containerRef.current.offsetWidth - 30);
       }
-    }
+    };
 
-    updateWidth()
-    window.addEventListener("resize", updateWidth)
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
 
     return () => {
-      window.removeEventListener("resize", updateWidth)
-    }
-  }, [])
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, []);
 
   if (error) {
-    setIsExpanded(false)
+    setIsExpanded(false);
   }
 
   return (
@@ -215,19 +217,22 @@ export function SankeyBox() {
       display="flex"
       flexDirection="column"
     >
-      <Button
-        variant="outline"
-        onClick={() => setIsExpanded((prev) => !prev)}
-        alignSelf="start"
-      >
-        {isExpanded ? "Collapse" : "Expand"} Flowchart
-      </Button>
-
-      <Link to="/sankey-config" href="/sankey-config/">
-        <Button variant="outline" alignSelf="start">
-          Settings
+      <HStack gap={0}>
+<Link to="/sankey-config" href="/sankey-config/">
+          <Button variant="outline" alignSelf="start">
+            <FiSettings />
+          </Button>
+        </Link>
+        <Button
+          variant="outline"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          alignSelf="start"
+        >
+          {!isExpanded ? <FiChevronRight /> : <FiChevronDown />}
         </Button>
-      </Link>
+
+        
+      </HStack>
 
       {isLoading ? (
         <Center flex="1">
@@ -243,5 +248,5 @@ export function SankeyBox() {
         <GenericSankeyChart data={data} width={chartWidth} />
       ) : null}
     </Box>
-  )
+  );
 }

@@ -8,8 +8,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useColorPalette } from "@/hooks/useColorPalette"
 import { Box } from "@chakra-ui/react"
-import useColorPalette from "@/hooks/useColorPalette"
 
 export interface GenericChartDataItem {
   [key: string]: string | number
@@ -36,7 +36,6 @@ export function GenericPieChart({
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
 }: GenericPieChartProps) {
-
   const colorPalette = useColorPalette()
 
   let finalConfig: ChartConfig

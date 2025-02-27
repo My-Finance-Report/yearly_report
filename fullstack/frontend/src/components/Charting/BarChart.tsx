@@ -5,11 +5,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { useTheme } from "next-themes"
+import { useColorPalette } from "@/hooks/useColorPalette"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
-import useColorPalette from "@/hooks/useColorPalette"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
