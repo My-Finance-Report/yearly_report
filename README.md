@@ -27,9 +27,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
-food -> dining in categories
-faq
-addative upload
 
 
 -> files processed table needs to be grouped by source and collapsolable
@@ -39,32 +36,15 @@ addative upload
 -> no way to delete transactions
 -> sankey config doesnt filter off archived sources
 
--> google sheets doesnt allow for cycles in the sankey
 
-- the site seems sluggish
-
-- (still) need to preserve location in tab groups when navigating forms
 - enable config of the barchart (categories to include + sources to include) (wip)
 
 - shareable report
-
   - allow to select different charts
 
-- release an admin page
-- why is it so slow when i upload n files in the first pass?
-  - probably some async code we dont need anymore
-- we should save some error logs to the db when a job fails
-- update the demo data to be more anon
-
 - manually add transactions
-- budget and budget progress
 
 - privacy policy
-- install a linter for extraneous imports
-- memoize llm calls to preserve existing data save costs
 
-# migration to python
-
-toasts are broken
-no worker queue on app
-no db loaded on app (probably url)
+- toasts are broken
+- sort is broken for dates
