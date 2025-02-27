@@ -200,6 +200,10 @@ export function SankeyBox() {
     }
   }, [])
 
+  if (error){
+    setIsExpanded(false)
+  }
+
   return (
     <Box
       flex="1"
