@@ -103,12 +103,15 @@ export function GenericSankeyChart({
   const colorPalette =
     theme.theme === "dark" ? darkModePalette : lightModePalette
 
+  console.log(data)
+  console.log(testData)
+
   return (
     <Box p={4}>
       <Sankey
         width={width}
         height={height}
-        data={testData}
+        data={data}
         nodeWidth={10}
         nodePadding={20}
         linkCurvature={0.5}

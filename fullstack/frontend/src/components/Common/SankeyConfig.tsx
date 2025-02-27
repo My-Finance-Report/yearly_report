@@ -205,7 +205,6 @@ export function SankeyConfigPage() {
             </Box>
           </div>
         ))}
-
         <Selector
           collection={collectionOfInputs}
           selected={null}
@@ -213,7 +212,6 @@ export function SankeyConfigPage() {
           onAdd={addInput}
           title="Input"
         />
-
         <Button
           colorScheme="blue"
           onClick={() => saveSankeyConfig.mutate()}
