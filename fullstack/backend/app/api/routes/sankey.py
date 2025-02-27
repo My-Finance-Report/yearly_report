@@ -97,15 +97,23 @@ def make_lookups_for_sankey(
         totals_lookup=dict(totals_lookup),
     )
 
+def get_or_create_sankey_config(
+    session: Session, user: User
+) -> SankeyConfig:
+    config = session.query(SankeyConfig).filter(SankeyConfig.user_id == user.id).first()
+    if not config:
+        config = SankeyConfig(user_id=user.id)
+        session.add(config)
+        session.commit()
+    return config
+
 
 @router.get("/", response_model=SankeyData)
 def get_sankey_data(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SankeyData:
-    config = session.query(SankeyConfig).filter(SankeyConfig.user_id == user.id).first()
-    if not config:
-        raise HTTPException(status_code=404, detail="No Sankey configuration found.")
+    config = get_or_create_sankey_config(session, user)
 
     lookups = make_lookups_for_sankey(session, config, user)
 
@@ -181,15 +189,8 @@ def create_sankey_config(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> dict[str, bool]:
-    config = (
-        session.query(SankeyConfig)
-        .filter(SankeyConfig.user_id == user.id)
-        .one_or_none()
-    )
-    if not config:
-        config = SankeyConfig(user_id=user.id, name="Custom Sankey Config")
-        session.add(config)
-        session.commit()
+
+    config = get_or_create_sankey_config(session, user)
 
     session.query(SankeyInput).filter(SankeyInput.config_id == config.id).delete()
     session.query(SankeyLinkage).filter(SankeyLinkage.config_id == config.id).delete()
@@ -218,20 +219,8 @@ def get_sankey_config_info(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SankeyConfigInfo:
-    config = (
-        session.query(SankeyConfig)
-        .filter(SankeyConfig.user_id == user.id)
-        .order_by(SankeyConfig.id.desc())
-        .first()
-    )
 
-    if not config:
-        return SankeyConfigInfo(
-            possible_inputs=[],
-            possible_links=[],
-            existing_inputs=[],
-            existing_links=[],
-        )
+    config = get_or_create_sankey_config(session, user)
 
     category_query = (
         session.query(

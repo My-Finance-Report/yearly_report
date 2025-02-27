@@ -200,7 +200,7 @@ export function SankeyBox() {
     }
   }, [])
 
-  if (error){
+  if (error) {
     setIsExpanded(false)
   }
 
