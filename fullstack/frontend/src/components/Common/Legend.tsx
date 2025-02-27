@@ -17,19 +17,9 @@ export function Legend() {
       setIsExpanded={setIsExpanded}
     >
       <Flex margin={3} gap={3} direction="row" wrap="wrap" spaceX={3}>
-        {Object.keys(colors).map((name) => {
+        {Object.entries(colors).map(([name, color], index) => {
           return (
-            <HStack borderRadius={"md"} borderWidth={1} p={3}>
-              <Box
-                width="16px"
-                borderWidth={1}
-                padding={3}
-                height="16px"
-                borderRadius="50%"
-                backgroundColor={colors[name]}
-              />
-              <Text>{name}</Text>
-            </HStack>
+            <LegendItem key={index.toString()} name={name} color={color} />
           )
         })}
       </Flex>
@@ -38,3 +28,20 @@ export function Legend() {
 }
 
 export default Legend
+
+
+export function LegendItem({ name, color }: { name: string, color: string }) {
+  return (
+    <HStack borderRadius={"md"} borderWidth={1} p={3}>
+      <Box
+        width="16px"
+        borderWidth={1}
+        padding={3}
+        height="16px"
+        borderRadius="50%"
+        backgroundColor={color}
+      />
+      <Text>{name}</Text>
+    </HStack>
+  )
+}

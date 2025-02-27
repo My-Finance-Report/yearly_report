@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import * as React from "react"
+import { Text } from "@chakra-ui/react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
 
@@ -15,12 +16,14 @@ export interface GenericBarChartProps {
   dataKey: keyof GenericChartDataItem
   nameKey: keyof GenericChartDataItem
   config?: ChartConfig | null
+  description?: string
 }
 
 export function GenericBarChart({
   data,
   nameKey,
   config,
+  description,
 }: GenericBarChartProps) {
   const { getColorForName } = useColorPalette()
 
@@ -79,6 +82,7 @@ export function GenericBarChart({
             ))}
           </BarChart>
         </ChartContainer>
+          <Text>{description}</Text>
       </CardContent>
     </Card>
   )

@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
-import { Box } from "@chakra-ui/react"
+import { Box, Text } from "@chakra-ui/react"
 
 export interface GenericChartDataItem {
   [key: string]: string | number
@@ -23,9 +23,11 @@ export interface GenericPieChartProps {
   innerRadius?: number
   activeIndex?: number
   activeShape?: (props: PieSectorDataItem) => JSX.Element
+  description?: string
 }
 
 export function GenericPieChart({
+  description,
   data,
   dataKey,
   nameKey,
@@ -41,7 +43,7 @@ export function GenericPieChart({
   let finalConfig: ChartConfig
   if (!config) {
     const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])))
-    finalConfig = uniqueNames.reduce((acc, name, index) => {
+    finalConfig = uniqueNames.reduce((acc, name) => {
       acc[String(name)] = {
         label: String(name),
         color: getColorForName(String(name)),
@@ -54,7 +56,7 @@ export function GenericPieChart({
 
   return (
     <Box className="flex flex-col">
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 align-center">
         <ChartContainer
           config={finalConfig}
           className="aspect-square max-h-[250px]"
@@ -62,7 +64,7 @@ export function GenericPieChart({
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent />}
             />
             <Pie
               data={data}
@@ -82,6 +84,7 @@ export function GenericPieChart({
             </Pie>
           </PieChart>
         </ChartContainer>
+      <Text>{description}</Text>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Box>

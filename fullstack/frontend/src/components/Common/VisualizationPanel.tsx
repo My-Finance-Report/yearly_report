@@ -116,6 +116,9 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
       })
     : []
 
+  const description = `${sourceGroup.transaction_source_name} ${showDeposits ? 'deposits' : 'withdrawrls'}, by ${sourceGroup.groups[0].groupby_kind} then ${sourceGroup.groups[0].subgroups![0].groupby_kind} `
+
+
   return (
     <BoxWithText
       text="Bar Chart"
@@ -123,7 +126,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
       setIsExpanded={setIsExpanded}
     >
       {hasValidTimeGrouping ? (
-        <GenericBarChart data={chartData} dataKey="date" nameKey="date" />
+        <GenericBarChart data={chartData} dataKey="date" nameKey="date"  description={description}/>
       ) : (
         <Box textAlign="center" p={4}>
           <Text fontSize="lg" color="gray.500">
@@ -141,7 +144,7 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.groups
     .flatMap(
       (group) =>
-        group.subgroups?.map((subgroup) => ({
+       group.subgroups?.map((subgroup) => ({
           group: subgroup.group_name,
           amount: showDeposits
             ? subgroup.total_deposits
@@ -168,6 +171,8 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     amount,
   }))
 
+  const description = `All time ${sourceGroup.transaction_source_name} ${showDeposits ? 'deposits' : 'withdrawals'} by ${sourceGroup.groups[0].subgroups![0].groupby_kind} `
+
   return (
     <BoxWithText
       text="Pie Chart"
@@ -176,6 +181,7 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     >
       <GenericPieChart
         data={chartData}
+        description={description}
         dataKey="amount"
         nameKey="group"
         config={null}
@@ -217,6 +223,8 @@ export function SankeyBox() {
     setIsExpanded(false)
   }
 
+  const description = "All time transactions grouped by category"
+
   return (
     <BoxWithText
       text="Sankey Visualization"
@@ -244,7 +252,7 @@ export function SankeyBox() {
           </Text>
         </Center>
       ) : isExpanded && data ? (
-        <GenericSankeyChart data={data} width={chartWidth} />
+        <GenericSankeyChart data={data} width={chartWidth} description={description} />
       ) : null}
     </BoxWithText>
   )

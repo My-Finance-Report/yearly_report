@@ -1,6 +1,6 @@
 import type { SankeyData } from "@/client"
 import { useColorPalette } from "@/hooks/useColor"
-import { Box } from "@chakra-ui/react"
+import { Box, Text } from "@chakra-ui/react"
 import React from "react"
 import { Sankey, Tooltip } from "recharts"
 import { Layer } from "recharts"
@@ -68,10 +68,12 @@ export interface SankeyChartProps {
   data: SankeyData
   width?: number
   height?: number
+  description?: string
 }
 
 export function GenericSankeyChart({
   data,
+  description,
   width = 950,
   height = 600,
 }: SankeyChartProps) {
@@ -100,6 +102,7 @@ export function GenericSankeyChart({
       >
         <Tooltip />
       </Sankey>
+      <Text>{description}</Text>
     </Box>
   )
 }
