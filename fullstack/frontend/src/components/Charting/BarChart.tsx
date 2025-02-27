@@ -6,8 +6,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
-import * as React from "react"
 import { Text } from "@chakra-ui/react"
+import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
 
@@ -82,7 +82,7 @@ export function GenericBarChart({
             ))}
           </BarChart>
         </ChartContainer>
-          <Text>{description}</Text>
+        <Text>{description}</Text>
       </CardContent>
     </Card>
   )

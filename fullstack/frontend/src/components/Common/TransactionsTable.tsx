@@ -8,10 +8,12 @@ import {
   TableColumnHeader,
   TableHeader,
   TableRow,
+  HStack,
 } from "@chakra-ui/react"
 import React from "react"
 
 import type { AggregatedGroup, TransactionSourceGroup } from "../../client"
+import { useColorPalette } from "@/hooks/useColor"
 
 export function TransactionsTable({
   sourceGroup,
@@ -22,12 +24,15 @@ export function TransactionsTable({
   toggleGroup: (sourceId: number, groupKey: string) => void
   expandedGroups: { [key: string]: boolean }
 }) {
+  const { getColorForName } = useColorPalette()
+
   return (
     <Table.Root variant="outline">
       <TableHeader>
         <TableRow>
           <TableColumnHeader />
           <TableColumnHeader>
+         
             {sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}
           </TableColumnHeader>
           <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
@@ -73,6 +78,8 @@ function renderGroups({
       : `${group.group_id}`
     const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
 
+    const {getColorForName} = useColorPalette()
+
     return (
       <React.Fragment key={groupKey}>
         <TableRow
@@ -82,7 +89,19 @@ function renderGroups({
           <TableCell>
             {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
           </TableCell>
-          <TableCell>{group.group_name}</TableCell>
+          <TableCell>
+            <HStack>
+            <Box
+              width="16px"
+            borderWidth={1}
+            padding={3}
+            height="16px"
+            borderRadius="50%"
+            backgroundColor={getColorForName(group.group_name)}
+                />
+            {group.group_name}
+  </HStack>
+</TableCell>
           <TableCell textAlign="end">{group.total_withdrawals}</TableCell>
           <TableCell textAlign="end">{group.total_deposits}</TableCell>
           <TableCell textAlign="end">{group.total_balance}</TableCell>

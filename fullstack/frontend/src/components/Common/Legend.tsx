@@ -18,9 +18,7 @@ export function Legend() {
     >
       <Flex margin={3} gap={3} direction="row" wrap="wrap" spaceX={3}>
         {Object.entries(colors).map(([name, color], index) => {
-          return (
-            <LegendItem key={index.toString()} name={name} color={color} />
-          )
+          return <LegendItem key={index.toString()} name={name} color={color} />
         })}
       </Flex>
     </BoxWithText>
@@ -29,8 +27,7 @@ export function Legend() {
 
 export default Legend
 
-
-export function LegendItem({ name, color }: { name: string, color: string }) {
+export function LegendItem({ name, color }: { name: string; color: string }) {
   return (
     <HStack borderRadius={"md"} borderWidth={1} p={3}>
       <Box

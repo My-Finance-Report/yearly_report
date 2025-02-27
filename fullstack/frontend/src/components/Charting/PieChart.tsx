@@ -62,10 +62,7 @@ export function GenericPieChart({
           className="aspect-square max-h-[250px]"
         >
           <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <Pie
               data={data}
               dataKey={dataKey}
@@ -84,7 +81,7 @@ export function GenericPieChart({
             </Pie>
           </PieChart>
         </ChartContainer>
-      <Text>{description}</Text>
+        <Text>{description}</Text>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Box>
