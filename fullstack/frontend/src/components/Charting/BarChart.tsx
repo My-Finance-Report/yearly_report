@@ -4,6 +4,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import { Text } from "@chakra-ui/react"
@@ -60,21 +62,13 @@ export function GenericBarChart({
               minTickGap={32}
               tickFormatter={(value) => value}
             />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  className="w-[150px]"
-                  nameKey="date"
-                  labelFormatter={(value) => value}
-                />
-              }
-            />
+            <ChartTooltip content={<ChartTooltipContent hideIndicator={false}getColorForName={getColorForName} />} />
             {uniqueKeys.map((key, index) => (
               <Bar
                 key={key}
                 dataKey={key}
                 stackId="a"
-                fill={computedConfig[key]?.color || "gray"}
+                fill={getColorForName(key) || "gray"}
                 radius={
                   index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
                 }

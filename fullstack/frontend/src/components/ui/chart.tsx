@@ -110,6 +110,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed"
       nameKey?: string
       labelKey?: string
+      getColorForName?: (name: string) => string
     }
 >(
   (
@@ -130,6 +131,7 @@ const ChartTooltipContent = React.forwardRef<
     },
     ref,
   ) => {
+
     const { config } = useChart()
 
     const tooltipLabel = React.useMemo(() => {

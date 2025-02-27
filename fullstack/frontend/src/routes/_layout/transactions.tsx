@@ -81,7 +81,10 @@ function Transactions() {
     )
 
   return (
-    <div style={{ alignItems: "center", marginRight: 48 }} className="flex flex-row gap-4">
+    <div
+      style={{ alignItems: "center", marginRight: 48 }}
+      className="flex flex-row gap-4"
+    >
       <div className="sticky top-0 mt-4">
         <Legend toShowNames={namesForLegends} />
       </div>
