@@ -157,7 +157,6 @@ function renderGroups({
                             AMOUNT
                           </TableColumnHeader>
                           <TableColumnHeader>KIND</TableColumnHeader>
-                          <TableColumnHeader>ARCHIVED</TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -173,9 +172,6 @@ function renderGroups({
                               {transaction.amount}
                             </TableCell>
                             <TableCell>{transaction.kind}</TableCell>
-                            <TableCell>
-                              {transaction.archived ? "Yes" : "No"}
-                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
