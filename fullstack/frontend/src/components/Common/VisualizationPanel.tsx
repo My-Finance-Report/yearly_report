@@ -283,7 +283,7 @@ export function SankeyBox({
       collapsedItems={collapsedItems}
       COMPONENT_NAME={COMPONENT_NAME}
       maxH={isExpanded ? 500 : undefined}
-      minH={isExpanded ? 300 : undefined}
+      minH={isExpanded ? 500 : undefined}
     >
       <HStack gap={0}>
         <Link to="/sankey-config" href="/sankey-config/">
