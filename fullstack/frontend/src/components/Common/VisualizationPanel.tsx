@@ -126,7 +126,7 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   return (
     <BoxWithText
-      text="Bar Chart"
+      text={description}
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}
     >
@@ -135,7 +135,6 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
           data={chartData}
           dataKey="date"
           nameKey="date"
-          description={description}
         />
       ) : (
         <Box textAlign="center" p={4}>
@@ -186,21 +185,18 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     !sourceGroup.groups[0].subgroups ||
     sourceGroup.groups[0].subgroups.length === 0
   ) {
-    description = `All time ${sourceGroup.transaction_source_name}`
+    description = `${sourceGroup.transaction_source_name}`
   } else {
-    description = `All time ${sourceGroup.transaction_source_name} ${
-      showDeposits ? "deposits" : "withdrawals"
-    } by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+    description = `${sourceGroup.transaction_source_name} by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
   }
   return (
     <BoxWithText
-      text="Pie Chart"
+      text={description}
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}
     >
       <GenericPieChart
         data={chartData}
-        description={description}
         dataKey="amount"
         nameKey="group"
         config={null}
