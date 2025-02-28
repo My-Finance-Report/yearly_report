@@ -51,34 +51,34 @@ export function GenericBarChart({
           className="aspect-auto h-[250px] w-full"
         >
           <BarChart data={data} margin={{ left: 12, right: 12 }}>
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="date"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            minTickGap={32}
-            tickFormatter={(value) => value}
-          />
-          <ChartTooltip
-            content={<ChartTooltipContent hideIndicator={false} />}
-          />
-          {uniqueKeys.map((key, index) => (
-            <Bar
-              key={key}
-              dataKey={key}
-              stackId="a"
-              fill={getColorForName(key) || "gray"}
-              radius={
-                index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
-              }
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={32}
+              tickFormatter={(value) => value}
             />
-          ))}
-        </BarChart>
-      </ChartContainer>
-      <Desc description={description} />
-    </CardContent>
-    <CardFooter className="flex-col gap-2 text-sm" />
-  </Card>
-);
+            <ChartTooltip
+              content={<ChartTooltipContent hideIndicator={false} />}
+            />
+            {uniqueKeys.map((key, index) => (
+              <Bar
+                key={key}
+                dataKey={key}
+                stackId="a"
+                fill={getColorForName(key) || "gray"}
+                radius={
+                  index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
+                }
+              />
+            ))}
+          </BarChart>
+        </ChartContainer>
+        <Desc description={description} />
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm" />
+    </Card>
+  )
 }

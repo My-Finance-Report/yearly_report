@@ -81,12 +81,12 @@ export function FilterGroup({
         top: 80,
         backgroundColor: "black",
         zIndex: 100,
-        marginRight: 100,
         minHeight: "150px",
         padding: "1px 0",
+        marginBottom: "10px",
       }}
     >
-      <div style={{ paddingTop: "10px" }}>
+      <div style={{ paddingTop: "10px", alignItems: "center", justifyContent: "center" }}>
         <BoxWithText
           text="Filters"
           setCollapsedItems={setCollapsedItems}
@@ -94,7 +94,7 @@ export function FilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
-          <HStack gap={4} paddingTop={4}>
+          <HStack gap={4} paddingTop={4} justify={"space-between"}>
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
@@ -109,13 +109,13 @@ export function FilterGroup({
               setGroupingOptions={setGroupingOptions}
             />
           </HStack>
-          <Box mt={4}>
+          <Box mt={4} backgroundColor={"gray.900"} borderRadius="lg">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <HStack>
+              <HStack p={4} justifyContent={"center"}>
                 <Text>Showing</Text>
                 <Tag.Root
                   paddingY={1.5}

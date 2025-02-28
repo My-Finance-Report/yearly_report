@@ -58,7 +58,7 @@ export function VisualizationPanel({
           templateAreas={`"sankey sankey sankey sankey"
                   "pie bar bar bar"`}
           templateColumns="1fr 1fr 1fr 1fr"
-          templateRows="auto 1fr" 
+          templateRows="auto auto"
           gap={4}
           w="100%"
         >
