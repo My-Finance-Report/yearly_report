@@ -67,6 +67,7 @@ export default function LabeledBox({
       minH={minH}
       maxW={maxW}
       minW={minW}
+      alignItems={'center'}
       borderWidth={1}
       borderRadius="md"
       ref={containerRef}

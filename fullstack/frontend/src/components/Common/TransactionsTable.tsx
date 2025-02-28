@@ -183,7 +183,7 @@ function TransactionRow({ transaction }: {transaction: TransactionOut}) {
   return (
     <TableRow >
       <TableCell>{transaction.description}</TableCell>
-      <TableCell>{transaction.date_of_transaction}</TableCell>
+      <TableCell>{new Date(transaction.date_of_transaction).toLocaleDateString()}</TableCell>
       <TableCell>{transaction.amount}</TableCell>
       <TableCell>{transaction.kind}</TableCell>
     </TableRow>
