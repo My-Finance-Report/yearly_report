@@ -1,29 +1,43 @@
 import { Box, Button, Text } from "@chakra-ui/react"
 import type React from "react"
-import { FiChevronDown, FiChevronRight } from "react-icons/fi"
+import { FiArrowRightCircle, FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi"
+
+export type CollapsibleName = keyof typeof NAME_TO_ICON
+
+export const NAME_TO_ICON = {
+    "Flow Chart": <FiArrowRightCircle/>,
+    "Bar Chart": <FiBarChart />,
+    "Pie Chart": <FiPieChart/>,
+    "Filters": <FiFilter/>,
+}
+
 
 interface LabeledBoxProps {
+  COMPONENT_NAME?: CollapsibleName
   text: string
   position?: "top" | "bottom" | "left" | "right"
   children: React.ReactNode
-  minH?: number
-  maxW?: number | string
+  minH?: number | string
+  maxH?: number | string
   minW?: number | string
-  expandable?: boolean
+  maxW?: number | string
+  isCollapsable?: boolean
   containerRef?: React.RefObject<HTMLDivElement>
   width?: number | string
-  isExpanded?: boolean
-  setIsExpanded?: React.Dispatch<React.SetStateAction<boolean>>
+  setCollapsedItems?: React.Dispatch<React.SetStateAction<CollapsibleName[]>> | undefined
+  collapsedItems?: CollapsibleName[]
 }
 
 export default function LabeledBox({
+  COMPONENT_NAME,
   text,
   position = "top",
   children,
-  isExpanded,
-  expandable = true,
-  setIsExpanded,
+  collapsedItems,
+  setCollapsedItems,
+  isCollapsable = true,
   minH,
+  maxH,
   width,
   maxW,
   minW = "50%",
@@ -61,13 +75,20 @@ export default function LabeledBox({
     },
   }
 
+  const isCollapsed = COMPONENT_NAME && collapsedItems?.includes(COMPONENT_NAME)
+
+  if (isCollapsed) {
+    return null
+  }
+
   return (
     <Box
       width={width}
       minH={minH}
+      maxH={maxH}
       maxW={maxW}
       minW={minW}
-      alignItems={'center'}
+      alignItems={"center"}
       borderWidth={1}
       borderRadius="md"
       ref={containerRef}
@@ -81,17 +102,19 @@ export default function LabeledBox({
           {text}
         </Text>
       </Box>
+      {isCollapsable && (
       <Button
         variant="outline"
         onClick={() => {
-          setIsExpanded?.((prev) => !prev)
+          setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!])
         }}
         alignSelf="start"
       >
-        {!isExpanded && expandable && <FiChevronRight />}
-        {isExpanded && expandable && <FiChevronDown />}
+       <FiMinimize2 /> 
       </Button>
-      {isExpanded && expandable && <Box flex="1">{children}</Box>}
+      )
+      }
+      <Box flex="1">{children}</Box>
     </Box>
   )
 }

@@ -13,8 +13,12 @@ import {
 import React from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
-import type { AggregatedGroup, TransactionOut, TransactionSourceGroup } from "../../client"
 import { FiEdit } from "react-icons/fi"
+import type {
+  AggregatedGroup,
+  TransactionOut,
+  TransactionSourceGroup,
+} from "../../client"
 
 export function TransactionsTable({
   sourceGroup,
@@ -160,7 +164,7 @@ function renderGroups({
                       </TableHeader>
                       <TableBody>
                         {group.transactions?.map((transaction) => (
-                            <TransactionRow transaction={transaction} />
+                          <TransactionRow transaction={transaction} />
                         ))}
                       </TableBody>
                     </Table.Root>
@@ -175,16 +179,18 @@ function renderGroups({
   })
 }
 
-
-function TransactionRow({ transaction }: {transaction: TransactionOut}) {
+function TransactionRow({ transaction }: { transaction: TransactionOut }) {
   const handleEdit = () => {
     // Logic to open the modal goes here
-  };
+  }
   return (
-    <TableRow >
+    <TableRow>
       <TableCell>{transaction.description}</TableCell>
-      <TableCell>{new Date(transaction.date_of_transaction).toLocaleDateString()}</TableCell>
+      <TableCell>
+        {new Date(transaction.date_of_transaction).toLocaleDateString()}
+      </TableCell>
       <TableCell>{transaction.amount}</TableCell>
       <TableCell>{transaction.kind}</TableCell>
     </TableRow>
-  )}
+  )
+}

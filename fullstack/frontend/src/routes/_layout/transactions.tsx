@@ -10,6 +10,7 @@ import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
+import type { CollapsibleName } from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import { useColorPalette } from "@/hooks/useColor"
@@ -29,6 +30,7 @@ function Transactions() {
   ])
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
+  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
 
   const toggleGroup = (sourceId: number, groupKey: string) => {
     setExpandedGroups((prev) => ({
@@ -80,12 +82,11 @@ function Transactions() {
         display: "flex",
         flexDirection: "row",
         gap: "4px",
-        marginRight: 48,
         marginBottom: 48,
       }}
     >
       <div>
-        <Legend toShowNames={namesForLegends} />
+        <Legend toShowNames={namesForLegends} collapsedItems={collapsedItems} setCollapsedItems={setCollapsedItems} />
       </div>
       <div>
         {isLoading ? (
@@ -95,7 +96,7 @@ function Transactions() {
         ) : data?.groups &&
           data.groups.length > 0 &&
           activeTransactionSource ? (
-          <>
+          <div style={{ display: "flex", flexDirection: "column",justifyContent:"center", alignItems: "start", marginLeft: 20 }}>
             <FilterGroup
               activeTransactionSource={activeTransactionSource}
               setActiveTransactionSource={setActiveTransactionSource}
@@ -104,11 +105,15 @@ function Transactions() {
               data={data}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
+              setCollapsedItems={setCollapsedItems}
+              collapsedItems={collapsedItems}
             />
             <VisualizationPanel
               sourceGroup={activeTransactionSource}
               isLoading={isLoading}
               showDeposits={showDeposits}
+              setCollapsedItems={setCollapsedItems}
+              collapsedItems={collapsedItems}
             />
 
             <TransactionsTable
@@ -117,7 +122,7 @@ function Transactions() {
               toShowNames={namesForLegends}
               expandedGroups={expandedGroups}
             />
-          </>
+          </div>
         ) : (
           <Link to="/upload-files" href="/upload-files">
             <Text>

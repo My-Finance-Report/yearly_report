@@ -18,7 +18,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import type { TransactionSourceGroup } from "../../client"
-import BoxWithText from "./BoxWithText"
+import BoxWithText, { CollapsibleName} from "./BoxWithText"
 import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
 import { TransactionSourceSelector } from "./TransactionSourceSelector"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
@@ -35,6 +35,8 @@ export function FilterGroup({
   setShowDeposits,
   showDeposits,
   setGroupingOptions,
+  setCollapsedItems,
+  collapsedItems,
 }: {
   activeTransactionSource: TransactionSourceGroup
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
@@ -45,8 +47,9 @@ export function FilterGroup({
   data: TransactionsGetAggregatedTransactionsResponse
   groupingOptions: GroupByOption[]
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  collapsedItems: CollapsibleName[]
 }) {
-  const [isExpanded, setIsExpanded] = useState(true)
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
       return prev.includes(option)
@@ -78,14 +81,17 @@ export function FilterGroup({
         top: 80,
         backgroundColor: "black",
         zIndex: 100,
+        marginRight: 100,
         padding: "1px 0",
       }}
     >
       <div style={{ paddingTop: "10px" }}>
         <BoxWithText
           text="Filters"
-          isExpanded={isExpanded}
-          setIsExpanded={setIsExpanded}
+          setCollapsedItems={setCollapsedItems}
+          collapsedItems={collapsedItems}
+          isCollapsable={false}
+          COMPONENT_NAME="Filters"
         >
           <HStack gap={4}>
             <WithdrawDepositSelector
