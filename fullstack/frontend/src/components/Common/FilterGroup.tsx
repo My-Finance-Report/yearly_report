@@ -18,7 +18,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import type { TransactionSourceGroup } from "../../client"
-import BoxWithText, { CollapsibleName} from "./BoxWithText"
+import BoxWithText, { type CollapsibleName } from "./BoxWithText"
 import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
 import { TransactionSourceSelector } from "./TransactionSourceSelector"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
@@ -82,6 +82,7 @@ export function FilterGroup({
         backgroundColor: "black",
         zIndex: 100,
         marginRight: 100,
+        minHeight: "150px",
         padding: "1px 0",
       }}
     >
@@ -93,7 +94,7 @@ export function FilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
-          <HStack gap={4}>
+          <HStack gap={4} paddingTop={4}>
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}

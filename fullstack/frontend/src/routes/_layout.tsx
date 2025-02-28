@@ -21,11 +21,14 @@ function Layout() {
     <div>
       <SegmentedNavigation />
       {isLoading ? (
-        <Flex justify="center" align="center" height="100vh" width="full">
+        <Flex justify="center" align="center" height="100vh" width="full" >
           <Spinner size="xl" color="ui.main" />
         </Flex>
       ) : (
+
+        <div style={{marginRight: 20}}>
         <Outlet />
+        </div>
       )}
     </div>
   )

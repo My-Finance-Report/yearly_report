@@ -1,4 +1,6 @@
-import BoxWithText, { CollapsibleName } from "@/components/Common/BoxWithText"
+import BoxWithText, {
+  type CollapsibleName,
+} from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Box,
@@ -29,14 +31,14 @@ interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
   showDeposits: boolean
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>> 
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
 }
 
 interface ValidatedVisualizationProps {
   sourceGroup: TransactionSourceGroup
   showDeposits: boolean
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>> 
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
 }
 
@@ -48,13 +50,7 @@ export function VisualizationPanel({
   collapsedItems,
 }: VisualizationProps) {
   return (
-    <Flex
-      direction="column"
-      gap={4}
-      mb={4}
-      align="center"
-      justify="center"
-    >
+    <Flex direction="column" gap={4} mb={4} align="center" justify="center">
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
@@ -62,18 +58,33 @@ export function VisualizationPanel({
           templateAreas={`"sankey sankey sankey sankey"
                   "pie bar bar bar"`}
           templateColumns="1fr 1fr 1fr 1fr"
-          templateRows="auto auto"
+          templateRows="auto 1fr" 
           gap={4}
           w="100%"
         >
           <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox sourceGroup={sourceGroup} showDeposits={showDeposits} collapsedItems={collapsedItems} setCollapsedItems={setCollapsedItems} />
+            <SankeyBox
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
           <Box gridArea="pie">
-            <PieBox sourceGroup={sourceGroup} showDeposits={showDeposits} collapsedItems={collapsedItems} setCollapsedItems={setCollapsedItems} />
+            <PieBox
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
-        <Box gridArea="bar">
-            <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} collapsedItems={collapsedItems} setCollapsedItems={setCollapsedItems} />
+          <Box gridArea="bar">
+            <BarChart
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
         </Grid>
       )}
@@ -81,7 +92,12 @@ export function VisualizationPanel({
   )
 }
 
-function BarChart({ sourceGroup, showDeposits, collapsedItems, setCollapsedItems }: ValidatedVisualizationProps) {
+function BarChart({
+  sourceGroup,
+  showDeposits,
+  collapsedItems,
+  setCollapsedItems,
+}: ValidatedVisualizationProps) {
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
@@ -154,7 +170,12 @@ function BarChart({ sourceGroup, showDeposits, collapsedItems, setCollapsedItems
   )
 }
 
-function PieBox({ sourceGroup, showDeposits, setCollapsedItems, collapsedItems }: ValidatedVisualizationProps) {
+function PieBox({
+  sourceGroup,
+  showDeposits,
+  setCollapsedItems,
+  collapsedItems,
+}: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.groups
     .flatMap(
       (group) =>
@@ -212,7 +233,10 @@ function PieBox({ sourceGroup, showDeposits, setCollapsedItems, collapsedItems }
   )
 }
 
-export function SankeyBox({ setCollapsedItems, collapsedItems }: ValidatedVisualizationProps) {
+export function SankeyBox({
+  setCollapsedItems,
+  collapsedItems,
+}: ValidatedVisualizationProps) {
   const { data, isLoading, error } = useQuery<
     SankeyGetSankeyDataResponse,
     Error
@@ -244,9 +268,9 @@ export function SankeyBox({ setCollapsedItems, collapsedItems }: ValidatedVisual
 
   const COMPONENT_NAME = "Flow Chart"
   const isExpanded = !collapsedItems.includes(COMPONENT_NAME)
-  
+
   if (error) {
-  setCollapsedItems((prev) => [...prev, COMPONENT_NAME])
+    setCollapsedItems((prev) => [...prev, COMPONENT_NAME])
   }
 
   const description = "All time transactions grouped by category"
@@ -263,7 +287,13 @@ export function SankeyBox({ setCollapsedItems, collapsedItems }: ValidatedVisual
     >
       <HStack gap={0}>
         <Link to="/sankey-config" href="/sankey-config/">
-          <Button variant="outline" alignSelf="start" position="absolute" top={2} right={2}>
+          <Button
+            variant="outline"
+            alignSelf="start"
+            position="absolute"
+            top={2}
+            right={2}
+          >
             <FiSettings />
           </Button>
         </Link>
@@ -289,5 +319,4 @@ export function SankeyBox({ setCollapsedItems, collapsedItems }: ValidatedVisual
       ) : null}
     </BoxWithText>
   )
-
 }

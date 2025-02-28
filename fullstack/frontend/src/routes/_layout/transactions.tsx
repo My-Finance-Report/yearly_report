@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import { Spinner, Text } from "@chakra-ui/react"
 
+import type { CollapsibleName } from "@/components/Common/BoxWithText"
 import { FilterGroup } from "@/components/Common/FilterGroup"
 import { GroupByOption } from "@/components/Common/GroupingConfig"
 import { Legend } from "@/components/Common/Legend"
@@ -10,7 +11,6 @@ import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { type TransactionSourceGroup, TransactionsService } from "../../client"
-import type { CollapsibleName } from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import { useColorPalette } from "@/hooks/useColor"
@@ -86,7 +86,11 @@ function Transactions() {
       }}
     >
       <div>
-        <Legend toShowNames={namesForLegends} collapsedItems={collapsedItems} setCollapsedItems={setCollapsedItems} />
+        <Legend
+          toShowNames={namesForLegends}
+          collapsedItems={collapsedItems}
+          setCollapsedItems={setCollapsedItems}
+        />
       </div>
       <div>
         {isLoading ? (
@@ -96,7 +100,15 @@ function Transactions() {
         ) : data?.groups &&
           data.groups.length > 0 &&
           activeTransactionSource ? (
-          <div style={{ display: "flex", flexDirection: "column",justifyContent:"center", alignItems: "start", marginLeft: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "start",
+              marginLeft: 20,
+            }}
+          >
             <FilterGroup
               activeTransactionSource={activeTransactionSource}
               setActiveTransactionSource={setActiveTransactionSource}

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import {
   type ChartConfig,
   ChartContainer,
@@ -6,10 +6,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
-import { Text } from "@chakra-ui/react"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
+import { Desc } from "./SankeyChart"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
@@ -51,33 +51,34 @@ export function GenericBarChart({
           className="aspect-auto h-[250px] w-full"
         >
           <BarChart data={data} margin={{ left: 12, right: 12 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => value}
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="date"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            minTickGap={32}
+            tickFormatter={(value) => value}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent hideIndicator={false} />}
+          />
+          {uniqueKeys.map((key, index) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              stackId="a"
+              fill={getColorForName(key) || "gray"}
+              radius={
+                index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
+              }
             />
-            <ChartTooltip
-              content={<ChartTooltipContent hideIndicator={false} />}
-            />
-            {uniqueKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                stackId="a"
-                fill={getColorForName(key) || "gray"}
-                radius={
-                  index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
-                }
-              />
-            ))}
-          </BarChart>
-        </ChartContainer>
-        <Text>{description}</Text>
-      </CardContent>
-    </Card>
-  )
+          ))}
+        </BarChart>
+      </ChartContainer>
+      <Desc description={description} />
+    </CardContent>
+    <CardFooter className="flex-col gap-2 text-sm" />
+  </Card>
+);
 }

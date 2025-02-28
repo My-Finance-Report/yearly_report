@@ -29,7 +29,6 @@ import {
   SankeyService,
   type SankeySibling,
 } from "../../client"
-import { SankeyBox } from "./VisualizationPanel"
 
 type Blah = { label: string; value: number }
 
@@ -222,7 +221,6 @@ export function SankeyConfigPage() {
           Save Configuration
         </Button>
       </VStack>
-      <SankeyBox />
     </Flex>
   )
 }

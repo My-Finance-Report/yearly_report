@@ -1,14 +1,18 @@
 import { Box, Flex, HStack, Text } from "@chakra-ui/react"
-import React from "react"
-import { useColorPalette } from "../../hooks/useColor"
-import BoxWithText, { CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
+import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
+import { useColorPalette } from "../../hooks/useColor"
+import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
 
 export function Legend({
   toShowNames,
   collapsedItems,
-  setCollapsedItems
-}: { toShowNames: (string | undefined)[] | undefined , collapsedItems: CollapsibleName[], setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>}) {
+  setCollapsedItems,
+}: {
+  toShowNames: (string | undefined)[] | undefined
+  collapsedItems: CollapsibleName[]
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+}) {
   const { getAssignedColors } = useColorPalette()
 
   const colors = getAssignedColors()
@@ -20,10 +24,7 @@ export function Legend({
   return (
     <div className="w-[300px]" style={{ position: "sticky", top: 80 }}>
       <div style={{ paddingTop: "10px" }}>
-        <BoxWithText
-          text="Legend"
-          isCollapsable={false}
-        >
+        <BoxWithText text="Legend" isCollapsable={false}>
           <Flex margin={3} gap={3} direction="column">
             {toShowColors.map(([name, color], index) => {
               return (
@@ -34,22 +35,30 @@ export function Legend({
         </BoxWithText>
       </div>
       {collapsedItems.length > 0 && (
-      <div style={{ paddingTop: "20px" }}>
-        <BoxWithText
-          text="Collapsed"
-          collapsedItems={collapsedItems}
-          setCollapsedItems={setCollapsedItems}
-          isCollapsable={false}
-        >
-          <Flex margin={3} gap={3} direction="column">
-            {collapsedItems.map((name, index) => {
-              return (
-                <CollapsedWidget key={index.toString()} name={name} onClick={() => setCollapsedItems(collapsedItems.filter((item) => item !== name))} />
-              )
-            })}
-          </Flex>
-        </BoxWithText>
-      </div>
+        <div style={{ paddingTop: "20px" }}>
+          <BoxWithText
+            text="Collapsed"
+            collapsedItems={collapsedItems}
+            setCollapsedItems={setCollapsedItems}
+            isCollapsable={false}
+          >
+            <Flex margin={3} gap={3} direction="column">
+              {collapsedItems.map((name, index) => {
+                return (
+                  <CollapsedWidget
+                    key={index.toString()}
+                    name={name}
+                    onClick={() =>
+                      setCollapsedItems(
+                        collapsedItems.filter((item) => item !== name),
+                      )
+                    }
+                  />
+                )
+              })}
+            </Flex>
+          </BoxWithText>
+        </div>
       )}
     </div>
   )
@@ -57,19 +66,25 @@ export function Legend({
 
 export default Legend
 
-
-
-function CollapsedWidget({name, onClick}:{name:CollapsibleName, onClick:()=>void}){
-    const icon = NAME_TO_ICON[name]
-    return (
-
-    <HStack borderRadius={"md"} borderWidth={1} p={3} cursor="pointer" onClick={onClick} justify="space-between">
-        {icon}
+function CollapsedWidget({
+  name,
+  onClick,
+}: { name: CollapsibleName; onClick: () => void }) {
+  const icon = NAME_TO_ICON[name]
+  return (
+    <HStack
+      borderRadius={"md"}
+      borderWidth={1}
+      p={3}
+      cursor="pointer"
+      onClick={onClick}
+      justify="space-between"
+    >
+      {icon}
       <Text>{name}</Text>
-      <FiMaximize2/>
+      <FiMaximize2 />
     </HStack>
-    )
-
+  )
 }
 
 export function LegendItem({ name, color }: { name: string; color: string }) {

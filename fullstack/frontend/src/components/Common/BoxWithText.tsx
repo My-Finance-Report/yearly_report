@@ -1,16 +1,21 @@
 import { Box, Button, Text } from "@chakra-ui/react"
 import type React from "react"
-import { FiArrowRightCircle, FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi"
+import {
+  FiArrowRightCircle,
+  FiBarChart,
+  FiFilter,
+  FiMinimize2,
+  FiPieChart,
+} from "react-icons/fi"
 
 export type CollapsibleName = keyof typeof NAME_TO_ICON
 
 export const NAME_TO_ICON = {
-    "Flow Chart": <FiArrowRightCircle/>,
-    "Bar Chart": <FiBarChart />,
-    "Pie Chart": <FiPieChart/>,
-    "Filters": <FiFilter/>,
+  "Flow Chart": <FiArrowRightCircle />,
+  "Bar Chart": <FiBarChart />,
+  "Pie Chart": <FiPieChart />,
+  Filters: <FiFilter />,
 }
-
 
 interface LabeledBoxProps {
   COMPONENT_NAME?: CollapsibleName
@@ -24,7 +29,9 @@ interface LabeledBoxProps {
   isCollapsable?: boolean
   containerRef?: React.RefObject<HTMLDivElement>
   width?: number | string
-  setCollapsedItems?: React.Dispatch<React.SetStateAction<CollapsibleName[]>> | undefined
+  setCollapsedItems?:
+    | React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+    | undefined
   collapsedItems?: CollapsibleName[]
 }
 
@@ -103,17 +110,16 @@ export default function LabeledBox({
         </Text>
       </Box>
       {isCollapsable && (
-      <Button
-        variant="outline"
-        onClick={() => {
-          setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!])
-        }}
-        alignSelf="start"
-      >
-       <FiMinimize2 /> 
-      </Button>
-      )
-      }
+        <Button
+          variant="outline"
+          onClick={() => {
+            setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!])
+          }}
+          alignSelf="start"
+        >
+          <FiMinimize2 />
+        </Button>
+      )}
       <Box flex="1">{children}</Box>
     </Box>
   )
