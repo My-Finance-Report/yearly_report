@@ -15,7 +15,7 @@ export function TransactionSourceSelector({
   >
 }) {
   return (
-    <Box borderWidth={1} borderRadius="md" p={2}>
+    <Box borderWidth={1} borderRadius="md" borderColor="green.500" p={2}>
       <HStack>
         {allTransactionSources.map((sourceGroup, index) => {
           const isActive =
@@ -25,6 +25,7 @@ export function TransactionSourceSelector({
             <Tag.Root
               key={index.toString()}
               cursor="pointer"
+              color={isActive ? "green.200" : "green.500"}
               opacity={!isActive ? 1 : 0.5}
               p={2}
               borderRadius="md"

@@ -12,13 +12,14 @@ export function WithdrawDepositSelector({
   const availableOptions = ["deposits", "withdrawals"]
 
   return (
-    <Box borderWidth={1} borderRadius="md" p={2}>
+    <Box borderWidth={1} borderColor="blue.500" borderRadius="md" p={2}>
       <HStack spaceX={4} wrap="nowrap" align="center">
         {availableOptions.map((option) => {
           const isActive = showDeposits === (option === "deposits")
           return (
             <Tag.Root
               key={option}
+              color={isActive ? "blue.300" : "blue.500"}
               cursor={"pointer"}
               opacity={!isActive ? 1 : 0.5}
               p={2}

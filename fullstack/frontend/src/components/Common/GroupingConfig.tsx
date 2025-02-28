@@ -41,11 +41,12 @@ export function GroupingConfig({
   }
 
   return (
-    <Box borderWidth={1} borderRadius="md" p={2}>
+    <Box borderWidth={1} borderColor="orange.500" borderRadius="md" p={2}>
         <HStack spaceX={2} wrap="nowrap">
           {availableOptions.map((option) => (
             <Tag.Root
               key={option}
+              color={groupingOptions.includes(option) ? "orange.200" : "orange.500"}
               cursor={
                 groupingOptions.includes(option) ? "not-allowed" : "pointer"
               }

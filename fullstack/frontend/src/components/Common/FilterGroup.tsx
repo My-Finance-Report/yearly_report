@@ -100,11 +100,11 @@ export function FilterGroup({
           >
             <HStack>
               <Text>showing</Text>
-              <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
+              <Tag.Root paddingY={1.5} color="blue.500" paddingX={2} size="lg" cursor="default">
                 <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
               </Tag.Root>
               <Text>from</Text>
-              <Tag.Root paddingY={1.5} paddingX={2} size="lg" cursor="default">
+              <Tag.Root paddingY={1.5} paddingX={2} color='green.500' size="lg" cursor="default">
                 <Text>{activeTransactionSource.transaction_source_name}</Text>
               </Tag.Root>
               <Text>Grouped by</Text>
@@ -157,6 +157,7 @@ const SortableItem = ({
       <Tag.Root
         ref={setNodeRef}
         py={noX ? 2 : 0}
+        color='orange.500'
         px={2}
         style={style}
         {...attributes}
