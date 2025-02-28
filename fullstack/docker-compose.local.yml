@@ -1,0 +1,65 @@
+version: "3.8"
+
+# WARNING = this doesn't actually get used in the current build process, see deploy-to-finance.sh
+
+services:
+  db:
+    image: postgres:12
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+  backend:
+    build:
+      context: ./backend
+    image: finance-backend:latest
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    ports:
+      - "8000:8000"
+  worker:
+    build:
+      context: .
+      dockerfile: fullstack/backend/Dockerfile.worker
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    env_file:
+      - .env.production
+    networks:
+      - default
+
+  frontend:
+    build:
+      context: ./frontend
+    args:
+        - VITE_API_URL=https://api.${DOMAIN?Variable not set}
+        - NODE_ENV=production
+    image: finance-frontend:latest
+    restart: always
+    depends_on:
+      - backend
+    env_file:
+      - .env.production
+    ports:
+      - "3000:3000"
+
+volumes:
+  app-db-data:

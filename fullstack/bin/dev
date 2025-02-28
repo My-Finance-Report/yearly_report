@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cd fullstack/backend
+
+# Kill previous tmux session
+tmux kill-session -t backend 2>/dev/null
+
+# Start new tmux session for the backend
+tmux new-session -d -s backend './backend
+
+# Split the window and start worker with watch mode
+tmux split-window -v './worker || echo "Worker crashed. Press Enter to exit." && read'
+
+# Select the first pane (FastAPI) as active
+tmux select-pane -t 0
+
+# Attach to the session
+tmux attach-session -t backend

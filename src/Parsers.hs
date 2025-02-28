@@ -94,7 +94,6 @@ parseRawTextToJson :: Text -> Text -> Text -> IO (Maybe [PartialTransaction])
 parseRawTextToJson filename pdfContent transactionSourceName = do
   let inputPrompt = generatePdfParsingPrompt filename pdfContent transactionSourceName
   let schema = generateTransactionSchema
-  print inputPrompt
 
   let messages = [ChatMessage {role = "user", content = inputPrompt}]
 
