@@ -63,7 +63,6 @@ export default function LabeledBox({
 
   return (
     <Box
-      flex="1"
       width={width}
       minH={minH}
       maxW={maxW}
