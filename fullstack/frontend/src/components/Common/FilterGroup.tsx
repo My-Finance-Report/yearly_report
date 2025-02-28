@@ -109,7 +109,7 @@ export function FilterGroup({
               onDragEnd={handleDragEnd}
             >
               <HStack>
-                <Text>showing</Text>
+                <Text>Showing</Text>
                 <Tag.Root
                   paddingY={1.5}
                   color="blue.500"
@@ -129,7 +129,7 @@ export function FilterGroup({
                 >
                   <Text>{activeTransactionSource.transaction_source_name}</Text>
                 </Tag.Root>
-                <Text>Grouped by</Text>
+                <Text>grouped by</Text>
                 <SortableContext
                   items={groupingOptions}
                   strategy={horizontalListSortingStrategy}
