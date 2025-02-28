@@ -1,5 +1,5 @@
 import type { TransactionSourceGroup } from "@/client"
-import {  HStack, Tag , Box } from "@chakra-ui/react"
+import { Box, HStack, Tag } from "@chakra-ui/react"
 import type React from "react"
 import BoxWithText from "./BoxWithText"
 
@@ -38,6 +38,6 @@ export function TransactionSourceSelector({
           )
         })}
       </HStack>
-  </Box>
+    </Box>
   )
 }

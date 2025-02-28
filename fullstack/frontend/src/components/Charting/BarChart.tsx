@@ -61,11 +61,7 @@ export function GenericBarChart({
               tickFormatter={(value) => value}
             />
             <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  hideIndicator={false}
-                />
-              }
+              content={<ChartTooltipContent hideIndicator={false} />}
             />
             {uniqueKeys.map((key, index) => (
               <Bar

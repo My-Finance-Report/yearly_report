@@ -1,6 +1,6 @@
-import {  HStack, Icon, Tag, TagLabel, Box } from "@chakra-ui/react"
-import BoxWithText from "./BoxWithText"
+import { Box, HStack, Icon, Tag, TagLabel } from "@chakra-ui/react"
 import { FiLogIn, FiLogOut } from "react-icons/fi"
+import BoxWithText from "./BoxWithText"
 
 export function WithdrawDepositSelector({
   setShowDeposits,

@@ -1,11 +1,7 @@
-import React, { useState } from "react";
+import type React from "react"
+import { useState } from "react"
 
-import { Text, Tag, HStack, CloseButton, Box } from "@chakra-ui/react";
-import { GroupByOption, GroupingConfig } from "./GroupingConfig";
-import { TransactionSourceSelector } from "./TransactionSourceSelector";
-import { WithdrawDepositSelector } from "./WithdrawDepositSelector";
-import BoxWithText from "./BoxWithText";
-import { type TransactionSourceGroup } from "../../client";
+import { Box, CloseButton, HStack, Tag, Text } from "@chakra-ui/react"
 import {
   DndContext,
   type DragEndEvent,
@@ -14,17 +10,22 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-} from "@dnd-kit/core";
+} from "@dnd-kit/core"
 import {
   SortableContext,
   arrayMove,
   horizontalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable";
+} from "@dnd-kit/sortable"
+import type { TransactionSourceGroup } from "../../client"
+import BoxWithText from "./BoxWithText"
+import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
+import { TransactionSourceSelector } from "./TransactionSourceSelector"
+import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
-import { CSS } from "@dnd-kit/utilities";
+import { CSS } from "@dnd-kit/utilities"
 
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client";
+import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 
 export function FilterGroup({
   activeTransactionSource,
@@ -35,40 +36,40 @@ export function FilterGroup({
   showDeposits,
   setGroupingOptions,
 }: {
-  activeTransactionSource: TransactionSourceGroup;
-  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
-  showDeposits: boolean;
+  activeTransactionSource: TransactionSourceGroup
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
+  showDeposits: boolean
   setActiveTransactionSource: React.Dispatch<
     React.SetStateAction<TransactionSourceGroup | null>
-  >;
-  data: TransactionsGetAggregatedTransactionsResponse;
-  groupingOptions: GroupByOption[];
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
+  >
+  data: TransactionsGetAggregatedTransactionsResponse
+  groupingOptions: GroupByOption[]
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true)
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
       return prev.includes(option)
         ? prev.length > 1
           ? prev.filter((o) => o !== option)
           : prev
-        : [...prev, option];
-    });
-  };
+        : [...prev, option]
+    })
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
-  );
+    useSensor(KeyboardSensor),
+  )
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    const { active, over } = event
+    if (!over || active.id === over.id) return
 
-    const oldIndex = groupingOptions.indexOf(active.id as GroupByOption);
-    const newIndex = groupingOptions.indexOf(over.id as GroupByOption);
-    setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex));
-  };
+    const oldIndex = groupingOptions.indexOf(active.id as GroupByOption)
+    const newIndex = groupingOptions.indexOf(over.id as GroupByOption)
+    setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex))
+  }
 
   return (
     <>
@@ -100,11 +101,23 @@ export function FilterGroup({
           >
             <HStack>
               <Text>showing</Text>
-              <Tag.Root paddingY={1.5} color="blue.500" paddingX={2} size="lg" cursor="default">
+              <Tag.Root
+                paddingY={1.5}
+                color="blue.500"
+                paddingX={2}
+                size="lg"
+                cursor="default"
+              >
                 <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
               </Tag.Root>
               <Text>from</Text>
-              <Tag.Root paddingY={1.5} paddingX={2} color='green.500' size="lg" cursor="default">
+              <Tag.Root
+                paddingY={1.5}
+                paddingX={2}
+                color="green.500"
+                size="lg"
+                cursor="default"
+              >
                 <Text>{activeTransactionSource.transaction_source_name}</Text>
               </Tag.Root>
               <Text>Grouped by</Text>
@@ -128,7 +141,7 @@ export function FilterGroup({
         </Box>
       </BoxWithText>
     </>
-  );
+  )
 }
 
 const SortableItem = ({
@@ -137,27 +150,27 @@ const SortableItem = ({
   noX,
   children,
 }: {
-  option: GroupByOption;
-  noX: boolean;
-  onRemove: (option: GroupByOption) => void;
-  children: React.ReactNode;
+  option: GroupByOption
+  noX: boolean
+  onRemove: (option: GroupByOption) => void
+  children: React.ReactNode
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: option,
-    });
+    })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+  }
 
   return (
     <>
       <Tag.Root
         ref={setNodeRef}
         py={noX ? 2 : 0}
-        color='orange.500'
+        color="orange.500"
         px={2}
         style={style}
         {...attributes}
@@ -172,5 +185,5 @@ const SortableItem = ({
       </Tag.Root>
       {children}
     </>
-  );
-};
+  )
+}

@@ -1,19 +1,11 @@
 import { AddIcon } from "@chakra-ui/icons"
-import {
-  HStack,
-  Icon,
-  Box,
-  Tag,
-  TagLabel,
-} from "@chakra-ui/react"
-
+import { Box, HStack, Icon, Tag, TagLabel } from "@chakra-ui/react"
 
 export enum GroupByOption {
   category = "category",
   month = "month",
   year = "year",
 }
-
 
 const availableOptions: GroupByOption[] = [
   GroupByOption.category,
@@ -42,28 +34,30 @@ export function GroupingConfig({
 
   return (
     <Box borderWidth={1} borderColor="orange.500" borderRadius="md" p={2}>
-        <HStack spaceX={2} wrap="nowrap">
-          {availableOptions.map((option) => (
-            <Tag.Root
-              key={option}
-              color={groupingOptions.includes(option) ? "orange.200" : "orange.500"}
-              cursor={
-                groupingOptions.includes(option) ? "not-allowed" : "pointer"
-              }
-              opacity={groupingOptions.includes(option) ? 0.5 : 1}
-              p={2}
-              borderRadius="md"
-              onClick={() =>
-                !groupingOptions.includes(option) && handleToggleOption(option)
-              }
-            >
-              <Icon as={AddIcon} mr={1} />
-              <TagLabel>
-                {option.charAt(0).toUpperCase() + option.slice(1)}
-              </TagLabel>
-            </Tag.Root>
-          ))}
-        </HStack>
-</Box>
+      <HStack spaceX={2} wrap="nowrap">
+        {availableOptions.map((option) => (
+          <Tag.Root
+            key={option}
+            color={
+              groupingOptions.includes(option) ? "orange.200" : "orange.500"
+            }
+            cursor={
+              groupingOptions.includes(option) ? "not-allowed" : "pointer"
+            }
+            opacity={groupingOptions.includes(option) ? 0.5 : 1}
+            p={2}
+            borderRadius="md"
+            onClick={() =>
+              !groupingOptions.includes(option) && handleToggleOption(option)
+            }
+          >
+            <Icon as={AddIcon} mr={1} />
+            <TagLabel>
+              {option.charAt(0).toUpperCase() + option.slice(1)}
+            </TagLabel>
+          </Tag.Root>
+        ))}
+      </HStack>
+    </Box>
   )
 }

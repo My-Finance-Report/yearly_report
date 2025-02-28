@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
-import { FiChevronDown, FiChevronRight, FiSettings } from "react-icons/fi"
+import { FiSettings } from "react-icons/fi"
 import {
   type AggregatedGroup,
   type GroupByOption,
@@ -118,9 +118,11 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   const description = `${sourceGroup.transaction_source_name} ${
     showDeposits ? "deposits" : "withdrawals"
-  }, by ${sourceGroup.groups[0].groupby_kind} then ${
-    sourceGroup.groups[0].subgroups![0].groupby_kind
-  } `
+  }, by ${sourceGroup.groups[0].groupby_kind} ${
+    sourceGroup.groups[0].subgroups?.length
+      ? `then ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+      : ""
+  }`
 
   return (
     <BoxWithText
@@ -179,10 +181,17 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     amount,
   }))
 
-  const description = `All time ${sourceGroup.transaction_source_name} ${
-    showDeposits ? "deposits" : "withdrawals"
-  } by ${sourceGroup.groups[0].subgroups![0].groupby_kind} `
-
+  let description: string
+  if (
+    !sourceGroup.groups[0].subgroups ||
+    sourceGroup.groups[0].subgroups.length === 0
+  ) {
+    description = `All time ${sourceGroup.transaction_source_name}`
+  } else {
+    description = `All time ${sourceGroup.transaction_source_name} ${
+      showDeposits ? "deposits" : "withdrawals"
+    } by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+  }
   return (
     <BoxWithText
       text="Pie Chart"
