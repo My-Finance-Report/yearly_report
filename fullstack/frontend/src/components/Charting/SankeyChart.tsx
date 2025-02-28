@@ -110,6 +110,7 @@ export function GenericSankeyChart({
         )}
       >
         <Tooltip />
+
       </Sankey>
       <Desc description={description} />
     </Box>

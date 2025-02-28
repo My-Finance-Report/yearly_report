@@ -293,6 +293,7 @@ export function SankeyBox({
             position="absolute"
             top={2}
             right={2}
+            size="sm"
           >
             <FiSettings />
           </Button>

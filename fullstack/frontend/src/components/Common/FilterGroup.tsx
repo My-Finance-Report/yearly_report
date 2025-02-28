@@ -86,7 +86,13 @@ export function FilterGroup({
         marginBottom: "10px",
       }}
     >
-      <div style={{ paddingTop: "10px", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          paddingTop: "10px",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <BoxWithText
           text="Filters"
           setCollapsedItems={setCollapsedItems}

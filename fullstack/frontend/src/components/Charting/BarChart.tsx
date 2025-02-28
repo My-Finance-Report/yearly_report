@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
 import { Desc } from "./SankeyChart"
 
@@ -59,6 +59,12 @@ export function GenericBarChart({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => value}
+            />
+    <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickCount={3}
             />
             <ChartTooltip
               content={<ChartTooltipContent hideIndicator={false} />}

@@ -34,7 +34,7 @@ export function GenericPieChart({
   nameKey,
   config,
   innerRadius = 60,
-  activeIndex = 0,
+  activeIndex = undefined,
   activeShape = ({ outerRadius = 0, ...props }: PieSectorDataItem) => (
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),

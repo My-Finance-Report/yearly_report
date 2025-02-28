@@ -111,6 +111,7 @@ export default function LabeledBox({
       {isCollapsable && (
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!])
           }}
