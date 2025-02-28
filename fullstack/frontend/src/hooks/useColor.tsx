@@ -78,8 +78,6 @@ export const ChartColorProvider = ({
   const getColorForName = (name: string) => {
     if (!assignedColors[name]) {
       const color = colorPalette[hashStringToIndex(name, colorPalette.length)]
-      console.log(assignedColors)
-      console.log("assign", name, color)
       setAssignedColors((prev) => ({
         ...prev,
         [name]: color,

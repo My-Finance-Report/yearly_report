@@ -1,41 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
-import { Spinner, Text } from "@chakra-ui/react";
+import { Spinner, Text } from "@chakra-ui/react"
 
-import { FilterGroup } from "@/components/Common/FilterGroup";
-import { GroupByOption } from "@/components/Common/GroupingConfig";
-import { Legend } from "@/components/Common/Legend";
-import { TransactionsTable } from "@/components/Common/TransactionsTable";
-import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { type TransactionSourceGroup, TransactionsService } from "../../client";
-import { isLoggedIn } from "../../hooks/useAuth";
+import { FilterGroup } from "@/components/Common/FilterGroup"
+import { GroupByOption } from "@/components/Common/GroupingConfig"
+import { Legend } from "@/components/Common/Legend"
+import { TransactionsTable } from "@/components/Common/TransactionsTable"
+import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
+import { useQuery } from "@tanstack/react-query"
+import { Link, createFileRoute } from "@tanstack/react-router"
+import { type TransactionSourceGroup, TransactionsService } from "../../client"
+import { isLoggedIn } from "../../hooks/useAuth"
 
-import { useColorPalette } from "@/hooks/useColor";
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client";
+import { useColorPalette } from "@/hooks/useColor"
+import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
-});
+})
 
 function Transactions() {
   const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean;
-  }>({});
+    [key: string]: boolean
+  }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.month,
     GroupByOption.category,
-  ]);
+  ])
 
-  const [showDeposits, setShowDeposits] = useState<boolean>(false);
+  const [showDeposits, setShowDeposits] = useState<boolean>(false)
 
   const toggleGroup = (sourceId: number, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
-    }));
-  };
+    }))
+  }
 
   const { data, isLoading, error } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -47,32 +47,32 @@ function Transactions() {
         groupBy: groupingOptions,
       }),
     enabled: isLoggedIn(),
-  });
+  })
 
-  const { getColorForName } = useColorPalette();
+  const { getColorForName } = useColorPalette()
   data?.groups.map((group) => {
     group.groups?.map((subgroup) => {
-      getColorForName(subgroup.group_name);
+      getColorForName(subgroup.group_name)
       subgroup.subgroups?.map((subsubgroup) => {
-        getColorForName(subsubgroup.group_name);
-      });
-    });
-  });
+        getColorForName(subsubgroup.group_name)
+      })
+    })
+  })
 
   const [activeTransactionSource, setActiveTransactionSource] =
-    useState<TransactionSourceGroup | null>(null);
+    useState<TransactionSourceGroup | null>(null)
 
   useEffect(() => {
     if (data?.groups.length) {
-      setActiveTransactionSource(data.groups[0]);
+      setActiveTransactionSource(data.groups[0])
     }
-  }, [data?.groups]);
+  }, [data?.groups])
 
   const namesForLegends = data?.groups
     .flatMap((group) => group.groups.map((subgroup) => subgroup.subgroups))
     .flatMap((subgroup) =>
-      subgroup?.map((subsubgroup) => subsubgroup.group_name)
-    );
+      subgroup?.map((subsubgroup) => subsubgroup.group_name),
+    )
 
   return (
     <div
@@ -130,7 +130,7 @@ function Transactions() {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default Transactions;
+export default Transactions
