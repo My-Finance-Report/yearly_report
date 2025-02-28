@@ -72,76 +72,86 @@ export function FilterGroup({
   }
 
   return (
-    <div style={{ position: "sticky", top: 0, backgroundColor:'black', zIndex: 100, padding: '1px 0'}}>
-        <div style={{paddingTop:'40px'}}>
-      <BoxWithText
-        text="Filters"
-        isExpanded={isExpanded}
-        setIsExpanded={setIsExpanded}
-      >
-        <HStack gap={4}>
-          <WithdrawDepositSelector
-            setShowDeposits={setShowDeposits}
-            showDeposits={showDeposits}
-          />
-          <TransactionSourceSelector
-            activeTransactionSource={activeTransactionSource}
-            setActiveTransactionSource={setActiveTransactionSource}
-            allTransactionSources={data.groups}
-          />
-          <GroupingConfig
-            groupingOptions={groupingOptions}
-            setGroupingOptions={setGroupingOptions}
-          />
-        </HStack>
-        <Box mt={4}>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <HStack>
-              <Text>showing</Text>
-              <Tag.Root
-                paddingY={1.5}
-                color="blue.500"
-                paddingX={2}
-                size="lg"
-                cursor="default"
-              >
-                <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
-              </Tag.Root>
-              <Text>from</Text>
-              <Tag.Root
-                paddingY={1.5}
-                paddingX={2}
-                color="green.500"
-                size="lg"
-                cursor="default"
-              >
-                <Text>{activeTransactionSource.transaction_source_name}</Text>
-              </Tag.Root>
-              <Text>Grouped by</Text>
-              <SortableContext
-                items={groupingOptions}
-                strategy={horizontalListSortingStrategy}
-              >
-                {groupingOptions.map((option, index) => (
-                  <SortableItem
-                    key={option}
-                    option={option}
-                    noX={groupingOptions.length === 1}
-                    onRemove={handleToggleOption}
-                  >
-                    {index !== groupingOptions.length - 1 && <Text>then</Text>}
-                  </SortableItem>
-                ))}
-              </SortableContext>
-            </HStack>
-          </DndContext>
-        </Box>
-      </BoxWithText>
-</div>
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        backgroundColor: "black",
+        zIndex: 100,
+        padding: "1px 0",
+      }}
+    >
+      <div style={{ paddingTop: "40px" }}>
+        <BoxWithText
+          text="Filters"
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+        >
+          <HStack gap={4}>
+            <WithdrawDepositSelector
+              setShowDeposits={setShowDeposits}
+              showDeposits={showDeposits}
+            />
+            <TransactionSourceSelector
+              activeTransactionSource={activeTransactionSource}
+              setActiveTransactionSource={setActiveTransactionSource}
+              allTransactionSources={data.groups}
+            />
+            <GroupingConfig
+              groupingOptions={groupingOptions}
+              setGroupingOptions={setGroupingOptions}
+            />
+          </HStack>
+          <Box mt={4}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <HStack>
+                <Text>showing</Text>
+                <Tag.Root
+                  paddingY={1.5}
+                  color="blue.500"
+                  paddingX={2}
+                  size="lg"
+                  cursor="default"
+                >
+                  <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
+                </Tag.Root>
+                <Text>from</Text>
+                <Tag.Root
+                  paddingY={1.5}
+                  paddingX={2}
+                  color="green.500"
+                  size="lg"
+                  cursor="default"
+                >
+                  <Text>{activeTransactionSource.transaction_source_name}</Text>
+                </Tag.Root>
+                <Text>Grouped by</Text>
+                <SortableContext
+                  items={groupingOptions}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {groupingOptions.map((option, index) => (
+                    <SortableItem
+                      key={option}
+                      option={option}
+                      noX={groupingOptions.length === 1}
+                      onRemove={handleToggleOption}
+                    >
+                      {index !== groupingOptions.length - 1 && (
+                        <Text>then</Text>
+                      )}
+                    </SortableItem>
+                  ))}
+                </SortableContext>
+              </HStack>
+            </DndContext>
+          </Box>
+        </BoxWithText>
+      </div>
     </div>
   )
 }
