@@ -96,12 +96,7 @@ function Transactions() {
           data.groups.length > 0 &&
           activeTransactionSource ? (
           <>
-            <VisualizationPanel
-              sourceGroup={activeTransactionSource}
-              isLoading={isLoading}
-              showDeposits={showDeposits}
-            />
-            <FilterGroup
+        <FilterGroup
               activeTransactionSource={activeTransactionSource}
               setActiveTransactionSource={setActiveTransactionSource}
               setShowDeposits={setShowDeposits}
@@ -110,6 +105,12 @@ function Transactions() {
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
             />
+            <VisualizationPanel
+              sourceGroup={activeTransactionSource}
+              isLoading={isLoading}
+              showDeposits={showDeposits}
+            />
+        
             <TransactionsTable
               toggleGroup={toggleGroup}
               sourceGroup={activeTransactionSource}

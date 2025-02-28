@@ -246,7 +246,7 @@ export function SankeyBox() {
 
   return (
     <BoxWithText
-      text="Sankey Visualization"
+      text=""
       containerRef={containerRef}
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}

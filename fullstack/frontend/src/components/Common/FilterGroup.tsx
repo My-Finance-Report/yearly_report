@@ -72,7 +72,8 @@ export function FilterGroup({
   }
 
   return (
-    <>
+    <div style={{ position: "sticky", top: 0, backgroundColor:'black', zIndex: 100, padding: '1px 0'}}>
+        <div style={{paddingTop:'40px'}}>
       <BoxWithText
         text="Filters"
         isExpanded={isExpanded}
@@ -140,7 +141,8 @@ export function FilterGroup({
           </DndContext>
         </Box>
       </BoxWithText>
-    </>
+</div>
+    </div>
   )
 }
 
