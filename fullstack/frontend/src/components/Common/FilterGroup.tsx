@@ -75,13 +75,13 @@ export function FilterGroup({
     <div
       style={{
         position: "sticky",
-        top: 0,
+        top: 80,
         backgroundColor: "black",
         zIndex: 100,
         padding: "1px 0",
       }}
     >
-      <div style={{ paddingTop: "40px" }}>
+      <div style={{ paddingTop: "10px" }}>
         <BoxWithText
           text="Filters"
           isExpanded={isExpanded}

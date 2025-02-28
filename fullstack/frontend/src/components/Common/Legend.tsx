@@ -17,8 +17,8 @@ export function Legend({
   )
 
   return (
-    <div className="w-[300px]" style={{ position: "sticky", top: 0 }}>
-      <div style={{ paddingTop: "40px" }}>
+    <div className="w-[300px]" style={{ position: "sticky", top: 80 }}>
+      <div style={{ paddingTop: "10px" }}>
         <BoxWithText
           text="Legend"
           isExpanded={isExpanded}

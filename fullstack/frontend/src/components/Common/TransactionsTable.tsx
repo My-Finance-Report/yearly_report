@@ -27,7 +27,7 @@ export function TransactionsTable({
   expandedGroups: { [key: string]: boolean }
 }) {
   return (
-    <Table.Root variant="outline">
+    <Table.Root variant="outline" borderRadius="md">
       <TableHeader>
         <TableRow>
           <TableColumnHeader />

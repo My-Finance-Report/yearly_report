@@ -156,7 +156,9 @@ const UserInformation = () => {
         </Flex>
       </Box>
 
-      <Button mt={4} variant="outline" onClick={handleLogout}>Logout</Button>
+      <Button mt={4} variant="outline" onClick={handleLogout}>
+        Logout
+      </Button>
     </Container>
   )
 }
