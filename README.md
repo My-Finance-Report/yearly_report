@@ -33,7 +33,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - demo account
 - edit transactions
 - show stats
-- create account flow doesnt work
 - toasts are broken
 - sort is broken for dates
 - privacy policy

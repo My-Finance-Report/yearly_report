@@ -20,7 +20,6 @@ export const Route = createFileRoute("/_layout/settings")({
 })
 
 function UserSettings() {
-  
   const queryClient = useQueryClient()
   const tabs = useTabs({
     defaultValue: "0",
