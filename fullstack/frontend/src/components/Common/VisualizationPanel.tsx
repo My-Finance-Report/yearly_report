@@ -126,13 +126,14 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   return (
     <BoxWithText
-      text={description}
+      text={""}
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}
     >
       {hasValidTimeGrouping ? (
         <GenericBarChart
           data={chartData}
+          description={description} 
           dataKey="date"
           nameKey="date"
         />
@@ -191,13 +192,14 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   }
   return (
     <BoxWithText
-      text={description}
+      text={""}
       isExpanded={isExpanded}
       setIsExpanded={setIsExpanded}
     >
       <GenericPieChart
         data={chartData}
         dataKey="amount"
+      description={description}
         nameKey="group"
         config={null}
       />
