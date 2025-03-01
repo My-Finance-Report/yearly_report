@@ -89,7 +89,7 @@ export function GenericSankeyChart({
   const { getColorForName } = useColorPalette()
 
   if (!isValidateData(data)) {
-    return null
+    return <Text>No data, be sure to configure the sankey chart by clicking the "Gear" icon </Text>
   }
 
   return (
@@ -110,7 +110,6 @@ export function GenericSankeyChart({
         )}
       >
         <Tooltip />
-
       </Sankey>
     </Box>
   )

@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine
 import sqlalchemy.orm as orm
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app import crud
@@ -15,6 +15,7 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 type Session = orm.Session
+
 
 def init_db(session: Session) -> None:
     """Initialize the database and create a superuser if not exists."""

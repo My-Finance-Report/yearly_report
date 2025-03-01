@@ -2,23 +2,20 @@ import os
 from collections.abc import Generator
 from typing import Any
 
+import jwt
 import sqlalchemy.orm as orm
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from app.core import security
 from app.core.config import settings
-from app.core.db import engine
 from app.local_types import TokenPayload
 from app.models import User
-
-
 
 load_dotenv()
 
@@ -38,6 +35,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
+
 def get_auth_db() -> Generator[Session, Any, None]:
     """Returns a database session that does NOT enforce RLS (used for authentication)."""
 
@@ -50,9 +48,9 @@ def get_auth_db() -> Generator[Session, Any, None]:
         db.close()
 
 
-
 def get_current_user(
-    token: str | bytes = Depends(reusable_oauth2), session: Session = Depends(get_auth_db)
+    token: str | bytes = Depends(reusable_oauth2),
+    session: Session = Depends(get_auth_db),
 ) -> User:
     try:
         payload = jwt.decode(
@@ -85,7 +83,6 @@ def get_current_active_superuser(
             status_code=403, detail="The user doesn't have enough privileges"
         )
     return current_user
-
 
 
 def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, None]:

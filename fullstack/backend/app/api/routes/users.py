@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 
 from app import crud
-from app.db import (
-    get_current_active_superuser,
-    get_current_user,
-)
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.db import Session, get_db
+from app.db import (
+    Session,
+    get_current_active_superuser,
+    get_current_user,
+    get_db,
+)
 from app.local_types import (
     Message,
     UserNewPassword,

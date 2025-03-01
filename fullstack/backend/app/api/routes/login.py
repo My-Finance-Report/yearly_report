@@ -6,11 +6,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
-from app.db import get_current_active_superuser, get_current_user
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.db import Session,get_auth_db
+from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
 from app.models import User
 from app.utils import (
@@ -80,7 +79,9 @@ def recover_password(email: str, session: Session = Depends(get_auth_db)) -> Mes
 
 
 @router.post("/reset-password/")
-def reset_password(body: NewPassword, session: Session = Depends(get_auth_db)) -> Message:
+def reset_password(
+    body: NewPassword, session: Session = Depends(get_auth_db)
+) -> Message:
     """
     Reset password
     """

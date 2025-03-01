@@ -1,46 +1,60 @@
-import { SegmentedControl } from "@/components/ui/segmented-control"
-import { Box, Flex, HStack, Text } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
-import { useNavigate, useRouterState } from "@tanstack/react-router"
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Box, Flex, HStack, Tag, Text, Spacer } from "@chakra-ui/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiBriefcase,
   FiHome,
   FiList,
   FiSettings,
   FiUsers,
-} from "react-icons/fi"
+} from "react-icons/fi";
 
-import type { UserOut } from "../../client"
+import { UploadsService, type UserOut } from "../../client";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
   { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
   { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
   { value: "/settings", label: "User Settings", icon: FiSettings },
-]
+];
 
 export function SegmentedNavigation() {
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-  const location = useRouterState().location
-  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useRouterState().location;
+  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
+  const { data: isUploading } = useQuery({
+   queryKey: ["isUploading"],
+   queryFn: async () => (await UploadsService.isUploading()),
+  });
+
+
 
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
-    : navigationItems
+    : navigationItems;
 
   return (
     <Flex
       align="center"
       justify="center"
       py={4}
+      px={6}
       position="sticky"
       minH={20}
       top={0}
       backgroundColor="black"
       zIndex={1000}
+      width="100%"
     >
-      <Text position="absolute" left={6} fontSize="24px" fontWeight="bold">
+      <Text
+        position="absolute"
+        left={6}
+        fontSize="24px"
+        fontWeight="bold"
+        color="white"
+      >
         My Financé
       </Text>
 
@@ -53,16 +67,42 @@ export function SegmentedNavigation() {
         items={finalItems.map(({ value, label, icon }) => ({
           value,
           label: (
-            <HStack>
+            <HStack spaceX={2}>
               <Box as={icon} />
-              {label}
+              <Text>{label}</Text>
             </HStack>
           ),
         }))}
         onValueChange={(value) => {
-          navigate({ to: value.value })
+          navigate({ to: value.value });
         }}
       />
+
+      {isUploading ? (
+          <HStack
+            position="absolute"
+            onClick={() => navigate({ to: "/upload-files" })}
+            cursor="pointer"
+            right={6}
+            spaceX={2}
+            px={3}
+            py={1}
+            borderRadius="md"
+            backgroundColor="green.600"
+          >
+            <Box
+              width="8px"
+              height="8px"
+              borderRadius="50%"
+              backgroundColor="green.300"
+            />
+            <Text fontSize="sm" color="white">
+              Processing files...
+            </Text>
+          </HStack>
+      ) : (
+        <Box />
+      )}
     </Flex>
-  )
+  );
 }

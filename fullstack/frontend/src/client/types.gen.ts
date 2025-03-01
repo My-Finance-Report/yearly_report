@@ -355,6 +355,8 @@ export type UploadsUploadFilesData = {
 
 export type UploadsUploadFilesResponse = (Array<UploadedPdfOut>);
 
+export type UploadsIsUploadingResponse = (boolean);
+
 export type UsersReadUsersData = {
     limit?: number;
     skip?: number;

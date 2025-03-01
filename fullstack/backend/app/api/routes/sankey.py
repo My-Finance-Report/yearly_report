@@ -4,9 +4,10 @@ from dataclasses import dataclass
 from fastapi import APIRouter, Depends
 
 from app.db import (
+    Session,
     get_current_user,
+    get_db,
 )
-from app.db import Session, get_db
 
 from ...local_types import (
     PossibleSankeyInput,

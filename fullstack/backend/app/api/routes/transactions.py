@@ -4,9 +4,10 @@ from itertools import groupby
 from fastapi import APIRouter, Depends, Query
 
 from app.db import (
+    Session,
     get_current_user,
+    get_db,
 )
-from app.db import Session, get_db
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,

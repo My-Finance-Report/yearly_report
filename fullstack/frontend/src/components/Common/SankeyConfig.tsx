@@ -158,88 +158,102 @@ export function SankeyConfigPage() {
   if (isLoading) {
     return <Spinner />
   }
-return (
-  <Flex direction="column" p={4} h="100vh">
-    <VStack align="start" spaceX={4} width="100%">
-      {selectedInputs.map((input, index) => (
-        <div key={index.toString()} style={{ marginLeft: '20px', borderLeft: '2px solid white', paddingLeft: '10px' }}>
-          <Box
-            key={input.category_id}
-            px={2}
-            py={1}
-            borderRadius="md"
-            backgroundColor="rgba(255, 255, 255, 0.1)" // Light background for visibility
+  return (
+    <Flex direction="column" p={4} h="100vh">
+      <VStack align="start" spaceX={4} width="100%">
+        {selectedInputs.map((input, index) => (
+          <div
+            key={index.toString()}
+            style={{
+              marginLeft: "20px",
+              borderLeft: "2px solid white",
+              paddingLeft: "10px",
+            }}
           >
-            <HStack>
-              <SimpleTag
-                name={input.category_name}
-                onRemove={() => removeInput(input)}
-                showRemove={true}
-                showAdd={false}
-                onAdd={() => {}}
-              />
-            </HStack>
-            {findInputFromId && (
-              <VStack align={"flex-start"}>
-                <HStack>
-                  <div
-                    style={{
-                      width: 150,
-                      height: 2,
-                      backgroundColor: "white",
-                    }}
-                  />
-                  <SimpleTag name={input.source_name} />
-                </HStack>
-                <Box ml={200}>
-                  {findInputFromId[input.category_id as number].siblings.map(
-                    (sibling: SankeySibling, inner) => (
-                      <div key={inner.toString()} style={{ marginLeft: '20px', borderLeft: '2px solid white', paddingLeft: '10px' }}>
-                        <HStack>
-                          <div
-                            style={{
-                              width: 150,
-                              height: 2,
-                              backgroundColor: "white",
-                            }}
-                          />
-                          <LinkageDisplay
-                            sibling={sibling}
-                            addLinkage={addLinkage}
-                            removeLinkage={removeLinkage}
-                            linkage={getLinkage(sibling)}
-                            setSelectedLinkage={setSelectedLinkage}
-                            collectionOfLinkages={collectionOfLinkages}
-                          />
-                        </HStack>
-                      </div>
-                    ),
-                  )}
-                </Box>
-              </VStack>
-            )}
-          </Box>
-        </div>
-      ))}
-      <Selector
-        collection={collectionOfInputs}
-        selected={null}
-        setSelected={setSelectedInput}
-        onAdd={addInput}
-        title="Input"
-      />
-      <Button
-        colorScheme="blue"
-        onClick={() => saveSankeyConfig.mutate()}
-        disabled={
-          selectedInputs.length === 0 && selectedLinkages.length === 0
-        }
-      >
-        Save Configuration
-      </Button>
-    </VStack>
-  </Flex>
-);
+            <Box
+              key={input.category_id}
+              px={2}
+              py={1}
+              borderRadius="md"
+              backgroundColor="rgba(255, 255, 255, 0.1)" // Light background for visibility
+            >
+              <HStack>
+                <SimpleTag
+                  name={input.category_name}
+                  onRemove={() => removeInput(input)}
+                  showRemove={true}
+                  showAdd={false}
+                  onAdd={() => {}}
+                />
+              </HStack>
+              {findInputFromId && (
+                <VStack align={"flex-start"}>
+                  <HStack>
+                    <div
+                      style={{
+                        width: 150,
+                        height: 2,
+                        backgroundColor: "white",
+                      }}
+                    />
+                    <SimpleTag name={input.source_name} />
+                  </HStack>
+                  <Box ml={200}>
+                    {findInputFromId[input.category_id as number].siblings.map(
+                      (sibling: SankeySibling, inner) => (
+                        <div
+                          key={inner.toString()}
+                          style={{
+                            marginLeft: "20px",
+                            borderLeft: "2px solid white",
+                            paddingLeft: "10px",
+                          }}
+                        >
+                          <HStack>
+                            <div
+                              style={{
+                                width: 150,
+                                height: 2,
+                                backgroundColor: "white",
+                              }}
+                            />
+                            <LinkageDisplay
+                              sibling={sibling}
+                              addLinkage={addLinkage}
+                              removeLinkage={removeLinkage}
+                              linkage={getLinkage(sibling)}
+                              setSelectedLinkage={setSelectedLinkage}
+                              collectionOfLinkages={collectionOfLinkages}
+                            />
+                          </HStack>
+                        </div>
+                      ),
+                    )}
+                  </Box>
+                </VStack>
+              )}
+            </Box>
+          </div>
+        ))}
+        <Selector
+          collection={collectionOfInputs}
+          selected={null}
+          setSelected={setSelectedInput}
+          onAdd={addInput}
+          title="Input"
+        />
+        <Button
+          colorScheme="blue"
+          onClick={() => saveSankeyConfig.mutate()}
+          disabled={
+            selectedInputs.length === 0 && selectedLinkages.length === 0
+          }
+        >
+          Save Configuration
+        </Button>
+      </VStack>
+    </Flex>
+  )
 }
 
 interface LinkageDisplayProps {

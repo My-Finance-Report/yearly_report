@@ -60,7 +60,7 @@ export function GenericBarChart({
               minTickGap={32}
               tickFormatter={(value) => value}
             />
-    <YAxis
+            <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={8}

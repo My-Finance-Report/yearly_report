@@ -5,17 +5,19 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from app.db import (
-    get_current_user,
-)
 from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException
 from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     extract_text_from_pdf,
 )
-from app.db import Session, get_db
+from app.db import (
+    Session,
+    get_current_user,
+    get_db,
+)
 from app.local_types import ProcessFileJobOut, UploadedPdfOut
 from app.models import (
     JobKind,
+    JobStatus,
     ProcessFileJob,
     UploadedPdf,
     User,
@@ -136,3 +138,18 @@ def upload_files(
         pdf = uploaded_pdf_from_raw_content(session, user, file)
         out.append(pdf)
     return out
+
+
+@router.post("/is_uploading", response_model=bool)
+def is_uploading(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> bool:
+    return bool(
+        session.query(ProcessFileJob)
+        .filter(
+            ProcessFileJob.user_id == user.id,
+            ProcessFileJob.status.in_([JobStatus.pending, JobStatus.processing]),
+        )
+        .all()
+    )

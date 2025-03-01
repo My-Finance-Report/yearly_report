@@ -111,9 +111,9 @@ function renderGroups({
               {group.group_name}
             </HStack>
           </TableCell>
-          <TableCell textAlign="end">{group.total_withdrawals}</TableCell>
-          <TableCell textAlign="end">{group.total_deposits}</TableCell>
-          <TableCell textAlign="end">{group.total_balance}</TableCell>
+          <TableCell textAlign="end">{formatAmount(group.total_withdrawals)}</TableCell>
+          <TableCell textAlign="end">{formatAmount(group.total_deposits)}</TableCell>
+          <TableCell textAlign="end">{formatAmount(group.total_balance)}</TableCell>
         </TableRow>
 
         {/* Expanded Content */}
@@ -189,8 +189,16 @@ function TransactionRow({ transaction }: { transaction: TransactionOut }) {
       <TableCell>
         {new Date(transaction.date_of_transaction).toLocaleDateString()}
       </TableCell>
-      <TableCell>{transaction.amount}</TableCell>
+      <TableCell>{formatAmount(transaction.amount)}</TableCell>
       <TableCell>{transaction.kind}</TableCell>
     </TableRow>
   )
+}
+
+
+function formatAmount(amount: number) {
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  })
 }

@@ -126,7 +126,10 @@ def save_account_config(
 ) -> TransactionSource:
     existing = (
         session.query(TransactionSource)
-        .filter(TransactionSource.name == account_config.name, TransactionSource.user_id == user.id)
+        .filter(
+            TransactionSource.name == account_config.name,
+            TransactionSource.user_id == user.id,
+        )
         .one_or_none()
     )
     if existing:
