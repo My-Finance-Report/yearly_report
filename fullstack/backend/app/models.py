@@ -152,6 +152,7 @@ class UploadedPdf(Base):
         Integer, primary_key=True, autoincrement=True
     )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
+    nickname: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     raw_content_hash: Mapped[str] = mapped_column(Text, nullable=False)
     upload_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)

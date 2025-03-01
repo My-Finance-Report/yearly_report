@@ -145,6 +145,18 @@ export type Token = {
     token_type?: string;
 };
 
+export type TransactionEdit = {
+    description: string;
+    category_id: number;
+    date_of_transaction: string;
+    amount: number;
+    transaction_source_id: number;
+    kind: TransactionKind;
+    uploaded_pdf_id?: (number | null);
+    archived?: boolean;
+    id: number;
+};
+
 export type TransactionKind = 'withdrawal' | 'deposit';
 
 export type TransactionOut = {
@@ -183,6 +195,7 @@ export type TransactionSourceOut = {
 
 export type UploadedPdfOut = {
     filename: string;
+    nickname?: (string | null);
     raw_content: string;
     raw_content_hash: string;
     upload_time: string;
@@ -341,6 +354,12 @@ export type TransactionsGetAggregatedTransactionsData = {
 
 export type TransactionsGetAggregatedTransactionsResponse = (AggregatedTransactions);
 
+export type TransactionsUpdateTransactionData = {
+    requestBody: TransactionEdit;
+};
+
+export type TransactionsUpdateTransactionResponse = (TransactionOut);
+
 export type UploadsReprocessFileData = {
     jobId: number;
 };
@@ -356,6 +375,12 @@ export type UploadsUploadFilesData = {
 export type UploadsUploadFilesResponse = (Array<UploadedPdfOut>);
 
 export type UploadsIsUploadingResponse = (boolean);
+
+export type UploadsDeleteFileData = {
+    fileId: number;
+};
+
+export type UploadsDeleteFileResponse = (unknown);
 
 export type UsersReadUsersData = {
     limit?: number;

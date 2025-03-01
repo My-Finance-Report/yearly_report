@@ -2,6 +2,7 @@ from collections.abc import Callable
 from datetime import datetime
 from itertools import groupby
 
+from typing import cast
 from fastapi import APIRouter, Depends, Query
 
 from app.db import (
@@ -14,6 +15,7 @@ from app.local_types import (
     AggregatedTransactions,
     GroupByOption,
     TransactionOut,
+    TransactionEdit,
     TransactionSourceGroup,
 )
 from app.models import (
@@ -276,3 +278,20 @@ def get_aggregated_transactions(
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,
     )
+
+
+@router.put(
+    "/{transaction_id}",
+    response_model=TransactionOut,
+)
+def update_transaction( transaction: TransactionEdit,user: User = Depends(get_current_user), session: Session = Depends(get_db))-> Transaction:
+    transaction_db= session.query(Transaction).filter(Transaction.id == transaction.id, Transaction.user_id == user.id).one()
+    transaction_db.amount = transaction.amount
+    transaction_db.description = transaction.description
+    transaction_db.date_of_transaction = transaction.date_of_transaction
+    transaction_db.kind = transaction.kind
+    transaction_db.category_id = cast(CategoryId, transaction.category_id)
+
+    session.commit()
+    return transaction_db
+

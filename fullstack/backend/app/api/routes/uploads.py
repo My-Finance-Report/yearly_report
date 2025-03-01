@@ -19,6 +19,7 @@ from app.models import (
     JobKind,
     JobStatus,
     ProcessFileJob,
+    Transaction,
     UploadedPdf,
     User,
 )
@@ -119,10 +120,10 @@ def get_uploads(
     jobs = (
         session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id.in_(file_ids)).all()
     )
-    job_lookup = {job.pdf_id: ProcessFileJobOut.from_orm(job) for job in jobs}
+    job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
 
     return [
-        UploadedPdfOut.from_orm(file).copy(update={"job": job_lookup.get(file.id)})
+        UploadedPdfOut.model_validate(file).model_copy(update={"job": job_lookup.get(file.id)})
         for file in files
     ]
 
@@ -153,3 +154,15 @@ def is_uploading(
         )
         .all()
     )
+
+
+@router.delete("/{file_id}", response_model=None)
+def delete_file( file_id: int, session: Session = Depends(get_db), user: User = Depends(get_current_user)) -> None:
+    file = session.query(UploadedPdf).filter(UploadedPdf.id == file_id, UploadedPdf.user_id == user.id).one()
+
+    session.query(Transaction).filter(Transaction.uploaded_pdf_id == file.id, Transaction.user_id == user.id).delete()
+    session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id == file.id, ProcessFileJob.user_id == user.id).delete()
+    session.delete(file)
+
+    session.commit()
+    return None

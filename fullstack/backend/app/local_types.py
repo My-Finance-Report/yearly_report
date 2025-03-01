@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-from app.models import JobStatus, SourceKind, TransactionKind
+from app.models import CategoryId, JobStatus, SourceKind, TransactionKind
 
 
 class Token(BaseModel):
@@ -116,9 +116,13 @@ class TransactionBase(BaseModel):
 class TransactionOut(TransactionBase):
     id: int
 
+class TransactionEdit(TransactionBase):
+    id: CategoryId
+
 
 class UploadedPdfBase(BaseModel):
     filename: str
+    nickname: str | None = None
     raw_content: str
     raw_content_hash: str
     upload_time: datetime
@@ -191,6 +195,7 @@ class ProcessFileJobOut(ProcessFileJobBase):
 
 class UploadedPdfOut(UploadedPdfBase):
     id: int
+    nickname: str | None = None
     job: ProcessFileJobOut | None = None
 
 

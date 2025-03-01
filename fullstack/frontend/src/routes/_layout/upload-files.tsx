@@ -1,7 +1,7 @@
 "use client"
 
 import FileDropzone from "@/components/Common/Dropzone"
-import { ReprocessButton } from "@/components/Common/ReprocessButton"
+import { ReprocessButton, DeleteButton } from "@/components/Common/ReprocessButton"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
   Box,
@@ -67,7 +67,7 @@ function UploadFiles() {
     }
   }
 
-  const handleJobUpdate = () => {
+  const handleUpdate = () => {
     refetch()
   }
 
@@ -87,6 +87,7 @@ function UploadFiles() {
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Filename</TableColumnHeader>
+              <TableColumnHeader>Nickname</TableColumnHeader>
               <TableColumnHeader>Status</TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
@@ -97,11 +98,16 @@ function UploadFiles() {
                 pdf.job && (
                   <TableRow key={pdf.id}>
                     <TableCell>{pdf.filename}</TableCell>
+                    <TableCell>{pdf.nickname}</TableCell>
                     <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
                     <TableCell>
                       <ReprocessButton
                         jobId={pdf.job.id}
-                        onReprocess={handleJobUpdate}
+                        onReprocess={handleUpdate}
+                      />
+                  <DeleteButton
+                        fileId={pdf.id}
+                        onReprocess={handleUpdate}
                       />
                     </TableCell>
                   </TableRow>
