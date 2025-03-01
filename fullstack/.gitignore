@@ -19,3 +19,4 @@ generated_code/*
 .stack-work/dist/*
 dist-newstyle/*
 TAGS
+*.vite
