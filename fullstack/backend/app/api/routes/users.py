@@ -9,10 +9,10 @@ from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.db import (
     Session,
+    get_auth_db,
     get_current_active_superuser,
     get_current_user,
     get_db,
-    get_auth_db,
 )
 from app.local_types import (
     Message,
@@ -148,7 +148,9 @@ def delete_user_me(
 
 
 @router.post("/signup", response_model=UserOut)
-def register_user(user_in: UserRegister, session: Session = Depends(get_auth_db)) -> User:
+def register_user(
+    user_in: UserRegister, session: Session = Depends(get_auth_db)
+) -> User:
     """
     Create new user without the need to be logged in.
     """

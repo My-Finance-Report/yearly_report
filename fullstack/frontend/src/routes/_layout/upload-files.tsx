@@ -87,7 +87,6 @@ function UploadFiles() {
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Filename</TableColumnHeader>
-              <TableColumnHeader>Upload Time</TableColumnHeader>
               <TableColumnHeader>Status</TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
@@ -98,9 +97,6 @@ function UploadFiles() {
                 pdf.job && (
                   <TableRow key={pdf.id}>
                     <TableCell>{pdf.filename}</TableCell>
-                    <TableCell>
-                      {new Date(pdf.upload_time).toLocaleString()}
-                    </TableCell>
                     <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
                     <TableCell>
                       <ReprocessButton
