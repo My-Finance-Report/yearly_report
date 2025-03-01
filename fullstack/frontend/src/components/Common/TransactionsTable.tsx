@@ -42,9 +42,9 @@ export function TransactionsTable({
           <TableColumnHeader>
             {sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}
           </TableColumnHeader>
-          <TableColumnHeader textAlign="end">WITHDRAWALS</TableColumnHeader>
-          <TableColumnHeader textAlign="end">DEPOSITS</TableColumnHeader>
-          <TableColumnHeader textAlign="end">BALANCE</TableColumnHeader>
+          <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
+          <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
+          <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -153,13 +153,13 @@ function renderGroups({
                             {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
                           </TableColumnHeader>
                           <TableColumnHeader textAlign="end">
-                            WITHDRAWALS
+                            EXPENSE
                           </TableColumnHeader>
                           <TableColumnHeader textAlign="end">
-                            DEPOSITS
+                            DEPOSIT
                           </TableColumnHeader>
                           <TableColumnHeader textAlign="end">
-                            BALANCE
+                            TOTAL
                           </TableColumnHeader>
                         </TableRow>
                       </TableHeader>

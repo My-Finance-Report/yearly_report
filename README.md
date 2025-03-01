@@ -32,6 +32,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> give a file a nick name when we process
 -> general bug around uploading file twice
 -> expect to have transactioons for january but don't
+-> need to be able to edit
+-> filter out from year start
 
 
 
