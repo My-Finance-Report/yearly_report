@@ -28,12 +28,23 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
+-> way to remove file
+-> give a file a nick name when we process
+-> general bug around uploading file twice
+-> expect to have transactioons for january but don't
+
+
+
+
+-> unable to delete a file and transactions
+- show error messages on login screens
+-> no bounce after create account
 - manually add transactions
-- admin page doesnt work
-- demo account
+- demo account -- exists but not useable yet
 - edit transactions
-- show stats
 - toasts are broken
-- sort is broken for dates
 - privacy policy
+- terms of service
+- contact me page
+
 

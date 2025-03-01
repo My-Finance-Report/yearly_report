@@ -115,7 +115,7 @@ export function FilterGroup({
               setGroupingOptions={setGroupingOptions}
             />
           </HStack>
-          <Box mt={4} backgroundColor={"colors.background.alt"} borderRadius="lg">
+          <Box mt={4} backgroundColor={"background"} borderRadius="lg">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
