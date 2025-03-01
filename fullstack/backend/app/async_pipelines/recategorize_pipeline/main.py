@@ -31,7 +31,7 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
                     partialTransactionAmount=row.amount,
                     partialTransactionDescription=row.description,
                     partialTransactionDateOfTransaction=row.date_of_transaction.strftime(
-                        "%d/%m/%Y"
+                        "%m/%d/%Y"
                     ),
                     partialTransactionKind=row.kind.value,
                 )
