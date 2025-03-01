@@ -45,7 +45,7 @@ export function GenericBarChart({
 
   return (
     <Card>
-      <CardContent className="px-2 sm:p-6">
+      <CardContent className="px-2 sm:p-6" style={{ backgroundColor: "background" }}>
         <ChartContainer
           config={computedConfig}
           className="aspect-auto h-[250px] w-full"
