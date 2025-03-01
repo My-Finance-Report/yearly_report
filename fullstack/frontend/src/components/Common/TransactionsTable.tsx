@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
+  Progress,
   Collapsible,
   HStack,
   Table,
@@ -48,6 +49,8 @@ export function TransactionsTable({
         {renderGroups({
           groups: sourceGroup.groups,
           sourceId: sourceGroup.transaction_source_id,
+          totalWidthdrawals: sourceGroup.total_withdrawals,
+          totalDeposits: sourceGroup.total_deposits,
           pathPrefix: "",
           toShowNames,
           toggleGroup,
@@ -55,9 +58,9 @@ export function TransactionsTable({
         })}
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Source Totals</TableCell>
-          <TableCell textAlign="end">{sourceGroup.total_withdrawals}</TableCell>
-          <TableCell textAlign="end">{sourceGroup.total_deposits}</TableCell>
-          <TableCell textAlign="end">{sourceGroup.total_balance}</TableCell>
+          <TableCell textAlign="end">{formatAmount(sourceGroup.total_withdrawals)}</TableCell>
+          <TableCell textAlign="end">{formatAmount(sourceGroup.total_deposits)}</TableCell>
+          <TableCell textAlign="end">{formatAmount(sourceGroup.total_balance)}</TableCell>
         </TableRow>
       </TableBody>
     </Table.Root>
@@ -71,6 +74,8 @@ function renderGroups({
   expandedGroups,
   toggleGroup,
   toShowNames,
+  totalWidthdrawals,
+  totalDeposits,
 }: {
   groups: AggregatedGroup[]
   sourceId: number
@@ -78,6 +83,8 @@ function renderGroups({
   toggleGroup: (sourceId: number, groupKey: string) => void
   expandedGroups: { [key: string]: boolean }
   toShowNames?: (string | undefined)[] | undefined
+  totalWidthdrawals?: number
+  totalDeposits?: number
 }) {
   return groups.map((group, idx) => {
     const groupKey = pathPrefix
@@ -97,7 +104,8 @@ function renderGroups({
             {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
           </TableCell>
           <TableCell>
-            <HStack>
+            <HStack justify={"space-between"}>
+              <HStack>
               {toShowNames?.includes(group.group_name) && (
                 <Box
                   width="16px"
@@ -110,13 +118,16 @@ function renderGroups({
               )}
               {group.group_name}
             </HStack>
+              {totalWidthdrawals &&
+              <PercentageBar amount={group.total_withdrawals} total={totalWidthdrawals} />
+  }
+            </HStack>
           </TableCell>
           <TableCell textAlign="end">{formatAmount(group.total_withdrawals)}</TableCell>
           <TableCell textAlign="end">{formatAmount(group.total_deposits)}</TableCell>
           <TableCell textAlign="end">{formatAmount(group.total_balance)}</TableCell>
         </TableRow>
 
-        {/* Expanded Content */}
         <Collapsible.Root open={isExpanded} asChild unmountOnExit>
           <TableRow>
             <TableCell colSpan={5} p={0}>
@@ -201,4 +212,16 @@ function formatAmount(amount: number) {
     style: "currency",
     currency: "USD",
   })
+}
+
+function PercentageBar({ amount, total }: { amount: number; total: number }) {
+  return (
+    <Progress.Root defaultValue={Math.abs(amount) / Math.abs(total) * 100} maxW="sm">
+      <HStack gap="5" minW={200}>
+        <Progress.Track maxW={150} minW={150} flex="1">
+          <Progress.Range />
+        </Progress.Track>
+      </HStack>
+    </Progress.Root>
+  )
 }
