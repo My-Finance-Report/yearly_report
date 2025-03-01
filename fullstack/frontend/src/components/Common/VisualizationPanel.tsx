@@ -1,4 +1,6 @@
-import BoxWithText from "@/components/Common/BoxWithText"
+import BoxWithText, {
+  type CollapsibleName,
+} from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Box,
@@ -29,27 +31,26 @@ interface VisualizationProps {
   sourceGroup: TransactionSourceGroup | undefined
   isLoading: boolean
   showDeposits: boolean
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  collapsedItems: CollapsibleName[]
 }
 
 interface ValidatedVisualizationProps {
   sourceGroup: TransactionSourceGroup
   showDeposits: boolean
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  collapsedItems: CollapsibleName[]
 }
 
 export function VisualizationPanel({
   showDeposits,
   sourceGroup,
   isLoading,
+  setCollapsedItems,
+  collapsedItems,
 }: VisualizationProps) {
   return (
-    <Flex
-      direction="column"
-      gap={4}
-      minH="300px"
-      mb={4}
-      align="center"
-      justify="center"
-    >
+    <Flex direction="column" gap={4} mb={4} align="center" justify="center">
       {isLoading || !sourceGroup ? (
         <Spinner size="lg" />
       ) : (
@@ -62,13 +63,28 @@ export function VisualizationPanel({
           w="100%"
         >
           <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox />
+            <SankeyBox
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
           <Box gridArea="pie">
-            <PieBox sourceGroup={sourceGroup} showDeposits={showDeposits} />
+            <PieBox
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
           <Box gridArea="bar">
-            <BarChart sourceGroup={sourceGroup} showDeposits={showDeposits} />
+            <BarChart
+              sourceGroup={sourceGroup}
+              showDeposits={showDeposits}
+              collapsedItems={collapsedItems}
+              setCollapsedItems={setCollapsedItems}
+            />
           </Box>
         </Grid>
       )}
@@ -76,8 +92,12 @@ export function VisualizationPanel({
   )
 }
 
-function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+function BarChart({
+  sourceGroup,
+  showDeposits,
+  collapsedItems,
+  setCollapsedItems,
+}: ValidatedVisualizationProps) {
   const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
   const hasTimeGrouping = (group: AggregatedGroup): boolean => {
@@ -126,16 +146,17 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
 
   return (
     <BoxWithText
-      text="Bar Chart"
-      isExpanded={isExpanded}
-      setIsExpanded={setIsExpanded}
+      text={""}
+      COMPONENT_NAME="Bar Chart"
+      setCollapsedItems={setCollapsedItems}
+      collapsedItems={collapsedItems}
     >
       {hasValidTimeGrouping ? (
         <GenericBarChart
           data={chartData}
+          description={description}
           dataKey="date"
           nameKey="date"
-          description={description}
         />
       ) : (
         <Box textAlign="center" p={4}>
@@ -149,8 +170,12 @@ function BarChart({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+function PieBox({
+  sourceGroup,
+  showDeposits,
+  setCollapsedItems,
+  collapsedItems,
+}: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.groups
     .flatMap(
       (group) =>
@@ -186,22 +211,21 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
     !sourceGroup.groups[0].subgroups ||
     sourceGroup.groups[0].subgroups.length === 0
   ) {
-    description = `All time ${sourceGroup.transaction_source_name}`
+    description = `${sourceGroup.transaction_source_name}`
   } else {
-    description = `All time ${sourceGroup.transaction_source_name} ${
-      showDeposits ? "deposits" : "withdrawals"
-    } by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+    description = `${sourceGroup.transaction_source_name} by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
   }
   return (
     <BoxWithText
-      text="Pie Chart"
-      isExpanded={isExpanded}
-      setIsExpanded={setIsExpanded}
+      text={""}
+      setCollapsedItems={setCollapsedItems}
+      collapsedItems={collapsedItems}
+      COMPONENT_NAME="Pie Chart"
     >
       <GenericPieChart
         data={chartData}
-        description={description}
         dataKey="amount"
+        description={description}
         nameKey="group"
         config={null}
       />
@@ -209,7 +233,10 @@ function PieBox({ sourceGroup, showDeposits }: ValidatedVisualizationProps) {
   )
 }
 
-export function SankeyBox() {
+export function SankeyBox({
+  setCollapsedItems,
+  collapsedItems,
+}: ValidatedVisualizationProps) {
   const { data, isLoading, error } = useQuery<
     SankeyGetSankeyDataResponse,
     Error
@@ -221,12 +248,13 @@ export function SankeyBox() {
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [chartWidth, setChartWidth] = useState<number>(0)
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [chartHeight, setChartHeight] = useState<number>(0)
 
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setChartWidth(containerRef.current.offsetWidth - 30)
+        setChartHeight(containerRef.current.offsetHeight - 70)
       }
     }
 
@@ -238,8 +266,11 @@ export function SankeyBox() {
     }
   }, [])
 
+  const COMPONENT_NAME = "Flow Chart"
+  const isExpanded = !collapsedItems.includes(COMPONENT_NAME)
+
   if (error) {
-    setIsExpanded(false)
+    setCollapsedItems((prev) => [...prev, COMPONENT_NAME])
   }
 
   const description = "All time transactions grouped by category"
@@ -248,13 +279,22 @@ export function SankeyBox() {
     <BoxWithText
       text=""
       containerRef={containerRef}
-      isExpanded={isExpanded}
-      setIsExpanded={setIsExpanded}
-      minH={isExpanded ? 300 : undefined}
+      setCollapsedItems={setCollapsedItems}
+      collapsedItems={collapsedItems}
+      COMPONENT_NAME={COMPONENT_NAME}
+      maxH={isExpanded ? 500 : undefined}
+      minH={isExpanded ? 500 : undefined}
     >
       <HStack gap={0}>
         <Link to="/sankey-config" href="/sankey-config/">
-          <Button variant="outline" alignSelf="start">
+          <Button
+            variant="outline"
+            alignSelf="start"
+            position="absolute"
+            top={2}
+            right={2}
+            size="sm"
+          >
             <FiSettings />
           </Button>
         </Link>
@@ -274,6 +314,7 @@ export function SankeyBox() {
         <GenericSankeyChart
           data={data}
           width={chartWidth}
+          height={chartHeight}
           description={description}
         />
       ) : null}

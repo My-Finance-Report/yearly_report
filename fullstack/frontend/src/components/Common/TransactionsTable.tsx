@@ -13,7 +13,12 @@ import {
 import React from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
-import type { AggregatedGroup, TransactionSourceGroup } from "../../client"
+import { FiEdit } from "react-icons/fi"
+import type {
+  AggregatedGroup,
+  TransactionOut,
+  TransactionSourceGroup,
+} from "../../client"
 
 export function TransactionsTable({
   sourceGroup,
@@ -27,7 +32,7 @@ export function TransactionsTable({
   expandedGroups: { [key: string]: boolean }
 }) {
   return (
-    <Table.Root variant="outline">
+    <Table.Root variant="outline" borderRadius="md">
       <TableHeader>
         <TableRow>
           <TableColumnHeader />
@@ -153,26 +158,13 @@ function renderGroups({
                         <TableRow>
                           <TableColumnHeader>DESCRIPTION</TableColumnHeader>
                           <TableColumnHeader>DATE</TableColumnHeader>
-                          <TableColumnHeader textAlign="end">
-                            AMOUNT
-                          </TableColumnHeader>
+                          <TableColumnHeader>AMOUNT</TableColumnHeader>
                           <TableColumnHeader>KIND</TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {group.transactions?.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell>{transaction.description}</TableCell>
-                            <TableCell>
-                              {new Date(
-                                transaction.date_of_transaction,
-                              ).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell textAlign="end">
-                              {transaction.amount}
-                            </TableCell>
-                            <TableCell>{transaction.kind}</TableCell>
-                          </TableRow>
+                          <TransactionRow transaction={transaction} />
                         ))}
                       </TableBody>
                     </Table.Root>
@@ -185,4 +177,20 @@ function renderGroups({
       </React.Fragment>
     )
   })
+}
+
+function TransactionRow({ transaction }: { transaction: TransactionOut }) {
+  const handleEdit = () => {
+    // Logic to open the modal goes here
+  }
+  return (
+    <TableRow>
+      <TableCell>{transaction.description}</TableCell>
+      <TableCell>
+        {new Date(transaction.date_of_transaction).toLocaleDateString()}
+      </TableCell>
+      <TableCell>{transaction.amount}</TableCell>
+      <TableCell>{transaction.kind}</TableCell>
+    </TableRow>
+  )
 }

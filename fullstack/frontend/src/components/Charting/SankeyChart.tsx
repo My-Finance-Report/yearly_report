@@ -1,7 +1,16 @@
 import type { SankeyData } from "@/client"
+import {
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverRoot,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { useColorPalette } from "@/hooks/useColor"
-import { Box, Text } from "@chakra-ui/react"
+import { Box, Button, Text } from "@chakra-ui/react"
 import React from "react"
+import { FiInfo } from "react-icons/fi"
 import { Sankey, Tooltip } from "recharts"
 import { Layer } from "recharts"
 
@@ -101,8 +110,30 @@ export function GenericSankeyChart({
         )}
       >
         <Tooltip />
+
       </Sankey>
-      <Text>{description}</Text>
     </Box>
+  )
+}
+
+export const Desc = ({ description }: { description: string | undefined }) => {
+  if (!description) {
+    return null
+  }
+
+  return (
+    <PopoverRoot>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="outline">
+          <FiInfo />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverBody>
+          <Text my="4">{description}</Text>
+        </PopoverBody>
+      </PopoverContent>
+    </PopoverRoot>
   )
 }

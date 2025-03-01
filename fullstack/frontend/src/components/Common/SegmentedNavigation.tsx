@@ -2,16 +2,21 @@ import { SegmentedControl } from "@/components/ui/segmented-control"
 import { Box, Flex, HStack, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
-import { FiBriefcase, FiHome, FiSettings, FiUsers } from "react-icons/fi"
+import {
+  FiBriefcase,
+  FiHome,
+  FiList,
+  FiSettings,
+  FiUsers,
+} from "react-icons/fi"
 
 import type { UserOut } from "../../client"
-import UserMenu from "./UserMenu"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
-  { value: "/manage-accounts", label: "Manage Accounts", icon: FiSettings },
+  { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
   { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
-  { value: "/settings", label: "Settings", icon: FiSettings },
+  { value: "/settings", label: "User Settings", icon: FiSettings },
 ]
 
 export function SegmentedNavigation() {
@@ -25,13 +30,22 @@ export function SegmentedNavigation() {
     : navigationItems
 
   return (
-    <Flex align="center" justify="space-between" py={4} mr={24}>
-      <Text fontSize="xl" fontWeight="bold" marginLeft={24}>
-        My Finance
+    <Flex
+      align="center"
+      justify="center"
+      py={4}
+      position="sticky"
+      minH={20}
+      top={0}
+      backgroundColor="black"
+      zIndex={1000}
+    >
+      <Text position="absolute" left={6} fontSize="24px" fontWeight="bold">
+        My Financé
       </Text>
 
       <SegmentedControl
-        defaultValue={"/transactions"}
+        defaultValue="/transactions"
         value={
           finalItems.find(({ value }) => location.pathname.startsWith(value))
             ?.value || null
@@ -49,7 +63,6 @@ export function SegmentedNavigation() {
           navigate({ to: value.value })
         }}
       />
-      <UserMenu />
     </Flex>
   )
 }

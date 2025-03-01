@@ -68,6 +68,12 @@ const UserInformation = () => {
     mutation.mutate(data)
   }
 
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    logout()
+  }
+
   const onCancel = () => {
     reset()
     toggleEditMode()
@@ -149,6 +155,10 @@ const UserInformation = () => {
           )}
         </Flex>
       </Box>
+
+      <Button mt={4} variant="outline" onClick={handleLogout}>
+        Logout
+      </Button>
     </Container>
   )
 }

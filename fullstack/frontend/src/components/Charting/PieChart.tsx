@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import { Box, Text } from "@chakra-ui/react"
+import { Desc } from "./SankeyChart"
 
 export interface GenericChartDataItem {
   [key: string]: string | number
@@ -33,7 +34,7 @@ export function GenericPieChart({
   nameKey,
   config,
   innerRadius = 60,
-  activeIndex = 0,
+  activeIndex = undefined,
   activeShape = ({ outerRadius = 0, ...props }: PieSectorDataItem) => (
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
@@ -59,7 +60,7 @@ export function GenericPieChart({
       <CardContent className="flex-1 pb-0 align-center">
         <ChartContainer
           config={finalConfig}
-          className="aspect-square max-h-[250px]"
+          className="aspect-square max-h-[250px] min-w-[250px]"
         >
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
@@ -81,7 +82,7 @@ export function GenericPieChart({
             </Pie>
           </PieChart>
         </ChartContainer>
-        <Text>{description}</Text>
+        <Desc description={description} />
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Box>

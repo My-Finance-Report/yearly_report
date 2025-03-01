@@ -83,10 +83,9 @@ function Login() {
         />
         {error && <Field.ErrorText>{error}</Field.ErrorText>}
       </Field.Root>
-
-      <Link as={RouterLink} href="/recover-password" color="blue.500">
-        Forgot password?
-      </Link>
+      <RouterLink to="/reset-password">
+        <Link color="blue.500">Forgot password?</Link>
+      </RouterLink>
 
       <Button variant="outline" type="submit" loading={isSubmitting}>
         Log In
@@ -94,9 +93,9 @@ function Login() {
 
       <Text>
         Don't have an account?{" "}
-        <Link as={RouterLink} href="/signup" color="blue.500">
-          Sign up
-        </Link>
+        <RouterLink to="/signup">
+          <Link color="blue.500">Sign up</Link>
+        </RouterLink>
       </Text>
     </Container>
   )

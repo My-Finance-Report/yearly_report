@@ -100,7 +100,7 @@ cd /root/code/traefik-public/
 Now with the environment variables set and the `docker-compose.traefik.yml` in place, you can start the Traefik Docker Compose running the following command:
 
 ```bash
-docker compose -f docker-compose.traefik.yml up -d
+docker-compose -f docker-compose.traefik.yml up -d
 ```
 
 ## Deploy the FastAPI Project

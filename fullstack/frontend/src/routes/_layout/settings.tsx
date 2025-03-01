@@ -1,4 +1,4 @@
-import { Container, Heading, Tabs, useTabs } from "@chakra-ui/react"
+import { Container, Tabs, useTabs } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
