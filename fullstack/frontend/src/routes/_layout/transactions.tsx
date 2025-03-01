@@ -132,6 +132,7 @@ function Transactions() {
               sourceGroup={activeTransactionSource}
               toShowNames={namesForLegends}
               expandedGroups={expandedGroups}
+              showWithdrawals={!showDeposits}
             />
           </div>
         ) : (

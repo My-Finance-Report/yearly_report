@@ -1,13 +1,14 @@
 from collections.abc import Callable
-from itertools import groupby
 from datetime import datetime
+from itertools import groupby
 
 from fastapi import APIRouter, Depends, Query
 
 from app.db import (
+    Session,
     get_current_user,
+    get_db,
 )
-from app.db import Session, get_db
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,
@@ -57,8 +58,6 @@ def get_month_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetim
 
 def get_year_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime:
     return transaction.date_of_transaction
-
-
 
 
 def get_category_name(key: str) -> str:

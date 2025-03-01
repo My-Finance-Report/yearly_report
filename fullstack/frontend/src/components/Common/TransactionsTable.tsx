@@ -26,11 +26,13 @@ export function TransactionsTable({
   toggleGroup,
   expandedGroups,
   toShowNames,
+  showWithdrawals,
 }: {
   sourceGroup: TransactionSourceGroup
   toggleGroup: (sourceId: number, groupKey: string) => void
   toShowNames?: (string | undefined)[] | undefined
   expandedGroups: { [key: string]: boolean }
+  showWithdrawals: boolean
 }) {
   return (
     <Table.Root variant="outline" borderRadius="md">
@@ -51,6 +53,7 @@ export function TransactionsTable({
           sourceId: sourceGroup.transaction_source_id,
           totalWidthdrawals: sourceGroup.total_withdrawals,
           totalDeposits: sourceGroup.total_deposits,
+          showWithdrawals,
           pathPrefix: "",
           toShowNames,
           toggleGroup,
@@ -76,6 +79,7 @@ function renderGroups({
   toShowNames,
   totalWidthdrawals,
   totalDeposits,
+  showWithdrawals,
 }: {
   groups: AggregatedGroup[]
   sourceId: number
@@ -84,13 +88,20 @@ function renderGroups({
   expandedGroups: { [key: string]: boolean }
   toShowNames?: (string | undefined)[] | undefined
   totalWidthdrawals?: number
+  showWithdrawals: boolean
   totalDeposits?: number
 }) {
   return groups.map((group, idx) => {
     const groupKey = pathPrefix
       ? `${pathPrefix}-${group.group_id}`
       : `${group.group_id}`
+
     const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
+
+    const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
+    const specificAmount = showWithdrawals ? group.total_withdrawals : group.total_deposits
+
+    console.log(showWithdrawals, specificAmount, totalAmount)
 
     const { getColorForName } = useColorPalette()
 
@@ -118,8 +129,8 @@ function renderGroups({
               )}
               {group.group_name}
             </HStack>
-              {totalWidthdrawals &&
-              <PercentageBar amount={group.total_withdrawals} total={totalWidthdrawals} />
+              {totalAmount &&
+              <PercentageBar amount={specificAmount} total={totalAmount} />
   }
             </HStack>
           </TableCell>
@@ -160,6 +171,7 @@ function renderGroups({
                           toggleGroup,
                           expandedGroups,
                           toShowNames,
+                          showWithdrawals,
                         })}
                       </TableBody>
                     </Table.Root>
