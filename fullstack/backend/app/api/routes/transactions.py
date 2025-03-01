@@ -1,13 +1,13 @@
 from collections.abc import Callable
 from itertools import groupby
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 
 from app.db import (
-    Session,
     get_current_user,
-    get_db,
 )
+from app.db import Session, get_db
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,
@@ -29,6 +29,7 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 CategoryLookup = dict[CategoryId, Category]
 
 GroupByKeyFunc = Callable[[Transaction, CategoryLookup], str]
+SortFunc = Callable[[Transaction, CategoryLookup], str | datetime]
 GroupByNameFunc = Callable[[str], str]
 GroupByIdFunc = Callable[[str], str]
 
@@ -44,6 +45,20 @@ def get_month_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
 
 def get_year_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
     return str(transaction.date_of_transaction.year)
+
+
+def get_category_sort(transaction: Transaction, lookup: CategoryLookup) -> str:
+    return lookup[transaction.category_id].name
+
+
+def get_month_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime:
+    return transaction.date_of_transaction
+
+
+def get_year_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime:
+    return transaction.date_of_transaction
+
+
 
 
 def get_category_name(key: str) -> str:
@@ -75,6 +90,12 @@ group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
     GroupByOption.category: get_category_key,
     GroupByOption.month: get_month_key,
     GroupByOption.year: get_year_key,
+}
+
+sort_funcs: dict[GroupByOption, SortFunc] = {
+    GroupByOption.category: get_category_sort,
+    GroupByOption.month: get_month_sort,
+    GroupByOption.year: get_year_sort,
 }
 
 
@@ -117,10 +138,14 @@ def recursive_group(
     def key_fn(txn: Transaction) -> str:
         return group_by_key_funcs[current](txn, category_lookup)
 
+    def sort_fn(txn: Transaction) -> str | datetime:
+        return sort_funcs[current](txn, category_lookup)
+
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
 
-    txns.sort(key=key_fn)
+
+    txns.sort(key=sort_fn)
     groups = []
     for key, group_iter in groupby(txns, key=key_fn):
         group_list = list(group_iter)
