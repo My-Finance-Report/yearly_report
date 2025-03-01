@@ -44,7 +44,7 @@ export function SegmentedNavigation() {
       position="sticky"
       minH={20}
       top={0}
-      backgroundColor="black"
+      backgroundColor="background"
       zIndex={1000}
       width="100%"
     >
@@ -53,7 +53,7 @@ export function SegmentedNavigation() {
         left={6}
         fontSize="24px"
         fontWeight="bold"
-        color="white"
+        color="colors.ui.main"
       >
         My Financé
       </Text>

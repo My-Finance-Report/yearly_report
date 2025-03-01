@@ -36,12 +36,13 @@ if (!root) {
 ReactDOM.createRoot(root).render(
   <StrictMode>
     <ChakraProvider value={theme}>
-      <ColorModeProvider />
+      <ColorModeProvider >
       <ChartColorProvider>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
         </QueryClientProvider>
       </ChartColorProvider>
+      </ColorModeProvider>
     </ChakraProvider>
   </StrictMode>,
 )
