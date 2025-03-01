@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import (
+from app.db import (
     get_current_user,
 )
 from app.db import Session, get_db

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from app.api.deps import (
+from app.db import (
     get_current_user,
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException

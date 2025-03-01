@@ -3,7 +3,7 @@ from itertools import groupby
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import (
+from app.db import (
     get_current_user,
 )
 from app.db import Session, get_db

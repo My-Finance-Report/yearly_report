@@ -16,7 +16,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    __rls_enabled__ = True
 
 
 class SourceKind(str, enum.Enum):

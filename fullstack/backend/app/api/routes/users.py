@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 
 from app import crud
-from app.api.deps import (
+from app.db import (
     get_current_active_superuser,
     get_current_user,
 )
