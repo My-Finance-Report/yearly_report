@@ -122,10 +122,14 @@ def get_uploads(
     )
     job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
 
-    return [
-        UploadedPdfOut.model_validate(file).model_copy(update={"job": job_lookup.get(file.id)})
+    val = [
+        UploadedPdfOut.model_validate(file).model_copy(
+            update={"job": job_lookup.get(file.id)}
+        )
         for file in files
     ]
+
+    return sorted(val, key=lambda x: x.filename, reverse=True)
 
 
 @router.post("/", response_model=list[UploadedPdfOut])
@@ -157,11 +161,23 @@ def is_uploading(
 
 
 @router.delete("/{file_id}", response_model=None)
-def delete_file( file_id: int, session: Session = Depends(get_db), user: User = Depends(get_current_user)) -> None:
-    file = session.query(UploadedPdf).filter(UploadedPdf.id == file_id, UploadedPdf.user_id == user.id).one()
+def delete_file(
+    file_id: int,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    file = (
+        session.query(UploadedPdf)
+        .filter(UploadedPdf.id == file_id, UploadedPdf.user_id == user.id)
+        .one()
+    )
 
-    session.query(Transaction).filter(Transaction.uploaded_pdf_id == file.id, Transaction.user_id == user.id).delete()
-    session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id == file.id, ProcessFileJob.user_id == user.id).delete()
+    session.query(Transaction).filter(
+        Transaction.uploaded_pdf_id == file.id, Transaction.user_id == user.id
+    ).delete()
+    session.query(ProcessFileJob).filter(
+        ProcessFileJob.pdf_id == file.id, ProcessFileJob.user_id == user.id
+    ).delete()
     session.delete(file)
 
     session.commit()

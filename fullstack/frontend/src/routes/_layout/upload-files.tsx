@@ -4,10 +4,8 @@ import FileDropzone from "@/components/Common/Dropzone"
 import { ReprocessButton, DeleteButton } from "@/components/Common/ReprocessButton"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
-  Box,
-  Button,
+  HStack,
   Container,
-  Heading,
   Spinner,
   Table,
   TableBody,
@@ -101,6 +99,7 @@ function UploadFiles() {
                     <TableCell>{pdf.nickname}</TableCell>
                     <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
                     <TableCell>
+                      <HStack gap={2}>
                       <ReprocessButton
                         jobId={pdf.job.id}
                         onReprocess={handleUpdate}
@@ -109,6 +108,7 @@ function UploadFiles() {
                         fileId={pdf.id}
                         onReprocess={handleUpdate}
                       />
+</HStack>
                     </TableCell>
                   </TableRow>
                 ),

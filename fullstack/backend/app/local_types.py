@@ -116,6 +116,7 @@ class TransactionBase(BaseModel):
 class TransactionOut(TransactionBase):
     id: int
 
+
 class TransactionEdit(TransactionBase):
     id: CategoryId
 
