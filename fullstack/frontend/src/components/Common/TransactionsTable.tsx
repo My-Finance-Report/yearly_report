@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
+  Button,
   Progress,
   Collapsible,
   HStack,
@@ -10,11 +11,13 @@ import {
   TableColumnHeader,
   TableHeader,
   TableRow,
+  useDisclosure,
 } from "@chakra-ui/react"
 import React from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
 import { FiEdit } from "react-icons/fi"
+import EditTransaction from "./EditTransaction"
 import type {
   AggregatedGroup,
   TransactionOut,
@@ -183,6 +186,7 @@ function renderGroups({
                           <TableColumnHeader>DATE</TableColumnHeader>
                           <TableColumnHeader>AMOUNT</TableColumnHeader>
                           <TableColumnHeader>KIND</TableColumnHeader>
+                          <TableColumnHeader></TableColumnHeader>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -203,9 +207,9 @@ function renderGroups({
 }
 
 function TransactionRow({ transaction }: { transaction: TransactionOut }) {
-  const handleEdit = () => {
-    // Logic to open the modal goes here
-  }
+
+  const editTransactionModal = useDisclosure()
+
   return (
     <TableRow>
       <TableCell>{transaction.description}</TableCell>
@@ -214,7 +218,10 @@ function TransactionRow({ transaction }: { transaction: TransactionOut }) {
       </TableCell>
       <TableCell>{formatAmount(transaction.amount)}</TableCell>
       <TableCell>{transaction.kind}</TableCell>
+      <TableCell><Button onClick={editTransactionModal.onOpen}><FiEdit /></Button></TableCell>
+      <EditTransaction transaction={transaction} isOpen={editTransactionModal.open} onClose={editTransactionModal.onClose} />
     </TableRow>
+    
   )
 }
 
