@@ -144,7 +144,6 @@ def recursive_group(
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
 
-
     txns.sort(key=sort_fn)
     groups = []
     for key, group_iter in groupby(txns, key=key_fn):
