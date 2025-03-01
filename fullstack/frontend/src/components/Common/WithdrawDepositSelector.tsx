@@ -19,9 +19,9 @@ export function WithdrawDepositSelector({
           return (
             <Tag.Root
               key={option}
-              color={isActive ? "blue.300" : "blue.500"}
+              color={!isActive ? "blue.300" : "blue.500"}
               cursor={"pointer"}
-              opacity={!isActive ? 1 : 0.5}
+              opacity={isActive ? 1 : 0.5}
               p={2}
               borderRadius="md"
               onClick={() =>

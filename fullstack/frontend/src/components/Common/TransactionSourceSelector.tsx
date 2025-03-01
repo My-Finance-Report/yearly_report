@@ -25,8 +25,8 @@ export function TransactionSourceSelector({
             <Tag.Root
               key={index.toString()}
               cursor="pointer"
-              color={isActive ? "green.200" : "green.500"}
-              opacity={!isActive ? 1 : 0.5}
+              color={!isActive ? "green.200" : "green.500"}
+              opacity={isActive ? 1 : 0.5}
               p={2}
               borderRadius="md"
               onClick={() => {

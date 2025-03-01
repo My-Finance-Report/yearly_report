@@ -38,17 +38,15 @@ export function GroupingConfig({
         {availableOptions.map((option) => (
           <Tag.Root
             key={option}
+            cursor="pointer"
             color={
-              groupingOptions.includes(option) ? "orange.200" : "orange.500"
+              !groupingOptions.includes(option) ? "orange.200" : "orange.500"
             }
-            cursor={
-              groupingOptions.includes(option) ? "not-allowed" : "pointer"
-            }
-            opacity={groupingOptions.includes(option) ? 0.5 : 1}
+            opacity={!groupingOptions.includes(option) ? 0.5 : 1}
             p={2}
             borderRadius="md"
             onClick={() =>
-              !groupingOptions.includes(option) && handleToggleOption(option)
+              handleToggleOption(option)
             }
           >
             <Icon as={AddIcon} mr={1} />
