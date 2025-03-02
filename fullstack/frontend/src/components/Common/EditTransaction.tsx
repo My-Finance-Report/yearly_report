@@ -2,44 +2,62 @@ import {
   Button,
   FieldErrorText,
   FieldLabel,
+  Select,
   FieldRoot,
   Input,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
+  SelectItem,
+  SelectTrigger,
+  SelectContent,
+  SelectValueText,
+  SelectRoot,
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type SubmitHandler, useForm, Controller } from "react-hook-form";
 
-import {  DialogBackdrop,
-    DialogBody,
-    DialogCloseTrigger,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogRoot,
-    DialogTitle,} from "@/components/ui/dialog"
+import {
+  DialogBackdrop,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   type ApiError,
   TransactionEdit,
   TransactionOut,
   TransactionsService,
-} from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
-import { emailPattern, handleError } from "../../utils"
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { emailPattern, handleError } from "../../utils";
 
 interface EditTransactionProps {
-  transaction: TransactionOut
-  isOpen: boolean
-  onClose: () => void
+  transaction: TransactionOut;
+  isOpen: boolean;
+  onClose: () => void;
 }
+const categories = [
+  { id: 1, name: "Groceries" },
+  { id: 2, name: "Utilities" },
+  { id: 3, name: "Rent" },
+  { id: 4, name: "Entertainment" },
+];
 
-
-const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps) => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
+const EditTransaction = ({
+  transaction,
+  isOpen,
+  onClose,
+}: EditTransactionProps) => {
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     getValues,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<TransactionEdit>({
@@ -49,9 +67,9 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
       ...transaction,
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
     },
-  })
+  });
 
-  console.log("form values", getValues())
+  console.log("form values", getValues());
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) =>
@@ -59,34 +77,36 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
         requestBody: data,
       }),
     onSuccess: () => {
-      showToast("Success!", "Transaction updated successfully.", "success")
-      onClose()
+      showToast("Success!", "Transaction updated successfully.", "success");
+      onClose();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<TransactionEdit> = async (data) => {
-
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   const onCancel = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
-
-  console.log("opening up")
+  console.log("opening up");
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
       <DialogBackdrop />
-      <DialogContent style={{ backgroundColor: "background" }} onSubmit={handleSubmit(onSubmit)} as='form'>
+      <DialogContent
+        style={{ backgroundColor: "background" }}
+        onSubmit={handleSubmit(onSubmit)}
+        as="form"
+      >
         <DialogHeader>
           <DialogTitle>Edit Transaction</DialogTitle>
           <DialogCloseTrigger />
@@ -124,7 +144,9 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
           </FieldRoot>
 
           <FieldRoot mt={4} invalid={!!errors.date_of_transaction}>
-            <FieldLabel htmlFor="date_of_transaction">Date of Transaction</FieldLabel>
+            <FieldLabel htmlFor="date_of_transaction">
+              Date of Transaction
+            </FieldLabel>
             <Input
               id="date_of_transaction"
               {...register("date_of_transaction", {
@@ -134,7 +156,9 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
               type="date"
             />
             {errors.date_of_transaction && (
-              <FieldErrorText>{errors.date_of_transaction.message}</FieldErrorText>
+              <FieldErrorText>
+                {errors.date_of_transaction.message}
+              </FieldErrorText>
             )}
           </FieldRoot>
 
@@ -147,6 +171,36 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
               })}
               placeholder="Category"
               type="number"
+            />
+            {errors.category_id && (
+              <FieldErrorText>{errors.category_id.message}</FieldErrorText>
+            )}
+          </FieldRoot>
+
+          <FieldRoot mt={4} invalid={!!errors.category_id}>
+            <FieldLabel htmlFor="category_id">Category</FieldLabel>
+            <Controller
+              control={control}
+              name="category_id"
+              render={({ field }) => (
+                <SelectRoot
+                  id="category_id"
+                  placeholder="Select a category"
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field}
+                >
+                  <SelectTrigger>
+                    <SelectValueText placeholder="Select movie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((movie) => (
+                      <SelectItem item={movie} key={movie.id}>
+                        {movie.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </SelectRoot>
+              )}
             />
             {errors.category_id && (
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
@@ -169,6 +223,6 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  )
-}
-export default EditTransaction
+  );
+};
+export default EditTransaction;
