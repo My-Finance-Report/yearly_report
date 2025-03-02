@@ -1,6 +1,5 @@
 import {
   Button,
-
   FieldErrorText,
   FieldLabel,
   FieldRoot,
@@ -46,8 +45,13 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
   } = useForm<TransactionEdit>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: transaction,
+    defaultValues: {
+      ...transaction,
+      date_of_transaction: transaction.date_of_transaction.split("T")[0],
+    },
   })
+
+  console.log("form values", getValues())
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) =>
@@ -125,7 +129,6 @@ const EditTransaction = ({ transaction, isOpen, onClose }: EditTransactionProps)
               id="date_of_transaction"
               {...register("date_of_transaction", {
                 required: "Date is required",
-                valueAsDate: true,
               })}
               placeholder="Date"
               type="date"
