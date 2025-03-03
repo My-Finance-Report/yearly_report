@@ -10,6 +10,7 @@ import {
   SelectContent,
   SelectValueText,
   SelectRoot,
+  createListCollection,
 } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm, Controller } from "react-hook-form";
@@ -31,19 +32,21 @@ import {
   TransactionsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
-import { emailPattern, handleError } from "../../utils";
+import { handleError } from "../../utils";
 
 interface EditTransactionProps {
   transaction: TransactionOut;
   isOpen: boolean;
   onClose: () => void;
 }
-const categories = [
-  { id: 1, name: "Groceries" },
-  { id: 2, name: "Utilities" },
-  { id: 3, name: "Rent" },
-  { id: 4, name: "Entertainment" },
-];
+const categories = {
+  items: [
+    { label: "Groceries", value: "Groceries" },
+    { label: "Utilities", value: "Utilities" },
+    { label: "Rent", value: "Rent" },
+    { label: "Entertainment", value: "Entertainment" },
+  ],
+};
 
 const EditTransaction = ({
   transaction,
@@ -68,8 +71,6 @@ const EditTransaction = ({
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
     },
   });
-
-  console.log("form values", getValues());
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) =>
@@ -97,7 +98,7 @@ const EditTransaction = ({
     onClose();
   };
 
-  console.log("opening up");
+  console.log("errors", errors);
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -164,44 +165,34 @@ const EditTransaction = ({
 
           <FieldRoot mt={4} invalid={!!errors.category_id}>
             <FieldLabel htmlFor="category_id">Category</FieldLabel>
-            <Input
-              id="category_id"
-              {...register("category_id", {
-                required: "Category is required",
-              })}
-              placeholder="Category"
-              type="number"
-            />
-            {errors.category_id && (
-              <FieldErrorText>{errors.category_id.message}</FieldErrorText>
-            )}
-          </FieldRoot>
 
-          <FieldRoot mt={4} invalid={!!errors.category_id}>
-            <FieldLabel htmlFor="category_id">Category</FieldLabel>
             <Controller
               control={control}
               name="category_id"
-              render={({ field }) => (
-                <SelectRoot
-                  id="category_id"
-                  placeholder="Select a category"
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  value={field}
-                >
-                  <SelectTrigger>
-                    <SelectValueText placeholder="Select movie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((movie) => (
-                      <SelectItem item={movie} key={movie.id}>
-                        {movie.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </SelectRoot>
-              )}
+              render={({ field }) => {
+                const { onChange, value } = field;
+                return (
+                  <SelectRoot
+                    id="category_id"
+                    placeholder="Select a category"
+                    collection={createListCollection(categories)}
+                    onValueChange={(val) => onChange(Number(val))}
+                  >
+                    <SelectTrigger>
+                      <SelectValueText placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.items.map((cat) => (
+                        <SelectItem key={cat.value} item={cat}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </SelectRoot>
+                );
+              }}
             />
+
             {errors.category_id && (
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}

@@ -53,7 +53,6 @@ export default function LabeledBox({
   const labelStyles = {
     position: "absolute",
     backgroundColor: "background",
-    color: "ui.main",
     px: 2,
     fontSize: "sm",
     whiteSpace: "nowrap",
