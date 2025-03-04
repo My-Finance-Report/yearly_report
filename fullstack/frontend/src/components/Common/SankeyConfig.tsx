@@ -30,7 +30,7 @@ import {
   type SankeySibling,
 } from "../../client"
 
-type Blah = { label: string; value: number }
+export type Blah = { label: string; value: number }
 
 export function SankeyConfigPage() {
   const [selectedInputs, setSelectedInputs] = useState<PossibleSankeyInput[]>(

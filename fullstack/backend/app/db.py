@@ -89,7 +89,10 @@ def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, No
     """Returns a database session and sets the user ID for RLS policies."""
     db = session_maker()
 
-    db.execute(text(f"SET app.current_user_id = {user.id}"))
+    statement = f"SET app.current_user_id = {user.id}"
+    db.execute(text(statement))
+    db.commit()
+
 
     try:
         yield db

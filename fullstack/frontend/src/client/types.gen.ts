@@ -360,6 +360,12 @@ export type TransactionsUpdateTransactionData = {
 
 export type TransactionsUpdateTransactionResponse = (TransactionOut);
 
+export type TransactionsListCategoriesData = {
+    transactionId: number;
+};
+
+export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
+
 export type UploadsReprocessFileData = {
     jobId: number;
 };

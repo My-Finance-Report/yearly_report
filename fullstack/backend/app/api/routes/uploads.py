@@ -145,7 +145,7 @@ def upload_files(
     return out
 
 
-@router.post("/is_uploading", response_model=bool)
+@router.get("/is_uploading", response_model=bool)
 def is_uploading(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),

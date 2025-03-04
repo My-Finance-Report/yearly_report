@@ -12,7 +12,7 @@ import {
   SelectRoot,
   createListCollection,
 } from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm, Controller } from "react-hook-form";
 
 import {
@@ -27,26 +27,30 @@ import {
 } from "@/components/ui/dialog";
 import {
   type ApiError,
+  CategoryOut,
   TransactionEdit,
   TransactionOut,
   TransactionsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import { handleError } from "../../utils";
+import { Blah } from "./SankeyConfig"; //TODO stop importing this
 
 interface EditTransactionProps {
   transaction: TransactionOut;
   isOpen: boolean;
   onClose: () => void;
 }
-const categories = {
-  items: [
-    { label: "Groceries", value: "Groceries" },
-    { label: "Utilities", value: "Utilities" },
-    { label: "Rent", value: "Rent" },
-    { label: "Entertainment", value: "Entertainment" },
-  ],
-};
+
+
+
+function rawCategoiesToSelectItems(categories: CategoryOut[]): { items: Blah[] } {
+  const blahs = categories.map((category) => ({
+    label: category.name,
+    value: category.id,
+  }));
+  return { items: blahs };
+}
 
 const EditTransaction = ({
   transaction,
@@ -62,6 +66,7 @@ const EditTransaction = ({
     reset,
     control,
     getValues,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<TransactionEdit>({
     mode: "onBlur",
@@ -69,14 +74,26 @@ const EditTransaction = ({
     defaultValues: {
       ...transaction,
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
+      category_id: transaction.category_id,
     },
   });
 
+
+  const {data, isLoading} = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => TransactionsService.listCategories({transactionId: transaction.id}),
+  })
+
+  const categories = rawCategoiesToSelectItems(data ?? [])
+
+
   const mutation = useMutation({
-    mutationFn: (data: TransactionEdit) =>
-      TransactionsService.updateTransaction({
+    mutationFn: (data: TransactionEdit) => {
+      console.log(data)
+      return TransactionsService.updateTransaction({
         requestBody: data,
-      }),
+      })
+    },
     onSuccess: () => {
       showToast("Success!", "Transaction updated successfully.", "success");
       onClose();
@@ -98,7 +115,6 @@ const EditTransaction = ({
     onClose();
   };
 
-  console.log("errors", errors);
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -176,7 +192,7 @@ const EditTransaction = ({
                     id="category_id"
                     placeholder="Select a category"
                     collection={createListCollection(categories)}
-                    onValueChange={(val) => onChange(Number(val))}
+                    onValueChange={(val) => { onChange(val.value[0])}}
                   >
                     <SelectTrigger>
                       <SelectValueText placeholder="Select a category" />
@@ -192,7 +208,6 @@ const EditTransaction = ({
                 );
               }}
             />
-
             {errors.category_id && (
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
