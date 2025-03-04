@@ -1,6 +1,6 @@
 import enum
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import NewType
 
 from sqlalchemy import (
@@ -272,9 +272,7 @@ class Budget(Base):
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "active", name="uq_budget"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "active", name="uq_budget"),)
 
 
 class BudgetEntry(Base):
@@ -288,6 +286,7 @@ class BudgetEntry(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
 
+
 class BudgetCategoryLink(Base):
     __tablename__ = "budget_category_link"
 
@@ -295,7 +294,7 @@ class BudgetCategoryLink(Base):
         Integer, primary_key=True, autoincrement=True
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
-    budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
+    budget_entry_id: Mapped[BudgetEntryId] = mapped_column(ForeignKey("budget_entry.id"), nullable=False)
     category_id: Mapped[CategoryId] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
