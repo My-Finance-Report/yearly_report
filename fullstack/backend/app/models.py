@@ -1,4 +1,5 @@
 import enum
+from decimal import Decimal
 from datetime import datetime, timezone
 from typing import NewType
 
@@ -8,6 +9,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -50,6 +52,9 @@ UploadConfigurationId = NewType("UploadConfigurationId", int)
 ProcessFileJobId = NewType("ProcessFileJobId", int)
 UploadedPdfId = NewType("UploadedPdfId", int)
 ColChartConfigId = NewType("ColChartConfigId", int)
+BudgetId = NewType("BudgetId", int)
+BudgetCategoryLinkId = NewType("BudgetCategoryLinkId", int)
+BudgetEntryId = NewType("BudgetEntryId", int)
 
 
 class User(Base):
@@ -257,3 +262,40 @@ class ProcessFileJob(Base):
     kind: Mapped[JobKind] = mapped_column(Enum(JobKind), nullable=False)
 
     __table_args__ = (UniqueConstraint("pdf_id", name="uq_process_file_job"),)
+
+
+class Budget(Base):
+    __tablename__ = "budget"
+
+    id: Mapped[BudgetId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "active", name="uq_budget"),
+    )
+
+
+class BudgetEntry(Base):
+    __tablename__ = "budget_entry"
+
+    id: Mapped[BudgetEntryId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
+    budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
+
+class BudgetCategoryLink(Base):
+    __tablename__ = "budget_category_link"
+
+    id: Mapped[BudgetCategoryLinkId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
+    category_id: Mapped[CategoryId] = mapped_column(
+        ForeignKey("category.id"), nullable=False
+    )
