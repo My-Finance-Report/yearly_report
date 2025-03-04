@@ -196,7 +196,7 @@ class BudgetEntryOut(BudgetEntryBase):
     category_links: list[BudgetCategoryLinkOut]
 
 
-class BaseBudget(BaseModel):
+class BudgetBase(BaseModel):
     user_id: UserId
     name: str
     active: bool = True
@@ -205,7 +205,7 @@ class BaseBudget(BaseModel):
         orm_mode = True
 
 
-class BudgetOut(BaseBudget):
+class BudgetOut(BudgetBase):
     id: int
     entries: list[BudgetEntryOut]
 

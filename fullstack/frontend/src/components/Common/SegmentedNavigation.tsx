@@ -7,6 +7,7 @@ import {
   FiHome,
   FiList,
   FiSettings,
+  FiDollarSign,
   FiUsers,
 } from "react-icons/fi";
 
@@ -16,6 +17,7 @@ const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
   { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
   { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
+  { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
 
