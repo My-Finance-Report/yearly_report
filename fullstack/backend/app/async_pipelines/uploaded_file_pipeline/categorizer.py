@@ -45,6 +45,23 @@ class TransactionsCoerceType:
 
     transactions: list[CategorizedTransaction]
 
+def update_filejob_with_nickname(in_process: InProcessFile) -> InProcessFile:
+    assert in_process.transaction_source, "must have"
+    assert in_process.transactions, "must have"
+
+    dates = [
+        t.partialTransactionDateOfTransaction
+        for t in in_process.transactions.transactions
+    ]
+
+    start_date = min(dates)
+    end_date = max(dates)
+    nickname = f"{in_process.transaction_source.name}-{start_date}-{end_date}"
+    in_process.file.nickname = nickname
+    in_process.session.add(in_process.file)
+    return in_process
+
+
 
 def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
     assert process.transactions, "didnt find transactions"

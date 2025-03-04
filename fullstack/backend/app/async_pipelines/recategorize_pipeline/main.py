@@ -3,6 +3,7 @@ from dataclasses import replace
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
     insert_categorized_transactions,
+    update_filejob_with_nickname,
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessFile,
@@ -92,5 +93,6 @@ def recategorize_pipeline(in_process: InProcessFile) -> None:
         apply_existing_transactions,
         archive_transactions_if_necessary,
         categorize_extracted_transactions,
+        update_filejob_with_nickname,
         final=insert_categorized_transactions,
     )

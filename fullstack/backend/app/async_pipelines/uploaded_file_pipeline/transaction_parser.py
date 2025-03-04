@@ -93,7 +93,6 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
         reg_lookup = {u.id: u.filename_regex.lower() for u in query}
         lookup = {u.id: u for u in query}
 
-
         raw_content = f"{process.file.filename} {process.file.raw_content}".lower()
         for id, filename_regex in reg_lookup.items():
             if filename_regex in raw_content:
@@ -101,7 +100,6 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
 
     if not config:
         config = create_configurations(process)
-
 
     assert config, "Should have generated a config by now"
 
