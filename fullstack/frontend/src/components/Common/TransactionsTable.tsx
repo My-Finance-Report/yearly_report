@@ -216,8 +216,8 @@ function TransactionRow({ transaction }: { transaction: TransactionOut }) {
         {new Date(transaction.date_of_transaction).toLocaleDateString()}
       </TableCell>
       <TableCell>{formatAmount(transaction.amount)}</TableCell>
-      <TableCell>{transaction.kind}</TableCell>
-      <TableCell><Button onClick={editTransactionModal.onOpen}><FiEdit /></Button></TableCell>
+      <TableCell>{'withdrawal' === transaction.kind ? 'Expense' : 'Deposit'}</TableCell>
+      <TableCell><Button onClick={editTransactionModal.onOpen} size="sm" variant="outline"><FiEdit size="8px" /></Button></TableCell>
       <EditTransaction transaction={transaction} isOpen={editTransactionModal.open} onClose={editTransactionModal.onClose} />
     </TableRow>
     

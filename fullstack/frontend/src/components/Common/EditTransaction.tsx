@@ -30,6 +30,7 @@ import {
   type ApiError,
   CategoryOut,
   TransactionEdit,
+  TransactionKind,
   TransactionOut,
   TransactionsService,
 } from "../../client";
@@ -53,6 +54,20 @@ function rawCategoiesToSelectItems(categories: CategoryOut[]): { items: Blah[] }
   return { items: blahs };
 }
 
+const kinds: { items: { label: string; value: TransactionKind }[] } = {
+  items: [
+  {
+    label: "Expense",
+    value: 'withdrawal',
+  },
+  {
+    label: "Deposit",
+    value: 'deposit',
+  }
+]
+}
+
+
 const EditTransaction = ({
   transaction,
   isOpen,
@@ -60,6 +75,7 @@ const EditTransaction = ({
 }: EditTransactionProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
+
 
   const {
     register,
@@ -73,7 +89,6 @@ const EditTransaction = ({
     defaultValues: {
       ...transaction,
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
-      category_id: transaction.category_id,
     },
   });
 
@@ -162,6 +177,41 @@ const EditTransaction = ({
             )}
           </FieldRoot>
 
+          <FieldRoot invalid={!!errors.kind} required mt={4}>
+            <FieldLabel htmlFor="kind">Kind</FieldLabel>
+            <Controller
+              control={control}
+              name="kind"
+              render={({ field }) => {
+                const { onChange, value } = field;
+                return (
+                  <SelectRoot
+                    id="kind"
+                    placeholder="Withdrawal / Deposit"
+                    defaultValue={[kinds.items.find((kind) => kind.value === transaction.kind)!.value]}
+                    collection={createListCollection(kinds)}
+                    onValueChange={(val) => { onChange(val.value[0])}}
+                  >
+                    <SelectTrigger>
+                      <SelectValueText placeholder="Select a kind" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {kinds.items.map((kind) => (
+                        <SelectItem key={kind.value} item={kind}>
+                          {kind.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </SelectRoot>
+                );
+              }}
+            />
+            {errors.category_id && (
+              <FieldErrorText>{errors.category_id.message}</FieldErrorText>
+            )}
+          </FieldRoot>
+
+
           <FieldRoot mt={4} invalid={!!errors.amount}>
             <FieldLabel htmlFor="amount">Amount</FieldLabel>
             <Input
@@ -212,21 +262,21 @@ const EditTransaction = ({
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
           </FieldRoot>
+
         </DialogBody>
 
         <DialogFooter gap={3}>
           <HStack>
+<Button variant="outline" onClick={onCancel} title="Cancel">
+            Cancel
+            </Button>
           <Button
-            variant="outline"
             type="submit"
             loading={isSubmitting}
-            disabled={!isDirty}
           >
             Save
           </Button>
-            <Button onClick={onCancel} title="Cancel">
-            Cancel
-            </Button>
+            
 </HStack>
         </DialogFooter>
       </DialogContent>
