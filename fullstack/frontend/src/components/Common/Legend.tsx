@@ -21,8 +21,11 @@ export function Legend({
     toShowNames?.includes(name),
   )
 
+  const showColors = false
+
   return (
-    <div className="w-[300px]" style={{ position: "sticky", top: 80 }}>
+    <div className="w-[200px]" style={{ position: "sticky", top: 80 }}>
+      {showColors && (
       <div style={{ paddingTop: "10px" }}>
         <BoxWithText text="Legend" isCollapsable={false}>
           <Flex margin={3} gap={3} direction="column">
@@ -34,6 +37,7 @@ export function Legend({
           </Flex>
         </BoxWithText>
       </div>
+      )}
       {collapsedItems.length > 0 && (
         <div style={{ paddingTop: "20px" }}>
           <BoxWithText
