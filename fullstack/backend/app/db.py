@@ -21,9 +21,6 @@ load_dotenv()
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
-print("\n\n\n\n")
-print(DATABASE_URL)
-
 engine = create_engine(DATABASE_URL, echo=True)
 
 session_maker = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -92,7 +89,6 @@ def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, No
     statement = f"SET app.current_user_id = {user.id}"
     db.execute(text(statement))
     db.commit()
-
 
     try:
         yield db

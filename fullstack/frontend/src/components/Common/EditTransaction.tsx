@@ -11,6 +11,7 @@ import {
   SelectValueText,
   SelectRoot,
   createListCollection,
+  HStack,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm, Controller } from "react-hook-form";
@@ -65,8 +66,6 @@ const EditTransaction = ({
     handleSubmit,
     reset,
     control,
-    getValues,
-    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<TransactionEdit>({
     mode: "onBlur",
@@ -89,7 +88,6 @@ const EditTransaction = ({
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {
-      console.log(data)
       return TransactionsService.updateTransaction({
         requestBody: data,
       })
@@ -102,7 +100,7 @@ const EditTransaction = ({
       handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["aggregatedTransactions"] });
     },
   });
 
@@ -145,21 +143,6 @@ const EditTransaction = ({
             )}
           </FieldRoot>
 
-          <FieldRoot mt={4} invalid={!!errors.amount}>
-            <FieldLabel htmlFor="amount">Amount</FieldLabel>
-            <Input
-              id="amount"
-              {...register("amount", {
-                required: "Amount is required",
-              })}
-              placeholder="Amount"
-              type="number"
-            />
-            {errors.amount && (
-              <FieldErrorText>{errors.amount.message}</FieldErrorText>
-            )}
-          </FieldRoot>
-
           <FieldRoot mt={4} invalid={!!errors.date_of_transaction}>
             <FieldLabel htmlFor="date_of_transaction">
               Date of Transaction
@@ -179,6 +162,21 @@ const EditTransaction = ({
             )}
           </FieldRoot>
 
+          <FieldRoot mt={4} invalid={!!errors.amount}>
+            <FieldLabel htmlFor="amount">Amount</FieldLabel>
+            <Input
+              id="amount"
+              {...register("amount", {
+                required: "Amount is required",
+              })}
+              placeholder="Amount"
+              type="number"
+            />
+            {errors.amount && (
+              <FieldErrorText>{errors.amount.message}</FieldErrorText>
+            )}
+          </FieldRoot>
+
           <FieldRoot mt={4} invalid={!!errors.category_id}>
             <FieldLabel htmlFor="category_id">Category</FieldLabel>
 
@@ -191,6 +189,8 @@ const EditTransaction = ({
                   <SelectRoot
                     id="category_id"
                     placeholder="Select a category"
+                    // @ts-ignore this works and saves a bunch of casts between numbers and string
+                    value={[categories.items.find((cat) => cat.value === transaction.category_id)!.value]}
                     collection={createListCollection(categories)}
                     onValueChange={(val) => { onChange(val.value[0])}}
                   >
@@ -215,6 +215,7 @@ const EditTransaction = ({
         </DialogBody>
 
         <DialogFooter gap={3}>
+          <HStack>
           <Button
             variant="outline"
             type="submit"
@@ -223,9 +224,10 @@ const EditTransaction = ({
           >
             Save
           </Button>
-          <DialogCloseTrigger asChild>
-            <Button onClick={onCancel}>Cancel</Button>
-          </DialogCloseTrigger>
+            <Button onClick={onCancel} title="Cancel">
+            Cancel
+            </Button>
+</HStack>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>

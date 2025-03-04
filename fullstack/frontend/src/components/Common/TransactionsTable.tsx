@@ -104,7 +104,6 @@ function renderGroups({
     const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
     const specificAmount = showWithdrawals ? group.total_withdrawals : group.total_deposits
 
-    console.log(showWithdrawals, specificAmount, totalAmount)
 
     const { getColorForName } = useColorPalette()
 

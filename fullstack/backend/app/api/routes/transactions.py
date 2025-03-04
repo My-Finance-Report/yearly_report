@@ -4,7 +4,6 @@ from itertools import groupby
 from typing import cast
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import text
 
 from app.db import (
     Session,
@@ -212,7 +211,6 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-
     transactions = (
         session.query(Transaction).filter(Transaction.user_id == user.id).all()
     )
@@ -292,13 +290,12 @@ def update_transaction(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> Transaction:
-
     transaction_db = (
         session.query(Transaction)
         .filter(Transaction.id == transaction.id, Transaction.user_id == user.id)
         .one()
     )
-    
+
     transaction_db.amount = transaction.amount
     transaction_db.description = transaction.description
     transaction_db.date_of_transaction = transaction.date_of_transaction
@@ -307,6 +304,7 @@ def update_transaction(
 
     session.commit()
     return transaction_db
+
 
 @router.get(
     "list_categories/{transaction_id}",
@@ -317,12 +315,18 @@ def list_categories(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> list[Category]:
-
     transaction_db = (
         session.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == user.id)
         .one()
     )
-    categories = session.query(Category).filter(Category.user_id == user.id, Category.source_id == transaction_db.transaction_source_id).all()
+    categories = (
+        session.query(Category)
+        .filter(
+            Category.user_id == user.id,
+            Category.source_id == transaction_db.transaction_source_id,
+        )
+        .all()
+    )
 
     return categories
