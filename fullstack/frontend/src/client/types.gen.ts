@@ -48,19 +48,22 @@ export type BudgetCategoryLinkOut = {
     id: number;
 };
 
+export type BudgetCreate = {
+    name: string;
+};
+
 export type BudgetEntryBase = {
     amount: number;
-    user_id: number;
     name: string;
     budget_id: number;
 };
 
 export type BudgetEntryOut = {
     amount: number;
-    user_id: number;
     name: string;
     budget_id: number;
     id: number;
+    user_id: number;
     category_links: Array<BudgetCategoryLinkOut>;
 };
 
@@ -340,10 +343,10 @@ export type AccountsDeleteCategoryData = {
 
 export type AccountsDeleteCategoryResponse = (unknown);
 
-export type BudgetsGetBudgetsResponse = (Array<BudgetOut>);
+export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
 export type BudgetsCreateBudgetData = {
-    requestBody: BudgetBase;
+    requestBody: BudgetCreate;
 };
 
 export type BudgetsCreateBudgetResponse = (BudgetOut);

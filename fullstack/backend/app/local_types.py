@@ -3,7 +3,16 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-from app.models import BudgetCategoryLinkId, BudgetEntryId, BudgetId, CategoryId, JobStatus, SourceKind, TransactionKind, UserId
+from app.models import (
+    BudgetCategoryLinkId,
+    BudgetEntryId,
+    BudgetId,
+    CategoryId,
+    JobStatus,
+    SourceKind,
+    TransactionKind,
+    UserId,
+)
 
 
 class Token(BaseModel):
@@ -183,16 +192,21 @@ class BudgetCategoryLinkBase(BaseModel):
 class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
     id: BudgetCategoryLinkId
 
+class BudgetEntryCreate(BaseModel):
+    amount: float
+    name: str
+
+
 
 class BudgetEntryBase(BaseModel):
     amount: float
-    user_id: UserId
     name: str
     budget_id: BudgetId
 
 
 class BudgetEntryOut(BudgetEntryBase):
     id: BudgetEntryId
+    user_id: UserId
     category_links: list[BudgetCategoryLinkOut]
 
 
@@ -205,9 +219,13 @@ class BudgetBase(BaseModel):
         orm_mode = True
 
 
+class BudgetCreate(BaseModel):
+    name: str
+
 class BudgetOut(BudgetBase):
     id: int
     entries: list[BudgetEntryOut]
+
 
 class ProcessFileJobBase(BaseModel):
     created_at: datetime
@@ -350,5 +368,3 @@ class SankeyConfigInfo(BaseModel):
 class SankeyConfigCreatePayload(BaseModel):
     inputs: list[SankeyInputCreate]
     links: list[SankeyLinkageCreate]
-
-

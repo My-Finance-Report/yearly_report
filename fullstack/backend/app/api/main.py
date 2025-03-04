@@ -3,13 +3,13 @@ from fastapi import APIRouter
 from app.api.routes import (
     login,
     manage_accounts,
+    manage_budgets,
     private,
     sankey,
     transactions,
     uploads,
     users,
     utils,
-    manage_budgets,
 )
 from app.core.config import settings
 

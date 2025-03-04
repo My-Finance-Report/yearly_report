@@ -1,36 +1,34 @@
-import  { BudgetsService } from "@/client"
-import { CategoriesManager } from "@/components/Common/CategoriesManager"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { BudgetsService } from "@/client";
+import { isLoggedIn } from "@/hooks/useAuth";
 import {
   Container,
+  Box,
+  Text,
+  Button,
   Flex,
   Heading,
-  Spinner,
-  Tabs,
-  VStack,
-  useTabs,
-} from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+  Input,
+  HStack,
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { ManageBudget } from "@/components/Common/BudgetManager";
 
 export const Route = createFileRoute("/_layout/budget")({
   component: ManageBudgets,
-})
+});
 
 function ManageBudgets() {
   const {
-    data: budgets,
+    data: budget,
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["budgets"],
-    queryFn: BudgetsService.getBudgets,
+    queryFn: BudgetsService.getBudget,
     enabled: isLoggedIn(),
-  })
-
-  const tabs = useTabs({
-    defaultValue: "0",
-  })
+  });
 
   if (isError) {
     return (
@@ -39,34 +37,60 @@ function ManageBudgets() {
           Failed to Load Budgets
         </Heading>
       </Container>
-    )
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Container maxW="full">
+        <Heading size="lg" textAlign="center" py={12}>
+          Loading...
+        </Heading>
+      </Container>
+    );
   }
 
   return (
     <Container mt={24} maxW="large">
-      {isLoading ? (
-        <Spinner size="lg" />
+      {budget ? (
+        <ManageBudget budget={budget} />
       ) : (
-        <Tabs.RootProvider variant="enclosed" value={tabs}>
-          <Flex justifyContent="center">
-            <Tabs.List>
-              {budgets?.map((budget, index) => (
-                <Tabs.Trigger key={budget.id} value={index.toString()}>
-                  {budget.name}
-                </Tabs.Trigger>
-              ))}
-            </Tabs.List>
-          </Flex>
-
-          {budgets?.map((budget, index) => (
-            <Tabs.Content key={budget.id} value={index.toString()}>
-              <VStack spaceX={6}>
-                <CategoriesManager accountId={budget.id} />
-              </VStack>
-            </Tabs.Content>
-          ))}
-        </Tabs.RootProvider>
+        <Flex justifyContent="center">
+          <CreateNewBudget />
+        </Flex>
       )}
     </Container>
-  )
+  );
+}
+
+function CreateNewBudget() {
+  const queryClient = useQueryClient();
+  const [budgetName, setBudgetName] = useState<string>("My Budget");
+
+  const addBudgetMutation = useMutation({
+    mutationFn: () =>
+      BudgetsService.createBudget({
+        requestBody: { name: budgetName },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      setBudgetName("");
+    },
+  });
+
+  return (
+    <Box>
+      <Text>You don't have a budget yet.</Text>
+      <HStack mt={4}>
+        <Input
+          maxWidth="md"
+          value={budgetName}
+          onChange={(e) => setBudgetName(e.target.value)}
+        ></Input>
+        <Button size="sm" onClick={() => addBudgetMutation.mutate()}>
+          Create Budget
+        </Button>
+      </HStack>
+    </Box>
+  );
 }

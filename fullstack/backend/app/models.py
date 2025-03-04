@@ -294,7 +294,9 @@ class BudgetCategoryLink(Base):
         Integer, primary_key=True, autoincrement=True
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
-    budget_entry_id: Mapped[BudgetEntryId] = mapped_column(ForeignKey("budget_entry.id"), nullable=False)
+    budget_entry_id: Mapped[BudgetEntryId] = mapped_column(
+        ForeignKey("budget_entry.id"), nullable=False
+    )
     category_id: Mapped[CategoryId] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
