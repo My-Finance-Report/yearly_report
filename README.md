@@ -28,18 +28,20 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback
 
--> way to remove file
--> give a file a nick name when we process
+-> something still feels off with RLS
+-> way to view all of the credit cards
+--> redo filter group component
+-> budgeting feature
+--> need to figure out how it works with categories
+--> should a category be 1:1 with a transaction source or 1:m?
 -> general bug around uploading file twice
+-> give a file a nick name when we process
+-> needs to have nav bar on login page
+-> Expense should line up in the table
+-> add more colors
 -> expect to have transactioons for january but don't
--> need to be able to edit
 -> filter out from year start
-
-
-
-
--> unable to delete a file and transactions
-- show error messages on login screens
+-> show error messages on login screens
 -> no bounce after create account
 - manually add transactions
 - demo account -- exists but not useable yet
@@ -48,5 +50,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 - privacy policy
 - terms of service
 - contact me page
+
 
 

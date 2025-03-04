@@ -41,10 +41,11 @@ def enqueue_or_reset_job(
         .one_or_none()
     )
 
+
     job: ProcessFileJob
     if existing_job:
         existing_job.status = JobStatus.pending
-        existing_job.kind = job_kind
+        existing_job.kind = job_kind if existing_job.status == JobStatus.completed else JobKind.full_upload
         existing_job.attempt_count = 0
         session.add(existing_job)
         session.commit()

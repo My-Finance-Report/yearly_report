@@ -93,6 +93,7 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
         reg_lookup = {u.id: u.filename_regex.lower() for u in query}
         lookup = {u.id: u for u in query}
 
+
         raw_content = f"{process.file.filename} {process.file.raw_content}".lower()
         for id, filename_regex in reg_lookup.items():
             if filename_regex in raw_content:
@@ -100,6 +101,7 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
 
     if not config:
         config = create_configurations(process)
+
 
     assert config, "Should have generated a config by now"
 
@@ -142,19 +144,15 @@ def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
 
 def request_llm_parse_of_transactions(process: InProcessFile) -> InProcessFile:
     """Request AI to parse transactions from the extracted text."""
-    print("getting into llm parse")
     if process.config is None:
         raise ValueError(
             "Upload configuration is required before parsing transactions."
         )
 
-    print("before prompt")
     prompt = generate_transactions_prompt(process)
-    print(prompt)
 
     parsed_transactions = make_chat_request(
         TransactionsWrapper, [ChatMessage(role="user", content=prompt)]
     )
-    print("made chat request")
 
     return replace(process, transactions=parsed_transactions)

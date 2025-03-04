@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.exc import PendingRollbackError
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
@@ -16,7 +17,7 @@ from ..async_pipelines.recategorize_pipeline.main import recategorize_pipeline
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.environ.get("WORKER_DATABASE_URL", "postgresql://persistent_user:persistent_pass@finance_app-db-1:5432/persistent_db")
 engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
@@ -95,7 +96,7 @@ def try_job(session: Session, job: ProcessFileJob) -> bool:
     try:
         run_job(session, job)
         return True
-    except Exception as e:
+    except (Exception, PendingRollbackError) as e:
         error_message = f"{job.error_messages or ''}\n{e}"
         job.error_messages = error_message.strip()
         session.add(job)

@@ -26,7 +26,6 @@ engine = create_engine(DATABASE_URL, echo=True)
 session_maker = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 type Session = orm.Session
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"

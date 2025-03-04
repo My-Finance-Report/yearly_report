@@ -168,10 +168,20 @@ def create_configurations(process: InProcessFile) -> UploadConfiguration:
 
     transaction_source = save_account_config(session, user, account_config)
 
-    upload_config = generate_upload_configuration(
-        session, user, transaction_source, pdf_content
-    )
-    if not upload_config:
-        raise ValueError("Failed to extract upload configuration.")
+    existing_config_with_bad_keywords = session.query(UploadConfiguration).filter(
+        UploadConfiguration.user_id == user.id,
+        UploadConfiguration.transaction_source_id == transaction_source.id,
+    ).one_or_none()
+
+    upload_config: UploadConfiguration | None = None
+    if existing_config_with_bad_keywords:
+        print(f"**** existing config id {existing_config_with_bad_keywords.id} found with bad keywords**** ")
+        upload_config = existing_config_with_bad_keywords
+    else:
+        upload_config = generate_upload_configuration(
+            session, user, transaction_source, pdf_content
+        )
+        if not upload_config:
+            raise ValueError("Failed to extract upload configuration.")
 
     return upload_config

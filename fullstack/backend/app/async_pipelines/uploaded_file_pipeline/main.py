@@ -22,6 +22,18 @@ def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
 
     return in_process
 
+def update_filejob_with_nickname(in_process: InProcessFile) -> InProcessFile:           
+    assert in_process.transaction_source, "must have"
+    assert in_process.transactions, "must have"
+
+    dates = [t.partialTransactionDateOfTransaction for t in in_process.transactions.transactions]
+
+    start_date = min(dates)
+    end_date = max(dates)
+    nickname = f'{in_process.transaction_source.name}-{start_date}-{end_date}'
+    in_process.file.nickname = nickname
+    in_process.session.add(in_process.file)
+    return in_process
 
 def uploaded_file_pipeline(in_process: InProcessFile) -> None:
     pipe(
@@ -31,5 +43,6 @@ def uploaded_file_pipeline(in_process: InProcessFile) -> None:
         archive_transactions_if_necessary,
         request_llm_parse_of_transactions,
         categorize_extracted_transactions,
+        update_filejob_with_nickname,
         final=insert_categorized_transactions,
     )
