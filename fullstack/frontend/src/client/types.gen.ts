@@ -31,6 +31,47 @@ export type Body_uploads_upload_files = {
     files: Array<((Blob | File))>;
 };
 
+export type BudgetBase = {
+    user_id: number;
+    name: string;
+    active?: boolean;
+};
+
+export type BudgetCategoryLinkBase = {
+    budget_id: number;
+    category_id: number;
+};
+
+export type BudgetCategoryLinkOut = {
+    budget_id: number;
+    category_id: number;
+    id: number;
+};
+
+export type BudgetEntryBase = {
+    amount: number;
+    user_id: number;
+    name: string;
+    budget_id: number;
+};
+
+export type BudgetEntryOut = {
+    amount: number;
+    user_id: number;
+    name: string;
+    budget_id: number;
+    id: number;
+    category_links: Array<BudgetCategoryLinkOut>;
+};
+
+export type BudgetOut = {
+    user_id: number;
+    name: string;
+    active?: boolean;
+    id: number;
+    entries: Array<BudgetEntryOut>;
+};
+
 export type CategoryBase = {
     name: string;
     source_id: number;
@@ -298,6 +339,79 @@ export type AccountsDeleteCategoryData = {
 };
 
 export type AccountsDeleteCategoryResponse = (unknown);
+
+export type BudgetsGetBudgetsResponse = (Array<BudgetOut>);
+
+export type BudgetsCreateBudgetData = {
+    requestBody: BudgetBase;
+};
+
+export type BudgetsCreateBudgetResponse = (BudgetOut);
+
+export type BudgetsUpdateBudgetData = {
+    budgetId: number;
+    requestBody: BudgetBase;
+};
+
+export type BudgetsUpdateBudgetResponse = (BudgetOut);
+
+export type BudgetsDeleteBudgetData = {
+    budgetId: number;
+};
+
+export type BudgetsDeleteBudgetResponse = (unknown);
+
+export type BudgetsGetBudgetEntriesData = {
+    budgetId: number;
+};
+
+export type BudgetsGetBudgetEntriesResponse = (Array<BudgetEntryOut>);
+
+export type BudgetsCreateBudgetEntryData = {
+    budgetId: number;
+    requestBody: BudgetEntryBase;
+};
+
+export type BudgetsCreateBudgetEntryResponse = (BudgetEntryOut);
+
+export type BudgetsUpdateBudgetEntryData = {
+    entryId: number;
+    requestBody: BudgetEntryBase;
+};
+
+export type BudgetsUpdateBudgetEntryResponse = (BudgetEntryOut);
+
+export type BudgetsDeleteBudgetEntryData = {
+    entryId: number;
+};
+
+export type BudgetsDeleteBudgetEntryResponse = (unknown);
+
+export type BudgetsGetBudgetCategoriesData = {
+    budgetEntryId: number;
+};
+
+export type BudgetsGetBudgetCategoriesResponse = (Array<BudgetCategoryLinkOut>);
+
+export type BudgetsCreateBudgetCategoryData = {
+    budgetEntryId: number;
+    requestBody: BudgetCategoryLinkBase;
+};
+
+export type BudgetsCreateBudgetCategoryResponse = (BudgetCategoryLinkOut);
+
+export type BudgetsUpdateBudgetCategoryData = {
+    categoryLinkId: number;
+    requestBody: BudgetCategoryLinkBase;
+};
+
+export type BudgetsUpdateBudgetCategoryResponse = (BudgetCategoryLinkOut);
+
+export type BudgetsDeleteBudgetCategoryData = {
+    categoryLinkId: number;
+};
+
+export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;

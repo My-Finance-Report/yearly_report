@@ -1,4 +1,4 @@
-import { BudgetService } from "@/client"
+import  { BudgetsService } from "@/client"
 import { CategoriesManager } from "@/components/Common/CategoriesManager"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
@@ -24,7 +24,7 @@ function ManageBudgets() {
     isError,
   } = useQuery({
     queryKey: ["budgets"],
-    queryFn: BudgetService.getBudget,
+    queryFn: BudgetsService.getBudgets,
     enabled: isLoggedIn(),
   })
 

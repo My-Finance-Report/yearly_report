@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, BudgetsGetBudgetsResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -159,6 +159,255 @@ export class AccountsService {
             url: '/api/v1/accounts/categories/{category_id}',
             path: {
                 category_id: data.categoryId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+}
+
+export class BudgetsService {
+    /**
+     * Get Budgets
+     * @returns BudgetOut Successful Response
+     * @throws ApiError
+     */
+    public static getBudgets(): CancelablePromise<BudgetsGetBudgetsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/budgets/'
+        });
+    }
+    
+    /**
+     * Create Budget
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns BudgetOut Successful Response
+     * @throws ApiError
+     */
+    public static createBudget(data: BudgetsCreateBudgetData): CancelablePromise<BudgetsCreateBudgetResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/budgets/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Budget
+     * @param data The data for the request.
+     * @param data.budgetId
+     * @param data.requestBody
+     * @returns BudgetOut Successful Response
+     * @throws ApiError
+     */
+    public static updateBudget(data: BudgetsUpdateBudgetData): CancelablePromise<BudgetsUpdateBudgetResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/budgets/{budget_id}',
+            path: {
+                budget_id: data.budgetId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Budget
+     * @param data The data for the request.
+     * @param data.budgetId
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static deleteBudget(data: BudgetsDeleteBudgetData): CancelablePromise<BudgetsDeleteBudgetResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/budgets/{budget_id}',
+            path: {
+                budget_id: data.budgetId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Budget Entries
+     * @param data The data for the request.
+     * @param data.budgetId
+     * @returns BudgetEntryOut Successful Response
+     * @throws ApiError
+     */
+    public static getBudgetEntries(data: BudgetsGetBudgetEntriesData): CancelablePromise<BudgetsGetBudgetEntriesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/budgets/{budget_id}/entries',
+            path: {
+                budget_id: data.budgetId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Budget Entry
+     * @param data The data for the request.
+     * @param data.budgetId
+     * @param data.requestBody
+     * @returns BudgetEntryOut Successful Response
+     * @throws ApiError
+     */
+    public static createBudgetEntry(data: BudgetsCreateBudgetEntryData): CancelablePromise<BudgetsCreateBudgetEntryResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/budgets/{budget_id}/entries',
+            path: {
+                budget_id: data.budgetId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Budget Entry
+     * @param data The data for the request.
+     * @param data.entryId
+     * @param data.requestBody
+     * @returns BudgetEntryOut Successful Response
+     * @throws ApiError
+     */
+    public static updateBudgetEntry(data: BudgetsUpdateBudgetEntryData): CancelablePromise<BudgetsUpdateBudgetEntryResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/budgets/entry/{entry_id}',
+            path: {
+                entry_id: data.entryId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Budget Entry
+     * @param data The data for the request.
+     * @param data.entryId
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static deleteBudgetEntry(data: BudgetsDeleteBudgetEntryData): CancelablePromise<BudgetsDeleteBudgetEntryResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/budgets/entry/{entry_id}',
+            path: {
+                entry_id: data.entryId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Budget Categories
+     * @param data The data for the request.
+     * @param data.budgetEntryId
+     * @returns BudgetCategoryLinkOut Successful Response
+     * @throws ApiError
+     */
+    public static getBudgetCategories(data: BudgetsGetBudgetCategoriesData): CancelablePromise<BudgetsGetBudgetCategoriesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/budgets/{budget_entry_id}/categories',
+            path: {
+                budget_entry_id: data.budgetEntryId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Budget Category
+     * @param data The data for the request.
+     * @param data.budgetEntryId
+     * @param data.requestBody
+     * @returns BudgetCategoryLinkOut Successful Response
+     * @throws ApiError
+     */
+    public static createBudgetCategory(data: BudgetsCreateBudgetCategoryData): CancelablePromise<BudgetsCreateBudgetCategoryResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/budgets/{budget_entry_id}/categories',
+            path: {
+                budget_entry_id: data.budgetEntryId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Budget Category
+     * @param data The data for the request.
+     * @param data.categoryLinkId
+     * @param data.requestBody
+     * @returns BudgetCategoryLinkOut Successful Response
+     * @throws ApiError
+     */
+    public static updateBudgetCategory(data: BudgetsUpdateBudgetCategoryData): CancelablePromise<BudgetsUpdateBudgetCategoryResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/budgets/categories/{category_link_id}',
+            path: {
+                category_link_id: data.categoryLinkId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Budget Category
+     * @param data The data for the request.
+     * @param data.categoryLinkId
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static deleteBudgetCategory(data: BudgetsDeleteBudgetCategoryData): CancelablePromise<BudgetsDeleteBudgetCategoryResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/budgets/categories/{category_link_id}',
+            path: {
+                category_link_id: data.categoryLinkId
             },
             errors: {
                 422: 'Validation Error'
