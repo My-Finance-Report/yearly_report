@@ -13,7 +13,7 @@ import {
   TableRow,
   useDisclosure,
 } from "@chakra-ui/react"
-import React from "react"
+import React, { useMemo } from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
 import { FiEdit } from "react-icons/fi"
@@ -51,7 +51,7 @@ export function TransactionsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {renderGroups({
+        {MemoizedRenderGroups({
           groups: sourceGroup.groups,
           sourceId: sourceGroup.transaction_source_id,
           totalWidthdrawals: sourceGroup.total_withdrawals,
@@ -73,7 +73,7 @@ export function TransactionsTable({
   )
 }
 
-function renderGroups({
+const MemoizedRenderGroups = React.memo(function RenderGroups({
   groups,
   sourceId,
   pathPrefix,
@@ -84,126 +84,150 @@ function renderGroups({
   totalDeposits,
   showWithdrawals,
 }: {
-  groups: AggregatedGroup[]
-  sourceId: number
-  pathPrefix: string
-  toggleGroup: (sourceId: number, groupKey: string) => void
-  expandedGroups: { [key: string]: boolean }
-  toShowNames?: (string | undefined)[] | undefined
-  totalWidthdrawals?: number
-  showWithdrawals: boolean
-  totalDeposits?: number
+  groups: AggregatedGroup[];
+  sourceId: number;
+  pathPrefix: string;
+  toggleGroup: (sourceId: number, groupKey: string) => void;
+  expandedGroups: { [key: string]: boolean };
+  toShowNames?: (string | undefined)[] | undefined;
+  totalWidthdrawals?: number;
+  showWithdrawals: boolean;
+  totalDeposits?: number;
 }) {
-  return groups.map((group, idx) => {
-    const groupKey = pathPrefix
-      ? `${pathPrefix}-${group.group_id}`
-      : `${group.group_id}`
+  const memoizedGroups = useMemo(() => {
+    return groups.map((group, idx) => {
+      const groupKey = pathPrefix
+        ? `${pathPrefix}-${group.group_id}`
+        : `${group.group_id}`;
 
-    const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
+      const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false;
 
-    const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
-    const specificAmount = showWithdrawals ? group.total_withdrawals : group.total_deposits
+      const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits;
+      const specificAmount = showWithdrawals
+        ? group.total_withdrawals
+        : group.total_deposits;
 
+      const { getColorForName } = useColorPalette();
 
-    const { getColorForName } = useColorPalette()
-
-    return (
-      <React.Fragment key={groupKey}>
-        <TableRow
-          style={{ cursor: "pointer" }}
-          onClick={() => toggleGroup(sourceId, groupKey)}
-        >
-          <TableCell>
-            {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-          </TableCell>
-          <TableCell>
-            <HStack justify={"space-between"}>
-              <HStack>
-              {toShowNames?.includes(group.group_name) && (
-                <Box
-                  width="16px"
-                  borderWidth={1}
-                  padding={3}
-                  height="16px"
-                  borderRadius="50%"
-                  backgroundColor={getColorForName(group.group_name)}
-                />
-              )}
-              {group.group_name}
-            </HStack>
-              {totalAmount &&
-              <PercentageBar amount={specificAmount} total={totalAmount} />
-  }
-            </HStack>
-          </TableCell>
-          <TableCell textAlign="end">{formatAmount(group.total_withdrawals)}</TableCell>
-          <TableCell textAlign="end">{formatAmount(group.total_deposits)}</TableCell>
-          <TableCell textAlign="end">{formatAmount(group.total_balance)}</TableCell>
-        </TableRow>
-
-        <Collapsible.Root open={isExpanded} asChild unmountOnExit>
-          <TableRow>
-            <TableCell colSpan={5} p={0}>
-              <Collapsible.Content>
-                <Box pl={4}>
-                  {group.subgroups && group.subgroups.length > 0 ? (
-                    <Table.Root variant="outline" size="sm">
-                      <TableHeader>
-                        <TableRow>
-                          <TableColumnHeader />
-                          <TableColumnHeader>
-                            {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
-                          </TableColumnHeader>
-                          <TableColumnHeader textAlign="end">
-                            EXPENSE
-                          </TableColumnHeader>
-                          <TableColumnHeader textAlign="end">
-                            DEPOSIT
-                          </TableColumnHeader>
-                          <TableColumnHeader textAlign="end">
-                            TOTAL
-                          </TableColumnHeader>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {renderGroups({
-                          groups: group.subgroups,
-                          sourceId,
-                          pathPrefix: groupKey,
-                          toggleGroup,
-                          expandedGroups,
-                          toShowNames,
-                          showWithdrawals,
-                        })}
-                      </TableBody>
-                    </Table.Root>
-                  ) : (
-                    <Table.Root variant="outline" size="sm">
-                      <TableHeader>
-                        <TableRow>
-                          <TableColumnHeader>DESCRIPTION</TableColumnHeader>
-                          <TableColumnHeader>DATE</TableColumnHeader>
-                          <TableColumnHeader>AMOUNT</TableColumnHeader>
-                          <TableColumnHeader>KIND</TableColumnHeader>
-                          <TableColumnHeader></TableColumnHeader>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {group.transactions?.map((transaction) => (
-                          <TransactionRow transaction={transaction} />
-                        ))}
-                      </TableBody>
-                    </Table.Root>
+      return (
+        <React.Fragment key={groupKey}>
+          <TableRow
+            style={{ cursor: "pointer" }}
+            onClick={() => toggleGroup(sourceId, groupKey)}
+          >
+            <TableCell>
+              {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+            </TableCell>
+            <TableCell>
+              <HStack justify={"space-between"}>
+                <HStack>
+                  {toShowNames?.includes(group.group_name) && (
+                    <Box
+                      width="16px"
+                      borderWidth={1}
+                      padding={3}
+                      height="16px"
+                      borderRadius="50%"
+                      backgroundColor={getColorForName(group.group_name)}
+                    />
                   )}
-                </Box>
-              </Collapsible.Content>
+                  {group.group_name}
+                </HStack>
+                {totalAmount && (
+                  <PercentageBar amount={specificAmount} total={totalAmount} />
+                )}
+              </HStack>
+            </TableCell>
+            <TableCell textAlign="end">
+              {formatAmount(group.total_withdrawals)}
+            </TableCell>
+            <TableCell textAlign="end">
+              {formatAmount(group.total_deposits)}
+            </TableCell>
+            <TableCell textAlign="end">
+              {formatAmount(group.total_balance)}
             </TableCell>
           </TableRow>
-        </Collapsible.Root>
-      </React.Fragment>
-    )
-  })
-}
+
+          <Collapsible.Root open={isExpanded} asChild unmountOnExit>
+            <TableRow>
+              <TableCell colSpan={5} p={0}>
+                <Collapsible.Content>
+                  <Box pl={4}>
+                    {group.subgroups && group.subgroups.length > 0 ? (
+                      <Table.Root variant="outline" size="sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableColumnHeader />
+                            <TableColumnHeader>
+                              {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
+                            </TableColumnHeader>
+                            <TableColumnHeader textAlign="end">
+                              EXPENSE
+                            </TableColumnHeader>
+                            <TableColumnHeader textAlign="end">
+                              DEPOSIT
+                            </TableColumnHeader>
+                            <TableColumnHeader textAlign="end">
+                              TOTAL
+                            </TableColumnHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <MemoizedRenderGroups
+                            groups={group.subgroups}
+                            sourceId={sourceId}
+                            pathPrefix={groupKey}
+                            toggleGroup={toggleGroup}
+                            expandedGroups={expandedGroups}
+                            toShowNames={toShowNames}
+                            showWithdrawals={showWithdrawals}
+                          />
+                        </TableBody>
+                      </Table.Root>
+                    ) : (
+                      <Table.Root variant="outline" size="sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableColumnHeader>DESCRIPTION</TableColumnHeader>
+                            <TableColumnHeader>DATE</TableColumnHeader>
+                            <TableColumnHeader>AMOUNT</TableColumnHeader>
+                            <TableColumnHeader>KIND</TableColumnHeader>
+                            <TableColumnHeader></TableColumnHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.transactions?.map((transaction) => (
+                            <TransactionRow transaction={transaction} />
+                          ))}
+                        </TableBody>
+                      </Table.Root>
+                    )}
+                  </Box>
+                </Collapsible.Content>
+              </TableCell>
+            </TableRow>
+          </Collapsible.Root>
+        </React.Fragment>
+      );
+    });
+  }, [
+    groups,
+    sourceId,
+    pathPrefix,
+    expandedGroups,
+    toggleGroup,
+    toShowNames,
+    totalWidthdrawals,
+    totalDeposits,
+    showWithdrawals,
+  ]);
+
+  return <>{memoizedGroups}</>;
+});
+
+export default MemoizedRenderGroups;
+
 
 function TransactionRow({ transaction }: { transaction: TransactionOut }) {
 
