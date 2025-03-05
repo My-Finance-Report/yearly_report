@@ -25,7 +25,7 @@ COPY ./app /app/app
 RUN chmod +x /app/scripts/prestart.sh
 
 # Run prestart.sh before starting FastAPI
-CMD ["/bin/sh", "-c", "/app/scripts/prestart.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"]
+CMD ["/bin/sh", "-c", "/app/scripts/prestart.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"]
 
 # Command to start FastAPI
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

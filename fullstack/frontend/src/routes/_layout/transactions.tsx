@@ -76,6 +76,18 @@ function Transactions() {
       subgroup?.map((subsubgroup) => subsubgroup.group_name),
     )
 
+  if (isLoading) {
+    return <Spinner />
+  }
+
+  if (error) {
+    return <Text color="red.500">Error loading transactions.</Text>
+  }
+
+  if (data && data.groups.length === 0 && !activeTransactionSource) {
+    return <Spinner />
+  }
+
   return (
     <div
       style={{
@@ -93,13 +105,9 @@ function Transactions() {
         />
       </div>
       <div>
-        {isLoading ? (
-          <Spinner />
-        ) : error ? (
-          <Text color="red.500">Error loading transactions.</Text>
-        ) : data?.groups &&
-          data.groups.length > 0 &&
-          activeTransactionSource ? (
+        { data?.groups &&
+          data.groups.length > 0 && activeTransactionSource  ?
+           (
           <div
             style={{
               flexDirection: "column",

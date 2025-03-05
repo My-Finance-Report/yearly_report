@@ -78,10 +78,10 @@ export function SegmentedNavigation() {
         }}
       />
 
-      {isUploading ? (
+      {currentUser ? (
           <HStack
             position="absolute"
-            onClick={() => navigate({ to: "/upload-files" })}
+            onClick={() => navigate({ to: "/settings" })}
             cursor="pointer"
             right={6}
             spaceX={2}
@@ -97,7 +97,7 @@ export function SegmentedNavigation() {
               backgroundColor="green.300"
             />
             <Text fontSize="sm" color="white">
-              Processing files...
+              {currentUser?.full_name}
             </Text>
           </HStack>
       ) : (

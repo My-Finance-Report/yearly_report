@@ -242,7 +242,7 @@ def get_aggregated_transactions(
 
     overall_withdrawals = 0.0
     overall_deposits = 0.0
-    ts_groups = []  
+    ts_groups = []
 
     transactions.sort(key=lambda t: t.transaction_source_id)
     for ts_id, ts_txns_iter in groupby(
