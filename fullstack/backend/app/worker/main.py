@@ -17,10 +17,8 @@ from ..async_pipelines.recategorize_pipeline.main import recategorize_pipeline
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.environ.get(
-    "WORKER_DATABASE_URL",
-    "postgresql://persistent_user:persistent_pass@finance_app-db-1:5432/persistent_db",
-)
+DATABASE_URL = os.environ["WORKER_DATABASE_URL"]
+
 engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

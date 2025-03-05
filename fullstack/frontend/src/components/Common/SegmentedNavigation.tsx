@@ -26,12 +26,10 @@ export function SegmentedNavigation() {
   const navigate = useNavigate();
   const location = useRouterState().location;
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
-  const { data: isUploading } = useQuery({
-   queryKey: ["isUploading"],
-   queryFn: async () => (await UploadsService.isUploading()),
-  });
 
 
+
+  const isUploading = false
 
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]

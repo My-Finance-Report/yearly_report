@@ -192,10 +192,10 @@ class BudgetCategoryLinkBase(BaseModel):
 class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
     id: BudgetCategoryLinkId
 
+
 class BudgetEntryCreate(BaseModel):
     amount: float
     name: str
-
 
 
 class BudgetEntryBase(BaseModel):
@@ -221,6 +221,7 @@ class BudgetBase(BaseModel):
 
 class BudgetCreate(BaseModel):
     name: str
+
 
 class BudgetOut(BudgetBase):
     id: int

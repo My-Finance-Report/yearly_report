@@ -31,12 +31,16 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> something still feels off with RLS
 https://theshubhendra.medium.com/role-based-row-filtering-advanced-sqlalchemy-techniques-733e6b1328f6
 
+-> home page load is very sluggish
 -> way to view all of the credit cards
 --> redo filter group component
 -> budgeting feature (in progress)
 --> 1:m with categories
 --> need a create a form page to support them
+
 -> general bug around uploading file twice
+ --> still exists
+
 -> needs to have nav bar on login page
 -> Expense should line up in the table
 -> add more colors

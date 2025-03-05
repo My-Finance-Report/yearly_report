@@ -16,6 +16,8 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     env_file:
       - .env.production
+    networks:
+      - default
     command: ["postgres"]
 
   backend:

@@ -28,9 +28,11 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 def get_url():
-    return str(settings.SQLALCHEMY_DATABASE_URI)
+    val=str(DATABASE_URL)
+    return val
 
 
 def run_migrations_offline():

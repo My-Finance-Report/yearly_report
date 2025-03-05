@@ -87,7 +87,6 @@ def get_year_id(key: str) -> str:
     return key
 
 
-# Mapping from GroupByOption to functions
 group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
     GroupByOption.category: get_category_key,
     GroupByOption.month: get_month_key,
@@ -243,9 +242,8 @@ def get_aggregated_transactions(
 
     overall_withdrawals = 0.0
     overall_deposits = 0.0
-    ts_groups = []  # Will hold TransactionSourceGroup objects
+    ts_groups = []  
 
-    # Group transactions by transaction_source_id.
     transactions.sort(key=lambda t: t.transaction_source_id)
     for ts_id, ts_txns_iter in groupby(
         transactions, key=lambda t: t.transaction_source_id

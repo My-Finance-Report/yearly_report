@@ -4,7 +4,6 @@ import tempfile
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy import text
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException
 from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
@@ -151,7 +150,6 @@ def is_uploading(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> bool:
-
     return bool(
         session.query(ProcessFileJob)
         .filter(

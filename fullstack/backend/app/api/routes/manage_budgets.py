@@ -6,13 +6,13 @@ from sqlalchemy.orm import Session
 from app.db import get_current_user, get_db
 from app.local_types import (
     BudgetBase,
-    BudgetCreate,
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
+    BudgetCreate,
     BudgetEntryBase,
+    BudgetEntryCreate,
     BudgetEntryOut,
     BudgetOut,
-    BudgetEntryCreate
 )
 from app.models import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId, User
 
@@ -20,11 +20,7 @@ router = APIRouter(prefix="/budgets", tags=["budgets"])
 
 
 def get_budget_out(session: Session, user: User) -> BudgetOut | None:
-    budget=  (
-        session.query(Budget)
-        .filter(Budget.user_id == user.id)
-        .first()
-    )
+    budget = session.query(Budget).filter(Budget.user_id == user.id).first()
 
     if not budget:
         return None
@@ -38,13 +34,20 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
     entry_ids = [entry.id for entry in entries]
     categories = (
         session.query(BudgetCategoryLink)
-        .filter(BudgetCategoryLink.budget_entry_id.in_(entry_ids), BudgetCategoryLink.user_id == user.id)
+        .filter(
+            BudgetCategoryLink.budget_entry_id.in_(entry_ids),
+            BudgetCategoryLink.user_id == user.id,
+        )
         .all()
     )
 
-    category_by_entry: dict[BudgetEntryId, list[BudgetCategoryLinkOut]] = defaultdict(list)
+    category_by_entry: dict[BudgetEntryId, list[BudgetCategoryLinkOut]] = defaultdict(
+        list
+    )
     for category in categories:
-        category_by_entry[category.budget_entry_id].append(BudgetCategoryLinkOut.model_validate(category.__dict__))
+        category_by_entry[category.budget_entry_id].append(
+            BudgetCategoryLinkOut.model_validate(category.__dict__)
+        )
 
     entries_out = [
         BudgetEntryOut(
@@ -73,12 +76,15 @@ def create_budget(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Budget:
-
-    existing_budget = session.query(Budget).filter(
-        Budget.name == budget.name, Budget.user_id == user.id, Budget.active
-    ).first()
+    existing_budget = (
+        session.query(Budget)
+        .filter(Budget.name == budget.name, Budget.user_id == user.id, Budget.active)
+        .first()
+    )
     if existing_budget:
-        raise HTTPException(status_code=400, detail="Budget with this name already exists.")
+        raise HTTPException(
+            status_code=400, detail="Budget with this name already exists."
+        )
 
     new_budget = Budget(**budget.model_dump(), user_id=user.id, active=True)
     session.add(new_budget)
@@ -179,7 +185,7 @@ def create_budget_entry(
     session.add(new_entry)
     session.commit()
     session.refresh(new_entry)
-    return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links":[]})
+    return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links": []})
 
 
 @router.put("/entry/{entry_id}", response_model=BudgetEntryOut)
