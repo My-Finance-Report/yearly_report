@@ -149,7 +149,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
             </TableCell>
           </TableRow>
 
-          <Collapsible.Root open={isExpanded} asChild unmountOnExit>
+          <Collapsible.Root open={isExpanded} lazyMount asChild>
             <TableRow>
               <TableCell colSpan={5} p={0}>
                 <Collapsible.Content>
