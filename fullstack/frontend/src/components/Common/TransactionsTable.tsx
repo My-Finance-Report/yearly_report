@@ -51,17 +51,17 @@ export function TransactionsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {MemoizedRenderGroups({
-          groups: sourceGroup.groups,
-          sourceId: sourceGroup.transaction_source_id,
-          totalWidthdrawals: sourceGroup.total_withdrawals,
-          totalDeposits: sourceGroup.total_deposits,
-          showWithdrawals,
-          pathPrefix: "",
-          toShowNames,
-          toggleGroup,
-          expandedGroups,
-        })}
+<MemoizedRenderGroups
+  groups={sourceGroup.groups}
+  sourceId={sourceGroup.transaction_source_id}
+  totalWidthdrawals={sourceGroup.total_withdrawals}
+  totalDeposits={sourceGroup.total_deposits}
+  showWithdrawals={showWithdrawals}
+  pathPrefix=""
+  toShowNames={toShowNames}
+  toggleGroup={toggleGroup}
+  expandedGroups={expandedGroups}
+/>
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Source Totals</TableCell>
           <TableCell textAlign="end">{formatAmount(sourceGroup.total_withdrawals)}</TableCell>
