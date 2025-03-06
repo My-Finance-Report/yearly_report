@@ -94,7 +94,9 @@ export type BudgetEntryStatus = {
     id: number;
     name: string;
     budget_id: number;
-    category_links_status: Array<BudgetCategoryLinkStatus>;
+    category_links_status: {
+        [key: string]: BudgetCategoryLinkStatus;
+    };
     total: string;
 };
 

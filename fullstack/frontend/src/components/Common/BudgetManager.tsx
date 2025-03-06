@@ -68,7 +68,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
                 <TableCell>{entry.amount}</TableCell>
                 <TableCell>{entry.total}</TableCell>
                 <TableCell>
-                  {entry.category_links_status?.map((category) => (
+                  {budgetEntryLookup[entry.id].category_links?.map((category) => (
                     <CategoryLink key={category.id} category={category} />
                   ))}
                 </TableCell>
@@ -98,14 +98,16 @@ function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEn
     <TableRoot>
       <TableHeader>
         <TableRow>
+          <TableColumnHeader>Month</TableColumnHeader>
           <TableColumnHeader>Category</TableColumnHeader>
           <TableColumnHeader>Total</TableColumnHeader>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {budgetEntryStatus.category_links_status.map( (link)=>(
+        {Object.entries(budgetEntryStatus.category_links_status).map(([month, link])=>(
           <>
           <TableRow>
+            <TableCell>{month}</TableCell>
             <TableCell>{link.stylized_name}</TableCell>
             <TableCell>{link.total}</TableCell>
           </TableRow>

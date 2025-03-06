@@ -1,8 +1,8 @@
 from collections import defaultdict
 from decimal import Decimal
-
+from sqlalchemy import func
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Query, Session
 
 from app.db import get_current_user, get_db
 from app.local_types import (
@@ -393,6 +393,14 @@ def delete_budget_category(
     session.commit()
     return None
 
+def group_transactions_by_month( transactions: list[Transaction] )-> dict[str, list[Transaction]]:
+    grouped_transactions = defaultdict(list)
+
+    for transaction in transactions:
+        month = transaction.date_of_transaction.strftime("%Y-%m")
+        grouped_transactions[month].append(transaction)
+    
+    return dict(grouped_transactions)
 
 @router.get("/budget_status", response_model=BudgetStatus)
 def get_budget_status(
@@ -403,32 +411,40 @@ def get_budget_status(
     if not budget:
         raise HTTPException(status_code=404, detail="need to have a budget")
 
-    entry_status: list[BudgetEntryStatus] = []
+    entry_statuses = []
     for entry in budget.entries:
-        category_status: list[BudgetCategoryLinkStatus] = []
+        category_status: dict[str, BudgetCategoryLinkStatus] = {}
         running_total: Decimal = Decimal(0)
         for category in entry.category_links:
             transactions = session.query(Transaction).filter(
                 Transaction.category_id == category.category_id
-            )
-            transactions_out = [
-                TransactionOut(**transaction.__dict__)
-                for transaction in transactions
-            ]
-            total = Decimal(sum([t.amount for t in transactions if t.kind == TransactionKind.withdrawal]))
-            running_total += total
-            category_status.append(
-                BudgetCategoryLinkStatus(
+            ).all()
+
+            for month, month_transactions in group_transactions_by_month(transactions).items():
+                transactions_out = [
+                    TransactionOut(**transaction.__dict__)
+                    for transaction in month_transactions
+                ]
+                total = Decimal(
+                    sum(
+                        [
+                            t.amount
+                            for t in transactions_out
+                            if t.kind == TransactionKind.withdrawal
+                        ]
+                    )
+                )
+                running_total += total
+                category_status[month] = BudgetCategoryLinkStatus(
                     budget_entry_id=category.budget_entry_id,
                     id=category.id,
                     stylized_name=category.stylized_name,
                     category_id=category.category_id,
                     transactions=transactions_out,
-                    total=total
+                    total=total,
                 )
-            )
 
-        entry_status.append(
+        entry_statuses.append(
             BudgetEntryStatus(
                 id=entry.id,
                 budget_id=budget.id,
@@ -440,5 +456,5 @@ def get_budget_status(
         )
 
     return BudgetStatus(
-        user_id=user.id, name=budget.name, active=True, entry_status=entry_status
+        user_id=user.id, name=budget.name, active=True, entry_status=entry_statuses
     )

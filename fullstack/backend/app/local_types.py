@@ -248,7 +248,7 @@ class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
 
 
 class BudgetEntryStatus(BudgetEntryBase):
-    category_links_status: list[BudgetCategoryLinkStatus]
+    category_links_status: dict[str,BudgetCategoryLinkStatus]
     total: Decimal
 
 
