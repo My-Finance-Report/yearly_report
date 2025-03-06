@@ -190,9 +190,11 @@ class BudgetCategoryLinkBase(BaseModel):
     budget_entry_id: BudgetEntryId
     category_id: CategoryId
 
+
 class BudgetCategoryLinkCreate(BaseModel):
     entry_id: BudgetEntryId
     category_id: CategoryId
+
 
 class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
     id: BudgetCategoryLinkId
@@ -214,6 +216,7 @@ class BudgetEntryOut(BudgetEntryBase):
     id: BudgetEntryId
     user_id: UserId
     category_links: list[BudgetCategoryLinkOut]
+
 
 class BudgetEntryEdit(BudgetEntryBase):
     id: BudgetEntryId

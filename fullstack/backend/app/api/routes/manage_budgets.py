@@ -10,12 +10,21 @@ from app.local_types import (
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
     BudgetCreate,
-    BudgetEntryEdit,
     BudgetEntryCreate,
+    BudgetEntryEdit,
     BudgetEntryOut,
     BudgetOut,
 )
-from app.models import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId, CategoryId, User, TransactionSource, Category
+from app.models import (
+    Budget,
+    BudgetCategoryLink,
+    BudgetEntry,
+    BudgetEntryId,
+    Category,
+    CategoryId,
+    TransactionSource,
+    User,
+)
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 
@@ -46,11 +55,13 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
         list
     )
 
-    name_lookup = get_stylized_name_lookup(session,user)
+    name_lookup = get_stylized_name_lookup(session, user)
 
     for category in categories:
         category_by_entry[category.budget_entry_id].append(
-            BudgetCategoryLinkOut(**category.__dict__,  stylized_name=name_lookup[category.category_id])
+            BudgetCategoryLinkOut(
+                **category.__dict__, stylized_name=name_lookup[category.category_id]
+            )
         )
 
     entries_out = [
@@ -192,9 +203,18 @@ def create_budget_entry(
     session.refresh(new_entry)
     return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links": []})
 
+
 def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
-    categories = session.query(Category, TransactionSource).join(TransactionSource, TransactionSource.id == Category.source_id).filter(Category.user_id == user.id).all()
-    return {category.id: f"{category.name} ({source.name})" for category, source in categories}
+    categories = (
+        session.query(Category, TransactionSource)
+        .join(TransactionSource, TransactionSource.id == Category.source_id)
+        .filter(Category.user_id == user.id)
+        .all()
+    )
+    return {
+        category.id: f"{category.name} ({source.name})"
+        for category, source in categories
+    }
 
 
 @router.put("/entry/{entry_id}", response_model=BudgetEntryOut)
@@ -216,9 +236,14 @@ def update_budget_entry(
     db_entry.name = entry.name
     db_entry.amount = Decimal(entry.amount)
 
-    session.query(BudgetCategoryLink).filter(BudgetCategoryLink.budget_entry_id == db_entry.id, BudgetCategoryLink.user_id == user.id).delete()
+    session.query(BudgetCategoryLink).filter(
+        BudgetCategoryLink.budget_entry_id == db_entry.id,
+        BudgetCategoryLink.user_id == user.id,
+    ).delete()
     links = [
-        BudgetCategoryLink(budget_entry_id=db_entry.id, user_id=user.id, category_id=entry.category_id)
+        BudgetCategoryLink(
+            budget_entry_id=db_entry.id, user_id=user.id, category_id=entry.category_id
+        )
         for entry in entry.category_links
     ]
 
@@ -227,14 +252,26 @@ def update_budget_entry(
     session.commit()
     session.refresh(db_entry)
 
-
-
     stylized_name_lookup = get_stylized_name_lookup(session, user)
 
+    links_out: list[BudgetCategoryLinkOut] = [
+        BudgetCategoryLinkOut(
+            budget_entry_id=link.budget_entry_id,
+            category_id=link.category_id,
+            id=link.id,
+            stylized_name=stylized_name_lookup[link.category_id],
+        )
+        for link in links
+    ]
 
-    links_out:list[BudgetCategoryLinkOut] = [BudgetCategoryLinkOut(budget_entry_id=link.budget_entry_id, category_id=link.category_id,id=link.id, stylized_name=stylized_name_lookup[link.category_id]) for link in links]
-
-    return BudgetEntryOut(budget_id=db_entry.budget_id, user_id=db_entry.user_id, amount=db_entry.amount, name=db_entry.name, id=db_entry.id, category_links=links_out)
+    return BudgetEntryOut(
+        budget_id=db_entry.budget_id,
+        user_id=db_entry.user_id,
+        amount=db_entry.amount,
+        name=db_entry.name,
+        id=db_entry.id,
+        category_links=links_out,
+    )
 
 
 @router.delete("/entry/{entry_id}", response_model=None)
@@ -263,14 +300,22 @@ def get_budget_categories(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[BudgetCategoryLinkOut]:
-    query =  session.query(BudgetCategoryLink).filter(
-            BudgetCategoryLink.budget_entry_id == budget_entry_id,
-            BudgetCategoryLink.user_id == user.id,
+    query = session.query(BudgetCategoryLink).filter(
+        BudgetCategoryLink.budget_entry_id == budget_entry_id,
+        BudgetCategoryLink.user_id == user.id,
+    )
+
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
+
+    return [
+        BudgetCategoryLinkOut(
+            budget_entry_id=link.budget_entry_id,
+            category_id=link.category_id,
+            id=link.id,
+            stylized_name=stylized_name_lookup[link.category_id],
         )
-
-    stylized_name_lookup = get_stylized_name_lookup(session,user)
-
-    return [BudgetCategoryLinkOut(budget_entry_id=link.budget_entry_id, category_id=link.category_id,id=link.id, stylized_name=stylized_name_lookup[link.category_id]) for link in query.all()]
+        for link in query.all()
+    ]
 
 
 @router.post("/{budget_entry_id}/categories", response_model=BudgetCategoryLinkOut)

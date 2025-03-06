@@ -39,7 +39,7 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
         requestBody: { name: newEntry, amount: amount },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", budget.id] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
       setNewEntry("");
     },
   });
@@ -49,7 +49,7 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
         entryId: entryId,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", budget.id] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
     },
   });
   const updateEntryMutation = useMutation({
@@ -73,9 +73,11 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
         },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", budget.id] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
     },
   });
+
+  console.log(editingEntry)
 
   return (
     <Box>

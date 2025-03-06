@@ -305,9 +305,16 @@ def update_transaction(
 
 
 def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
-    categories = session.query(Category, TransactionSource).join(TransactionSource, TransactionSource.id == Category.source_id).filter(Category.user_id == user.id).all()
-    return {category.id: f"{category.name} ({source.name})" for category, source in categories}
-
+    categories = (
+        session.query(Category, TransactionSource)
+        .join(TransactionSource, TransactionSource.id == Category.source_id)
+        .filter(Category.user_id == user.id)
+        .all()
+    )
+    return {
+        category.id: f"{category.name} ({source.name})"
+        for category, source in categories
+    }
 
 
 @router.get(
@@ -319,12 +326,8 @@ def list_categories(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> list[CategoryOut]:
-
-    categories_query = (
-        session.query(Category)
-        .filter(
-            Category.user_id == user.id,
-        )
+    categories_query = session.query(Category).filter(
+        Category.user_id == user.id,
     )
 
     transaction_db = (
@@ -332,11 +335,16 @@ def list_categories(
         .filter(Transaction.id == transaction_id, Transaction.user_id == user.id)
         .one()
     )
-    categories_query = categories_query.filter(Category.source_id == transaction_db.transaction_source_id)
+    categories_query = categories_query.filter(
+        Category.source_id == transaction_db.transaction_source_id
+    )
 
-    name_lookup = get_stylized_name_lookup(session,user)
+    name_lookup = get_stylized_name_lookup(session, user)
 
-    return [CategoryOut(**category.__dict__, name=name_lookup[category.id]) for category in categories_query.all()]
+    return [
+        CategoryOut(**category.__dict__, name=name_lookup[category.id])
+        for category in categories_query.all()
+    ]
 
 
 @router.get(
@@ -347,14 +355,13 @@ def list_all_categories(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> list[CategoryOut]:
-
-    categories_query = (
-        session.query(Category)
-        .filter(
-            Category.user_id == user.id,
-        )
+    categories_query = session.query(Category).filter(
+        Category.user_id == user.id,
     )
 
-    name_lookup = get_stylized_name_lookup(session,user)
+    name_lookup = get_stylized_name_lookup(session, user)
 
-    return [CategoryOut(**category.__dict__, stylized_name=name_lookup[category.id]) for category in categories_query.all()]
+    return [
+        CategoryOut(**category.__dict__, stylized_name=name_lookup[category.id])
+        for category in categories_query.all()
+    ]
