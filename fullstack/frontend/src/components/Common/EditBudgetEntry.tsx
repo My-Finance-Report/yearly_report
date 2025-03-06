@@ -231,17 +231,16 @@ function CategoryLinkSelector({
 }: {
     onChange: (value: number[]) => void;
     categories: { items: Blah[] };
-    field: any
+    field: { value: number[] };
     categoryLookup: Record<CategoryOut["id"], CategoryOut>;
 }) {
-
 
     return (
         <>
             <VStack>
                 {field.value?.map((category_id: number) => (
                     <CategoryLink
-                        onRemove={() => onChange(field.value.filter((c) => c !== category_id))}
+                        onRemove={() => onChange(field.value.filter((c:number) => c !== category_id))}
                         key={category_id}
                         category={categoryLookup[category_id]}
                     />

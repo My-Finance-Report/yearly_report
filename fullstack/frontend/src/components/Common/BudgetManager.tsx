@@ -46,6 +46,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
     },
   })
 
