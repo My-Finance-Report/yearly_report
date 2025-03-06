@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   type BudgetCategoryLinkOut,
   type BudgetEntryOut,
@@ -7,6 +8,7 @@ import { DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
+  Collapsible,
   HStack,
   Input,
   TableBody,
@@ -32,7 +34,7 @@ import EditBudgetEntry from "./EditBudgetEntry"
 export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budgetStatus: BudgetStatus }) => {
   const queryClient = useQueryClient()
 
-  const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> = budget.entries.reduce( (acc, entry) => {
+  const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> = budget.entries.reduce((acc, entry) => {
     acc[entry.id] = entry
     return acc
   }, {} as Record<BudgetEntryOut["id"], BudgetEntryOut>)
@@ -46,6 +48,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
     },
   })
+
 
   return (
     <Box>
@@ -61,28 +64,28 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
             </TableRow>
           </TableHeader>
           <TableBody>
-            {budgetStatus.entry_status?.sort().map((entry,index) => (
+            {budgetStatus.entry_status?.sort().map((entry, index) => (
               <>
-              <TableRow key={index}>
-                <TableCell minW={60}>{entry.name}</TableCell>
-                <TableCell>{entry.amount}</TableCell>
-                <TableCell>{entry.total}</TableCell>
-                <TableCell>
-                  {budgetEntryLookup[entry.id].category_links?.map((category) => (
-                    <CategoryLink key={category.id} category={category} />
-                  ))}
-                </TableCell>
-                <TableCell textAlign="right">
-                  <ActionsCell
-                    entry={budgetEntryLookup[entry.id]}
-                    deleteEntryMutation={deleteEntryMutation}
-                  />
-                </TableCell>
+                <TableRow key={index}>
+                  <TableCell minW={60}>{entry.name}</TableCell>
+                  <TableCell>{entry.amount}</TableCell>
+                  <TableCell>{entry.total}</TableCell>
+                  <TableCell>
+                    {budgetEntryLookup[entry.id].category_links?.map((category) => (
+                      <CategoryLink key={category.id} category={category} />
+                    ))}
+                  </TableCell>
+                  <TableCell textAlign="right">
+                    <ActionsCell
+                      entry={budgetEntryLookup[entry.id]}
+                      deleteEntryMutation={deleteEntryMutation}
+                    />
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                <CategoryLevelTable budgetEntryStatus={entry}/>
+                  <CategoryLevelTable budgetEntryStatus={entry} />
                 </TableRow>
-                </>
+              </>
             ))}
           </TableBody>
         </TableRoot>
@@ -93,37 +96,38 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
 }
 
 function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEntryStatus }) {
-
   return (
-    <TableRoot>
-      <TableHeader>
-        <TableRow>
-          <TableColumnHeader>Month</TableColumnHeader>
-          <TableColumnHeader>Category</TableColumnHeader>
-          <TableColumnHeader>Total</TableColumnHeader>
-        </TableRow>
-      </TableHeader>
+    <TableRoot variant="outline">
       <TableBody>
-        {Object.entries(budgetEntryStatus.category_links_status).map(([month, link])=>(
-          <>
-          <TableRow>
-            <TableCell>{month}</TableCell>
-            <TableCell>{link.stylized_name}</TableCell>
-            <TableCell>{link.total}</TableCell>
-          </TableRow>
-          <TransactionLevelTable categoryLinkStatus={link}/>
-          </>
-        )
-        )}
+        {Object.entries(budgetEntryStatus.category_links_status).map(([month, link]) => (
+          <Collapsible.Root key={month}>
+            <Collapsible.Trigger asChild>
+              <TableRow style={{ cursor: "pointer" }}>
+                <TableCell>{month}</TableCell>
+                <TableCell>{link.stylized_name}</TableCell>
+                <TableCell>{link.total}</TableCell>
+              </TableRow>
+            </Collapsible.Trigger>
+            <Collapsible.Content>
+              <TableRow>
+                <TableCell colSpan={3}>
+                  <TransactionLevelTable categoryLinkStatus={link} />
+                </TableCell>
+              </TableRow>
+            </Collapsible.Content>
+          </Collapsible.Root>
+      
+        ))}
       </TableBody>
     </TableRoot>
-  )
+  );
 }
 
 function TransactionLevelTable({ categoryLinkStatus }: { categoryLinkStatus: BudgetCategoryLinkStatus }) {
 
+
   return (
-    <TableRoot>
+    <TableRoot variant={'outline'}>
       <TableHeader>
         <TableRow>
           <TableColumnHeader>Transactions</TableColumnHeader>
@@ -131,8 +135,8 @@ function TransactionLevelTable({ categoryLinkStatus }: { categoryLinkStatus: Bud
         </TableRow>
       </TableHeader>
       <TableBody>
-        {categoryLinkStatus.transactions.map( (transaction)=>(
-          <TableRow>
+        {categoryLinkStatus.transactions.map((transaction) => (
+          <TableRow key={transaction.id}>
             <TableCell>{transaction.description}</TableCell>
             <TableCell>{transaction.amount}</TableCell>
           </TableRow>
@@ -222,3 +226,4 @@ function CategoryLink({ category }: { category: BudgetCategoryLinkOut }) {
     </Tag.Root>
   )
 }
+

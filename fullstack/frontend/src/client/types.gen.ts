@@ -113,6 +113,7 @@ export type BudgetStatus = {
     name: string;
     active?: boolean;
     entry_status: Array<BudgetEntryStatus>;
+    months_with_entries: Array<(string)>;
 };
 
 export type CategoryBase = {

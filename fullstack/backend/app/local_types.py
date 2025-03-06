@@ -248,12 +248,13 @@ class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
 
 
 class BudgetEntryStatus(BudgetEntryBase):
-    category_links_status: dict[str,BudgetCategoryLinkStatus]
+    category_links_status: dict[str, BudgetCategoryLinkStatus]
     total: Decimal
 
 
 class BudgetStatus(BudgetBase):
     entry_status: list[BudgetEntryStatus]
+    months_with_entries: list[str]
 
 
 class ProcessFileJobBase(BaseModel):
