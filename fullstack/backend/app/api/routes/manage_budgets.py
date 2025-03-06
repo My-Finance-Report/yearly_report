@@ -417,6 +417,7 @@ def get_budget_status(
             ))
 
         entry_status.append(BudgetEntryStatus(
+            id=entry.id,
             budget_id=budget.id,
             name=entry.name,
             amount=entry.amount,

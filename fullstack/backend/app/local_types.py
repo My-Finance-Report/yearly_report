@@ -208,6 +208,7 @@ class BudgetEntryCreate(BaseModel):
 
 class BudgetEntryBase(BaseModel):
     amount: Decimal
+    id: BudgetEntryId
     name: str
     budget_id: BudgetId
 

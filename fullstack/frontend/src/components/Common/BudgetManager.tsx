@@ -2,7 +2,6 @@ import {
   type BudgetCategoryLinkOut,
   type BudgetEntryOut,
   BudgetsService,
-  CategoryOut,
 } from "@/client"
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
@@ -27,11 +26,16 @@ import {
 } from "@tanstack/react-query"
 import { useState } from "react"
 import { FaPlus } from "react-icons/fa"
-import type { BudgetOut } from "../../client"
+import type { BudgetOut, BudgetStatus, BudgetEntryStatus } from "../../client"
 import EditBudgetEntry from "./EditBudgetEntry"
 
-export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
+export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budgetStatus: BudgetStatus }) => {
   const queryClient = useQueryClient()
+
+  const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> = budget.entries.reduce( (acc, entry) => {
+    acc[entry.id] = entry
+    return acc
+  }, {})
 
   const deleteEntryMutation = useMutation({
     mutationFn: (entryId: number) =>
@@ -56,28 +60,56 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {budget.entries?.sort().map((entry) => (
-              <TableRow key={entry.id}>
+            {budgetStatus.entry_status?.sort().map((entry,index) => (
+              <>
+              <TableRow key={index}>
                 <TableCell minW={60}>{entry.name}</TableCell>
                 <TableCell>{entry.amount}</TableCell>
                 <TableCell>
-                  {entry.category_links?.map((category) => (
+                  {entry.category_links_status?.map((category) => (
                     <CategoryLink key={category.id} category={category} />
                   ))}
                 </TableCell>
                 <TableCell textAlign="right">
                   <ActionsCell
-                    entry={entry}
+                    entry={budgetEntryLookup[entry.id]}
                     deleteEntryMutation={deleteEntryMutation}
                   />
                 </TableCell>
-              </TableRow>
+                </TableRow>
+                <TableRow>
+                <CategoryLevelTable budgetEntryStatus={entry}/>
+                </TableRow>
+                </>
             ))}
           </TableBody>
         </TableRoot>
         <CreateNew budgetId={budget.id} />
       </VStack>
     </Box>
+  )
+}
+
+function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEntryStatus }) {
+
+  return (
+    <TableRoot>
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeader>Category</TableColumnHeader>
+          <TableColumnHeader>Total</TableColumnHeader>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {budgetEntryStatus.category_links_status.map( (entry)=>(
+          <TableRow>
+            <TableCell>{entry.stylized_name}</TableCell>
+            <TableCell>{68}</TableCell>
+          </TableRow>
+        )
+        )}
+      </TableBody>
+    </TableRoot>
   )
 }
 

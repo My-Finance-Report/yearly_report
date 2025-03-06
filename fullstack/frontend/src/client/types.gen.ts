@@ -54,6 +54,14 @@ export type BudgetCategoryLinkOut = {
     stylized_name: string;
 };
 
+export type BudgetCategoryLinkStatus = {
+    budget_entry_id: number;
+    category_id: number;
+    id: number;
+    stylized_name: string;
+    transactions: Array<TransactionOut>;
+};
+
 export type BudgetCreate = {
     name: string;
 };
@@ -80,12 +88,26 @@ export type BudgetEntryOut = {
     category_links: Array<BudgetCategoryLinkOut>;
 };
 
+export type BudgetEntryStatus = {
+    amount: string;
+    name: string;
+    budget_id: number;
+    category_links_status: Array<BudgetCategoryLinkStatus>;
+};
+
 export type BudgetOut = {
     user_id: number;
     name: string;
     active?: boolean;
     id: number;
     entries: Array<BudgetEntryOut>;
+};
+
+export type BudgetStatus = {
+    user_id: number;
+    name: string;
+    active?: boolean;
+    entry_status: Array<BudgetEntryStatus>;
 };
 
 export type CategoryBase = {
@@ -96,10 +118,10 @@ export type CategoryBase = {
 
 export type CategoryOut = {
     name: string;
-    stylized_name: string;
     source_id: number;
     archived?: boolean;
     id: number;
+    stylized_name: string;
 };
 
 export type GroupByOption = 'category' | 'month' | 'year';
@@ -429,6 +451,8 @@ export type BudgetsDeleteBudgetCategoryData = {
 };
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
+
+export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;

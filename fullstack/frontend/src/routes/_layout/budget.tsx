@@ -30,6 +30,18 @@ function ManageBudgets() {
     enabled: isLoggedIn(),
   })
 
+  const {
+      data: budgetStatus,
+      isLoading: statusLoading,
+      isError: statusIsError,
+    } = useQuery({
+      queryKey: ["budgetStatus"],
+      queryFn: BudgetsService.getBudgetStatus,
+      enabled: isLoggedIn(),
+    })
+
+  console.log(budgetStatus)
+
   if (isError) {
     return (
       <Container maxW="full">
@@ -57,7 +69,7 @@ function ManageBudgets() {
         lucky when things work :)
       </Text>
       {budget ? (
-        <ManageBudget budget={budget} />
+        <ManageBudget budget={budget} budgetStatus={budgetStatus} />
       ) : (
         <Flex justifyContent="center">
           <CreateNewBudget />
