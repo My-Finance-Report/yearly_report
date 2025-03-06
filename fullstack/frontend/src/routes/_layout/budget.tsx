@@ -40,7 +40,6 @@ function ManageBudgets() {
       enabled: isLoggedIn(),
     })
 
-  console.log(budgetStatus)
 
   if (isError||statusIsError) {
     return (

@@ -430,20 +430,12 @@ def get_budget_status(
             for month, month_transactions in group_transactions_by_month(
                 transactions
             ).items():
-
                 transactions_out = [
                     TransactionOut(**transaction.__dict__)
                     for transaction in month_transactions
                     if transaction.kind == TransactionKind.withdrawal
                 ]
-                total = Decimal(
-                    sum(
-                        [
-                            t.amount
-                            for t in transactions_out
-                        ]
-                    )
-                )
+                total = Decimal(sum([t.amount for t in transactions_out]))
                 running_total += total
                 months_with_entries.add(month)
                 category_status[month] = BudgetCategoryLinkStatus(
@@ -467,5 +459,9 @@ def get_budget_status(
         )
 
     return BudgetStatus(
-        user_id=user.id, name=budget.name, active=True, entry_status=entry_statuses, months_with_entries=list(months_with_entries)
+        user_id=user.id,
+        name=budget.name,
+        active=True,
+        entry_status=entry_statuses,
+        months_with_entries=list(months_with_entries),
     )

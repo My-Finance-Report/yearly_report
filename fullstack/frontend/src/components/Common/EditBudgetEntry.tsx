@@ -73,6 +73,7 @@ export default function EditBudgetEntry({
     const queryClient = useQueryClient();
     const showToast = useCustomToast();
 
+
     const {
         register,
         handleSubmit,
@@ -82,6 +83,9 @@ export default function EditBudgetEntry({
     } = useForm<FormInput>({
         mode: "onBlur",
         criteriaMode: "all",
+        defaultValues:{
+            category_links: budgetEntry.category_links.map((link)=>link.category_id)
+        }
     });
 
     const { data } = useQuery({
@@ -124,6 +128,7 @@ export default function EditBudgetEntry({
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["budgets"] });
+            queryClient.invalidateQueries({ queryKey: ["budgetStatus"] });
         },
     });
 
@@ -190,7 +195,7 @@ export default function EditBudgetEntry({
                             render={({ field }) => (
                                 <CategoryLinkSelector
                                     onChange={field.onChange}
-                                    value={field.value}
+                                    field={field}
                                     categories={categories}
                                     categoryLookup={categoryLookup || {}}
                                 />
@@ -200,6 +205,7 @@ export default function EditBudgetEntry({
                             <FieldErrorText>{errors.category_links.message}</FieldErrorText>
                         )}
                     </FieldRoot>
+
                 </DialogBody>
 
                 <DialogFooter gap={3}>
@@ -220,20 +226,22 @@ export default function EditBudgetEntry({
 function CategoryLinkSelector({
     onChange,
     categories,
-    value,
+    field,
     categoryLookup,
 }: {
     onChange: (value: number[]) => void;
     categories: { items: Blah[] };
-    value: number[];
+    field: any
     categoryLookup: Record<CategoryOut["id"], CategoryOut>;
 }) {
+
+
     return (
         <>
             <VStack>
-                {value?.map((category_id: number) => (
+                {field.value?.map((category_id: number) => (
                     <CategoryLink
-                        onRemove={() => onChange(value.filter((c) => c !== category_id))}
+                        onRemove={() => onChange(field.value.filter((c) => c !== category_id))}
                         key={category_id}
                         category={categoryLookup[category_id]}
                     />
