@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 
 from pydantic import BaseModel
@@ -105,6 +106,7 @@ class CategoryBase(BaseModel):
 
 class CategoryOut(CategoryBase):
     id: int
+    stylized_name: str
 
 
 class TransactionBase(BaseModel):
@@ -185,12 +187,16 @@ class ColChartConfigOut(ColChartConfigBase):
 
 
 class BudgetCategoryLinkBase(BaseModel):
-    budget_id: BudgetId
+    budget_entry_id: BudgetEntryId
     category_id: CategoryId
 
+class BudgetCategoryLinkCreate(BaseModel):
+    entry_id: BudgetEntryId
+    category_id: CategoryId
 
 class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
     id: BudgetCategoryLinkId
+    stylized_name: str
 
 
 class BudgetEntryCreate(BaseModel):
@@ -199,7 +205,7 @@ class BudgetEntryCreate(BaseModel):
 
 
 class BudgetEntryBase(BaseModel):
-    amount: float
+    amount: Decimal
     name: str
     budget_id: BudgetId
 
@@ -208,6 +214,10 @@ class BudgetEntryOut(BudgetEntryBase):
     id: BudgetEntryId
     user_id: UserId
     category_links: list[BudgetCategoryLinkOut]
+
+class BudgetEntryEdit(BudgetEntryBase):
+    id: BudgetEntryId
+    category_links: list[BudgetCategoryLinkCreate]
 
 
 class BudgetBase(BaseModel):

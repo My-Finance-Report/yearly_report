@@ -44,9 +44,9 @@ interface EditTransactionProps {
   onClose: () => void;
 }
 
-
-
-function rawCategoiesToSelectItems(categories: CategoryOut[]): { items: Blah[] } {
+function rawCategoiesToSelectItems(categories: CategoryOut[]): {
+  items: Blah[];
+} {
   const blahs = categories.map((category) => ({
     label: category.name,
     value: category.id,
@@ -56,17 +56,16 @@ function rawCategoiesToSelectItems(categories: CategoryOut[]): { items: Blah[] }
 
 const kinds: { items: { label: string; value: TransactionKind }[] } = {
   items: [
-  {
-    label: "Expense",
-    value: 'withdrawal',
-  },
-  {
-    label: "Deposit",
-    value: 'deposit',
-  }
-]
-}
-
+    {
+      label: "Expense",
+      value: "withdrawal",
+    },
+    {
+      label: "Deposit",
+      value: "deposit",
+    },
+  ],
+};
 
 const EditTransaction = ({
   transaction,
@@ -75,7 +74,6 @@ const EditTransaction = ({
 }: EditTransactionProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
-
 
   const {
     register,
@@ -92,20 +90,19 @@ const EditTransaction = ({
     },
   });
 
-
-  const {data, isLoading} = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => TransactionsService.listCategories({transactionId: transaction.id}),
-  })
+    queryFn: () =>
+      TransactionsService.listCategories({ transactionId: transaction.id }),
+  });
 
-  const categories = rawCategoiesToSelectItems(data ?? [])
-
+  const categories = rawCategoiesToSelectItems(data ?? []);
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {
       return TransactionsService.updateTransaction({
         requestBody: data,
-      })
+      });
     },
     onSuccess: () => {
       showToast("Success!", "Transaction updated successfully.", "success");
@@ -127,7 +124,6 @@ const EditTransaction = ({
     reset();
     onClose();
   };
-
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -188,9 +184,15 @@ const EditTransaction = ({
                   <SelectRoot
                     id="kind"
                     placeholder="Withdrawal / Deposit"
-                    defaultValue={[kinds.items.find((kind) => kind.value === transaction.kind)!.value]}
+                    defaultValue={[
+                      kinds.items.find(
+                        (kind) => kind.value === transaction.kind
+                      )!.value,
+                    ]}
                     collection={createListCollection(kinds)}
-                    onValueChange={(val) => { onChange(val.value[0])}}
+                    onValueChange={(val) => {
+                      onChange(val.value[0]);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValueText placeholder="Select a kind" />
@@ -210,7 +212,6 @@ const EditTransaction = ({
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
           </FieldRoot>
-
 
           <FieldRoot mt={4} invalid={!!errors.amount}>
             <FieldLabel htmlFor="amount">Amount</FieldLabel>
@@ -240,9 +241,15 @@ const EditTransaction = ({
                     id="category_id"
                     placeholder="Select a category"
                     // @ts-ignore this works and saves a bunch of casts between numbers and string
-                    value={[categories.items.find((cat) => cat.value === transaction.category_id)!.value]}
+                    value={[
+                      categories.items.find( 
+                        (cat) => cat.value === transaction.category_id 
+                      )!.value, 
+                    ]}
                     collection={createListCollection(categories)}
-                    onValueChange={(val) => { onChange(val.value[0])}}
+                    onValueChange={(val) => {
+                      onChange(val.value[0]);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValueText placeholder="Select a category" />
@@ -262,22 +269,17 @@ const EditTransaction = ({
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
           </FieldRoot>
-
         </DialogBody>
 
         <DialogFooter gap={3}>
           <HStack>
-<Button variant="outline" onClick={onCancel} title="Cancel">
-            Cancel
+            <Button variant="outline" onClick={onCancel} title="Cancel">
+              Cancel
             </Button>
-          <Button
-            type="submit"
-            loading={isSubmitting}
-          >
-            Save
-          </Button>
-            
-</HStack>
+            <Button type="submit" loading={isSubmitting}>
+              Save
+            </Button>
+          </HStack>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>

@@ -38,28 +38,41 @@ export type BudgetBase = {
 };
 
 export type BudgetCategoryLinkBase = {
-    budget_id: number;
+    budget_entry_id: number;
+    category_id: number;
+};
+
+export type BudgetCategoryLinkCreate = {
+    entry_id: number;
     category_id: number;
 };
 
 export type BudgetCategoryLinkOut = {
-    budget_id: number;
+    budget_entry_id: number;
     category_id: number;
     id: number;
+    stylized_name: string;
 };
 
 export type BudgetCreate = {
     name: string;
 };
 
-export type BudgetEntryBase = {
+export type BudgetEntryCreate = {
     amount: number;
     name: string;
+};
+
+export type BudgetEntryEdit = {
+    amount: (number | string);
+    name: string;
     budget_id: number;
+    id: number;
+    category_links: Array<BudgetCategoryLinkCreate>;
 };
 
 export type BudgetEntryOut = {
-    amount: number;
+    amount: string;
     name: string;
     budget_id: number;
     id: number;
@@ -83,6 +96,7 @@ export type CategoryBase = {
 
 export type CategoryOut = {
     name: string;
+    stylized_name: string;
     source_id: number;
     archived?: boolean;
     id: number;
@@ -372,14 +386,14 @@ export type BudgetsGetBudgetEntriesResponse = (Array<BudgetEntryOut>);
 
 export type BudgetsCreateBudgetEntryData = {
     budgetId: number;
-    requestBody: BudgetEntryBase;
+    requestBody: BudgetEntryCreate;
 };
 
 export type BudgetsCreateBudgetEntryResponse = (BudgetEntryOut);
 
 export type BudgetsUpdateBudgetEntryData = {
     entryId: number;
-    requestBody: BudgetEntryBase;
+    requestBody: BudgetEntryEdit;
 };
 
 export type BudgetsUpdateBudgetEntryResponse = (BudgetEntryOut);
@@ -482,6 +496,8 @@ export type TransactionsListCategoriesData = {
 };
 
 export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
+
+export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
 
 export type UploadsReprocessFileData = {
     jobId: number;

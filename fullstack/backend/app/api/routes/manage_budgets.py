@@ -1,4 +1,5 @@
 from collections import defaultdict
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -9,12 +10,12 @@ from app.local_types import (
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
     BudgetCreate,
-    BudgetEntryBase,
+    BudgetEntryEdit,
     BudgetEntryCreate,
     BudgetEntryOut,
     BudgetOut,
 )
-from app.models import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId, User
+from app.models import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId, CategoryId, User, TransactionSource, Category
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 
@@ -44,9 +45,12 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
     category_by_entry: dict[BudgetEntryId, list[BudgetCategoryLinkOut]] = defaultdict(
         list
     )
+
+    name_lookup = get_stylized_name_lookup(session,user)
+
     for category in categories:
         category_by_entry[category.budget_entry_id].append(
-            BudgetCategoryLinkOut.model_validate(category.__dict__)
+            BudgetCategoryLinkOut(**category.__dict__,  stylized_name=name_lookup[category.category_id])
         )
 
     entries_out = [
@@ -63,7 +67,7 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
 
 
 @router.get("/", response_model=BudgetOut | None)
-def Get_budget(
+def get_budget(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> BudgetOut | None:
@@ -166,12 +170,13 @@ def get_budget_entries(
     if not db_entries:
         raise HTTPException(status_code=404, detail="Budget not found.")
 
-    return [
+    val = [
         BudgetEntryOut.model_validate(
             {**entry.__dict__, "category_links": link_by_entry[entry.id]}
         )
         for entry in db_entries
     ]
+    return val
 
 
 @router.post("/{budget_id}/entries", response_model=BudgetEntryOut)
@@ -187,14 +192,18 @@ def create_budget_entry(
     session.refresh(new_entry)
     return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links": []})
 
+def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
+    categories = session.query(Category, TransactionSource).join(TransactionSource, TransactionSource.id == Category.source_id).filter(Category.user_id == user.id).all()
+    return {category.id: f"{category.name} ({source.name})" for category, source in categories}
+
 
 @router.put("/entry/{entry_id}", response_model=BudgetEntryOut)
 def update_budget_entry(
     entry_id: int,
-    entry: BudgetEntryBase,
+    entry: BudgetEntryEdit,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> BudgetEntry:
+) -> BudgetEntryOut:
     db_entry = (
         session.query(BudgetEntry)
         .filter(BudgetEntry.id == entry_id, BudgetEntry.user_id == user.id)
@@ -204,12 +213,28 @@ def update_budget_entry(
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found.")
 
-    for key, value in entry.model_dump().items():
-        setattr(db_entry, key, value)
+    db_entry.name = entry.name
+    db_entry.amount = Decimal(entry.amount)
+
+    session.query(BudgetCategoryLink).filter(BudgetCategoryLink.budget_entry_id == db_entry.id, BudgetCategoryLink.user_id == user.id).delete()
+    links = [
+        BudgetCategoryLink(budget_entry_id=db_entry.id, user_id=user.id, category_id=entry.category_id)
+        for entry in entry.category_links
+    ]
+
+    session.add_all(links)
 
     session.commit()
     session.refresh(db_entry)
-    return db_entry
+
+
+
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
+
+
+    links_out:list[BudgetCategoryLinkOut] = [BudgetCategoryLinkOut(budget_entry_id=link.budget_entry_id, category_id=link.category_id,id=link.id, stylized_name=stylized_name_lookup[link.category_id]) for link in links]
+
+    return BudgetEntryOut(budget_id=db_entry.budget_id, user_id=db_entry.user_id, amount=db_entry.amount, name=db_entry.name, id=db_entry.id, category_links=links_out)
 
 
 @router.delete("/entry/{entry_id}", response_model=None)
@@ -237,15 +262,15 @@ def get_budget_categories(
     budget_entry_id: int,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> list[BudgetCategoryLink]:
-    return (
-        session.query(BudgetCategoryLink)
-        .filter(
+) -> list[BudgetCategoryLinkOut]:
+    query =  session.query(BudgetCategoryLink).filter(
             BudgetCategoryLink.budget_entry_id == budget_entry_id,
             BudgetCategoryLink.user_id == user.id,
         )
-        .all()
-    )
+
+    stylized_name_lookup = get_stylized_name_lookup(session,user)
+
+    return [BudgetCategoryLinkOut(budget_entry_id=link.budget_entry_id, category_id=link.category_id,id=link.id, stylized_name=stylized_name_lookup[link.category_id]) for link in query.all()]
 
 
 @router.post("/{budget_entry_id}/categories", response_model=BudgetCategoryLinkOut)

@@ -304,6 +304,12 @@ def update_transaction(
     return transaction_db
 
 
+def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
+    categories = session.query(Category, TransactionSource).join(TransactionSource, TransactionSource.id == Category.source_id).filter(Category.user_id == user.id).all()
+    return {category.id: f"{category.name} ({source.name})" for category, source in categories}
+
+
+
 @router.get(
     "list_categories/{transaction_id}",
     response_model=list[CategoryOut],
@@ -312,19 +318,43 @@ def list_categories(
     transaction_id: int,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
-) -> list[Category]:
+) -> list[CategoryOut]:
+
+    categories_query = (
+        session.query(Category)
+        .filter(
+            Category.user_id == user.id,
+        )
+    )
+
     transaction_db = (
         session.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == user.id)
         .one()
     )
-    categories = (
+    categories_query = categories_query.filter(Category.source_id == transaction_db.transaction_source_id)
+
+    name_lookup = get_stylized_name_lookup(session,user)
+
+    return [CategoryOut(**category.__dict__, name=name_lookup[category.id]) for category in categories_query.all()]
+
+
+@router.get(
+    "list_all_categories",
+    response_model=list[CategoryOut],
+)
+def list_all_categories(
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> list[CategoryOut]:
+
+    categories_query = (
         session.query(Category)
         .filter(
             Category.user_id == user.id,
-            Category.source_id == transaction_db.transaction_source_id,
         )
-        .all()
     )
 
-    return categories
+    name_lookup = get_stylized_name_lookup(session,user)
+
+    return [CategoryOut(**category.__dict__, stylized_name=name_lookup[category.id]) for category in categories_query.all()]
