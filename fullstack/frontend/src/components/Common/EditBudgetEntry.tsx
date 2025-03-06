@@ -35,6 +35,7 @@ import {
   TransactionsService,
   CategoryOut,
   BudgetsService,
+  TransactionsListAllCategoriesResponse,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import { handleError } from "../../utils";
@@ -57,14 +58,12 @@ function rawCategoiesToSelectItems(categories: CategoryOut[]): {
 }
 
 type FormInput = {
-    amount: number;
-    name: string;
-    budget_id: number;
-    id: number;
-    category_links: Array<number>;
+  amount: number;
+  name: string;
+  budget_id: number;
+  id: number;
+  category_links: Array<number>;
 };
-
-
 
 export default function EditBudgetEntry({
   budgetEntry,
@@ -73,8 +72,6 @@ export default function EditBudgetEntry({
 }: EditBudgetEntryProps) {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
-
-  console.log(budgetEntry);
 
   const {
     register,
@@ -86,7 +83,6 @@ export default function EditBudgetEntry({
     mode: "onBlur",
     criteriaMode: "all",
   });
-
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
@@ -104,7 +100,10 @@ export default function EditBudgetEntry({
           budget_id: budgetEntry.budget_id,
           id: budgetEntry.id,
           amount: data.amount,
-          category_links: data.category_links.map((link) => ({category_id: link, entry_id: budgetEntry.id})),
+          category_links: data.category_links.map((link) => ({
+            category_id: link,
+            entry_id: budgetEntry.id,
+          })),
         },
       });
     },
@@ -180,40 +179,14 @@ export default function EditBudgetEntry({
             <Controller
               control={control}
               name="category_links"
-              render={({ field }) => {
-                const { onChange, value } = field;
-                console.log(value);
-                return (
-                    <>
-                        <VStack>
-                        {value?.map((category_id: number) => (
-                            <CategoryLink onRemove={()=>onChange(value.filter((c) => c !== category_id))} key={category_id} category={data?.find((c) => c.id === category_id)!} />
-                        ))}
-                        </VStack>
-                  <SelectRoot
-                    id="category_links"
-                    placeholder="Select a category"
-                    multiple
-                    size="sm"
-                    collection={createListCollection(categories)}
-                    onValueChange={(val) => {
-                      onChange(val.value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValueText placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.items.map((cat) => (
-                        <SelectItem key={cat.value} item={cat}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </SelectRoot>
-</>
-                );
-              }}
+              render={({ field }) => (
+                <CategoryLinkSelector
+                  onChange={field.onChange}
+                  value={field.value}
+                  categories={categories}
+                  data={data}
+                />
+              )}
             />
             {errors.category_links && (
               <FieldErrorText>{errors.category_links.message}</FieldErrorText>
@@ -236,12 +209,64 @@ export default function EditBudgetEntry({
   );
 }
 
+function CategoryLinkSelector({
+  onChange,
+  categories,
+  value,
+  data
+}: {
+  onChange: (value: string[]) => void;
+  categories: {items:Blah[]}
+  value: string[];
+  data: TransactionsListAllCategoriesResponse | undefined
+}) {
+  return (
+    <>
+      <VStack>
+        {value?.map((category_id: string) => (
+          <CategoryLink
+            onRemove={() => onChange(value.filter((c) => c !== category_id))}
+            key={category_id}
+            category={data?.find((c) => c.id === category_id)!}
+          />
+        ))}
+      </VStack>
+      <SelectRoot
+        id="category_links"
+        placeholder="Select a category"
+        multiple
+        size="sm"
+        collection={createListCollection(categories)}
+        onValueChange={(val) => {
+          onChange(val.value);
+        }}
+      >
+        <SelectTrigger>
+          <SelectValueText placeholder="Select a category" />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.items.map((cat) => (
+            <SelectItem key={cat.value} item={cat}>
+              {cat.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
+    </>
+  );
+}
 
-function CategoryLink({category, onRemove}: {category: CategoryOut, onRemove: (category: CategoryOut) => void}) {
-   return ( 
-    <Tag.Root size="sm" >
-    <Text key={category.id}>{category.stylized_name}</Text>
-    <CloseButton onClick={() => onRemove(category)} />
+function CategoryLink({
+  category,
+  onRemove,
+}: {
+  category: CategoryOut;
+  onRemove: (category: CategoryOut) => void;
+}) {
+  return (
+    <Tag.Root size="sm">
+      <Text key={category.id}>{category.stylized_name}</Text>
+      <CloseButton onClick={() => onRemove(category)} />
     </Tag.Root>
-)
+  );
 }

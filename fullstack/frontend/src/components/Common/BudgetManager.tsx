@@ -1,8 +1,8 @@
-import React from "react";
-import { BudgetEntryOut, BudgetsService } from "@/client";
-import { CheckIcon, CloseIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { BudgetCategoryLinkOut, BudgetEntryOut, BudgetsService, CategoryOut } from "@/client";
+import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Box,
+  Tag,
   Button,
   HStack,
   Input,
@@ -16,10 +16,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import {
-  UseMutateFunction,
   useMutation,
   UseMutationResult,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useState } from "react";
@@ -59,7 +57,7 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
                 <TableCell>{entry.amount}</TableCell>
                 <TableCell>
                   {entry.category_links?.map((category) => (
-                    <Text key={category.id}>{category.stylized_name}</Text>
+                    <CategoryLink key={category.id} category={category} />
                   ))}
                 </TableCell>
                 <TableCell textAlign="right">
@@ -143,4 +141,13 @@ function ActionsCell({
       </Button>
     </HStack>
   );
+}
+
+
+function CategoryLink({category}: {category: BudgetCategoryLinkOut}) {
+   return ( 
+    <Tag.Root size="sm" m={2} >
+    <Text key={category.id}>{category.stylized_name}</Text>
+    </Tag.Root>
+)
 }
