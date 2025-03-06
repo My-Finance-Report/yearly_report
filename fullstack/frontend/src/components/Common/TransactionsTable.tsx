@@ -2,9 +2,9 @@ import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
-  Progress,
   Collapsible,
   HStack,
+  Progress,
   Table,
   TableBody,
   TableCell,
@@ -17,12 +17,12 @@ import React, { useMemo } from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
 import { FiEdit } from "react-icons/fi"
-import EditTransaction from "./EditTransaction"
 import type {
   AggregatedGroup,
   TransactionOut,
   TransactionSourceGroup,
 } from "../../client"
+import EditTransaction from "./EditTransaction"
 
 export function TransactionsTable({
   sourceGroup,
@@ -51,22 +51,28 @@ export function TransactionsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-<MemoizedRenderGroups
-  groups={sourceGroup.groups}
-  sourceId={sourceGroup.transaction_source_id}
-  totalWidthdrawals={sourceGroup.total_withdrawals}
-  totalDeposits={sourceGroup.total_deposits}
-  showWithdrawals={showWithdrawals}
-  pathPrefix=""
-  toShowNames={toShowNames}
-  toggleGroup={toggleGroup}
-  expandedGroups={expandedGroups}
-/>
+        <MemoizedRenderGroups
+          groups={sourceGroup.groups}
+          sourceId={sourceGroup.transaction_source_id}
+          totalWidthdrawals={sourceGroup.total_withdrawals}
+          totalDeposits={sourceGroup.total_deposits}
+          showWithdrawals={showWithdrawals}
+          pathPrefix=""
+          toShowNames={toShowNames}
+          toggleGroup={toggleGroup}
+          expandedGroups={expandedGroups}
+        />
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Source Totals</TableCell>
-          <TableCell textAlign="end">{formatAmount(sourceGroup.total_withdrawals)}</TableCell>
-          <TableCell textAlign="end">{formatAmount(sourceGroup.total_deposits)}</TableCell>
-          <TableCell textAlign="end">{formatAmount(sourceGroup.total_balance)}</TableCell>
+          <TableCell textAlign="end">
+            {formatAmount(sourceGroup.total_withdrawals)}
+          </TableCell>
+          <TableCell textAlign="end">
+            {formatAmount(sourceGroup.total_deposits)}
+          </TableCell>
+          <TableCell textAlign="end">
+            {formatAmount(sourceGroup.total_balance)}
+          </TableCell>
         </TableRow>
       </TableBody>
     </Table.Root>
@@ -84,30 +90,30 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
   totalDeposits,
   showWithdrawals,
 }: {
-  groups: AggregatedGroup[];
-  sourceId: number;
-  pathPrefix: string;
-  toggleGroup: (sourceId: number, groupKey: string) => void;
-  expandedGroups: { [key: string]: boolean };
-  toShowNames?: (string | undefined)[] | undefined;
-  totalWidthdrawals?: number;
-  showWithdrawals: boolean;
-  totalDeposits?: number;
+  groups: AggregatedGroup[]
+  sourceId: number
+  pathPrefix: string
+  toggleGroup: (sourceId: number, groupKey: string) => void
+  expandedGroups: { [key: string]: boolean }
+  toShowNames?: (string | undefined)[] | undefined
+  totalWidthdrawals?: number
+  showWithdrawals: boolean
+  totalDeposits?: number
 }) {
   const memoizedGroups = useMemo(() => {
-    return groups.map((group, idx) => {
+    return groups.map((group) => {
       const groupKey = pathPrefix
         ? `${pathPrefix}-${group.group_id}`
-        : `${group.group_id}`;
+        : `${group.group_id}`
 
-      const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false;
+      const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
 
-      const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits;
+      const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
       const specificAmount = showWithdrawals
         ? group.total_withdrawals
-        : group.total_deposits;
+        : group.total_deposits
 
-      const { getColorForName } = useColorPalette();
+      const { getColorForName } = useColorPalette()
 
       return (
         <React.Fragment key={groupKey}>
@@ -193,12 +199,12 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                             <TableColumnHeader>DATE</TableColumnHeader>
                             <TableColumnHeader>AMOUNT</TableColumnHeader>
                             <TableColumnHeader>KIND</TableColumnHeader>
-                            <TableColumnHeader></TableColumnHeader>
+                            <TableColumnHeader />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {group.transactions?.map((transaction) => (
-                            <TransactionRow transaction={transaction} />
+                          {group.transactions?.map((transaction, index) => (
+                            <TransactionRow key={index.toString()} transaction={transaction} />
                           ))}
                         </TableBody>
                       </Table.Root>
@@ -209,8 +215,8 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
             </TableRow>
           </Collapsible.Root>
         </React.Fragment>
-      );
-    });
+      )
+    })
   }, [
     groups,
     sourceId,
@@ -221,16 +227,14 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
     totalWidthdrawals,
     totalDeposits,
     showWithdrawals,
-  ]);
+  ])
 
-  return <>{memoizedGroups}</>;
-});
+  return <>{memoizedGroups}</>
+})
 
-export default MemoizedRenderGroups;
-
+export default MemoizedRenderGroups
 
 function TransactionRow({ transaction }: { transaction: TransactionOut }) {
-
   const editTransactionModal = useDisclosure()
 
   return (
@@ -240,14 +244,26 @@ function TransactionRow({ transaction }: { transaction: TransactionOut }) {
         {new Date(transaction.date_of_transaction).toLocaleDateString()}
       </TableCell>
       <TableCell>{formatAmount(transaction.amount)}</TableCell>
-      <TableCell>{'withdrawal' === transaction.kind ? 'Expense' : 'Deposit'}</TableCell>
-      <TableCell><Button onClick={editTransactionModal.onOpen} size="sm" variant="outline"><FiEdit size="8px" /></Button></TableCell>
-      <EditTransaction transaction={transaction} isOpen={editTransactionModal.open} onClose={editTransactionModal.onClose} />
+      <TableCell>
+        {"withdrawal" === transaction.kind ? "Expense" : "Deposit"}
+      </TableCell>
+      <TableCell>
+        <Button
+          onClick={editTransactionModal.onOpen}
+          size="sm"
+          variant="outline"
+        >
+          <FiEdit size="8px" />
+        </Button>
+      </TableCell>
+      <EditTransaction
+        transaction={transaction}
+        isOpen={editTransactionModal.open}
+        onClose={editTransactionModal.onClose}
+      />
     </TableRow>
-    
   )
 }
-
 
 function formatAmount(amount: number) {
   return amount.toLocaleString("en-US", {
@@ -258,7 +274,10 @@ function formatAmount(amount: number) {
 
 function PercentageBar({ amount, total }: { amount: number; total: number }) {
   return (
-    <Progress.Root defaultValue={Math.abs(amount) / Math.abs(total) * 100} maxW="sm">
+    <Progress.Root
+      defaultValue={(Math.abs(amount) / Math.abs(total)) * 100}
+      maxW="sm"
+    >
       <HStack gap="5" minW={200}>
         <Progress.Track maxW={150} minW={150} flex="1">
           <Progress.Range />

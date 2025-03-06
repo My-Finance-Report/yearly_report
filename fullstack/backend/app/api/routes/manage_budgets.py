@@ -9,11 +9,15 @@ from app.local_types import (
     BudgetBase,
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
+    BudgetCategoryLinkStatus,
     BudgetCreate,
     BudgetEntryCreate,
     BudgetEntryEdit,
     BudgetEntryOut,
+    BudgetEntryStatus,
     BudgetOut,
+    BudgetStatus,
+    TransactionOut,
 )
 from app.models import (
     Budget,
@@ -22,6 +26,7 @@ from app.models import (
     BudgetEntryId,
     Category,
     CategoryId,
+    Transaction,
     TransactionSource,
     User,
 )
@@ -289,7 +294,9 @@ def delete_budget_entry(
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found.")
 
-    session.query(BudgetCategoryLink).filter(BudgetCategoryLink.budget_entry_id == entry_id).delete()
+    session.query(BudgetCategoryLink).filter(
+        BudgetCategoryLink.budget_entry_id == entry_id
+    ).delete()
     session.delete(db_entry)
 
     session.commit()
@@ -384,3 +391,36 @@ def delete_budget_category(
     session.delete(db_link)
     session.commit()
     return None
+
+
+@router.get("/budget_status", response_model=BudgetStatus)
+def get_budget_status(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> BudgetStatus:
+
+    budget = get_budget_out(session=session, user=user)
+    if not budget:
+        raise HTTPException(status_code=404, detail="need to have a budget")
+
+    entry_status: list[BudgetEntryStatus] = []
+    for entry in budget.entries:
+        category_status:list[BudgetCategoryLinkStatus] = []
+        for category in entry.category_links:
+            transactions = session.query(Transaction).filter(Transaction.category_id == category.category_id)
+            category_status.append(BudgetCategoryLinkStatus(
+                budget_entry_id=category.budget_entry_id,
+                id=category.id,
+                stylized_name=category.stylized_name,
+                category_id=category.category_id,
+                transactions=[TransactionOut(**transaction.__dict__) for transaction in transactions]
+            ))
+
+        entry_status.append(BudgetEntryStatus(
+            budget_id=budget.id,
+            name=entry.name,
+            amount=entry.amount,
+            category_links_status=category_status
+        ))
+
+    return BudgetStatus(user_id=user.id,name=budget.name,active=True,entry_status=entry_status)

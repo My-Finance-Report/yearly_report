@@ -25,7 +25,7 @@ function Layout() {
           <Spinner size="xl" color="ui.main" />
         </Flex>
       ) : (
-        <div style={{ backgroundColor: "background" , padding: 20}}>
+        <div style={{ backgroundColor: "background", padding: 20 }}>
           <Outlet />
         </div>
       )}

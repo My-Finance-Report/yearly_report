@@ -1,4 +1,8 @@
-import { UploadsDeleteFileResponse, type UploadsReprocessFileResponse, UploadsService } from "@/client"
+import {
+  type UploadsDeleteFileResponse,
+  type UploadsReprocessFileResponse,
+  UploadsService,
+} from "@/client"
 import { Button } from "@chakra-ui/react"
 
 interface ReprocessButtonProps {
@@ -24,7 +28,13 @@ export function ReprocessButton({ jobId, onReprocess }: ReprocessButtonProps) {
   )
 }
 
-export function DeleteButton({ fileId, onReprocess }: {fileId: number, onReprocess: (response: UploadsDeleteFileResponse) => void}) {
+export function DeleteButton({
+  fileId,
+  onReprocess,
+}: {
+  fileId: number
+  onReprocess: (response: UploadsDeleteFileResponse) => void
+}) {
   const handleReprocess = async () => {
     try {
       const response: UploadsDeleteFileResponse =
@@ -36,9 +46,13 @@ export function DeleteButton({ fileId, onReprocess }: {fileId: number, onReproce
   }
 
   return (
-    <Button size="sm" color="red.400" variant="outline" onClick={handleReprocess}>
+    <Button
+      size="sm"
+      color="red.400"
+      variant="outline"
+      onClick={handleReprocess}
+    >
       Delete File and Transactions
     </Button>
   )
 }
-

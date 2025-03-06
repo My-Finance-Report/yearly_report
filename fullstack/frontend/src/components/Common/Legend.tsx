@@ -26,17 +26,21 @@ export function Legend({
   return (
     <div className="w-[200px]" style={{ position: "sticky", top: 80 }}>
       {showColors && (
-      <div style={{ paddingTop: "10px" }}>
-        <BoxWithText text="Legend" isCollapsable={false}>
-          <Flex margin={3} gap={3} direction="column">
-            {toShowColors.map(([name, color], index) => {
-              return (
-                <LegendItem key={index.toString()} name={name} color={color} />
-              )
-            })}
-          </Flex>
-        </BoxWithText>
-      </div>
+        <div style={{ paddingTop: "10px" }}>
+          <BoxWithText text="Legend" isCollapsable={false}>
+            <Flex margin={3} gap={3} direction="column">
+              {toShowColors.map(([name, color], index) => {
+                return (
+                  <LegendItem
+                    key={index.toString()}
+                    name={name}
+                    color={color}
+                  />
+                )
+              })}
+            </Flex>
+          </BoxWithText>
+        </div>
       )}
       {collapsedItems.length > 0 && (
         <div style={{ paddingTop: "20px" }}>

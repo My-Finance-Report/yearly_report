@@ -105,9 +105,7 @@ function Transactions() {
         />
       </div>
       <div>
-        { data?.groups &&
-          data.groups.length > 0 && activeTransactionSource  ?
-           (
+        {data?.groups && data.groups.length > 0 && activeTransactionSource ? (
           <div
             style={{
               flexDirection: "column",

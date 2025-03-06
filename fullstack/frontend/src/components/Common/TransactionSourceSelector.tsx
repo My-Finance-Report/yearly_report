@@ -1,7 +1,6 @@
 import type { TransactionSourceGroup } from "@/client"
 import { Box, HStack, Tag } from "@chakra-ui/react"
 import type React from "react"
-import BoxWithText from "./BoxWithText"
 
 export function TransactionSourceSelector({
   allTransactionSources,

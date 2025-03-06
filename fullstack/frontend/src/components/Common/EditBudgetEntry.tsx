@@ -1,272 +1,279 @@
 import {
-  Button,
-  Text,
-  FieldErrorText,
-  FieldLabel,
-  FieldRoot,
-  Tag,
-  Input,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValueText,
-  SelectRoot,
-  createListCollection,
-  HStack,
-  VStack,
-  CloseButton,
+    Button,
+    CloseButton,
+    FieldErrorText,
+    FieldLabel,
+    FieldRoot,
+    HStack,
+    Input,
+    SelectContent,
+    SelectItem,
+    SelectRoot,
+    SelectTrigger,
+    SelectValueText,
+    Tag,
+    Text,
+    VStack,
+    createListCollection,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type SubmitHandler, useForm, Controller } from "react-hook-form";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 
 import {
-  DialogBackdrop,
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
+    DialogBackdrop,
+    DialogBody,
+    DialogCloseTrigger,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogRoot,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  type ApiError,
-  BudgetEntryOut,
-  TransactionsService,
-  CategoryOut,
-  BudgetsService,
-  TransactionsListAllCategoriesResponse,
+    type ApiError,
+    type BudgetEntryOut,
+    BudgetsService,
+    type CategoryOut,
+    TransactionsService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import { handleError } from "../../utils";
-import { Blah } from "./SankeyConfig"; //TODO stop importing this
+import type { Blah } from "./SankeyConfig"; //TODO stop importing this
 
 interface EditBudgetEntryProps {
-  budgetEntry: BudgetEntryOut;
-  isOpen: boolean;
-  onClose: () => void;
+    budgetEntry: BudgetEntryOut;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 function rawCategoiesToSelectItems(categories: CategoryOut[]): {
-  items: Blah[];
+    items: Blah[];
 } {
-  const blahs = categories.map((category) => ({
-    label: category.stylized_name,
-    value: category.id,
-  }));
-  return { items: blahs };
+    const blahs = categories.map((category) => ({
+        label: category.stylized_name,
+        value: category.id,
+    }));
+    return { items: blahs };
 }
 
 type FormInput = {
-  amount: number;
-  name: string;
-  budget_id: number;
-  id: number;
-  category_links: Array<number>;
+    amount: number;
+    name: string;
+    budget_id: number;
+    id: number;
+    category_links: Array<number>;
 };
 
 export default function EditBudgetEntry({
-  budgetEntry,
-  isOpen,
-  onClose,
+    budgetEntry,
+    isOpen,
+    onClose,
 }: EditBudgetEntryProps) {
-  const queryClient = useQueryClient();
-  const showToast = useCustomToast();
+    const queryClient = useQueryClient();
+    const showToast = useCustomToast();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    formState: { errors, isSubmitting, isDirty },
-  } = useForm<FormInput>({
-    mode: "onBlur",
-    criteriaMode: "all",
-  });
+    const {
+        register,
+        handleSubmit,
+        reset,
+        control,
+        formState: { errors, isSubmitting },
+    } = useForm<FormInput>({
+        mode: "onBlur",
+        criteriaMode: "all",
+    });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => TransactionsService.listAllCategories(),
-  });
+    const { data } = useQuery({
+        queryKey: ["categories"],
+        queryFn: () => TransactionsService.listAllCategories(),
+    });
 
-  const categories = rawCategoiesToSelectItems(data ?? []);
+    const categories = rawCategoiesToSelectItems(data ?? []);
 
-  const mutation = useMutation({
-    mutationFn: (data: FormInput) => {
-      return BudgetsService.updateBudgetEntry({
-        entryId: budgetEntry.id,
-        requestBody: {
-          ...data,
-          budget_id: budgetEntry.budget_id,
-          id: budgetEntry.id,
-          amount: data.amount,
-          category_links: data.category_links.map((link) => ({
-            category_id: link,
-            entry_id: budgetEntry.id,
-          })),
+    const categoryLookup: Record<CategoryOut["id"], CategoryOut> | undefined = data?.reduce(
+        (acc, category) => {
+            acc[category.id] = category;
+            return acc;
         },
-      });
-    },
-    onSuccess: () => {
-      showToast("Success!", "Transaction updated successfully.", "success");
-      onClose();
-    },
-    onError: (err: ApiError) => {
-      handleError(err, showToast);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-    },
-  });
+        {} as Record<CategoryOut["id"], CategoryOut>
+    );
 
-  const onSubmit: SubmitHandler<FormInput> = async (data) => {
-    mutation.mutate(data);
-  };
+    const mutation = useMutation({
+        mutationFn: (data: FormInput) => {
+            return BudgetsService.updateBudgetEntry({
+                entryId: budgetEntry.id,
+                requestBody: {
+                    ...data,
+                    budget_id: budgetEntry.budget_id,
+                    id: budgetEntry.id,
+                    amount: data.amount,
+                    category_links: data.category_links.map((link) => ({
+                        category_id: link,
+                        entry_id: budgetEntry.id,
+                    })),
+                },
+            });
+        },
+        onSuccess: () => {
+            showToast("Success!", "Transaction updated successfully.", "success");
+            onClose();
+        },
+        onError: (err: ApiError) => {
+            handleError(err, showToast);
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["budgets"] });
+        },
+    });
 
-  const onCancel = () => {
-    reset();
-    onClose();
-  };
+    const onSubmit: SubmitHandler<FormInput> = async (data) => {
+        mutation.mutate(data);
+    };
 
-  return (
-    <DialogRoot open={isOpen} onOpenChange={onClose} modal>
-      <DialogBackdrop />
-      <DialogContent
-        style={{ backgroundColor: "background" }}
-        onSubmit={handleSubmit(onSubmit)}
-        as="form"
-      >
-        <DialogHeader>
-          <DialogTitle>Edit Budget Entry</DialogTitle>
-          <DialogCloseTrigger />
-        </DialogHeader>
+    const onCancel = () => {
+        reset();
+        onClose();
+    };
 
-        <DialogBody>
-          <FieldRoot invalid={!!errors.name} required>
-            <FieldLabel htmlFor="name">Name</FieldLabel>
-            <Input
-              id="name"
-              {...register("name", {
-                required: "Name is required",
-              })}
-              placeholder="Name"
-              type="text"
-              defaultValue={budgetEntry?.name}
-            />
-            {errors.name && (
-              <FieldErrorText>{errors.name.message}</FieldErrorText>
-            )}
-          </FieldRoot>
+    return (
+        <DialogRoot open={isOpen} onOpenChange={onClose} modal>
+            <DialogBackdrop />
+            <DialogContent
+                style={{ backgroundColor: "background" }}
+                onSubmit={handleSubmit(onSubmit)}
+                as="form"
+            >
+                <DialogHeader>
+                    <DialogTitle>Edit Budget Entry</DialogTitle>
+                    <DialogCloseTrigger />
+                </DialogHeader>
 
-          <FieldRoot mt={4} invalid={!!errors.amount}>
-            <FieldLabel htmlFor="amount">Amount</FieldLabel>
-            <Input
-              id="amount"
-              {...register("amount", {
-                required: "Amount is required",
-              })}
-              placeholder="Amount"
-              type="number"
-              defaultValue={budgetEntry?.amount}
-            />
-            {errors.amount && (
-              <FieldErrorText>{errors.amount.message}</FieldErrorText>
-            )}
-          </FieldRoot>
+                <DialogBody>
+                    <FieldRoot invalid={!!errors.name} required>
+                        <FieldLabel htmlFor="name">Name</FieldLabel>
+                        <Input
+                            id="name"
+                            {...register("name", {
+                                required: "Name is required",
+                            })}
+                            placeholder="Name"
+                            type="text"
+                            defaultValue={budgetEntry?.name}
+                        />
+                        {errors.name && (
+                            <FieldErrorText>{errors.name.message}</FieldErrorText>
+                        )}
+                    </FieldRoot>
 
-          <FieldRoot mt={4} invalid={!!errors.category_links}>
-            <FieldLabel htmlFor="category_links">Category Links</FieldLabel>
-            <Controller
-              control={control}
-              name="category_links"
-              render={({ field }) => (
-                <CategoryLinkSelector
-                  onChange={field.onChange}
-                  value={field.value}
-                  categories={categories}
-                  data={data}
-                />
-              )}
-            />
-            {errors.category_links && (
-              <FieldErrorText>{errors.category_links.message}</FieldErrorText>
-            )}
-          </FieldRoot>
-        </DialogBody>
+                    <FieldRoot mt={4} invalid={!!errors.amount}>
+                        <FieldLabel htmlFor="amount">Amount</FieldLabel>
+                        <Input
+                            id="amount"
+                            {...register("amount", {
+                                required: "Amount is required",
+                            })}
+                            placeholder="Amount"
+                            type="number"
+                            defaultValue={budgetEntry?.amount}
+                        />
+                        {errors.amount && (
+                            <FieldErrorText>{errors.amount.message}</FieldErrorText>
+                        )}
+                    </FieldRoot>
 
-        <DialogFooter gap={3}>
-          <HStack>
-            <Button variant="outline" onClick={onCancel} title="Cancel">
-              Cancel
-            </Button>
-            <Button type="submit" loading={isSubmitting}>
-              Save
-            </Button>
-          </HStack>
-        </DialogFooter>
-      </DialogContent>
-    </DialogRoot>
-  );
+                    <FieldRoot mt={4} invalid={!!errors.category_links}>
+                        <FieldLabel htmlFor="category_links">Category Links</FieldLabel>
+                        <Controller
+                            control={control}
+                            name="category_links"
+                            render={({ field }) => (
+                                <CategoryLinkSelector
+                                    onChange={field.onChange}
+                                    value={field.value}
+                                    categories={categories}
+                                    categoryLookup={categoryLookup || {}}
+                                />
+                            )}
+                        />
+                        {errors.category_links && (
+                            <FieldErrorText>{errors.category_links.message}</FieldErrorText>
+                        )}
+                    </FieldRoot>
+                </DialogBody>
+
+                <DialogFooter gap={3}>
+                    <HStack>
+                        <Button variant="outline" onClick={onCancel} title="Cancel">
+                            Cancel
+                        </Button>
+                        <Button type="submit" loading={isSubmitting}>
+                            Save
+                        </Button>
+                    </HStack>
+                </DialogFooter>
+            </DialogContent>
+        </DialogRoot>
+    );
 }
 
 function CategoryLinkSelector({
-  onChange,
-  categories,
-  value,
-  data
+    onChange,
+    categories,
+    value,
+    categoryLookup,
 }: {
-  onChange: (value: string[]) => void;
-  categories: {items:Blah[]}
-  value: string[];
-  data: TransactionsListAllCategoriesResponse | undefined
+    onChange: (value: number[]) => void;
+    categories: { items: Blah[] };
+    value: number[];
+    categoryLookup: Record<CategoryOut["id"], CategoryOut>;
 }) {
-  return (
-    <>
-      <VStack>
-        {value?.map((category_id: string) => (
-          <CategoryLink
-            onRemove={() => onChange(value.filter((c) => c !== category_id))}
-            key={category_id}
-            category={data?.find((c) => c.id === category_id)!}
-          />
-        ))}
-      </VStack>
-      <SelectRoot
-        id="category_links"
-        placeholder="Select a category"
-        multiple
-        size="sm"
-        collection={createListCollection(categories)}
-        onValueChange={(val) => {
-          onChange(val.value);
-        }}
-      >
-        <SelectTrigger>
-          <SelectValueText placeholder="Select a category" />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.items.map((cat) => (
-            <SelectItem key={cat.value} item={cat}>
-              {cat.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-    </>
-  );
+    return (
+        <>
+            <VStack>
+                {value?.map((category_id: number) => (
+                    <CategoryLink
+                        onRemove={() => onChange(value.filter((c) => c !== category_id))}
+                        key={category_id}
+                        category={categoryLookup[category_id]}
+                    />
+                ))}
+            </VStack>
+            <SelectRoot
+                id="category_links"
+                placeholder="Select a category"
+                multiple
+                size="sm"
+                collection={createListCollection(categories)}
+                onValueChange={(val) => {
+                    onChange(val.value as unknown as number[]);
+                }}
+            >
+                <SelectTrigger>
+                    <SelectValueText placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                    {categories.items.map((cat) => (
+                        <SelectItem key={cat.value} item={cat}>
+                            {cat.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </SelectRoot>
+        </>
+    );
 }
 
 function CategoryLink({
-  category,
-  onRemove,
+    category,
+    onRemove,
 }: {
-  category: CategoryOut;
-  onRemove: (category: CategoryOut) => void;
+    category: CategoryOut;
+    onRemove: (category: CategoryOut) => void;
 }) {
-  return (
-    <Tag.Root size="sm">
-      <Text key={category.id}>{category.stylized_name}</Text>
-      <CloseButton onClick={() => onRemove(category)} />
-    </Tag.Root>
-  );
+    return (
+        <Tag.Root size="sm">
+            <Text key={category.id}>{category.stylized_name}</Text>
+            <CloseButton onClick={() => onRemove(category)} />
+        </Tag.Root>
+    );
 }

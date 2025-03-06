@@ -237,8 +237,18 @@ class BudgetCreate(BaseModel):
 
 
 class BudgetOut(BudgetBase):
-    id: int
+    id: BudgetId
     entries: list[BudgetEntryOut]
+
+
+class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
+    transactions: list[TransactionOut]
+
+class BudgetEntryStatus(BudgetEntryBase):
+    category_links_status: list[BudgetCategoryLinkStatus]
+
+class BudgetStatus(BudgetBase):
+    entry_status: list[BudgetEntryStatus]
 
 
 class ProcessFileJobBase(BaseModel):

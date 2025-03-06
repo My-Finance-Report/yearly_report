@@ -16,7 +16,6 @@ import {
   type ApiError,
   LoginService,
   type NewPassword,
-  type Token,
 } from "../client"
 import { isLoggedIn } from "../hooks/useAuth"
 import useCustomToast from "../hooks/useCustomToast"

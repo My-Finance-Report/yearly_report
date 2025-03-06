@@ -45,9 +45,7 @@ export function GroupingConfig({
             opacity={!groupingOptions.includes(option) ? 0.5 : 1}
             p={2}
             borderRadius="md"
-            onClick={() =>
-              handleToggleOption(option)
-            }
+            onClick={() => handleToggleOption(option)}
           >
             <Icon as={AddIcon} mr={1} />
             <TagLabel>

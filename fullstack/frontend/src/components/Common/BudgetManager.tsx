@@ -1,32 +1,37 @@
-import { BudgetCategoryLinkOut, BudgetEntryOut, BudgetsService, CategoryOut } from "@/client";
-import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import {
+  type BudgetCategoryLinkOut,
+  type BudgetEntryOut,
+  BudgetsService,
+  CategoryOut,
+} from "@/client"
+import { DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
-  Tag,
   Button,
   HStack,
   Input,
-  Text,
   TableBody,
   TableCell,
   TableColumnHeader,
   TableHeader,
   TableRoot,
   TableRow,
+  Tag,
+  Text,
   VStack,
-} from "@chakra-ui/react";
+} from "@chakra-ui/react"
 import {
+  type UseMutationResult,
   useMutation,
-  UseMutationResult,
   useQueryClient,
-} from "@tanstack/react-query";
-import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
-import { BudgetOut } from "../../client";
-import EditBudgetEntry from "./EditBudgetEntry";
+} from "@tanstack/react-query"
+import { useState } from "react"
+import { FaPlus } from "react-icons/fa"
+import type { BudgetOut } from "../../client"
+import EditBudgetEntry from "./EditBudgetEntry"
 
 export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   const deleteEntryMutation = useMutation({
     mutationFn: (entryId: number) =>
@@ -34,9 +39,9 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
         entryId: entryId,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] })
     },
-  });
+  })
 
   return (
     <Box>
@@ -45,7 +50,7 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Budget Entry</TableColumnHeader>
-              <TableColumnHeader>Amount</TableColumnHeader>
+              <TableColumnHeader>Amount Per Month</TableColumnHeader>
               <TableColumnHeader>Categories</TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
@@ -73,12 +78,12 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
         <CreateNew budgetId={budget.id} />
       </VStack>
     </Box>
-  );
-};
+  )
+}
 
 function CreateNew({ budgetId }: { budgetId: number }) {
-  const [newEntry, setNewEntry] = useState<string>("");
-  const queryClient = useQueryClient();
+  const [newEntry, setNewEntry] = useState<string>("")
+  const queryClient = useQueryClient()
 
   const addEntryMutation = useMutation({
     mutationFn: (amount: number) =>
@@ -87,10 +92,10 @@ function CreateNew({ budgetId }: { budgetId: number }) {
         requestBody: { name: newEntry, amount: amount },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      setNewEntry("");
+      queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      setNewEntry("")
     },
-  });
+  })
 
   return (
     <HStack w="full">
@@ -109,17 +114,17 @@ function CreateNew({ budgetId }: { budgetId: number }) {
         Add Entry
       </Button>
     </HStack>
-  );
+  )
 }
 
 function ActionsCell({
   entry,
   deleteEntryMutation,
 }: {
-  entry: BudgetEntryOut;
-  deleteEntryMutation: UseMutationResult<unknown, Error, number, unknown>;
+  entry: BudgetEntryOut
+  deleteEntryMutation: UseMutationResult<unknown, Error, number, unknown>
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
   return (
     <HStack>
       <Button size="sm" aria-label="Edit" onClick={() => setIsOpen(true)}>
@@ -140,14 +145,13 @@ function ActionsCell({
         Delete
       </Button>
     </HStack>
-  );
+  )
 }
 
-
-function CategoryLink({category}: {category: BudgetCategoryLinkOut}) {
-   return ( 
-    <Tag.Root size="sm" m={2} >
-    <Text key={category.id}>{category.stylized_name}</Text>
+function CategoryLink({ category }: { category: BudgetCategoryLinkOut }) {
+  return (
+    <Tag.Root size="sm" m={2}>
+      <Text key={category.id}>{category.stylized_name}</Text>
     </Tag.Root>
-)
+  )
 }
