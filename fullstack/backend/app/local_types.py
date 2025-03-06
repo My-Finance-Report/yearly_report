@@ -333,7 +333,7 @@ class TransactionSourceGroup(BaseModel):
 
 
 class AggregatedTransactions(BaseModel):
-    groups: list[TransactionSourceGroup]
+    groups: list[AggregatedGroup]
     overall_withdrawals: float
     overall_deposits: float
     overall_balance: float

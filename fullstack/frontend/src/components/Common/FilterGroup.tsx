@@ -1,5 +1,4 @@
 import type React from "react"
-import { useState } from "react"
 
 import { Box, CloseButton, HStack, Tag, Text } from "@chakra-ui/react"
 import {
@@ -17,20 +16,14 @@ import {
   horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable"
-import type { TransactionSourceGroup } from "../../client"
 import BoxWithText, { type CollapsibleName } from "./BoxWithText"
 import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
-import { TransactionSourceSelector } from "./TransactionSourceSelector"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
 import { CSS } from "@dnd-kit/utilities"
 
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
 
 export function FilterGroup({
-  activeTransactionSource,
-  setActiveTransactionSource,
-  data,
   groupingOptions,
   setShowDeposits,
   showDeposits,
@@ -38,13 +31,8 @@ export function FilterGroup({
   setCollapsedItems,
   collapsedItems,
 }: {
-  activeTransactionSource: TransactionSourceGroup
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
   showDeposits: boolean
-  setActiveTransactionSource: React.Dispatch<
-    React.SetStateAction<TransactionSourceGroup | null>
-  >
-  data: TransactionsGetAggregatedTransactionsResponse
   groupingOptions: GroupByOption[]
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
@@ -100,15 +88,10 @@ export function FilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
-          <HStack gap={4} paddingTop={4} justify={"space-between"}>
+          <HStack gap={4} paddingTop={4}>
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
-            />
-            <TransactionSourceSelector
-              activeTransactionSource={activeTransactionSource}
-              setActiveTransactionSource={setActiveTransactionSource}
-              allTransactionSources={data.groups}
             />
             <GroupingConfig
               groupingOptions={groupingOptions}
@@ -131,16 +114,6 @@ export function FilterGroup({
                   cursor="default"
                 >
                   <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
-                </Tag.Root>
-                <Text>from</Text>
-                <Tag.Root
-                  paddingY={1.5}
-                  paddingX={2}
-                  color="green.500"
-                  size="lg"
-                  cursor="default"
-                >
-                  <Text>{activeTransactionSource.transaction_source_name}</Text>
                 </Tag.Root>
                 <Text>grouped by</Text>
                 <SortableContext

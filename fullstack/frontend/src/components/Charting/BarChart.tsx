@@ -34,7 +34,7 @@ export function GenericBarChart({
   const computedConfig: ChartConfig = React.useMemo(() => {
     if (config) return config
 
-    return uniqueKeys.reduce((acc, key, index) => {
+    return uniqueKeys.reduce((acc, key) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
         color: getColorForName(key),

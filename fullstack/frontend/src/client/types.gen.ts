@@ -12,7 +12,7 @@ export type AggregatedGroup = {
 };
 
 export type AggregatedTransactions = {
-    groups: Array<TransactionSourceGroup>;
+    groups: Array<AggregatedGroup>;
     overall_withdrawals: number;
     overall_deposits: number;
     overall_balance: number;
@@ -261,15 +261,6 @@ export type TransactionSourceBase = {
     name: string;
     archived?: boolean;
     source_kind?: SourceKind;
-};
-
-export type TransactionSourceGroup = {
-    transaction_source_id: number;
-    transaction_source_name: string;
-    total_withdrawals: number;
-    total_deposits: number;
-    total_balance: number;
-    groups: Array<AggregatedGroup>;
 };
 
 export type TransactionSourceOut = {

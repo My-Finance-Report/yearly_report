@@ -20,19 +20,19 @@ import { FiEdit } from "react-icons/fi"
 import type {
   AggregatedGroup,
   TransactionOut,
-  TransactionSourceGroup,
+  TransactionsGetAggregatedTransactionsResponse,
 } from "../../client"
 import EditTransaction from "./EditTransaction"
 
 export function TransactionsTable({
-  sourceGroup,
+  data,
   toggleGroup,
   expandedGroups,
   toShowNames,
   showWithdrawals,
 }: {
-  sourceGroup: TransactionSourceGroup
-  toggleGroup: (sourceId: number, groupKey: string) => void
+  data:TransactionsGetAggregatedTransactionsResponse
+  toggleGroup: (sourceId: number | string, groupKey: string) => void
   toShowNames?: (string | undefined)[] | undefined
   expandedGroups: { [key: string]: boolean }
   showWithdrawals: boolean
@@ -43,7 +43,7 @@ export function TransactionsTable({
         <TableRow>
           <TableColumnHeader />
           <TableColumnHeader>
-            {sourceGroup.groups[0].groupby_kind?.toLocaleUpperCase()}
+            {data.groups[0].groupby_kind?.toLocaleUpperCase()}
           </TableColumnHeader>
           <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
           <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
@@ -52,10 +52,9 @@ export function TransactionsTable({
       </TableHeader>
       <TableBody>
         <MemoizedRenderGroups
-          groups={sourceGroup.groups}
-          sourceId={sourceGroup.transaction_source_id}
-          totalWidthdrawals={sourceGroup.total_withdrawals}
-          totalDeposits={sourceGroup.total_deposits}
+          groups={data.groups}
+          totalWidthdrawals={data.overall_withdrawals}
+          totalDeposits={data.overall_deposits}
           showWithdrawals={showWithdrawals}
           pathPrefix=""
           toShowNames={toShowNames}
@@ -65,13 +64,13 @@ export function TransactionsTable({
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Source Totals</TableCell>
           <TableCell textAlign="end">
-            {formatAmount(sourceGroup.total_withdrawals)}
+            {formatAmount(data.overall_withdrawals)}
           </TableCell>
           <TableCell textAlign="end">
-            {formatAmount(sourceGroup.total_deposits)}
+            {formatAmount(data.overall_deposits)}
           </TableCell>
           <TableCell textAlign="end">
-            {formatAmount(sourceGroup.total_balance)}
+            {formatAmount(data.overall_balance)}
           </TableCell>
         </TableRow>
       </TableBody>
@@ -81,7 +80,6 @@ export function TransactionsTable({
 
 const MemoizedRenderGroups = React.memo(function RenderGroups({
   groups,
-  sourceId,
   pathPrefix,
   expandedGroups,
   toggleGroup,
@@ -91,9 +89,8 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
   showWithdrawals,
 }: {
   groups: AggregatedGroup[]
-  sourceId: number
   pathPrefix: string
-  toggleGroup: (sourceId: number, groupKey: string) => void
+  toggleGroup: (groupId: number | string, groupKey: string) => void
   expandedGroups: { [key: string]: boolean }
   toShowNames?: (string | undefined)[] | undefined
   totalWidthdrawals?: number
@@ -106,7 +103,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
         ? `${pathPrefix}-${group.group_id}`
         : `${group.group_id}`
 
-      const isExpanded = expandedGroups[`${sourceId}-${groupKey}`] || false
+      const isExpanded = expandedGroups[`${group.group_id}-${groupKey}`] || false
 
       const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
       const specificAmount = showWithdrawals
@@ -119,7 +116,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
         <React.Fragment key={groupKey}>
           <TableRow
             style={{ cursor: "pointer" }}
-            onClick={() => toggleGroup(sourceId, groupKey)}
+            onClick={() => toggleGroup(group.group_id,groupKey)}
           >
             <TableCell>
               {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
@@ -182,7 +179,6 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                         <TableBody>
                           <MemoizedRenderGroups
                             groups={group.subgroups}
-                            sourceId={sourceId}
                             pathPrefix={groupKey}
                             toggleGroup={toggleGroup}
                             expandedGroups={expandedGroups}
@@ -219,7 +215,6 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
     })
   }, [
     groups,
-    sourceId,
     pathPrefix,
     expandedGroups,
     toggleGroup,

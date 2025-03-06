@@ -10,7 +10,7 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { type TransactionSourceGroup, TransactionsService } from "../../client"
+import { AggregatedGroup, TransactionsService } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
 
 import { useColorPalette } from "@/hooks/useColor"
@@ -25,6 +25,7 @@ function Transactions() {
     [key: string]: boolean
   }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
+    GroupByOption.account,
     GroupByOption.month,
     GroupByOption.category,
   ])
@@ -32,7 +33,7 @@ function Transactions() {
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
 
-  const toggleGroup = (sourceId: number, groupKey: string) => {
+  const toggleGroup = (sourceId: number | string, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
@@ -53,28 +54,23 @@ function Transactions() {
 
   const { getColorForName } = useColorPalette()
   data?.groups.map((group) => {
-    group.groups?.map((subgroup) => {
-      getColorForName(subgroup.group_name)
-      subgroup.subgroups?.map((subsubgroup) => {
-        getColorForName(subsubgroup.group_name)
+      getColorForName(group.group_name)
+      group.subgroups?.map((subgroup) => {
+        getColorForName(subgroup.group_name)
       })
-    })
   })
 
-  const [activeTransactionSource, setActiveTransactionSource] =
-    useState<TransactionSourceGroup | null>(null)
+  const [activeGrouping, setactiveGrouping] =
+    useState<AggregatedGroup | null>(null)
 
   useEffect(() => {
     if (data?.groups.length) {
-      setActiveTransactionSource(data.groups[0])
+      setactiveGrouping(data.groups[0])
     }
   }, [data?.groups])
 
   const namesForLegends = data?.groups
-    .flatMap((group) => group.groups.map((subgroup) => subgroup.subgroups))
-    .flatMap((subgroup) =>
-      subgroup?.map((subsubgroup) => subsubgroup.group_name),
-    )
+    .flatMap((group) => group?.subgroups?.map((subgroup) => subgroup.group_name))
 
   if (isLoading) {
     return <Spinner />
@@ -84,7 +80,7 @@ function Transactions() {
     return <Text color="red.500">Error loading transactions.</Text>
   }
 
-  if (data && data.groups.length === 0 && !activeTransactionSource) {
+  if (data && data.groups.length === 0 && !activeGrouping) {
     return <Spinner />
   }
 
@@ -105,7 +101,7 @@ function Transactions() {
         />
       </div>
       <div>
-        {data?.groups && data.groups.length > 0 && activeTransactionSource ? (
+        {data?.groups && data.groups.length > 0 && activeGrouping ? (
           <div
             style={{
               flexDirection: "column",
@@ -115,18 +111,15 @@ function Transactions() {
             }}
           >
             <FilterGroup
-              activeTransactionSource={activeTransactionSource}
-              setActiveTransactionSource={setActiveTransactionSource}
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
-              data={data}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
               setCollapsedItems={setCollapsedItems}
               collapsedItems={collapsedItems}
             />
             <VisualizationPanel
-              sourceGroup={activeTransactionSource}
+              sourceGroup={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}
               setCollapsedItems={setCollapsedItems}
@@ -135,7 +128,7 @@ function Transactions() {
 
             <TransactionsTable
               toggleGroup={toggleGroup}
-              sourceGroup={activeTransactionSource}
+              data={data}
               toShowNames={namesForLegends}
               expandedGroups={expandedGroups}
               showWithdrawals={!showDeposits}

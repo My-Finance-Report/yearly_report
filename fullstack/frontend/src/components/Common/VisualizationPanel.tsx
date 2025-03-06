@@ -21,14 +21,13 @@ import {
   type GroupByOption,
   type SankeyGetSankeyDataResponse,
   SankeyService,
-  type TransactionSourceGroup,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
-import { GenericPieChart } from "../Charting/PieChart"
+import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
 
 interface VisualizationProps {
-  sourceGroup: TransactionSourceGroup | undefined
+  sourceGroup: AggregatedGroup | undefined
   isLoading: boolean
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
@@ -36,7 +35,7 @@ interface VisualizationProps {
 }
 
 interface ValidatedVisualizationProps {
-  sourceGroup: TransactionSourceGroup
+  sourceGroup: AggregatedGroup
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
@@ -107,10 +106,10 @@ function BarChart({
     return group.subgroups?.some(hasTimeGrouping) || false
   }
 
-  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping)
+  const hasValidTimeGrouping = sourceGroup.subgroups?.some(hasTimeGrouping)
 
   const categoryKeys = new Set<string>()
-  for (const group of sourceGroup.groups) {
+  for (const group of sourceGroup.subgroups || []) {
     if (group.subgroups) {
       for (const subgroup of group.subgroups) {
         categoryKeys.add(subgroup.group_name)
@@ -118,8 +117,8 @@ function BarChart({
     }
   }
 
-  const chartData = hasValidTimeGrouping
-    ? sourceGroup.groups.map((group) => {
+  const chartData: GenericChartDataItem[] | undefined = hasValidTimeGrouping
+    ? sourceGroup.subgroups?.map((group) => {
         const base: Record<string, number | string> = {
           date: group.group_id.toString(),
         }
@@ -136,11 +135,11 @@ function BarChart({
       })
     : []
 
-  const description = `${sourceGroup.transaction_source_name} ${
+  const description = `${sourceGroup.group_name} ${
     showDeposits ? "deposits" : "withdrawals"
-  }, by ${sourceGroup.groups[0].groupby_kind} ${
-    sourceGroup.groups[0].subgroups?.length
-      ? `then ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+  }, by ${sourceGroup.groupby_kind} ${
+    sourceGroup.subgroups?.length
+      ? `then ${sourceGroup.subgroups[0].groupby_kind}`
       : ""
   }`
 
@@ -151,7 +150,7 @@ function BarChart({
       setCollapsedItems={setCollapsedItems}
       collapsedItems={collapsedItems}
     >
-      {hasValidTimeGrouping ? (
+      {hasValidTimeGrouping && chartData ? (
         <GenericBarChart
           data={chartData}
           description={description}
@@ -176,8 +175,7 @@ function PieBox({
   setCollapsedItems,
   collapsedItems,
 }: ValidatedVisualizationProps) {
-  const chartDataMap = sourceGroup.groups
-    .flatMap(
+  const chartDataMap = sourceGroup.subgroups?.flatMap(
       (group) =>
         group.subgroups?.map((subgroup) => ({
           group: subgroup.group_name,
@@ -201,20 +199,16 @@ function PieBox({
       {} as Record<string, number>,
     )
 
-  const chartData = Object.entries(chartDataMap).map(([group, amount]) => ({
-    group,
-    amount,
-  }))
-
   let description: string
   if (
-    !sourceGroup.groups[0].subgroups ||
-    sourceGroup.groups[0].subgroups.length === 0
+    !sourceGroup.subgroups ||
+    sourceGroup.subgroups.length === 0
   ) {
-    description = `${sourceGroup.transaction_source_name}`
+    description = `${sourceGroup.group_name}`
   } else {
-    description = `${sourceGroup.transaction_source_name} by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+    description = `${sourceGroup.group_name} by ${sourceGroup.subgroups[0].groupby_kind}`
   }
+  if (!chartDataMap) return null
   return (
     <BoxWithText
       text={""}
@@ -223,8 +217,8 @@ function PieBox({
       COMPONENT_NAME="Pie Chart"
     >
       <GenericPieChart
-        data={chartData}
-        dataKey="amount"
+        data={Object.entries(chartDataMap).map(([key, value]) => ({ name: key, value }))}
+        dataKey="value"
         description={description}
         nameKey="group"
         config={null}

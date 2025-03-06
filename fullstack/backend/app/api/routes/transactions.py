@@ -245,37 +245,17 @@ def get_aggregated_transactions(
 
     overall_withdrawals = 0.0
     overall_deposits = 0.0
-    ts_groups = []
 
     transactions.sort(key=lambda t: t.transaction_source_id)
-    for ts_id, ts_txns_iter in groupby(
-        transactions, key=lambda t: t.transaction_source_id
-    ):
-        ts_txns = list(ts_txns_iter)
-        # Compute source-level totals.
-        ts_withdrawals = sum(t.amount for t in ts_txns if t.kind == "withdrawal")
-        ts_deposits = sum(t.amount for t in ts_txns if t.kind == "deposit")
-        overall_withdrawals += ts_withdrawals
-        overall_deposits += ts_deposits
 
-        # Use the recursive function to group by the provided options.
-        groups = recursive_group(ts_txns, group_by, category_lookup, ts_lookup)
+    overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
+    overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
-        ts_obj = ts_lookup[ts_id]
-        ts_groups.append(
-            TransactionSourceGroup(
-                transaction_source_id=ts_obj.id,
-                transaction_source_name=ts_obj.name,
-                total_withdrawals=ts_withdrawals,
-                total_deposits=ts_deposits,
-                total_balance=ts_deposits - ts_withdrawals,
-                groups=groups,
-            )
-        )
+    groups = recursive_group(transactions, group_by, category_lookup, ts_lookup)
 
     overall_balance = overall_deposits - overall_withdrawals
     return AggregatedTransactions(
-        groups=ts_groups,
+        groups=groups,
         overall_withdrawals=overall_withdrawals,
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,
