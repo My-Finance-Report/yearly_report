@@ -41,7 +41,7 @@ const useAuth = () => {
       )
     },
     onError: (err: ApiError) => {
-      let errDetail = (err.body as any)?.detail
+      let errDetail = (err.body as { detail: string })?.detail
 
       if (err instanceof AxiosError) {
         errDetail = err.message
@@ -67,7 +67,7 @@ const useAuth = () => {
       navigate({ to: "/" })
     },
     onError: (err: ApiError) => {
-      let errDetail = (err.body as any)?.detail
+      let errDetail = (err.body as {detail: string})?.detail
 
       if (err instanceof AxiosError) {
         errDetail = err.message

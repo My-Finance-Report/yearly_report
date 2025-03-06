@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.api.routes.manage_budgets import get_stylized_name_lookup
 from app.db import get_current_user, get_db
 from app.local_types import (
     CategoryBase,
@@ -10,7 +11,6 @@ from app.local_types import (
 )
 from app.models import Category, TransactionSource, User
 from app.worker.enqueue_job import enqueue_recategorization
-from app.api.routes.manage_budgets import get_stylized_name_lookup
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
@@ -20,14 +20,18 @@ def get_transaction_sources(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TransactionSourceOut]:
-    db_sources =  (
+    db_sources = (
         session.query(TransactionSource)
         .filter(TransactionSource.user_id == user.id)
         .all()
     )
 
-
-    return [TransactionSourceOut(name=db_source.name,archived=db_source.archived, id=db_source.id) for db_source in db_sources]
+    return [
+        TransactionSourceOut(
+            name=db_source.name, archived=db_source.archived, id=db_source.id
+        )
+        for db_source in db_sources
+    ]
 
 
 @router.post("/", response_model=TransactionSourceOut)
@@ -54,7 +58,9 @@ def create_transaction_source(
     session.commit()
     session.refresh(new_source)
 
-    return TransactionSourceOut(name=new_source.name,archived=new_source.archived, id=new_source.id)
+    return TransactionSourceOut(
+        name=new_source.name, archived=new_source.archived, id=new_source.id
+    )
 
 
 @router.put("/{source_id}", response_model=TransactionSourceOut)
@@ -78,7 +84,9 @@ def update_transaction_source(
 
     session.commit()
     session.refresh(db_source)
-    return TransactionSourceOut(name=db_source.name,archived=db_source.archived, id=db_source.id)
+    return TransactionSourceOut(
+        name=db_source.name, archived=db_source.archived, id=db_source.id
+    )
 
 
 @router.delete("/{source_id}", response_model=None)
@@ -115,11 +123,22 @@ def get_categories(
     if not source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
 
-    db_categories =  session.query(Category).filter(Category.source_id == source_id).all()
+    db_categories = (
+        session.query(Category).filter(Category.source_id == source_id).all()
+    )
 
     stylized_name_lookup = get_stylized_name_lookup(session, user)
 
-    return [CategoryOut(name=db_category.name,archived=db_category.archived, id=db_category.id, source_id=db_category.source_id, stylized_name=stylized_name_lookup[db_category.id]) for db_category in db_categories]
+    return [
+        CategoryOut(
+            name=db_category.name,
+            archived=db_category.archived,
+            id=db_category.id,
+            source_id=db_category.source_id,
+            stylized_name=stylized_name_lookup[db_category.id],
+        )
+        for db_category in db_categories
+    ]
 
 
 @router.post("/{source_id}/categories", response_model=CategoryOut)
@@ -160,7 +179,13 @@ def create_category(
 
     stylized_name_lookup = get_stylized_name_lookup(session, user)
 
-    return CategoryOut(name=new_category.name,archived=new_category.archived, id=new_category.id, source_id=new_category.source_id, stylized_name=stylized_name_lookup[new_category.id])
+    return CategoryOut(
+        name=new_category.name,
+        archived=new_category.archived,
+        id=new_category.id,
+        source_id=new_category.source_id,
+        stylized_name=stylized_name_lookup[new_category.id],
+    )
 
 
 @router.put("/categories/{category_id}", response_model=CategoryOut)
@@ -185,7 +210,13 @@ def update_category(
     session.commit()
     session.refresh(db_category)
     stylized_name_lookup = get_stylized_name_lookup(session, user)
-    return CategoryOut(name=db_category.name,archived=db_category.archived, id=db_category.id, source_id=db_category.source_id, stylized_name=stylized_name_lookup[db_category.id])
+    return CategoryOut(
+        name=db_category.name,
+        archived=db_category.archived,
+        id=db_category.id,
+        source_id=db_category.source_id,
+        stylized_name=stylized_name_lookup[db_category.id],
+    )
 
 
 @router.delete("/categories/{category_id}", response_model=None)
