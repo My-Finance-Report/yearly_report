@@ -26,7 +26,7 @@ import {
 } from "@tanstack/react-query"
 import { useState } from "react"
 import { FaPlus } from "react-icons/fa"
-import type { BudgetOut, BudgetStatus, BudgetEntryStatus } from "../../client"
+import type { BudgetOut, BudgetStatus, BudgetEntryStatus, BudgetCategoryLinkStatus } from "../../client"
 import EditBudgetEntry from "./EditBudgetEntry"
 
 export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budgetStatus: BudgetStatus }) => {
@@ -101,10 +101,36 @@ function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEn
         </TableRow>
       </TableHeader>
       <TableBody>
-        {budgetEntryStatus.category_links_status.map( (entry)=>(
+        {budgetEntryStatus.category_links_status.map( (link)=>(
+          <>
           <TableRow>
-            <TableCell>{entry.stylized_name}</TableCell>
+            <TableCell>{link.stylized_name}</TableCell>
             <TableCell>{68}</TableCell>
+          </TableRow>
+          <TransactionLevelTable categoryLinkStatus={link}/>
+          </>
+        )
+        )}
+      </TableBody>
+    </TableRoot>
+  )
+}
+
+function TransactionLevelTable({ categoryLinkStatus }: { categoryLinkStatus: BudgetCategoryLinkStatus }) {
+
+  return (
+    <TableRoot>
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeader>Transactions</TableColumnHeader>
+          <TableColumnHeader>Amount</TableColumnHeader>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {categoryLinkStatus.transactions.map( (transaction)=>(
+          <TableRow>
+            <TableCell>{transaction.description}</TableCell>
+            <TableCell>{transaction.amount}</TableCell>
           </TableRow>
         )
         )}
@@ -112,6 +138,11 @@ function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEn
     </TableRoot>
   )
 }
+
+
+
+
+
 
 function CreateNew({ budgetId }: { budgetId: number }) {
   const [newEntry, setNewEntry] = useState<string>("")
