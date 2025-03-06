@@ -35,7 +35,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
   const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> = budget.entries.reduce( (acc, entry) => {
     acc[entry.id] = entry
     return acc
-  }, {})
+  }, {} as Record<BudgetEntryOut["id"], BudgetEntryOut>)
 
   const deleteEntryMutation = useMutation({
     mutationFn: (entryId: number) =>

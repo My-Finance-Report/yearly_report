@@ -73,23 +73,24 @@ export type BudgetEntryCreate = {
 
 export type BudgetEntryEdit = {
     amount: (number | string);
+    id: number;
     name: string;
     budget_id: number;
-    id: number;
     category_links: Array<BudgetCategoryLinkCreate>;
 };
 
 export type BudgetEntryOut = {
     amount: string;
+    id: number;
     name: string;
     budget_id: number;
-    id: number;
     user_id: number;
     category_links: Array<BudgetCategoryLinkOut>;
 };
 
 export type BudgetEntryStatus = {
     amount: string;
+    id: number;
     name: string;
     budget_id: number;
     category_links_status: Array<BudgetCategoryLinkStatus>;

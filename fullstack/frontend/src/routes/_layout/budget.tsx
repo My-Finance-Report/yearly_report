@@ -42,7 +42,7 @@ function ManageBudgets() {
 
   console.log(budgetStatus)
 
-  if (isError) {
+  if (isError||statusIsError) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
@@ -52,7 +52,7 @@ function ManageBudgets() {
     )
   }
 
-  if (isLoading) {
+  if (isLoading || statusLoading) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
@@ -68,7 +68,7 @@ function ManageBudgets() {
         the budget feature is still very much in development, so consider it
         lucky when things work :)
       </Text>
-      {budget ? (
+      {budget && budgetStatus ? (
         <ManageBudget budget={budget} budgetStatus={budgetStatus} />
       ) : (
         <Flex justifyContent="center">
