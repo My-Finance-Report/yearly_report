@@ -29,20 +29,7 @@ import EditBudgetEntry from "./EditBudgetEntry";
 
 export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
   const queryClient = useQueryClient();
-  const [newEntry, setNewEntry] = useState<string>("");
-  const [editingEntry, setEditingEntry] = useState<BudgetEntryOut | null>(null);
 
-  const addEntryMutation = useMutation({
-    mutationFn: (amount: number) =>
-      BudgetsService.createBudgetEntry({
-        budgetId: budget.id,
-        requestBody: { name: newEntry, amount: amount },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      setNewEntry("");
-    },
-  });
   const deleteEntryMutation = useMutation({
     mutationFn: (entryId: number) =>
       BudgetsService.deleteBudgetEntry({
@@ -52,32 +39,6 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
     },
   });
-  const updateEntryMutation = useMutation({
-    mutationFn: ({
-      entryId,
-      name,
-      amount,
-    }: {
-      entryId: number;
-      name: string;
-      amount: string;
-    }) =>
-      BudgetsService.updateBudgetEntry({
-        entryId: entryId,
-        requestBody: {
-          id: entryId,
-          category_links: [],
-          name,
-          amount,
-          budget_id: budget.id,
-        },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-    },
-  });
-
-  console.log(editingEntry)
 
   return (
     <Box>
@@ -94,71 +55,82 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
           <TableBody>
             {budget.entries?.sort().map((entry) => (
               <TableRow key={entry.id}>
-                <TableCell minW={60}>
-                  {entry.name}
-                </TableCell>
-                <TableCell>
-                  {entry.amount}
-                </TableCell>
+                <TableCell minW={60}>{entry.name}</TableCell>
+                <TableCell>{entry.amount}</TableCell>
                 <TableCell>
                   {entry.category_links?.map((category) => (
                     <Text key={category.id}>{category.stylized_name}</Text>
                   ))}
                 </TableCell>
                 <TableCell textAlign="right">
-                    <ActionsCell
-                      entry={entry}
-                      deleteEntryMutation={deleteEntryMutation}
-                    />
+                  <ActionsCell
+                    entry={entry}
+                    deleteEntryMutation={deleteEntryMutation}
+                  />
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </TableRoot>
-
-        <HStack w="full">
-          <Input
-            placeholder="New entry name"
-            maxW={200}
-            value={newEntry}
-            onChange={(e) => setNewEntry(e.target.value)}
-          />
-          <Button
-            size="sm"
-            onClick={() => addEntryMutation.mutate(0)}
-            disabled={!newEntry.trim()}
-          >
-            <FaPlus />
-            Add Entry
-          </Button>
-        </HStack>
+        <CreateNew budgetId={budget.id} />
       </VStack>
     </Box>
   );
 };
+
+function CreateNew({ budgetId }: { budgetId: number }) {
+  const [newEntry, setNewEntry] = useState<string>("");
+  const queryClient = useQueryClient();
+
+  const addEntryMutation = useMutation({
+    mutationFn: (amount: number) =>
+      BudgetsService.createBudgetEntry({
+        budgetId,
+        requestBody: { name: newEntry, amount: amount },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      setNewEntry("");
+    },
+  });
+
+  return (
+    <HStack w="full">
+      <Input
+        placeholder="New entry name"
+        maxW={200}
+        value={newEntry}
+        onChange={(e) => setNewEntry(e.target.value)}
+      />
+      <Button
+        size="sm"
+        onClick={() => addEntryMutation.mutate(0)}
+        disabled={!newEntry.trim()}
+      >
+        <FaPlus />
+        Add Entry
+      </Button>
+    </HStack>
+  );
+}
 
 function ActionsCell({
   entry,
   deleteEntryMutation,
 }: {
   entry: BudgetEntryOut;
-  deleteEntryMutation:UseMutationResult<unknown, Error, number, unknown> ;
+  deleteEntryMutation: UseMutationResult<unknown, Error, number, unknown>;
 }) {
-
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <HStack>
-      <Button
-        size="sm"
-        aria-label="Edit"
-        onClick={() => setIsOpen(true)}
-      >
+      <Button size="sm" aria-label="Edit" onClick={() => setIsOpen(true)}>
         <EditIcon /> Edit
-      <EditBudgetEntry
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            budgetEntry={entry}
-          />
+        <EditBudgetEntry
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          budgetEntry={entry}
+        />
       </Button>
       <Button
         size="sm"

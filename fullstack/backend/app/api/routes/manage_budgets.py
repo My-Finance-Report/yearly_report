@@ -289,7 +289,9 @@ def delete_budget_entry(
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found.")
 
+    session.query(BudgetCategoryLink).filter(BudgetCategoryLink.budget_entry_id == entry_id).delete()
     session.delete(db_entry)
+
     session.commit()
     return None
 

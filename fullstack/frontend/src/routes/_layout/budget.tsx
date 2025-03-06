@@ -52,6 +52,7 @@ function ManageBudgets() {
 
   return (
     <Container mt={24} maxW="large">
+      <Text fontSize="lg" textAlign="center" py={12}>the budget feature is still very much in development, so consider it lucky when things work :)</Text>
       {budget ? (
         <ManageBudget budget={budget} />
       ) : (
