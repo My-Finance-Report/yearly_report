@@ -5,12 +5,14 @@ export enum GroupByOption {
   category = "category",
   month = "month",
   year = "year",
+  account = "account",
 }
 
 const availableOptions: GroupByOption[] = [
   GroupByOption.category,
   GroupByOption.year,
   GroupByOption.month,
+  GroupByOption.account,
 ]
 
 interface GroupingConfigProps {

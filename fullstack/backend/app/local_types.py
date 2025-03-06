@@ -292,6 +292,7 @@ class TransactionGroup(BaseModel):
 
 
 class GroupByOption(str, Enum):
+    account = "account"
     category = "category"
     month = "month"
     year = "year"

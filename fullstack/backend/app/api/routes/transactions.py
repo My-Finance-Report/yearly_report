@@ -24,6 +24,7 @@ from app.models import (
     CategoryId,
     Transaction,
     TransactionSource,
+    TransactionSourceId,
     User,
 )
 
@@ -31,23 +32,39 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
 CategoryLookup = dict[CategoryId, Category]
+AccountLookup = dict[TransactionSourceId, TransactionSource]
 
-GroupByKeyFunc = Callable[[Transaction, CategoryLookup], str]
+GroupByKeyFunc = Callable[[Transaction, CategoryLookup, AccountLookup], str]
 SortFunc = Callable[[Transaction, CategoryLookup], str | datetime]
 GroupByNameFunc = Callable[[str], str]
 GroupByIdFunc = Callable[[str], str]
 
 
-# Helper functions
-def get_category_key(transaction: Transaction, lookup: CategoryLookup) -> str:
+def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
+    categories = (
+        session.query(Category, TransactionSource)
+        .join(TransactionSource, TransactionSource.id == Category.source_id)
+        .filter(Category.user_id == user.id)
+        .all()
+    )
+    return {
+        category.id: f"{category.name} ({source.name})"
+        for category, source in categories
+    }
+
+def get_account_key(transaction: Transaction, _lookup: CategoryLookup, account_lookup: AccountLookup) -> str:
+    return account_lookup[transaction.transaction_source_id].name
+
+
+def get_category_key(transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
     return lookup[transaction.category_id].name
 
 
-def get_month_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
+def get_month_key(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
     return transaction.date_of_transaction.strftime("%B %Y")
 
 
-def get_year_key(transaction: Transaction, _lookup: CategoryLookup) -> str:
+def get_year_key(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
     return str(transaction.date_of_transaction.year)
 
 
@@ -63,31 +80,15 @@ def get_year_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime
     return transaction.date_of_transaction
 
 
-def get_category_name(key: str) -> str:
-    return key
+def get_account_sort(transaction: Transaction, _lookup: CategoryLookup) -> str:
+    return str(transaction.transaction_source_id)
 
-
-def get_month_name(key: str) -> str:
-    return key
-
-
-def get_year_name(key: str) -> str:
-    return key
-
-
-def get_category_id(key: str) -> str:
-    return key
-
-
-def get_month_id(key: str) -> str:
-    return key
-
-
-def get_year_id(key: str) -> str:
+def id(key: str) -> str:
     return key
 
 
 group_by_key_funcs: dict[GroupByOption, GroupByKeyFunc] = {
+    GroupByOption.account: get_account_key,
     GroupByOption.category: get_category_key,
     GroupByOption.month: get_month_key,
     GroupByOption.year: get_year_key,
@@ -97,19 +98,22 @@ sort_funcs: dict[GroupByOption, SortFunc] = {
     GroupByOption.category: get_category_sort,
     GroupByOption.month: get_month_sort,
     GroupByOption.year: get_year_sort,
+    GroupByOption.account: get_account_sort,
 }
 
 
 group_by_name_funcs: dict[GroupByOption, GroupByNameFunc] = {
-    GroupByOption.category: get_category_name,
-    GroupByOption.month: get_month_name,
-    GroupByOption.year: get_year_name,
+    GroupByOption.category: id,
+    GroupByOption.month: id,
+    GroupByOption.year: id,
+    GroupByOption.account: id,
 }
 
 group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
-    GroupByOption.category: get_category_id,
-    GroupByOption.month: get_month_id,
-    GroupByOption.year: get_year_id,
+    GroupByOption.category: id,
+    GroupByOption.month: id,
+    GroupByOption.year: id,
+    GroupByOption.account: id,
 }
 
 
@@ -117,6 +121,7 @@ def recursive_group(
     txns: list[Transaction],
     group_options: list[GroupByOption],
     category_lookup: CategoryLookup,
+    account_lookup: AccountLookup,
 ) -> list[AggregatedGroup]:
     if not group_options:
         total_withdrawals = sum(t.amount for t in txns if t.kind == "withdrawal")
@@ -137,7 +142,7 @@ def recursive_group(
     current = group_options[0]
 
     def key_fn(txn: Transaction) -> str:
-        return group_by_key_funcs[current](txn, category_lookup)
+        return group_by_key_funcs[current](txn, category_lookup, account_lookup)
 
     def sort_fn(txn: Transaction) -> str | datetime:
         return sort_funcs[current](txn, category_lookup)
@@ -156,7 +161,7 @@ def recursive_group(
         group_name = name_fn(key)
 
         if len(group_options) > 1:
-            subgroups = recursive_group(group_list, group_options[1:], category_lookup)
+            subgroups = recursive_group(group_list, group_options[1:], category_lookup, account_lookup)
             groups.append(
                 AggregatedGroup(
                     group_id=group_id,
@@ -221,7 +226,6 @@ def get_aggregated_transactions(
             overall_balance=0.0,
         )
 
-    # Build lookup for categories if grouping by category is requested.
     if GroupByOption.category in group_by:
         category_ids = {txn.category_id for txn in transactions}
         category_lookup = {
@@ -231,7 +235,6 @@ def get_aggregated_transactions(
     else:
         category_lookup = {}
 
-    # Build lookup for transaction sources.
     ts_ids = {txn.transaction_source_id for txn in transactions}
     ts_lookup = {
         ts.id: ts
@@ -256,7 +259,7 @@ def get_aggregated_transactions(
         overall_deposits += ts_deposits
 
         # Use the recursive function to group by the provided options.
-        groups = recursive_group(ts_txns, group_by, category_lookup)
+        groups = recursive_group(ts_txns, group_by, category_lookup, ts_lookup)
 
         ts_obj = ts_lookup[ts_id]
         ts_groups.append(
@@ -303,18 +306,6 @@ def update_transaction(
     session.commit()
     return transaction_db
 
-
-def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
-    categories = (
-        session.query(Category, TransactionSource)
-        .join(TransactionSource, TransactionSource.id == Category.source_id)
-        .filter(Category.user_id == user.id)
-        .all()
-    )
-    return {
-        category.id: f"{category.name} ({source.name})"
-        for category, source in categories
-    }
 
 
 @router.get(
