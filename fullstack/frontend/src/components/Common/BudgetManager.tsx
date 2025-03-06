@@ -106,38 +106,10 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
                   ))}
                 </TableCell>
                 <TableCell textAlign="right">
-                  {editingEntry?.id === entry.id ? (
-                    <HStack>
-                      <Button
-                        size="sm"
-                        aria-label="Save"
-                        onClick={() =>
-                          updateEntryMutation.mutate({
-                            entryId: entry.id,
-                            name: editingEntry.name,
-                            amount: editingEntry.amount,
-                          })
-                        }
-                      >
-                        {" "}
-                        <CheckIcon />
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        aria-label="Cancel"
-                        onClick={() => setEditingEntry(null)}
-                      >
-                        <CloseIcon />
-                      </Button>
-                    </HStack>
-                  ) : (
                     <ActionsCell
-                      setEditingEntry={setEditingEntry}
                       entry={entry}
                       deleteEntryMutation={deleteEntryMutation}
                     />
-                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -159,11 +131,6 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
             <FaPlus />
             Add Entry
           </Button>
-          <EditBudgetEntry
-            isOpen={editingEntry !== null}
-            onClose={() => setEditingEntry(null)}
-            budgetEntry={editingEntry!}
-          />
         </HStack>
       </VStack>
     </Box>
@@ -171,22 +138,27 @@ export const ManageBudget = ({ budget }: { budget: BudgetOut }) => {
 };
 
 function ActionsCell({
-  setEditingEntry,
   entry,
   deleteEntryMutation,
 }: {
-  setEditingEntry: (entry: BudgetEntryOut) => void;
   entry: BudgetEntryOut;
   deleteEntryMutation:UseMutationResult<unknown, Error, number, unknown> ;
 }) {
+
+  const [isOpen, setIsOpen] = useState(false)
   return (
     <HStack>
       <Button
         size="sm"
         aria-label="Edit"
-        onClick={() => setEditingEntry(entry)}
+        onClick={() => setIsOpen(true)}
       >
         <EditIcon /> Edit
+      <EditBudgetEntry
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            budgetEntry={entry}
+          />
       </Button>
       <Button
         size="sm"
