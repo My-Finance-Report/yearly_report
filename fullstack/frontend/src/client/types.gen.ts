@@ -60,6 +60,7 @@ export type BudgetCategoryLinkStatus = {
     id: number;
     stylized_name: string;
     transactions: Array<TransactionOut>;
+    total: string;
 };
 
 export type BudgetCreate = {
@@ -94,6 +95,7 @@ export type BudgetEntryStatus = {
     name: string;
     budget_id: number;
     category_links_status: Array<BudgetCategoryLinkStatus>;
+    total: string;
 };
 
 export type BudgetOut = {

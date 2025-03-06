@@ -244,9 +244,13 @@ class BudgetOut(BudgetBase):
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
+    total: Decimal
+
 
 class BudgetEntryStatus(BudgetEntryBase):
     category_links_status: list[BudgetCategoryLinkStatus]
+    total: Decimal
+
 
 class BudgetStatus(BudgetBase):
     entry_status: list[BudgetEntryStatus]

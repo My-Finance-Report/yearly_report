@@ -27,6 +27,7 @@ from app.models import (
     Category,
     CategoryId,
     Transaction,
+    TransactionKind,
     TransactionSource,
     User,
 )
@@ -398,30 +399,46 @@ def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> BudgetStatus:
-
     budget = get_budget_out(session=session, user=user)
     if not budget:
         raise HTTPException(status_code=404, detail="need to have a budget")
 
     entry_status: list[BudgetEntryStatus] = []
     for entry in budget.entries:
-        category_status:list[BudgetCategoryLinkStatus] = []
+        category_status: list[BudgetCategoryLinkStatus] = []
+        running_total: Decimal = Decimal(0)
         for category in entry.category_links:
-            transactions = session.query(Transaction).filter(Transaction.category_id == category.category_id)
-            category_status.append(BudgetCategoryLinkStatus(
-                budget_entry_id=category.budget_entry_id,
-                id=category.id,
-                stylized_name=category.stylized_name,
-                category_id=category.category_id,
-                transactions=[TransactionOut(**transaction.__dict__) for transaction in transactions]
-            ))
+            transactions = session.query(Transaction).filter(
+                Transaction.category_id == category.category_id
+            )
+            transactions_out = [
+                TransactionOut(**transaction.__dict__)
+                for transaction in transactions
+            ]
+            total = Decimal(sum([t.amount for t in transactions if t.kind == TransactionKind.withdrawal]))
+            running_total += total
+            category_status.append(
+                BudgetCategoryLinkStatus(
+                    budget_entry_id=category.budget_entry_id,
+                    id=category.id,
+                    stylized_name=category.stylized_name,
+                    category_id=category.category_id,
+                    transactions=transactions_out,
+                    total=total
+                )
+            )
 
-        entry_status.append(BudgetEntryStatus(
-            id=entry.id,
-            budget_id=budget.id,
-            name=entry.name,
-            amount=entry.amount,
-            category_links_status=category_status
-        ))
+        entry_status.append(
+            BudgetEntryStatus(
+                id=entry.id,
+                budget_id=budget.id,
+                name=entry.name,
+                amount=entry.amount,
+                category_links_status=category_status,
+                total=running_total,
+            )
+        )
 
-    return BudgetStatus(user_id=user.id,name=budget.name,active=True,entry_status=entry_status)
+    return BudgetStatus(
+        user_id=user.id, name=budget.name, active=True, entry_status=entry_status
+    )

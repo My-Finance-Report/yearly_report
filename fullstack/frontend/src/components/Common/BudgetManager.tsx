@@ -54,7 +54,8 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Budget Entry</TableColumnHeader>
-              <TableColumnHeader>Amount Per Month</TableColumnHeader>
+              <TableColumnHeader>Target</TableColumnHeader>
+              <TableColumnHeader>Progress</TableColumnHeader>
               <TableColumnHeader>Categories</TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
@@ -65,6 +66,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
               <TableRow key={index}>
                 <TableCell minW={60}>{entry.name}</TableCell>
                 <TableCell>{entry.amount}</TableCell>
+                <TableCell>{entry.total}</TableCell>
                 <TableCell>
                   {entry.category_links_status?.map((category) => (
                     <CategoryLink key={category.id} category={category} />
@@ -105,7 +107,7 @@ function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEn
           <>
           <TableRow>
             <TableCell>{link.stylized_name}</TableCell>
-            <TableCell>{68}</TableCell>
+            <TableCell>{link.total}</TableCell>
           </TableRow>
           <TransactionLevelTable categoryLinkStatus={link}/>
           </>
