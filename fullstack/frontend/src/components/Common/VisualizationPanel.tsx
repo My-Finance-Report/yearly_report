@@ -3,6 +3,7 @@ import BoxWithText, {
 } from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
+  useBreakpointValue,
   Box,
   Button,
   Center,
@@ -48,6 +49,9 @@ export function VisualizationPanel({
   setCollapsedItems,
   collapsedItems,
 }: VisualizationProps) {
+
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
   return (
     <Flex direction="column" gap={4} mb={4} align="center" justify="center">
       {isLoading || !sourceGroup ? (
@@ -61,22 +65,27 @@ export function VisualizationPanel({
           gap={4}
           w="100%"
         >
-          <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-              collapsedItems={collapsedItems}
-              setCollapsedItems={setCollapsedItems}
-            />
-          </Box>
-          <Box gridArea="pie">
-            <PieBox
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-              collapsedItems={collapsedItems}
-              setCollapsedItems={setCollapsedItems}
-            />
-          </Box>
+          {!isMobile && (
+            <>
+              <Box gridArea="sankey" width="100%" position="relative">
+                <SankeyBox
+                  sourceGroup={sourceGroup}
+                  showDeposits={showDeposits}
+                  collapsedItems={collapsedItems}
+                  setCollapsedItems={setCollapsedItems}
+                />
+              </Box>
+              <Box gridArea="pie">
+                <PieBox
+                  sourceGroup={sourceGroup}
+                  showDeposits={showDeposits}
+                  collapsedItems={collapsedItems}
+                  setCollapsedItems={setCollapsedItems}
+                />
+              </Box>
+            </>
+          )
+          }
           <Box gridArea="bar">
             <BarChart
               sourceGroup={sourceGroup}
@@ -119,29 +128,27 @@ function BarChart({
 
   const chartData: GenericChartDataItem[] | undefined = hasValidTimeGrouping
     ? sourceGroup.subgroups?.map((group) => {
-        const base: Record<string, number | string> = {
-          date: group.group_id.toString(),
-        }
+      const base: Record<string, number | string> = {
+        date: group.group_id.toString(),
+      }
 
-        if (group.subgroups) {
-          for (const subgroup of group.subgroups) {
-            base[subgroup.group_name] = showDeposits
-              ? subgroup.total_deposits
-              : subgroup.total_withdrawals
-          }
+      if (group.subgroups) {
+        for (const subgroup of group.subgroups) {
+          base[subgroup.group_name] = showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals
         }
+      }
 
-        return base
-      })
+      return base
+    })
     : []
 
-  const description = `${sourceGroup.group_name} ${
-    showDeposits ? "deposits" : "withdrawals"
-  }, by ${sourceGroup.groupby_kind} ${
-    sourceGroup.subgroups?.length
+  const description = `${sourceGroup.group_name} ${showDeposits ? "deposits" : "withdrawals"
+    }, by ${sourceGroup.groupby_kind} ${sourceGroup.subgroups?.length
       ? `then ${sourceGroup.subgroups[0].groupby_kind}`
       : ""
-  }`
+    }`
 
   return (
     <BoxWithText
@@ -176,21 +183,21 @@ function PieBox({
   collapsedItems,
 }: ValidatedVisualizationProps) {
   const chartDataMap = sourceGroup.subgroups?.flatMap(
-      (group) =>
-        group.subgroups?.map((subgroup) => ({
-          group: subgroup.group_name,
+    (group) =>
+      group.subgroups?.map((subgroup) => ({
+        group: subgroup.group_name,
+        amount: showDeposits
+          ? subgroup.total_deposits
+          : subgroup.total_withdrawals,
+      })) || [
+        {
+          group: group.group_name,
           amount: showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals,
-        })) || [
-          {
-            group: group.group_name,
-            amount: showDeposits
-              ? group.total_deposits
-              : group.total_withdrawals,
-          },
-        ],
-    )
+            ? group.total_deposits
+            : group.total_withdrawals,
+        },
+      ],
+  )
     .reduce(
       (acc, { group, amount }) => {
         acc[group] = (acc[group] || 0) + amount

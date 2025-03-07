@@ -1,17 +1,30 @@
 import { UserOut } from "@/client"
 import { SegmentedControl } from "@/components/ui/segmented-control"
-import { Box, Flex, HStack,  Text } from "@chakra-ui/react"
-import {  useQueryClient } from "@tanstack/react-query"
-import { useNavigate, useRouterState } from "@tanstack/react-router"
 import {
-  FiBriefcase,
-  FiDollarSign,
-  FiHome,
-  FiList,
-  FiSettings,
-  FiUsers,
-} from "react-icons/fi"
-
+  Box,
+  Flex,
+  HStack,
+  Text,
+  Button,
+  VStack,
+  useBreakpointValue
+} from "@chakra-ui/react"
+import {
+  DrawerBackdrop,
+  DrawerBody,
+  DrawerCloseTrigger,
+  DrawerContent,
+  DrawerFooter,
+  DrawerActionTrigger,
+  DrawerHeader,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate, useRouterState } from "@tanstack/react-router"
+import { FiBriefcase, FiDollarSign, FiHome, FiList, FiSettings, FiUsers, FiMenu } from "react-icons/fi"
+import { useState } from "react"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -26,6 +39,7 @@ export function SegmentedNavigation() {
   const navigate = useNavigate()
   const location = useRouterState().location
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
@@ -34,7 +48,7 @@ export function SegmentedNavigation() {
   return (
     <Flex
       align="center"
-      justify="center"
+      justify="space-between"
       py={4}
       px={6}
       position="sticky"
@@ -45,60 +59,107 @@ export function SegmentedNavigation() {
       width="100%"
     >
       <Text
-        position="absolute"
-        left={6}
         fontSize="24px"
         fontWeight="bold"
         color="colors.ui.main"
       >
         My Financé
       </Text>
-
-      <SegmentedControl
-        defaultValue="/transactions"
-        value={
-          finalItems.find(({ value }) => location.pathname.startsWith(value))
-            ?.value || null
-        }
-        items={finalItems.map(({ value, label, icon }) => ({
-          value,
-          label: (
-            <HStack spaceX={2}>
-              <Box as={icon} />
-              <Text>{label}</Text>
-            </HStack>
-          ),
-        }))}
-        onValueChange={(value) => {
-          navigate({ to: value.value })
-        }}
-      />
-
-      {currentUser ? (
-        <HStack
-          position="absolute"
-          onClick={() => navigate({ to: "/settings" })}
-          cursor="pointer"
-          right={6}
-          spaceX={2}
-          px={3}
-          py={1}
-          borderRadius="md"
-          backgroundColor="green.600"
-        >
-          <Box
-            width="8px"
-            height="8px"
-            borderRadius="50%"
-            backgroundColor="green.300"
-          />
-          <Text fontSize="sm" color="white">
-            {currentUser?.full_name}
-          </Text>
-        </HStack>
+      {isMobile ? (
+        <MobileMenu user={currentUser} navigate={navigate} finalItems={finalItems} />
       ) : (
-        <Box />
+        <>
+          <SegmentedControl
+            defaultValue="/transactions"
+            value={
+              finalItems.find(({ value }) => location.pathname.startsWith(value))
+                ?.value || null
+            }
+            items={finalItems.map(({ value, label, icon }) => ({
+              value,
+              label: (
+                <HStack spaceX={2}>
+                  <Box as={icon} />
+                  <Text>{label}</Text>
+                </HStack>
+              ),
+            }))}
+            onValueChange={(value) => {
+              navigate({ to: value.value })
+            }}
+          />
+          {currentUser ? (
+            <HStack
+              onClick={() => navigate({ to: "/settings" })}
+              cursor="pointer"
+              px={3}
+              py={1}
+              borderRadius="md"
+              backgroundColor="green.600"
+            >
+              <Box
+                width="8px"
+                height="8px"
+                borderRadius="50%"
+                backgroundColor="green.300"
+              />
+              <Text fontSize="sm" color="white">
+                {currentUser?.full_name}
+              </Text>
+            </HStack>
+          ) : (
+            <Box />
+          )}
+        </>
       )}
+
     </Flex>
+  )
+}
+
+
+function MobileMenu({ user, navigate, finalItems }: { user: UserOut | undefined, navigate: (to: { to: string }) => void, finalItems: typeof navigationItems }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <DrawerRoot open={open} onOpenChange={(e) => setOpen(e.open)} placement={'bottom'}>
+      <DrawerBackdrop />
+      <DrawerTrigger asChild>
+        <Button variant="outline" size="sm">
+          <FiMenu />
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        {user && (
+          <DrawerHeader>
+            <DrawerTitle>{user.full_name}</DrawerTitle>
+          </DrawerHeader>
+        )}
+        <DrawerBody>
+          <VStack align="start" gap={2}>
+            {finalItems.map(({ value, label, icon }) => (
+              <Button
+                key={value}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigate({ to: value })
+                  setOpen(false)
+                }}
+              >
+                <Box as={icon} />
+                {label}
+              </Button>
+            ))}
+          </VStack>
+        </DrawerBody>
+        <DrawerFooter>
+          <DrawerActionTrigger asChild>
+            <Button variant="outline">Close</Button>
+          </DrawerActionTrigger>
+        </DrawerFooter>
+        <DrawerCloseTrigger />
+      </DrawerContent>
+    </DrawerRoot>
   )
 }

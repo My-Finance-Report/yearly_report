@@ -1,47 +1,18 @@
 import { Box, Flex, HStack, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
-import { useColorPalette } from "../../hooks/useColor"
 import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
 
 export function Legend({
-  toShowNames,
   collapsedItems,
   setCollapsedItems,
 }: {
-  toShowNames: (string | undefined)[] | undefined
   collapsedItems: CollapsibleName[]
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
 }) {
-  const { getAssignedColors } = useColorPalette()
-
-  const colors = getAssignedColors()
-
-  const toShowColors = Object.entries(colors).filter(([name]) =>
-    toShowNames?.includes(name),
-  )
-
-  const showColors = false
 
   return (
-    <div className="w-[200px]" style={{ position: "sticky", top: 80 }}>
-      {showColors && (
-        <div style={{ paddingTop: "10px" }}>
-          <BoxWithText text="Legend" isCollapsable={false}>
-            <Flex margin={3} gap={3} direction="column">
-              {toShowColors.map(([name, color], index) => {
-                return (
-                  <LegendItem
-                    key={index.toString()}
-                    name={name}
-                    color={color}
-                  />
-                )
-              })}
-            </Flex>
-          </BoxWithText>
-        </div>
-      )}
+    <div className="maxw-[200px]" style={{ position: "sticky", top: 80}}>
       {collapsedItems.length > 0 && (
         <div style={{ paddingTop: "20px" }}>
           <BoxWithText

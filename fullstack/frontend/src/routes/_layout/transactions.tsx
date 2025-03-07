@@ -129,13 +129,10 @@ function Transactions() {
         marginBottom: 48,
       }}
     >
-      <div>
-        <Legend
-          toShowNames={namesForLegends}
-          collapsedItems={collapsedItems}
-          setCollapsedItems={setCollapsedItems}
-        />
-      </div>
+      <Legend
+        collapsedItems={collapsedItems}
+        setCollapsedItems={setCollapsedItems}
+      />
       <div>
         {data?.groups && data.groups.length > 0 && activeGrouping ? (
           <div
