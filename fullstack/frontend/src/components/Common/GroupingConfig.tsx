@@ -1,5 +1,4 @@
-import { AddIcon } from "@chakra-ui/icons"
-import { Box, HStack, Icon, Tag, TagLabel } from "@chakra-ui/react"
+import { Box, HStack, Tag, TagLabel } from "@chakra-ui/react"
 
 export enum GroupByOption {
   category = "category",
@@ -49,7 +48,6 @@ export function GroupingConfig({
             borderRadius="md"
             onClick={() => handleToggleOption(option)}
           >
-            <Icon as={AddIcon} mr={1} />
             <TagLabel>
               {option.charAt(0).toUpperCase() + option.slice(1)}
             </TagLabel>

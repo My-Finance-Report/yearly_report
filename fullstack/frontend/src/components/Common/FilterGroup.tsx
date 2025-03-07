@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { Checkbox, CheckboxGroup, Fieldset } from "@chakra-ui/react"
+import { Button, Checkbox, CheckboxGroup, Fieldset } from "@chakra-ui/react"
 import {
   PopoverBody,
   PopoverContent,
@@ -33,15 +33,15 @@ import { CSS } from "@dnd-kit/utilities"
 import { BsFunnel } from "react-icons/bs"
 
 export interface FilterInfo {
-    years: string[] | null
-    accounts: string[] | null
-    months: string[] | null
-    categories: string[] | null
-    setYears: React.Dispatch<React.SetStateAction<string[] | null>>
-    setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>
-    setMonths: React.Dispatch<React.SetStateAction<string[] | null>>
-    setCategories: React.Dispatch<React.SetStateAction<string[] | null>>
-  }
+  years: string[] | null
+  accounts: string[] | null
+  months: string[] | null
+  categories: string[] | null
+  setYears: React.Dispatch<React.SetStateAction<string[] | null>>
+  setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>
+  setMonths: React.Dispatch<React.SetStateAction<string[] | null>>
+  setCategories: React.Dispatch<React.SetStateAction<string[] | null>>
+}
 
 function getFilterSettings(filterInfo: FilterInfo, groupingOption: GroupByOption): [string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>] {
   switch (groupingOption) {
@@ -164,19 +164,19 @@ export function FilterGroup({
                   {groupingOptions.map((option, index) => {
                     const [filters, setFilters] = getFilterSettings(filterInfo, option)
                     return (
-                    <SortableItem
-                      key={option}
-                      filters={filters}
-                      setFilters={setFilters}
-                      choices={groupingOptionsChoices[option]}
-                      option={option}
-                      noX={groupingOptions.length === 1}
-                      onRemove={handleToggleOption}
-                    >
-                      {index !== groupingOptions.length - 1 && (
-                        <Text>then</Text>
-                      )}
-                    </SortableItem>
+                      <SortableItem
+                        key={option}
+                        filters={filters}
+                        setFilters={setFilters}
+                        choices={groupingOptionsChoices[option]}
+                        option={option}
+                        noX={groupingOptions.length === 1}
+                        onRemove={handleToggleOption}
+                      >
+                        {index !== groupingOptions.length - 1 && (
+                          <Text>then</Text>
+                        )}
+                      </SortableItem>
                     )
                   })}
                 </SortableContext>
@@ -223,7 +223,6 @@ const SortableItem = ({
         ref={setNodeRef}
         py={noX ? 2 : 0}
         color="orange.500"
-        px={2}
         style={style}
         {...attributes}
         {...listeners}
@@ -231,12 +230,12 @@ const SortableItem = ({
         <Text cursor="grab">
           {option.charAt(0).toUpperCase() + option.slice(1)}
         </Text>
+        <Box p={1}>
+        <FilterButton filters={filters} setFilters={setFilters} options={choices} name={"testing"} />
         {!noX && (
-          <>
-            <FilterButton filters={filters} setFilters={setFilters} options={choices} name={"testing"} />
-            <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
-          </>
+          <CloseButton onClick={() => onRemove(option)} size="xs" variant="outline" />
         )}
+</Box>
       </Tag.Root>
       {children}
     </>
@@ -257,13 +256,15 @@ function FilterButton({
 }) {
 
   const handleChange = (newSelectedValues: string[]) => {
-    setFilters(() => ([ ...newSelectedValues] ))
+    setFilters(() => ([...newSelectedValues]))
   }
 
   return (
     <PopoverRoot>
       <PopoverTrigger>
-        <BsFunnel />
+        <Button size='xs' variant="outline">
+          <BsFunnel />
+        </Button>
       </PopoverTrigger>
 
       <PopoverContent>
