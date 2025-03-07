@@ -454,7 +454,13 @@ def list_categories(
     stylized_name_lookup = get_stylized_name_lookup(session, user)
 
     return [
-        CategoryOut(name=category.name, stylized_name=stylized_name_lookup[category.id], id=category.id, archived=category.archived, source_id=category.source_id)
+        CategoryOut(
+            name=category.name,
+            stylized_name=stylized_name_lookup[category.id],
+            id=category.id,
+            archived=category.archived,
+            source_id=category.source_id,
+        )
         for category in categories_query.all()
     ]
 
@@ -474,6 +480,12 @@ def list_all_categories(
     stylized_name_lookup = get_stylized_name_lookup(session, user)
 
     return [
-        CategoryOut(name=category.name, stylized_name=stylized_name_lookup[category.id], id=category.id, archived=category.archived, source_id=category.source_id)
+        CategoryOut(
+            name=category.name,
+            stylized_name=stylized_name_lookup[category.id],
+            id=category.id,
+            archived=category.archived,
+            source_id=category.source_id,
+        )
         for category in categories_query.all()
     ]
