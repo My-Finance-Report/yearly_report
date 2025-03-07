@@ -451,10 +451,10 @@ def list_categories(
         Category.source_id == transaction_db.transaction_source_id
     )
 
-    name_lookup = get_stylized_name_lookup(session, user)
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
 
     return [
-        CategoryOut(**category.__dict__, name=name_lookup[category.id])
+        CategoryOut(name=category.name, stylized_name=stylized_name_lookup[category.id], id=category.id, archived=category.archived, source_id=category.source_id)
         for category in categories_query.all()
     ]
 
@@ -471,9 +471,9 @@ def list_all_categories(
         Category.user_id == user.id,
     )
 
-    name_lookup = get_stylized_name_lookup(session, user)
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
 
     return [
-        CategoryOut(**category.__dict__, stylized_name=name_lookup[category.id])
+        CategoryOut(name=category.name, stylized_name=stylized_name_lookup[category.id], id=category.id, archived=category.archived, source_id=category.source_id)
         for category in categories_query.all()
     ]

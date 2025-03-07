@@ -242,7 +242,7 @@ const EditTransaction = ({
                     value={[
                       categories.items.find( 
                         (cat) => cat.value === transaction.category_id,
-                      )!.value as unknown as  string,
+                      )?.value as unknown as  string,
                     ]}
                     collection={createListCollection(categories)}
                     onValueChange={(val) => {
