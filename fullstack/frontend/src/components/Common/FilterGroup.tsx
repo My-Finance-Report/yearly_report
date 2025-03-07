@@ -45,6 +45,7 @@ import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 import { CSS } from "@dnd-kit/utilities"
 import { BsFunnel } from "react-icons/bs"
 import { useState } from "react"
+import { FiChevronDown, FiChevronUp } from "react-icons/fi"
 
 export interface FilterInfo {
   years: string[] | null
@@ -194,6 +195,31 @@ function InnerFilterGroup({
     setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex))
   }
 
+  const moveItemUp = (option: GroupByOption) => {
+    setGroupingOptions((prev) => {
+      const index = prev.indexOf(option)
+      if (index > 0) {
+        const newOptions = [...prev]
+          ;[newOptions[index - 1], newOptions[index]] = [newOptions[index], newOptions[index - 1]]
+        return newOptions
+      }
+      return prev
+    })
+  }
+
+  const moveItemDown = (option: GroupByOption) => {
+    setGroupingOptions((prev) => {
+      const index = prev.indexOf(option)
+      if (index < prev.length - 1) {
+        const newOptions = [...prev]
+          ;[newOptions[index], newOptions[index + 1]] = [newOptions[index + 1], newOptions[index]]
+        return newOptions
+      }
+      return prev
+    })
+  }
+
+
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   return (
@@ -261,10 +287,15 @@ function InnerFilterGroup({
                         key={option}
                         filters={filters}
                         setFilters={setFilters}
+                        moveItemUp={moveItemUp}
+                        moveItemDown={moveItemDown}
+                        isFirst={index === 0}
+                        isLast={index === groupingOptions.length - 1}
                         choices={groupingOptionsChoices[option]}
                         option={option}
                         noX={groupingOptions.length === 1}
                         onRemove={handleToggleOption}
+                        isMobile={!!isMobile}
                       >
                         {index !== groupingOptions.length - 1 && (
                           <Text>then</Text>
@@ -289,7 +320,12 @@ const SortableItem = ({
   onRemove,
   noX,
   children,
-  choices
+  choices,
+  moveItemUp,
+  moveItemDown,
+  isFirst,
+  isLast,
+  isMobile
 }: {
   option: GroupByOption
   choices: string[]
@@ -298,6 +334,11 @@ const SortableItem = ({
   noX: boolean
   onRemove: (option: GroupByOption) => void
   children: React.ReactNode
+  moveItemUp: (option: GroupByOption) => void
+  moveItemDown: (option: GroupByOption) => void
+  isFirst: boolean
+  isLast: boolean
+  isMobile: boolean
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -309,14 +350,13 @@ const SortableItem = ({
     transition,
   }
 
-
   return (
     <>
       <Tag.Root
         ref={setNodeRef}
         py={noX ? 2 : 0}
         color="orange.500"
-        maxW={180}
+        maxW={230}
         justifyContent="space-between"
         style={style}
         {...attributes}
@@ -330,12 +370,25 @@ const SortableItem = ({
           {!noX && (
             <CloseButton onClick={() => onRemove(option)} size="xs" variant="outline" />
           )}
+          {isMobile &&
+            (
+              <>
+                <Button size="xs" variant="outline" disabled={isFirst} onClick={() => moveItemUp(option)}>
+                  <FiChevronUp />
+                </Button>
+                <Button size="xs" variant="outline" disabled={isLast} onClick={() => moveItemDown(option)}>
+                  <FiChevronDown />
+                </Button>
+              </>
+            )
+          }
         </Box>
       </Tag.Root>
       {children}
     </>
   )
 }
+
 
 
 function FilterButton({
