@@ -454,6 +454,31 @@ export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
 export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
 
+export type DemoGetDemoAggregatedTransactionsData = {
+    /**
+     * Filter for transactions
+     */
+    accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    categories?: (Array<(string)> | null);
+    /**
+     * List of grouping options in order (e.g. category, month)
+     */
+    groupBy?: Array<GroupByOption>;
+    /**
+     * Filter for transactions
+     */
+    months?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    years?: (Array<(string)> | null);
+};
+
+export type DemoGetDemoAggregatedTransactionsResponse = (AggregatedTransactions);
+
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
 };
