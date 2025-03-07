@@ -86,7 +86,7 @@ function Login() {
         />
         {error && <Field.ErrorText>{error}</Field.ErrorText>}
       </Field.Root>
-      <RouterLink to="/reset-password">
+      <RouterLink to="/recover-password">
         <Link color="blue.500">Forgot password?</Link>
       </RouterLink>
 

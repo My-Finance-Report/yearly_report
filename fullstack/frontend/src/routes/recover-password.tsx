@@ -16,6 +16,7 @@ import { type ApiError, LoginService } from "../client"
 import { isLoggedIn } from "../hooks/useAuth"
 import useCustomToast from "../hooks/useCustomToast"
 import { emailPattern, handleError } from "../utils"
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
 
 interface FormData {
   email: string
@@ -67,6 +68,8 @@ function RecoverPassword() {
   }
 
   return (
+    <>
+    <SegmentedNavigation />
     <Container
       as="form"
       onSubmit={handleSubmit(onSubmit)}
@@ -104,6 +107,7 @@ function RecoverPassword() {
         Continue
       </Button>
     </Container>
+</>
   )
 }
 
