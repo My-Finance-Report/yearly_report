@@ -1,7 +1,8 @@
+import { UserOut } from "@/client"
 import { SegmentedControl } from "@/components/ui/segmented-control"
-import { Box, Flex, HStack, Spacer, Tag, Text } from "@chakra-ui/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
+import { Box, Flex, HStack,  Text } from "@chakra-ui/react"
+import {  useQueryClient } from "@tanstack/react-query"
+import { useNavigate, useRouterState } from "@tanstack/react-router"
 import {
   FiBriefcase,
   FiDollarSign,
@@ -11,7 +12,6 @@ import {
   FiUsers,
 } from "react-icons/fi"
 
-import { UploadsService, type UserOut } from "../../client"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -27,11 +27,9 @@ export function SegmentedNavigation() {
   const location = useRouterState().location
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
 
-  const isUploading = false
-
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
-    : navigationItems
+    : currentUser ? navigationItems : []
 
   return (
     <Flex

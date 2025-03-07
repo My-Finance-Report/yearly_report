@@ -17,7 +17,6 @@ from app.local_types import (
     GroupByOption,
     TransactionEdit,
     TransactionOut,
-    TransactionSourceGroup,
 )
 from app.models import (
     Category,
@@ -52,19 +51,28 @@ def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
         for category, source in categories
     }
 
-def get_account_key(transaction: Transaction, _lookup: CategoryLookup, account_lookup: AccountLookup) -> str:
+
+def get_account_key(
+    transaction: Transaction, _lookup: CategoryLookup, account_lookup: AccountLookup
+) -> str:
     return account_lookup[transaction.transaction_source_id].name
 
 
-def get_category_key(transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
+def get_category_key(
+    transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup
+) -> str:
     return lookup[transaction.category_id].name
 
 
-def get_month_key(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
+def get_month_key(
+    transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup
+) -> str:
     return transaction.date_of_transaction.strftime("%B %Y")
 
 
-def get_year_key(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup) -> str:
+def get_year_key(
+    transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup
+) -> str:
     return str(transaction.date_of_transaction.year)
 
 
@@ -82,6 +90,7 @@ def get_year_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime
 
 def get_account_sort(transaction: Transaction, _lookup: CategoryLookup) -> str:
     return str(transaction.transaction_source_id)
+
 
 def id(key: str) -> str:
     return key
@@ -161,7 +170,9 @@ def recursive_group(
         group_name = name_fn(key)
 
         if len(group_options) > 1:
-            subgroups = recursive_group(group_list, group_options[1:], category_lookup, account_lookup)
+            subgroups = recursive_group(
+                group_list, group_options[1:], category_lookup, account_lookup
+            )
             groups.append(
                 AggregatedGroup(
                     group_id=group_id,
@@ -285,7 +296,6 @@ def update_transaction(
 
     session.commit()
     return transaction_db
-
 
 
 @router.get(
