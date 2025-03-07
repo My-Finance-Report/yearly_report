@@ -118,7 +118,7 @@ def get_uploads(
     file_ids = [file.id for file in files]
 
     jobs = (
-        session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id.in_(file_ids)).all()
+        session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id).all()
     )
     job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
 

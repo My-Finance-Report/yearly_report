@@ -116,9 +116,6 @@ function Transactions() {
     return <Text color="red.500">Error loading transactions.</Text>
   }
 
-  if (!data || data.groups.length === 0 && !activeGrouping) {
-    return <Spinner />
-  }
 
   return (
     <div
