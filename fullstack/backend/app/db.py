@@ -21,7 +21,7 @@ load_dotenv()
 DATABASE_URL = os.environ["DATABASE_URL"]
 
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True, pool_use_lifo=True)
 
 session_maker = orm.sessionmaker(autoflush=True, bind=engine)
 type Session = orm.Session

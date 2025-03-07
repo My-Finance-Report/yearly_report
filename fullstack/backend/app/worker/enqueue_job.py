@@ -37,7 +37,7 @@ def enqueue_or_reset_job(
 ) -> ProcessFileJob:
     existing_job = (
         session.query(ProcessFileJob)
-        .filter(ProcessFileJob.pdf_id == pdf_id)
+        .filter(ProcessFileJob.pdf_id == pdf_id, ProcessFileJob.user_id == user_id)
         .one_or_none()
     )
 
