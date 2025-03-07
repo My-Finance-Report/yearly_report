@@ -140,7 +140,6 @@ function Transactions() {
               flexDirection: "column",
               justifyContent: "center",
               alignItems: "start",
-              marginLeft: 20,
             }}
           >
             <FilterGroup

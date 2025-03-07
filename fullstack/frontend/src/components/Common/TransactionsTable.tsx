@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
+  useBreakpointValue,
   Button,
   Collapsible,
   HStack,
@@ -37,6 +38,10 @@ export function TransactionsTable({
   expandedGroups: { [key: string]: boolean }
   showWithdrawals: boolean
 }) {
+
+
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
   return (
     <Table.Root variant="outline" borderRadius="md">
       <TableHeader>
@@ -47,7 +52,9 @@ export function TransactionsTable({
           </TableColumnHeader>
           <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
           <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
-          <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
+          {!isMobile && (
+            <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -55,6 +62,7 @@ export function TransactionsTable({
           groups={data.groups}
           totalWidthdrawals={data.overall_withdrawals}
           totalDeposits={data.overall_deposits}
+          isMobile={!!isMobile} 
           showWithdrawals={showWithdrawals}
           pathPrefix=""
           toShowNames={toShowNames}
@@ -69,9 +77,11 @@ export function TransactionsTable({
           <TableCell textAlign="end">
             {formatAmount(data.overall_deposits)}
           </TableCell>
+          {!isMobile && (
           <TableCell textAlign="end">
             {formatAmount(data.overall_balance)}
           </TableCell>
+          )}
         </TableRow>
       </TableBody>
     </Table.Root>
@@ -82,6 +92,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
   groups,
   pathPrefix,
   expandedGroups,
+  isMobile,
   toggleGroup,
   toShowNames,
   totalWidthdrawals,
@@ -95,6 +106,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
   toShowNames?: (string | undefined)[] | undefined
   totalWidthdrawals?: number
   showWithdrawals: boolean
+  isMobile: boolean
   totalDeposits?: number
 }) {
   const memoizedGroups = useMemo(() => {
@@ -111,6 +123,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
         : group.total_deposits
 
       const { getColorForName } = useColorPalette()
+
 
       return (
         <React.Fragment key={groupKey}>
@@ -137,7 +150,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                   {group.group_name}
                 </HStack>
                 {totalAmount && (
-                  <PercentageBar amount={specificAmount} total={totalAmount} />
+                  <PercentageBar amount={specificAmount} total={totalAmount} isMobile={isMobile} />
                 )}
               </HStack>
             </TableCell>
@@ -147,9 +160,11 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
             <TableCell textAlign="end">
               {formatAmount(group.total_deposits)}
             </TableCell>
+            {!isMobile && (
             <TableCell textAlign="end">
               {formatAmount(group.total_balance)}
             </TableCell>
+            )}
           </TableRow>
 
           <Collapsible.Root open={isExpanded} lazyMount asChild>
@@ -181,6 +196,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                             groups={group.subgroups}
                             pathPrefix={groupKey}
                             toggleGroup={toggleGroup}
+                            isMobile={isMobile}
                             expandedGroups={expandedGroups}
                             toShowNames={toShowNames}
                             showWithdrawals={showWithdrawals}
@@ -267,7 +283,10 @@ function formatAmount(amount: number) {
   })
 }
 
-function PercentageBar({ amount, total }: { amount: number; total: number }) {
+function PercentageBar({ amount, total,isMobile }: { amount: number; total: number; isMobile: boolean }) {
+  if (isMobile) {
+    return null
+  }
   return (
     <Progress.Root
       defaultValue={(Math.abs(amount) / Math.abs(total)) * 100}
