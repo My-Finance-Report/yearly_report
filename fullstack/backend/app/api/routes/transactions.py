@@ -1,10 +1,11 @@
-from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime
 from itertools import groupby
 from typing import cast
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Query as SqlQuery
+from sqlalchemy import func
 
 from app.db import (
     Session,
@@ -213,33 +214,66 @@ def get_transactions(
     val = session.query(Transaction).filter(Transaction.user_id == user.id).all()
     return val
 
-def add_groups(group, grouping_option_choices):
-    """
-    Recursively traverse `group.subgroups` (and deeper) and populate
-    grouping_option_choices[group.groupby_kind] with group.group_name.
-    """
-    if group.groupby_kind:  
-        grouping_option_choices[group.groupby_kind].add(group.group_name)
+def build_grouping_option_choices(session: Session, user: User):
 
-    # Recurse into subgroups
-    if group.subgroups:
-        for subgroup in group.subgroups:
-            add_groups(subgroup, grouping_option_choices)
+    all_dates = session.query(Transaction.date_of_transaction).filter(Transaction.user_id == user.id).distinct().order_by(Transaction.date_of_transaction).all()
+    all_categories = session.query(Category.name).filter(Category.user_id == user.id).distinct().order_by(Category.name).all()
+    all_accounts = session.query(TransactionSource.name).filter(TransactionSource.user_id == user.id).distinct().order_by(TransactionSource.name).all()
 
-def build_grouping_option_choices(groups):
-    grouping_option_choices = defaultdict(set)
-    for group in groups:
-        add_groups(group, grouping_option_choices)
+    return {
+        GroupByOption.year: list(set([str(row.date_of_transaction.year) for row in all_dates])),
+        GroupByOption.month: list(set([str(row.date_of_transaction.strftime("%B")) for row in all_dates])),
+        GroupByOption.category: list(set([category.name for category in all_categories])),
+        GroupByOption.account: list(set([account.name for account in all_accounts])),
+    }
+    
 
-    vals = grouping_option_choices[GroupByOption.month]
-    new_vals = set()
-    for val in vals:
-        new_val = val.split(" ")[0]
-        new_vals.add(new_val)
+def apply_category_filter(
+    transactions: SqlQuery[Transaction],
+    categories: list[str],
+) -> SqlQuery[Transaction]:
+    return transactions.join(Category, Category.id == Transaction.category_id).filter(Category.name.in_(categories))
 
-    grouping_option_choices[GroupByOption.month] = list(new_vals)
+def apply_account_filter(
+    transactions: SqlQuery[Transaction],
+    accounts: list[str],
+) -> SqlQuery[Transaction]:
+    return transactions.join(TransactionSource, TransactionSource.id == Transaction.transaction_source_id).filter(TransactionSource.name.in_(accounts))
 
-    return grouping_option_choices
+
+def apply_year_filter(
+    transactions: SqlQuery[Transaction],
+    years: list[int],
+) -> SqlQuery[Transaction]:
+    return (
+        transactions
+        .filter(func.extract("year", Transaction.date_of_transaction).in_(list(map(int,years))))
+    )
+
+def apply_month_filter(
+    transactions: SqlQuery[Transaction],
+    months: list[str],
+) -> SqlQuery[Transaction]:
+    # Similarly for month; pass months as integers (1 through 12)
+    month_lookup = {
+        "january": 1,
+        "february": 2,
+        "march": 3,
+        "april": 4,
+        "may": 5,
+        "june": 6,
+        "july": 7,
+        "august": 8,
+        "september": 9,
+        "october": 10,
+        "november": 11,
+        "december": 12
+    }
+    month_numbers = [month_lookup[m.lower()] for m in months]
+    return (
+        transactions
+        .filter(func.extract("month", Transaction.date_of_transaction).in_(month_numbers))
+    )
 
 
 @router.get(
@@ -252,12 +286,45 @@ def get_aggregated_transactions(
         [GroupByOption.category],
         description="List of grouping options in order (e.g. category, month)",
     ),
+    years: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
+    months: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
+    categories: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
+    accounts: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-    transactions = (
-        session.query(Transaction).filter(Transaction.user_id == user.id).all()
+
+    
+    transactions_query = (
+        session.query(Transaction).filter(Transaction.user_id == user.id)
     )
+
+    calls: list[tuple[Callable[[SqlQuery, list], SqlQuery], list | None]] = [
+        (apply_month_filter,  months),
+        (apply_year_filter, years),
+        (apply_category_filter, categories),
+        (apply_account_filter, accounts),
+    ]
+
+    for func, arg in calls:
+        # an unreal level of hack
+        if arg and len(arg) > 0 and arg[0] != 'blah':
+            transactions_query = func(transactions_query, arg)
+
+    transactions = transactions_query.all()
+
     if not transactions:
         return AggregatedTransactions(
             groups=[],
@@ -294,7 +361,7 @@ def get_aggregated_transactions(
 
     groups = recursive_group(transactions, group_by, category_lookup, ts_lookup)
 
-    grouping_option_choices = build_grouping_option_choices(groups)
+    grouping_option_choices = build_grouping_option_choices(session,user)
 
     overall_balance = overall_deposits - overall_withdrawals
     return AggregatedTransactions(

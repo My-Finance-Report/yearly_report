@@ -1,5 +1,6 @@
 import type React from "react"
-import { Checkbox, CheckboxGroup, Fieldset, For } from "@chakra-ui/react"
+
+import { Checkbox, CheckboxGroup, Fieldset } from "@chakra-ui/react"
 import {
   PopoverBody,
   PopoverContent,
@@ -25,15 +26,43 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import BoxWithText, { type CollapsibleName } from "./BoxWithText"
-import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
+import { GroupByOption, GroupingConfig } from "./GroupingConfig"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
 import { CSS } from "@dnd-kit/utilities"
 import { BsFunnel } from "react-icons/bs"
 
+export interface FilterInfo {
+    years: string[] | null
+    accounts: string[] | null
+    months: string[] | null
+    categories: string[] | null
+    setYears: React.Dispatch<React.SetStateAction<string[] | null>>
+    setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>
+    setMonths: React.Dispatch<React.SetStateAction<string[] | null>>
+    setCategories: React.Dispatch<React.SetStateAction<string[] | null>>
+  }
+
+function getFilterSettings(filterInfo: FilterInfo, groupingOption: GroupByOption): [string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>] {
+  switch (groupingOption) {
+    case GroupByOption.year:
+      return [filterInfo.years, filterInfo.setYears]
+    case GroupByOption.account:
+      return [filterInfo.accounts, filterInfo.setAccounts]
+    case GroupByOption.month:
+      return [filterInfo.months, filterInfo.setMonths]
+    case GroupByOption.category:
+      return [filterInfo.categories, filterInfo.setCategories]
+    default:
+      throw "Invalid grouping option"
+  }
+}
+
+
 
 export function FilterGroup({
   groupingOptions,
+  filterInfo,
   groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
@@ -43,6 +72,7 @@ export function FilterGroup({
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
   showDeposits: boolean
+  filterInfo: FilterInfo
   groupingOptions: GroupByOption[]
   groupingOptionsChoices: { [key in GroupByOption]: string[] }
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
@@ -131,9 +161,13 @@ export function FilterGroup({
                   items={groupingOptions}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {groupingOptions.map((option, index) => (
+                  {groupingOptions.map((option, index) => {
+                    const [filters, setFilters] = getFilterSettings(filterInfo, option)
+                    return (
                     <SortableItem
                       key={option}
+                      filters={filters}
+                      setFilters={setFilters}
                       choices={groupingOptionsChoices[option]}
                       option={option}
                       noX={groupingOptions.length === 1}
@@ -143,7 +177,8 @@ export function FilterGroup({
                         <Text>then</Text>
                       )}
                     </SortableItem>
-                  ))}
+                    )
+                  })}
                 </SortableContext>
               </HStack>
             </DndContext>
@@ -156,6 +191,8 @@ export function FilterGroup({
 
 const SortableItem = ({
   option,
+  filters,
+  setFilters,
   onRemove,
   noX,
   children,
@@ -163,6 +200,8 @@ const SortableItem = ({
 }: {
   option: GroupByOption
   choices: string[]
+  filters: string[] | null
+  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
   noX: boolean
   onRemove: (option: GroupByOption) => void
   children: React.ReactNode
@@ -194,7 +233,7 @@ const SortableItem = ({
         </Text>
         {!noX && (
           <>
-            <FilterButton options={choices} name={"testing"} />
+            <FilterButton filters={filters} setFilters={setFilters} options={choices} name={"testing"} />
             <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
           </>
         )}
@@ -205,34 +244,52 @@ const SortableItem = ({
 }
 
 
-function FilterButton({options, name}: {options: string[], name: string}) {
+function FilterButton({
+  options,
+  name,
+  filters,
+  setFilters
+}: {
+  options: string[]
+  name: string
+  filters: string[] | null
+  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
+}) {
+
+  const handleChange = (newSelectedValues: string[]) => {
+    setFilters(() => ([ ...newSelectedValues] ))
+  }
+
   return (
     <PopoverRoot>
-      <PopoverTrigger >
-        < BsFunnel />
+      <PopoverTrigger>
+        <BsFunnel />
       </PopoverTrigger>
+
       <PopoverContent>
         <PopoverBody>
           <PopoverTitle />
-   <Fieldset.Root>
-      <CheckboxGroup defaultValue={options} name={name}>
-        <Fieldset.Legend fontSize="sm" mb="2">
-        </Fieldset.Legend>
-        <Fieldset.Content>
-          <For each={options}>
-            {(value) => (
-              <Checkbox.Root key={value} value={value}>
-                <Checkbox.HiddenInput />
-                <Checkbox.Control>
-                  <Checkbox.Indicator />
-                </Checkbox.Control>
-                <Checkbox.Label>{value}</Checkbox.Label>
-              </Checkbox.Root>
-            )}
-          </For>
-        </Fieldset.Content>
-      </CheckboxGroup>
-    </Fieldset.Root>         
+
+          <Fieldset.Root>
+            <CheckboxGroup
+              value={filters || options}
+              name={name}
+              onValueChange={handleChange}
+            >
+              <Fieldset.Legend fontSize="sm" mb="2" />
+              <Fieldset.Content>
+                {options.map((value) => (
+                  <Checkbox.Root key={value} value={value}>
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Checkbox.Label>{value}</Checkbox.Label>
+                  </Checkbox.Root>
+                ))}
+              </Fieldset.Content>
+            </CheckboxGroup>
+          </Fieldset.Root>
         </PopoverBody>
       </PopoverContent>
     </PopoverRoot>

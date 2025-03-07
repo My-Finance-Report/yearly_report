@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 
@@ -317,7 +317,6 @@ class AggregatedGroup(BaseModel):
 
 
 AggregatedGroup.model_rebuild()
-
 
 class TransactionSourceGroup(BaseModel):
     transaction_source_id: int

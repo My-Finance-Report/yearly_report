@@ -502,9 +502,25 @@ export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 
 export type TransactionsGetAggregatedTransactionsData = {
     /**
+     * Filter for transactions
+     */
+    accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    categories?: (Array<(string)> | null);
+    /**
      * List of grouping options in order (e.g. category, month)
      */
     groupBy?: Array<GroupByOption>;
+    /**
+     * Filter for transactions
+     */
+    months?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    years?: (Array<(string)> | null);
 };
 
 export type TransactionsGetAggregatedTransactionsResponse = (AggregatedTransactions);

@@ -613,6 +613,10 @@ export class TransactionsService {
      * Get Aggregated Transactions
      * @param data The data for the request.
      * @param data.groupBy List of grouping options in order (e.g. category, month)
+     * @param data.years Filter for transactions
+     * @param data.months Filter for transactions
+     * @param data.categories Filter for transactions
+     * @param data.accounts Filter for transactions
      * @returns AggregatedTransactions Successful Response
      * @throws ApiError
      */
@@ -621,7 +625,11 @@ export class TransactionsService {
             method: 'GET',
             url: '/api/v1/transactions/aggregated',
             query: {
-                group_by: data.groupBy
+                group_by: data.groupBy,
+                years: data.years,
+                months: data.months,
+                categories: data.categories,
+                accounts: data.accounts
             },
             errors: {
                 422: 'Validation Error'

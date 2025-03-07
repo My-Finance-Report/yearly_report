@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { Spinner, Text } from "@chakra-ui/react"
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText"
-import { FilterGroup } from "@/components/Common/FilterGroup"
+import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup"
 import { GroupByOption } from "@/components/Common/GroupingConfig"
 import { Legend } from "@/components/Common/Legend"
 import { TransactionsTable } from "@/components/Common/TransactionsTable"
@@ -30,6 +30,23 @@ function Transactions() {
     GroupByOption.category,
   ])
 
+  // need to figure out how to pass null through api
+  const [accounts, setAccounts] = useState<string[] | null>(null)
+  const [categories, setCategories] = useState<string[] | null>(null)
+  const [months, setMonths] = useState<string[] | null>(null)
+  const [years, setYears] = useState<string[] | null>(null)
+
+  const filterInfo: FilterInfo = {
+    years,
+    accounts,
+    months,
+    categories,
+    setYears,
+    setAccounts,
+    setMonths,
+    setCategories,
+  }
+
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
 
@@ -40,7 +57,7 @@ function Transactions() {
     }))
   }
 
-  const { data, isLoading, error } = useQuery<
+  const { data, isLoading, error, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
@@ -48,9 +65,18 @@ function Transactions() {
     queryFn: () =>
       TransactionsService.getAggregatedTransactions({
         groupBy: groupingOptions,
+        years,
+        accounts,
+        months,
+        categories,
       }),
     enabled: isLoggedIn(),
   })
+
+  useEffect(() => {
+    refetch()
+  }, [filterInfo])
+
 
   const { getColorForName } = useColorPalette()
   data?.groups.map((group) => {
@@ -64,9 +90,19 @@ function Transactions() {
     useState<AggregatedGroup | null>(null)
 
   useEffect(() => {
+    if(data?.grouping_options_choices) {
+      setYears(data.grouping_options_choices[GroupByOption.year])
+      setMonths(data.grouping_options_choices[GroupByOption.month])
+      setCategories(data.grouping_options_choices[GroupByOption.category])
+      setAccounts(data.grouping_options_choices[GroupByOption.account])
+    }
+  },[])
+
+  useEffect(() => {
     if (data?.groups.length) {
       setactiveGrouping(data.groups[0])
     }
+    
   }, [data?.groups])
 
   const namesForLegends = data?.groups
@@ -80,7 +116,7 @@ function Transactions() {
     return <Text color="red.500">Error loading transactions.</Text>
   }
 
-  if (data && data.groups.length === 0 && !activeGrouping) {
+  if (!data || data.groups.length === 0 && !activeGrouping) {
     return <Spinner />
   }
 
@@ -112,7 +148,8 @@ function Transactions() {
           >
             <FilterGroup
               setShowDeposits={setShowDeposits}
-              groupingOptionsChoices={data.grouping_options_choices}
+              filterInfo={filterInfo}
+              groupingOptionsChoices={data.grouping_options_choices as { [key in GroupByOption]: string[] }}
               showDeposits={showDeposits}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
