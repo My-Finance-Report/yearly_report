@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime
 from itertools import groupby
@@ -212,6 +213,34 @@ def get_transactions(
     val = session.query(Transaction).filter(Transaction.user_id == user.id).all()
     return val
 
+def add_groups(group, grouping_option_choices):
+    """
+    Recursively traverse `group.subgroups` (and deeper) and populate
+    grouping_option_choices[group.groupby_kind] with group.group_name.
+    """
+    if group.groupby_kind:  
+        grouping_option_choices[group.groupby_kind].add(group.group_name)
+
+    # Recurse into subgroups
+    if group.subgroups:
+        for subgroup in group.subgroups:
+            add_groups(subgroup, grouping_option_choices)
+
+def build_grouping_option_choices(groups):
+    grouping_option_choices = defaultdict(set)
+    for group in groups:
+        add_groups(group, grouping_option_choices)
+
+    vals = grouping_option_choices[GroupByOption.month]
+    new_vals = set()
+    for val in vals:
+        new_val = val.split(" ")[0]
+        new_vals.add(new_val)
+
+    grouping_option_choices[GroupByOption.month] = list(new_vals)
+
+    return grouping_option_choices
+
 
 @router.get(
     "/aggregated",
@@ -235,6 +264,7 @@ def get_aggregated_transactions(
             overall_withdrawals=0.0,
             overall_deposits=0.0,
             overall_balance=0.0,
+            grouping_options_choices={},
         )
 
     if GroupByOption.category in group_by:
@@ -264,12 +294,15 @@ def get_aggregated_transactions(
 
     groups = recursive_group(transactions, group_by, category_lookup, ts_lookup)
 
+    grouping_option_choices = build_grouping_option_choices(groups)
+
     overall_balance = overall_deposits - overall_withdrawals
     return AggregatedTransactions(
         groups=groups,
         overall_withdrawals=overall_withdrawals,
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,
+        grouping_options_choices=grouping_option_choices,
     )
 
 

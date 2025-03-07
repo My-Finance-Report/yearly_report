@@ -112,6 +112,7 @@ function Transactions() {
           >
             <FilterGroup
               setShowDeposits={setShowDeposits}
+              groupingOptionsChoices={data.grouping_options_choices}
               showDeposits={showDeposits}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}

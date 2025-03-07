@@ -1,4 +1,12 @@
 import type React from "react"
+import { Checkbox, CheckboxGroup, Fieldset, For } from "@chakra-ui/react"
+import {
+  PopoverBody,
+  PopoverContent,
+  PopoverRoot,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 import { Box, CloseButton, HStack, Tag, Text } from "@chakra-ui/react"
 import {
@@ -21,10 +29,12 @@ import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
 import { CSS } from "@dnd-kit/utilities"
+import { BsFunnel } from "react-icons/bs"
 
 
 export function FilterGroup({
   groupingOptions,
+  groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
   setGroupingOptions,
@@ -34,6 +44,7 @@ export function FilterGroup({
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
   showDeposits: boolean
   groupingOptions: GroupByOption[]
+  groupingOptionsChoices: { [key in GroupByOption]: string[] }
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
@@ -123,6 +134,7 @@ export function FilterGroup({
                   {groupingOptions.map((option, index) => (
                     <SortableItem
                       key={option}
+                      choices={groupingOptionsChoices[option]}
                       option={option}
                       noX={groupingOptions.length === 1}
                       onRemove={handleToggleOption}
@@ -147,8 +159,10 @@ const SortableItem = ({
   onRemove,
   noX,
   children,
+  choices
 }: {
   option: GroupByOption
+  choices: string[]
   noX: boolean
   onRemove: (option: GroupByOption) => void
   children: React.ReactNode
@@ -162,6 +176,7 @@ const SortableItem = ({
     transform: CSS.Transform.toString(transform),
     transition,
   }
+
 
   return (
     <>
@@ -178,10 +193,48 @@ const SortableItem = ({
           {option.charAt(0).toUpperCase() + option.slice(1)}
         </Text>
         {!noX && (
-          <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
+          <>
+            <FilterButton options={choices} name={"testing"} />
+            <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
+          </>
         )}
       </Tag.Root>
       {children}
     </>
+  )
+}
+
+
+function FilterButton({options, name}: {options: string[], name: string}) {
+  return (
+    <PopoverRoot>
+      <PopoverTrigger >
+        < BsFunnel />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverBody>
+          <PopoverTitle />
+   <Fieldset.Root>
+      <CheckboxGroup defaultValue={options} name={name}>
+        <Fieldset.Legend fontSize="sm" mb="2">
+        </Fieldset.Legend>
+        <Fieldset.Content>
+          <For each={options}>
+            {(value) => (
+              <Checkbox.Root key={value} value={value}>
+                <Checkbox.HiddenInput />
+                <Checkbox.Control>
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+                <Checkbox.Label>{value}</Checkbox.Label>
+              </Checkbox.Root>
+            )}
+          </For>
+        </Fieldset.Content>
+      </CheckboxGroup>
+    </Fieldset.Root>         
+        </PopoverBody>
+      </PopoverContent>
+    </PopoverRoot>
   )
 }

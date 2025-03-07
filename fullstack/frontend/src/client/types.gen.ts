@@ -16,6 +16,9 @@ export type AggregatedTransactions = {
     overall_withdrawals: number;
     overall_deposits: number;
     overall_balance: number;
+    grouping_options_choices: {
+        [key: string]: Array<(string)>;
+    };
 };
 
 export type Body_login_login_access_token = {

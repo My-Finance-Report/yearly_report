@@ -337,6 +337,7 @@ class AggregatedTransactions(BaseModel):
     overall_withdrawals: float
     overall_deposits: float
     overall_balance: float
+    grouping_options_choices: dict[GroupByOption, list[str]]
 
     class Config:
         orm_mode = True
