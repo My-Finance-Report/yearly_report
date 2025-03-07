@@ -171,7 +171,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
             <TableRow>
               <TableCell colSpan={5} p={0}>
                 <Collapsible.Content>
-                  <Box pl={4}>
+                  <Box pl={isMobile ? 2 : 4}>
                     {group.subgroups && group.subgroups.length > 0 ? (
                       <Table.Root variant="outline" size="sm">
                         <TableHeader>
@@ -186,9 +186,11 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                             <TableColumnHeader textAlign="end">
                               DEPOSIT
                             </TableColumnHeader>
-                            <TableColumnHeader textAlign="end">
-                              TOTAL
-                            </TableColumnHeader>
+                            {!isMobile && (
+                              <TableColumnHeader textAlign="end">
+                                TOTAL
+                              </TableColumnHeader>
+                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -208,7 +210,9 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                         <TableHeader>
                           <TableRow>
                             <TableColumnHeader>DESCRIPTION</TableColumnHeader>
+                            {!isMobile && (
                             <TableColumnHeader>DATE</TableColumnHeader>
+                            )}
                             <TableColumnHeader>AMOUNT</TableColumnHeader>
                             <TableColumnHeader>KIND</TableColumnHeader>
                             <TableColumnHeader />
@@ -216,7 +220,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                         </TableHeader>
                         <TableBody>
                           {group.transactions?.map((transaction, index) => (
-                            <TransactionRow key={index.toString()} transaction={transaction} />
+                            <TransactionRow key={index.toString()} transaction={transaction}  isMobile={isMobile}/>
                           ))}
                         </TableBody>
                       </Table.Root>
@@ -245,15 +249,17 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
 
 export default MemoizedRenderGroups
 
-function TransactionRow({ transaction }: { transaction: TransactionOut }) {
+function TransactionRow({ transaction, isMobile }: { transaction: TransactionOut, isMobile: boolean }) {
   const editTransactionModal = useDisclosure()
 
   return (
     <TableRow>
       <TableCell>{transaction.description}</TableCell>
+      {!isMobile && (
       <TableCell>
         {new Date(transaction.date_of_transaction).toLocaleDateString()}
       </TableCell>
+      )}
       <TableCell>{formatAmount(transaction.amount)}</TableCell>
       <TableCell>
         {"withdrawal" === transaction.kind ? "Expense" : "Deposit"}

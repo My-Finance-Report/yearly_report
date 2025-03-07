@@ -50,7 +50,7 @@ export function VisualizationPanel({
   collapsedItems,
 }: VisualizationProps) {
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isMobile = !!useBreakpointValue({ base: true, md: false })
 
   const layout  = isMobile ? "bar bar bar bar" : "pie bar bar bar"
 
@@ -73,7 +73,7 @@ export function VisualizationPanel({
                 sourceGroup={sourceGroup}
                 showDeposits={showDeposits}
                 collapsedItems={collapsedItems}
-              setCollapsedItems={setCollapsedItems}
+                setCollapsedItems={setCollapsedItems}
             />
           </Box>
           <Box gridArea="pie">
@@ -84,7 +84,7 @@ export function VisualizationPanel({
               setCollapsedItems={setCollapsedItems}
             />
           </Box>
-      </>
+        </>
           )
 }
           <Box gridArea="bar">
@@ -153,12 +153,15 @@ function BarChart({
       : ""
   }`
 
+  const isMobile = !!useBreakpointValue({ base: true, md: false })
+
   return (
     <BoxWithText
       text={""}
       COMPONENT_NAME="Bar Chart"
       setCollapsedItems={setCollapsedItems}
       collapsedItems={collapsedItems}
+      isCollapsable={!isMobile}
     >
       {hasValidTimeGrouping && chartData ? (
         <GenericBarChart
