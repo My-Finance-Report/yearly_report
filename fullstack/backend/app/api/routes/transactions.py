@@ -444,6 +444,7 @@ def list_categories(
     transaction_db = (
         session.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == user.id)
+        .filter(~Transaction.archived)
         .one()
     )
     categories_query = categories_query.filter(

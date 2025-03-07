@@ -7,6 +7,7 @@ from app.db import Session
 from app.models import (
     Category,
     ProcessFileJob,
+    Transaction,
     TransactionSource,
     UploadConfiguration,
     UploadedPdf,
@@ -112,4 +113,5 @@ class InProcessFile:
     transaction_source: TransactionSource | None = None
     categories: list[Category] | None = None
     transactions: TransactionsWrapper | None = None
+    existing_transactions: list[Transaction] | None = None
     categorized_transactions: list[CategorizedTransaction] | None = None

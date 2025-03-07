@@ -22,6 +22,7 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
     query = in_process.session.query(Transaction).filter(
         Transaction.transaction_source_id == in_process.config.transaction_source_id,
         Transaction.user_id == in_process.user.id,
+        Transaction.uploaded_pdf_id == in_process.file.id,
         ~Transaction.archived,
     )
     return replace(
