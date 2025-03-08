@@ -1,20 +1,28 @@
 # demo_data.py
 
+from dataclasses import dataclass
 from datetime import datetime
 
 # Import your models/enums
 from app.models import (
-    Transaction,
     Category,
-    TransactionSource,
-    TransactionKind,
     SourceKind,
+    Transaction,
+    TransactionKind,
+    TransactionSource,
 )
-# If your models live in a different file, adjust imports accordingly.
 
-def get_demo_data():
+
+@dataclass
+class DemoData:
+    sources: list[TransactionSource]
+    categories: list[Category]
+    transactions: list[Transaction]
+
+
+def get_demo_data() -> DemoData:
     """Return lists of mock data for demonstration and filtering."""
-    
+
     # Mock transaction sources
     sources = [
         TransactionSource(
@@ -37,39 +45,39 @@ def get_demo_data():
             user_id=1,
             archived=False,
             source_kind=SourceKind.account,
-        )
+        ),
     ]
 
     # Mock categories
     categories = [
         Category(
-            id=1, 
-            name="Groceries", 
+            id=1,
+            name="Groceries",
             source_id=1,  # belongs to Main Checking
             user_id=1,
             archived=False,
         ),
         Category(
-            id=2, 
+            id=2,
             name="Rent",
-            source_id=1,  
+            source_id=1,
             user_id=1,
             archived=False,
         ),
         Category(
-            id=3, 
+            id=3,
             name="Utilities",
             source_id=2,  # belongs to Credit Card
             user_id=1,
             archived=False,
         ),
         Category(
-            id=4, 
+            id=4,
             name="Salary",
             source_id=3,  # belongs to Employer
             user_id=1,
             archived=False,
-        )
+        ),
     ]
 
     # Mock transactions
@@ -143,7 +151,7 @@ def get_demo_data():
         Transaction(
             id=107,
             description="Restaurant dinner",
-            category_id=1, 
+            category_id=1,
             date_of_transaction=datetime(2024, 1, 10),
             amount=60,
             transaction_source_id=2,
@@ -153,8 +161,4 @@ def get_demo_data():
         ),
     ]
 
-    return {
-        "sources": sources,
-        "categories": categories,
-        "transactions": transactions,
-    }
+    return DemoData(sources, categories, transactions)

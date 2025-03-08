@@ -1,29 +1,32 @@
-from collections.abc import Callable
-
 from fastapi import APIRouter, Query
 
+from app.api.routes.demo_data import get_demo_data
+from app.api.routes.transactions import recursive_group
 from app.local_types import (
     AggregatedTransactions,
     GroupByOption,
 )
 from app.models import (
+    Category,
+    CategoryId,
     Transaction,
+    TransactionSource,
+    TransactionSourceId,
 )
-from app.api.routes.transactions import recursive_group
-from app.api.routes.demo_data import get_demo_data
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
+
 def apply_category_filter(
     transactions: list[Transaction],
-    categories: list[str],
+    categories: list[CategoryId],
 ) -> list[Transaction]:
     return [t for t in transactions if t.category_id in categories]
 
 
 def apply_account_filter(
     transactions: list[Transaction],
-    accounts: list[str],
+    accounts: list[TransactionSourceId],
 ) -> list[Transaction]:
     return [t for t in transactions if t.transaction_source_id in accounts]
 
@@ -32,7 +35,9 @@ def apply_year_filter(
     transactions: list[Transaction],
     years: list[str],
 ) -> list[Transaction]:
-    return [t for t in transactions if t.date_of_transaction.year in years]
+    return [
+        t for t in transactions if t.date_of_transaction.year in [int(y) for y in years]
+    ]
 
 
 def apply_month_filter(
@@ -58,19 +63,29 @@ def apply_month_filter(
     return [t for t in transactions if t.date_of_transaction.month in month_numbers]
 
 
-
-def get_demo_grouping_options(transactions: list[Transaction], category_lookup, ts_lookup)->dict[GroupByOption, list[str]]:
-    val =  {
-        GroupByOption.category: [category_lookup[t.category_id].name for t in transactions],
-        GroupByOption.month: [t.date_of_transaction.strftime("%B") for t in transactions],
+def get_demo_grouping_options(
+    transactions: list[Transaction],
+    category_lookup: dict[CategoryId, Category],
+    ts_lookup: dict[TransactionSourceId, TransactionSource],
+) -> dict[GroupByOption, list[str]]:
+    val = {
+        GroupByOption.category: [
+            category_lookup[t.category_id].name for t in transactions
+        ],
+        GroupByOption.month: [
+            t.date_of_transaction.strftime("%B") for t in transactions
+        ],
         GroupByOption.year: [str(t.date_of_transaction.year) for t in transactions],
-        GroupByOption.account: [ts_lookup[t.transaction_source_id].name for t in transactions],
+        GroupByOption.account: [
+            ts_lookup[t.transaction_source_id].name for t in transactions
+        ],
     }
 
     for key, value in val.items():
         val[key] = list(set(value))
 
     return val
+
 
 @router.get(
     "/demo_aggregated",
@@ -99,22 +114,24 @@ def get_demo_aggregated_transactions(
     ),
 ) -> AggregatedTransactions:
     demo_data = get_demo_data()
-    transactions = demo_data["transactions"]
-    calls: list[
-        tuple[
-            Callable[[list[Transaction], list[str]], list[Transaction]],
-            list[str] | None,
-        ]
-    ] = [
+    transactions = demo_data.transactions
+    category_lookup = {c.id: c for c in demo_data.categories}
+
+    ts_lookup = {ts.id: ts for ts in demo_data.sources}
+
+    ts_lookup_by_name = {ts.name: ts.id for ts in demo_data.sources}
+    category_lookup_by_name = {c.name: c.id for c in demo_data.categories}
+
+    calls = [
         (apply_month_filter, months),
         (apply_year_filter, years),
-        (apply_category_filter, categories),
-        (apply_account_filter, accounts),
+        (apply_category_filter, [category_lookup_by_name[c] for c in categories or []]),
+        (apply_account_filter, [ts_lookup_by_name[ts] for ts in accounts or []]),
     ]
 
     for a_callable, arg in calls:
         if arg and len(arg) > 0:
-            transactions = a_callable(transactions, arg)
+            transactions = a_callable(transactions, arg)  # type: ignore
 
     if not transactions:
         return AggregatedTransactions(
@@ -124,16 +141,6 @@ def get_demo_aggregated_transactions(
             overall_balance=0.0,
             grouping_options_choices={},
         )
-
-    category_lookup = {
-            c.id: c
-            for c in demo_data["categories"]
-        }
-
-    ts_lookup = {
-        ts.id: ts
-        for ts in demo_data["sources"]
-    }
 
     overall_withdrawals = 0.0
     overall_deposits = 0.0
@@ -145,7 +152,9 @@ def get_demo_aggregated_transactions(
 
     groups = recursive_group(transactions, group_by, category_lookup, ts_lookup)
 
-    grouping_option_choices = get_demo_grouping_options(transactions, category_lookup, ts_lookup)
+    grouping_option_choices = get_demo_grouping_options(
+        transactions, category_lookup, ts_lookup
+    )
 
     overall_balance = overall_deposits - overall_withdrawals
     return AggregatedTransactions(
@@ -155,6 +164,3 @@ def get_demo_aggregated_transactions(
         overall_balance=overall_balance,
         grouping_options_choices=grouping_option_choices,
     )
-
-
-

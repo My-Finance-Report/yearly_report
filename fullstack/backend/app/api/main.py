@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    demo,
     login,
     manage_accounts,
     manage_budgets,
@@ -8,7 +9,6 @@ from app.api.routes import (
     sankey,
     transactions,
     uploads,
-    demo,
     users,
     utils,
 )
