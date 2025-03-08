@@ -452,7 +452,7 @@ export type BudgetsDeleteBudgetCategoryData = {
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
-export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
+export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
 
 export type DemoGetDemoAggregatedTransactionsData = {
     /**

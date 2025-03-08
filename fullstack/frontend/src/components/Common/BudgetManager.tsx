@@ -165,6 +165,7 @@ function CreateNew({ budgetId }: { budgetId: number }) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
       setNewEntry("")
     },
   })

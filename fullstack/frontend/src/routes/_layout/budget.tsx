@@ -89,6 +89,7 @@ function CreateNewBudget() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
       setBudgetName("")
     },
   })

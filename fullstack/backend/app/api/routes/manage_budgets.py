@@ -78,7 +78,10 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
         for entry in entries
     ]
     return BudgetOut(
-        **budget.__dict__,
+        active=budget.active,
+        id=budget.id,
+        user_id=budget.user_id,
+        name=budget.name,
         entries=entries_out,
     )
 
@@ -96,22 +99,27 @@ def create_budget(
     budget: BudgetCreate,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> Budget:
+) -> BudgetOut:
     existing_budget = (
         session.query(Budget)
-        .filter(Budget.name == budget.name, Budget.user_id == user.id, Budget.active)
+        .filter(Budget.user_id == user.id, Budget.active)
         .first()
     )
     if existing_budget:
         raise HTTPException(
-            status_code=400, detail="Budget with this name already exists."
+            status_code=400, detail="Budget for this user already exists."
         )
 
     new_budget = Budget(**budget.model_dump(), user_id=user.id, active=True)
     session.add(new_budget)
     session.commit()
-    session.refresh(new_budget)
-    return new_budget
+    val =  get_budget_out(session=session, user=user)
+    if not val:
+        raise HTTPException(
+            status_code=400, detail="Budget somehow missing."
+        )
+    return val
+    
 
 
 @router.put("/{budget_id}", response_model=BudgetOut)
@@ -120,7 +128,7 @@ def update_budget(
     budget: BudgetBase,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> Budget:
+) -> BudgetOut:
     db_budget = (
         session.query(Budget)
         .filter(Budget.id == budget_id, Budget.user_id == user.id, Budget.active)
@@ -134,9 +142,12 @@ def update_budget(
         setattr(db_budget, key, value)
 
     session.commit()
-    session.refresh(db_budget)
-    return db_budget
-
+    val =  get_budget_out(session=session, user=user)
+    if not val:
+        raise HTTPException(
+            status_code=400, detail="Budget somehow missing."
+        )
+    return val
 
 @router.delete("/{budget_id}", response_model=None)
 def delete_budget(
@@ -406,14 +417,14 @@ def group_transactions_by_month(
     return dict(grouped_transactions)
 
 
-@router.get("/budget_status", response_model=BudgetStatus)
+@router.get("/budget_status", response_model=BudgetStatus| None)
 def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> BudgetStatus:
+) -> BudgetStatus | None: 
     budget = get_budget_out(session=session, user=user)
     if not budget:
-        raise HTTPException(status_code=404, detail="need to have a budget")
+        return None
 
     entry_statuses = []
     months_with_entries = set()
