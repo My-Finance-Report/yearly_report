@@ -311,12 +311,13 @@ class AuditLogAction(str, enum.Enum):
     change_date = "change_date"
     change_amount = "change_amount"
 
+
 @dataclass
 class AuditChange:
     old_date: datetime | None = None
     new_date: datetime | None = None
-    old_amount: Decimal | None = None
-    new_amount: Decimal | None = None
+    old_amount: float | None = None
+    new_amount: float | None = None
     old_category: CategoryId | None = None
     new_category: CategoryId | None = None
     old_kind: TransactionKind | None = None
@@ -324,18 +325,27 @@ class AuditChange:
 
     def valid(self) -> bool:
         # if any 'new' field is there, the 'old' must also be there
-        return (self.old_date is not None) == (self.new_date is not None) and \
-            (self.old_amount is not None) == (self.new_amount is not None) and \
-            (self.old_category is not None) == (self.new_category is not None) and \
-            (self.old_kind is not None) == (self.new_kind is not None)
+        return (
+            (self.old_date is not None) == (self.new_date is not None)
+            and (self.old_amount is not None) == (self.new_amount is not None)
+            and (self.old_category is not None) == (self.new_category is not None)
+            and (self.old_kind is not None) == (self.new_kind is not None)
+        )
+
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
 
-    id: Mapped[AuditLogId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[AuditLogId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     action: Mapped[AuditLogAction] = mapped_column(Enum(AuditLogAction), nullable=False)
     change: Mapped[AuditChange] = mapped_column(JSON, nullable=False)
-    transaction_id: Mapped[TransactionId] = mapped_column(ForeignKey("transaction.id"), nullable=False)
+    transaction_id: Mapped[TransactionId] = mapped_column(
+        ForeignKey("transaction.id"), nullable=False
+    )
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )

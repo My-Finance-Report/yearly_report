@@ -21,6 +21,9 @@ from app.local_types import (
     TransactionOut,
 )
 from app.models import (
+    AuditChange,
+    AuditLog,
+    AuditLogAction,
     Category,
     CategoryId,
     Transaction,
@@ -403,6 +406,36 @@ def get_aggregated_transactions(
     )
 
 
+def make_audit_entry(old: Transaction, new:TransactionEdit)->list[AuditLog]:
+
+    actions: list[AuditLogAction] = []
+    changes: list[AuditChange] = []
+
+    if old.date_of_transaction != new.date_of_transaction:
+        actions.append(AuditLogAction.change_date)
+        changes.append(AuditChange(old_date=old.date_of_transaction, new_date=new.date_of_transaction))
+    if old.amount != new.amount:
+        actions.append(AuditLogAction.change_amount)
+        changes.append(AuditChange(old_amount=old.amount, new_amount=new.amount))
+    if old.category_id != new.category_id:
+        actions.append(AuditLogAction.reclassify_transaction_category)
+        changes.append(AuditChange(old_category=old.category_id, new_category=cast(CategoryId, new.category_id)))
+    if old.kind != new.kind:
+        actions.append(AuditLogAction.reclassify_transaction_kind)
+        changes.append(AuditChange(old_kind=old.kind, new_kind=new.kind))
+
+    logs: list[AuditLog] = []
+    for action, change in zip(actions, changes):
+        val = AuditLog(
+            user_id=old.user_id,
+            action=action,
+            change=change, 
+            transaction_id=old.id,
+        )
+        logs.append(val)
+
+    return logs
+
 @router.put(
     "/{transaction_id}",
     response_model=TransactionOut,
@@ -418,12 +451,15 @@ def update_transaction(
         .one()
     )
 
+    audit_logs = make_audit_entry(old=transaction_db, new=transaction)
+
     transaction_db.amount = transaction.amount
     transaction_db.description = transaction.description
     transaction_db.date_of_transaction = transaction.date_of_transaction
     transaction_db.kind = transaction.kind
     transaction_db.category_id = cast(CategoryId, transaction.category_id)
 
+    session.add_all(audit_logs)
     session.commit()
     return transaction_db
 
