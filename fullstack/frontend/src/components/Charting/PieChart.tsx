@@ -55,6 +55,7 @@ export function GenericPieChart({
     finalConfig = config
   }
 
+
   return (
     <Box className="flex flex-col">
       <CardContent className="flex-1 pb-0 align-center">

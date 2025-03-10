@@ -224,6 +224,8 @@ const chartDataMap = sourceGroups.flatMap(group =>
   } else {
     description = `${sourceGroups[0].group_name} by ${sourceGroups[0].subgroups[0].groupby_kind}`
   }
+
+
   if (!chartDataMap) return null
   return (
     <BoxWithText
@@ -236,7 +238,7 @@ const chartDataMap = sourceGroups.flatMap(group =>
         data={Object.entries(chartDataMap).map(([key, value]) => ({ name: key, value }))}
         dataKey="value"
         description={description}
-        nameKey="group"
+        nameKey="name"
         config={null}
       />
     </BoxWithText>
