@@ -1,5 +1,4 @@
 import enum
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import NewType
@@ -323,7 +322,7 @@ class AuditChange(BaseModel):
     old_kind: TransactionKind | None = Field(default=None)
     new_kind: TransactionKind | None = Field(default=None)
 
-    
+
 class AuditLog(Base):
     __tablename__ = "audit_log"
 

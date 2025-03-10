@@ -8,6 +8,7 @@ from app.models import (
     Category,
     ProcessFileJob,
     Transaction,
+    TransactionId,
     TransactionSource,
     UploadConfiguration,
     UploadedPdf,
@@ -20,6 +21,7 @@ class PdfParseException(Exception):
 
 
 class PartialTransaction(BaseModel):
+    partialTransactionId: TransactionId |None = Field(..., description="Unique identifier for the transaction")
     partialTransactionDateOfTransaction: str = Field(
         ..., description="Transaction date in MM/DD/YYYY format"
     )
