@@ -12,10 +12,13 @@ export type AggregatedGroup = {
 };
 
 export type AggregatedTransactions = {
-    groups: Array<TransactionSourceGroup>;
+    groups: Array<AggregatedGroup>;
     overall_withdrawals: number;
     overall_deposits: number;
     overall_balance: number;
+    grouping_options_choices: {
+        [key: string]: Array<(string)>;
+    };
 };
 
 export type Body_login_login_access_token = {
@@ -38,33 +41,66 @@ export type BudgetBase = {
 };
 
 export type BudgetCategoryLinkBase = {
-    budget_id: number;
+    budget_entry_id: number;
+    category_id: number;
+};
+
+export type BudgetCategoryLinkCreate = {
+    entry_id: number;
     category_id: number;
 };
 
 export type BudgetCategoryLinkOut = {
-    budget_id: number;
+    budget_entry_id: number;
     category_id: number;
     id: number;
+    stylized_name: string;
+};
+
+export type BudgetCategoryLinkStatus = {
+    budget_entry_id: number;
+    category_id: number;
+    id: number;
+    stylized_name: string;
+    transactions: Array<TransactionOut>;
+    total: string;
 };
 
 export type BudgetCreate = {
     name: string;
 };
 
-export type BudgetEntryBase = {
+export type BudgetEntryCreate = {
     amount: number;
     name: string;
+};
+
+export type BudgetEntryEdit = {
+    amount: (number | string);
+    id: number;
+    name: string;
     budget_id: number;
+    category_links: Array<BudgetCategoryLinkCreate>;
 };
 
 export type BudgetEntryOut = {
-    amount: number;
+    amount: string;
+    id: number;
     name: string;
     budget_id: number;
-    id: number;
     user_id: number;
     category_links: Array<BudgetCategoryLinkOut>;
+};
+
+export type BudgetEntryStatus = {
+    amount: string;
+    id: number;
+    name: string;
+    budget_id: number;
+    category_links_status: {
+        [key: string]: BudgetCategoryLinkStatus;
+    };
+    total: string;
 };
 
 export type BudgetOut = {
@@ -73,6 +109,14 @@ export type BudgetOut = {
     active?: boolean;
     id: number;
     entries: Array<BudgetEntryOut>;
+};
+
+export type BudgetStatus = {
+    user_id: number;
+    name: string;
+    active?: boolean;
+    entry_status: Array<BudgetEntryStatus>;
+    months_with_entries: Array<(string)>;
 };
 
 export type CategoryBase = {
@@ -86,9 +130,10 @@ export type CategoryOut = {
     source_id: number;
     archived?: boolean;
     id: number;
+    stylized_name: string;
 };
 
-export type GroupByOption = 'category' | 'month' | 'year';
+export type GroupByOption = 'account' | 'category' | 'month' | 'year';
 
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
@@ -219,15 +264,6 @@ export type TransactionSourceBase = {
     name: string;
     archived?: boolean;
     source_kind?: SourceKind;
-};
-
-export type TransactionSourceGroup = {
-    transaction_source_id: number;
-    transaction_source_name: string;
-    total_withdrawals: number;
-    total_deposits: number;
-    total_balance: number;
-    groups: Array<AggregatedGroup>;
 };
 
 export type TransactionSourceOut = {
@@ -372,14 +408,14 @@ export type BudgetsGetBudgetEntriesResponse = (Array<BudgetEntryOut>);
 
 export type BudgetsCreateBudgetEntryData = {
     budgetId: number;
-    requestBody: BudgetEntryBase;
+    requestBody: BudgetEntryCreate;
 };
 
 export type BudgetsCreateBudgetEntryResponse = (BudgetEntryOut);
 
 export type BudgetsUpdateBudgetEntryData = {
     entryId: number;
-    requestBody: BudgetEntryBase;
+    requestBody: BudgetEntryEdit;
 };
 
 export type BudgetsUpdateBudgetEntryResponse = (BudgetEntryOut);
@@ -415,6 +451,33 @@ export type BudgetsDeleteBudgetCategoryData = {
 };
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
+
+export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
+
+export type DemoGetDemoAggregatedTransactionsData = {
+    /**
+     * Filter for transactions
+     */
+    accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    categories?: (Array<(string)> | null);
+    /**
+     * List of grouping options in order (e.g. category, month)
+     */
+    groupBy?: Array<GroupByOption>;
+    /**
+     * Filter for transactions
+     */
+    months?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    years?: (Array<(string)> | null);
+};
+
+export type DemoGetDemoAggregatedTransactionsResponse = (AggregatedTransactions);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
@@ -464,9 +527,25 @@ export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 
 export type TransactionsGetAggregatedTransactionsData = {
     /**
+     * Filter for transactions
+     */
+    accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    categories?: (Array<(string)> | null);
+    /**
      * List of grouping options in order (e.g. category, month)
      */
     groupBy?: Array<GroupByOption>;
+    /**
+     * Filter for transactions
+     */
+    months?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    years?: (Array<(string)> | null);
 };
 
 export type TransactionsGetAggregatedTransactionsResponse = (AggregatedTransactions);
@@ -482,6 +561,8 @@ export type TransactionsListCategoriesData = {
 };
 
 export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
+
+export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
 
 export type UploadsReprocessFileData = {
     jobId: number;

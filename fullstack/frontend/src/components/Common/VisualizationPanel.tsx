@@ -3,6 +3,7 @@ import BoxWithText, {
 } from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
+  useBreakpointValue,
   Box,
   Button,
   Center,
@@ -21,22 +22,22 @@ import {
   type GroupByOption,
   type SankeyGetSankeyDataResponse,
   SankeyService,
-  type TransactionSourceGroup,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
-import { GenericPieChart } from "../Charting/PieChart"
+import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
 
 interface VisualizationProps {
-  sourceGroup: TransactionSourceGroup | undefined
+  sourceGroups: AggregatedGroup[] 
   isLoading: boolean
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  includeSankey?: boolean
   collapsedItems: CollapsibleName[]
 }
 
 interface ValidatedVisualizationProps {
-  sourceGroup: TransactionSourceGroup
+  sourceGroups: AggregatedGroup[]
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
@@ -44,43 +45,57 @@ interface ValidatedVisualizationProps {
 
 export function VisualizationPanel({
   showDeposits,
-  sourceGroup,
+  sourceGroups,
   isLoading,
   setCollapsedItems,
   collapsedItems,
+  includeSankey = true,
 }: VisualizationProps) {
+
+  const isMobile = !!useBreakpointValue({ base: true, md: false })
+
+  const layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
+
+  console.log(sourceGroups)
+
   return (
     <Flex direction="column" gap={4} mb={4} align="center" justify="center">
-      {isLoading || !sourceGroup ? (
+      {isLoading || !sourceGroups ? (
         <Spinner size="lg" />
       ) : (
         <Grid
-          templateAreas={`"sankey sankey sankey sankey"
-                  "pie bar bar bar"`}
+          templateAreas={`"sankey sankey sankey sankey" "${layout}"`}
           templateColumns="1fr 1fr 1fr 1fr"
           templateRows="auto auto"
           gap={4}
           w="100%"
         >
-          <Box gridArea="sankey" width="100%" position="relative">
-            <SankeyBox
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-              collapsedItems={collapsedItems}
-              setCollapsedItems={setCollapsedItems}
-            />
-          </Box>
-          <Box gridArea="pie">
-            <PieBox
-              sourceGroup={sourceGroup}
-              showDeposits={showDeposits}
-              collapsedItems={collapsedItems}
-              setCollapsedItems={setCollapsedItems}
-            />
-          </Box>
+          {!isMobile && (
+            <>
+            {includeSankey &&
+              <Box gridArea="sankey" width="100%" position="relative">
+                <SankeyBox
+                  sourceGroups={sourceGroups}
+                  showDeposits={showDeposits}
+                  collapsedItems={collapsedItems}
+                  setCollapsedItems={setCollapsedItems}
+                />
+              </Box>
+}
+              <Box gridArea="pie">
+                <PieBox
+                  sourceGroups={sourceGroups}
+                  showDeposits={showDeposits}
+                  collapsedItems={collapsedItems}
+                  setCollapsedItems={setCollapsedItems}
+                />
+              </Box>
+            </>
+          )
+          }
           <Box gridArea="bar">
             <BarChart
-              sourceGroup={sourceGroup}
+              sourceGroups={sourceGroups}
               showDeposits={showDeposits}
               collapsedItems={collapsedItems}
               setCollapsedItems={setCollapsedItems}
@@ -93,7 +108,7 @@ export function VisualizationPanel({
 }
 
 function BarChart({
-  sourceGroup,
+  sourceGroups,
   showDeposits,
   collapsedItems,
   setCollapsedItems,
@@ -107,10 +122,10 @@ function BarChart({
     return group.subgroups?.some(hasTimeGrouping) || false
   }
 
-  const hasValidTimeGrouping = sourceGroup.groups.some(hasTimeGrouping)
+  const hasValidTimeGrouping = sourceGroups.some(hasTimeGrouping)
 
   const categoryKeys = new Set<string>()
-  for (const group of sourceGroup.groups) {
+  for (const group of sourceGroups) {
     if (group.subgroups) {
       for (const subgroup of group.subgroups) {
         categoryKeys.add(subgroup.group_name)
@@ -118,31 +133,31 @@ function BarChart({
     }
   }
 
-  const chartData = hasValidTimeGrouping
-    ? sourceGroup.groups.map((group) => {
-        const base: Record<string, number | string> = {
-          date: group.group_id.toString(),
-        }
+  const chartData: GenericChartDataItem[] | undefined = hasValidTimeGrouping
+    ? sourceGroups.map((group) => {
+      const base: Record<string, number | string> = {
+        date: group.group_id.toString(),
+      }
 
-        if (group.subgroups) {
-          for (const subgroup of group.subgroups) {
-            base[subgroup.group_name] = showDeposits
-              ? subgroup.total_deposits
-              : subgroup.total_withdrawals
-          }
+      if (group.subgroups) {
+        for (const subgroup of group.subgroups) {
+          base[subgroup.group_name] = showDeposits
+            ? subgroup.total_deposits
+            : subgroup.total_withdrawals
         }
+      }
 
-        return base
-      })
+      return base
+    })
     : []
 
-  const description = `${sourceGroup.transaction_source_name} ${
-    showDeposits ? "deposits" : "withdrawals"
-  }, by ${sourceGroup.groups[0].groupby_kind} ${
-    sourceGroup.groups[0].subgroups?.length
-      ? `then ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+  const description = `${sourceGroups[0].group_name} ${showDeposits ? "deposits" : "withdrawals"
+    }, by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
+      ? `then ${sourceGroups[0].subgroups[0].groupby_kind}`
       : ""
-  }`
+    }`
+
+  const isMobile = !!useBreakpointValue({ base: true, md: false })
 
   return (
     <BoxWithText
@@ -150,8 +165,9 @@ function BarChart({
       COMPONENT_NAME="Bar Chart"
       setCollapsedItems={setCollapsedItems}
       collapsedItems={collapsedItems}
+      isCollapsable={!isMobile}
     >
-      {hasValidTimeGrouping ? (
+      {hasValidTimeGrouping && chartData ? (
         <GenericBarChart
           data={chartData}
           description={description}
@@ -171,50 +187,46 @@ function BarChart({
 }
 
 function PieBox({
-  sourceGroup,
+  sourceGroups,
   showDeposits,
   setCollapsedItems,
   collapsedItems,
 }: ValidatedVisualizationProps) {
-  const chartDataMap = sourceGroup.groups
-    .flatMap(
-      (group) =>
-        group.subgroups?.map((subgroup) => ({
-          group: subgroup.group_name,
-          amount: showDeposits
-            ? subgroup.total_deposits
-            : subgroup.total_withdrawals,
-        })) || [
-          {
-            group: group.group_name,
-            amount: showDeposits
-              ? group.total_deposits
-              : group.total_withdrawals,
-          },
-        ],
-    )
-    .reduce(
-      (acc, { group, amount }) => {
-        acc[group] = (acc[group] || 0) + amount
-        return acc
-      },
-      {} as Record<string, number>,
-    )
 
-  const chartData = Object.entries(chartDataMap).map(([group, amount]) => ({
-    group,
-    amount,
-  }))
+const chartDataMap = sourceGroups.flatMap(group =>
+  group.subgroups?.map(subgroup => ({
+    group: group.group_name, // use the outer group's name
+    amount: showDeposits
+      ? subgroup.total_deposits
+      : subgroup.total_withdrawals,
+  })) || [
+    {
+      group: group.group_name,
+      amount: showDeposits
+        ? group.total_deposits
+        : group.total_withdrawals,
+    },
+  ]
+).reduce(
+  (acc, { group, amount }) => {
+    acc[group] = (acc[group] || 0) + amount;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
 
   let description: string
   if (
-    !sourceGroup.groups[0].subgroups ||
-    sourceGroup.groups[0].subgroups.length === 0
+    !sourceGroups[0].subgroups ||
+    sourceGroups[0].subgroups.length === 0
   ) {
-    description = `${sourceGroup.transaction_source_name}`
+    description = `${sourceGroups[0].group_name}`
   } else {
-    description = `${sourceGroup.transaction_source_name} by ${sourceGroup.groups[0].subgroups[0].groupby_kind}`
+    description = `${sourceGroups[0].group_name} by ${sourceGroups[0].subgroups[0].groupby_kind}`
   }
+
+
+  if (!chartDataMap) return null
   return (
     <BoxWithText
       text={""}
@@ -223,10 +235,10 @@ function PieBox({
       COMPONENT_NAME="Pie Chart"
     >
       <GenericPieChart
-        data={chartData}
-        dataKey="amount"
+        data={Object.entries(chartDataMap).map(([key, value]) => ({ name: key, value }))}
+        dataKey="value"
         description={description}
-        nameKey="group"
+        nameKey="name"
         config={null}
       />
     </BoxWithText>

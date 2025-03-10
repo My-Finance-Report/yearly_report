@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 
 from pydantic import BaseModel
@@ -105,6 +106,7 @@ class CategoryBase(BaseModel):
 
 class CategoryOut(CategoryBase):
     id: int
+    stylized_name: str
 
 
 class TransactionBase(BaseModel):
@@ -185,21 +187,28 @@ class ColChartConfigOut(ColChartConfigBase):
 
 
 class BudgetCategoryLinkBase(BaseModel):
-    budget_id: BudgetId
+    budget_entry_id: BudgetEntryId
+    category_id: CategoryId
+
+
+class BudgetCategoryLinkCreate(BaseModel):
+    entry_id: BudgetEntryId
     category_id: CategoryId
 
 
 class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
     id: BudgetCategoryLinkId
+    stylized_name: str
+
 
 class BudgetEntryCreate(BaseModel):
     amount: float
     name: str
 
 
-
 class BudgetEntryBase(BaseModel):
-    amount: float
+    amount: Decimal
+    id: BudgetEntryId
     name: str
     budget_id: BudgetId
 
@@ -208,6 +217,11 @@ class BudgetEntryOut(BudgetEntryBase):
     id: BudgetEntryId
     user_id: UserId
     category_links: list[BudgetCategoryLinkOut]
+
+
+class BudgetEntryEdit(BudgetEntryBase):
+    id: BudgetEntryId
+    category_links: list[BudgetCategoryLinkCreate]
 
 
 class BudgetBase(BaseModel):
@@ -222,9 +236,25 @@ class BudgetBase(BaseModel):
 class BudgetCreate(BaseModel):
     name: str
 
+
 class BudgetOut(BudgetBase):
-    id: int
+    id: BudgetId
     entries: list[BudgetEntryOut]
+
+
+class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
+    transactions: list[TransactionOut]
+    total: Decimal
+
+
+class BudgetEntryStatus(BudgetEntryBase):
+    category_links_status: dict[str, BudgetCategoryLinkStatus]
+    total: Decimal
+
+
+class BudgetStatus(BudgetBase):
+    entry_status: list[BudgetEntryStatus]
+    months_with_entries: list[str]
 
 
 class ProcessFileJobBase(BaseModel):
@@ -262,6 +292,7 @@ class TransactionGroup(BaseModel):
 
 
 class GroupByOption(str, Enum):
+    account = "account"
     category = "category"
     month = "month"
     year = "year"
@@ -302,10 +333,11 @@ class TransactionSourceGroup(BaseModel):
 
 
 class AggregatedTransactions(BaseModel):
-    groups: list[TransactionSourceGroup]
+    groups: list[AggregatedGroup]
     overall_withdrawals: float
     overall_deposits: float
     overall_balance: float
+    grouping_options_choices: dict[GroupByOption, list[str]]
 
     class Config:
         orm_mode = True

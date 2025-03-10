@@ -1,3 +1,5 @@
+import os
+
 import sqlalchemy.orm as orm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -9,7 +11,8 @@ from app.models import User
 from ..local_types import UserRegister
 
 # Create SQLAlchemy engine
-engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True)
+DATABASE_URL = os.environ["DATABASE_URL"]
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,4 +1,5 @@
 import { PasswordInput } from "@/components/ui/password-input"
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
 import { Button, Container, Field, Input, Link, Text } from "@chakra-ui/react"
 import {
   Link as RouterLink,
@@ -45,6 +46,8 @@ function Login() {
   }
 
   return (
+    <>
+    <SegmentedNavigation />
     <Container
       as="form"
       onSubmit={handleSubmit(onSubmit)}
@@ -83,7 +86,7 @@ function Login() {
         />
         {error && <Field.ErrorText>{error}</Field.ErrorText>}
       </Field.Root>
-      <RouterLink to="/reset-password">
+      <RouterLink to="/recover-password">
         <Link color="blue.500">Forgot password?</Link>
       </RouterLink>
 
@@ -98,6 +101,7 @@ function Login() {
         </RouterLink>
       </Text>
     </Container>
+</>
   )
 }
 

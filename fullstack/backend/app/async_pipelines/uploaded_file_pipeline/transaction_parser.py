@@ -70,6 +70,8 @@ def already_processed(process: InProcessFile) -> bool:
         )
         .one_or_none()
     )
+
+    logger.info(f"Already processed: {val}")
     return bool(val)
 
 
@@ -124,18 +126,17 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
 
 def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
     """Remove existing transactions if the file has been processed before."""
-    if already_processed(process):
-        logger.info(f"Removing previous transactions for file: {process.file.filename}")
-        assert process.config, "must have"
-        query = process.session.query(Transaction).filter(
-            Transaction.transaction_source_id == process.config.transaction_source_id,
-            Transaction.user_id == process.user.id,
-        )
+    logger.info(f"Removing previous transactions for file: {process.file.filename}")
+    query = process.session.query(Transaction).filter(
+        Transaction.uploaded_pdf_id == process.file.id,
+        Transaction.user_id == process.user.id,
+    )
 
-        for row in query:
-            row.archived = True
-            process.session.add(row)
-        process.session.commit()
+    logger.info(f"Removing previous transactions: {query.count()}")
+
+    query.delete()
+
+    process.session.commit()
 
     return process
 

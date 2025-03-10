@@ -1,7 +1,28 @@
 import type React from "react"
-import { useState } from "react"
+import {
+  DrawerBackdrop,
+  DrawerBody,
+  DrawerCloseTrigger,
+  DrawerContent,
+  DrawerFooter,
+  DrawerActionTrigger,
+  DrawerHeader,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 
-import { Box, CloseButton, HStack, Tag, Text } from "@chakra-ui/react"
+
+import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useBreakpointValue } from "@chakra-ui/react"
+import {
+  PopoverBody,
+  PopoverContent,
+  PopoverRoot,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+import { Box, CloseButton, Tag, Text } from "@chakra-ui/react"
 import {
   DndContext,
   type DragEndEvent,
@@ -17,20 +38,45 @@ import {
   horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable"
-import type { TransactionSourceGroup } from "../../client"
 import BoxWithText, { type CollapsibleName } from "./BoxWithText"
-import { type GroupByOption, GroupingConfig } from "./GroupingConfig"
-import { TransactionSourceSelector } from "./TransactionSourceSelector"
+import { GroupByOption, GroupingConfig } from "./GroupingConfig"
 import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
 import { CSS } from "@dnd-kit/utilities"
+import { BsFunnel } from "react-icons/bs"
+import { useState } from "react"
+import { FiChevronDown, FiChevronUp } from "react-icons/fi"
 
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
+export interface FilterInfo {
+  years: string[] | null
+  accounts: string[] | null
+  months: string[] | null
+  categories: string[] | null
+  setYears: React.Dispatch<React.SetStateAction<string[] | null>>
+  setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>
+  setMonths: React.Dispatch<React.SetStateAction<string[] | null>>
+  setCategories: React.Dispatch<React.SetStateAction<string[] | null>>
+}
+
+function getFilterSettings(filterInfo: FilterInfo, groupingOption: GroupByOption): [string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>] {
+  switch (groupingOption) {
+    case GroupByOption.year:
+      return [filterInfo.years, filterInfo.setYears]
+    case GroupByOption.account:
+      return [filterInfo.accounts, filterInfo.setAccounts]
+    case GroupByOption.month:
+      return [filterInfo.months, filterInfo.setMonths]
+    case GroupByOption.category:
+      return [filterInfo.categories, filterInfo.setCategories]
+    default:
+      throw "Invalid grouping option"
+  }
+}
+
 
 export function FilterGroup({
-  activeTransactionSource,
-  setActiveTransactionSource,
-  data,
+  filterInfo,
+  groupingOptionsChoices,
   groupingOptions,
   setShowDeposits,
   showDeposits,
@@ -38,18 +84,93 @@ export function FilterGroup({
   setCollapsedItems,
   collapsedItems,
 }: {
-  activeTransactionSource: TransactionSourceGroup
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
   showDeposits: boolean
-  setActiveTransactionSource: React.Dispatch<
-    React.SetStateAction<TransactionSourceGroup | null>
-  >
-  data: TransactionsGetAggregatedTransactionsResponse
+  filterInfo: FilterInfo
   groupingOptions: GroupByOption[]
+  groupingOptionsChoices: { [key in GroupByOption]: string[] }
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
   collapsedItems: CollapsibleName[]
 }) {
+
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
+
+  const [open, setOpen] = useState(false)
+
+  if (isMobile) {
+    return (
+      <DrawerRoot open={open} onOpenChange={(e) => setOpen(e.open)} placement={'bottom'}>
+        <DrawerBackdrop />
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Text>Adjust Filters</Text>
+            <BsFunnel />
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Filters</DrawerTitle>
+          </DrawerHeader>
+          <DrawerBody>
+            <InnerFilterGroup
+              filterInfo={filterInfo}
+              groupingOptionsChoices={groupingOptionsChoices}
+              groupingOptions={groupingOptions}
+              setShowDeposits={setShowDeposits}
+              showDeposits={showDeposits}
+              setGroupingOptions={setGroupingOptions}
+              setCollapsedItems={setCollapsedItems}
+              collapsedItems={collapsedItems}
+            />
+          </DrawerBody>
+          <DrawerFooter>
+            <DrawerActionTrigger asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerActionTrigger>
+          </DrawerFooter>
+          <DrawerCloseTrigger />
+        </DrawerContent>
+      </DrawerRoot>
+    )
+  }
+
+
+
+  return <InnerFilterGroup
+    filterInfo={filterInfo}
+    groupingOptionsChoices={groupingOptionsChoices}
+    groupingOptions={groupingOptions}
+    setShowDeposits={setShowDeposits}
+    showDeposits={showDeposits}
+    setGroupingOptions={setGroupingOptions}
+    setCollapsedItems={setCollapsedItems}
+    collapsedItems={collapsedItems}
+  />
+}
+
+
+function InnerFilterGroup({
+  groupingOptions,
+  filterInfo,
+  groupingOptionsChoices,
+  setShowDeposits,
+  showDeposits,
+  setGroupingOptions,
+  setCollapsedItems,
+  collapsedItems,
+}: {
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
+  showDeposits: boolean
+  filterInfo: FilterInfo
+  groupingOptions: GroupByOption[]
+  groupingOptionsChoices: { [key in GroupByOption]: string[] }
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  collapsedItems: CollapsibleName[]
+}) {
+
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
       return prev.includes(option)
@@ -73,6 +194,33 @@ export function FilterGroup({
     const newIndex = groupingOptions.indexOf(over.id as GroupByOption)
     setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex))
   }
+
+  const moveItemUp = (option: GroupByOption) => {
+    setGroupingOptions((prev) => {
+      const index = prev.indexOf(option)
+      if (index > 0) {
+        const newOptions = [...prev]
+          ;[newOptions[index - 1], newOptions[index]] = [newOptions[index], newOptions[index - 1]]
+        return newOptions
+      }
+      return prev
+    })
+  }
+
+  const moveItemDown = (option: GroupByOption) => {
+    setGroupingOptions((prev) => {
+      const index = prev.indexOf(option)
+      if (index < prev.length - 1) {
+        const newOptions = [...prev]
+          ;[newOptions[index], newOptions[index + 1]] = [newOptions[index + 1], newOptions[index]]
+        return newOptions
+      }
+      return prev
+    })
+  }
+
+
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   return (
     <div
@@ -100,28 +248,23 @@ export function FilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
-          <HStack gap={4} paddingTop={4} justify={"space-between"}>
+          <Flex direction={isMobile ? "column" : "row"} gap={4} paddingTop={4} alignItems={isMobile ? "start" : "center"} justifyContent={"center"}>
             <WithdrawDepositSelector
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
-            />
-            <TransactionSourceSelector
-              activeTransactionSource={activeTransactionSource}
-              setActiveTransactionSource={setActiveTransactionSource}
-              allTransactionSources={data.groups}
             />
             <GroupingConfig
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
             />
-          </HStack>
+          </Flex>
           <Box mt={4} backgroundColor={"background"} borderRadius="lg">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <HStack p={4} justifyContent={"center"}>
+              <Flex direction={isMobile ? "column" : "row"} p={4} justifyContent={"center"} gap={2} alignItems={isMobile ? 'start' : 'center'}>
                 <Text>Showing</Text>
                 <Tag.Root
                   paddingY={1.5}
@@ -132,35 +275,36 @@ export function FilterGroup({
                 >
                   <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
                 </Tag.Root>
-                <Text>from</Text>
-                <Tag.Root
-                  paddingY={1.5}
-                  paddingX={2}
-                  color="green.500"
-                  size="lg"
-                  cursor="default"
-                >
-                  <Text>{activeTransactionSource.transaction_source_name}</Text>
-                </Tag.Root>
                 <Text>grouped by</Text>
                 <SortableContext
                   items={groupingOptions}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {groupingOptions.map((option, index) => (
-                    <SortableItem
-                      key={option}
-                      option={option}
-                      noX={groupingOptions.length === 1}
-                      onRemove={handleToggleOption}
-                    >
-                      {index !== groupingOptions.length - 1 && (
-                        <Text>then</Text>
-                      )}
-                    </SortableItem>
-                  ))}
+                  {groupingOptions.map((option, index) => {
+                    const [filters, setFilters] = getFilterSettings(filterInfo, option)
+                    return (
+                      <SortableItem
+                        key={option}
+                        filters={filters}
+                        setFilters={setFilters}
+                        moveItemUp={moveItemUp}
+                        moveItemDown={moveItemDown}
+                        isFirst={index === 0}
+                        isLast={index === groupingOptions.length - 1}
+                        choices={groupingOptionsChoices[option]}
+                        option={option}
+                        noX={groupingOptions.length === 1}
+                        onRemove={handleToggleOption}
+                        isMobile={!!isMobile}
+                      >
+                        {index !== groupingOptions.length - 1 && (
+                          <Text>then</Text>
+                        )}
+                      </SortableItem>
+                    )
+                  })}
                 </SortableContext>
-              </HStack>
+              </Flex>
             </DndContext>
           </Box>
         </BoxWithText>
@@ -171,14 +315,30 @@ export function FilterGroup({
 
 const SortableItem = ({
   option,
+  filters,
+  setFilters,
   onRemove,
   noX,
   children,
+  choices,
+  moveItemUp,
+  moveItemDown,
+  isFirst,
+  isLast,
+  isMobile
 }: {
   option: GroupByOption
+  choices: string[]
+  filters: string[] | null
+  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
   noX: boolean
   onRemove: (option: GroupByOption) => void
   children: React.ReactNode
+  moveItemUp: (option: GroupByOption) => void
+  moveItemDown: (option: GroupByOption) => void
+  isFirst: boolean
+  isLast: boolean
+  isMobile: boolean
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -196,7 +356,8 @@ const SortableItem = ({
         ref={setNodeRef}
         py={noX ? 2 : 0}
         color="orange.500"
-        px={2}
+        maxW={230}
+        justifyContent="space-between"
         style={style}
         {...attributes}
         {...listeners}
@@ -204,11 +365,82 @@ const SortableItem = ({
         <Text cursor="grab">
           {option.charAt(0).toUpperCase() + option.slice(1)}
         </Text>
-        {!noX && (
-          <CloseButton onClick={() => onRemove(option)} ml={2} size="sm" />
-        )}
+        <Box p={1}>
+          <FilterButton filters={filters} setFilters={setFilters} options={choices} name={"testing"} />
+          {!noX && (
+            <CloseButton onClick={() => onRemove(option)} size="xs" variant="outline" />
+          )}
+          {isMobile &&
+            (
+              <>
+                <Button size="xs" variant="outline" disabled={isFirst} onClick={() => moveItemUp(option)}>
+                  <FiChevronUp />
+                </Button>
+                <Button size="xs" variant="outline" disabled={isLast} onClick={() => moveItemDown(option)}>
+                  <FiChevronDown />
+                </Button>
+              </>
+            )
+          }
+        </Box>
       </Tag.Root>
       {children}
     </>
+  )
+}
+
+
+
+function FilterButton({
+  options,
+  name,
+  filters,
+  setFilters
+}: {
+  options: string[]
+  name: string
+  filters: string[] | null
+  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
+}) {
+
+  const handleChange = (newSelectedValues: string[]) => {
+    setFilters(() => ([...newSelectedValues]))
+  }
+
+  return (
+    <PopoverRoot>
+      <PopoverTrigger>
+        <Button size='xs' variant="outline">
+          <BsFunnel />
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent>
+        <PopoverBody>
+          <PopoverTitle />
+
+          <Fieldset.Root>
+            <CheckboxGroup
+              value={filters || options}
+              name={name}
+              onValueChange={handleChange}
+            >
+              <Fieldset.Legend fontSize="sm" mb="2" />
+              <Fieldset.Content>
+                {options.map((value) => (
+                  <Checkbox.Root key={value} value={value}>
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Checkbox.Label>{value}</Checkbox.Label>
+                  </Checkbox.Root>
+                ))}
+              </Fieldset.Content>
+            </CheckboxGroup>
+          </Fieldset.Root>
+        </PopoverBody>
+      </PopoverContent>
+    </PopoverRoot>
   )
 }

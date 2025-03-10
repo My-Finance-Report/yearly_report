@@ -1,11 +1,14 @@
 "use client"
 
 import FileDropzone from "@/components/Common/Dropzone"
-import { ReprocessButton, DeleteButton } from "@/components/Common/ReprocessButton"
+import {
+  DeleteButton,
+  ReprocessButton,
+} from "@/components/Common/ReprocessButton"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
-  HStack,
   Container,
+  HStack,
   Spinner,
   Table,
   TableBody,
@@ -100,15 +103,15 @@ function UploadFiles() {
                     <TableCell>{pdf.job?.status || "Unknown"}</TableCell>
                     <TableCell>
                       <HStack gap={2}>
-                      <ReprocessButton
-                        jobId={pdf.job.id}
-                        onReprocess={handleUpdate}
-                      />
-                  <DeleteButton
-                        fileId={pdf.id}
-                        onReprocess={handleUpdate}
-                      />
-</HStack>
+                        <ReprocessButton
+                          jobId={pdf.job.id}
+                          onReprocess={handleUpdate}
+                        />
+                        <DeleteButton
+                          fileId={pdf.id}
+                          onReprocess={handleUpdate}
+                        />
+                      </HStack>
                     </TableCell>
                   </TableRow>
                 ),

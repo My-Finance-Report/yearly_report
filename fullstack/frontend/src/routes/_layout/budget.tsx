@@ -1,23 +1,23 @@
-import { BudgetsService } from "@/client";
-import { isLoggedIn } from "@/hooks/useAuth";
+import { BudgetsService } from "@/client"
+import { ManageBudget } from "@/components/Common/BudgetManager"
+import { isLoggedIn } from "@/hooks/useAuth"
 import {
-  Container,
   Box,
-  Text,
   Button,
+  Container,
   Flex,
+  HStack,
   Heading,
   Input,
-  HStack,
-} from "@chakra-ui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { ManageBudget } from "@/components/Common/BudgetManager";
+  Text,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { useState } from "react"
 
 export const Route = createFileRoute("/_layout/budget")({
   component: ManageBudgets,
-});
+})
 
 function ManageBudgets() {
   const {
@@ -28,44 +28,59 @@ function ManageBudgets() {
     queryKey: ["budgets"],
     queryFn: BudgetsService.getBudget,
     enabled: isLoggedIn(),
-  });
+  })
 
-  if (isError) {
+  const {
+      data: budgetStatus,
+      isLoading: statusLoading,
+      isError: statusIsError,
+    } = useQuery({
+      queryKey: ["budgetStatus"],
+      queryFn: BudgetsService.getBudgetStatus,
+      enabled: isLoggedIn(),
+    })
+
+
+  if (isError||statusIsError) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
           Failed to Load Budgets
         </Heading>
       </Container>
-    );
+    )
   }
 
-  if (isLoading) {
+  if (isLoading || statusLoading) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
           Loading...
         </Heading>
       </Container>
-    );
+    )
   }
 
   return (
     <Container mt={24} maxW="large">
-      {budget ? (
-        <ManageBudget budget={budget} />
+      <Text fontSize="lg" textAlign="center" py={12}>
+        the budget feature is still very much in development, so consider it
+        lucky when things work :)
+      </Text>
+      {budget && budgetStatus ? (
+        <ManageBudget budget={budget} budgetStatus={budgetStatus} />
       ) : (
         <Flex justifyContent="center">
           <CreateNewBudget />
         </Flex>
       )}
     </Container>
-  );
+  )
 }
 
 function CreateNewBudget() {
-  const queryClient = useQueryClient();
-  const [budgetName, setBudgetName] = useState<string>("My Budget");
+  const queryClient = useQueryClient()
+  const [budgetName, setBudgetName] = useState<string>("My Budget")
 
   const addBudgetMutation = useMutation({
     mutationFn: () =>
@@ -73,10 +88,11 @@ function CreateNewBudget() {
         requestBody: { name: budgetName },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      setBudgetName("");
+      queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
+      setBudgetName("")
     },
-  });
+  })
 
   return (
     <Box>
@@ -86,11 +102,11 @@ function CreateNewBudget() {
           maxWidth="md"
           value={budgetName}
           onChange={(e) => setBudgetName(e.target.value)}
-        ></Input>
+        />
         <Button size="sm" onClick={() => addBudgetMutation.mutate()}>
           Create Budget
         </Button>
       </HStack>
     </Box>
-  );
+  )
 }

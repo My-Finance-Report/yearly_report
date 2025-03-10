@@ -34,7 +34,7 @@ export function GenericBarChart({
   const computedConfig: ChartConfig = React.useMemo(() => {
     if (config) return config
 
-    return uniqueKeys.reduce((acc, key, index) => {
+    return uniqueKeys.reduce((acc, key) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
         color: getColorForName(key),
@@ -45,7 +45,10 @@ export function GenericBarChart({
 
   return (
     <Card>
-      <CardContent className="px-2 sm:p-6" style={{ backgroundColor: "background" }}>
+      <CardContent
+        className="px-2 sm:p-6"
+        style={{ backgroundColor: "background" }}
+      >
         <ChartContainer
           config={computedConfig}
           className="aspect-auto h-[250px] w-full"

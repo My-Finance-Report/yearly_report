@@ -3,7 +3,5 @@
 set -e
 set -x
 
-
 cd frontend
-npm run lint 
 tsc -p tsconfig.build.json

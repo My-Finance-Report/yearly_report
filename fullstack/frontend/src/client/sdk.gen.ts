@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -415,6 +415,49 @@ export class BudgetsService {
         });
     }
     
+    /**
+     * Get Budget Status
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static getBudgetStatus(): CancelablePromise<BudgetsGetBudgetStatusResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/budgets/budget_status'
+        });
+    }
+    
+}
+
+export class DemoService {
+    /**
+     * Get Demo Aggregated Transactions
+     * @param data The data for the request.
+     * @param data.groupBy List of grouping options in order (e.g. category, month)
+     * @param data.years Filter for transactions
+     * @param data.months Filter for transactions
+     * @param data.categories Filter for transactions
+     * @param data.accounts Filter for transactions
+     * @returns AggregatedTransactions Successful Response
+     * @throws ApiError
+     */
+    public static getDemoAggregatedTransactions(data: DemoGetDemoAggregatedTransactionsData = {}): CancelablePromise<DemoGetDemoAggregatedTransactionsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/demo/demo_aggregated',
+            query: {
+                group_by: data.groupBy,
+                years: data.years,
+                months: data.months,
+                categories: data.categories,
+                accounts: data.accounts
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
 }
 
 export class LoginService {
@@ -601,6 +644,10 @@ export class TransactionsService {
      * Get Aggregated Transactions
      * @param data The data for the request.
      * @param data.groupBy List of grouping options in order (e.g. category, month)
+     * @param data.years Filter for transactions
+     * @param data.months Filter for transactions
+     * @param data.categories Filter for transactions
+     * @param data.accounts Filter for transactions
      * @returns AggregatedTransactions Successful Response
      * @throws ApiError
      */
@@ -609,7 +656,11 @@ export class TransactionsService {
             method: 'GET',
             url: '/api/v1/transactions/aggregated',
             query: {
-                group_by: data.groupBy
+                group_by: data.groupBy,
+                years: data.years,
+                months: data.months,
+                categories: data.categories,
+                accounts: data.accounts
             },
             errors: {
                 422: 'Validation Error'
@@ -653,6 +704,18 @@ export class TransactionsService {
             errors: {
                 422: 'Validation Error'
             }
+        });
+    }
+    
+    /**
+     * List All Categories
+     * @returns CategoryOut Successful Response
+     * @throws ApiError
+     */
+    public static listAllCategories(): CancelablePromise<TransactionsListAllCategoriesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/transactionslist_all_categories'
         });
     }
     

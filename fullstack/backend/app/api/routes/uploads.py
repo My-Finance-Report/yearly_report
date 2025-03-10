@@ -4,7 +4,6 @@ import tempfile
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy import text
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException
 from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
@@ -74,7 +73,10 @@ def uploaded_pdf_from_raw_content(
 
     print("enqueue the job")
     job = enqueue_or_reset_job(
-        session, user.id, uploaded_file.id, job_kind=JobKind.full_upload
+        session=session,
+        user_id=user.id,
+        pdf_id=uploaded_file.id,
+        job_kind=JobKind.full_upload,
     )
 
     return UploadedPdfOut.model_validate(uploaded_file).model_copy(
@@ -119,7 +121,9 @@ def get_uploads(
     file_ids = [file.id for file in files]
 
     jobs = (
-        session.query(ProcessFileJob).filter(ProcessFileJob.pdf_id.in_(file_ids)).all()
+        session.query(ProcessFileJob)
+        .filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id)
+        .all()
     )
     job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
 
@@ -151,7 +155,6 @@ def is_uploading(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> bool:
-
     return bool(
         session.query(ProcessFileJob)
         .filter(

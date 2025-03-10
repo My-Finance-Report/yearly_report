@@ -19,6 +19,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 import type { UserRegister } from "../client"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 import { confirmPasswordRules, emailPattern, passwordRules } from "../utils"
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
@@ -59,6 +60,7 @@ function SignUp() {
 
   return (
     <>
+      <SegmentedNavigation />
       <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
         <Container
           as="form"
@@ -133,9 +135,11 @@ function SignUp() {
           </Button>
           <Text>
             Already have an account?{" "}
-            <Link as={RouterLink} href="/login" color="blue.500">
+            <RouterLink to="/login" color="blue.500">
+            <Link color="blue.500">
               Log In
-            </Link>
+    </Link>
+              </RouterLink>
           </Text>
         </Container>
       </Flex>

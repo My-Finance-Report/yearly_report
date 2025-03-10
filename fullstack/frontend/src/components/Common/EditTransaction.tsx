@@ -2,19 +2,18 @@ import {
   Button,
   FieldErrorText,
   FieldLabel,
-  Select,
   FieldRoot,
-  Input,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValueText,
-  SelectRoot,
-  createListCollection,
   HStack,
-} from "@chakra-ui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type SubmitHandler, useForm, Controller } from "react-hook-form";
+  Input,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  createListCollection,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Controller, type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   DialogBackdrop,
@@ -25,64 +24,62 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   type ApiError,
-  CategoryOut,
-  TransactionEdit,
-  TransactionKind,
-  TransactionOut,
+  type CategoryOut,
+  type TransactionEdit,
+  type TransactionKind,
+  type TransactionOut,
   TransactionsService,
-} from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
-import { handleError } from "../../utils";
-import { Blah } from "./SankeyConfig"; //TODO stop importing this
+} from "../../client"
+import useCustomToast from "../../hooks/useCustomToast"
+import { handleError } from "../../utils"
+import type { Blah } from "./SankeyConfig" //TODO stop importing this
 
 interface EditTransactionProps {
-  transaction: TransactionOut;
-  isOpen: boolean;
-  onClose: () => void;
+  transaction: TransactionOut
+  isOpen: boolean
+  onClose: () => void
 }
 
-
-
-function rawCategoiesToSelectItems(categories: CategoryOut[]): { items: Blah[] } {
+function rawCategoiesToSelectItems(categories: CategoryOut[]): {
+  items: Blah[]
+} {
   const blahs = categories.map((category) => ({
     label: category.name,
     value: category.id,
-  }));
-  return { items: blahs };
+  }))
+  return { items: blahs }
 }
 
 const kinds: { items: { label: string; value: TransactionKind }[] } = {
   items: [
-  {
-    label: "Expense",
-    value: 'withdrawal',
-  },
-  {
-    label: "Deposit",
-    value: 'deposit',
-  }
-]
+    {
+      label: "Expense",
+      value: "withdrawal",
+    },
+    {
+      label: "Deposit",
+      value: "deposit",
+    },
+  ],
 }
-
 
 const EditTransaction = ({
   transaction,
   isOpen,
   onClose,
 }: EditTransactionProps) => {
-  const queryClient = useQueryClient();
-  const showToast = useCustomToast();
-
+  const queryClient = useQueryClient()
+  const showToast = useCustomToast()
 
   const {
     register,
     handleSubmit,
     reset,
     control,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm<TransactionEdit>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -90,16 +87,15 @@ const EditTransaction = ({
       ...transaction,
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
     },
-  });
+  })
 
-
-  const {data, isLoading} = useQuery({
+  const { data  } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => TransactionsService.listCategories({transactionId: transaction.id}),
+    queryFn: () =>
+      TransactionsService.listCategories({ transactionId: transaction.id }),
   })
 
   const categories = rawCategoiesToSelectItems(data ?? [])
-
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {
@@ -108,26 +104,25 @@ const EditTransaction = ({
       })
     },
     onSuccess: () => {
-      showToast("Success!", "Transaction updated successfully.", "success");
-      onClose();
+      showToast("Success!", "Transaction updated successfully.", "success")
+      onClose()
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast);
+      handleError(err, showToast)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["aggregatedTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["aggregatedTransactions"] })
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<TransactionEdit> = async (data) => {
-    mutation.mutate(data);
-  };
+    mutation.mutate(data)
+  }
 
   const onCancel = () => {
-    reset();
-    onClose();
-  };
-
+    reset()
+    onClose()
+  }
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -183,14 +178,20 @@ const EditTransaction = ({
               control={control}
               name="kind"
               render={({ field }) => {
-                const { onChange, value } = field;
+                const { onChange } = field
                 return (
                   <SelectRoot
                     id="kind"
                     placeholder="Withdrawal / Deposit"
-                    defaultValue={[kinds.items.find((kind) => kind.value === transaction.kind)!.value]}
+                    defaultValue={[
+                      kinds.items.find(
+                        (kind) => kind.value === transaction.kind,
+                      )!.value,
+                    ]}
                     collection={createListCollection(kinds)}
-                    onValueChange={(val) => { onChange(val.value[0])}}
+                    onValueChange={(val) => {
+                      onChange(val.value[0])
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValueText placeholder="Select a kind" />
@@ -203,14 +204,13 @@ const EditTransaction = ({
                       ))}
                     </SelectContent>
                   </SelectRoot>
-                );
+                )
               }}
             />
             {errors.category_id && (
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
           </FieldRoot>
-
 
           <FieldRoot mt={4} invalid={!!errors.amount}>
             <FieldLabel htmlFor="amount">Amount</FieldLabel>
@@ -234,15 +234,20 @@ const EditTransaction = ({
               control={control}
               name="category_id"
               render={({ field }) => {
-                const { onChange, value } = field;
+                const { onChange } = field
                 return (
                   <SelectRoot
                     id="category_id"
                     placeholder="Select a category"
-                    // @ts-ignore this works and saves a bunch of casts between numbers and string
-                    value={[categories.items.find((cat) => cat.value === transaction.category_id)!.value]}
+                    value={[
+                      categories.items.find( 
+                        (cat) => cat.value === transaction.category_id,
+                      )?.value as unknown as  string,
+                    ]}
                     collection={createListCollection(categories)}
-                    onValueChange={(val) => { onChange(val.value[0])}}
+                    onValueChange={(val) => {
+                      onChange(val.value[0])
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValueText placeholder="Select a category" />
@@ -255,32 +260,27 @@ const EditTransaction = ({
                       ))}
                     </SelectContent>
                   </SelectRoot>
-                );
+                )
               }}
             />
             {errors.category_id && (
               <FieldErrorText>{errors.category_id.message}</FieldErrorText>
             )}
           </FieldRoot>
-
         </DialogBody>
 
         <DialogFooter gap={3}>
           <HStack>
-<Button variant="outline" onClick={onCancel} title="Cancel">
-            Cancel
+            <Button variant="outline" onClick={onCancel} title="Cancel">
+              Cancel
             </Button>
-          <Button
-            type="submit"
-            loading={isSubmitting}
-          >
-            Save
-          </Button>
-            
-</HStack>
+            <Button type="submit" loading={isSubmitting}>
+              Save
+            </Button>
+          </HStack>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  );
-};
-export default EditTransaction;
+  )
+}
+export default EditTransaction

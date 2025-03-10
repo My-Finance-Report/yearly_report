@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { Spinner, Text } from "@chakra-ui/react"
+import { Spinner, Text, Flex } from "@chakra-ui/react"
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText"
 import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup"
@@ -10,17 +10,17 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable"
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { AggregatedGroup, TransactionsService } from "../../client"
-import { isLoggedIn } from "../../hooks/useAuth"
+import { AggregatedGroup, DemoService } from "../client"
 
 import { useColorPalette } from "@/hooks/useColor"
-import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
+import type { TransactionsGetAggregatedTransactionsResponse } from "../client"
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
 
-export const Route = createFileRoute("/_layout/transactions")({
-  component: Transactions,
+export const Route = createFileRoute("/demo")({
+  component: DemoLayout,
 })
 
-function Transactions() {
+function Demo() {
   const [expandedGroups, setExpandedGroups] = useState<{
     [key: string]: boolean
   }>({})
@@ -30,7 +30,6 @@ function Transactions() {
     GroupByOption.category,
   ])
 
-  // need to figure out how to pass null through api
   const [accounts, setAccounts] = useState<string[] | null>(null)
   const [categories, setCategories] = useState<string[] | null>(null)
   const [months, setMonths] = useState<string[] | null>(null)
@@ -61,16 +60,15 @@ function Transactions() {
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
-    queryKey: ["aggregatedTransactions", groupingOptions],
+    queryKey: ["demo_aggregatedTransactions", groupingOptions],
     queryFn: () =>
-      TransactionsService.getAggregatedTransactions({
+      DemoService.getDemoAggregatedTransactions({
         groupBy: groupingOptions,
         years,
         accounts,
         months,
         categories,
       }),
-    enabled: isLoggedIn(),
   })
 
   useEffect(() => {
@@ -86,7 +84,7 @@ function Transactions() {
       })
   })
 
-  const [activeGrouping, setActiveGrouping] =
+  const [activeGrouping, setactiveGrouping] =
     useState<AggregatedGroup[] | null>(null)
 
   useEffect(() => {
@@ -100,11 +98,10 @@ function Transactions() {
 
   useEffect(() => {
     if (data?.groups.length) {
-      setActiveGrouping(data.groups)
+      setactiveGrouping(data.groups)
     }
+    
   }, [data?.groups])
-
-
 
   const namesForLegends = data?.groups
     .flatMap((group) => group?.subgroups?.map((subgroup) => subgroup.group_name))
@@ -128,6 +125,7 @@ function Transactions() {
         marginBottom: 48,
       }}
     >
+
       <Legend
         collapsedItems={collapsedItems}
         setCollapsedItems={setCollapsedItems}
@@ -152,6 +150,7 @@ function Transactions() {
               collapsedItems={collapsedItems}
             />
             <VisualizationPanel
+              includeSankey={false}
               sourceGroups={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}
@@ -183,4 +182,16 @@ function Transactions() {
   )
 }
 
-export default Transactions
+
+export default function DemoLayout() {
+
+  return (
+    <div style={{ backgroundColor: "background", padding: 20, minHeight: "100vh" }}>
+      <SegmentedNavigation />
+        <Flex justify="center" align="center" width="full">
+          <Demo/>
+        </Flex>
+    </div>
+  )
+}
+

@@ -1,16 +1,17 @@
-import { AddIcon } from "@chakra-ui/icons"
-import { Box, HStack, Icon, Tag, TagLabel } from "@chakra-ui/react"
+import { Box, HStack, Tag, TagLabel } from "@chakra-ui/react"
 
 export enum GroupByOption {
   category = "category",
   month = "month",
   year = "year",
+  account = "account",
 }
 
 const availableOptions: GroupByOption[] = [
   GroupByOption.category,
   GroupByOption.year,
   GroupByOption.month,
+  GroupByOption.account,
 ]
 
 interface GroupingConfigProps {
@@ -45,11 +46,8 @@ export function GroupingConfig({
             opacity={!groupingOptions.includes(option) ? 0.5 : 1}
             p={2}
             borderRadius="md"
-            onClick={() =>
-              handleToggleOption(option)
-            }
+            onClick={() => handleToggleOption(option)}
           >
-            <Icon as={AddIcon} mr={1} />
             <TagLabel>
               {option.charAt(0).toUpperCase() + option.slice(1)}
             </TagLabel>

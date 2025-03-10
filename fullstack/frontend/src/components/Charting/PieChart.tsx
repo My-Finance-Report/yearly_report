@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
-import { Box, Text } from "@chakra-ui/react"
+import { Box } from "@chakra-ui/react"
 import { Desc } from "./SankeyChart"
 
 export interface GenericChartDataItem {
@@ -54,6 +54,7 @@ export function GenericPieChart({
   } else {
     finalConfig = config
   }
+
 
   return (
     <Box className="flex flex-col">

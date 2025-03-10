@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_layout")({
   beforeLoad: async () => {
     if (!isLoggedIn()) {
       throw redirect({
-        to: "/login",
+        to: "/demo",
       })
     }
   },
@@ -18,16 +18,16 @@ function Layout() {
   const { isLoading } = useAuth()
 
   return (
-    <div>
+    <div style={{ backgroundColor: "background", padding: 20, minHeight: "100vh" }}>
       <SegmentedNavigation />
       {isLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">
           <Spinner size="xl" color="ui.main" />
         </Flex>
       ) : (
-        <div style={{ backgroundColor: "background" , padding: 20}}>
+        <Flex justify="center" align="center" width="full">
           <Outlet />
-        </div>
+        </Flex>
       )}
     </div>
   )
