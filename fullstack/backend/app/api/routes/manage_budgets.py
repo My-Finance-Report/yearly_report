@@ -101,9 +101,7 @@ def create_budget(
     user: User = Depends(get_current_user),
 ) -> BudgetOut:
     existing_budget = (
-        session.query(Budget)
-        .filter(Budget.user_id == user.id, Budget.active)
-        .first()
+        session.query(Budget).filter(Budget.user_id == user.id, Budget.active).first()
     )
     if existing_budget:
         raise HTTPException(
@@ -113,13 +111,10 @@ def create_budget(
     new_budget = Budget(**budget.model_dump(), user_id=user.id, active=True)
     session.add(new_budget)
     session.commit()
-    val =  get_budget_out(session=session, user=user)
+    val = get_budget_out(session=session, user=user)
     if not val:
-        raise HTTPException(
-            status_code=400, detail="Budget somehow missing."
-        )
+        raise HTTPException(status_code=400, detail="Budget somehow missing.")
     return val
-    
 
 
 @router.put("/{budget_id}", response_model=BudgetOut)
@@ -142,12 +137,11 @@ def update_budget(
         setattr(db_budget, key, value)
 
     session.commit()
-    val =  get_budget_out(session=session, user=user)
+    val = get_budget_out(session=session, user=user)
     if not val:
-        raise HTTPException(
-            status_code=400, detail="Budget somehow missing."
-        )
+        raise HTTPException(status_code=400, detail="Budget somehow missing.")
     return val
+
 
 @router.delete("/{budget_id}", response_model=None)
 def delete_budget(
@@ -417,11 +411,11 @@ def group_transactions_by_month(
     return dict(grouped_transactions)
 
 
-@router.get("/budget_status", response_model=BudgetStatus| None)
+@router.get("/budget_status", response_model=BudgetStatus | None)
 def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> BudgetStatus | None: 
+) -> BudgetStatus | None:
     budget = get_budget_out(session=session, user=user)
     if not budget:
         return None
