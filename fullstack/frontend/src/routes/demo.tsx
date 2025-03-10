@@ -85,7 +85,7 @@ function Demo() {
   })
 
   const [activeGrouping, setactiveGrouping] =
-    useState<AggregatedGroup | null>(null)
+    useState<AggregatedGroup[] | null>(null)
 
   useEffect(() => {
     if(data?.grouping_options_choices) {
@@ -98,7 +98,7 @@ function Demo() {
 
   useEffect(() => {
     if (data?.groups.length) {
-      setactiveGrouping(data.groups[0])
+      setactiveGrouping(data.groups)
     }
     
   }, [data?.groups])
@@ -151,7 +151,7 @@ function Demo() {
             />
             <VisualizationPanel
               includeSankey={false}
-              sourceGroup={activeGrouping}
+              sourceGroups={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}
               setCollapsedItems={setCollapsedItems}

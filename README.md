@@ -26,32 +26,23 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
-# User feedback
+# User feedback / TODO
 
--> something still feels off with RLS
-https://theshubhendra.medium.com/role-based-row-filtering-advanced-sqlalchemy-techniques-733e6b1328f6
+-> manually add in an account + transactions to the account (CD, 401k etc)
 
--> home page load is very sluggish
--> way to view all of the credit cards
---> redo filter group component
--> budgeting feature (in progress)
---> 1:m with categories
---> need a create a form page to support them
+-> manually override categories for transactions (memoize to llm)
+-> redo filter group component (waiting on designs)
+-> some bugs on the landing page version likely around existing filters
+-> pie chart is weird currently 
+-> edit transaction category is broken
+-> show error messages on login screens
+-> create account shouldnt bounce to login 
+-> popovers on the charts are still weird
 
--> general bug around uploading file twice
- --> still exists
-
--> needs to have nav bar on login page
+-> toasts are broken
 -> Expense should line up in the table
 -> add more colors
--> expect to have transactioons for january but don't
--> filter out from year start
--> show error messages on login screens
--> no bounce after create account
-- manually add transactions
-- demo account -- exists but not useable yet
-- edit transactions
-- toasts are broken
+
 - privacy policy
 - terms of service
 - contact me page

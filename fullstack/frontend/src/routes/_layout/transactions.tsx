@@ -86,8 +86,8 @@ function Transactions() {
       })
   })
 
-  const [activeGrouping, setactiveGrouping] =
-    useState<AggregatedGroup | null>(null)
+  const [activeGrouping, setActiveGrouping] =
+    useState<AggregatedGroup[] | null>(null)
 
   useEffect(() => {
     if(data?.grouping_options_choices) {
@@ -100,10 +100,11 @@ function Transactions() {
 
   useEffect(() => {
     if (data?.groups.length) {
-      setactiveGrouping(data.groups[0])
+      setActiveGrouping(data.groups)
     }
-    
   }, [data?.groups])
+
+
 
   const namesForLegends = data?.groups
     .flatMap((group) => group?.subgroups?.map((subgroup) => subgroup.group_name))
@@ -115,6 +116,7 @@ function Transactions() {
   if (error) {
     return <Text color="red.500">Error loading transactions.</Text>
   }
+
 
 
   return (
@@ -150,7 +152,7 @@ function Transactions() {
               collapsedItems={collapsedItems}
             />
             <VisualizationPanel
-              sourceGroup={activeGrouping}
+              sourceGroups={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}
               setCollapsedItems={setCollapsedItems}
