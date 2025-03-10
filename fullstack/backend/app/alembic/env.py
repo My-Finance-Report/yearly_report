@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.environ["WORKER_DATABASE_URL"]
 
 def get_url():
     val=str(DATABASE_URL)
