@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import NewType
 
+from pydantic import BaseModel, Field
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -312,27 +313,17 @@ class AuditLogAction(str, enum.Enum):
     change_amount = "change_amount"
 
 
-@dataclass
-class AuditChange:
-    old_date: datetime | None = None
-    new_date: datetime | None = None
-    old_amount: float | None = None
-    new_amount: float | None = None
-    old_category: CategoryId | None = None
-    new_category: CategoryId | None = None
-    old_kind: TransactionKind | None = None
-    new_kind: TransactionKind | None = None
+class AuditChange(BaseModel):
+    old_date: datetime | None = Field(default=None)
+    new_date: datetime | None = Field(default=None)
+    old_amount: float | None = Field(default=None)
+    new_amount: float | None = Field(default=None)
+    old_category: CategoryId | None = Field(default=None)
+    new_category: CategoryId | None = Field(default=None)
+    old_kind: TransactionKind | None = Field(default=None)
+    new_kind: TransactionKind | None = Field(default=None)
 
-    def valid(self) -> bool:
-        # if any 'new' field is there, the 'old' must also be there
-        return (
-            (self.old_date is not None) == (self.new_date is not None)
-            and (self.old_amount is not None) == (self.new_amount is not None)
-            and (self.old_category is not None) == (self.new_category is not None)
-            and (self.old_kind is not None) == (self.new_kind is not None)
-        )
-
-
+    
 class AuditLog(Base):
     __tablename__ = "audit_log"
 

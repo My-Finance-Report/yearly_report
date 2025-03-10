@@ -28,6 +28,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
+-> dashboard config and ability to save them (query params)
 -> manually add in an account + transactions to the account (CD, 401k etc)
 -> general desire for the means to track assets (confirmed by rick)
 -> manually override categories for transactions (memoize to llm) (confirmed by rick)

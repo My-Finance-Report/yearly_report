@@ -429,7 +429,7 @@ def make_audit_entry(old: Transaction, new:TransactionEdit)->list[AuditLog]:
         val = AuditLog(
             user_id=old.user_id,
             action=action,
-            change=change, 
+            change=change.model_dump_json(), 
             transaction_id=old.id,
         )
         logs.append(val)
@@ -450,6 +450,8 @@ def update_transaction(
         .filter(Transaction.id == transaction.id, Transaction.user_id == user.id)
         .one()
     )
+
+
 
     audit_logs = make_audit_entry(old=transaction_db, new=transaction)
 
