@@ -29,19 +29,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback / TODO
 
 -> manually add in an account + transactions to the account (CD, 401k etc)
-
--> manually override categories for transactions (memoize to llm)
+-> general desire for the means to track assets (confirmed by rick)
+-> manually override categories for transactions (memoize to llm) (confirmed by rick)
 -> redo filter group component (waiting on designs)
 -> some bugs on the landing page version likely around existing filters
--> pie chart is weird currently 
 -> edit transaction category is broken
+--> doesnt show the change in the selector
 -> show error messages on login screens
 -> create account shouldnt bounce to login 
 -> popovers on the charts are still weird
-
 -> toasts are broken
 -> Expense should line up in the table
--> add more colors
 
 - privacy policy
 - terms of service
