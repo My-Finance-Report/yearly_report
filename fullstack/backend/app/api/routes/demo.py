@@ -113,7 +113,7 @@ def get_demo_aggregated_transactions(
         default=None,
         description="Filter for transactions",
     ),
-    budgets: list[str] | None = Query(
+    _budgets: list[str] | None = Query(
         default=None,
         description="Filter for transactions",
     ),
@@ -157,7 +157,9 @@ def get_demo_aggregated_transactions(
 
     budgets_lookup: BudgetLookup = {}
 
-    groups = recursive_group(transactions, group_by, category_lookup, ts_lookup, budgets_lookup)
+    groups = recursive_group(
+        transactions, group_by, category_lookup, ts_lookup, budgets_lookup
+    )
 
     grouping_option_choices = get_demo_grouping_options(
         transactions, category_lookup, ts_lookup

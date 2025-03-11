@@ -42,8 +42,12 @@ CategoryLookup = dict[CategoryId, Category]
 BudgetLookup = dict[CategoryId, BudgetEntry]
 AccountLookup = dict[TransactionSourceId, TransactionSource]
 
-GroupByKeyFunc = Callable[[Transaction, CategoryLookup, AccountLookup, BudgetLookup], str]
-SortFunc = Callable[[Transaction, CategoryLookup, AccountLookup, BudgetLookup], str | datetime]
+GroupByKeyFunc = Callable[
+    [Transaction, CategoryLookup, AccountLookup, BudgetLookup], str
+]
+SortFunc = Callable[
+    [Transaction, CategoryLookup, AccountLookup, BudgetLookup], str | datetime
+]
 GroupByNameFunc = Callable[[str], str]
 GroupByIdFunc = Callable[[str], str]
 
@@ -62,54 +66,97 @@ def get_stylized_name_lookup(session: Session, user: User) -> dict[int, str]:
 
 
 def get_account_key(
-    transaction: Transaction, _lookup: CategoryLookup, account_lookup: AccountLookup, _budget_lookup: BudgetLookup
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
 ) -> str:
     return account_lookup[transaction.transaction_source_id].name
 
 
 def get_category_key(
-    transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup
+    transaction: Transaction,
+    lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
 ) -> str:
     return lookup[transaction.category_id].name
 
 
 def get_month_key(
-    transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
 ) -> str:
     return transaction.date_of_transaction.strftime("%B %Y")
 
 
 def get_year_key(
-    transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
 ) -> str:
     return str(transaction.date_of_transaction.year)
 
+
 def get_budget_key(
-    transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup 
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
 ) -> str:
-    val=  _budget_lookup.get(transaction.category_id)
+    val = _budget_lookup.get(transaction.category_id)
     if val:
         return val.name
     return "Unbudgeted"
 
 
-def get_category_sort(transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
+def get_category_sort(
+    transaction: Transaction,
+    lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
+) -> str:
     return lookup[transaction.category_id].name
 
 
-def get_month_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> datetime:
+def get_month_sort(
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
+) -> datetime:
     return transaction.date_of_transaction
 
 
-def get_year_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> datetime:
+def get_year_sort(
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
+) -> datetime:
     return transaction.date_of_transaction
 
 
-def get_account_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
+def get_account_sort(
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
+) -> str:
     return str(transaction.transaction_source_id)
 
-def get_budget_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
-    return get_budget_key(transaction, _lookup, _account_lookup, _budget_lookup) 
+
+def get_budget_sort(
+    transaction: Transaction,
+    _lookup: CategoryLookup,
+    _account_lookup: AccountLookup,
+    _budget_lookup: BudgetLookup,
+) -> str:
+    return get_budget_key(transaction, _lookup, _account_lookup, _budget_lookup)
+
 
 def id(key: str) -> str:
     return key
@@ -175,7 +222,9 @@ def recursive_group(
     current = group_options[0]
 
     def key_fn(txn: Transaction) -> str:
-        return group_by_key_funcs[current](txn, category_lookup, account_lookup, budget_lookup)
+        return group_by_key_funcs[current](
+            txn, category_lookup, account_lookup, budget_lookup
+        )
 
     def sort_fn(txn: Transaction) -> str | datetime:
         return sort_funcs[current](txn, category_lookup, account_lookup, budget_lookup)
@@ -195,7 +244,11 @@ def recursive_group(
 
         if len(group_options) > 1:
             subgroups = recursive_group(
-                group_list, group_options[1:], category_lookup, account_lookup, budget_lookup
+                group_list,
+                group_options[1:],
+                category_lookup,
+                account_lookup,
+                budget_lookup,
             )
             groups.append(
                 AggregatedGroup(
@@ -321,10 +374,14 @@ def apply_budget_filter(
     transactions: SqlQuery[Transaction],
     budgets: list[str],
 ) -> SqlQuery[Transaction]:
-
-    return transactions.join(
-        BudgetCategoryLink, BudgetCategoryLink.category_id == Transaction.category_id).join(BudgetEntry, BudgetEntry.id == BudgetCategoryLink.budget_entry_id).filter(BudgetEntry.name.in_(budgets))
-
+    return (
+        transactions.join(
+            BudgetCategoryLink,
+            BudgetCategoryLink.category_id == Transaction.category_id,
+        )
+        .join(BudgetEntry, BudgetEntry.id == BudgetCategoryLink.budget_entry_id)
+        .filter(BudgetEntry.name.in_(budgets))
+    )
 
 
 def apply_month_filter(
@@ -351,11 +408,18 @@ def apply_month_filter(
         func.extract("month", Transaction.date_of_transaction).in_(month_numbers)
     )
 
+
 def get_budget_lookup(session: Session, user: User) -> BudgetLookup:
-    links = session.query(BudgetCategoryLink).filter(BudgetCategoryLink.user_id == user.id).all()
+    links = (
+        session.query(BudgetCategoryLink)
+        .filter(BudgetCategoryLink.user_id == user.id)
+        .all()
+    )
     entries = session.query(BudgetEntry).filter(BudgetEntry.user_id == user.id).all()
-    entries_dict:dict[BudgetEntryId, BudgetEntry] = {entry.id: entry for entry in entries}
-    lookup:dict[CategoryId, BudgetEntry] = {}
+    entries_dict: dict[BudgetEntryId, BudgetEntry] = {
+        entry.id: entry for entry in entries
+    }
+    lookup: dict[CategoryId, BudgetEntry] = {}
     for link in links:
         lookup[link.category_id] = entries_dict[link.budget_entry_id]
     return lookup
@@ -453,7 +517,9 @@ def get_aggregated_transactions(
     overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
-    groups = recursive_group(transactions, group_by, category_lookup, ts_lookup, budget_lookup)
+    groups = recursive_group(
+        transactions, group_by, category_lookup, ts_lookup, budget_lookup
+    )
 
     grouping_option_choices = build_grouping_option_choices(session, user)
 

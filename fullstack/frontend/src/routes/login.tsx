@@ -10,6 +10,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 import type { Body_login_login_access_token as AccessToken } from "../client"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 import { emailPattern } from "../utils"
+import { useState } from "react"
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const { loginMutation, error, resetError } = useAuth()
+  const [blahError, setError] = useState(false)
   const {
     register,
     handleSubmit,
@@ -41,9 +43,12 @@ function Login() {
     try {
       await loginMutation.mutateAsync(data)
     } catch {
-      // error is handled by useAuth hook
+      setError(true)
     }
   }
+
+
+
 
   return (
     <>
@@ -58,6 +63,9 @@ function Login() {
       gap={4}
       centerContent
     >
+      {blahError && (
+          <Text>Incorrect Username or Password</Text>
+        )}
       <Field.Root>
         <Field.Label>Email</Field.Label>
         <Input
@@ -70,6 +78,7 @@ function Login() {
           type="email"
           required
         />
+
         {errors.username && (
           <Field.ErrorText>{errors.username.message}</Field.ErrorText>
         )}
