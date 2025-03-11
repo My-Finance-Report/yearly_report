@@ -149,7 +149,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                   )}
                   {group.group_name}
                 </HStack>
-                {totalAmount && (
+                {totalAmount && !isMobile &&(
                   <PercentageBar amount={specificAmount} total={totalAmount} isMobile={isMobile} />
                 )}
               </HStack>
