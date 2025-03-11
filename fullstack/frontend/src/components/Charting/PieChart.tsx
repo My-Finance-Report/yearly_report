@@ -36,19 +36,19 @@ function SingleSliceTooltip({
     return null
   }
 
-  // In a single <Pie>, payload typically has only one item for the hovered slice:
   const hoveredItem = payload[0]
+
+  console.log(hoveredItem)
 
 
   return (
     <Box p={2} className="rounded-md bg-black shadow-md ring-1 ring-black/5">
-      {/* We'll display the name and a currency-formatted value. */}
       <p className="mb-2 font-semibold">{hoveredItem.name}</p>
 
       <div className="flex items-center gap-2 text-sm">
         <span
           className="inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: hoveredItem.color }}
+          style={{ backgroundColor: hoveredItem.payload.fill }}
         />
         <span className="font-medium">{formatCurrency(hoveredItem.value ?? 0)}</span>
       </div>
