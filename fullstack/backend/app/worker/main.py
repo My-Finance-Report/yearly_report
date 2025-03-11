@@ -94,7 +94,6 @@ def process_next_job(session: Session) -> None:
 
 
 def try_job(session: Session, job: ProcessFileJob) -> bool:
-
     try:
         run_job(session, job)
 

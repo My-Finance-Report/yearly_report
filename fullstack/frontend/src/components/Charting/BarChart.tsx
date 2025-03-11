@@ -3,13 +3,13 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
 import { Desc } from "./SankeyChart"
+import { TooltipProps } from "recharts"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
@@ -18,6 +18,54 @@ export interface GenericBarChartProps {
   config?: ChartConfig | null
   description?: string
 }
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value)
+}
+
+function SingleSliceTooltip({
+  active,
+  label,
+  payload,
+  hoveredKey,
+}: TooltipProps<number, string> & {
+  hoveredKey: string | null
+}) {
+  if (!active || !payload || !payload.length || !hoveredKey) {
+    return null
+  }
+
+  // Recharts will pass an array of items for the entire stacked bar at this x-position.
+  // We only want the hovered slice, i.e., the one that matches `hoveredKey`.
+  const hoveredItem = payload.find((item) => item.dataKey === hoveredKey)
+  if (!hoveredItem) {
+    return null
+  }
+
+  return (
+    <div className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5">
+      {/* 
+        'label' here is typically your x-axis label (e.g. '2023-01-01'), 
+        but you can rename / omit as you like.
+      */}
+      <p className="mb-2 font-semibold">{label}</p>
+
+      <div className="flex items-center gap-2 text-sm">
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: hoveredItem.color }}
+        />
+        {/* hoveredItem.name is the label for this dataKey, hoveredItem.value is the numeric value */}
+        <span>{hoveredItem.name}:</span>
+        <span className="font-medium">{formatCurrency(hoveredItem.value || 0)}</span>
+      </div>
+    </div>
+  )
+}
+
 
 export function GenericBarChart({
   data,
@@ -30,6 +78,7 @@ export function GenericBarChart({
   const uniqueKeys = Object.keys(data[0] || {}).filter(
     (key) => key !== nameKey && key !== "date",
   )
+  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null)
 
   const computedConfig: ChartConfig = React.useMemo(() => {
     if (config) return config
@@ -70,7 +119,7 @@ export function GenericBarChart({
               tickCount={3}
             />
             <ChartTooltip
-              content={<ChartTooltipContent hideIndicator={false} />}
+              content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
             />
             {uniqueKeys.map((key, index) => (
               <Bar
@@ -78,6 +127,8 @@ export function GenericBarChart({
                 dataKey={key}
                 stackId="a"
                 fill={getColorForName(key) || "gray"}
+  onMouseEnter={() => setHoveredKey(key)}
+                onMouseLeave={() => setHoveredKey(null)}
                 radius={
                   index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
                 }
