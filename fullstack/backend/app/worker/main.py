@@ -94,8 +94,13 @@ def process_next_job(session: Session) -> None:
 
 
 def try_job(session: Session, job: ProcessFileJob) -> bool:
+
     try:
         run_job(session, job)
+
+        job.error_messages = ""
+        session.add(job)
+        session.commit()
         return True
     except (Exception, PendingRollbackError) as e:
         error_message = f"{job.error_messages or ''}\n{e}"

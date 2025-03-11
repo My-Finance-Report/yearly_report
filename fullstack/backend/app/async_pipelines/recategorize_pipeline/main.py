@@ -2,7 +2,6 @@ from dataclasses import replace
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
-    insert_categorized_transactions,
     update_filejob_with_nickname,
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
@@ -11,11 +10,15 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     PartialTransaction,
     TransactionsWrapper,
 )
-from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
-    archive_transactions_if_necessary,
-)
 from app.func_utils import pipe
-from app.models import Category, CategoryId, Transaction, TransactionId, TransactionSource, UploadConfiguration
+from app.models import (
+    Category,
+    CategoryId,
+    Transaction,
+    TransactionId,
+    TransactionSource,
+    UploadConfiguration,
+)
 
 
 def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
@@ -88,28 +91,42 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
         categories=categories,
     )
 
+
 def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
-    assert all(t.partialTransactionId is not None for t in in_process.categorized_transactions), "must have"
+    assert all(
+        t.partialTransactionId is not None for t in in_process.categorized_transactions
+    ), "must have"
     assert in_process.categories, "must have"
 
-    category_lookup: dict[str,CategoryId] = {cat.name: cat.id for cat in in_process.categories}
-    transaction_lookup:dict[TransactionId,CategorizedTransaction] = {t.partialTransactionId: t for t in in_process.categorized_transactions if t.partialTransactionId is not None}
+    category_lookup: dict[str, CategoryId] = {
+        cat.name: cat.id for cat in in_process.categories
+    }
+    transaction_lookup: dict[TransactionId, CategorizedTransaction] = {
+        t.partialTransactionId: t
+        for t in in_process.categorized_transactions
+        if t.partialTransactionId is not None
+    }
 
-    existing_transactions = in_process.session.query(Transaction).filter(
-        Transaction.id.in_(transaction_lookup.keys()),
-        Transaction.user_id == in_process.user.id,
-        Transaction.uploaded_pdf_id == in_process.file.id,
-    ).all()
+    existing_transactions = (
+        in_process.session.query(Transaction)
+        .filter(
+            Transaction.id.in_(transaction_lookup.keys()),
+            Transaction.user_id == in_process.user.id,
+            Transaction.uploaded_pdf_id == in_process.file.id,
+        )
+        .all()
+    )
 
     assert len(existing_transactions) == len(transaction_lookup), "must have"
 
     for transaction in existing_transactions:
-        transaction.category_id = category_lookup[transaction_lookup[transaction.id].category]
+        transaction.category_id = category_lookup[
+            transaction_lookup[transaction.id].category
+        ]
 
     in_process.session.commit()
-
 
 
 def recategorize_pipeline(in_process: InProcessFile) -> None:

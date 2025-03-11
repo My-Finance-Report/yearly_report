@@ -21,7 +21,9 @@ class PdfParseException(Exception):
 
 
 class PartialTransaction(BaseModel):
-    partialTransactionId: TransactionId |None = Field(..., description="Unique identifier for the transaction")
+    partialTransactionId: TransactionId | None = Field(
+        ..., description="Unique identifier for the transaction"
+    )
     partialTransactionDateOfTransaction: str = Field(
         ..., description="Transaction date in MM/DD/YYYY format"
     )
@@ -69,6 +71,10 @@ class TransactionsWrapper(BaseModel):
 def create_categorized_transaction_model(categories: list[str]) -> type[BaseModel]:
     return create_model(
         "CategorizedTransaction",
+        partialTransactionId=(
+            TransactionId | None,
+            Field(..., description="Unique identifier for the transaction"),
+        ),
         partialTransactionDateOfTransaction=(
             str,
             Field(..., description="Transaction date in MM/DD/YYYY format"),
