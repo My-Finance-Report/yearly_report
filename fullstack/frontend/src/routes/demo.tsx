@@ -35,12 +35,15 @@ function Demo() {
   const [categories, setCategories] = useState<string[] | null>(null)
   const [months, setMonths] = useState<string[] | null>(null)
   const [years, setYears] = useState<string[] | null>(null)
+  const [budgets, setBudgets] = useState<string[] | null>(null)
 
   const filterInfo: FilterInfo = {
+    budgets,
     years,
     accounts,
     months,
     categories,
+    setBudgets,
     setYears,
     setAccounts,
     setMonths,

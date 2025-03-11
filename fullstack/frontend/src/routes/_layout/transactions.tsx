@@ -38,8 +38,10 @@ function Transactions() {
   const [categories, setCategories] = useState<string[] | null>(null)
   const [months, setMonths] = useState<string[] | null>(null)
   const [years, setYears] = useState<string[] | null>(null)
+  const [budgets, setBudgets] = useState<string[] | null>(null)
 
   const filterInfo: FilterInfo = {
+    budgets,
     years,
     accounts,
     months,
@@ -48,6 +50,7 @@ function Transactions() {
     setAccounts,
     setMonths,
     setCategories,
+    setBudgets,
   }
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
@@ -72,6 +75,7 @@ function Transactions() {
         accounts,
         months,
         categories,
+        budgets,
       }),
     enabled: isLoggedIn(),
   })
@@ -98,6 +102,7 @@ function Transactions() {
       setMonths(data.grouping_options_choices[GroupByOption.month])
       setCategories(data.grouping_options_choices[GroupByOption.category])
       setAccounts(data.grouping_options_choices[GroupByOption.account])
+      setBudgets(data.grouping_options_choices[GroupByOption.budget])
     }
   },[])
 

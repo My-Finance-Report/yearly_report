@@ -37,7 +37,7 @@ interface UserRegisterForm extends UserRegister {
 }
 
 function SignUp() {
-  const { signUpMutation } = useAuth()
+  const { signUpMutation, loginMutation } = useAuth()
   const {
     register,
     handleSubmit,
@@ -54,8 +54,19 @@ function SignUp() {
     },
   })
 
-  const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
-    signUpMutation.mutate(data)
+ const onSubmit: SubmitHandler<UserRegisterForm> = async (data) => {
+    if (isSubmitting) return
+
+    try {
+      await signUpMutation.mutateAsync(data)
+
+      await loginMutation.mutateAsync({
+        username: data.email,
+        password: data.password,
+      })
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
@@ -136,10 +147,10 @@ function SignUp() {
           <Text>
             Already have an account?{" "}
             <RouterLink to="/login" color="blue.500">
-            <Link color="blue.500">
-              Log In
-    </Link>
-              </RouterLink>
+              <Link color="blue.500">
+                Log In
+              </Link>
+            </RouterLink>
           </Text>
         </Container>
       </Flex>

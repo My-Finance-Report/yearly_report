@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router"
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { ColorModeProvider } from "./components/ui/color-mode"
+import { Toaster } from "./components/ui/toaster"
 import { ChartColorProvider } from "./hooks/useColor"
 import { routeTree } from "./routeTree.gen"
 
@@ -38,9 +39,10 @@ ReactDOM.createRoot(root).render(
     <ChakraProvider value={theme}>
       <ColorModeProvider>
         <ChartColorProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
+          <Toaster/>
+            <QueryClientProvider client={queryClient}>
+              <RouterProvider router={router} />
+            </QueryClientProvider>
         </ChartColorProvider>
       </ColorModeProvider>
     </ChakraProvider>

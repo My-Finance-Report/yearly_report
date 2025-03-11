@@ -53,10 +53,12 @@ export interface FilterInfo {
   accounts: string[] | null
   months: string[] | null
   categories: string[] | null
+  budgets: string[] | null
   setYears: React.Dispatch<React.SetStateAction<string[] | null>>
   setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>
   setMonths: React.Dispatch<React.SetStateAction<string[] | null>>
   setCategories: React.Dispatch<React.SetStateAction<string[] | null>>
+  setBudgets: React.Dispatch<React.SetStateAction<string[] | null>>
 }
 
 function getFilterSettings(filterInfo: FilterInfo, groupingOption: GroupByOption): [string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>] {
@@ -69,6 +71,8 @@ function getFilterSettings(filterInfo: FilterInfo, groupingOption: GroupByOption
       return [filterInfo.months, filterInfo.setMonths]
     case GroupByOption.category:
       return [filterInfo.categories, filterInfo.setCategories]
+    case GroupByOption.budget:
+      return [filterInfo.budgets, filterInfo.setBudgets] 
     default:
       throw "Invalid grouping option"
   }
@@ -172,6 +176,8 @@ function InnerFilterGroup({
   collapsedItems: CollapsibleName[]
 }) {
 
+  const includeBudget = (filterInfo.budgets?.length || 0) > 1
+
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
       return prev.includes(option)
@@ -221,6 +227,7 @@ function InnerFilterGroup({
   }
 
 
+
   const isMobile = useIsMobile()
 
   return (
@@ -255,6 +262,7 @@ function InnerFilterGroup({
               showDeposits={showDeposits}
             />
             <GroupingConfig
+              showBudgets={includeBudget}
               groupingOptions={groupingOptions}
               setGroupingOptions={setGroupingOptions}
             />

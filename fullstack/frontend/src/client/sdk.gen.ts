@@ -648,6 +648,7 @@ export class TransactionsService {
      * @param data.months Filter for transactions
      * @param data.categories Filter for transactions
      * @param data.accounts Filter for transactions
+     * @param data.budgets Filter for transactions
      * @returns AggregatedTransactions Successful Response
      * @throws ApiError
      */
@@ -660,7 +661,8 @@ export class TransactionsService {
                 years: data.years,
                 months: data.months,
                 categories: data.categories,
-                accounts: data.accounts
+                accounts: data.accounts,
+                budgets: data.budgets
             },
             errors: {
                 422: 'Validation Error'

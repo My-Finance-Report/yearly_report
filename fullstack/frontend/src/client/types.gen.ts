@@ -133,7 +133,7 @@ export type CategoryOut = {
     stylized_name: string;
 };
 
-export type GroupByOption = 'account' | 'category' | 'month' | 'year';
+export type GroupByOption = 'account' | 'category' | 'month' | 'year' | 'budget';
 
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
@@ -530,6 +530,10 @@ export type TransactionsGetAggregatedTransactionsData = {
      * Filter for transactions
      */
     accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    budgets?: (Array<(string)> | null);
     /**
      * Filter for transactions
      */

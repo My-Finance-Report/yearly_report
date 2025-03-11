@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 
 from app.api.routes.demo_data import get_demo_data
-from app.api.routes.transactions import recursive_group
+from app.api.routes.transactions import BudgetLookup, recursive_group
 from app.local_types import (
     AggregatedTransactions,
     GroupByOption,
@@ -79,6 +79,7 @@ def get_demo_grouping_options(
         GroupByOption.account: [
             ts_lookup[t.transaction_source_id].name for t in transactions
         ],
+        GroupByOption.budget: [],
     }
 
     for key, value in val.items():
@@ -109,6 +110,10 @@ def get_demo_aggregated_transactions(
         description="Filter for transactions",
     ),
     accounts: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
+    _budgets: list[str] | None = Query(
         default=None,
         description="Filter for transactions",
     ),
@@ -150,7 +155,11 @@ def get_demo_aggregated_transactions(
     overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
-    groups = recursive_group(transactions, group_by, category_lookup, ts_lookup)
+    budgets_lookup: BudgetLookup = {}
+
+    groups = recursive_group(
+        transactions, group_by, category_lookup, ts_lookup, budgets_lookup
+    )
 
     grouping_option_choices = get_demo_grouping_options(
         transactions, category_lookup, ts_lookup
