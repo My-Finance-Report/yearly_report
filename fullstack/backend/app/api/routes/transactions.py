@@ -43,7 +43,7 @@ BudgetLookup = dict[CategoryId, BudgetEntry]
 AccountLookup = dict[TransactionSourceId, TransactionSource]
 
 GroupByKeyFunc = Callable[[Transaction, CategoryLookup, AccountLookup, BudgetLookup], str]
-SortFunc = Callable[[Transaction, CategoryLookup], str | datetime]
+SortFunc = Callable[[Transaction, CategoryLookup, AccountLookup, BudgetLookup], str | datetime]
 GroupByNameFunc = Callable[[str], str]
 GroupByIdFunc = Callable[[str], str]
 
@@ -87,24 +87,29 @@ def get_year_key(
 def get_budget_key(
     transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup 
 ) -> str:
-    return _budget_lookup[transaction.category_id].name
+    val=  _budget_lookup.get(transaction.category_id)
+    if val:
+        return val.name
+    return "Unbudgeted"
 
 
-def get_category_sort(transaction: Transaction, lookup: CategoryLookup) -> str:
+def get_category_sort(transaction: Transaction, lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
     return lookup[transaction.category_id].name
 
 
-def get_month_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime:
+def get_month_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> datetime:
     return transaction.date_of_transaction
 
 
-def get_year_sort(transaction: Transaction, _lookup: CategoryLookup) -> datetime:
+def get_year_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> datetime:
     return transaction.date_of_transaction
 
 
-def get_account_sort(transaction: Transaction, _lookup: CategoryLookup) -> str:
+def get_account_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
     return str(transaction.transaction_source_id)
 
+def get_budget_sort(transaction: Transaction, _lookup: CategoryLookup, _account_lookup: AccountLookup, _budget_lookup: BudgetLookup) -> str:
+    return get_budget_key(transaction, _lookup, _account_lookup, _budget_lookup) 
 
 def id(key: str) -> str:
     return key
@@ -123,6 +128,7 @@ sort_funcs: dict[GroupByOption, SortFunc] = {
     GroupByOption.month: get_month_sort,
     GroupByOption.year: get_year_sort,
     GroupByOption.account: get_account_sort,
+    GroupByOption.budget: get_budget_sort,
 }
 
 
@@ -131,6 +137,7 @@ group_by_name_funcs: dict[GroupByOption, GroupByNameFunc] = {
     GroupByOption.month: id,
     GroupByOption.year: id,
     GroupByOption.account: id,
+    GroupByOption.budget: id,
 }
 
 group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
@@ -138,6 +145,7 @@ group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
     GroupByOption.month: id,
     GroupByOption.year: id,
     GroupByOption.account: id,
+    GroupByOption.budget: id,
 }
 
 
@@ -170,7 +178,7 @@ def recursive_group(
         return group_by_key_funcs[current](txn, category_lookup, account_lookup, budget_lookup)
 
     def sort_fn(txn: Transaction) -> str | datetime:
-        return sort_funcs[current](txn, category_lookup)
+        return sort_funcs[current](txn, category_lookup, account_lookup, budget_lookup)
 
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
@@ -274,6 +282,8 @@ def build_grouping_option_choices(
         GroupByOption.budget: list({entry.name for entry in all_entries}),
     }
 
+    val[GroupByOption.budget].append("Unbudgeted")
+
     for key, value in val.items():
         val[key] = sorted(value)
 
@@ -305,6 +315,16 @@ def apply_year_filter(
     return transactions.filter(
         func.extract("year", Transaction.date_of_transaction).in_(list(map(int, years)))
     )
+
+
+def apply_budget_filter(
+    transactions: SqlQuery[Transaction],
+    budgets: list[str],
+) -> SqlQuery[Transaction]:
+
+    return transactions.join(
+        BudgetCategoryLink, BudgetCategoryLink.category_id == Transaction.category_id).join(BudgetEntry, BudgetEntry.id == BudgetCategoryLink.budget_entry_id).filter(BudgetEntry.name.in_(budgets))
+
 
 
 def apply_month_filter(
@@ -367,6 +387,10 @@ def get_aggregated_transactions(
         default=None,
         description="Filter for transactions",
     ),
+    budgets: list[str] | None = Query(
+        default=None,
+        description="Filter for transactions",
+    ),
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
@@ -384,6 +408,7 @@ def get_aggregated_transactions(
         (apply_year_filter, years),
         (apply_category_filter, categories),
         (apply_account_filter, accounts),
+        (apply_budget_filter, budgets),
     ]
 
     for a_callable, arg in calls:

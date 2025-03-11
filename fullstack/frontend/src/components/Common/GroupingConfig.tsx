@@ -5,6 +5,7 @@ export enum GroupByOption {
   month = "month",
   year = "year",
   account = "account",
+  budget = "budget",
 }
 
 const availableOptions: GroupByOption[] = [
@@ -12,16 +13,19 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.year,
   GroupByOption.month,
   GroupByOption.account,
+  GroupByOption.budget,
 ]
 
 interface GroupingConfigProps {
   groupingOptions: GroupByOption[]
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
+  showBudgets: boolean
 }
 
 export function GroupingConfig({
   groupingOptions,
   setGroupingOptions,
+  showBudgets,
 }: GroupingConfigProps) {
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
@@ -33,10 +37,13 @@ export function GroupingConfig({
     })
   }
 
+  const filteredOptions = showBudgets ? availableOptions : availableOptions.filter((option) => option !== GroupByOption.budget)
+
+
   return (
     <Box borderWidth={1} borderColor="orange.500" borderRadius="md" p={2}>
       <HStack spaceX={2} wrap="nowrap">
-        {availableOptions.map((option) => (
+        {filteredOptions.map((option) => (
           <Tag.Root
             key={option}
             cursor="pointer"
