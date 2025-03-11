@@ -35,6 +35,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 --> doesnt rerun on category delete
 -> manually override categories for transactions (memoize to llm) (confirmed by rick)
 -> restyle the budgets page
+-> stable sort on filter component
 -> redo filter group component (waiting on designs)
 -> some bugs on the landing page version likely around existing filters
 -> show error messages on login screens
