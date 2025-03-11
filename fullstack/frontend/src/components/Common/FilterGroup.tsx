@@ -366,7 +366,7 @@ const SortableItem = ({
           {option.charAt(0).toUpperCase() + option.slice(1)}
         </Text>
         <Box p={1}>
-          <FilterButton filters={filters} setFilters={setFilters} options={choices} name={"testing"} />
+          <FilterButton filters={filters} setFilters={setFilters} options={choices} name={option} />
           {!noX && (
             <CloseButton onClick={() => onRemove(option)} size="xs" variant="outline" />
           )}
