@@ -10,6 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import type { GenericChartDataItem } from "./PieChart"
 import { Desc } from "./SankeyChart"
 import { TooltipProps } from "recharts"
+import { Box } from "@chakra-ui/react"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
@@ -38,19 +39,13 @@ function SingleSliceTooltip({
     return null
   }
 
-  // Recharts will pass an array of items for the entire stacked bar at this x-position.
-  // We only want the hovered slice, i.e., the one that matches `hoveredKey`.
   const hoveredItem = payload.find((item) => item.dataKey === hoveredKey)
   if (!hoveredItem) {
     return null
   }
 
   return (
-    <div className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5">
-      {/* 
-        'label' here is typically your x-axis label (e.g. '2023-01-01'), 
-        but you can rename / omit as you like.
-      */}
+    <Box p={2} className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5">
       <p className="mb-2 font-semibold">{label}</p>
 
       <div className="flex items-center gap-2 text-sm">
@@ -58,11 +53,10 @@ function SingleSliceTooltip({
           className="inline-block h-2 w-2 rounded-full"
           style={{ backgroundColor: hoveredItem.color }}
         />
-        {/* hoveredItem.name is the label for this dataKey, hoveredItem.value is the numeric value */}
         <span>{hoveredItem.name}:</span>
         <span className="font-medium">{formatCurrency(hoveredItem.value || 0)}</span>
       </div>
-    </div>
+    </Box>
   )
 }
 

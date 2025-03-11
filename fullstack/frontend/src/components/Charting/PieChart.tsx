@@ -2,19 +2,61 @@ import { Cell, Pie, PieChart, Sector } from "recharts"
 import type { PieSectorDataItem } from "recharts/types/polar/Pie"
 
 import { CardContent, CardFooter } from "@/components/ui/card"
+import { TooltipProps } from "recharts"
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import { Box } from "@chakra-ui/react"
 import { Desc } from "./SankeyChart"
+import { useState } from "react"
 
 export interface GenericChartDataItem {
   [key: string]: string | number
 }
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value)
+}
+
+function SingleSliceTooltip({
+  active,
+  payload,
+  hoveredKey,
+}: TooltipProps<number, string> & {
+  hoveredKey: string | null
+}) {
+  // If there's no active hover, or no data, or no hovered key, don't show anything
+  if (!active || !payload || payload.length === 0 || !hoveredKey) {
+    return null
+  }
+
+  // In a single <Pie>, payload typically has only one item for the hovered slice:
+  const hoveredItem = payload[0]
+
+
+  return (
+    <Box p={2} className="rounded-md bg-black shadow-md ring-1 ring-black/5">
+      {/* We'll display the name and a currency-formatted value. */}
+      <p className="mb-2 font-semibold">{hoveredItem.name}</p>
+
+      <div className="flex items-center gap-2 text-sm">
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: hoveredItem.color }}
+        />
+        <span className="font-medium">{formatCurrency(hoveredItem.value ?? 0)}</span>
+      </div>
+    </Box>
+  )
+}
+
+
 
 export interface GenericPieChartProps {
   data: GenericChartDataItem[]
@@ -55,6 +97,8 @@ export function GenericPieChart({
     finalConfig = config
   }
 
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+
 
   return (
     <Box className="flex flex-col">
@@ -64,7 +108,7 @@ export function GenericPieChart({
           className="aspect-square max-h-[250px] min-w-[250px]"
         >
           <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+            <ChartTooltip  content={<SingleSliceTooltip hoveredKey={hoveredKey} />} />
             <Pie
               data={data}
               dataKey={dataKey}
@@ -78,6 +122,8 @@ export function GenericPieChart({
                 <Cell
                   key={`cell-${index.toString()}`}
                   fill={getColorForName(String(entry[nameKey]))}
+                  onMouseEnter={() => setHoveredKey(String(entry[nameKey]))}
+                  onMouseLeave={() => setHoveredKey(null)}
                 />
               ))}
             </Pie>
