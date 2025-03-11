@@ -38,7 +38,6 @@ function SingleSliceTooltip({
 
   const hoveredItem = payload[0]
 
-  console.log(hoveredItem)
 
 
   return (
