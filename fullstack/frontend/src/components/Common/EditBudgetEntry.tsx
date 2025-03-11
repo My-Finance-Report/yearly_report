@@ -120,7 +120,7 @@ export default function EditBudgetEntry({
             });
         },
         onSuccess: () => {
-            showToast("Success!", "Transaction updated successfully.", "success");
+            showToast("Success!", "Budget entry updated successfully.", "success");
             onClose();
         },
         onError: (err: ApiError) => {
