@@ -421,7 +421,7 @@ function FilterButton({
       to: ".",
       search: (old: Record<string, string>) => ({
         ...old,
-        [name]: localSelection.join(","), // e.g. "a,b,c"
+        [name]: localSelection.join(","), 
       }),
       replace: true,
   })
