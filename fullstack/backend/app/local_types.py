@@ -296,6 +296,7 @@ class GroupByOption(str, Enum):
     category = "category"
     month = "month"
     year = "year"
+    budget = "budget"
 
 
 class AggregatedGroup(BaseModel):
