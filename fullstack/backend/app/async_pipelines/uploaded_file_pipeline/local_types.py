@@ -110,13 +110,12 @@ def create_categorized_transactions_wrapper(categories: list[str]) -> type[BaseM
         ),
     )
 
+
 @dataclass
 class Recategorization:
     description: str
     previous_category: str
     overrided_category: str
-
-
 
 
 @dataclass(frozen=True)

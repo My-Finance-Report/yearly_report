@@ -53,31 +53,36 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
 def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile:
     assert in_process.transaction_source, "must have"
     assert in_process.categories, "must have"
-    query = in_process.session.query(AuditLog, Transaction).join(Transaction, Transaction.id == AuditLog.transaction_id).filter(
-        Transaction.transaction_source_id == in_process.transaction_source.id,
-        Transaction.user_id == in_process.user.id,
-        Transaction.uploaded_pdf_id == in_process.file.id,
-        ~Transaction.archived,
-        AuditLog.apply_to_future == True
-    ).all()
+    query = (
+        in_process.session.query(AuditLog, Transaction)
+        .join(Transaction, Transaction.id == AuditLog.transaction_id)
+        .filter(
+            Transaction.transaction_source_id == in_process.transaction_source.id,
+            Transaction.user_id == in_process.user.id,
+            Transaction.uploaded_pdf_id == in_process.file.id,
+            ~Transaction.archived,
+            AuditLog.apply_to_future,
+        )
+        .all()
+    )
 
-    category_lookup = {cat.id:cat.name for cat in in_process.categories}
+    category_lookup = {cat.id: cat.name for cat in in_process.categories}
 
-    recats:list[Recategorization] = []
+    recats: list[Recategorization] = []
     for auditlog, transaction in query:
         if auditlog.new_category and auditlog.old_category:
-            recats.append(Recategorization(
-                description=transaction.description,
-                previous_category=category_lookup[auditlog.old_category],
-                overrided_category=category_lookup[auditlog.new_category]
-            ))
-
+            recats.append(
+                Recategorization(
+                    description=transaction.description,
+                    previous_category=category_lookup[auditlog.old_category],
+                    overrided_category=category_lookup[auditlog.new_category],
+                )
+            )
 
     return replace(
         in_process,
         previous_recategorizations=recats or None,
     )
-
 
 
 def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:

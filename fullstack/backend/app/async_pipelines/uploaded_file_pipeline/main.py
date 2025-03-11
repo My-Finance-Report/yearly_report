@@ -1,3 +1,6 @@
+from app.async_pipelines.recategorize_pipeline.main import (
+    apply_previous_recategorizations,
+)
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
     insert_categorized_transactions,
@@ -10,7 +13,6 @@ from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     request_llm_parse_of_transactions,
 )
 from app.func_utils import pipe
-from app.async_pipelines.recategorize_pipeline.main import apply_previous_recategorizations
 
 
 def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
