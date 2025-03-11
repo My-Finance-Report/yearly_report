@@ -207,8 +207,8 @@ const EditTransaction = ({
                 )
               }}
             />
-            {errors.category_id && (
-              <FieldErrorText>{errors.category_id.message}</FieldErrorText>
+            {errors.kind && (
+              <FieldErrorText>{errors.kind.message}</FieldErrorText>
             )}
           </FieldRoot>
 
@@ -234,14 +234,14 @@ const EditTransaction = ({
               control={control}
               name="category_id"
               render={({ field }) => {
-                const { onChange } = field
+                const { onChange, value } = field
                 return (
                   <SelectRoot
                     id="category_id"
                     placeholder="Select a category"
                     value={[
                       categories.items.find( 
-                        (cat) => cat.value === transaction.category_id,
+                        (cat) => cat.value === value,
                       )?.value as unknown as  string,
                     ]}
                     collection={createListCollection(categories)}
