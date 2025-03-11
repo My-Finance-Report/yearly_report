@@ -87,7 +87,7 @@ def process_next_job(session: Session) -> None:
     success = try_job(session, job)
 
     job.status = JobStatus.completed if success else JobStatus.failed
-    job.last_tried_at = datetime.utcnow()
+    job.last_tried_at = datetime.now(timezone.utc)
     session.commit()
 
     logger.info(f"Job {job.id} completed with status: {job.status}")

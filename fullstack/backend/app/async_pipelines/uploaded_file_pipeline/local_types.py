@@ -110,6 +110,14 @@ def create_categorized_transactions_wrapper(categories: list[str]) -> type[BaseM
         ),
     )
 
+@dataclass
+class Recategorization:
+    description: str
+    previous_category: str
+    overrided_category: str
+
+
+
 
 @dataclass(frozen=True)
 class InProcessFile:
@@ -123,3 +131,4 @@ class InProcessFile:
     transactions: TransactionsWrapper | None = None
     existing_transactions: list[Transaction] | None = None
     categorized_transactions: list[CategorizedTransaction] | None = None
+    previous_recategorizations: list[Recategorization] | None = None

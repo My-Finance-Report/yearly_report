@@ -10,6 +10,7 @@ from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     request_llm_parse_of_transactions,
 )
 from app.func_utils import pipe
+from app.async_pipelines.recategorize_pipeline.main import apply_previous_recategorizations
 
 
 def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
@@ -29,6 +30,7 @@ def uploaded_file_pipeline(in_process: InProcessFile) -> None:
         in_process,
         apply_upload_config,
         persist_config_to_job_record,
+        apply_previous_recategorizations,
         archive_transactions_if_necessary,
         request_llm_parse_of_transactions,
         categorize_extracted_transactions,

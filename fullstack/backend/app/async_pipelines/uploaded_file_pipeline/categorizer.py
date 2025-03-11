@@ -1,5 +1,5 @@
 import logging
-from dataclasses import replace
+from dataclasses import  replace
 from datetime import datetime
 from typing import cast
 
@@ -8,17 +8,19 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessFile,
     PartialTransaction,
     create_categorized_transactions_wrapper,
+    Recategorization
 )
 from app.func_utils import make_batches
 from app.models import Transaction
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 
 logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 
 def generate_categorization_prompt(
-    categories: list[str], transactions: list[PartialTransaction]
+    categories: list[str], transactions: list[PartialTransaction], previous_recategorizations: list[Recategorization] | None = None
 ) -> Prompt:
     return [
         ChatMessage(
@@ -27,6 +29,10 @@ def generate_categorization_prompt(
     Here is a list of categories:
 
     {", ".join(categories)}
+
+    Here is a list of previous overwrites the user has responded with: 
+
+    {"\n".join([f"{r.description}: {r.previous_category} changed to {r.overrided_category}" for r in previous_recategorizations]) if previous_recategorizations else "None"}
 
     Assign the most appropriate category to the following transactions:
 
@@ -85,7 +91,7 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
                 make_chat_request(
                     CategorizedTransactionsWrapper,
                     generate_categorization_prompt(
-                        categories=account_categories, transactions=batch
+                        categories=account_categories, transactions=batch, previous_recategorizations=process.previous_recategorizations
                     ),
                 ),
             )
