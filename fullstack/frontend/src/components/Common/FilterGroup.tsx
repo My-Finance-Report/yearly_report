@@ -13,12 +13,11 @@ import {
 } from "@/components/ui/drawer"
 
 
-import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useBreakpointValue } from "@chakra-ui/react"
+import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useBreakpointValue, useDisclosure } from "@chakra-ui/react"
 import {
   PopoverBody,
   PopoverContent,
   PopoverRoot,
-  PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover"
 
@@ -44,8 +43,9 @@ import { WithdrawDepositSelector } from "./WithdrawDepositSelector"
 
 import { CSS } from "@dnd-kit/utilities"
 import { BsFunnel } from "react-icons/bs"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FiChevronDown, FiChevronUp } from "react-icons/fi"
+import { useRouter } from "@tanstack/react-router"
 
 export interface FilterInfo {
   years: string[] | null
@@ -388,44 +388,75 @@ const SortableItem = ({
     </>
   )
 }
-
+interface FilterButtonProps {
+  options: string[]
+  name: string
+  filters: string[] | null
+  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
+}
 
 
 function FilterButton({
   options,
   name,
   filters,
-  setFilters
-}: {
-  options: string[]
-  name: string
-  filters: string[] | null
-  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>
-}) {
+  setFilters,
+}: FilterButtonProps) {
+  const router = useRouter()
+  const [localSelection, setLocalSelection] = useState<string[]>(
+    () => filters ?? options 
+  )
+
+  useEffect(() => {
+    if (filters !== null) {
+      setLocalSelection(filters)
+    }
+  }, [filters])
+
+  const { open, onOpen, onClose } = useDisclosure()
+
+  const handleClose = () => {
+    setFilters(localSelection)
+    router.navigate({
+      to: ".",
+      search: (old: Record<string, string>) => ({
+        ...old,
+        [name]: localSelection.join(","), // e.g. "a,b,c"
+      }),
+      replace: true,
+  })
+    
+    onClose()
+  }
 
   const handleChange = (newSelectedValues: string[]) => {
-    setFilters(() => ([...newSelectedValues]))
+    setLocalSelection([...newSelectedValues])
+  }
+
+  const handleSelectAll = () => {
+    setLocalSelection([...options])
+  }
+
+  const handleUnselectAll = () => {
+    setLocalSelection([])
   }
 
   return (
-    <PopoverRoot>
+    <PopoverRoot open={open} onOpenChange={onOpen} onExitComplete={handleClose}>
       <PopoverTrigger>
-        <Button size='xs' variant="outline">
+        <Button size="xs" variant="outline">
           <BsFunnel />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent>
         <PopoverBody>
-          <PopoverTitle />
-
           <Fieldset.Root>
             <CheckboxGroup
-              value={filters || options}
+              value={localSelection}
               name={name}
               onValueChange={handleChange}
             >
-              <Fieldset.Legend fontSize="sm" mb="2" />
               <Fieldset.Content>
                 {options.map((value) => (
                   <Checkbox.Root key={value} value={value}>
@@ -439,6 +470,17 @@ function FilterButton({
               </Fieldset.Content>
             </CheckboxGroup>
           </Fieldset.Root>
+          <Flex flexDirection="row" gap={4} mt={2}>
+            <Button size="xs" onClick={handleClose} >
+              Apply
+            </Button>
+            <Button size="xs" variant="outline" onClick={handleSelectAll}>
+              Select All
+            </Button>
+            <Button size="xs" variant="outline" onClick={handleUnselectAll}>
+              Unselect All
+            </Button>
+</Flex>
         </PopoverBody>
       </PopoverContent>
     </PopoverRoot>

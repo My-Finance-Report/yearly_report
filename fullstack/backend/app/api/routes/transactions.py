@@ -243,7 +243,7 @@ def build_grouping_option_choices(
         .all()
     )
 
-    return {
+    val = {
         GroupByOption.year: list(
             {str(row.date_of_transaction.year) for row in all_dates}
         ),
@@ -253,6 +253,11 @@ def build_grouping_option_choices(
         GroupByOption.category: list({category.name for category in all_categories}),
         GroupByOption.account: list({account.name for account in all_accounts}),
     }
+
+    for key, value in val.items():
+        val[key] = sorted(value)
+
+    return val
 
 
 def apply_category_filter(
