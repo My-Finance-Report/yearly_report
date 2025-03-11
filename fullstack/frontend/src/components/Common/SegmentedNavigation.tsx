@@ -6,7 +6,6 @@ import {
   HStack,
   Text,
   Button,
-  useBreakpointValue
 } from "@chakra-ui/react"
 import {
   DrawerBackdrop,
@@ -24,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { FiBriefcase, FiDollarSign, FiHome, FiList, FiSettings, FiUsers, FiMenu } from "react-icons/fi"
 import { useState } from "react"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -38,7 +38,7 @@ export function SegmentedNavigation() {
   const navigate = useNavigate()
   const location = useRouterState().location
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isMobile = useIsMobile()
   
   // Example: final nav items + "Admin" if user is superuser
   const finalItems = currentUser?.is_superuser

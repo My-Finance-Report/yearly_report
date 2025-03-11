@@ -15,6 +15,7 @@ import { isLoggedIn } from "../../hooks/useAuth"
 
 import { useColorPalette } from "@/hooks/useColor"
 import type { TransactionsGetAggregatedTransactionsResponse } from "../../client"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
@@ -29,6 +30,8 @@ function Transactions() {
     GroupByOption.month,
     GroupByOption.category,
   ])
+
+  const isMobile = useIsMobile()
 
   // need to figure out how to pass null through api
   const [accounts, setAccounts] = useState<string[] | null>(null)
@@ -165,6 +168,7 @@ function Transactions() {
               toShowNames={namesForLegends}
               expandedGroups={expandedGroups}
               showWithdrawals={!showDeposits}
+              isMobile={isMobile}
             />
           </div>
         ) : (

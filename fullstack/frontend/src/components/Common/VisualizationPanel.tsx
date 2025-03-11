@@ -3,7 +3,6 @@ import BoxWithText, {
 } from "@/components/Common/BoxWithText"
 import { isLoggedIn } from "@/hooks/useAuth"
 import {
-  useBreakpointValue,
   Box,
   Button,
   Center,
@@ -26,6 +25,7 @@ import {
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
 import { GenericSankeyChart } from "../Charting/SankeyChart"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 interface VisualizationProps {
   sourceGroups: AggregatedGroup[] 
@@ -52,11 +52,9 @@ export function VisualizationPanel({
   includeSankey = true,
 }: VisualizationProps) {
 
-  const isMobile = !!useBreakpointValue({ base: true, md: false })
+  const isMobile = useIsMobile()
 
   const layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
-
-  console.log(sourceGroups)
 
   return (
     <Flex direction="column" gap={4} mb={4} align="center" justify="center">
@@ -157,7 +155,7 @@ function BarChart({
       : ""
     }`
 
-  const isMobile = !!useBreakpointValue({ base: true, md: false })
+  const isMobile = useIsMobile()
 
   return (
     <BoxWithText

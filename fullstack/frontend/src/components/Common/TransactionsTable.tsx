@@ -1,7 +1,6 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
-  useBreakpointValue,
   Button,
   Collapsible,
   HStack,
@@ -31,16 +30,18 @@ export function TransactionsTable({
   expandedGroups,
   toShowNames,
   showWithdrawals,
+  isMobile,
 }: {
   data:TransactionsGetAggregatedTransactionsResponse
   toggleGroup: (sourceId: number | string, groupKey: string) => void
   toShowNames?: (string | undefined)[] | undefined
   expandedGroups: { [key: string]: boolean }
   showWithdrawals: boolean
+  isMobile: boolean
 }) {
 
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
+
 
   return (
     <Table.Root variant="outline" borderRadius="md">
@@ -149,7 +150,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                   )}
                   {group.group_name}
                 </HStack>
-                {totalAmount && !isMobile &&(
+                {totalAmount && (
                   <PercentageBar amount={specificAmount} total={totalAmount} isMobile={isMobile} />
                 )}
               </HStack>
@@ -290,6 +291,7 @@ function formatAmount(amount: number) {
 }
 
 function PercentageBar({ amount, total,isMobile }: { amount: number; total: number; isMobile: boolean }) {
+
   if (isMobile) {
     return null
   }

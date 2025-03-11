@@ -15,6 +15,7 @@ import { AggregatedGroup, DemoService } from "../client"
 import { useColorPalette } from "@/hooks/useColor"
 import type { TransactionsGetAggregatedTransactionsResponse } from "../client"
 import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export const Route = createFileRoute("/demo")({
   component: DemoLayout,
@@ -75,6 +76,7 @@ function Demo() {
     refetch()
   }, [filterInfo])
 
+  const isMobile = useIsMobile()
 
   const { getColorForName } = useColorPalette()
   data?.groups.map((group) => {
@@ -164,6 +166,7 @@ function Demo() {
               toShowNames={namesForLegends}
               expandedGroups={expandedGroups}
               showWithdrawals={!showDeposits}
+              isMobile={isMobile}
             />
           </div>
         ) : (

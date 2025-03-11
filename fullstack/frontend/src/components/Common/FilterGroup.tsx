@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/drawer"
 
 
-import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useBreakpointValue, useDisclosure } from "@chakra-ui/react"
+import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useDisclosure } from "@chakra-ui/react"
 import {
   PopoverBody,
   PopoverContent,
@@ -46,6 +46,7 @@ import { BsFunnel } from "react-icons/bs"
 import { useEffect, useState } from "react"
 import { FiChevronDown, FiChevronUp } from "react-icons/fi"
 import { useRouter } from "@tanstack/react-router"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export interface FilterInfo {
   years: string[] | null
@@ -94,7 +95,7 @@ export function FilterGroup({
   collapsedItems: CollapsibleName[]
 }) {
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isMobile = useIsMobile()
 
 
   const [open, setOpen] = useState(false)
@@ -220,7 +221,7 @@ function InnerFilterGroup({
   }
 
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isMobile = useIsMobile()
 
   return (
     <div
