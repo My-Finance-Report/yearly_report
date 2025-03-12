@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/drawer"
 
 
-import { Button, Flex, Checkbox, CheckboxGroup, Fieldset, useDisclosure } from "@chakra-ui/react"
+import { Button, Flex, Checkbox, CheckboxGroup, Fieldset } from "@chakra-ui/react"
 import {
   PopoverBody,
   PopoverContent,
@@ -423,7 +423,6 @@ function FilterButton({
     }
   }, [filters])
 
-  const { open, onOpen, onClose } = useDisclosure()
 
   const handleClose = () => {
     setFilters(localSelection)
@@ -434,9 +433,7 @@ function FilterButton({
         [name]: localSelection.join(","), 
       }),
       replace: true,
-  })
-    
-    onClose()
+    })
   }
 
   const handleChange = (newSelectedValues: string[]) => {
@@ -452,8 +449,8 @@ function FilterButton({
   }
 
   return (
-    <PopoverRoot open={open} onOpenChange={onOpen} onExitComplete={handleClose}>
-      <PopoverTrigger>
+    <PopoverRoot onExitComplete={handleClose} closeOnInteractOutside={true}>
+      <PopoverTrigger asChild>
         <Button size="xs" variant="outline">
           <BsFunnel />
         </Button>
@@ -481,9 +478,11 @@ function FilterButton({
             </CheckboxGroup>
           </Fieldset.Root>
           <Flex flexDirection="row" gap={4} mt={2}>
-            <Button size="xs" onClick={handleClose} >
-              Apply
-            </Button>
+            <PopoverTrigger asChild>
+              <Button size="xs" onClick={handleClose} >
+                Apply
+              </Button>
+            </PopoverTrigger>
             <Button size="xs" variant="outline" onClick={handleSelectAll}>
               Select All
             </Button>
