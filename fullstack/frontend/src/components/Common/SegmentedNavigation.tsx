@@ -53,6 +53,7 @@ export function SegmentedNavigation() {
 
   const isDemo = location.pathname.startsWith("/demo");
 
+
   return (
     <Flex
       direction="column"
@@ -76,8 +77,7 @@ export function SegmentedNavigation() {
           justifyContent="center"
         >
           <Text fontWeight="bold">Want your finances to look like this?</Text>
-          <Flex direction="row" gap={3}>
-            
+          <Flex direction={isMobile ? "column" : "row"} gap={3}>
             <Button
               variant="solid"
               onClick={() => navigate({ to: "/signup" })}
