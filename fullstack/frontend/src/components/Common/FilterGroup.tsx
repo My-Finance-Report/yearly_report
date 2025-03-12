@@ -176,7 +176,8 @@ function InnerFilterGroup({
   collapsedItems: CollapsibleName[]
 }) {
 
-  const includeBudget = (filterInfo.budgets?.length || 0) > 1
+  const includeBudget = groupingOptionsChoices[GroupByOption.budget].length > 1
+
 
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
