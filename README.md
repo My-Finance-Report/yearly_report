@@ -28,19 +28,34 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
+
+-> OAuth
+
+-> might need a page that actually defines what the tool does
+
+
+-> broke the mobile view
+ --> filters
+
 -> dashboard config and ability to save them (query params)
+--> adding them but not able to save
+
 -> manually add in an account + transactions to the account (CD, 401k etc)
 -> general desire for the means to track assets (confirmed by rick)
+
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
+
 -> manually override categories for transactions (memoize to llm) (confirmed by rick)
+ --> this should mostly be working
+
 -> restyle the budgets page
--> stable sort on filter component
+ --> actually just work on transactions page instead
+
 -> redo filter group component (waiting on designs)
+
 -> some bugs on the landing page version likely around existing filters
--> show error messages on login screens
--> create account shouldnt bounce to login 
--> toasts are broken
+
 -> Expense should line up in the table
 
 - privacy policy

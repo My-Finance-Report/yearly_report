@@ -2,6 +2,7 @@ import { Box, Flex, HStack, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
 import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export function Legend({
   collapsedItems,
@@ -10,6 +11,11 @@ export function Legend({
   collapsedItems: CollapsibleName[]
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
 }) {
+
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    return null;
+  }
 
   return (
     <div className="maxw-[200px]" style={{ position: "sticky", top: 80}}>
