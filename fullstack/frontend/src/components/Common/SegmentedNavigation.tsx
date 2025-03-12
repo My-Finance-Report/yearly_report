@@ -87,7 +87,7 @@ export function SegmentedNavigation() {
 
               <Link href="mailto:mcarroll1220@gmail.com?subject=Finance%20Demo%20Request">
             <Button variant="solid">
-                Request a demo <FiMail />
+                Email me directly (I'm the maker) <FiMail />
             </Button>
 
               </Link>
