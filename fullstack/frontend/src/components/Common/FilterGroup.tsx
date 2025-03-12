@@ -283,7 +283,7 @@ function InnerFilterGroup({
                   size="lg"
                   cursor="default"
                 >
-                  <Text>{showDeposits ? "Deposits" : "Withdrawals"}</Text>
+                  <Text>{showDeposits ? "Deposits" : "Expenses"}</Text>
                 </Tag.Root>
                 <Text>grouped by</Text>
                 <SortableContext

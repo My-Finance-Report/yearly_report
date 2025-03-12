@@ -42,7 +42,7 @@ export function GroupingConfig({
 
   return (
     <Box borderWidth={1} borderColor="orange.500" borderRadius="md" p={2}>
-      <HStack spaceX={2} wrap="nowrap">
+      <HStack spaceX={2} wrap="wrap">
         {filteredOptions.map((option) => (
           <Tag.Root
             key={option}
