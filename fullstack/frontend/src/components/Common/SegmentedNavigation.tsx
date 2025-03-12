@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/drawer"
 import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
-import { FiBriefcase, FiDollarSign, FiHome, FiList, FiSettings, FiUsers, FiMenu } from "react-icons/fi"
+import { FiBriefcase, FiDollarSign, FiHome, FiList, FiSettings, FiUsers, FiMenu, FiArrowRight} from "react-icons/fi"
 import { useState } from "react"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
@@ -73,15 +73,19 @@ export function SegmentedNavigation() {
           justifyContent="center"
           onClick={() => navigate({ to: "/signup" })}
         >
-            <Text>
-              You are in a demo, but this can be your finances!
+            <Text fontWeight={"bold"}>
+              Want your finance's to look like this? 
             </Text>
-            <Text>
-              1. Sign up
-            </Text>
-            <Text>
-              2. Upload your bank statements
-            </Text>
+            <Flex direction='column'  alignItems={'start'}>
+
+            <Button variant={'ghost'} >
+              1. Create an account
+              <FiArrowRight/>
+            </Button>
+            <Button variant={'ghost'}>
+              2. Upload your statements 
+            </Button>
+            </Flex>
       </Flex>
       )}
 
