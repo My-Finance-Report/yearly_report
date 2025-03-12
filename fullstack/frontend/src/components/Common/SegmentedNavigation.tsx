@@ -1,4 +1,5 @@
 import { UserOut } from "@/client";
+import { ClipboardButton, ClipboardRoot } from "@/components/ui/clipboard"
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import {
@@ -14,7 +15,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiBriefcase,
   FiDollarSign,
@@ -84,13 +85,11 @@ export function SegmentedNavigation() {
             >
               Create an account <FiArrowRight />
             </Button>
-
-              <Link href="mailto:mcarroll1220@gmail.com?subject=Finance%20Demo%20Request">
+            <a href="mailto:mcarroll1220@gmail.com?subject=Finance%20Demo%20Request">
             <Button variant="solid">
                 Email me directly (I'm the maker) <FiMail />
             </Button>
-
-              </Link>
+            </a>
           </Flex>
         </Flex>
       )}
