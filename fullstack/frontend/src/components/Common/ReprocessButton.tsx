@@ -3,6 +3,7 @@ import {
   type UploadsReprocessFileResponse,
   UploadsService,
 } from "@/client"
+import useCustomToast from "@/hooks/useCustomToast";
 import { Button } from "@chakra-ui/react"
 
 interface ReprocessButtonProps {
@@ -11,13 +12,16 @@ interface ReprocessButtonProps {
 }
 
 export function ReprocessButton({ jobId, onReprocess }: ReprocessButtonProps) {
+
+  const showToast = useCustomToast();
   const handleReprocess = async () => {
     try {
       const response: UploadsReprocessFileResponse =
         await UploadsService.reprocessFile({ jobId })
+      showToast("File reprocessing!","", "success")
       onReprocess(response)
-    } catch (error) {
-      console.error("Failed to reprocess file:", error)
+    } catch {
+      showToast("File failed to reprocess!","", "error")
     }
   }
 
