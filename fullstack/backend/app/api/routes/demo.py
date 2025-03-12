@@ -162,7 +162,7 @@ def get_demo_aggregated_transactions(
     )
 
     grouping_option_choices = get_demo_grouping_options(
-        transactions, category_lookup, ts_lookup
+        demo_data.transactions, category_lookup, ts_lookup
     )
 
     overall_balance = overall_deposits - overall_withdrawals
