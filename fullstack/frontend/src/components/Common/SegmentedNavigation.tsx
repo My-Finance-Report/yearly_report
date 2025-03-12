@@ -1,12 +1,6 @@
-import { UserOut } from "@/client"
-import { SegmentedControl } from "@/components/ui/segmented-control"
-import {
-  Box,
-  Flex,
-  HStack,
-  Text,
-  Button,
-} from "@chakra-ui/react"
+import { UserOut } from "@/client";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -18,12 +12,22 @@ import {
   DrawerRoot,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import { useQueryClient } from "@tanstack/react-query"
-import { useNavigate, useRouterState } from "@tanstack/react-router"
-import { FiBriefcase, FiDollarSign, FiHome, FiList, FiSettings, FiUsers, FiMenu, FiArrowRight} from "react-icons/fi"
-import { useState } from "react"
-import { useIsMobile } from "@/hooks/useIsMobile"
+} from "@/components/ui/drawer";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  FiBriefcase,
+  FiDollarSign,
+  FiHome,
+  FiList,
+  FiSettings,
+  FiUsers,
+  FiMenu,
+  FiArrowRight,
+  FiMail,
+} from "react-icons/fi";
+import { useState } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -31,23 +35,23 @@ const navigationItems = [
   { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
-]
+];
 
 export function SegmentedNavigation() {
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-  const location = useRouterState().location
-  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
-  const isMobile = useIsMobile()
-  
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useRouterState().location;
+  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
+  const isMobile = useIsMobile();
+
   // Example: final nav items + "Admin" if user is superuser
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : currentUser
-    ? navigationItems
-    : []
+      ? navigationItems
+      : [];
 
-  const isDemo = location.pathname.startsWith("/demo")
+  const isDemo = location.pathname.startsWith("/demo");
 
   return (
     <Flex
@@ -67,26 +71,28 @@ export function SegmentedNavigation() {
           py={2}
           direction="column"
           gap={2}
-          cursor="pointer"
           fontWeight="semibold"
           alignItems="center"
           justifyContent="center"
-          onClick={() => navigate({ to: "/signup" })}
         >
-            <Text fontWeight={"bold"}>
-              Want your finance's to look like this? 
-            </Text>
-            <Flex direction='column'  alignItems={'start'}>
+          <Text fontWeight="bold">Want your finances to look like this?</Text>
+          <Flex direction="row" gap={3}>
+            
+            <Button
+              variant="solid"
+              onClick={() => navigate({ to: "/signup" })}
+            >
+              Create an account <FiArrowRight />
+            </Button>
 
-            <Button variant={'ghost'} >
-              1. Create an account
-              <FiArrowRight/>
+              <Link href="mailto:mcarroll1220@gmail.com?subject=Finance%20Demo%20Request">
+            <Button variant="solid">
+                Request a demo <FiMail />
             </Button>
-            <Button variant={'ghost'}>
-              2. Upload your statements 
-            </Button>
-            </Flex>
-      </Flex>
+
+              </Link>
+          </Flex>
+        </Flex>
       )}
 
       <Flex
@@ -126,7 +132,7 @@ export function SegmentedNavigation() {
                 ),
               }))}
               onValueChange={(newValue) => {
-                navigate({ to: newValue.value })
+                navigate({ to: newValue.value });
               }}
             />
             {currentUser ? (
@@ -155,7 +161,7 @@ export function SegmentedNavigation() {
         )}
       </Flex>
     </Flex>
-  )
+  );
 }
 
 function MobileMenu({
@@ -163,14 +169,18 @@ function MobileMenu({
   navigate,
   finalItems,
 }: {
-  user: UserOut | undefined
-  navigate: (to: { to: string }) => void
-  finalItems: typeof navigationItems
+  user: UserOut | undefined;
+  navigate: (to: { to: string }) => void;
+  finalItems: typeof navigationItems;
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
-    <DrawerRoot open={open} onOpenChange={(e) => setOpen(e.open)} placement={"bottom"}>
+    <DrawerRoot
+      open={open}
+      onOpenChange={(e) => setOpen(e.open)}
+      placement={"bottom"}
+    >
       <DrawerBackdrop />
       <DrawerTrigger asChild>
         <Button variant="outline" size="sm">
@@ -190,8 +200,8 @@ function MobileMenu({
               variant="outline"
               size="sm"
               onClick={() => {
-                navigate({ to: value })
-                setOpen(false)
+                navigate({ to: value });
+                setOpen(false);
               }}
               mb={2}
             >
@@ -208,6 +218,5 @@ function MobileMenu({
         <DrawerCloseTrigger />
       </DrawerContent>
     </DrawerRoot>
-  )
+  );
 }
-
