@@ -1,5 +1,5 @@
 import React from "react"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
   Box,
   Flex,
@@ -17,11 +17,11 @@ export const Route = createFileRoute("/landing")({
 
 function Landing() {
     const isMobile = useIsMobile();
+    const navigate = useNavigate();
   return (
     <>
     <SegmentedNavigation />
     <Box as="main" maxW="1200px" mx="auto" px={4} py={8}>
-      {/* Hero Section */}
       <Flex
         direction={{ base: "column", md: "row" }}
         align="center"
@@ -39,16 +39,15 @@ function Landing() {
             so you can take control of your budget and build a future you love.
           </Text>
           <Flex marginTop={4} gap={2}>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => navigate({ to: "/demo" })}>
             Try the Demo
           </Button>
-          <Button variant="solid">
+          <Button variant="solid" onClick={() => navigate({ to: "/signup" })}>
             Sign Up
           </Button>
           </Flex>
         </Box>
         <Box flex="1" textAlign="center">
-          {/* Replace with your actual hero image source */}
           <Image
             src="/assets/images/landing.png"
             alt="My Financé illustration"
@@ -58,7 +57,6 @@ function Landing() {
         </Box>
       </Flex>
 
-      {/* Directions / Cards Section */}
       <Box mt={8}>
         <Heading as="h2" size="lg" mb={6}>
           Love takes patience, this doesn’t
