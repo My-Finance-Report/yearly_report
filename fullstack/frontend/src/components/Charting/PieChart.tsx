@@ -31,7 +31,6 @@ function SingleSliceTooltip({
 }: TooltipProps<number, string> & {
   hoveredKey: string | null
 }) {
-  // If there's no active hover, or no data, or no hovered key, don't show anything
   if (!active || !payload || payload.length === 0 || !hoveredKey) {
     return null
   }

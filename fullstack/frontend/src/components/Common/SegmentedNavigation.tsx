@@ -24,7 +24,7 @@ import {
   FiUsers,
   FiMenu,
   FiArrowRight,
-  FiMail,
+  FiCalendar,
 } from "react-icons/fi";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -84,9 +84,9 @@ export function SegmentedNavigation() {
             >
               Create an account <FiArrowRight />
             </Button>
-            <a href="mailto:mcarroll1220@gmail.com?subject=Finance%20Demo%20Request">
+            <a target="_blank" href="https://cal.com/matt-carroll">
             <Button variant="solid">
-                Email me directly (I'm the maker) <FiMail />
+                Schedule a call with me (I'm the maker)<FiCalendar />
             </Button>
             </a>
           </Flex>
