@@ -155,7 +155,6 @@ function Demo() {
               collapsedItems={collapsedItems}
             />
             <VisualizationPanel
-              includeSankey={false}
               sourceGroups={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}

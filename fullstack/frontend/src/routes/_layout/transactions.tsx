@@ -54,7 +54,7 @@ function Transactions() {
   }
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
-  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>(['Flow Chart'])
+  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
 
   const toggleGroup = (sourceId: number | string, groupKey: string) => {
     setExpandedGroups((prev) => ({

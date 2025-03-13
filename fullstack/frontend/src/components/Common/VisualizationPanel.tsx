@@ -32,7 +32,6 @@ interface VisualizationProps {
   isLoading: boolean
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
-  includeSankey?: boolean
   collapsedItems: CollapsibleName[]
 }
 
@@ -49,7 +48,6 @@ export function VisualizationPanel({
   isLoading,
   setCollapsedItems,
   collapsedItems,
-  includeSankey = true,
 }: VisualizationProps) {
 
   const isMobile = useIsMobile()
@@ -62,24 +60,13 @@ export function VisualizationPanel({
         <Spinner size="lg" />
       ) : (
         <Grid
-          templateAreas={`"sankey sankey sankey sankey" "${layout}"`}
+          templateAreas={`"${layout}"`}
           templateColumns="1fr 1fr 1fr 1fr"
           templateRows="auto auto"
           gap={4}
           w="100%"
         >
           {!isMobile && (
-            <>
-            {includeSankey &&
-              <Box gridArea="sankey" width="100%" position="relative">
-                <SankeyBox
-                  sourceGroups={sourceGroups}
-                  showDeposits={showDeposits}
-                  collapsedItems={collapsedItems}
-                  setCollapsedItems={setCollapsedItems}
-                />
-              </Box>
-}
               <Box gridArea="pie">
                 <PieBox
                   sourceGroups={sourceGroups}
@@ -88,7 +75,6 @@ export function VisualizationPanel({
                   setCollapsedItems={setCollapsedItems}
                 />
               </Box>
-            </>
           )
           }
           <Box gridArea="bar">
