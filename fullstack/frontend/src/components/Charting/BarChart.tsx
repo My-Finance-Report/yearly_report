@@ -46,15 +46,15 @@ function SingleSliceTooltip({
 
   return (
     <Box p={2} className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5">
-      <p className="mb-2 font-semibold">{label}</p>
+      <p className="mb-2 font-semibold" style={{ color: "white" }}>{label}</p>
 
       <div className="flex items-center gap-2 text-sm">
         <span
           className="inline-block h-2 w-2 rounded-full"
           style={{ backgroundColor: hoveredItem.color }}
         />
-        <span>{hoveredItem.name}:</span>
-        <span className="font-medium">{formatCurrency(hoveredItem.value || 0)}</span>
+        <span style={{ color: "white" }}>{hoveredItem.name}:</span>
+        <span className="font-medium" style={{ color: "white" }}>{formatCurrency(hoveredItem.value || 0)}</span>
       </div>
     </Box>
   )
