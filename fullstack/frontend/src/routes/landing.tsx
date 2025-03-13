@@ -46,6 +46,7 @@ function Landing() {
             Sign Up
           </Button>
           </Flex>
+          <Text fontSize="sm" fontWeight="bold" mt={2}>$20/year</Text>
         </Box>
         <Box flex="1" textAlign="center">
           <Image
