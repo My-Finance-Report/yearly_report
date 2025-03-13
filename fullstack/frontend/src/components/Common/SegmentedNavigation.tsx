@@ -28,6 +28,7 @@ import {
 } from "react-icons/fi";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { LuFileQuestion } from "react-icons/lu";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -84,6 +85,15 @@ export function SegmentedNavigation() {
             >
               Create an account <FiArrowRight />
             </Button>
+            <Button
+              variant="solid"
+              onClick={() => navigate({ to: "/landing" })}
+            >
+              How does this work? <LuFileQuestion />
+            </Button>
+
+
+
             <a target="_blank" href="https://cal.com/matt-carroll">
             <Button variant="solid">
                 Schedule a call with me (I'm the maker)<FiCalendar />
@@ -153,7 +163,9 @@ export function SegmentedNavigation() {
                 </Text>
               </HStack>
             ) : (
-              <Box />
+              <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
+                Log in
+              </Button>
             )}
           </>
         )}

@@ -122,7 +122,6 @@ def get_demo_aggregated_transactions(
     transactions = demo_data.transactions
     category_lookup = {c.id: c for c in demo_data.categories}
 
-
     ts_lookup = {ts.id: ts for ts in demo_data.sources}
 
     ts_lookup_by_name = {ts.name: ts.id for ts in demo_data.sources}

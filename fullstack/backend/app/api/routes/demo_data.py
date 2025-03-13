@@ -1,7 +1,6 @@
 # demo_data.py
-from collections import defaultdict
-
 import random
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -64,9 +63,9 @@ def generate_demo_data(num_transactions: int = 1000) -> DemoData:
             )
         )
 
-    categories:list[Category] = []
+    categories: list[Category] = []
     for source in sources:
-        for index,category in enumerate(HARDCODED_CATEGORIES[source.source_kind]):
+        for index, category in enumerate(HARDCODED_CATEGORIES[source.source_kind]):
             categories.append(
                 Category(
                     id=index + 1,
@@ -76,7 +75,6 @@ def generate_demo_data(num_transactions: int = 1000) -> DemoData:
                     archived=False,
                 )
             )
-
 
     category_lookup = defaultdict(list)
 
