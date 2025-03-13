@@ -1,30 +1,19 @@
 import BoxWithText, {
   type CollapsibleName,
 } from "@/components/Common/BoxWithText"
-import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Box,
-  Button,
-  Center,
   Flex,
   Grid,
-  HStack,
   Spinner,
   Text,
 } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState } from "react"
-import { FiSettings } from "react-icons/fi"
 import {
   type AggregatedGroup,
   type GroupByOption,
-  type SankeyGetSankeyDataResponse,
-  SankeyService,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
-import { GenericSankeyChart } from "../Charting/SankeyChart"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
 interface VisualizationProps {
@@ -229,91 +218,3 @@ const chartDataMap = sourceGroups.flatMap(group =>
   )
 }
 
-export function SankeyBox({
-  setCollapsedItems,
-  collapsedItems,
-}: ValidatedVisualizationProps) {
-  const { data, isLoading, error } = useQuery<
-    SankeyGetSankeyDataResponse,
-    Error
-  >({
-    queryKey: ["sankeyData"],
-    queryFn: () => SankeyService.getSankeyData(),
-    enabled: isLoggedIn(),
-  })
-
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [chartWidth, setChartWidth] = useState<number>(0)
-  const [chartHeight, setChartHeight] = useState<number>(0)
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setChartWidth(containerRef.current.offsetWidth - 30)
-        setChartHeight(containerRef.current.offsetHeight - 70)
-      }
-    }
-
-    updateWidth()
-    window.addEventListener("resize", updateWidth)
-
-    return () => {
-      window.removeEventListener("resize", updateWidth)
-    }
-  }, [])
-
-  const COMPONENT_NAME = "Flow Chart"
-  const isExpanded = !collapsedItems.includes(COMPONENT_NAME)
-
-  if (error) {
-    setCollapsedItems((prev) => [...prev, COMPONENT_NAME])
-  }
-
-  const description = "All time transactions grouped by category"
-
-  return (
-    <BoxWithText
-      text=""
-      containerRef={containerRef}
-      setCollapsedItems={setCollapsedItems}
-      collapsedItems={collapsedItems}
-      COMPONENT_NAME={COMPONENT_NAME}
-      maxH={isExpanded ? 500 : undefined}
-      minH={isExpanded ? 500 : undefined}
-    >
-      <HStack gap={0}>
-        <Link to="/sankey-config" href="/sankey-config/">
-          <Button
-            variant="outline"
-            alignSelf="start"
-            position="absolute"
-            top={2}
-            right={2}
-            size="sm"
-          >
-            <FiSettings />
-          </Button>
-        </Link>
-      </HStack>
-
-      {isLoading ? (
-        <Center flex="1">
-          <Spinner size="lg" />
-        </Center>
-      ) : error ? (
-        <Center flex="1">
-          <Text color="red.500">
-            Failed to load Sankey data. Have you created a config?
-          </Text>
-        </Center>
-      ) : isExpanded && data ? (
-        <GenericSankeyChart
-          data={data}
-          width={chartWidth}
-          height={chartHeight}
-          description={description}
-        />
-      ) : null}
-    </BoxWithText>
-  )
-}

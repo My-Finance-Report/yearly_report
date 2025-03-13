@@ -1,5 +1,4 @@
 import { UserOut } from "@/client";
-import { ClipboardButton, ClipboardRoot } from "@/components/ui/clipboard"
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import {

@@ -84,6 +84,7 @@ def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile
         previous_recategorizations=recats or None,
     )
 
+
 def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
     config: UploadConfiguration | None = None
     if process.job.config_id:

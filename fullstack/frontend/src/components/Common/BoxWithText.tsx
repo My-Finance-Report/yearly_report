@@ -12,7 +12,7 @@ export type CollapsibleName = keyof typeof NAME_TO_ICON
 export const NAME_TO_ICON = {
   "Bar Chart": <FiBarChart />,
   "Pie Chart": <FiPieChart />,
-  Filters: <FiFilter />,
+  "Filters": <FiFilter />,
 }
 
 interface LabeledBoxProps {
