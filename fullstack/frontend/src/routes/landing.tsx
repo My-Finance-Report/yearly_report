@@ -7,15 +7,16 @@ import {
   Heading,
   Text,
   Image,
-  SimpleGrid,
 } from "@chakra-ui/react"
 import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export const Route = createFileRoute("/landing")({
   component: Landing,
 })
 
 function Landing() {
+    const isMobile = useIsMobile();
   return (
     <>
     <SegmentedNavigation />
@@ -63,8 +64,7 @@ function Landing() {
           Love takes patience, this doesn’t
         </Heading>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spaceX={6}>
-          {/* Card 1 */}
+<Flex direction={isMobile ? "column" : "row"} gap={2}>
           <Box
             border="1px solid"
             borderColor="gray.200"
@@ -80,7 +80,6 @@ function Landing() {
             </Text>
           </Box>
 
-          {/* Card 2 */}
           <Box
             border="1px solid"
             borderColor="gray.200"
@@ -96,7 +95,6 @@ function Landing() {
             </Text>
           </Box>
 
-          {/* Card 3 */}
           <Box
             border="1px solid"
             borderColor="gray.200"
@@ -110,7 +108,7 @@ function Landing() {
                 Setup your budget to track your spending and build better habits.
             </Text>
           </Box>
-        </SimpleGrid>
+        </Flex>
       </Box>
     </Box>
 </>
