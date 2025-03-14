@@ -121,7 +121,7 @@ export function GenericBarChart({
                 dataKey={key}
                 stackId="a"
                 fill={getColorForName(key) || "gray"}
-  onMouseEnter={() => setHoveredKey(key)}
+                onMouseEnter={() => setHoveredKey(key)}
                 onMouseLeave={() => setHoveredKey(null)}
                 radius={
                   index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]

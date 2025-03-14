@@ -28,7 +28,7 @@ import {
 } from "react-icons/fi";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { LuFileQuestion } from "react-icons/lu";
+import { LuShieldQuestion } from "react-icons/lu";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -54,7 +54,6 @@ export function SegmentedNavigation() {
 
   const isDemo = location.pathname.startsWith("/demo");
 
-
   return (
     <Flex
       direction="column"
@@ -66,7 +65,7 @@ export function SegmentedNavigation() {
     >
       {isDemo && (
         <Flex
-          bg="yellow.600"
+          bgColor="yellow.600"
           rounded="md"
           color="white"
           px={4}
@@ -80,24 +79,24 @@ export function SegmentedNavigation() {
           <Text fontWeight="bold">Want your finances to look like this?</Text>
           <Flex direction={isMobile ? "column" : "row"} gap={3}>
             <Button
-              variant="solid"
+              variant="outline"
+              bgColor={"white"}
               onClick={() => navigate({ to: "/signup" })}
             >
               Create an account <FiArrowRight />
             </Button>
             <Button
-              variant="solid"
+              variant="outline"
+              bgColor={"white"}
               onClick={() => navigate({ to: "/landing" })}
             >
-              How does this work? <LuFileQuestion />
+              How does this work? <LuShieldQuestion />
             </Button>
-
-
-
             <a target="_blank" href="https://cal.com/matt-carroll">
-            <Button variant="solid">
-                Schedule a call with me (I'm the maker)<FiCalendar />
-            </Button>
+              <Button variant="outline" bgColor={"white"}>
+                Schedule a call with me (I'm the maker)
+                <FiCalendar />
+              </Button>
             </a>
           </Flex>
         </Flex>
@@ -163,7 +162,10 @@ export function SegmentedNavigation() {
                 </Text>
               </HStack>
             ) : (
-              <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/login" })}
+              >
                 Log in
               </Button>
             )}
