@@ -81,19 +81,22 @@ export function SegmentedNavigation() {
             <Button
               variant="outline"
               bgColor={"white"}
+
+              color={"black"}
               onClick={() => navigate({ to: "/signup" })}
             >
               Create an account <FiArrowRight />
             </Button>
             <Button
               variant="outline"
+              color={"black"}
               bgColor={"white"}
               onClick={() => navigate({ to: "/landing" })}
             >
               How does this work? <LuShieldQuestion />
             </Button>
             <a target="_blank" href="https://cal.com/matt-carroll">
-              <Button variant="outline" bgColor={"white"}>
+              <Button variant="outline" bgColor={"white"} color={"black"}>
                 Schedule a call with me (I'm the maker)
                 <FiCalendar />
               </Button>
