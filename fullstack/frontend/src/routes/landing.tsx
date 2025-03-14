@@ -35,8 +35,7 @@ function Landing() {
           </Heading>
           <Text fontSize="lg" maxW="600px" lineHeight="tall">
             Love shouldn’t be complicated—neither should your finances.
-            My Financé gives you a clear, visual breakdown of your spending,
-            so you can take control of your budget and build a future you love.
+            My Financé gives you a clear, visual breakdown of your spending each month.
           </Text>
           <Flex marginTop={4} gap={2}>
           <Button variant="outline" onClick={() => navigate({ to: "/demo" })}>
@@ -59,11 +58,8 @@ function Landing() {
       </Flex>
 
       <Box mt={8}>
-        <Heading as="h2" size="lg" mb={6}>
-          Love takes patience, this doesn’t
-        </Heading>
 
-<Flex direction={isMobile ? "column" : "row"} gap={2}>
+      <Flex direction={isMobile ? "column" : "row"} gap={2}>
           <Box
             border="1px solid"
             borderColor="gray.200"
