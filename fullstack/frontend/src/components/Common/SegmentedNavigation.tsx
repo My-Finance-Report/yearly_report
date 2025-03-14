@@ -65,7 +65,7 @@ export function SegmentedNavigation() {
     >
       {isDemo && (
         <Flex
-          bgColor="yellow.600"
+          bgColor="#B83280"
           rounded="md"
           color="white"
           px={4}

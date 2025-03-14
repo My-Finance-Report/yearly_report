@@ -25,20 +25,14 @@ export const ChartColorProvider = ({
 
   const lightModePalette = [
     "#3182CE",
-    "#38A169",
-    "#E53E3E",
     "#DD6B20",
     "#805AD5",
-    "#D69E2E",
-    "#319795",
     "#B83280",
     "#A0AEC0",
-    "#ED64A6",
     "#4299E1",
     "#38A169",
     "#E53E3E",
     "#C05621",
-    "#9F7AEA",
     "#D69E2E",
     "#319795",
     "#ED64A6",
@@ -55,18 +49,17 @@ export const ChartColorProvider = ({
     "#F6E05E",
     "#81E6D9",
     "#F687B3",
-    "#CBD5E0",
     "#D53F8C",
     "#4299E1",
     "#38A169",
     "#E53E3E",
     "#C05621",
-    "#9F7AEA",
     "#D69E2E",
     "#319795",
     "#ED64A6",
     "#718096",
     "#6B46C1",
+
   ]
 
   const colorPalette = theme === "dark" ? darkModePalette : lightModePalette

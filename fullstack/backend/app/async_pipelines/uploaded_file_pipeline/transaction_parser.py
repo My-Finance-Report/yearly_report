@@ -22,7 +22,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 def generate_transactions_prompt(process: InProcessFile) -> str:
     """Generate the AI prompt for parsing transactions."""
 

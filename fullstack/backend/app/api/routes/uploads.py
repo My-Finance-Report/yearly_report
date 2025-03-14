@@ -1,8 +1,8 @@
-import io
-import subprocess
 import csv
 import hashlib
+import io
 import os
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 
@@ -26,6 +26,7 @@ from app.models import (
 from app.worker.enqueue_job import enqueue_or_reset_job
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
+
 
 def extract_text_from_csv(content_bytes: bytes) -> str:
     text_stream = io.StringIO(content_bytes.decode("utf-8", errors="replace"))
@@ -53,10 +54,11 @@ def extract_text_from_pdf(content_bytes: bytes) -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         raise PdfParseException(f"Failed to extract text from PDF: {e.stderr}") from e
-    
+
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+
 
 def get_raw_text(content_bytes: bytes, filename: str) -> str:
     _, extension = os.path.splitext(filename.lower())
