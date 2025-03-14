@@ -23,12 +23,10 @@ import {
   FiSettings,
   FiUsers,
   FiMenu,
-  FiArrowRight,
-  FiCalendar,
+  FiChevronRight,
 } from "react-icons/fi";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { LuShieldQuestion } from "react-icons/lu";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -76,29 +74,33 @@ export function SegmentedNavigation() {
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontWeight="bold">Want your finances to look like this?</Text>
+          <Text fontSize={20} fontWeight={500}>Want a visual breakdown of your income, expenses and trends —  like this?</Text>
           <Flex direction={isMobile ? "column" : "row"} gap={3}>
             <Button
               variant="outline"
               bgColor={"white"}
-
-              color={"black"}
+              color={"#5F62F6"} 
+              borderColor={"#5F62F6"} 
+              borderRadius={200}
               onClick={() => navigate({ to: "/signup" })}
+
             >
-              Create an account <FiArrowRight />
+              Create an account <FiChevronRight />
             </Button>
             <Button
               variant="outline"
-              color={"black"}
+              color={"#5F62F6"}
               bgColor={"white"}
+              borderColor={"#5F62F6"}
+              borderRadius={200}
               onClick={() => navigate({ to: "/landing" })}
             >
-              How does this work? <LuShieldQuestion />
+              How does this work? <FiChevronRight />
             </Button>
             <a target="_blank" href="https://cal.com/matt-carroll">
-              <Button variant="outline" bgColor={"white"} color={"black"}>
+              <Button variant="outline" bgColor={"white"} color={"#5F62F6"} borderColor={"#5F62F6"} borderRadius={200}>
                 Schedule a call with me (I'm the maker)
-                <FiCalendar />
+                <FiChevronRight />
               </Button>
             </a>
           </Flex>
