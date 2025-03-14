@@ -191,7 +191,7 @@ function Demo() {
 export default function DemoLayout() {
 
   return (
-    <div style={{ backgroundColor: "background", padding: 20, minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "background",  minHeight: "100vh" }}>
       <SegmentedNavigation />
         <Flex justify="center" align="center" width="full">
           <Demo/>

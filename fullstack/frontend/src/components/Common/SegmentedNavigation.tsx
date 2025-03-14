@@ -64,7 +64,6 @@ export function SegmentedNavigation() {
       {isDemo && (
         <Flex
           bgColor="#5F62F6"
-          rounded="md"
           color="white"
           px={4}
           py={2}
@@ -74,19 +73,8 @@ export function SegmentedNavigation() {
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={20} fontWeight={500}>Want a visual breakdown of your income, expenses and trends —  like this?</Text>
+          <Text fontSize={20} fontWeight={500}>Want a visual breakdown of your income, expenses and trends — like this?</Text>
           <Flex direction={isMobile ? "column" : "row"} gap={3}>
-            <Button
-              variant="outline"
-              bgColor={"white"}
-              color={"#5F62F6"} 
-              borderColor={"#5F62F6"} 
-              borderRadius={200}
-              onClick={() => navigate({ to: "/signup" })}
-
-            >
-              Create an account <FiChevronRight />
-            </Button>
             <Button
               variant="outline"
               color={"#5F62F6"}
@@ -95,11 +83,11 @@ export function SegmentedNavigation() {
               borderRadius={200}
               onClick={() => navigate({ to: "/landing" })}
             >
-              How does this work? <FiChevronRight />
+              How does it work? <FiChevronRight />
             </Button>
             <a target="_blank" href="https://cal.com/matt-carroll">
               <Button variant="outline" bgColor={"white"} color={"#5F62F6"} borderColor={"#5F62F6"} borderRadius={200}>
-                Schedule a call with me (I'm the maker)
+                Schedule a call with me 
                 <FiChevronRight />
               </Button>
             </a>
@@ -167,12 +155,26 @@ export function SegmentedNavigation() {
                 </Text>
               </HStack>
             ) : (
-              <Button
-                variant="outline"
+              <Flex gap={2}>
+            <Button
+              variant="outline"
+              color={"#5F62F6"}
+              bgColor={"white"}
+              borderRadius={200}
                 onClick={() => navigate({ to: "/login" })}
-              >
+            >
                 Log in
               </Button>
+          <Button
+              variant="solid"
+              color={"white"}
+              bgColor={"#5F62F6"}
+              borderRadius={200}
+                onClick={() => navigate({ to: "/login" })}
+            >
+              Sign Up
+              </Button>
+              </Flex>
             )}
           </>
         )}
