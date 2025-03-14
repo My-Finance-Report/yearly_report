@@ -1,5 +1,4 @@
 import logging
-import subprocess
 from dataclasses import replace
 
 from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
@@ -7,7 +6,6 @@ from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessFile,
-    PdfParseException,
     TransactionsWrapper,
 )
 from app.models import (
@@ -23,22 +21,6 @@ from app.open_ai_utils import ChatMessage, make_chat_request
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def extract_text_from_pdf(pdf_path: str) -> str:
-    """Extract text from a PDF file using `pdftotext`."""
-    command = "pdftotext"
-    args = ["-layout", pdf_path, "-"]
-
-    try:
-        result = subprocess.run(
-            [command] + args,
-            capture_output=True,
-            check=True,
-            text=True,
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        raise PdfParseException(f"Failed to extract text from PDF: {e.stderr}") from e
 
 
 def generate_transactions_prompt(process: InProcessFile) -> str:

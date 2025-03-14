@@ -38,9 +38,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 -> csv support
 
--> database backups
-
--> remove an account from manage page if there is no transactions
+-> confirm the db backup is working
 
 -> dashboard config and ability to save them (query params)
 --> parse the query params from the url

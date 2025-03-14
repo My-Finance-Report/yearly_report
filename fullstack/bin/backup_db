@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+BACKUP_DIR="/home/ec2-user/db_backups"
+
+CONTAINER_NAME="finance_app-db-1"
+
+
+S3_BUCKET="s3://my-finance-backups"
+
+RETENTION_DAYS=14
+
+mkdir -p "$BACKUP_DIR"
+
+TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+BACKUP_FILENAME="db_backup_${TIMESTAMP}.sql.gz"
+BACKUP_PATH="${BACKUP_DIR}/${BACKUP_FILENAME}"
+
+docker exec "$CONTAINER_NAME" \
+  sh -c 'pg_dump --dbname="$WORKER_DATABASE_URL"' \
+  | gzip > "$BACKUP_PATH"
+
+aws s3 cp "$BACKUP_PATH" "$S3_BUCKET/"
+
+echo "Backup completed: $BACKUP_PATH"

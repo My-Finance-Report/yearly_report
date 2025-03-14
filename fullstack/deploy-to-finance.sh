@@ -50,6 +50,7 @@ docker push ${ECR_FRONTEND_URL}
 
 echo "🔄 Syncing Deployment Files..."
 rsync -avz docker-compose.prod.yml ${REMOTE_SERVER}:${REMOTE_DIR}/
+rsync -avz bin/backup_db ${REMOTE_SERVER}:${REMOTE_DIR}/
 
 echo "🚀 Running Deployment on ${REMOTE_SERVER}..."
 ssh ${REMOTE_SERVER} << EOF
