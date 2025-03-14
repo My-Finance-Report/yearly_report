@@ -34,6 +34,33 @@ function Transactions() {
   const isMobile = useIsMobile()
 
 
+  const applySearchParams = () => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const year = searchParams.get("year")
+    const month = searchParams.get("month")
+    const category = searchParams.get("category")
+    const account = searchParams.get("account")
+    const budget = searchParams.get("budget")
+
+    if (year) {
+      setYears(year.split(","))
+    }
+    if (month) {
+      setMonths(month.split(","))
+    }
+    if (category) {
+      setCategories(category.split(","))
+    }
+    if (account) {
+      setAccounts(account.split(","))
+    }
+    if (budget) {
+      setBudgets(budget.split(","))
+    }
+  }
+  useEffect(() => { applySearchParams() }, [])
+
+
   const [accounts, setAccounts] = useState<string[] | null>(null)
   const [categories, setCategories] = useState<string[] | null>(null)
   const [months, setMonths] = useState<string[] | null>(null)
