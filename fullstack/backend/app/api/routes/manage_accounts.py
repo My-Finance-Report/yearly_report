@@ -9,7 +9,7 @@ from app.local_types import (
     TransactionSourceBase,
     TransactionSourceOut,
 )
-from app.models import Category, TransactionSource, User
+from app.models import Category, Transaction, TransactionSource, User
 from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
@@ -20,11 +20,20 @@ def get_transaction_sources(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TransactionSourceOut]:
+
+    has_transactions = session.query(Transaction.transaction_source_id).filter(
+        Transaction.user_id == user.id
+    ).distinct().all()
+
+    source_ids_with_transactions = [t.transaction_source_id for t in has_transactions]
+
+
     db_sources = (
         session.query(TransactionSource)
-        .filter(TransactionSource.user_id == user.id)
+        .filter(TransactionSource.id.in_(source_ids_with_transactions),TransactionSource.user_id == user.id)
         .all()
     )
+
 
     return [
         TransactionSourceOut(
