@@ -74,6 +74,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, default=True
     )  # Default user is active
+    send_email: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(
         Boolean, default=False
     )  # Flag for admin users
