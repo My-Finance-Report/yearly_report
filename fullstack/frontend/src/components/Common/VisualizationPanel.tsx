@@ -10,7 +10,6 @@ import {
 } from "@chakra-ui/react"
 import {
   type AggregatedGroup,
-  type GroupByOption,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
@@ -86,17 +85,8 @@ function BarChart({
   collapsedItems,
   setCollapsedItems,
 }: ValidatedVisualizationProps) {
-  const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
-  const hasTimeGrouping = (group: AggregatedGroup): boolean => {
-    if (group.groupby_kind && TIME_OPTIONS.includes(group.groupby_kind)) {
-      return true
-    }
-    return group.subgroups?.some(hasTimeGrouping) || false
-  }
-
-  const hasValidTimeGrouping = sourceGroups.some(hasTimeGrouping)
-
+  
   const categoryKeys = new Set<string>()
   for (const group of sourceGroups) {
     if (group.subgroups) {
@@ -106,8 +96,7 @@ function BarChart({
     }
   }
 
-  const chartData: GenericChartDataItem[] | undefined = hasValidTimeGrouping
-    ? sourceGroups.map((group) => {
+  const chartData: GenericChartDataItem[]  =  sourceGroups.map((group) => {
       const base: Record<string, number | string> = {
         date: group.group_id.toString(),
       }
@@ -122,7 +111,6 @@ function BarChart({
 
       return base
     })
-    : []
 
   const description = `${sourceGroups[0].group_name} ${showDeposits ? "deposits" : "withdrawals"
     }, by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
@@ -140,7 +128,7 @@ function BarChart({
       collapsedItems={collapsedItems}
       isCollapsable={!isMobile}
     >
-      {hasValidTimeGrouping && chartData ? (
+      {chartData ? (
         <GenericBarChart
           data={chartData}
           description={description}

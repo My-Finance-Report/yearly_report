@@ -28,34 +28,24 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
-
+-> support sorting in the bars themselves, try to prevent color overlaps
+-> csv support
+-> database backups
+-> power user mode
 -> OAuth
-
--> might need a page that actually defines what the tool does
-
-
--> broke the mobile view
- --> filters
-
+-> remove an account from manage page if there is no transactions
 -> dashboard config and ability to save them (query params)
 --> adding them but not able to save
-
 -> manually add in an account + transactions to the account (CD, 401k etc)
 -> general desire for the means to track assets (confirmed by rick)
-
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
-
 -> manually override categories for transactions (memoize to llm) (confirmed by rick)
  --> this should mostly be working
-
 -> restyle the budgets page
  --> actually just work on transactions page instead
-
 -> redo filter group component (waiting on designs)
-
--> some bugs on the landing page version likely around existing filters
-
+-> color resolution could be better
 -> Expense should line up in the table
 
 - privacy policy
