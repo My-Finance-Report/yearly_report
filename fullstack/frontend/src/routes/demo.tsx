@@ -26,9 +26,9 @@ function Demo() {
     [key: string]: boolean
   }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
-    GroupByOption.account,
     GroupByOption.month,
     GroupByOption.category,
+    GroupByOption.account,
   ])
 
   const [accounts, setAccounts] = useState<string[] | null>(null)
@@ -155,7 +155,6 @@ function Demo() {
               collapsedItems={collapsedItems}
             />
             <VisualizationPanel
-              includeSankey={false}
               sourceGroups={activeGrouping}
               isLoading={isLoading}
               showDeposits={showDeposits}

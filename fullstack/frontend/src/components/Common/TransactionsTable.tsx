@@ -295,6 +295,7 @@ function PercentageBar({ amount, total,isMobile }: { amount: number; total: numb
   if (isMobile) {
     return null
   }
+
   return (
     <Progress.Root
       defaultValue={(Math.abs(amount) / Math.abs(total)) * 100}

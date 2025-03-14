@@ -1,30 +1,18 @@
 import BoxWithText, {
   type CollapsibleName,
 } from "@/components/Common/BoxWithText"
-import { isLoggedIn } from "@/hooks/useAuth"
 import {
   Box,
-  Button,
-  Center,
   Flex,
   Grid,
-  HStack,
   Spinner,
   Text,
 } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState } from "react"
-import { FiSettings } from "react-icons/fi"
 import {
   type AggregatedGroup,
-  type GroupByOption,
-  type SankeyGetSankeyDataResponse,
-  SankeyService,
 } from "../../client"
 import { GenericBarChart } from "../Charting/BarChart"
 import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
-import { GenericSankeyChart } from "../Charting/SankeyChart"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
 interface VisualizationProps {
@@ -32,7 +20,6 @@ interface VisualizationProps {
   isLoading: boolean
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
-  includeSankey?: boolean
   collapsedItems: CollapsibleName[]
 }
 
@@ -49,7 +36,6 @@ export function VisualizationPanel({
   isLoading,
   setCollapsedItems,
   collapsedItems,
-  includeSankey = true,
 }: VisualizationProps) {
 
   const isMobile = useIsMobile()
@@ -62,24 +48,13 @@ export function VisualizationPanel({
         <Spinner size="lg" />
       ) : (
         <Grid
-          templateAreas={`"sankey sankey sankey sankey" "${layout}"`}
+          templateAreas={`"${layout}"`}
           templateColumns="1fr 1fr 1fr 1fr"
           templateRows="auto auto"
           gap={4}
           w="100%"
         >
           {!isMobile && (
-            <>
-            {includeSankey &&
-              <Box gridArea="sankey" width="100%" position="relative">
-                <SankeyBox
-                  sourceGroups={sourceGroups}
-                  showDeposits={showDeposits}
-                  collapsedItems={collapsedItems}
-                  setCollapsedItems={setCollapsedItems}
-                />
-              </Box>
-}
               <Box gridArea="pie">
                 <PieBox
                   sourceGroups={sourceGroups}
@@ -88,7 +63,6 @@ export function VisualizationPanel({
                   setCollapsedItems={setCollapsedItems}
                 />
               </Box>
-            </>
           )
           }
           <Box gridArea="bar">
@@ -111,17 +85,8 @@ function BarChart({
   collapsedItems,
   setCollapsedItems,
 }: ValidatedVisualizationProps) {
-  const TIME_OPTIONS: GroupByOption[] = ["month", "year"]
 
-  const hasTimeGrouping = (group: AggregatedGroup): boolean => {
-    if (group.groupby_kind && TIME_OPTIONS.includes(group.groupby_kind)) {
-      return true
-    }
-    return group.subgroups?.some(hasTimeGrouping) || false
-  }
-
-  const hasValidTimeGrouping = sourceGroups.some(hasTimeGrouping)
-
+  
   const categoryKeys = new Set<string>()
   for (const group of sourceGroups) {
     if (group.subgroups) {
@@ -131,8 +96,7 @@ function BarChart({
     }
   }
 
-  const chartData: GenericChartDataItem[] | undefined = hasValidTimeGrouping
-    ? sourceGroups.map((group) => {
+  const chartData: GenericChartDataItem[]  =  sourceGroups.map((group) => {
       const base: Record<string, number | string> = {
         date: group.group_id.toString(),
       }
@@ -147,7 +111,6 @@ function BarChart({
 
       return base
     })
-    : []
 
   const description = `${sourceGroups[0].group_name} ${showDeposits ? "deposits" : "withdrawals"
     }, by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
@@ -165,7 +128,7 @@ function BarChart({
       collapsedItems={collapsedItems}
       isCollapsable={!isMobile}
     >
-      {hasValidTimeGrouping && chartData ? (
+      {chartData ? (
         <GenericBarChart
           data={chartData}
           description={description}
@@ -243,91 +206,3 @@ const chartDataMap = sourceGroups.flatMap(group =>
   )
 }
 
-export function SankeyBox({
-  setCollapsedItems,
-  collapsedItems,
-}: ValidatedVisualizationProps) {
-  const { data, isLoading, error } = useQuery<
-    SankeyGetSankeyDataResponse,
-    Error
-  >({
-    queryKey: ["sankeyData"],
-    queryFn: () => SankeyService.getSankeyData(),
-    enabled: isLoggedIn(),
-  })
-
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [chartWidth, setChartWidth] = useState<number>(0)
-  const [chartHeight, setChartHeight] = useState<number>(0)
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setChartWidth(containerRef.current.offsetWidth - 30)
-        setChartHeight(containerRef.current.offsetHeight - 70)
-      }
-    }
-
-    updateWidth()
-    window.addEventListener("resize", updateWidth)
-
-    return () => {
-      window.removeEventListener("resize", updateWidth)
-    }
-  }, [])
-
-  const COMPONENT_NAME = "Flow Chart"
-  const isExpanded = !collapsedItems.includes(COMPONENT_NAME)
-
-  if (error) {
-    setCollapsedItems((prev) => [...prev, COMPONENT_NAME])
-  }
-
-  const description = "All time transactions grouped by category"
-
-  return (
-    <BoxWithText
-      text=""
-      containerRef={containerRef}
-      setCollapsedItems={setCollapsedItems}
-      collapsedItems={collapsedItems}
-      COMPONENT_NAME={COMPONENT_NAME}
-      maxH={isExpanded ? 500 : undefined}
-      minH={isExpanded ? 500 : undefined}
-    >
-      <HStack gap={0}>
-        <Link to="/sankey-config" href="/sankey-config/">
-          <Button
-            variant="outline"
-            alignSelf="start"
-            position="absolute"
-            top={2}
-            right={2}
-            size="sm"
-          >
-            <FiSettings />
-          </Button>
-        </Link>
-      </HStack>
-
-      {isLoading ? (
-        <Center flex="1">
-          <Spinner size="lg" />
-        </Center>
-      ) : error ? (
-        <Center flex="1">
-          <Text color="red.500">
-            Failed to load Sankey data. Have you created a config?
-          </Text>
-        </Center>
-      ) : isExpanded && data ? (
-        <GenericSankeyChart
-          data={data}
-          width={chartWidth}
-          height={chartHeight}
-          description={description}
-        />
-      ) : null}
-    </BoxWithText>
-  )
-}

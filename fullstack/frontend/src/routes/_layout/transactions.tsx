@@ -33,7 +33,7 @@ function Transactions() {
 
   const isMobile = useIsMobile()
 
-  // need to figure out how to pass null through api
+
   const [accounts, setAccounts] = useState<string[] | null>(null)
   const [categories, setCategories] = useState<string[] | null>(null)
   const [months, setMonths] = useState<string[] | null>(null)

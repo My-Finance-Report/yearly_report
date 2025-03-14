@@ -1,6 +1,5 @@
 import { Box, HStack, Icon, Tag, TagLabel } from "@chakra-ui/react"
 import { FiLogIn, FiLogOut } from "react-icons/fi"
-import BoxWithText from "./BoxWithText"
 
 export function WithdrawDepositSelector({
   setShowDeposits,
@@ -9,7 +8,7 @@ export function WithdrawDepositSelector({
   showDeposits: boolean
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
 }) {
-  const availableOptions = ["deposits", "withdrawals"]
+  const availableOptions = ["deposits", "expense"]
 
   return (
     <Box borderWidth={1} borderColor="blue.500" borderRadius="md" p={2}>

@@ -28,24 +28,36 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
+-> monthly emails (resend)
+
+-> stripe (when do people need to pay?)
+
+-> try to prevent color overlaps
+
+-> OAuth, nice but not required
+
+-> csv support
+
+-> database backups
+
+-> remove an account from manage page if there is no transactions
+
 -> dashboard config and ability to save them (query params)
--> manually add in an account + transactions to the account (CD, 401k etc)
--> general desire for the means to track assets (confirmed by rick)
+--> parse the query params from the url
+
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
--> manually override categories for transactions (memoize to llm) (confirmed by rick)
+
 -> restyle the budgets page
--> stable sort on filter component
+ -> cleaner and remove the warning
+ -> add some indication of budget progress on the landing page
+
 -> redo filter group component (waiting on designs)
--> some bugs on the landing page version likely around existing filters
--> show error messages on login screens
--> create account shouldnt bounce to login 
--> toasts are broken
 -> Expense should line up in the table
 
-- privacy policy
-- terms of service
-- contact me page
+-> privacy policy
+-> terms of service
+-> contact me page (add to other pages or footer)
 
 
 
