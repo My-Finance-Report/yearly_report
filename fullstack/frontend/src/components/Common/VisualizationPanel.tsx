@@ -185,7 +185,7 @@ function PieBox({
 
 const chartDataMap = sourceGroups.flatMap(group =>
   group.subgroups?.map(subgroup => ({
-    group: group.group_name, // use the outer group's name
+    group: group.group_name, 
     amount: showDeposits
       ? subgroup.total_deposits
       : subgroup.total_withdrawals,
@@ -205,15 +205,8 @@ const chartDataMap = sourceGroups.flatMap(group =>
   {} as Record<string, number>,
 );
 
-  let description: string
-  if (
-    !sourceGroups[0].subgroups ||
-    sourceGroups[0].subgroups.length === 0
-  ) {
-    description = `${sourceGroups[0].group_name}`
-  } else {
-    description = `${sourceGroups[0].group_name} by ${sourceGroups[0].subgroups[0].groupby_kind}`
-  }
+  const description = `${showDeposits ? "Deposits" : "Expenses"
+    } by ${sourceGroups[0].groupby_kind}`
 
 
   if (!chartDataMap) return null

@@ -26,18 +26,17 @@ export const Route = createFileRoute("/_layout/transactions")({
 
 function Transactions() { 
   const getFunction = TransactionsService.getAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} isDemo={false} />
+  return <InnerTransactions getFunction={getFunction} />
 }
 
 export function DemoTransactions() { 
   const getFunction = DemoService.getDemoAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} isDemo={true} />
+  return <InnerTransactions getFunction={getFunction} />
 }
 
 
 
-function InnerTransactions({getFunction, isDemo}: {
-  isDemo: boolean
+function InnerTransactions({getFunction}: {
   getFunction: (params: {
     groupBy: GroupByOption[];
     years: string[];
@@ -138,7 +137,6 @@ function InnerTransactions({getFunction, isDemo}: {
         maxW="320px"
         style={{
           position: "absolute",
-          top: isDemo ? 176 : 100,
           left: 10,
         }}
       >

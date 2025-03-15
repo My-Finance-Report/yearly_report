@@ -207,11 +207,34 @@ function MobileMenu({
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        {user && (
+
           <DrawerHeader>
+        {user ? (
             <DrawerTitle>{user.full_name}</DrawerTitle>
+        ):
+        (
+        <Flex gap={2}>
+            <Button
+              variant="outline"
+              color={"#5F62F6"}
+              bgColor={"white"}
+              borderRadius={200}
+                onClick={() => navigate({ to: "/login" })}
+            >
+                Log in
+              </Button>
+          <Button
+              variant="solid"
+              color={"white"}
+              bgColor={"#5F62F6"}
+              borderRadius={200}
+                onClick={() => navigate({ to: "/login" })}
+            >
+              Sign Up
+              </Button>
+              </Flex>
+            )}
           </DrawerHeader>
-        )}
         <DrawerBody>
           {finalItems.map(({ value, label, icon }) => (
             <Button
