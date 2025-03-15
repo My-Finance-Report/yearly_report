@@ -4,7 +4,7 @@ from itertools import groupby
 from typing import cast
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import ColumnExpressionArgument, func, or_, false, and_
+from sqlalchemy import ColumnExpressionArgument, false, func, or_
 from sqlalchemy.orm import Query as SqlQuery
 
 from app.db import (
@@ -381,7 +381,7 @@ def apply_budget_filter(
 
     # If we have normal budget names, build an IN(...) condition; else use `false()`
     # (i.e. no normal budgets matched)
-    budget_filter: ColumnExpressionArgument
+    budget_filter: ColumnExpressionArgument[bool]
     if normal_budgets:
         budget_filter = BudgetEntry.name.in_(normal_budgets)
     else:
@@ -392,7 +392,7 @@ def apply_budget_filter(
     # If the magic word "Unbudgeted" is in budgets, include transactions
     # where BudgetEntry is NULL as well.
     if MAGIC_WORD_FOR_NO_BUDGET in budgets:
-        budget_filter = or_(budget_filter, BudgetEntry.id == None)
+        budget_filter = or_(budget_filter, BudgetEntry.id.is_(None))
 
     return (
         transactions
@@ -481,12 +481,14 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-
     transactions_query = session.query(Transaction).filter(
         Transaction.user_id == user.id
     )
 
-    filter_functions:dict[GroupByOption, Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]]] = {
+    filter_functions: dict[
+        GroupByOption,
+        Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]],
+    ] = {
         GroupByOption.year: apply_year_filter,
         GroupByOption.month: apply_month_filter,
         GroupByOption.category: apply_category_filter,
@@ -494,9 +496,9 @@ def get_aggregated_transactions(
         GroupByOption.budget: apply_budget_filter,
     }
 
-    filter_function_arguments:dict[GroupByOption, list[str] | None] = {
+    filter_function_arguments: dict[GroupByOption, list[str] | None] = {
         GroupByOption.year: years,
-        GroupByOption.month: months,        
+        GroupByOption.month: months,
         GroupByOption.category: categories,
         GroupByOption.account: accounts,
         GroupByOption.budget: budgets,

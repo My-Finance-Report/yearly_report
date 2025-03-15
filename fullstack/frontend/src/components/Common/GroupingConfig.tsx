@@ -1,6 +1,8 @@
 import { useCheckboxGroup, Menu, Button, Portal } from "@chakra-ui/react";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaRegPlusSquare } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
+import { Text } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 
 export enum GroupByOption {
   category = "category",
@@ -48,8 +50,8 @@ export function GroupingConfig({
   return (
     <Menu.Root key="grouping-config" onSelect={(value)=>handleToggleOption(value.value as GroupByOption)}>
       <Menu.Trigger asChild>
-        <Button variant="subtle" size="sm">
-          Add a new filter group <FaPlus />
+        <Button  variant="plain" size="sm">
+          <Text textDecoration={'underline'}>Add another filter group</Text> <AddIcon/>
         </Button>
       </Menu.Trigger>
       <Portal>
