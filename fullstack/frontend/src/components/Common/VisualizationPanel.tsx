@@ -112,8 +112,8 @@ function BarChart({
       return base
     })
 
-  const description = `${sourceGroups[0].group_name} ${showDeposits ? "deposits" : "withdrawals"
-    }, by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
+  const description = `${showDeposits ? "Deposits" : "Expenses"
+    } by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
       ? `then ${sourceGroups[0].subgroups[0].groupby_kind}`
       : ""
     }`
