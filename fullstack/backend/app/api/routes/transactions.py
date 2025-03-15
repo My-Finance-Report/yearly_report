@@ -4,7 +4,7 @@ from itertools import groupby
 from typing import cast
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
+from sqlalchemy import ColumnExpressionArgument, func, or_, false, and_
 from sqlalchemy.orm import Query as SqlQuery
 
 from app.db import (
@@ -374,13 +374,36 @@ def apply_budget_filter(
     transactions: SqlQuery[Transaction],
     budgets: list[str],
 ) -> SqlQuery[Transaction]:
+    MAGIC_WORD_FOR_NO_BUDGET = "Unbudgeted"
+
+    # Separate out any real budget names from the special magic word
+    normal_budgets = [b for b in budgets if b != MAGIC_WORD_FOR_NO_BUDGET]
+
+    # If we have normal budget names, build an IN(...) condition; else use `false()`
+    # (i.e. no normal budgets matched)
+    budget_filter: ColumnExpressionArgument
+    if normal_budgets:
+        budget_filter = BudgetEntry.name.in_(normal_budgets)
+    else:
+        # No normal budgets in the list, so base condition is always false
+        # (we'll check "Unbudgeted" separately below)
+        budget_filter = false()
+
+    # If the magic word "Unbudgeted" is in budgets, include transactions
+    # where BudgetEntry is NULL as well.
+    if MAGIC_WORD_FOR_NO_BUDGET in budgets:
+        budget_filter = or_(budget_filter, BudgetEntry.id == None)
+
     return (
-        transactions.join(
+        transactions
+        # Use left (outer) join so that rows with no BudgetCategoryLink
+        # still appear (as NULLs in the joined fields).
+        .outerjoin(
             BudgetCategoryLink,
             BudgetCategoryLink.category_id == Transaction.category_id,
         )
-        .join(BudgetEntry, BudgetEntry.id == BudgetCategoryLink.budget_entry_id)
-        .filter(BudgetEntry.name.in_(budgets))
+        .outerjoin(BudgetEntry, BudgetEntry.id == BudgetCategoryLink.budget_entry_id)
+        .filter(budget_filter)
     )
 
 
@@ -404,7 +427,6 @@ def apply_month_filter(
         "december": 12,
     }
     month_numbers = [month_lookup[m.lower()] for m in months]
-    print(month_numbers)
     return transactions.filter(
         func.extract("month", Transaction.date_of_transaction).in_(month_numbers)
     )
@@ -459,26 +481,32 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
+
     transactions_query = session.query(Transaction).filter(
         Transaction.user_id == user.id
     )
 
-    calls: list[
-        tuple[
-            Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]],
-            list[str] | None,
-        ]
-    ] = [
-        (apply_month_filter, months),
-        (apply_year_filter, years),
-        (apply_category_filter, categories),
-        (apply_account_filter, accounts),
-        (apply_budget_filter, budgets),
-    ]
+    filter_functions:dict[GroupByOption, Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]]] = {
+        GroupByOption.year: apply_year_filter,
+        GroupByOption.month: apply_month_filter,
+        GroupByOption.category: apply_category_filter,
+        GroupByOption.account: apply_account_filter,
+        GroupByOption.budget: apply_budget_filter,
+    }
 
-    for a_callable, arg in calls:
-        if arg and len(arg) > 0:
-            transactions_query = a_callable(transactions_query, arg)
+    filter_function_arguments:dict[GroupByOption, list[str] | None] = {
+        GroupByOption.year: years,
+        GroupByOption.month: months,        
+        GroupByOption.category: categories,
+        GroupByOption.account: accounts,
+        GroupByOption.budget: budgets,
+    }
+
+    for option in group_by:
+        filter_func = filter_functions[option]
+        argument = filter_function_arguments[option]
+        if argument and len(argument) > 0:
+            transactions_query = filter_func(transactions_query, argument)
 
     transactions = transactions_query.all()
 

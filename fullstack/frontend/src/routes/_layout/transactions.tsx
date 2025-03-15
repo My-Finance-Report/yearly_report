@@ -33,11 +33,11 @@ function Transactions() {
 
   const isMobile = useIsMobile();
 
-  const [accounts, setAccounts] = useState<string[] | null>(null);
-  const [categories, setCategories] = useState<string[] | null>(null);
-  const [months, setMonths] = useState<string[] | null>(null);
-  const [years, setYears] = useState<string[] | null>(null);
-  const [budgets, setBudgets] = useState<string[] | null>(null);
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [months, setMonths] = useState<string[]>([]);
+  const [years, setYears] = useState<string[]>([]);
+  const [budgets, setBudgets] = useState<string[]>([]);
 
   const filterInfo: FilterInfo = {
     budgets,
@@ -93,16 +93,6 @@ function Transactions() {
   >(null);
 
   useEffect(() => {
-    if (data?.grouping_options_choices) {
-      setYears(data.grouping_options_choices[GroupByOption.year]);
-      setMonths(data.grouping_options_choices[GroupByOption.month]);
-      setCategories(data.grouping_options_choices[GroupByOption.category]);
-      setAccounts(data.grouping_options_choices[GroupByOption.account]);
-      setBudgets(data.grouping_options_choices[GroupByOption.budget]);
-    }
-  }, [data?.grouping_options_choices]);
-
-  useEffect(() => {
     if (data?.groups.length) {
       setActiveGrouping(data.groups);
     }
@@ -122,14 +112,13 @@ function Transactions() {
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
         gap: "4px",
-        marginBottom: 48,
-        alignItems: isMobile ? "stretch" : "flex-start", 
+        marginBottom: isMobile ? 0 : 48,
       }}
     >
       <Box
         maxW="320px"
         style={{
-          position: "fixed",
+          position: "absolute",
           top: 100,
           left: 10,
         }}
@@ -153,7 +142,7 @@ function Transactions() {
           setCollapsedItems={setCollapsedItems}
         />
       </Box>
-    <Box marginLeft={isMobile ? 0 : 260}>
+    <Box marginLeft={isMobile ? 0 : 260} marginTop={isMobile ? '40px' : '0px'}>
         <BlahComponent
           isLoading={isLoading}
           data={data}

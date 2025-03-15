@@ -79,6 +79,30 @@ export function VisualizationPanel({
   )
 }
 
+function squareOffData(data: GenericChartDataItem[]) {
+  // 1. Collect all unique keys (besides 'date')
+  const allKeys: Set<string> = new Set();
+  data.forEach((row: GenericChartDataItem) => {
+    Object.keys(row).forEach((key) => {
+      if (key !== 'date') {
+        allKeys.add(key);
+      }
+    });
+  });
+
+  const allKeysArray: string[] = Array.from(allKeys);
+  return data.map((row) => {
+    const newRow: GenericChartDataItem = { ...row };
+    allKeysArray.forEach((key) => {
+      if (!(key in newRow)) {
+        newRow[key] = 0;
+      }
+    });
+    return newRow;
+  });
+}
+
+  
 function BarChart({
   sourceGroups,
   showDeposits,
@@ -112,6 +136,7 @@ function BarChart({
       return base
     })
 
+
   const description = `${showDeposits ? "Deposits" : "Expenses"
     } by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
       ? `then ${sourceGroups[0].subgroups[0].groupby_kind}`
@@ -130,7 +155,7 @@ function BarChart({
     >
       {chartData ? (
         <GenericBarChart
-          data={chartData}
+          data={squareOffData(chartData)}
           description={description}
           dataKey="date"
           nameKey="date"

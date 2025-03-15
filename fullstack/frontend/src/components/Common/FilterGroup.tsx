@@ -15,7 +15,6 @@ import {
 import {
   Button,
   Flex,
-  useCheckboxGroup,
 } from "@chakra-ui/react";
 
 import { Box, CloseButton, Tag, Text, Menu,  Portal } from "@chakra-ui/react";
@@ -41,27 +40,26 @@ import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel } from "react-icons/bs";
 import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
-import { useRouter } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useState } from "react";
+import {  useState } from "react";
 
 export interface FilterInfo {
-  years: string[] | null;
-  accounts: string[] | null;
-  months: string[] | null;
-  categories: string[] | null;
-  budgets: string[] | null;
-  setYears: React.Dispatch<React.SetStateAction<string[] | null>>;
-  setAccounts: React.Dispatch<React.SetStateAction<string[] | null>>;
-  setMonths: React.Dispatch<React.SetStateAction<string[] | null>>;
-  setCategories: React.Dispatch<React.SetStateAction<string[] | null>>;
-  setBudgets: React.Dispatch<React.SetStateAction<string[] | null>>;
+  years: string[];
+  accounts: string[];
+  months: string[];
+  categories: string[];
+  budgets: string[];
+  setYears: React.Dispatch<React.SetStateAction<string[]>>;
+  setAccounts: React.Dispatch<React.SetStateAction<string[]>>;
+  setMonths: React.Dispatch<React.SetStateAction<string[]>>;
+  setCategories: React.Dispatch<React.SetStateAction<string[]>>;
+  setBudgets: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 function getFilterSettings(
   filterInfo: FilterInfo,
   groupingOption: GroupByOption
-): [string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>] {
+): [string[], React.Dispatch<React.SetStateAction<string[]>>] {
   switch (groupingOption) {
     case GroupByOption.year:
       return [filterInfo.years, filterInfo.setYears];
@@ -343,8 +341,8 @@ const SortableItem = ({
 }: {
   option: GroupByOption;
   choices: string[] | undefined;
-  filters: string[] | null;
-  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>;
+  filters: string[];
+  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
   noX: boolean;
   onRemove: (option: GroupByOption) => void;
   moveItemUp: (option: GroupByOption) => void;
@@ -412,37 +410,44 @@ const SortableItem = ({
 interface FilterButtonProps {
   options: string[];
   name: string;
-  filters: string[] | null;
-  setFilters: React.Dispatch<React.SetStateAction<string[] | null>>;
+  filters: string[];
+  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-function FilterButton({ options, name, filters, setFilters }: FilterButtonProps) {
-  const group = useCheckboxGroup({ defaultValue: filters ?? options });
+export function FilterButton({ options, filters, setFilters }: FilterButtonProps) {
+  // We don’t call useCheckboxGroup() by itself. Instead we do something like:
+  // const { value, getCheckboxProps } = useCheckboxGroup({
+  //   value: filters,
+  //   onChange: (val) => setFilters(val),
+  // });
 
-  const handleClose = () => {
-    const selectedFilters = options.filter((option) => group.isChecked(option));
-    setFilters(selectedFilters);
-
+  // Or skip useCheckboxGroup and just do checkboxes in a controlled manner:
+  const handleToggle = (option: string) => {
+    if (filters.includes(option)) {
+      setFilters(filters.filter((f) => f !== option));
+    } else {
+      setFilters([...filters, option]);
+    }
   };
 
   const handleSelectAll = () => {
-    group.setValue(options);
+    setFilters(options);
   };
 
   const handleUnselectAll = () => {
-    group.setValue([]);
+    setFilters([]);
   };
 
   return (
     <Menu.Root
       closeOnSelect={false}
-      onInteractOutside={handleClose}
-      onPointerDownOutside={handleClose}
-      onExitComplete={handleClose}
-      onEscapeKeyDown={handleClose}
+      onInteractOutside={() => {}}
+      onPointerDownOutside={() => {}}
+      onExitComplete={() => {}}
+      onEscapeKeyDown={() => {}}
     >
       <Menu.Trigger asChild>
-        <Button variant="subtle" size="sm">
+        <Button variant="subtle" size="xs">
           <BsFunnel />
         </Button>
       </Menu.Trigger>
@@ -450,21 +455,29 @@ function FilterButton({ options, name, filters, setFilters }: FilterButtonProps)
         <Menu.Positioner>
           <Menu.Content zIndex={10000}>
             <Flex direction="column" gap={2}>
-            <Button size="xs" variant="subtle" onClick={handleSelectAll}>Select All</Button>
-            <Button size="xs" variant="subtle" onClick={handleUnselectAll}>Unselect All</Button>
+              <Button size="xs" variant="subtle" onClick={handleSelectAll}>
+                Select All
+              </Button>
+              <Button size="xs" variant="subtle" onClick={handleUnselectAll}>
+                Unselect All
+              </Button>
             </Flex>
             <Menu.ItemGroup>
-              {options.map((option) => (
-                <Menu.CheckboxItem
-                  key={option}
-                  value={option}
-                  checked={group.isChecked(option)}
-                  onCheckedChange={() => group.toggleValue(option)}
-                >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                  {group.isChecked(option) && <FiCheck />}
-                </Menu.CheckboxItem>
-              ))}
+              {options.map((option) => {
+                const checked = filters.includes(option);
+                return (
+                  <Menu.CheckboxItem
+                    value={option}
+                    key={option}
+                    // The key part is controlling 'checked' and toggling via parent
+                    checked={checked}
+                    onCheckedChange={() => handleToggle(option)}
+                  >
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                    {checked && <FiCheck />}
+                  </Menu.CheckboxItem>
+                );
+              })}
             </Menu.ItemGroup>
           </Menu.Content>
         </Menu.Positioner>
@@ -472,5 +485,3 @@ function FilterButton({ options, name, filters, setFilters }: FilterButtonProps)
     </Menu.Root>
   );
 }
-
-export default FilterButton;

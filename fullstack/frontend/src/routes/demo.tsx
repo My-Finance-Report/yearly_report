@@ -28,11 +28,11 @@ function Demo() {
     GroupByOption.account,
   ])
 
-  const [accounts, setAccounts] = useState<string[] | null>(null)
-  const [categories, setCategories] = useState<string[] | null>(null)
-  const [months, setMonths] = useState<string[] | null>(null)
-  const [years, setYears] = useState<string[] | null>(null)
-  const [budgets, setBudgets] = useState<string[] | null>(null)
+  const [accounts, setAccounts] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [months, setMonths] = useState<string[]>([])
+  const [years, setYears] = useState<string[]>([])
+  const [budgets, setBudgets] = useState<string[]>([])
 
   const filterInfo: FilterInfo = {
     budgets,
@@ -83,15 +83,6 @@ function Demo() {
     useState<AggregatedGroup[] | null>(null)
 
   useEffect(() => {
-    if(data?.grouping_options_choices) {
-      setYears(data.grouping_options_choices[GroupByOption.year])
-      setMonths(data.grouping_options_choices[GroupByOption.month])
-      setCategories(data.grouping_options_choices[GroupByOption.category])
-      setAccounts(data.grouping_options_choices[GroupByOption.account])
-    }
-  },[])
-
-  useEffect(() => {
     if (data?.groups.length) {
       setactiveGrouping(data.groups)
     }
@@ -120,7 +111,6 @@ function Demo() {
         marginBottom: 48,
       }}
     >
-
       <Legend
         collapsedItems={collapsedItems}
         setCollapsedItems={setCollapsedItems}
