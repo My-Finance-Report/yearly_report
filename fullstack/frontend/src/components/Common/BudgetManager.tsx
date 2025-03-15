@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   type BudgetCategoryLinkOut,
   type BudgetEntryOut,
@@ -6,16 +5,13 @@ import {
 } from "@/client"
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
-  Box,
   Button,
-  Collapsible,
   HStack,
-  Input,
   TableBody,
   TableCell,
   TableColumnHeader,
   TableHeader,
-  TableRoot,
+  Table,
   TableRow,
   Tag,
   Text,
@@ -28,8 +24,10 @@ import {
 } from "@tanstack/react-query"
 import { useState } from "react"
 import { FaPlus } from "react-icons/fa"
-import type { BudgetOut, BudgetStatus, BudgetEntryStatus, BudgetCategoryLinkStatus } from "../../client"
+import type { BudgetOut, BudgetStatus} from "../../client"
 import EditBudgetEntry from "./EditBudgetEntry"
+import { formatCurrency } from '../Charting/PieChart'
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budgetStatus: BudgetStatus }) => {
   const queryClient = useQueryClient()
@@ -50,17 +48,20 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
     },
   })
 
+  const isMobile = useIsMobile()
 
   return (
-    <Box>
-      <VStack gap={4}>
-        <TableRoot variant="outline">
+
+    <VStack>
+        <CreateNew budgetId={budget.id} />
+        <Table.Root variant="outline" borderRadius="md">
           <TableHeader>
             <TableRow>
               <TableColumnHeader>Budget Entry</TableColumnHeader>
-              <TableColumnHeader>Target</TableColumnHeader>
-              <TableColumnHeader>Progress</TableColumnHeader>
-              <TableColumnHeader>Categories</TableColumnHeader>
+              <TableColumnHeader>Target <Text fontSize="xs">(/month)</Text></TableColumnHeader>
+              {!isMobile && (
+                <TableColumnHeader>Categories</TableColumnHeader>
+              )}
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
           </TableHeader>
@@ -68,140 +69,89 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
             {budgetStatus.entry_status?.sort().map((entry, index) => (
               <>
                 <TableRow key={index}>
-                  <TableCell minW={60}>{entry.name}</TableCell>
-                  <TableCell>{entry.amount}</TableCell>
-                  <TableCell>{entry.total}</TableCell>
+                  <TableCell>{entry.name}</TableCell>
+                  <TableCell>{formatCurrency(Number(entry.amount))}</TableCell>
+                  {!isMobile &&
                   <TableCell>
                     {budgetEntryLookup[entry.id].category_links?.map((category) => (
                       <CategoryLink key={category.id} category={category} />
                     ))}
                   </TableCell>
+}
                   <TableCell textAlign="right">
                     <ActionsCell
                       entry={budgetEntryLookup[entry.id]}
+                      isMobile={isMobile}
                       deleteEntryMutation={deleteEntryMutation}
                     />
                   </TableCell>
                 </TableRow>
-                <TableRow>
-                  <CategoryLevelTable budgetEntryStatus={entry} />
-                </TableRow>
               </>
             ))}
           </TableBody>
-        </TableRoot>
-        <CreateNew budgetId={budget.id} />
-      </VStack>
-    </Box>
+        </Table.Root>
+  </VStack>
   )
 }
-
-function CategoryLevelTable({ budgetEntryStatus }: { budgetEntryStatus: BudgetEntryStatus }) {
-  return (
-    <TableRoot variant="outline">
-      <TableBody>
-        {Object.entries(budgetEntryStatus.category_links_status).map(([month, link]) => (
-          <Collapsible.Root key={month}>
-            <Collapsible.Trigger asChild>
-              <TableRow style={{ cursor: "pointer" }}>
-                <TableCell>{month}</TableCell>
-                <TableCell>{link.stylized_name}</TableCell>
-                <TableCell>{link.total}</TableCell>
-              </TableRow>
-            </Collapsible.Trigger>
-            <Collapsible.Content>
-              <TableRow>
-                <TableCell colSpan={3}>
-                  <TransactionLevelTable categoryLinkStatus={link} />
-                </TableCell>
-              </TableRow>
-            </Collapsible.Content>
-          </Collapsible.Root>
-      
-        ))}
-      </TableBody>
-    </TableRoot>
-  );
-}
-
-function TransactionLevelTable({ categoryLinkStatus }: { categoryLinkStatus: BudgetCategoryLinkStatus }) {
-
-
-  return (
-    <TableRoot variant={'outline'}>
-      <TableHeader>
-        <TableRow>
-          <TableColumnHeader>Transactions</TableColumnHeader>
-          <TableColumnHeader>Amount</TableColumnHeader>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {categoryLinkStatus.transactions.map((transaction) => (
-          <TableRow key={transaction.id}>
-            <TableCell>{transaction.description}</TableCell>
-            <TableCell>{transaction.amount}</TableCell>
-          </TableRow>
-        )
-        )}
-      </TableBody>
-    </TableRoot>
-  )
-}
-
-
-
 
 
 
 function CreateNew({ budgetId }: { budgetId: number }) {
-  const [newEntry, setNewEntry] = useState<string>("")
+  const [newEntry, setNewEntry] = useState<BudgetEntryOut | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const addEntryMutation = useMutation({
-    mutationFn: (amount: number) =>
+    mutationFn: () =>
       BudgetsService.createBudgetEntry({
         budgetId,
-        requestBody: { name: newEntry, amount: amount },
+        requestBody: { name: "New Category", amount: 0 },
       }),
-    onSuccess: () => {
+    onSuccess: (data: BudgetEntryOut) => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
       queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
-      setNewEntry("")
+      setNewEntry(data)
+      setIsOpen(true)
     },
   })
 
+  const handleCreate = () => {
+    addEntryMutation.mutate()
+  }
+
   return (
     <HStack w="full">
-      <Input
-        placeholder="New entry name"
-        maxW={200}
-        value={newEntry}
-        onChange={(e) => setNewEntry(e.target.value)}
-      />
-      <Button
-        size="sm"
-        onClick={() => addEntryMutation.mutate(0)}
-        disabled={!newEntry.trim()}
-      >
+      <Button size="sm" onClick={handleCreate}>
         <FaPlus />
         Add Entry
       </Button>
+
+      {newEntry && (
+        <EditBudgetEntry
+          isOpen={isOpen}
+          onClose={() => {setIsOpen(false); setNewEntry(null)}}
+          budgetEntry={newEntry}
+        />
+      )}
     </HStack>
   )
 }
 
+
 function ActionsCell({
   entry,
   deleteEntryMutation,
+  isMobile,
 }: {
   entry: BudgetEntryOut
   deleteEntryMutation: UseMutationResult<unknown, Error, number, unknown>
+  isMobile: boolean
 }) {
   const [isOpen, setIsOpen] = useState(false)
   return (
     <HStack>
       <Button size="sm" aria-label="Edit" onClick={() => setIsOpen(true)}>
-        <EditIcon /> Edit
+        <EditIcon /> {!isMobile && "Edit"}
         <EditBudgetEntry
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
@@ -215,7 +165,7 @@ function ActionsCell({
         onClick={() => deleteEntryMutation.mutate(entry.id)}
       >
         <DeleteIcon />
-        Delete
+        {!isMobile && "Delete"}
       </Button>
     </HStack>
   )

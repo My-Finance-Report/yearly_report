@@ -74,6 +74,7 @@ export default function EditBudgetEntry({
     const showToast = useCustomToast();
 
 
+
     const {
         register,
         handleSubmit,
@@ -84,7 +85,7 @@ export default function EditBudgetEntry({
         mode: "onBlur",
         criteriaMode: "all",
         defaultValues:{
-            category_links: budgetEntry.category_links.map((link)=>link.category_id)
+        category_links: budgetEntry.category_links.map((link)=>link.category_id)
         }
     });
 
@@ -140,7 +141,6 @@ export default function EditBudgetEntry({
         reset();
         onClose();
     };
-
     return (
         <DialogRoot open={isOpen} onOpenChange={onClose} modal>
             <DialogBackdrop />
