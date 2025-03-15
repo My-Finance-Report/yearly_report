@@ -22,9 +22,6 @@ export const Route = createFileRoute("/demo")({
 })
 
 function Demo() {
-  const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean
-  }>({})
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.month,
     GroupByOption.category,
@@ -52,13 +49,6 @@ function Demo() {
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
-
-  const toggleGroup = (sourceId: number | string, groupKey: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
-    }))
-  }
 
   const { data, isLoading, error, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -163,10 +153,8 @@ function Demo() {
             />
 
             <TransactionsTable
-              toggleGroup={toggleGroup}
               data={data}
               toShowNames={namesForLegends}
-              expandedGroups={expandedGroups}
               showWithdrawals={!showDeposits}
               isMobile={isMobile}
             />

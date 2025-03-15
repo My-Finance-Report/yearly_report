@@ -13,7 +13,7 @@ import {
   TableRow,
   useDisclosure,
 } from "@chakra-ui/react"
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
 import { FiEdit } from "react-icons/fi"
@@ -26,21 +26,30 @@ import EditTransaction from "./EditTransaction"
 
 export function TransactionsTable({
   data,
-  toggleGroup,
-  expandedGroups,
   toShowNames,
   showWithdrawals,
   isMobile,
 }: {
   data:TransactionsGetAggregatedTransactionsResponse
-  toggleGroup: (sourceId: number | string, groupKey: string) => void
   toShowNames?: (string | undefined)[] | undefined
-  expandedGroups: { [key: string]: boolean }
   showWithdrawals: boolean
   isMobile: boolean
 }) {
 
+  const [expandedGroups, setExpandedGroups] = useState<{
+    [key: string]: boolean;
+  }>({});
 
+const toggleGroup = (sourceId: number | string, groupKey: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
+    }));
+  };
+
+  if (!data.groups.length) {
+    return null
+  }
 
 
   return (

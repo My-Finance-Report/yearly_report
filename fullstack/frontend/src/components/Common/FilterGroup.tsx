@@ -15,18 +15,10 @@ import {
 import {
   Button,
   Flex,
-  Checkbox,
-  CheckboxGroup,
-  Fieldset,
+  useCheckboxGroup,
 } from "@chakra-ui/react";
-import {
-  PopoverBody,
-  PopoverContent,
-  PopoverRoot,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
-import { Box, CloseButton, Tag, Text } from "@chakra-ui/react";
+import { Box, CloseButton, Tag, Text, Menu,  Portal } from "@chakra-ui/react";
 import {
   DndContext,
   type DragEndEvent,
@@ -44,15 +36,14 @@ import {
 } from "@dnd-kit/sortable";
 import BoxWithText, { type CollapsibleName } from "./BoxWithText";
 import { GroupByOption, GroupingConfig } from "./GroupingConfig";
-import { WithdrawDepositSelector } from "./WithdrawDepositSelector";
+import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
 
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel } from "react-icons/bs";
-import { useEffect, useState } from "react";
-import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useRouter } from "@tanstack/react-router";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { FaLevelUpAlt } from "react-icons/fa";
+import { useState } from "react";
 
 export interface FilterInfo {
   years: string[] | null;
@@ -101,7 +92,7 @@ export function FilterGroup({
   showDeposits: boolean;
   filterInfo: FilterInfo;
   groupingOptions: GroupByOption[];
-  groupingOptionsChoices: { [key in GroupByOption]: string[] };
+  groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
   collapsedItems: CollapsibleName[];
@@ -126,7 +117,7 @@ export function FilterGroup({
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Filters</DrawerTitle>
+            <DrawerTitle></DrawerTitle>
           </DrawerHeader>
           <DrawerBody>
             <InnerFilterGroup
@@ -179,12 +170,13 @@ function InnerFilterGroup({
   showDeposits: boolean;
   filterInfo: FilterInfo;
   groupingOptions: GroupByOption[];
-  groupingOptionsChoices: { [key in GroupByOption]: string[] };
+  groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
   collapsedItems: CollapsibleName[];
 }) {
-  const includeBudget = groupingOptionsChoices[GroupByOption.budget].length > 1;
+
+  const includeBudget = !!(groupingOptionsChoices && groupingOptionsChoices[GroupByOption.budget]?.length > 1);
 
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
@@ -252,15 +244,9 @@ function InnerFilterGroup({
         marginBottom: "10px",
       }}
     >
-      <div
-        style={{
-          paddingTop: "10px",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div>
         <BoxWithText
-          text="Filters"
+          text=""
           setCollapsedItems={setCollapsedItems}
           collapsedItems={collapsedItems}
           isCollapsable={false}
@@ -270,19 +256,9 @@ function InnerFilterGroup({
             direction={isMobile ? "column" : "row"}
             gap={4}
             paddingTop={4}
-            alignItems={isMobile ? "start" : "center"}
-            justifyContent={"center"}
-          >
-            <WithdrawDepositSelector
-              setShowDeposits={setShowDeposits}
-              showDeposits={showDeposits}
-            />
-            <GroupingConfig
-              showBudgets={includeBudget}
-              groupingOptions={groupingOptions}
-              setGroupingOptions={setGroupingOptions}
-            />
-          </Flex>
+            alignItems={"start"}
+            justifyContent={"start"}
+          ></Flex>
           <Box mt={4} backgroundColor={"background"} borderRadius="lg">
             <DndContext
               sensors={sensors}
@@ -291,55 +267,59 @@ function InnerFilterGroup({
             >
               <Flex
                 direction="column"
-                p={isMobile ? 1 : 4}
-                justifyContent={"center"}
+                justifyContent={"start"}
                 gap={2}
-                alignItems={isMobile ? "start" : "center"}
+                alignItems={"start"}
               >
                 <Flex direction="column" alignItems="start" gap={2}>
-                  <Tag.Root
-                    paddingY={1.5}
-                    color="blue.500"
-                    paddingX={2}
-                    size="lg"
-                    cursor="default"
+                  <WithdrawDepositSelectorSegmented
+                    setShowDeposits={setShowDeposits}
+                    showDeposits={showDeposits}
+                  />
+                  <SortableContext
+                    items={groupingOptions}
+                    strategy={horizontalListSortingStrategy}
                   >
-                    <Text>{showDeposits ? "Deposits" : "Expenses"}</Text>
-                  </Tag.Root>
-                <SortableContext
-                  items={groupingOptions}
-                  strategy={horizontalListSortingStrategy}
-                >
-                  {groupingOptions.map((option, index) => {
-                    const [filters, setFilters] = getFilterSettings(
-                      filterInfo,
-                      option
-                    );
-
-                    const multiplier = isMobile ? 2 : 8;
-                    return (
-                      <Flex paddingLeft={isMobile? 1 : 3} marginLeft={index * multiplier} key={option} direction="row" alignItems="center" justifyContent="start" gap={2}>
-                      <FaLevelUpAlt style={{ transform: 'rotate(90deg)' }} />
-                      <SortableItem
-                        key={option}
-                        filters={filters}
-                        setFilters={setFilters}
-                        moveItemUp={moveItemUp}
-                        moveItemDown={moveItemDown}
-                        isFirst={index === 0}
-                        isLast={index === groupingOptions.length - 1}
-                        choices={groupingOptionsChoices[option]}
-                        option={option}
-                        noX={groupingOptions.length === 1}
-                        onRemove={handleToggleOption}
-                        isMobile={isMobile}
-                      >
-                      </SortableItem>
-                      </Flex>
-                    );
-                  })}
-                </SortableContext>
-</Flex>
+                    {groupingOptions.map((option, index) => {
+                      const [filters, setFilters] = getFilterSettings(
+                        filterInfo,
+                        option
+                      );
+                      return (
+                        <Flex
+                          paddingLeft={1}
+                          marginLeft={index * 2}
+                          key={option}
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="start"
+                          gap={2}
+                        >
+                          <SortableItem
+                            key={option}
+                            filters={filters}
+                            setFilters={setFilters}
+                            moveItemUp={moveItemUp}
+                            moveItemDown={moveItemDown}
+                            isFirst={index === 0}
+                            isLast={index === groupingOptions.length - 1}
+                            choices={groupingOptionsChoices?.[option]}
+                            option={option}
+                            noX={groupingOptions.length === 1}
+                            onRemove={handleToggleOption}
+                          />
+                        </Flex>
+                      );
+                    })}
+                  </SortableContext>
+                  <Box paddingLeft={groupingOptions.length * 2}>
+                    <GroupingConfig
+                      showBudgets={includeBudget}
+                      groupingOptions={groupingOptions}
+                      setGroupingOptions={setGroupingOptions}
+                    />
+                  </Box>
+                </Flex>
               </Flex>
             </DndContext>
           </Box>
@@ -349,50 +329,28 @@ function InnerFilterGroup({
   );
 }
 
-function determineDisplayText(
-  option: GroupByOption,
-  isMobile: boolean,
-  filters: string[] | null
-): string {
-  const name = `${option.charAt(0).toUpperCase() + option.slice(1)}`;
-  if (isMobile) {
-    return name;
-  }
-  if (filters && filters.length > 0 && filters.length < 3) {
-    return `${name}: ${filters.join(", ")}`;
-  }
-  if (filters && filters.length >= 3) {
-    return `${name}: ${filters[0]}, ${filters[1]}, ...`;
-  }
-  return `${name}: All`;
-}
-
 const SortableItem = ({
   option,
   filters,
   setFilters,
   onRemove,
   noX,
-  children,
   choices,
   moveItemUp,
   moveItemDown,
   isFirst,
   isLast,
-  isMobile
 }: {
   option: GroupByOption;
-  choices: string[];
+  choices: string[] | undefined;
   filters: string[] | null;
   setFilters: React.Dispatch<React.SetStateAction<string[] | null>>;
   noX: boolean;
   onRemove: (option: GroupByOption) => void;
-  children?: React.ReactNode;
   moveItemUp: (option: GroupByOption) => void;
   moveItemDown: (option: GroupByOption) => void;
   isFirst: boolean;
   isLast: boolean;
-  isMobile: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -405,41 +363,41 @@ const SortableItem = ({
   };
 
   return (
-    <>
       <Tag.Root
         ref={setNodeRef}
         py={noX ? 2 : 0}
-        color="orange.500"
+        minW={"260px"}
         justifyContent="space-between"
         style={style}
         {...attributes}
         {...listeners}
       >
-        <Text cursor="grab">{determineDisplayText(option, isMobile, filters)}</Text>
-        <Flex p={1} gap={2}>
+        <Text ml={1} cursor="grab">
+          {option.charAt(0).toUpperCase() + option.slice(1)}
+        </Text>
+        <Flex p={1} gap={0} >
           <FilterButton
             filters={filters}
             setFilters={setFilters}
-            options={choices}
+            options={choices ?? []}
             name={option}
           />
-
-              <Button
-                size="xs"
-                variant="outline"
-                disabled={isFirst}
-                onClick={() => moveItemUp(option)}
-              >
-                <FiChevronUp />
-              </Button>
-              <Button
-                size="xs"
-                variant="outline"
-                disabled={isLast}
-                onClick={() => moveItemDown(option)}
-              >
-                <FiChevronDown />
-              </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            disabled={isFirst}
+            onClick={() => moveItemUp(option)}
+          >
+            <FiChevronUp />
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            disabled={isLast}
+            onClick={() => moveItemDown(option)}
+          >
+            <FiChevronDown />
+          </Button>
           {!noX && (
             <CloseButton
               onClick={() => onRemove(option)}
@@ -449,8 +407,6 @@ const SortableItem = ({
           )}
         </Flex>
       </Tag.Root>
-      {children}
-    </>
   );
 };
 interface FilterButtonProps {
@@ -460,90 +416,71 @@ interface FilterButtonProps {
   setFilters: React.Dispatch<React.SetStateAction<string[] | null>>;
 }
 
-function FilterButton({
-  options,
-  name,
-  filters,
-  setFilters,
-}: FilterButtonProps) {
+function FilterButton({ options, name, filters, setFilters }: FilterButtonProps) {
   const router = useRouter();
-  const [localSelection, setLocalSelection] = useState<string[]>(
-    () => filters ?? options
-  );
-
-  useEffect(() => {
-    if (filters !== null) {
-      setLocalSelection(filters);
-    }
-  }, [filters]);
+  const group = useCheckboxGroup({ defaultValue: filters ?? options });
 
   const handleClose = () => {
-    setFilters(localSelection);
+    const selectedFilters = options.filter((option) => group.isChecked(option));
+    setFilters(selectedFilters);
     router.navigate({
       to: ".",
       search: (old: Record<string, string>) => ({
         ...old,
-        [name]: localSelection.join(","),
+        [name]: selectedFilters.join(","),
       }),
       replace: true,
     });
   };
 
-  const handleChange = (newSelectedValues: string[]) => {
-    setLocalSelection([...newSelectedValues]);
-  };
-
   const handleSelectAll = () => {
-    setLocalSelection([...options]);
+    group.setValue(options);
+    console.log(group)
   };
 
   const handleUnselectAll = () => {
-    setLocalSelection([]);
+    group.setValue([]);
+    console.log(group)
   };
 
   return (
-    <PopoverRoot onExitComplete={handleClose} >
-      <PopoverTrigger >
-        <Button size="xs" variant="outline">
+    <Menu.Root
+      closeOnSelect={false}
+      onInteractOutside={handleClose}
+      onPointerDownOutside={handleClose}
+      onExitComplete={handleClose}
+      onEscapeKeyDown={handleClose}
+    >
+      <Menu.Trigger asChild>
+        <Button variant="subtle" size="sm">
           <BsFunnel />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent>
-        <PopoverBody>
-          <Fieldset.Root>
-            <CheckboxGroup
-              value={localSelection}
-              name={name}
-              onValueChange={handleChange}
-            >
-              <Fieldset.Content>
-                {options.map((value) => (
-                  <Checkbox.Root key={value} value={value}>
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator />
-                    </Checkbox.Control>
-                    <Checkbox.Label>{value}</Checkbox.Label>
-                  </Checkbox.Root>
-                ))}
-              </Fieldset.Content>
-            </CheckboxGroup>
-          </Fieldset.Root>
-          <Flex flexDirection="row" gap={4} mt={2}>
-            <PopoverTrigger asChild>
-              <Button size="xs" onClick={handleClose}>
-                Apply
-              </Button>
-            </PopoverTrigger>
-            <Button size="xs" variant="outline" onClick={handleSelectAll}>
-              Select All
-            </Button>
-            <Button size="xs" variant="outline" onClick={handleUnselectAll}>
-              Unselect All
-            </Button>
-          </Flex>
-        </PopoverBody>
-      </PopoverContent>
-    </PopoverRoot>
+      </Menu.Trigger>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content zIndex={10000}>
+            <Flex direction="column" gap={2}>
+            <Button size="xs" variant="subtle" onClick={handleSelectAll}>Select All</Button>
+            <Button size="xs" variant="subtle" onClick={handleUnselectAll}>Unselect All</Button>
+            </Flex>
+            <Menu.ItemGroup>
+              {options.map((option) => (
+                <Menu.CheckboxItem
+                  key={option}
+                  value={option}
+                  checked={group.isChecked(option)}
+                  onCheckedChange={() => group.toggleValue(option)}
+                >
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                  {group.isChecked(option) && <FiCheck />}
+                </Menu.CheckboxItem>
+              ))}
+            </Menu.ItemGroup>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
+    </Menu.Root>
   );
 }
+
+export default FilterButton;

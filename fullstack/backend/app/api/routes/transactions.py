@@ -404,6 +404,7 @@ def apply_month_filter(
         "december": 12,
     }
     month_numbers = [month_lookup[m.lower()] for m in months]
+    print(month_numbers)
     return transactions.filter(
         func.extract("month", Transaction.date_of_transaction).in_(month_numbers)
     )
