@@ -40,7 +40,11 @@ export function VisualizationPanel({
 
   const isMobile = useIsMobile()
 
-  const layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
+  let layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
+
+  if (collapsedItems.includes("Pie Chart")) {
+    layout = "bar bar bar bar"
+  }
 
   return (
     <Flex direction="column" gap={4} mb={4} align="center" justify="center">
@@ -161,7 +165,7 @@ function BarChart({
           nameKey="date"
         />
       ) : (
-        <Box textAlign="center" p={4}>
+        <Box textAlign="center" p={12}>
           <Text fontSize="lg" color="gray.500">
             This grouping configuration does not support a bar chart. Please
             include a time-based grouping (e.g., month or year).

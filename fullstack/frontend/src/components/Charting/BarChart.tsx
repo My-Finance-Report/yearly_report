@@ -1,30 +1,31 @@
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-} from "@/components/ui/chart"
-import { useColorPalette } from "@/hooks/useColor"
-import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import type { GenericChartDataItem } from "./PieChart"
-import { Desc } from "./SankeyChart"
-import { TooltipProps } from "recharts"
-import { Box } from "@chakra-ui/react"
+} from "@/components/ui/chart";
+import { useColorPalette } from "@/hooks/useColor";
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { GenericChartDataItem } from "./PieChart";
+import { Desc } from "./SankeyChart";
+import { TooltipProps } from "recharts";
+import { Box } from "@chakra-ui/react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export interface GenericBarChartProps {
-  data: GenericChartDataItem[]
-  dataKey: keyof GenericChartDataItem
-  nameKey: keyof GenericChartDataItem
-  config?: ChartConfig | null
-  description?: string
+  data: GenericChartDataItem[];
+  dataKey: keyof GenericChartDataItem;
+  nameKey: keyof GenericChartDataItem;
+  config?: ChartConfig | null;
+  description?: string;
 }
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(value)
+  }).format(value);
 }
 
 function SingleSliceTooltip({
@@ -33,20 +34,25 @@ function SingleSliceTooltip({
   payload,
   hoveredKey,
 }: TooltipProps<number, string> & {
-  hoveredKey: string | null
+  hoveredKey: string | null;
 }) {
   if (!active || !payload || !payload.length || !hoveredKey) {
-    return null
+    return null;
   }
 
-  const hoveredItem = payload.find((item) => item.dataKey === hoveredKey)
+  const hoveredItem = payload.find((item) => item.dataKey === hoveredKey);
   if (!hoveredItem) {
-    return null
+    return null;
   }
 
   return (
-    <Box p={2} className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5">
-      <p className="mb-2 font-semibold" style={{ color: "white" }}>{label}</p>
+    <Box
+      p={2}
+      className="rounded-md bg-black p-3 shadow-md ring-1 ring-black/5"
+    >
+      <p className="mb-2 font-semibold" style={{ color: "white" }}>
+        {label}
+      </p>
 
       <div className="flex items-center gap-2 text-sm">
         <span
@@ -54,12 +60,13 @@ function SingleSliceTooltip({
           style={{ backgroundColor: hoveredItem.color }}
         />
         <span style={{ color: "white" }}>{hoveredItem.name}:</span>
-        <span className="font-medium" style={{ color: "white" }}>{formatCurrency(hoveredItem.value || 0)}</span>
+        <span className="font-medium" style={{ color: "white" }}>
+          {formatCurrency(hoveredItem.value || 0)}
+        </span>
       </div>
     </Box>
-  )
+  );
 }
-
 
 export function GenericBarChart({
   data,
@@ -67,50 +74,62 @@ export function GenericBarChart({
   config,
   description,
 }: GenericBarChartProps) {
-  const { getColorForName } = useColorPalette()
+
+  const isMobile = useIsMobile()
+  const { getColorForName } = useColorPalette();
 
   const uniqueKeys = Object.keys(data[0] || {}).filter(
-    (key) => key !== nameKey && key !== "date",
-  )
-  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null)
+    (key) => key !== nameKey && key !== "date"
+  );
+  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null);
 
   const computedConfig: ChartConfig = React.useMemo(() => {
-    if (config) return config
+    if (config) return config;
 
     return uniqueKeys.reduce((acc, key) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
         color: getColorForName(key),
-      }
-      return acc
-    }, {} as ChartConfig)
-  }, [config, getColorForName, uniqueKeys])
+      };
+      return acc;
+    }, {} as ChartConfig);
+  }, [config, getColorForName, uniqueKeys]);
 
   return (
     <Card>
       <CardContent
         className="px-2 sm:p-6"
-        style={{ backgroundColor: "background" }}
+        style={{ backgroundColor: "background", padding: 10 }}
       >
         <ChartContainer
           config={computedConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <BarChart data={data} margin={{ left: 12, right: 12 }}>
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => value}
+              interval={isMobile ? undefined : 0}
+              tick={{ angle: -20, textAnchor: "end", textSize: 12 }}
+              tickFormatter={(value: string) => {
+                const maxLength = 20;
+                if (value.length > maxLength) {
+                  return value.slice(0, maxLength) + "...";
+                }
+                return value;
+              }}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               tickCount={3}
+              tickFormatter={(value) => formatCurrency(value)}
             />
             <ChartTooltip
               content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
@@ -134,5 +153,5 @@ export function GenericBarChart({
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Card>
-  )
+  );
 }

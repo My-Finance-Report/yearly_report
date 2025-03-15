@@ -10,7 +10,7 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { AggregatedGroup, TransactionsService } from "../../client";
+import { AggregatedGroup, DemoService, TransactionsService } from "../../client";
 import { isLoggedIn } from "../../hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
@@ -24,7 +24,29 @@ export const Route = createFileRoute("/_layout/transactions")({
   component: Transactions,
 });
 
-function Transactions() {
+function Transactions() { 
+  const getFunction = TransactionsService.getAggregatedTransactions
+  return <InnerTransactions getFunction={getFunction} isDemo={false} />
+}
+
+export function DemoTransactions() { 
+  const getFunction = DemoService.getDemoAggregatedTransactions
+  return <InnerTransactions getFunction={getFunction} isDemo={true} />
+}
+
+
+
+function InnerTransactions({getFunction, isDemo}: {
+  isDemo: boolean
+  getFunction: (params: {
+    groupBy: GroupByOption[];
+    years: string[];
+    accounts: string[];
+    months: string[];
+    categories: string[];
+    budgets: string[];
+  }) => Promise<TransactionsGetAggregatedTransactionsResponse>;
+}) {
   const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
     GroupByOption.month,
     GroupByOption.category,
@@ -52,9 +74,6 @@ function Transactions() {
     setBudgets,
   };
 
-  console.log(filterInfo);
-  console.log(budgets)
-
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
 
@@ -62,9 +81,9 @@ function Transactions() {
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
-    queryKey: ["aggregatedTransactions", groupingOptions],
+    queryKey: ["aggregatedTransactions", getFunction.name, groupingOptions],
     queryFn: () =>
-      TransactionsService.getAggregatedTransactions({
+      getFunction({
         groupBy: groupingOptions,
         years,
         accounts,
@@ -119,7 +138,7 @@ function Transactions() {
         maxW="320px"
         style={{
           position: "absolute",
-          top: 100,
+          top: isDemo ? 176 : 100,
           left: 10,
         }}
       >
@@ -224,4 +243,3 @@ function BlahComponent({
   );
 }
 
-export default Transactions;
