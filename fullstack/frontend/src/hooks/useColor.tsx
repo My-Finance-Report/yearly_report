@@ -1,10 +1,8 @@
+import React, { createContext, useContext, useRef, useCallback } from "react"
 import { useTheme } from "next-themes"
-import type React from "react"
-import { createContext, useContext, useState } from "react"
 
 interface ColorContextType {
   getColorForName: (name: string) => string
-  getAssignedColors: () => Record<string, string>
 }
 
 const hashStringToIndex = (str: string, length: number) => {
@@ -18,9 +16,7 @@ const hashStringToIndex = (str: string, length: number) => {
 
 const ColorContext = createContext<ColorContextType | undefined>(undefined)
 
-export const ChartColorProvider = ({
-  children,
-}: { children: React.ReactNode }) => {
+export const ChartColorProvider = ({ children }: { children: React.ReactNode }) => {
   const { theme } = useTheme()
 
   const lightModePalette = [
@@ -59,34 +55,22 @@ export const ChartColorProvider = ({
     "#ED64A6",
     "#718096",
     "#6B46C1",
-
   ]
 
   const colorPalette = theme === "dark" ? darkModePalette : lightModePalette
 
-  const [assignedColors, setAssignedColors] = useState<Record<string, string>>(
-    {},
-  )
+  // Use a ref to store assigned colors so updating it doesn't trigger a re-render
+  const assignedColorsRef = useRef<Record<string, string>>({})
 
-  const getColorForName = (name: string) => {
-    if (!assignedColors[name]) {
-      const color = colorPalette[hashStringToIndex(name, colorPalette.length)]
-      setAssignedColors((prev) => ({
-        ...prev,
-        [name]: color,
-      }))
+  const getColorForName = useCallback((name: string) => {
+    if (!assignedColorsRef.current[name]) {
+      assignedColorsRef.current[name] = colorPalette[hashStringToIndex(name, colorPalette.length)]
     }
-
-    return (
-      assignedColors[name] ||
-      colorPalette[hashStringToIndex(name, colorPalette.length)]
-    )
-  }
-
-  const getAssignedColors = () => assignedColors
+    return assignedColorsRef.current[name]
+  }, [colorPalette])
 
   return (
-    <ColorContext.Provider value={{ getColorForName, getAssignedColors }}>
+    <ColorContext.Provider value={{ getColorForName }}>
       {children}
     </ColorContext.Provider>
   )

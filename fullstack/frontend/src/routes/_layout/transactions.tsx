@@ -33,34 +33,6 @@ function Transactions() {
 
   const isMobile = useIsMobile();
 
-  const applySearchParams = () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const year = searchParams.get("year");
-    const month = searchParams.get("month");
-    const category = searchParams.get("category");
-    const account = searchParams.get("account");
-    const budget = searchParams.get("budget");
-
-    if (year) {
-      setYears(year.split(","));
-    }
-    if (month) {
-      setMonths(month.split(","));
-    }
-    if (category) {
-      setCategories(category.split(","));
-    }
-    if (account) {
-      setAccounts(account.split(","));
-    }
-    if (budget) {
-      setBudgets(budget.split(","));
-    }
-  };
-  useEffect(() => {
-    applySearchParams();
-  }, []);
-
   const [accounts, setAccounts] = useState<string[] | null>(null);
   const [categories, setCategories] = useState<string[] | null>(null);
   const [months, setMonths] = useState<string[] | null>(null);
@@ -79,6 +51,9 @@ function Transactions() {
     setCategories,
     setBudgets,
   };
+
+  console.log(filterInfo);
+  console.log(budgets)
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
@@ -105,6 +80,7 @@ function Transactions() {
   }, [filterInfo]);
 
   const { getColorForName } = useColorPalette();
+
   data?.groups.map((group) => {
     getColorForName(group.group_name);
     group.subgroups?.map((subgroup) => {
@@ -147,7 +123,7 @@ function Transactions() {
         flexDirection: isMobile ? "column" : "row",
         gap: "4px",
         marginBottom: 48,
-        alignItems: isMobile ? "stretch" : "flex-start", // Keeps the filter at the top
+        alignItems: isMobile ? "stretch" : "flex-start", 
       }}
     >
       <Box
@@ -177,7 +153,7 @@ function Transactions() {
           setCollapsedItems={setCollapsedItems}
         />
       </Box>
-      <Box marginLeft={isMobile ? 0 : 260}>
+    <Box marginLeft={isMobile ? 0 : 260}>
         <BlahComponent
           isLoading={isLoading}
           data={data}

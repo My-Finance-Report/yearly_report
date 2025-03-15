@@ -13,7 +13,7 @@ import {
   TableRow,
   useDisclosure,
 } from "@chakra-ui/react"
-import React, { useMemo, useState } from "react"
+import React, {  useState } from "react"
 
 import { useColorPalette } from "@/hooks/useColor"
 import { FiEdit } from "react-icons/fi"
@@ -68,7 +68,7 @@ const toggleGroup = (sourceId: number | string, groupKey: string) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <MemoizedRenderGroups
+        <RenderGroups
           groups={data.groups}
           totalWidthdrawals={data.overall_withdrawals}
           totalDeposits={data.overall_deposits}
@@ -98,7 +98,7 @@ const toggleGroup = (sourceId: number | string, groupKey: string) => {
   )
 }
 
-const MemoizedRenderGroups = React.memo(function RenderGroups({
+function RenderGroups({
   groups,
   pathPrefix,
   expandedGroups,
@@ -119,8 +119,10 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
   isMobile: boolean
   totalDeposits?: number
 }) {
-  const memoizedGroups = useMemo(() => {
-    return groups.map((group) => {
+    return ( 
+    <>
+    {
+    groups.map((group) => {
       const groupKey = pathPrefix
         ? `${pathPrefix}-${group.group_id}`
         : `${group.group_id}`
@@ -204,7 +206,7 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          <MemoizedRenderGroups
+                          <RenderGroups
                             groups={group.subgroups}
                             pathPrefix={groupKey}
                             toggleGroup={toggleGroup}
@@ -243,21 +245,11 @@ const MemoizedRenderGroups = React.memo(function RenderGroups({
         </React.Fragment>
       )
     })
-  }, [
-    groups,
-    pathPrefix,
-    expandedGroups,
-    toggleGroup,
-    toShowNames,
-    totalWidthdrawals,
-    totalDeposits,
-    showWithdrawals,
-  ])
-
-  return <>{memoizedGroups}</>
-})
-
-export default MemoizedRenderGroups
+  }
+  </>
+  )
+}
+  
 
 function TransactionRow({ transaction, isMobile }: { transaction: TransactionOut, isMobile: boolean }) {
   const editTransactionModal = useDisclosure()

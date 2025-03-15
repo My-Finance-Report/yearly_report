@@ -312,7 +312,7 @@ function InnerFilterGroup({
                       );
                     })}
                   </SortableContext>
-                  <Box paddingLeft={groupingOptions.length * 2}>
+                  <Box key='blah' paddingLeft={groupingOptions.length * 2}>
                     <GroupingConfig
                       showBudgets={includeBudget}
                       groupingOptions={groupingOptions}
@@ -384,7 +384,7 @@ const SortableItem = ({
           />
           <Button
             size="xs"
-            variant="outline"
+            variant="subtle"
             disabled={isFirst}
             onClick={() => moveItemUp(option)}
           >
@@ -392,7 +392,7 @@ const SortableItem = ({
           </Button>
           <Button
             size="xs"
-            variant="outline"
+            variant="subtle"
             disabled={isLast}
             onClick={() => moveItemDown(option)}
           >
@@ -402,7 +402,7 @@ const SortableItem = ({
             <CloseButton
               onClick={() => onRemove(option)}
               size="xs"
-              variant="outline"
+              variant="subtle"
             />
           )}
         </Flex>
@@ -417,30 +417,20 @@ interface FilterButtonProps {
 }
 
 function FilterButton({ options, name, filters, setFilters }: FilterButtonProps) {
-  const router = useRouter();
   const group = useCheckboxGroup({ defaultValue: filters ?? options });
 
   const handleClose = () => {
     const selectedFilters = options.filter((option) => group.isChecked(option));
     setFilters(selectedFilters);
-    router.navigate({
-      to: ".",
-      search: (old: Record<string, string>) => ({
-        ...old,
-        [name]: selectedFilters.join(","),
-      }),
-      replace: true,
-    });
+
   };
 
   const handleSelectAll = () => {
     group.setValue(options);
-    console.log(group)
   };
 
   const handleUnselectAll = () => {
     group.setValue([]);
-    console.log(group)
   };
 
   return (

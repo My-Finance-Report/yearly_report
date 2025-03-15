@@ -46,7 +46,7 @@ export function GroupingConfig({
   const group = useCheckboxGroup({ defaultValue: groupingOptions });
 
   return (
-    <Menu.Root onSelect={(value)=>handleToggleOption(value.value as GroupByOption)}>
+    <Menu.Root key="grouping-config" onSelect={(value)=>handleToggleOption(value.value as GroupByOption)}>
       <Menu.Trigger asChild>
         <Button variant="subtle" size="sm">
           Add a new filter group <FaPlus />
@@ -56,11 +56,9 @@ export function GroupingConfig({
         <Menu.Positioner>
           <Menu.Content zIndex={10000}>
             <Menu.ItemGroup>
-              {filteredOptions.map((option) => (
-                <>
-
+              {filteredOptions.map((option, index) => (
                   <Menu.CheckboxItem
-                    key={option}
+                    key={index.toString()}
                     value={option}
                     checked={group.isChecked(option)}
                     onCheckedChange={() => group.toggleValue(option)}
@@ -68,7 +66,6 @@ export function GroupingConfig({
                     {option.charAt(0).toUpperCase() + option.slice(1)}
                     {group.isChecked(option) && <FiCheck />}
                   </Menu.CheckboxItem>
-                </>
               ))}
             </Menu.ItemGroup>
           </Menu.Content>
