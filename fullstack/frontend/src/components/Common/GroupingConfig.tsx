@@ -1,5 +1,4 @@
 import { useCheckboxGroup, Menu, Button, Portal } from "@chakra-ui/react";
-import { FaPlus, FaRegPlusSquare } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { Text } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";

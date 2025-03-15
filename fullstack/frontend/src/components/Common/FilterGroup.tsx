@@ -38,7 +38,7 @@ import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
 
 import { CSS } from "@dnd-kit/utilities";
-import { BsFunnel } from "react-icons/bs";
+import { BsFunnel, BsFunnelFill } from "react-icons/bs";
 import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {  useState } from "react";
@@ -415,13 +415,7 @@ interface FilterButtonProps {
 }
 
 export function FilterButton({ options, filters, setFilters }: FilterButtonProps) {
-  // We don’t call useCheckboxGroup() by itself. Instead we do something like:
-  // const { value, getCheckboxProps } = useCheckboxGroup({
-  //   value: filters,
-  //   onChange: (val) => setFilters(val),
-  // });
 
-  // Or skip useCheckboxGroup and just do checkboxes in a controlled manner:
   const handleToggle = (option: string) => {
     if (filters.includes(option)) {
       setFilters(filters.filter((f) => f !== option));
@@ -438,6 +432,8 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
     setFilters([]);
   };
 
+  const hasApplied = filters.length > 0
+
   return (
     <Menu.Root
       closeOnSelect={false}
@@ -448,7 +444,7 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
     >
       <Menu.Trigger asChild>
         <Button variant="subtle" size="xs">
-          <BsFunnel />
+          {hasApplied ? <BsFunnelFill /> : <BsFunnel />}
         </Button>
       </Menu.Trigger>
       <Portal>
