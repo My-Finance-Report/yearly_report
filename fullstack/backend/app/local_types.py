@@ -307,6 +307,7 @@ class AggregatedGroup(BaseModel):
     total_withdrawals: float
     total_deposits: float
     total_balance: float
+    budgeted_total: float
     # For non-leaf groups, these will be populated.
     subgroups: list["AggregatedGroup"] = []
     # For leaf groups, this is a list of transactions.

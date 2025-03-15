@@ -212,6 +212,7 @@ def recursive_group(
                 group_name="All",
                 groupby_kind=None,
                 total_withdrawals=total_withdrawals,
+                budgeted_total=0,
                 total_deposits=total_deposits,
                 total_balance=total_deposits - total_withdrawals,
                 transactions=[TransactionOut.model_validate(t) for t in txns],
@@ -255,6 +256,7 @@ def recursive_group(
                     group_id=group_id,
                     group_name=group_name,
                     groupby_kind=current,
+                    budgeted_total=0,
                     total_withdrawals=group_withdrawals,
                     total_deposits=group_deposits,
                     total_balance=balance,
@@ -268,6 +270,7 @@ def recursive_group(
                     group_id=group_id,
                     group_name=group_name,
                     groupby_kind=current,
+                    budgeted_total=0,
                     total_withdrawals=group_withdrawals,
                     total_deposits=group_deposits,
                     total_balance=balance,
@@ -539,9 +542,6 @@ def get_aggregated_transactions(
             TransactionSource.id.in_(ts_ids)
         )
     }
-
-    overall_withdrawals = 0.0
-    overall_deposits = 0.0
 
     transactions.sort(key=lambda t: t.transaction_source_id)
 
