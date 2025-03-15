@@ -95,6 +95,11 @@ export function GenericBarChart({
     }, {} as ChartConfig);
   }, [config, getColorForName, uniqueKeys]);
 
+  let interval = isMobile ? undefined : 0;
+  if (data.length > 20) {
+    interval = undefined;
+  }
+
   return (
     <Card>
       <CardContent
@@ -114,7 +119,8 @@ export function GenericBarChart({
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              interval={isMobile ? undefined : 0}
+              interval={interval}
+              //@ts-ignore
               tick={{ angle: -20, textAnchor: "end", textSize: 12 }}
               tickFormatter={(value: string) => {
                 const maxLength = 20;
