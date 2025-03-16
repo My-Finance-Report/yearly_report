@@ -1,4 +1,5 @@
 import logging
+import re
 from dataclasses import replace
 
 from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
@@ -73,13 +74,15 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
             .filter(UploadConfiguration.user_id == process.user.id)
             .all()
         )
-        reg_lookup = {u.id: u.filename_regex.lower() for u in query}
+        reg_lookup = {u.id: u.filename_regex for u in query}
         lookup = {u.id: u for u in query}
 
-        raw_content = f"{process.file.filename} {process.file.raw_content}".lower()
+        raw_content = f"{process.file.filename}"
         for id, filename_regex in reg_lookup.items():
-            if filename_regex in raw_content:
+            if re.search(filename_regex, raw_content, re.IGNORECASE):
                 config = lookup[id]
+                break
+        
 
     if not config:
         config = create_configurations(process)

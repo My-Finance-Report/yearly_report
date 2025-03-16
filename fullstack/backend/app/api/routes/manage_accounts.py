@@ -9,10 +9,12 @@ from app.local_types import (
     TransactionSourceBase,
     TransactionSourceOut,
 )
-from app.models import Category, Transaction, TransactionSource, User
+from app.models import Category, Transaction, TransactionSource, TransactionSourceId, User
 from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
+
+
 
 
 @router.get("/", response_model=list[TransactionSourceOut])
@@ -252,3 +254,52 @@ def delete_category(
     enqueue_recategorization(
         session=session, user_id=user.id, transaction_source_id=db_category.source_id
     )
+
+
+@router.post("/merge-accounts", response_model=None)
+def merge_accounts(
+    to_keep_id: TransactionSourceId,
+    to_merge_id: TransactionSourceId,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+
+    db_to_keep = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == to_keep_id, TransactionSource.user_id == user.id)
+        .one()
+    )
+
+    if not db_to_keep:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    db_to_merge = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == to_merge_id, TransactionSource.user_id == user.id)
+        .one()
+    )
+
+    if not db_to_merge:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    categories_in_account_we_loose = session.query(Category).filter(Category.source_id == to_merge_id).all()
+    categories_in_account_we_keep = session.query(Category).filter(Category.source_id == to_keep_id).all()
+
+    lookup_in_loose_by_id = {c.id: c for c in categories_in_account_we_loose}
+    lookup_in_keep_by_name = {c.name.lower(): c for c in categories_in_account_we_keep}
+
+    for transaction in session.query(Transaction).filter(Transaction.transaction_source_id == to_merge_id):
+        transaction.transaction_source_id = to_keep_id
+        old_category = lookup_in_loose_by_id[transaction.category_id]
+        if old_category.name.lower() not in lookup_in_keep_by_name:
+            new_category = Category(name=old_category.name, user_id=user.id, source_id=to_keep_id)
+            session.add(new_category)
+            session.commit()
+            session.refresh(new_category)
+        transaction.category_id = lookup_in_keep_by_name[old_category.name].id
+
+    session.commit()
+
+    session.delete(db_to_merge)
+    session.commit()
+

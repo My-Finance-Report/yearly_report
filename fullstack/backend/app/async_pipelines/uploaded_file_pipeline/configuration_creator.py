@@ -21,14 +21,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_upload_config_prompt(pdf_content: str) -> str:
+def generate_upload_config_prompt(pdf_content: str, filename: str) -> str:
     """Generates the AI prompt for extracting upload configuration."""
     return f"""
     Analyze the following PDF content to extract an upload configuration.
 
+    - filenameRegex: A regex that will work across multiple months.
+      be mindful of the user having more than one account at the same institution.
     - Identify stable keywords that will work across multiple months.
     - Extract start and end keywords that isolate this month's transactions.
     - Avoid including summary sections.
+
+    ### Filename:
+    {filename}
 
     ### PDF Content:
     {pdf_content}
@@ -71,12 +76,14 @@ def extract_account_and_categories(
 
 
 def generate_upload_configuration(
+    *,
     session: Session,
     user: User,
     transaction_source: TransactionSource,
+    filename: str,
     pdf_content: str,
 ) -> UploadConfiguration | None:
-    prompt = generate_upload_config_prompt(pdf_content)
+    prompt = generate_upload_config_prompt(pdf_content, filename)
 
     messages = [ChatMessage(role="user", content=prompt)]
     response = make_chat_request(PartialUploadConfig, messages)
@@ -86,7 +93,7 @@ def generate_upload_configuration(
         return None
 
     upload_config = UploadConfiguration(
-        filename_regex=response.fileIdKeyword,
+        filename_regex=response.filenameRegex,
         start_keyword=response.startKeyword,
         end_keyword=response.endKeyword,
         transaction_source_id=transaction_source.id,
@@ -185,7 +192,11 @@ def create_configurations(process: InProcessFile) -> UploadConfiguration:
         upload_config = existing_config_with_bad_keywords
     else:
         upload_config = generate_upload_configuration(
-            session, user, transaction_source, pdf_content
+            session=session,
+            user=user,
+            transaction_source=transaction_source,
+            filename=process.file.filename,
+            pdf_content=pdf_content,
         )
         if not upload_config:
             raise ValueError("Failed to extract upload configuration.")

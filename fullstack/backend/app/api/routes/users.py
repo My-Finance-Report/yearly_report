@@ -24,7 +24,6 @@ from app.local_types import (
     UserUpdateMe,
 )
 from app.models import (
-    Budget,
     User,
 )
 from app.utils import generate_new_account_email, send_email
