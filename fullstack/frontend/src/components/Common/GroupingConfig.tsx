@@ -44,7 +44,7 @@ export function GroupingConfig({
     ? availableOptions
     : availableOptions.filter((option) => option !== GroupByOption.budget);
 
-  const group = useCheckboxGroup({ defaultValue: groupingOptions });
+  const group = useCheckboxGroup({ value: groupingOptions });
 
   return (
     <Menu.Root key="grouping-config" onSelect={(value)=>handleToggleOption(value.value as GroupByOption)}>
@@ -61,6 +61,7 @@ export function GroupingConfig({
                   <Menu.CheckboxItem
                     key={index.toString()}
                     value={option}
+                    disabled={group.isChecked(option)}
                     checked={group.isChecked(option)}
                     onCheckedChange={() => group.toggleValue(option)}
                   >

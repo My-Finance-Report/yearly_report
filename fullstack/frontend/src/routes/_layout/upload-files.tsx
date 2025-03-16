@@ -108,16 +108,16 @@ function UploadFiles() {
       ) : error ? (
         <Text color="red.500">Error loading files.</Text>
       ) : data && data.length > 0 ? (
-        <Table.Root variant="outline" mt={24}>
+        <Table.Root variant="outline" mt={24} rounded="md">
           <TableHeader>
             <TableRow>
-              <TableColumnHeader onClick={() => handleSort((obj)=> obj.filename, "filename")}>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.filename, "filename")}>
                 Filename {sortConfig.columnName === "filename" && (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
-              <TableColumnHeader onClick={() => handleSort((obj)=> obj.nickname || "", "nickname")}>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.nickname || "", "nickname")}>
                 Nickname {sortConfig.columnName === "nickname" && (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
-              <TableColumnHeader onClick={() => handleSort((obj)=> obj.job?.status || "Unknown", "status")}>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.job?.status || "Unknown", "status")}>
                 Status {sortConfig.columnName === "status" && (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
