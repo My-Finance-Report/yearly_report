@@ -107,7 +107,7 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
     return replace(process, categorized_transactions=out)
 
 
-def insert_categorized_transactions(in_process: InProcessFile) -> None:
+async def insert_categorized_transactions(in_process: InProcessFile) -> None:
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"

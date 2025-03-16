@@ -82,7 +82,6 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
             if re.search(filename_regex, raw_content, re.IGNORECASE):
                 config = lookup[id]
                 break
-        
 
     if not config:
         config = create_configurations(process)

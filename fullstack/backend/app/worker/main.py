@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
+from app.db import get_db_for_user
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_pipeline
@@ -55,6 +57,27 @@ def reset_stuck_jobs(session: Session) -> None:
     logger.info(f"Reset {len(stuck_jobs)} stuck jobs.")
 
 
+def fetch_users_other_jobs(session: Session, user_id: int) -> list[ProcessFileJob]:
+    jobs =  (
+        session.query(ProcessFileJob)
+        .filter(
+            ProcessFileJob.status == "pending",
+            ProcessFileJob.attempt_count < MAX_ATTEMPTS,
+            ProcessFileJob.archived.is_(False),
+            ProcessFileJob.user_id != user_id,
+        )
+        .all()
+    )
+    for job in jobs:
+        job.status = JobStatus.processing
+        job.last_tried_at = datetime.now(timezone.utc)
+        job.attempt_count += 1
+
+    session.commit()
+    return jobs
+
+
+
 def fetch_and_lock_next_job(session: Session) -> ProcessFileJob | None:
     job = (
         session.query(ProcessFileJob)
@@ -76,15 +99,32 @@ def fetch_and_lock_next_job(session: Session) -> ProcessFileJob | None:
     return None
 
 
-def process_next_job(session: Session) -> None:
-    job = fetch_and_lock_next_job(session)
+def process_next_jobs(session: Session) -> None:
+    all_jobs = []
 
+    job = fetch_and_lock_next_job(session)
     if not job:
-        logger.info("No jobs available.")
+        logger.info("No job available.")
         return
 
-    logger.info(f"Processing job: {job.id}")
-    success = try_job(session, job)
+    all_jobs.append(job)
+    all_jobs.extend(fetch_users_other_jobs(session, job.user_id))
+
+    job_ids = [job.id for job in all_jobs]
+
+
+    user_session = create_user_specific_session(job.user_id)
+
+    all_user_jobs =user_session.query(ProcessFileJob).filter(
+            ProcessFileJob.id.in_(job_ids)).all()
+
+
+    assert all(job.user_id == job.user_id for job in all_user_jobs), (
+        "all jobs in batch must belong to one user"
+    )
+
+    logger.info(f"Processing jobs: {[job.id for job in all_user_jobs]}")
+    success = try_jobs(user_session, all_user_jobs)
 
     job.status = JobStatus.completed if success else JobStatus.failed
     job.last_tried_at = datetime.now(timezone.utc)
@@ -93,50 +133,53 @@ def process_next_job(session: Session) -> None:
     logger.info(f"Job {job.id} completed with status: {job.status}")
 
 
-def try_job(session: Session, job: ProcessFileJob) -> bool:
+def try_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> bool:
     try:
-        run_job(session, job)
+        run_jobs(user_session, jobs)
 
-        job.error_messages = ""
-        session.add(job)
-        session.commit()
+        for job in jobs:
+            job.error_messages = ""
+            user_session.add(job)
+        user_session.commit()
         return True
     except (Exception, PendingRollbackError) as e:
-        error_message = f"{job.error_messages or ''}\n{e}"
-        job.error_messages = error_message.strip()
-        session.add(job)
-        session.commit()
-
-        logger.error(f"Job {job.id} failed: {e}")
+        logger.error(f"Job failed: {e}")
         return False
 
 
-FUNC_LOOKUP: dict[JobKind, Callable[[InProcessFile], None]] = {
+FUNC_LOOKUP: dict[JobKind, Callable[[list[InProcessFile]], None]] = {
     JobKind.full_upload: uploaded_file_pipeline,
     JobKind.recategorize: recategorize_pipeline,
 }
 
 
-def run_job(session: Session, job: ProcessFileJob) -> None:
-    pdf = session.get(UploadedPdf, job.pdf_id)
-    if not pdf:
-        raise ValueError("PDF record not found!")
+def create_user_specific_session(user_id: int) -> Session:
+    return next(get_db_for_user(user_id))
 
-    user = session.get(User, job.user_id)
-    if not user:
-        raise ValueError("User record not found!")
 
-    in_process = InProcessFile(session=session, user=user, file=pdf, job=job)
+def run_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> None:
+    in_process_files: dict[JobKind, list[InProcessFile]] = defaultdict(list)
+    for job in jobs:
+        pdf = user_session.get(UploadedPdf, job.pdf_id)
+        if not pdf:
+            raise ValueError("PDF record not found!")
+
+        user = user_session.get(User, job.user_id)
+        if not user:
+            raise ValueError("User record not found!")
+        in_process_files[job.kind].append(
+            InProcessFile(session=user_session, user=user, file=pdf, job=job)
+        )
 
     callable = FUNC_LOOKUP[job.kind]
-    callable(in_process)
+    callable(in_process_files[job.kind])
 
 
 def worker() -> None:
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
-            process_next_job(session)
+            process_next_jobs(session)
         time.sleep(POLL_INTERVAL)
 
 

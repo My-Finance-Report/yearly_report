@@ -97,3 +97,21 @@ def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, No
         yield db
     finally:
         db.close()
+
+
+def get_db_for_user(user_id: int) -> Generator[Session, Any, None]:
+    """Returns a database session and sets the user ID for RLS policies."""
+    db = session_maker()
+
+    db.execute(text(f"SET app.current_user_id = {user_id}"))
+    db.commit()
+
+    if db.execute(
+        text("SELECT current_setting('app.current_user_id')")
+    ).scalar() != str(user_id):
+        raise NotImplementedError("idk why this isnt working")
+
+    try:
+        yield db
+    finally:
+        db.close()

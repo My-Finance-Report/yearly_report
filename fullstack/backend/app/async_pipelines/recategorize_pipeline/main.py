@@ -166,13 +166,14 @@ def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     in_process.session.commit()
 
 
-def recategorize_pipeline(in_process: InProcessFile) -> None:
-    pipe(
-        in_process,
-        apply_upload_config_no_create,
-        apply_previous_recategorizations,
-        apply_existing_transactions,
-        categorize_extracted_transactions,
-        update_filejob_with_nickname,
-        final=insert_recategorized_transactions,
-    )
+def recategorize_pipeline(in_process_files: list[InProcessFile]) -> None:
+    for in_process in in_process_files:
+        pipe(
+            in_process,
+            apply_upload_config_no_create,
+            apply_previous_recategorizations,
+            apply_existing_transactions,
+            categorize_extracted_transactions,
+            update_filejob_with_nickname,
+            final=insert_recategorized_transactions,
+        )
