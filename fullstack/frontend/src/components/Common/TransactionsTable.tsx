@@ -24,6 +24,7 @@ import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client";
 import EditTransaction from "./EditTransaction";
+import { GroupByOption } from "./GroupingConfig";
 
 export function TransactionsTable({
   data,
@@ -135,12 +136,13 @@ function RenderGroups({
           expandedGroups[`${group.group_id}-${groupKey}`] || false;
 
         const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits;
+        const budgetedTotal = group.budgeted_total;
         const specificAmount = showWithdrawals
           ? group.total_withdrawals
           : group.total_deposits;
 
         const { getColorForName } = useColorPalette();
-        const isBudget = group.groupby_kind === "budget";
+        const isBudget = group.groupby_kind === GroupByOption.budget;
 
         return (
           <React.Fragment key={groupKey}>
@@ -170,7 +172,7 @@ function RenderGroups({
                 <TableCell>
                   <PercentageBar
                     amount={specificAmount}
-                    total={totalAmount}
+                    total={isBudget? budgetedTotal : totalAmount}
                     isBudget={isBudget}
                     isMobile={isMobile}
                   />
@@ -328,9 +330,12 @@ function PercentageBar({
   }
 
   const value = (Math.abs(amount) / Math.abs(total)) * 100;
+  if (isBudget && total === 0) {
+    return <Text>n/a</Text>
+  }
 
-  if (value > 100 && isBudget) {
-    return <Text>Overbudget</Text>;
+  if (isBudget) {
+    return <Text color={value > 100 ? "red" : "green"}>{value.toFixed()}% (${total} was budgeted)</Text>;
   }
 
   return (

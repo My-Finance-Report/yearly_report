@@ -7,6 +7,7 @@ export type AggregatedGroup = {
     total_withdrawals: number;
     total_deposits: number;
     total_balance: number;
+    budgeted_total: number;
     subgroups?: Array<AggregatedGroup>;
     transactions?: Array<TransactionOut>;
 };
@@ -379,6 +380,13 @@ export type AccountsDeleteCategoryData = {
 
 export type AccountsDeleteCategoryResponse = (unknown);
 
+export type AccountsMergeAccountsData = {
+    toKeepId: number;
+    toMergeId: number;
+};
+
+export type AccountsMergeAccountsResponse = (unknown);
+
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
 export type BudgetsCreateBudgetData = {
@@ -459,6 +467,10 @@ export type DemoGetDemoAggregatedTransactionsData = {
      * Filter for transactions
      */
     accounts?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
+    budgets?: (Array<(string)> | null);
     /**
      * Filter for transactions
      */

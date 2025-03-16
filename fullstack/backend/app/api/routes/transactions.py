@@ -466,15 +466,17 @@ def enrich_with_budget_info(
     # first we start at the outer most group
     for group in agg.groups:
         if group.groupby_kind == GroupByOption.budget:
-            group.budgeted_total = entry_lookup_worse.get(group.group_name, 0)
-
-    # for each group we need to count the number of "things" in the group below
-
-    # if the thing below is a year, we multiply the budgeted amount by 12
-
-    # if the thing below is a month, we just use the main amount
+            total_amount:float = 0
+            per_month_amount = entry_lookup_worse.get(group.group_name, 0)
+            for subgroup in group.subgroups:
+                if subgroup.groupby_kind == GroupByOption.month:
+                    total_amount += per_month_amount
+                elif subgroup.groupby_kind == GroupByOption.year:
+                    total_amount += per_month_amount * 12
+            group.budgeted_total = total_amount
 
     return agg
+
 
 
 @router.get(
