@@ -112,7 +112,7 @@ export function GenericBarChart({
         >
           <BarChart
             data={data}
-            margin={{ top: 20, right: 20, bottom: 50, left: 20 }}
+            margin={{ top: 20, right: 20, bottom: 50, left: 40 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
