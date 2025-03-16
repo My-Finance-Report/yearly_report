@@ -55,16 +55,15 @@ def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
     return in_process
 
 
-def uploaded_file_pipeline(in_process_files: list[InProcessFile]) -> None:
-    in_process_with_config = []
-    for in_process in in_process_files:
-        in_process_with_config.append(apply_upload_config(in_process))
+async def uploaded_file_pipeline(in_process_files: list[InProcessFile]) -> None:
+    in_process_with_config = [apply_upload_config(in_process) for in_process in in_process_files]
     print(f"batch processing {len(in_process_with_config)}")
-    async_batch_process_files_with_config(in_process_with_config)
+    await async_batch_process_files_with_config(in_process_with_config)
 
 
 async def process_file_async(in_process: InProcessFile) -> None:
-    return await pipe(
+    def blah():
+        return pipe(
         in_process,
         persist_config_to_job_record,
         apply_previous_recategorizations,
@@ -72,29 +71,17 @@ async def process_file_async(in_process: InProcessFile) -> None:
         request_llm_parse_of_transactions,
         categorize_extracted_transactions,
         update_filejob_with_nickname,
-        final=insert_categorized_transactions,
-    )
+        final=insert_categorized_transactions
+        )
 
-
-async def process_file_with_config_async(process: InProcessFile) -> None:
-    """Process a file with pre-determined configuration."""
-    return await pipe(
-        process,
-        persist_config_to_job_record,
-        apply_previous_recategorizations,
-        archive_transactions_if_necessary,
-        request_llm_parse_of_transactions,
-        categorize_extracted_transactions,
-        update_filejob_with_nickname,
-        final=insert_categorized_transactions,
-    )
+    return await asyncio.to_thread(blah)
 
 
 async def process_files_with_config_async(files: list[InProcessFile]) -> None:
     """Process multiple files with pre-determined configuration in parallel."""
-    await asyncio.gather(*[process_file_with_config_async(file) for file in files])
+    await asyncio.gather(*[process_file_async(file) for file in files])
 
 
-def async_batch_process_files_with_config(files: list[InProcessFile]) -> None:
+async def async_batch_process_files_with_config(files: list[InProcessFile]) -> None:
     """Process multiple files with pre-determined configuration."""
-    asyncio.run(process_files_with_config_async(files))
+    await process_files_with_config_async(files)
