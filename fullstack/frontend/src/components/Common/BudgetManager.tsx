@@ -43,7 +43,6 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
         entryId: entryId,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] })
       queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
     },
   })
@@ -73,7 +72,7 @@ export const ManageBudget = ({ budget, budgetStatus }: { budget: BudgetOut, budg
                   <TableCell>{formatCurrency(Number(entry.amount))}</TableCell>
                   {!isMobile &&
                   <TableCell>
-                    {budgetEntryLookup[entry.id].category_links?.map((category) => (
+                    {budgetEntryLookup[entry.id]?.category_links?.map((category) => (
                       <CategoryLink key={category.id} category={category} />
                     ))}
                   </TableCell>
@@ -105,7 +104,7 @@ function CreateNew({ budgetId }: { budgetId: number }) {
     mutationFn: () =>
       BudgetsService.createBudgetEntry({
         budgetId,
-        requestBody: { name: "New Category", amount: 0 },
+        requestBody: { name: "", amount: 100 },
       }),
     onSuccess: (data: BudgetEntryOut) => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
