@@ -68,7 +68,7 @@ def fetch_users_other_jobs(session: Session, user_id: int) -> list[ProcessFileJo
             ProcessFileJob.archived.is_(False),
             ProcessFileJob.user_id == user_id,
         )
-        .limit(3)
+        .limit(6)
         .all()
     )
     for job in jobs:

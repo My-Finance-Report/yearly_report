@@ -28,8 +28,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
--> budgets page bugs out
-  -> wasnt able to reproduce? 
+
+-> easy mode on filters
 
 -> budget page should probably not use edit modal for create
 
@@ -40,10 +40,9 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> check boxes are buggy in add filter group
 
 -> merge account function
+--> built backend but needs frontend
 
 -> sort orders in table
-
--> make the uploading itself faster
 
 -> repro filter bug by getting a query that has no results
 
