@@ -56,22 +56,24 @@ def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
 
 
 async def uploaded_file_pipeline(in_process_files: list[InProcessFile]) -> None:
-    in_process_with_config = [apply_upload_config(in_process) for in_process in in_process_files]
+    in_process_with_config = [
+        apply_upload_config(in_process) for in_process in in_process_files
+    ]
     print(f"batch processing {len(in_process_with_config)}")
     await async_batch_process_files_with_config(in_process_with_config)
 
 
 async def process_file_async(in_process: InProcessFile) -> None:
-    def blah():
+    def blah() -> None:
         return pipe(
-        in_process,
-        persist_config_to_job_record,
-        apply_previous_recategorizations,
-        archive_transactions_if_necessary,
-        request_llm_parse_of_transactions,
-        categorize_extracted_transactions,
-        update_filejob_with_nickname,
-        final=insert_categorized_transactions
+            in_process,
+            persist_config_to_job_record,
+            apply_previous_recategorizations,
+            archive_transactions_if_necessary,
+            request_llm_parse_of_transactions,
+            categorize_extracted_transactions,
+            update_filejob_with_nickname,
+            final=insert_categorized_transactions,
         )
 
     return await asyncio.to_thread(blah)

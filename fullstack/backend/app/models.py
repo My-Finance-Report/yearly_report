@@ -1,19 +1,23 @@
 import enum
+import json
+from dataclasses import is_dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import NewType
+from typing import Generic, NewType, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy import (
     JSON,
     Boolean,
     DateTime,
+    Dialect,
     Enum,
     ForeignKey,
     Integer,
     Numeric,
     String,
     Text,
+    TypeDecorator,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -324,6 +328,38 @@ class AuditChange(BaseModel):
     new_kind: TransactionKind | None = Field(default=None)
 
 
+T = TypeVar("T")  # This represents any dataclass type
+
+
+class JSONType(TypeDecorator[T], Generic[T]):
+    """
+    A generic SQLAlchemy column type that stores any dataclass as JSON.
+    """
+
+    impl = JSON
+
+    def __init__(self, dataclass_type: type[T]) -> None:
+        """Initialize with the dataclass type that should be used for deserialization."""
+        super().__init__()
+        self.dataclass_type = dataclass_type
+
+    def process_bind_param(self, value: T | None, _dialect: Dialect) -> str | None:
+        """Convert a dataclass into JSON when writing to the database."""
+        if value is not None:
+            if is_dataclass(value):
+                return json.dumps(value.__dict__)
+            raise ValueError(
+                f"Expected instance of {self.dataclass_type}, got {type(value)}"
+            )
+        return None  # Store None as-is
+
+    def process_result_value(self, value: str | None, _dialect: Dialect) -> T | None:
+        """Convert JSON from the database back into the correct dataclass."""
+        if value is not None:
+            return self.dataclass_type(**json.loads(value))
+        return None
+
+
 class AuditLog(Base):
     __tablename__ = "audit_log"
 
@@ -332,7 +368,7 @@ class AuditLog(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     action: Mapped[AuditLogAction] = mapped_column(Enum(AuditLogAction), nullable=False)
-    change: Mapped[AuditChange] = mapped_column(JSON, nullable=False)
+    change: Mapped[AuditChange] = mapped_column(JSONType(AuditChange), nullable=False)
     apply_to_future: Mapped[bool] = mapped_column(Boolean, nullable=False)
     transaction_id: Mapped[TransactionId] = mapped_column(
         ForeignKey("transaction.id"), nullable=False

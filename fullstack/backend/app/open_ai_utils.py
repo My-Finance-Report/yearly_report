@@ -27,8 +27,7 @@ def make_chat_request(model: type[T], messages: list[ChatMessage]) -> T | None:
 
     client = openai.OpenAI(api_key=api_key)
 
-
-    #try:
+    # try:
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
         messages=[msg.model_dump() for msg in messages],  # type: ignore[misc]
@@ -43,6 +42,6 @@ def make_chat_request(model: type[T], messages: list[ChatMessage]) -> T | None:
     val = response.choices[0].message.parsed
     return val
 
-    #except openai.OpenAIError as e:
+    # except openai.OpenAIError as e:
     #    print(f"OpenAI API error: {e}")
     #    return None

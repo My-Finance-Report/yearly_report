@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import replace
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
@@ -23,7 +24,7 @@ from app.models import (
 )
 
 
-async def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
+def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
     assert in_process.config, "must have"
     query = in_process.session.query(Transaction).filter(
         Transaction.transaction_source_id == in_process.config.transaction_source_id,
@@ -69,13 +70,23 @@ def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile
     category_lookup = {cat.id: cat.name for cat in in_process.categories}
 
     recats: list[Recategorization] = []
+    auditlog: AuditLog
+    transaction: Transaction
     for auditlog, transaction in query:
-        if auditlog.new_category and auditlog.old_category:
+        if auditlog.change.new_kind and auditlog.change.old_kind:
             recats.append(
                 Recategorization(
                     description=transaction.description,
-                    previous_category=category_lookup[auditlog.old_category],
-                    overrided_category=category_lookup[auditlog.new_category],
+                    previous_category=auditlog.change.old_kind,
+                    overrided_category=auditlog.change.new_kind,
+                )
+            )
+        if auditlog.change.new_category and auditlog.change.old_category:
+            recats.append(
+                Recategorization(
+                    description=transaction.description,
+                    previous_category=category_lookup[auditlog.change.old_category],
+                    overrided_category=category_lookup[auditlog.change.new_category],
                 )
             )
 
@@ -166,9 +177,17 @@ def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     in_process.session.commit()
 
 
-def recategorize_pipeline(in_process_files: list[InProcessFile]) -> None:
-    for in_process in in_process_files:
-        pipe(
+async def recategorize_file_pipeline(in_process_files: list[InProcessFile]) -> None:
+    in_process_with_config = [
+        apply_upload_config_no_create(in_process) for in_process in in_process_files
+    ]
+    print(f"batch processing {len(in_process_with_config)}")
+    await async_batch_reprocess_files_with_config(in_process_with_config)
+
+
+async def reprocess_file_async(in_process: InProcessFile) -> None:
+    def blah() -> None:
+        return pipe(
             in_process,
             apply_upload_config_no_create,
             apply_previous_recategorizations,
@@ -177,3 +196,15 @@ def recategorize_pipeline(in_process_files: list[InProcessFile]) -> None:
             update_filejob_with_nickname,
             final=insert_recategorized_transactions,
         )
+
+    return await asyncio.to_thread(blah)
+
+
+async def reprocess_files_with_config_async(files: list[InProcessFile]) -> None:
+    """Process multiple files with pre-determined configuration in parallel."""
+    await asyncio.gather(*[reprocess_file_async(file) for file in files])
+
+
+async def async_batch_reprocess_files_with_config(files: list[InProcessFile]) -> None:
+    """Process multiple files with pre-determined configuration."""
+    await reprocess_files_with_config_async(files)

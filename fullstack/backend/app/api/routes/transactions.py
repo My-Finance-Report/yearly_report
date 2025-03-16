@@ -624,6 +624,7 @@ def make_audit_entry(old: Transaction, new: TransactionEdit) -> list[AuditLog]:
             action=action,
             change=change.model_dump_json(),
             transaction_id=old.id,
+            apply_to_future=True,
         )
         logs.append(val)
 
