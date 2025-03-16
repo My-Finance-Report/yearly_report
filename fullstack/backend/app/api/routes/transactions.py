@@ -451,6 +451,32 @@ def get_budget_lookup(session: Session, user: User) -> BudgetLookup:
     return lookup
 
 
+def enrich_with_budget_info(
+    session: Session, user: User, agg: AggregatedTransactions
+) -> AggregatedTransactions:
+    budget_entries = (
+        session.query(BudgetEntry).filter(BudgetEntry.user_id == user.id).all()
+    )
+
+    _entry_lookup = {entry.id: entry for entry in budget_entries}
+    entry_lookup_worse: dict[str, float] = {
+        entry.name: float(entry.amount) for entry in budget_entries
+    }
+
+    # first we start at the outer most group
+    for group in agg.groups:
+        if group.groupby_kind == GroupByOption.budget:
+            group.budgeted_total = entry_lookup_worse.get(group.group_name, 0)
+
+    # for each group we need to count the number of "things" in the group below
+
+    # if the thing below is a year, we multiply the budgeted amount by 12
+
+    # if the thing below is a month, we just use the main amount
+
+    return agg
+
+
 @router.get(
     "/aggregated",
     dependencies=[Depends(get_current_user)],
@@ -555,13 +581,14 @@ def get_aggregated_transactions(
     grouping_option_choices = build_grouping_option_choices(session, user)
 
     overall_balance = overall_deposits - overall_withdrawals
-    return AggregatedTransactions(
+    val = AggregatedTransactions(
         groups=groups,
         overall_withdrawals=overall_withdrawals,
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,
         grouping_options_choices=grouping_option_choices,
     )
+    return enrich_with_budget_info(session, user, val)
 
 
 def make_audit_entry(old: Transaction, new: TransactionEdit) -> list[AuditLog]:

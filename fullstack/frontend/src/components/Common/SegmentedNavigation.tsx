@@ -66,7 +66,7 @@ export function SegmentedNavigation() {
           bgColor="#5F62F6"
           color="white"
           px={4}
-          py={2}
+          py={4}
           direction="column"
           gap={2}
           fontWeight="semibold"
@@ -103,7 +103,7 @@ export function SegmentedNavigation() {
         minH={20}
         width="100%"
       >
-        <Text fontSize="24px" fontWeight="bold" color="colors.ui.main">
+        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="24px" fontWeight="bold" color="colors.ui.main">
           My Financé
         </Text>
 
@@ -228,7 +228,7 @@ function MobileMenu({
               color={"white"}
               bgColor={"#5F62F6"}
               borderRadius={200}
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: "/signup" })}
             >
               Sign Up
               </Button>

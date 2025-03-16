@@ -9,12 +9,12 @@ export default function WithdrawDepositSelectorSegmented({
   showDeposits: boolean
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
 }) {
-  const availableOptions = ["deposits", "expense"]
+  const availableOptions = ["deposits", "expenses"]
 
   return (
     <SegmentedControl
-      defaultValue={showDeposits ? "deposits" : "expense"}
-      value={showDeposits ? "deposits" : "expense"}
+      defaultValue={showDeposits ? "deposits" : "expenses"}
+      value={showDeposits ? "deposits" : "expenses"}
       items={availableOptions.map((option) => ({
         value: option,
         label: option.charAt(0).toUpperCase() + option.slice(1),
