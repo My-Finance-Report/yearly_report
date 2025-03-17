@@ -252,7 +252,7 @@ function InnerFilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
-          <NonPowerUserButtons setGroupingOptions={setGroupingOptions} filterInfo={filterInfo}/>
+          <NonPowerUserButtons setGroupingOptions={setGroupingOptions} filterInfo={filterInfo} groupingOptionsChoices={groupingOptionsChoices}/>
           <Flex
             direction={isMobile ? "column" : "row"}
             gap={4}
@@ -485,13 +485,19 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
   );
 }
 
-function NonPowerUserButtons({filterInfo, setGroupingOptions}: {filterInfo: FilterInfo, setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>}) {
+function NonPowerUserButtons({filterInfo, setGroupingOptions, groupingOptionsChoices}: {filterInfo: FilterInfo, setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>, groupingOptionsChoices: Record<GroupByOption, string[]> | undefined}) {
+
+
+  const excludingUnbudgeted = groupingOptionsChoices?.[GroupByOption.budget].filter(budget => budget !== "Unbudgeted") ?? []
+
 
   const [years,setYears] =  getFilterSettings(filterInfo, GroupByOption.year)
+  const [budgets,setBudgets] =  getFilterSettings(filterInfo, GroupByOption.budget)
 
   const setMonthlyBudget = () => {
     setGroupingOptions([GroupByOption.budget, GroupByOption.month, GroupByOption.year]);
    setYears([new Date().getFullYear().toString()])
+   setBudgets(excludingUnbudgeted)
   }
 
   const setYTD = () => {
