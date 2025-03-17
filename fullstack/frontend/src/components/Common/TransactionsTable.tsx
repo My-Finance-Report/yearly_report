@@ -282,6 +282,9 @@ function TransactionRow({
 }) {
   const editTransactionModal = useDisclosure();
 
+
+
+
   return (
     <TableRow>
       <TableCell>{transaction.description}</TableCell>
