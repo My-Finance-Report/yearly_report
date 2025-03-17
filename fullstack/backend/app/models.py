@@ -1,6 +1,6 @@
 import enum
 import json
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Generic, NewType, TypeVar
@@ -40,19 +40,16 @@ class JSONType(TypeDecorator[T], Generic[T]):
     def process_bind_param(self, value: T | None, _dialect: Dialect) -> str | None:
         """Convert a dataclass into JSON when writing to the database."""
         if value is not None:
-            if is_dataclass(value):
-                return json.dumps(value.__dict__)
-            raise ValueError(
-                f"Expected instance of {self.dataclass_type}, got {type(value)}"
-            )
-        return None  
+            return json.dumps(value.__dict__)
+        return None
 
-    def process_result_value(self, value: dict | None, _dialect: Dialect) -> T | None:
+    def process_result_value(
+        self, value: dict[str, str] | None, _dialect: Dialect
+    ) -> T | None:
         """Convert JSON from the database back into the correct dataclass."""
         if value is not None:
             return self.dataclass_type(**value)
         return None
-
 
 
 class Base(DeclarativeBase):
@@ -107,24 +104,18 @@ class User(Base):
 
     id: Mapped[UserId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(
-        String, nullable=False
-    )  
-    full_name: Mapped[str | None] = mapped_column(
-        String, nullable=True
-    )  
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True
-    )  
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     send_email: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_superuser: Mapped[bool] = mapped_column(
-        Boolean, default=False
-    )  
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
     onboarding_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    settings: Mapped[UserSettings] = mapped_column(JSONType(UserSettings), nullable=False)
+    settings: Mapped[UserSettings] = mapped_column(
+        JSONType(UserSettings), nullable=False
+    )
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
 
 
@@ -364,7 +355,6 @@ class AuditChange(BaseModel):
     new_category: CategoryId | None = Field(default=None)
     old_kind: TransactionKind | None = Field(default=None)
     new_kind: TransactionKind | None = Field(default=None)
-
 
 
 class AuditLog(Base):

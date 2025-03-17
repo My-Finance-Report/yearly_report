@@ -300,6 +300,7 @@ export type UserOut = {
     id: number;
     created_at?: (string | null);
     updated_at?: (string | null);
+    settings: UserSettings;
 };
 
 export type UserRegister = {
@@ -308,6 +309,11 @@ export type UserRegister = {
     full_name: string;
     is_superuser?: boolean;
     is_active?: boolean;
+};
+
+export type UserSettings = {
+    has_budget?: boolean;
+    power_user_filters?: boolean;
 };
 
 export type UsersPublic = {

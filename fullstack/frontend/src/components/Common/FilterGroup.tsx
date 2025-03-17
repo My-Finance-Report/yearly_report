@@ -76,6 +76,7 @@ function getFilterSettings(
   }
 }
 
+
 export function FilterGroup({
   filterInfo,
   groupingOptionsChoices,
@@ -251,6 +252,7 @@ function InnerFilterGroup({
           isCollapsable={false}
           COMPONENT_NAME="Filters"
         >
+          <NonPowerUserButtons setGroupingOptions={setGroupingOptions} filterInfo={filterInfo}/>
           <Flex
             direction={isMobile ? "column" : "row"}
             gap={4}
@@ -480,5 +482,33 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
+  );
+}
+
+function NonPowerUserButtons({filterInfo, setGroupingOptions}: {filterInfo: FilterInfo, setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>}) {
+
+  const [years,setYears] =  getFilterSettings(filterInfo, GroupByOption.year)
+
+  const setMonthlyBudget = () => {
+    setGroupingOptions([GroupByOption.budget, GroupByOption.month, GroupByOption.year]);
+   setYears([new Date().getFullYear().toString()])
+  }
+
+  const setYTD = () => {
+    setGroupingOptions([GroupByOption.year, GroupByOption.month,GroupByOption.category]);
+   setYears([new Date().getFullYear().toString()])
+  }
+
+  const setLastYear = () => {
+    setGroupingOptions([GroupByOption.year, GroupByOption.month,GroupByOption.category]);
+    setYears([(new Date().getFullYear()-1).toString()])
+  }
+
+  return (
+    <Flex gap={2} direction={'column'}>   
+      <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>Monthly Budget</Button>
+      <Button size="xs" variant="subtle" onClick={setYTD}>Year To Date</Button>
+      <Button size="xs" variant="subtle" onClick={setLastYear}>Last Year</Button>
+    </Flex>
   );
 }

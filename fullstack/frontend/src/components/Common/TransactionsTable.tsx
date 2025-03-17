@@ -142,6 +142,8 @@ function RenderGroups({
 
         const {getColorForName} = useColorPalette();
 
+        const isUnbudgeted = group.group_name === "Unbudgeted";
+
 
         return (
           <React.Fragment key={groupKey}>
@@ -173,6 +175,7 @@ function RenderGroups({
                     amount={specificAmount}
                     total={totalAmount}
                     budgetedTotal={budgetedTotal}
+                    isUnbudgeted={isUnbudgeted}
                     isMobile={isMobile}
                   />
                 </TableCell>
@@ -320,11 +323,13 @@ function PercentageBar({
   amount,
   total,
   budgetedTotal,
+  isUnbudgeted,
   isMobile,
 }: {
   amount: number;
   total: number | undefined;
   budgetedTotal?: number | undefined;
+  isUnbudgeted: boolean;
   isMobile: boolean;
 }) {
   if (isMobile) {
@@ -340,7 +345,7 @@ function PercentageBar({
 
   const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100;
 
-  if (!budgetedTotal && total && total > 0) {
+  if (isUnbudgeted) {
     return <Text>n/a</Text>
   }
 

@@ -480,7 +480,6 @@ def enrich_with_budget_info(
     return agg
 
 
-
 @router.get(
     "/aggregated",
     dependencies=[Depends(get_current_user)],
@@ -520,7 +519,6 @@ def get_aggregated_transactions(
 
     if not group_by:
         group_by = [GroupByOption.category, GroupByOption.month, GroupByOption.account]
-
 
     FILTER_FUNCTIONS: dict[
         GroupByOption,
@@ -632,7 +630,7 @@ def make_audit_entry(old: Transaction, new: TransactionEdit) -> list[AuditLog]:
         val = AuditLog(
             user_id=old.user_id,
             action=action,
-            change=change.model_dump_json(),
+            change=change,
             transaction_id=old.id,
             apply_to_future=True,
         )

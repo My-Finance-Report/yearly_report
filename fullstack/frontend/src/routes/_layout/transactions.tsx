@@ -11,7 +11,7 @@ import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { AggregatedGroup, DemoService, TransactionsService } from "../../client";
-import useAuth, { isLoggedIn } from "../../hooks/useAuth";
+import  { isLoggedIn } from "../../hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
 import type {
@@ -71,8 +71,6 @@ function InnerTransactions({getFunction}: {
     setBudgets,
   };
 
-  const user = useAuth();
-  console.log(user)
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
