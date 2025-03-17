@@ -466,12 +466,14 @@ def enrich_with_budget_info(
     # first we start at the outer most group
     for group in agg.groups:
         if group.groupby_kind == GroupByOption.budget:
-            total_amount:float = 0
+            total_amount: float = 0
             per_month_amount = entry_lookup_worse.get(group.group_name, 0)
             for subgroup in group.subgroups:
                 if subgroup.groupby_kind == GroupByOption.month:
+                    subgroup.budgeted_total = per_month_amount
                     total_amount += per_month_amount
                 elif subgroup.groupby_kind == GroupByOption.year:
+                    subgroup.budgeted_total = per_month_amount * 12
                     total_amount += per_month_amount * 12
             group.budgeted_total = total_amount
 
@@ -485,8 +487,8 @@ def enrich_with_budget_info(
     response_model=AggregatedTransactions,
 )
 def get_aggregated_transactions(
-    group_by: list[GroupByOption] = Query(
-        [GroupByOption.category],
+    group_by: list[GroupByOption] | None = Query(
+        None,
         description="List of grouping options in order (e.g. category, month)",
     ),
     years: list[str] | None = Query(
@@ -516,7 +518,11 @@ def get_aggregated_transactions(
         Transaction.user_id == user.id
     )
 
-    filter_functions: dict[
+    if not group_by:
+        group_by = [GroupByOption.category, GroupByOption.month, GroupByOption.account]
+
+
+    FILTER_FUNCTIONS: dict[
         GroupByOption,
         Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]],
     ] = {
@@ -527,7 +533,7 @@ def get_aggregated_transactions(
         GroupByOption.budget: apply_budget_filter,
     }
 
-    filter_function_arguments: dict[GroupByOption, list[str] | None] = {
+    FILTER_FUNCTION_ARGUMENTS: dict[GroupByOption, list[str] | None] = {
         GroupByOption.year: years,
         GroupByOption.month: months,
         GroupByOption.category: categories,
@@ -536,8 +542,8 @@ def get_aggregated_transactions(
     }
 
     for option in group_by:
-        filter_func = filter_functions[option]
-        argument = filter_function_arguments[option]
+        filter_func = FILTER_FUNCTIONS[option]
+        argument = FILTER_FUNCTION_ARGUMENTS[option]
         if argument and len(argument) > 0:
             transactions_query = filter_func(transactions_query, argument)
 
@@ -547,6 +553,7 @@ def get_aggregated_transactions(
         return AggregatedTransactions(
             groups=[],
             overall_withdrawals=0.0,
+            group_by_ordering=group_by,
             overall_deposits=0.0,
             overall_balance=0.0,
             grouping_options_choices={},
@@ -585,6 +592,7 @@ def get_aggregated_transactions(
     overall_balance = overall_deposits - overall_withdrawals
     val = AggregatedTransactions(
         groups=groups,
+        group_by_ordering=group_by,
         overall_withdrawals=overall_withdrawals,
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,

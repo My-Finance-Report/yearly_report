@@ -24,7 +24,6 @@ import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client";
 import EditTransaction from "./EditTransaction";
-import { GroupByOption } from "./GroupingConfig";
 
 export function TransactionsTable({
   data,
@@ -63,7 +62,7 @@ export function TransactionsTable({
             {data.groups[0].groupby_kind?.toLocaleUpperCase()}
           </TableColumnHeader>
           <TableColumnHeader>
-            {isMobile ? null : isBudget ? "% OF BUDGETED AMOUNT" : "% OF TOTAL"}
+            {isMobile ? null : isBudget ? "BUDGET" : ""}
           </TableColumnHeader>
           <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
           <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
@@ -141,8 +140,8 @@ function RenderGroups({
           ? group.total_withdrawals
           : group.total_deposits;
 
-        const { getColorForName } = useColorPalette();
-        const isBudget = group.groupby_kind === GroupByOption.budget;
+        const {getColorForName} = useColorPalette();
+
 
         return (
           <React.Fragment key={groupKey}>
@@ -168,12 +167,12 @@ function RenderGroups({
                   {group.group_name}
                 </HStack>
               </TableCell>
-              {totalAmount ? (
+              {totalAmount || budgetedTotal ? (
                 <TableCell>
                   <PercentageBar
                     amount={specificAmount}
-                    total={isBudget? budgetedTotal : totalAmount}
-                    isBudget={isBudget}
+                    total={totalAmount}
+                    budgetedTotal={budgetedTotal}
                     isMobile={isMobile}
                   />
                 </TableCell>
@@ -206,7 +205,10 @@ function RenderGroups({
                               <TableColumnHeader>
                                 {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
                               </TableColumnHeader>
-                              <TableColumnHeader textAlign="end"></TableColumnHeader>
+                              { group.budgeted_total ? (
+                              <TableColumnHeader>BUDGET</TableColumnHeader>
+                              ):
+                              <TableColumnHeader></TableColumnHeader>}
                               <TableColumnHeader textAlign="end">
                                 EXPENSE
                               </TableColumnHeader>
@@ -317,25 +319,33 @@ function formatAmount(amount: number) {
 function PercentageBar({
   amount,
   total,
-  isBudget,
+  budgetedTotal,
   isMobile,
 }: {
   amount: number;
-  total: number;
-  isBudget: boolean;
+  total: number | undefined;
+  budgetedTotal?: number | undefined;
   isMobile: boolean;
 }) {
   if (isMobile) {
     return null;
   }
 
-  const value = (Math.abs(amount) / Math.abs(total)) * 100;
-  if (isBudget && total === 0) {
+  const totalToUse = budgetedTotal ? budgetedTotal : total;
+
+  if (!totalToUse) {
+    return null;
+  }
+
+
+  const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100;
+
+  if (!budgetedTotal && total && total > 0) {
     return <Text>n/a</Text>
   }
 
-  if (isBudget) {
-    return <Text color={value > 100 ? "red" : "green"}>{value.toFixed()}% (${total} was budgeted)</Text>;
+  if (budgetedTotal) {
+    return <Text color={value > 100 ? "red" : "green"}>{value.toFixed()}% (${totalToUse} was budgeted)</Text>
   }
 
   return (

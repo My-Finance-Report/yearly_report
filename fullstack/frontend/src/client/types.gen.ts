@@ -15,6 +15,7 @@ export type AggregatedGroup = {
 export type AggregatedTransactions = {
     groups: Array<AggregatedGroup>;
     overall_withdrawals: number;
+    group_by_ordering: Array<GroupByOption>;
     overall_deposits: number;
     overall_balance: number;
     grouping_options_choices: {
@@ -553,7 +554,7 @@ export type TransactionsGetAggregatedTransactionsData = {
     /**
      * List of grouping options in order (e.g. category, month)
      */
-    groupBy?: Array<GroupByOption>;
+    groupBy?: (Array<GroupByOption> | null);
     /**
      * Filter for transactions
      */

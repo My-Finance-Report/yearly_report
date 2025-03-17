@@ -13,6 +13,7 @@ from app.models import (
     SourceKind,
     TransactionKind,
     UserId,
+    UserSettings,
 )
 
 
@@ -54,6 +55,7 @@ class UserOut(UserBase):
     id: int
     created_at: None | datetime = None
     updated_at: None | datetime = None
+    settings: UserSettings
 
 
 class UserRegister(BaseModel):
@@ -337,6 +339,7 @@ class TransactionSourceGroup(BaseModel):
 class AggregatedTransactions(BaseModel):
     groups: list[AggregatedGroup]
     overall_withdrawals: float
+    group_by_ordering: list[GroupByOption]
     overall_deposits: float
     overall_balance: float
     grouping_options_choices: dict[GroupByOption, list[str]]

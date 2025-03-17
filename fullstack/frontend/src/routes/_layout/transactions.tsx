@@ -11,7 +11,7 @@ import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { AggregatedGroup, DemoService, TransactionsService } from "../../client";
-import { isLoggedIn } from "../../hooks/useAuth";
+import useAuth, { isLoggedIn } from "../../hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
 import type {
@@ -46,11 +46,9 @@ function InnerTransactions({getFunction}: {
     budgets: string[];
   }) => Promise<TransactionsGetAggregatedTransactionsResponse>;
 }) {
-  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([
-    GroupByOption.month,
-    GroupByOption.category,
-    GroupByOption.account,
-  ]);
+
+
+  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.month, GroupByOption.category, GroupByOption.budget]);
 
   const isMobile = useIsMobile();
 
@@ -73,6 +71,9 @@ function InnerTransactions({getFunction}: {
     setBudgets,
   };
 
+  const user = useAuth();
+  console.log(user)
+
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
 
@@ -92,6 +93,7 @@ function InnerTransactions({getFunction}: {
       }),
     enabled: isLoggedIn(),
   });
+
 
   useEffect(() => {
     refetch();
@@ -115,6 +117,7 @@ function InnerTransactions({getFunction}: {
       setActiveGrouping(data.groups);
     }
   }, [data?.groups]);
+
 
   const namesForLegends = data?.groups.flatMap((group) =>
     group?.subgroups?.map((subgroup) => subgroup.group_name)

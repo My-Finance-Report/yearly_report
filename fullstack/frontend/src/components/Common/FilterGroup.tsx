@@ -232,6 +232,7 @@ function InnerFilterGroup({
 
   const isMobile = useIsMobile();
 
+
   return (
     <div
       style={{
