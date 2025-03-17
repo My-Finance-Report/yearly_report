@@ -1,22 +1,55 @@
 import enum
+import json
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import NewType
+from typing import Generic, NewType, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy import (
     JSON,
     Boolean,
     DateTime,
+    Dialect,
     Enum,
     ForeignKey,
     Integer,
     Numeric,
     String,
     Text,
+    TypeDecorator,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+T = TypeVar("T")  # This represents any dataclass type
+
+
+class JSONType(TypeDecorator[T], Generic[T]):
+    """
+    A generic SQLAlchemy column type that stores any dataclass as JSON.
+    """
+
+    impl = JSON
+
+    def __init__(self, dataclass_type: type[T]) -> None:
+        """Initialize with the dataclass type that should be used for deserialization."""
+        super().__init__()
+        self.dataclass_type = dataclass_type
+
+    def process_bind_param(self, value: T | None, _dialect: Dialect) -> str | None:
+        """Convert a dataclass into JSON when writing to the database."""
+        if value is not None:
+            return json.dumps(value.__dict__)
+        return None
+
+    def process_result_value(
+        self, value: dict[str, str] | None, _dialect: Dialect
+    ) -> T | None:
+        """Convert JSON from the database back into the correct dataclass."""
+        if value is not None:
+            return self.dataclass_type(**value)
+        return None
 
 
 class Base(DeclarativeBase):
@@ -60,28 +93,29 @@ BudgetEntryId = NewType("BudgetEntryId", int)
 AuditLogId = NewType("AuditLogId", int)
 
 
+@dataclass(kw_only=True)
+class UserSettings:
+    has_budget: bool = False
+    power_user_filters: bool = True
+
+
 class User(Base):
     __tablename__ = "user"
 
     id: Mapped[UserId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(
-        String, nullable=False
-    )  # Renamed for clarity
-    full_name: Mapped[str | None] = mapped_column(
-        String, nullable=True
-    )  # From the other model
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True
-    )  # Default user is active
-    is_superuser: Mapped[bool] = mapped_column(
-        Boolean, default=False
-    )  # Flag for admin users
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    send_email: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
     onboarding_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
+    settings: Mapped[UserSettings] = mapped_column(
+        JSONType(UserSettings), nullable=False
+    )
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
 
 
@@ -331,7 +365,7 @@ class AuditLog(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     action: Mapped[AuditLogAction] = mapped_column(Enum(AuditLogAction), nullable=False)
-    change: Mapped[AuditChange] = mapped_column(JSON, nullable=False)
+    change: Mapped[AuditChange] = mapped_column(JSONType(AuditChange), nullable=False)
     apply_to_future: Mapped[bool] = mapped_column(Boolean, nullable=False)
     transaction_id: Mapped[TransactionId] = mapped_column(
         ForeignKey("transaction.id"), nullable=False

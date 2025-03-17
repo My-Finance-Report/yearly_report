@@ -74,6 +74,7 @@ export default function EditBudgetEntry({
     const showToast = useCustomToast();
 
 
+
     const {
         register,
         handleSubmit,
@@ -84,7 +85,7 @@ export default function EditBudgetEntry({
         mode: "onBlur",
         criteriaMode: "all",
         defaultValues:{
-            category_links: budgetEntry.category_links.map((link)=>link.category_id)
+        category_links: budgetEntry.category_links.map((link)=>link.category_id)
         }
     });
 
@@ -140,7 +141,6 @@ export default function EditBudgetEntry({
         reset();
         onClose();
     };
-
     return (
         <DialogRoot open={isOpen} onOpenChange={onClose} modal>
             <DialogBackdrop />
@@ -162,7 +162,7 @@ export default function EditBudgetEntry({
                             {...register("name", {
                                 required: "Name is required",
                             })}
-                            placeholder="Name"
+                            placeholder="e.g. Groceries"
                             type="text"
                             defaultValue={budgetEntry?.name}
                         />
@@ -172,13 +172,13 @@ export default function EditBudgetEntry({
                     </FieldRoot>
 
                     <FieldRoot mt={4} invalid={!!errors.amount}>
-                        <FieldLabel htmlFor="amount">Amount</FieldLabel>
+                        <FieldLabel htmlFor="amount">Amount / month</FieldLabel>
                         <Input
                             id="amount"
                             {...register("amount", {
                                 required: "Amount is required",
                             })}
-                            placeholder="Amount"
+                            placeholder="e.g. 500"
                             type="number"
                             defaultValue={budgetEntry?.amount}
                         />

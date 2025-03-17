@@ -40,7 +40,11 @@ export function VisualizationPanel({
 
   const isMobile = useIsMobile()
 
-  const layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
+  let layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
+
+  if (collapsedItems.includes("Pie Chart")) {
+    layout = "bar bar bar bar"
+  }
 
   return (
     <Flex direction="column" gap={4} mb={4} align="center" justify="center">
@@ -79,6 +83,30 @@ export function VisualizationPanel({
   )
 }
 
+function squareOffData(data: GenericChartDataItem[]) {
+  // 1. Collect all unique keys (besides 'date')
+  const allKeys: Set<string> = new Set();
+  data.forEach((row: GenericChartDataItem) => {
+    Object.keys(row).forEach((key) => {
+      if (key !== 'date') {
+        allKeys.add(key);
+      }
+    });
+  });
+
+  const allKeysArray: string[] = Array.from(allKeys);
+  return data.map((row) => {
+    const newRow: GenericChartDataItem = { ...row };
+    allKeysArray.forEach((key) => {
+      if (!(key in newRow)) {
+        newRow[key] = 0;
+      }
+    });
+    return newRow;
+  });
+}
+
+  
 function BarChart({
   sourceGroups,
   showDeposits,
@@ -112,8 +140,9 @@ function BarChart({
       return base
     })
 
-  const description = `${sourceGroups[0].group_name} ${showDeposits ? "deposits" : "withdrawals"
-    }, by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
+
+  const description = `${showDeposits ? "Deposits" : "Expenses"
+    } by ${sourceGroups[0].groupby_kind} ${sourceGroups[0].subgroups?.length
       ? `then ${sourceGroups[0].subgroups[0].groupby_kind}`
       : ""
     }`
@@ -130,13 +159,13 @@ function BarChart({
     >
       {chartData ? (
         <GenericBarChart
-          data={chartData}
+          data={squareOffData(chartData)}
           description={description}
           dataKey="date"
           nameKey="date"
         />
       ) : (
-        <Box textAlign="center" p={4}>
+        <Box textAlign="center" p={12}>
           <Text fontSize="lg" color="gray.500">
             This grouping configuration does not support a bar chart. Please
             include a time-based grouping (e.g., month or year).
@@ -156,7 +185,7 @@ function PieBox({
 
 const chartDataMap = sourceGroups.flatMap(group =>
   group.subgroups?.map(subgroup => ({
-    group: group.group_name, // use the outer group's name
+    group: group.group_name, 
     amount: showDeposits
       ? subgroup.total_deposits
       : subgroup.total_withdrawals,
@@ -176,15 +205,8 @@ const chartDataMap = sourceGroups.flatMap(group =>
   {} as Record<string, number>,
 );
 
-  let description: string
-  if (
-    !sourceGroups[0].subgroups ||
-    sourceGroups[0].subgroups.length === 0
-  ) {
-    description = `${sourceGroups[0].group_name}`
-  } else {
-    description = `${sourceGroups[0].group_name} by ${sourceGroups[0].subgroups[0].groupby_kind}`
-  }
+  const description = `${showDeposits ? "Deposits" : "Expenses"
+    } by ${sourceGroups[0].groupby_kind}`
 
 
   if (!chartDataMap) return null

@@ -20,10 +20,16 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
 import { UploadsService } from "../../client"
 import type { UploadedPdfOut } from "../../client"
 import { isLoggedIn } from "../../hooks/useAuth"
+import { useState } from "react"
+
+interface SortConfig {
+  keyExtractor: (obj: UploadedPdfOut) => string;
+  direction: "asc" | "desc";
+  columnName: string
+}
 
 export const Route = createFileRoute("/_layout/upload-files")({
   component: UploadFiles,
@@ -32,7 +38,6 @@ export const Route = createFileRoute("/_layout/upload-files")({
 function UploadFiles() {
   const toast = useCustomToast()
   const queryClient = useQueryClient()
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const uploadMutation = useMutation<UploadedPdfOut[], Error, File[]>({
     mutationFn: (files: File[]) => {
@@ -47,7 +52,6 @@ function UploadFiles() {
       )
       console.log("toasted")
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
-      setSelectedFiles([])
     },
     onError: () => {
       toast("Upload failed", "There was an error uploading the files.", "error")
@@ -72,6 +76,26 @@ function UploadFiles() {
     refetch()
   }
 
+ const [sortConfig, setSortConfig] = useState<SortConfig>({ keyExtractor: (obj: UploadedPdfOut) => obj.nickname || "", direction: "asc", columnName: "nickname" });
+
+  const sortedData = [...(data || [])].sort((a, b) => {
+    const valueA = sortConfig.keyExtractor(a);
+    const valueB = sortConfig.keyExtractor(b);
+
+    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
+    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (getKey: (obj: UploadedPdfOut) => string, columnName: string) => {
+    setSortConfig((prev) => ({
+      keyExtractor: getKey,
+      direction: prev.columnName === columnName ? (prev.direction === "asc" ? "desc" : "asc") : "asc",
+      columnName
+    }));
+  };
+
+
   return (
     <Container maxW="large" py={8}>
       <FileDropzone
@@ -84,17 +108,23 @@ function UploadFiles() {
       ) : error ? (
         <Text color="red.500">Error loading files.</Text>
       ) : data && data.length > 0 ? (
-        <Table.Root variant="outline" mt={24}>
+        <Table.Root variant="outline" mt={24} rounded="md">
           <TableHeader>
             <TableRow>
-              <TableColumnHeader>Filename</TableColumnHeader>
-              <TableColumnHeader>Nickname</TableColumnHeader>
-              <TableColumnHeader>Status</TableColumnHeader>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.filename, "filename")}>
+                Filename {sortConfig.columnName === "filename" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              </TableColumnHeader>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.nickname || "", "nickname")}>
+                Nickname {sortConfig.columnName === "nickname" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              </TableColumnHeader>
+              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.job?.status || "Unknown", "status")}>
+                Status {sortConfig.columnName === "status" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              </TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map(
+            {sortedData.map(
               (pdf) =>
                 pdf.job && (
                   <TableRow key={pdf.id}>

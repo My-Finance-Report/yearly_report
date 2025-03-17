@@ -1,10 +1,8 @@
+import React, { createContext, useContext, useRef, useCallback } from "react"
 import { useTheme } from "next-themes"
-import type React from "react"
-import { createContext, useContext, useState } from "react"
 
 interface ColorContextType {
   getColorForName: (name: string) => string
-  getAssignedColors: () => Record<string, string>
 }
 
 const hashStringToIndex = (str: string, length: number) => {
@@ -18,27 +16,19 @@ const hashStringToIndex = (str: string, length: number) => {
 
 const ColorContext = createContext<ColorContextType | undefined>(undefined)
 
-export const ChartColorProvider = ({
-  children,
-}: { children: React.ReactNode }) => {
+export const ChartColorProvider = ({ children }: { children: React.ReactNode }) => {
   const { theme } = useTheme()
 
   const lightModePalette = [
     "#3182CE",
-    "#38A169",
-    "#E53E3E",
     "#DD6B20",
     "#805AD5",
-    "#D69E2E",
-    "#319795",
     "#B83280",
     "#A0AEC0",
-    "#ED64A6",
     "#4299E1",
     "#38A169",
     "#E53E3E",
     "#C05621",
-    "#9F7AEA",
     "#D69E2E",
     "#319795",
     "#ED64A6",
@@ -55,13 +45,11 @@ export const ChartColorProvider = ({
     "#F6E05E",
     "#81E6D9",
     "#F687B3",
-    "#CBD5E0",
     "#D53F8C",
     "#4299E1",
     "#38A169",
     "#E53E3E",
     "#C05621",
-    "#9F7AEA",
     "#D69E2E",
     "#319795",
     "#ED64A6",
@@ -71,29 +59,18 @@ export const ChartColorProvider = ({
 
   const colorPalette = theme === "dark" ? darkModePalette : lightModePalette
 
-  const [assignedColors, setAssignedColors] = useState<Record<string, string>>(
-    {},
-  )
+  // Use a ref to store assigned colors so updating it doesn't trigger a re-render
+  const assignedColorsRef = useRef<Record<string, string>>({})
 
-  const getColorForName = (name: string) => {
-    if (!assignedColors[name]) {
-      const color = colorPalette[hashStringToIndex(name, colorPalette.length)]
-      setAssignedColors((prev) => ({
-        ...prev,
-        [name]: color,
-      }))
+  const getColorForName = useCallback((name: string) => {
+    if (!assignedColorsRef.current[name]) {
+      assignedColorsRef.current[name] = colorPalette[hashStringToIndex(name, colorPalette.length)]
     }
-
-    return (
-      assignedColors[name] ||
-      colorPalette[hashStringToIndex(name, colorPalette.length)]
-    )
-  }
-
-  const getAssignedColors = () => assignedColors
+    return assignedColorsRef.current[name]
+  }, [colorPalette])
 
   return (
-    <ColorContext.Provider value={{ getColorForName, getAssignedColors }}>
+    <ColorContext.Provider value={{ getColorForName }}>
       {children}
     </ColorContext.Provider>
   )

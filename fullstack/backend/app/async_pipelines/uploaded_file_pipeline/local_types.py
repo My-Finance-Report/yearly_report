@@ -39,7 +39,7 @@ class PartialTransaction(BaseModel):
 
 
 class PartialUploadConfig(BaseModel):
-    fileIdKeyword: str = Field(
+    filenameRegex: str = Field(
         ..., description="Stable keyword identifying this file type."
     )
     startKeyword: str = Field(

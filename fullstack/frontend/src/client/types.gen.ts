@@ -7,6 +7,7 @@ export type AggregatedGroup = {
     total_withdrawals: number;
     total_deposits: number;
     total_balance: number;
+    budgeted_total: number;
     subgroups?: Array<AggregatedGroup>;
     transactions?: Array<TransactionOut>;
 };
@@ -14,6 +15,7 @@ export type AggregatedGroup = {
 export type AggregatedTransactions = {
     groups: Array<AggregatedGroup>;
     overall_withdrawals: number;
+    group_by_ordering: Array<GroupByOption>;
     overall_deposits: number;
     overall_balance: number;
     grouping_options_choices: {
@@ -298,6 +300,7 @@ export type UserOut = {
     id: number;
     created_at?: (string | null);
     updated_at?: (string | null);
+    settings: UserSettings;
 };
 
 export type UserRegister = {
@@ -306,6 +309,11 @@ export type UserRegister = {
     full_name: string;
     is_superuser?: boolean;
     is_active?: boolean;
+};
+
+export type UserSettings = {
+    has_budget?: boolean;
+    power_user_filters?: boolean;
 };
 
 export type UsersPublic = {
@@ -378,6 +386,13 @@ export type AccountsDeleteCategoryData = {
 };
 
 export type AccountsDeleteCategoryResponse = (unknown);
+
+export type AccountsMergeAccountsData = {
+    toKeepId: number;
+    toMergeId: number;
+};
+
+export type AccountsMergeAccountsResponse = (unknown);
 
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
@@ -462,6 +477,10 @@ export type DemoGetDemoAggregatedTransactionsData = {
     /**
      * Filter for transactions
      */
+    budgets?: (Array<(string)> | null);
+    /**
+     * Filter for transactions
+     */
     categories?: (Array<(string)> | null);
     /**
      * List of grouping options in order (e.g. category, month)
@@ -541,7 +560,7 @@ export type TransactionsGetAggregatedTransactionsData = {
     /**
      * List of grouping options in order (e.g. category, month)
      */
-    groupBy?: Array<GroupByOption>;
+    groupBy?: (Array<GroupByOption> | null);
     /**
      * Filter for transactions
      */

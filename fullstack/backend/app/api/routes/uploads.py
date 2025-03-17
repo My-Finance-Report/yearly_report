@@ -1,14 +1,14 @@
+import csv
 import hashlib
+import io
 import os
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import PdfParseException
-from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
-    extract_text_from_pdf,
-)
 from app.db import (
     Session,
     get_current_user,
@@ -28,6 +28,48 @@ from app.worker.enqueue_job import enqueue_or_reset_job
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 
+def extract_text_from_csv(content_bytes: bytes) -> str:
+    text_stream = io.StringIO(content_bytes.decode("utf-8", errors="replace"))
+    reader = csv.reader(text_stream)
+    lines = [", ".join(row) for row in reader]
+    return "\n".join(lines)
+
+
+def extract_text_from_pdf(content_bytes: bytes) -> str:
+    """Extract text from a PDF file using `pdftotext`."""
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(content_bytes)
+        tmp_path = tmp.name
+
+        command = "pdftotext"
+        args = ["-layout", tmp_path, "-"]
+
+    try:
+        result = subprocess.run(
+            [command] + args,
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        raise PdfParseException(f"Failed to extract text from PDF: {e.stderr}") from e
+
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+def get_raw_text(content_bytes: bytes, filename: str) -> str:
+    _, extension = os.path.splitext(filename.lower())
+    if extension == ".pdf":
+        return extract_text_from_pdf(content_bytes)
+    elif extension == ".csv":
+        return extract_text_from_csv(content_bytes)
+    else:
+        raise ValueError("Unsupported file type")
+
+
 def uploaded_pdf_from_raw_content(
     session: Session, user: User, file: UploadFile
 ) -> UploadedPdfOut:
@@ -45,18 +87,7 @@ def uploaded_pdf_from_raw_content(
     if existing_file:
         uploaded_file = existing_file
     else:
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-            tmp.write(content_bytes)
-            tmp_path = tmp.name
-
-        try:
-            extracted_text = extract_text_from_pdf(tmp_path)
-        except PdfParseException as e:
-            os.remove(tmp_path)
-            raise HTTPException(status_code=400, detail=str(e))
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
+        extracted_text = get_raw_text(content_bytes, file.filename or "")
 
         new_file = UploadedPdf(
             filename=file.filename,

@@ -18,7 +18,7 @@ function Layout() {
   const { isLoading } = useAuth()
 
   return (
-    <div style={{ backgroundColor: "background", padding: 20, minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "background", minHeight: "100vh" }}>
       <SegmentedNavigation />
       {isLoading ? (
         <Flex justify="center" align="center" height="100vh" width="full">

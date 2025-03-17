@@ -1,4 +1,7 @@
-import { Box, HStack, Tag, TagLabel } from "@chakra-ui/react"
+import { useCheckboxGroup, Menu, Button, Portal } from "@chakra-ui/react";
+import { FiCheck } from "react-icons/fi";
+import { Text } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 
 export enum GroupByOption {
   category = "category",
@@ -14,12 +17,12 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.month,
   GroupByOption.account,
   GroupByOption.budget,
-]
+];
 
 interface GroupingConfigProps {
-  groupingOptions: GroupByOption[]
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>
-  showBudgets: boolean
+  groupingOptions: GroupByOption[];
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
+  showBudgets: boolean;
 }
 
 export function GroupingConfig({
@@ -33,34 +36,44 @@ export function GroupingConfig({
         ? prev.length > 1
           ? prev.filter((o) => o !== option)
           : prev
-        : [...prev, option]
-    })
-  }
+        : [...prev, option];
+    });
+  };
 
-  const filteredOptions = showBudgets ? availableOptions : availableOptions.filter((option) => option !== GroupByOption.budget)
+  const filteredOptions = showBudgets
+    ? availableOptions
+    : availableOptions.filter((option) => option !== GroupByOption.budget);
 
+  const group = useCheckboxGroup({ value: groupingOptions });
 
   return (
-    <Box borderWidth={1} borderColor="orange.500" borderRadius="md" p={2}>
-      <HStack spaceX={2} wrap="wrap">
-        {filteredOptions.map((option) => (
-          <Tag.Root
-            key={option}
-            cursor="pointer"
-            color={
-              !groupingOptions.includes(option) ? "orange.200" : "orange.500"
-            }
-            opacity={!groupingOptions.includes(option) ? 0.5 : 1}
-            p={2}
-            borderRadius="md"
-            onClick={() => handleToggleOption(option)}
-          >
-            <TagLabel>
-              {option.charAt(0).toUpperCase() + option.slice(1)}
-            </TagLabel>
-          </Tag.Root>
-        ))}
-      </HStack>
-    </Box>
-  )
+    <Menu.Root key="grouping-config" onSelect={(value)=>handleToggleOption(value.value as GroupByOption)}>
+      <Menu.Trigger asChild>
+        <Button  variant="plain" size="sm">
+          <Text textDecoration={'underline'}>Add another filter group</Text> <AddIcon/>
+        </Button>
+      </Menu.Trigger>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content zIndex={10000}>
+            <Menu.ItemGroup>
+              {filteredOptions.map((option, index) => (
+                  <Menu.CheckboxItem
+                    key={index.toString()}
+                    value={option}
+                    disabled={group.isChecked(option)}
+                    checked={group.isChecked(option)}
+                    onCheckedChange={() => group.toggleValue(option)}
+                  >
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                    {group.isChecked(option) && <FiCheck />}
+                  </Menu.CheckboxItem>
+              ))}
+            </Menu.ItemGroup>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
+    </Menu.Root>
+  );
+
 }

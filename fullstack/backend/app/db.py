@@ -21,7 +21,9 @@ load_dotenv()
 DATABASE_URL = os.environ["DATABASE_URL"]
 
 
-engine = create_engine(DATABASE_URL, echo=True, pool_use_lifo=True)
+engine = create_engine(
+    DATABASE_URL, echo=False, pool_use_lifo=True, pool_size=20, max_overflow=40
+)
 
 session_maker = orm.sessionmaker(autoflush=True, bind=engine)
 type Session = orm.Session
@@ -91,6 +93,24 @@ def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, No
     if db.execute(
         text("SELECT current_setting('app.current_user_id')")
     ).scalar() != str(user.id):
+        raise NotImplementedError("idk why this isnt working")
+
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_db_for_user(user_id: int) -> Generator[Session, Any, None]:
+    """Returns a database session and sets the user ID for RLS policies."""
+    db = session_maker()
+
+    db.execute(text(f"SET app.current_user_id = {user_id}"))
+    db.commit()
+
+    if db.execute(
+        text("SELECT current_setting('app.current_user_id')")
+    ).scalar() != str(user_id):
         raise NotImplementedError("idk why this isnt working")
 
     try:

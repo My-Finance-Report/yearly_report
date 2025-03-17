@@ -29,7 +29,7 @@ def make_chat_request(model: type[T], messages: list[ChatMessage]) -> T | None:
 
     try:
         response = client.beta.chat.completions.parse(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[msg.model_dump() for msg in messages],  # type: ignore[misc]
             response_format=model,
             temperature=0.0,

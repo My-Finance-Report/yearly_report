@@ -6,7 +6,7 @@ T = TypeVar("T")
 J = TypeVar("J")
 
 
-def make_batches(data: list[T], batch_size: int = 10) -> list[list[T]]:
+def make_batches(data: list[T], batch_size: int = 30) -> list[list[T]]:
     return [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
 
 

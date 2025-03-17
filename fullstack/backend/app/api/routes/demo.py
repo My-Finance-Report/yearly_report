@@ -141,6 +141,7 @@ def get_demo_aggregated_transactions(
     if not transactions:
         return AggregatedTransactions(
             groups=[],
+            group_by_ordering=[],
             overall_withdrawals=0.0,
             overall_deposits=0.0,
             overall_balance=0.0,
@@ -172,4 +173,5 @@ def get_demo_aggregated_transactions(
         overall_deposits=overall_deposits,
         overall_balance=overall_balance,
         grouping_options_choices=grouping_option_choices,
+        group_by_ordering=group_by,
     )
