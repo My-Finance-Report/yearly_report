@@ -59,18 +59,18 @@ export interface FilterInfo {
 function getFilterSettings(
   filterInfo: FilterInfo,
   groupingOption: GroupByOption
-): [string[], React.Dispatch<React.SetStateAction<string[]>>] {
+): {values: string[], setValues: React.Dispatch<React.SetStateAction<string[]>>} {
   switch (groupingOption) {
     case GroupByOption.year:
-      return [filterInfo.years, filterInfo.setYears];
+      return {values: filterInfo.years, setValues: filterInfo.setYears};
     case GroupByOption.account:
-      return [filterInfo.accounts, filterInfo.setAccounts];
+      return {values: filterInfo.accounts, setValues: filterInfo.setAccounts};
     case GroupByOption.month:
-      return [filterInfo.months, filterInfo.setMonths];
+      return {values: filterInfo.months, setValues: filterInfo.setMonths};
     case GroupByOption.category:
-      return [filterInfo.categories, filterInfo.setCategories];
+      return {values: filterInfo.categories, setValues: filterInfo.setCategories};
     case GroupByOption.budget:
-      return [filterInfo.budgets, filterInfo.setBudgets];
+      return {values: filterInfo.budgets, setValues: filterInfo.setBudgets};
     default:
       throw "Invalid grouping option";
   }
@@ -282,7 +282,7 @@ function InnerFilterGroup({
                     strategy={horizontalListSortingStrategy}
                   >
                     {groupingOptions.map((option, index) => {
-                      const [filters, setFilters] = getFilterSettings(
+                      const {values, setValues} = getFilterSettings(
                         filterInfo,
                         option
                       );
@@ -298,8 +298,8 @@ function InnerFilterGroup({
                         >
                           <SortableItem
                             key={option}
-                            filters={filters}
-                            setFilters={setFilters}
+                            filters={values}
+                            setFilters={setValues}
                             moveItemUp={moveItemUp}
                             moveItemDown={moveItemDown}
                             isFirst={index === 0}
@@ -491,8 +491,8 @@ function NonPowerUserButtons({filterInfo, setGroupingOptions, groupingOptionsCho
   const excludingUnbudgeted = groupingOptionsChoices?.[GroupByOption.budget].filter(budget => budget !== "Unbudgeted") ?? []
 
 
-  const [years,setYears] =  getFilterSettings(filterInfo, GroupByOption.year)
-  const [budgets,setBudgets] =  getFilterSettings(filterInfo, GroupByOption.budget)
+  const { setValues: setYears} =  getFilterSettings(filterInfo, GroupByOption.year)
+  const { setValues: setBudgets} =  getFilterSettings(filterInfo, GroupByOption.budget)
 
   const setMonthlyBudget = () => {
     setGroupingOptions([GroupByOption.budget, GroupByOption.month, GroupByOption.year]);
