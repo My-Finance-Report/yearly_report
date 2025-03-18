@@ -11,23 +11,35 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TermsImport } from './routes/terms'
 import { Route as SignupImport } from './routes/signup'
 import { Route as ResetPasswordImport } from './routes/reset-password'
 import { Route as RecoverPasswordImport } from './routes/recover-password'
 import { Route as LoginImport } from './routes/login'
 import { Route as LandingImport } from './routes/landing'
+import { Route as FaqImport } from './routes/faq'
 import { Route as DemoImport } from './routes/demo'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutUploadFilesImport } from './routes/_layout/upload-files'
 import { Route as LayoutTransactionsImport } from './routes/_layout/transactions'
+import { Route as LayoutTermsImport } from './routes/_layout/terms'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutSankeyConfigImport } from './routes/_layout/sankey-config'
+import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
 import { Route as LayoutManageAccountsImport } from './routes/_layout/manage-accounts'
+import { Route as LayoutHowImport } from './routes/_layout/how'
+import { Route as LayoutFaqImport } from './routes/_layout/faq'
+import { Route as LayoutContactMeImport } from './routes/_layout/contact-me'
 import { Route as LayoutBudgetImport } from './routes/_layout/budget'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
+
+const TermsRoute = TermsImport.update({
+  path: '/terms',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const SignupRoute = SignupImport.update({
   path: '/signup',
@@ -51,6 +63,11 @@ const LoginRoute = LoginImport.update({
 
 const LandingRoute = LandingImport.update({
   path: '/landing',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const FaqRoute = FaqImport.update({
+  path: '/faq',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -79,6 +96,11 @@ const LayoutTransactionsRoute = LayoutTransactionsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutTermsRoute = LayoutTermsImport.update({
+  path: '/terms',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutSettingsRoute = LayoutSettingsImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
@@ -89,8 +111,28 @@ const LayoutSankeyConfigRoute = LayoutSankeyConfigImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutPrivacyRoute = LayoutPrivacyImport.update({
+  path: '/privacy',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutManageAccountsRoute = LayoutManageAccountsImport.update({
   path: '/manage-accounts',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutHowRoute = LayoutHowImport.update({
+  path: '/how',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutFaqRoute = LayoutFaqImport.update({
+  path: '/faq',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutContactMeRoute = LayoutContactMeImport.update({
+  path: '/contact-me',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -116,6 +158,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoImport
       parentRoute: typeof rootRoute
     }
+    '/faq': {
+      preLoaderRoute: typeof FaqImport
+      parentRoute: typeof rootRoute
+    }
     '/landing': {
       preLoaderRoute: typeof LandingImport
       parentRoute: typeof rootRoute
@@ -136,6 +182,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupImport
       parentRoute: typeof rootRoute
     }
+    '/terms': {
+      preLoaderRoute: typeof TermsImport
+      parentRoute: typeof rootRoute
+    }
     '/_layout/admin': {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
@@ -144,8 +194,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutBudgetImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/contact-me': {
+      preLoaderRoute: typeof LayoutContactMeImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/faq': {
+      preLoaderRoute: typeof LayoutFaqImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/how': {
+      preLoaderRoute: typeof LayoutHowImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/manage-accounts': {
       preLoaderRoute: typeof LayoutManageAccountsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/privacy': {
+      preLoaderRoute: typeof LayoutPrivacyImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/sankey-config': {
@@ -154,6 +220,10 @@ declare module '@tanstack/react-router' {
     }
     '/_layout/settings': {
       preLoaderRoute: typeof LayoutSettingsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/terms': {
+      preLoaderRoute: typeof LayoutTermsImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/transactions': {
@@ -177,19 +247,26 @@ export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
     LayoutBudgetRoute,
+    LayoutContactMeRoute,
+    LayoutFaqRoute,
+    LayoutHowRoute,
     LayoutManageAccountsRoute,
+    LayoutPrivacyRoute,
     LayoutSankeyConfigRoute,
     LayoutSettingsRoute,
+    LayoutTermsRoute,
     LayoutTransactionsRoute,
     LayoutUploadFilesRoute,
     LayoutIndexRoute,
   ]),
   DemoRoute,
+  FaqRoute,
   LandingRoute,
   LoginRoute,
   RecoverPasswordRoute,
   ResetPasswordRoute,
   SignupRoute,
+  TermsRoute,
 ])
 
 /* prettier-ignore-end */
