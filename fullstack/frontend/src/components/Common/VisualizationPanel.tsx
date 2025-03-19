@@ -89,7 +89,7 @@ function squareOffData(data: GenericChartDataItem[]) {
   data.forEach((row: GenericChartDataItem) => {
     Object.keys(row).forEach((key) => {
       if (key !== 'date') {
-        allKeys.add(key);
+          allKeys.add(key);
       }
     });
   });
@@ -114,7 +114,6 @@ function BarChart({
   setCollapsedItems,
 }: ValidatedVisualizationProps) {
 
-  
   const categoryKeys = new Set<string>()
   for (const group of sourceGroups) {
     if (group.subgroups) {
