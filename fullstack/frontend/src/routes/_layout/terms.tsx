@@ -12,7 +12,7 @@ function Terms() {
         Terms of Service
       </Heading>
 
-      <VStack spacing={6} align="start">
+      <VStack spaceY={6} align="start">
         <Box>
           <Heading as="h3" size="md">
             1. Acceptance of Terms
