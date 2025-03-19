@@ -20,18 +20,19 @@ function Layout() {
 
 
     return (
-        <div style={{ backgroundColor: "background", minHeight: "100vh" }}>
+            <Flex direction="column" justifyContent={'space-between'} minH="100vh" backgroundColor="background">
             <SegmentedNavigation />
             {isLoading ? (
-                <Flex justify="center" align="center" height="100vh" width="full">
+                <Flex justify="center" align="center" height="100vh" width="full" mb={20}>
                     <Spinner size="xl" color="ui.main" />
                 </Flex>
             ) : (
-                <Flex justify="center" align="center" width="full">
-                    <Outlet />
-                </Flex>
-            )}
-      <Footer/>
-    </div>
+                    <Flex justify="center" align="center" width="full">
+                        <Outlet />
+                    </Flex>
+                )}
+
+            <Footer/>
+        </Flex>
   )
 }

@@ -5,14 +5,12 @@ export function Footer() {
     <Box as="footer" w="100%" py={6}>
       <Flex
         maxW="1200px"
+        alignSelf={'flex-end'}
         mx="auto"
         p={6}
         justify="space-between"
         align="center"
         flexWrap="wrap"
-        position='absolute'
-        bottom={0}
-
       >
         <Text fontSize="lg" fontWeight="bold">
 
