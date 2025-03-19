@@ -71,6 +71,8 @@ services:
       - .env.production
     networks:
       - traefik-public
+
+
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
@@ -84,13 +86,13 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.entrypoints=http
 
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`dashboard.${DOMAIN?Variable not set}`) || Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)
-      
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.entrypoints=https
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=true
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=le
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
 
 
 

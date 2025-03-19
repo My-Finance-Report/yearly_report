@@ -28,7 +28,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # User feedback / TODO
 
--> not working:  transaction in modal is not always correct ?
 
 -> add a last active at time on the user model
 
@@ -37,6 +36,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> budget page should probably not use edit modal for create
 
 -> shareable report
+
+-> redirect everything to the main url
 
 -> welcome email
 

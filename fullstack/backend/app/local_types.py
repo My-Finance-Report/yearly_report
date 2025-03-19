@@ -10,8 +10,9 @@ from app.models import (
     BudgetId,
     CategoryId,
     JobStatus,
-    SourceKind,
-    TransactionKind,
+    TransactionSourceBase,
+    CategoryBase,
+    TransactionBase,
     UserId,
     UserSettings,
 )
@@ -84,46 +85,14 @@ class UserUpdateMe(BaseModel):
     email: str
 
 
-class TransactionSourceBase(BaseModel):
-    name: str
-    archived: bool = False
-    source_kind: SourceKind = SourceKind.account
-
-    class Config:
-        orm_mode = True
-
 
 class TransactionSourceOut(TransactionSourceBase):
     id: int
-
-
-class CategoryBase(BaseModel):
-    name: str
-    source_id: int
-    archived: bool = False
-
-    class Config:
-        orm_mode = True
-
 
 class CategoryOut(CategoryBase):
     id: int
     stylized_name: str
 
-
-class TransactionBase(BaseModel):
-    description: str
-    category_id: int
-    date_of_transaction: datetime
-    amount: float
-    transaction_source_id: int
-    kind: TransactionKind
-    uploaded_pdf_id: None | int = None
-    archived: bool = False
-
-    class Config:
-        from_attributes = True
-        orm_mode = True
 
 
 class TransactionOut(TransactionBase):

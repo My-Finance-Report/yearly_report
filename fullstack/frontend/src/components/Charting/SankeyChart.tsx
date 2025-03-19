@@ -120,7 +120,7 @@ export function GenericSankeyChart({
   )
 }
 
-export const Desc = ({ description,mt  }: { description: string | undefined, mt: string | undefined }) => {
+export const Desc = ({ description,mt  }: { description: string | undefined, mt?: string | undefined }) => {
   if (!description) {
     return null
   }

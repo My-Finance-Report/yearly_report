@@ -19,7 +19,7 @@ function Landing() {
     const isMobile = useIsMobile();
     const navigate = useNavigate();
   return (
-    <>
+    <div style={{backgroundColor: "background"}}>
     <SegmentedNavigation />
     <Box as="main" maxW="1200px" mx="auto" px={4} py={8}>
       <Flex
@@ -106,7 +106,7 @@ function Landing() {
         </Flex>
       </Box>
     </Box>
-</>
+</div>
   )
 }
 
