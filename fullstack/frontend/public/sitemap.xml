@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url><loc>https://myfinancereport.com/</loc><priority>0.8</priority></url><url><loc>https://myfinancereport.com/faq</loc><priority>0.8</priority></url><url><loc>https://myfinancereport.com/privacy</loc><priority>0.8</priority></url><url><loc>https://myfinancereport.com/demo</loc><priority>0.8</priority></url><url><loc>https://myfinancereport.com/landing/how</loc><priority>0.8</priority></url><url><loc>https://myfinancereport.com/contact-me</loc><priority>0.8</priority></url>
+    <url>
+        <loc>https://myfinancereport.com/</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/faq</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/privacy</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/demo</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/landing</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/how</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://myfinancereport.com/contact-me</loc>
+        <priority>0.8</priority>
+    </url>
 </urlset>

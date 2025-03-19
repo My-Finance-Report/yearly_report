@@ -488,7 +488,7 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
 function NonPowerUserButtons({filterInfo, setGroupingOptions, groupingOptionsChoices}: {filterInfo: FilterInfo, setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>, groupingOptionsChoices: Record<GroupByOption, string[]> | undefined}) {
 
 
-  const excludingUnbudgeted = groupingOptionsChoices?.[GroupByOption.budget].filter(budget => budget !== "Unbudgeted") ?? []
+  const excludingUnbudgeted = groupingOptionsChoices?.[GroupByOption.budget]?.filter(budget => budget !== "Unbudgeted") ?? []
 
 
   const { setValues: setYears} =  getFilterSettings(filterInfo, GroupByOption.year)
