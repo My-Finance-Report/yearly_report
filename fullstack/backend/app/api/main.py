@@ -6,8 +6,8 @@ from app.api.routes import (
     manage_accounts,
     manage_budgets,
     private,
-    sitemap,
     sankey,
+    sitemap,
     transactions,
     uploads,
     users,
@@ -30,6 +30,3 @@ api_router.include_router(utils.router)
 
 if settings.ENVIRONMENT == "local":
     api_router.include_router(private.router)
-
-
-

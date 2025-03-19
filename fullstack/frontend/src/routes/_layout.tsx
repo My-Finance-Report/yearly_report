@@ -16,11 +16,8 @@ export const Route = createFileRoute("/_layout")({
 })
 
 function Layout() {
-    const { isLoading, error,logout } = useAuth()
+    const { isLoading } = useAuth()
 
-    if (error){
-        logout()
-    }
 
     return (
         <div style={{ backgroundColor: "background", minHeight: "100vh" }}>
