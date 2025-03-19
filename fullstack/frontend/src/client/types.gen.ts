@@ -542,6 +542,8 @@ export type SankeyCreateSankeyConfigResponse = ({
 
 export type SankeyGetSankeyConfigInfoResponse = (SankeyConfigInfo);
 
+export type SitemapSitemapResponse = (unknown);
+
 export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 
 export type TransactionsGetAggregatedTransactionsData = {

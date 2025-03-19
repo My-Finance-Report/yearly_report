@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TermsImport } from './routes/terms'
+import { Route as SitemapImport } from './routes/sitemap'
 import { Route as SignupImport } from './routes/signup'
 import { Route as ResetPasswordImport } from './routes/reset-password'
 import { Route as RecoverPasswordImport } from './routes/recover-password'
@@ -38,6 +39,11 @@ import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 const TermsRoute = TermsImport.update({
   path: '/terms',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SitemapRoute = SitemapImport.update({
+  path: '/sitemap',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -182,6 +188,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupImport
       parentRoute: typeof rootRoute
     }
+    '/sitemap': {
+      preLoaderRoute: typeof SitemapImport
+      parentRoute: typeof rootRoute
+    }
     '/terms': {
       preLoaderRoute: typeof TermsImport
       parentRoute: typeof rootRoute
@@ -266,6 +276,7 @@ export const routeTree = rootRoute.addChildren([
   RecoverPasswordRoute,
   ResetPasswordRoute,
   SignupRoute,
+  SitemapRoute,
   TermsRoute,
 ])
 
