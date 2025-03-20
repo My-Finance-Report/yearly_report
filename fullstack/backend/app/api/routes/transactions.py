@@ -582,10 +582,16 @@ def get_aggregated_transactions(
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
     HIDDEN_GROUPING_OPTIONS = [GroupByOption.year]
-    group_by_with_hidden_removed = [g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS]
+    group_by_with_hidden_removed = [
+        g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS
+    ]
 
     groups = recursive_group(
-        transactions, group_by_with_hidden_removed, category_lookup, ts_lookup, budget_lookup
+        transactions,
+        group_by_with_hidden_removed,
+        category_lookup,
+        ts_lookup,
+        budget_lookup,
     )
 
     grouping_option_choices = build_grouping_option_choices(session, user)

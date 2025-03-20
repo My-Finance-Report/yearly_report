@@ -73,11 +73,11 @@ function Landing() {
         border="1px solid"
         borderRadius="md"
         p={6}
-        flex="1" // Ensures equal width
-        minWidth="250px" // Prevents shrinking too much on smaller screens
+        flex="1" 
+        minWidth="250px" 
         display="flex"
         flexDirection="column"
-        justifyContent="space-between" // Ensures text is evenly spaced
+        justifyContent="space-between"
       >
         <Heading as="h3" size="md" mb={2}>
           {title}
@@ -94,9 +94,9 @@ function Landing() {
           Your Dashboard will look like this:
         </Heading>
       </Box>
-      <Box border="1px solid"  borderRadius="md" m={6} p={3} backgroundColor="background" >
+      <Box border="1px solid"  borderRadius="md" m={isMobile ? 1 : 6} p={isMobile ? 1 : 6} backgroundColor="background" >
       <DemoTransactions />
-</Box>
+  </Box>
     </Flex>
   );
 }
