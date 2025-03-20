@@ -50,7 +50,6 @@ function UploadFiles() {
         "The files were processed successfully.",
         "success",
       )
-      console.log("toasted")
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
     },
     onError: () => {

@@ -542,6 +542,7 @@ function NonPowerUserButtons({
     groupingOptionsChoices?.[GroupByOption.budget]?.filter(
       (budget) => budget !== "Unbudgeted"
     ) ?? [];
+  const hasBudgets = excludingUnbudgeted.length > 0;
 
   const { setValues: setYears } = getFilterSettings(
     filterInfo,
@@ -578,18 +579,32 @@ function NonPowerUserButtons({
       GroupByOption.year,
     ]);
     setYears([(new Date().getFullYear() - 1).toString()]);
+
+  };
+
+  const setAllTime = () => {
+    setGroupingOptions([
+      GroupByOption.month,
+      GroupByOption.category,
+    ]);
+    setYears(groupingOptionsChoices?.[GroupByOption.year] ?? []);
   };
 
   return (
     <Flex gap={2} direction={"column"}>
+      {hasBudgets && (
       <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
         Monthly Budget
       </Button>
+      )}
       <Button size="xs" variant="subtle" onClick={setYTD}>
         Year To Date
       </Button>
       <Button size="xs" variant="subtle" onClick={setLastYear}>
         Last Year
+      </Button>
+      <Button size="xs" variant="subtle" onClick={setAllTime}>
+        All Time
       </Button>
     </Flex>
   );
