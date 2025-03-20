@@ -116,6 +116,8 @@ function InnerTransactions({getFunction}: {
     }
   }, [data?.groups]);
 
+  const hasData = data?.groups && activeGrouping
+
 
   const namesForLegends = data?.groups.flatMap((group) =>
     group?.subgroups?.map((subgroup) => subgroup.group_name)
@@ -135,6 +137,7 @@ function InnerTransactions({getFunction}: {
         padding: "10px",
       }}
     >
+      {hasData && (
       <Box
       >
         <FilterGroup
@@ -156,6 +159,7 @@ function InnerTransactions({getFunction}: {
           setCollapsedItems={setCollapsedItems}
         />
       </Box>
+      )}
     <Box marginTop={isMobile ? '40px' : '0px'}>
         <BlahComponent
           isLoading={isLoading}

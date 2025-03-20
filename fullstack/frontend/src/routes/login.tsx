@@ -75,6 +75,7 @@ function Login() {
             pattern: emailPattern,
           })}
           placeholder="Email"
+          autoComplete="username"
           type="email"
           required
         />
@@ -91,6 +92,7 @@ function Login() {
             required: "Password is required",
           })}
           placeholder="Password"
+          autoComplete="current-password"
           required
         />
         {error && <Field.ErrorText>{error}</Field.ErrorText>}

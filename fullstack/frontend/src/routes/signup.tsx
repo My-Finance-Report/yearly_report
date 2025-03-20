@@ -90,6 +90,7 @@ function SignUp() {
               minLength={3}
               {...register("full_name", { required: "Full Name is required" })}
               placeholder="Full Name"
+              autoComplete="name"
               type="text"
             />
             {errors.full_name && (
@@ -106,6 +107,7 @@ function SignUp() {
                 pattern: emailPattern,
               })}
               placeholder="Email"
+              autoComplete="username"
               type="email"
             />
             {errors.email && (
@@ -119,6 +121,7 @@ function SignUp() {
               id="password"
               {...register("password", passwordRules())}
               placeholder="Password"
+              autoComplete="new-password"
               type="password"
             />
             {errors.password && (
@@ -132,6 +135,7 @@ function SignUp() {
               id="confirm_password"
               {...register("confirm_password", confirmPasswordRules(getValues))}
               placeholder="Repeat Password"
+              autoComplete="new-password"
               type="password"
             />
             {errors.confirm_password && (

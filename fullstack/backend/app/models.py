@@ -44,11 +44,14 @@ class JSONType(TypeDecorator[T], Generic[T]):
         return None
 
     def process_result_value(
-        self, value: dict[str, str] | None, _dialect: Dialect
+        self, value: dict[str, str] | str | None, _dialect: Dialect
     ) -> T | None:
         """Convert JSON from the database back into the correct dataclass."""
         if value is not None:
-            return self.dataclass_type(**value)
+            if isinstance(value, dict):
+                return self.dataclass_type(**value)
+            else:
+                return self.dataclass_type(**json.loads(value))
         return None
 
 
@@ -97,7 +100,7 @@ TransactionReportId = NewType("TransactionReportId", int)
 @dataclass(kw_only=True)
 class UserSettings:
     has_budget: bool = False
-    power_user_filters: bool = True
+    power_user_filters: bool = False
 
 
 class User(Base):
