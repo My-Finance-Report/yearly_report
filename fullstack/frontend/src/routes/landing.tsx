@@ -1,113 +1,104 @@
-import React from "react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import {
-  Box,
-  Flex,
-  Button,
-  Heading,
-  Text,
-  Image,
-} from "@chakra-ui/react"
-import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
-import { useIsMobile } from "@/hooks/useIsMobile"
+import React from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { DemoTransactions } from "./_layout/transactions";
+import { Box, Flex, Button, Heading, Text, Image } from "@chakra-ui/react";
+import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export const Route = createFileRoute("/landing")({
   component: Landing,
-})
+});
 
 function Landing() {
-    const isMobile = useIsMobile();
-    const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
   return (
-    <div style={{backgroundColor: "background"}}>
-    <SegmentedNavigation />
-    <Box as="main" maxW="1200px" mx="auto" px={4} py={8}>
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        align="center"
-        justify="space-between"
-        mb={{ base: 6, md: 12 }}
-        gap={6}
-      >
-        <Box flex="1">
-          <Heading as="h1" size="xl" mb={4}>
-            Because you should love your finances
-          </Heading>
-          <Text fontSize="lg" maxW="600px" lineHeight="tall">
-            Love shouldn’t be complicated—neither should your finances.
-            My Financé gives you a clear, visual breakdown of your spending each month.
-          </Text>
-          <Flex marginTop={4} gap={2}>
-          <Button variant="outline" onClick={() => navigate({ to: "/demo" })}>
-            Try the Demo
-          </Button>
-          <Button variant="solid" onClick={() => navigate({ to: "/signup" })}>
-            Sign Up
-          </Button>
-          </Flex>
-          <Text fontSize="sm" fontWeight="bold" mt={2}>$20/year</Text>
-        </Box>
-        <Box flex="1" textAlign="center">
-          <Image
-            src="/assets/images/landing.png"
-            alt="My Financé illustration"
-            borderRadius="md"
-            mx="auto"
-          />
-        </Box>
-      </Flex>
-
-      <Box mt={8}>
-
-      <Flex direction={isMobile ? "column" : "row"} gap={2}>
-          <Box
-            border="1px solid"
-            borderColor="gray.200"
-            borderRadius="md"
-            p={6}
-          >
-            <Heading as="h3" size="md" mb={2}>
-              1. Bank Statement Extraction
+    <Flex direction="column" minHeight="100vh" backgroundColor="background" alignItems="center">
+      <SegmentedNavigation />
+      <Box as="main" maxW="1200px" mx="auto" px={4} py={12}>
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          align="center"
+          justify="space-between"
+          mb={{ base: 6, md: 12 }}
+          gap={6}
+        >
+          <Box flex="1" marginRight={isMobile ? 0 : 24}>
+            <Heading as="h1" size="5xl" mb={4}>
+              Because you should love your finances
             </Heading>
-            <Text>
-              Automatically extract transactions from your bank statements,
-              no manual data entry required.
+            <Text fontSize="lg" maxW="600px" lineHeight="tall" >
+              Love shouldn’t be complicated—neither should your finances. My
+              Financé gives you a clear, visual breakdown of your spending each
+              month.
             </Text>
+            <Flex marginTop={8} gap={2}>
+              <Button
+                variant="solid"
+                onClick={() => navigate({ to: "/signup" })}
+              >
+                Sign Up
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/demo" })}
+              >
+                Try the Demo
+              </Button>
+            </Flex>
           </Box>
-
-          <Box
-            border="1px solid"
-            borderColor="gray.200"
-            borderRadius="md"
-            p={6}
-          >
-            <Heading as="h3" size="md" mb={2}>
-              2. Clear &amp; Visual Breakdown
-            </Heading>
-            <Text>
-              Our visual analytics break down your spending by category,
-              giving you a simple, high-level overview of your finances.
-            </Text>
-          </Box>
-
-          <Box
-            border="1px solid"
-            borderColor="gray.200"
-            borderRadius="md"
-            p={6}
-          >
-            <Heading as="h3" size="md" mb={2}>
-              3. (Optional) Budgeting
-            </Heading>
-            <Text>
-                Setup your budget to track your spending and build better habits.
-            </Text>
+          <Box flex="1" textAlign="center">
+            <Image
+              src="/assets/images/landing.png"
+              alt="My Financé illustration"
+              borderRadius="md"
+              mx="auto"
+            />
           </Box>
         </Flex>
+
+<Box mt={8}>
+  <Flex
+    direction={isMobile ? "column" : "row"}
+    gap={10}
+    alignItems="stretch" // Ensures all boxes stretch to the same height
+  >
+    {[ 
+      { title: "Bank Statement Extraction", text: "Easily extract transactions from your bank account, no manual data entry required." },
+      { title: "Clear & Visual Breakdown", text: "Automatically categorize your transactions and display clean visualizations." },
+      { title: "Budgeting", text: "Set up a budget and get insights into your progress over months and years." }
+    ].map(({ title, text }) => (
+      <Box
+        key={title}
+        border="1px solid"
+        borderRadius="md"
+        p={6}
+        flex="1" // Ensures equal width
+        minWidth="250px" // Prevents shrinking too much on smaller screens
+        display="flex"
+        flexDirection="column"
+        justifyContent="space-between" // Ensures text is evenly spaced
+      >
+        <Heading as="h3" size="md" mb={2}>
+          {title}
+        </Heading>
+        <Text>{text}</Text>
       </Box>
-    </Box>
-</div>
-  )
+    ))}
+  </Flex>
+</Box>
+
+      </Box>
+      <Box mt={24} textAlign="center" mb={10}>
+        <Heading as="h3" size="2xl" >
+          Your Dashboard will look like this:
+        </Heading>
+      </Box>
+      <Box border="1px solid"  borderRadius="md" m={6} p={3} backgroundColor="background" >
+      <DemoTransactions />
+</Box>
+    </Flex>
+  );
 }
 
-export default Landing
+export default Landing;

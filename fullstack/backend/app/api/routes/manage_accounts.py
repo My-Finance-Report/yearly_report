@@ -4,15 +4,15 @@ from sqlalchemy.orm import Session
 from app.api.routes.manage_budgets import get_stylized_name_lookup
 from app.db import get_current_user, get_db
 from app.local_types import (
-    CategoryBase,
     CategoryOut,
-    TransactionSourceBase,
     TransactionSourceOut,
 )
 from app.models import (
     Category,
+    CategoryBase,
     Transaction,
     TransactionSource,
+    TransactionSourceBase,
     TransactionSourceId,
     User,
 )

@@ -233,7 +233,7 @@ def recursive_group(
     name_fn = group_by_name_funcs[current]
     id_fn = group_by_id_funcs[current]
 
-    txns.sort(key=sort_fn)
+    txns.sort(key=sort_fn, reverse=True)
     groups = []
     for key, group_iter in groupby(txns, key=key_fn):
         group_list = list(group_iter)
@@ -581,8 +581,11 @@ def get_aggregated_transactions(
     overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
+    HIDDEN_GROUPING_OPTIONS = [GroupByOption.year]
+    group_by_with_hidden_removed = [g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS]
+
     groups = recursive_group(
-        transactions, group_by, category_lookup, ts_lookup, budget_lookup
+        transactions, group_by_with_hidden_removed, category_lookup, ts_lookup, budget_lookup
     )
 
     grouping_option_choices = build_grouping_option_choices(session, user)

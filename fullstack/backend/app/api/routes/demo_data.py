@@ -82,9 +82,9 @@ def generate_demo_data(num_transactions: int = 1000) -> DemoData:
         category_lookup[category_obj.source_id].append(category_obj)
 
     transactions = []
-    start_date = datetime(2023, 1, 1)
+    start_date = datetime(2024, 1, 1)
     for i in range(1, num_transactions + 1):
-        random_date = start_date + timedelta(days=random.randint(0, 365))
+        random_date = start_date + timedelta(days=random.randint(0, 365*2))
         source = random.choice(sources)
         options = category_lookup[source.id]
         category_ = random.choice(options)

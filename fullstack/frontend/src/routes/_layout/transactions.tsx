@@ -132,14 +132,10 @@ function InnerTransactions({getFunction}: {
         flexDirection: isMobile ? "column" : "row",
         gap: "4px",
         marginBottom: isMobile ? 0 : 48,
+        padding: "10px",
       }}
     >
       <Box
-        maxW="320px"
-        style={{
-          position: "absolute",
-          left: 10,
-        }}
       >
         <FilterGroup
           setShowDeposits={setShowDeposits}
@@ -160,7 +156,7 @@ function InnerTransactions({getFunction}: {
           setCollapsedItems={setCollapsedItems}
         />
       </Box>
-    <Box marginLeft={isMobile ? 0 : 260} marginTop={isMobile ? '40px' : '0px'}>
+    <Box marginTop={isMobile ? '40px' : '0px'}>
         <BlahComponent
           isLoading={isLoading}
           data={data}

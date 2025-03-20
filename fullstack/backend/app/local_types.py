@@ -8,11 +8,11 @@ from app.models import (
     BudgetCategoryLinkId,
     BudgetEntryId,
     BudgetId,
+    CategoryBase,
     CategoryId,
     JobStatus,
-    TransactionSourceBase,
-    CategoryBase,
     TransactionBase,
+    TransactionSourceBase,
     UserId,
     UserSettings,
 )
@@ -85,14 +85,13 @@ class UserUpdateMe(BaseModel):
     email: str
 
 
-
 class TransactionSourceOut(TransactionSourceBase):
     id: int
+
 
 class CategoryOut(CategoryBase):
     id: int
     stylized_name: str
-
 
 
 class TransactionOut(TransactionBase):

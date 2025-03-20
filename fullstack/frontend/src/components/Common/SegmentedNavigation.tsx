@@ -102,7 +102,7 @@ export function SegmentedNavigation() {
         minH={20}
         width="100%"
       >
-        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="24px" fontWeight="bold" color="colors.ui.main">
+        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="20px" fontWeight="bold" color="colors.ui.main">
           My Financé
         </Text>
 
