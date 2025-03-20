@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { DemoTransactions } from "./_layout/transactions";
-import { Box, Flex, Button, Heading, Text, Image } from "@chakra-ui/react";
+import { Box, Flex, Button, Heading, Text, Image, Highlight } from "@chakra-ui/react";
 import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -12,6 +12,13 @@ export const Route = createFileRoute("/landing")({
 function Landing() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  const demoSectionRef = useRef<HTMLDivElement>(null);
+
+  const scrollToDemo = () => {
+    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <Flex direction="column" minHeight="100vh" backgroundColor="background" alignItems="center">
       <SegmentedNavigation />
@@ -25,7 +32,9 @@ function Landing() {
         >
           <Box flex="1" marginRight={isMobile ? 0 : 24}>
             <Heading as="h1" size="5xl" mb={4}>
-              Because you should love your finances
+              <Highlight  query="finances" styles={{color: "#8b55e9"}}>
+                Because you should love your finances
+              </Highlight>
             </Heading>
             <Text fontSize="lg" maxW="600px" lineHeight="tall" >
               Love shouldn’t be complicated—neither should your finances. My
@@ -41,7 +50,7 @@ function Landing() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate({ to: "/demo" })}
+                onClick={scrollToDemo}
               >
                 Try the Demo
               </Button>
@@ -89,12 +98,12 @@ function Landing() {
 </Box>
 
       </Box>
-      <Box mt={24} textAlign="center" mb={10}>
+      <Box ref={demoSectionRef} mt={24} textAlign="center" mb={10}>
         <Heading as="h3" size="2xl" >
           Your Dashboard will look like this:
         </Heading>
       </Box>
-      <Box border="1px solid"  borderRadius="md" m={isMobile ? 1 : 6} p={isMobile ? 1 : 6} backgroundColor="background" >
+      <Box  border="1px solid"  borderRadius="md" m={isMobile ? 1 : 6} p={isMobile ? 1 : 6} backgroundColor="background" >
       <DemoTransactions />
   </Box>
     </Flex>
