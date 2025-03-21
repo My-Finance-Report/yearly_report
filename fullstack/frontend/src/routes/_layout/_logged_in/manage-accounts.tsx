@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-export const Route = createFileRoute("/_layout/manage-accounts")({
+export const Route = createFileRoute("/_layout/_logged_in/manage-accounts")({
   component: ManageAccounts,
 })
 

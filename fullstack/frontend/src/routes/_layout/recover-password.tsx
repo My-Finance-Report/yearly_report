@@ -12,17 +12,16 @@ import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { type ApiError, LoginService } from "../client"
-import { isLoggedIn } from "../hooks/useAuth"
-import useCustomToast from "../hooks/useCustomToast"
-import { emailPattern, handleError } from "../utils"
-import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
+import { type ApiError, LoginService } from "@/client"
+import { isLoggedIn } from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import { emailPattern, handleError } from "../../utils"
 
 interface FormData {
   email: string
 }
 
-export const Route = createFileRoute("/recover-password")({
+export const Route = createFileRoute("/_layout/recover-password")({
   component: RecoverPassword,
   beforeLoad: async () => {
     if (isLoggedIn()) {
@@ -68,8 +67,6 @@ function RecoverPassword() {
   }
 
   return (
-    <>
-    <SegmentedNavigation />
     <Container
       as="form"
       onSubmit={handleSubmit(onSubmit)}
@@ -107,7 +104,6 @@ function RecoverPassword() {
         Continue
       </Button>
     </Container>
-</>
   )
 }
 

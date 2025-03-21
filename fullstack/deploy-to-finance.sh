@@ -44,7 +44,7 @@ docker tag finance-worker:${IMAGE_TAG} ${ECR_WORKER_URL}
 docker tag finance-frontend:${IMAGE_TAG} ${ECR_FRONTEND_URL}
 
 echo "🚀 Pushing Images to ECR..."
-docker push ${ECR_BACKEND_URL}
+docker puh ${ECR_BACKEND_URL}
 docker push ${ECR_WORKER_URL}
 docker push ${ECR_FRONTEND_URL}
 
@@ -63,6 +63,8 @@ ssh ${REMOTE_SERVER} << EOF
 
     echo "🚀 Starting containers..."
     docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+
+    chmod +x /home/ec2-user/code/finance_app/backup_db
 EOF
 
 echo "✅ Deployment Completed!"

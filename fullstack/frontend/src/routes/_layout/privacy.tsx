@@ -28,8 +28,9 @@ function Privacy() {
             2. How Is Your Data Used?
           </Heading>
           <Text>
-            Your uploaded data is processed locally and used solely for categorization and financial analysis within the app. 
-            We do not share or sell your data to anyone.
+            Your uploaded data is processed and used solely for categorization and financial analysis within the app. 
+            We do not share your data with anyone, beyond the llm provider, which currently is OpenAI.
+            We do not sell your data.
           </Text>
         </Box>
 

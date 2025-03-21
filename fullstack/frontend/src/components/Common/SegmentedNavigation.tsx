@@ -80,7 +80,7 @@ export function SegmentedNavigation() {
               color={"#5F62F6"}
               bgColor={"white"}
               borderColor={"#5F62F6"}
-              onClick={() => navigate({ to: "/landing" })}
+              onClick={() => navigate({ to: "/" })}
             >
               How does it work? <FiChevronRight />
             </Button>

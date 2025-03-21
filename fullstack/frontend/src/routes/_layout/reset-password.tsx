@@ -16,16 +16,16 @@ import {
   type ApiError,
   LoginService,
   type NewPassword,
-} from "../client"
-import { isLoggedIn } from "../hooks/useAuth"
-import useCustomToast from "../hooks/useCustomToast"
-import { confirmPasswordRules, handleError, passwordRules } from "../utils"
+} from "@/client"
+import { isLoggedIn } from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
 
 interface NewPasswordForm extends NewPassword {
   confirm_password: string
 }
 
-export const Route = createFileRoute("/reset-password")({
+export const Route = createFileRoute("/_layout/reset-password")({
   component: ResetPassword,
   beforeLoad: async () => {
     if (isLoggedIn()) {

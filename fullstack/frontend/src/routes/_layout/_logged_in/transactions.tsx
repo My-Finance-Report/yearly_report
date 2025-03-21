@@ -10,17 +10,17 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { AggregatedGroup, DemoService, TransactionsService } from "../../client";
-import  { isLoggedIn } from "../../hooks/useAuth";
+import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
+import { isLoggedIn } from "@/hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
 import type {
   AggregatedTransactions,
   TransactionsGetAggregatedTransactionsResponse,
-} from "../../client";
+} from "@/client";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
-export const Route = createFileRoute("/_layout/transactions")({
+export const Route = createFileRoute("/_layout/_logged_in/transactions")({
   component: Transactions,
 });
 

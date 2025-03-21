@@ -16,12 +16,11 @@ import {
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import type { UserRegister } from "../client"
-import useAuth, { isLoggedIn } from "../hooks/useAuth"
-import { confirmPasswordRules, emailPattern, passwordRules } from "../utils"
-import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
+import type { UserRegister } from "@/client"
+import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { confirmPasswordRules, emailPattern, passwordRules } from "../../utils"
 
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
   beforeLoad: async () => {
     if (isLoggedIn()) {
@@ -70,8 +69,6 @@ function SignUp() {
   }
 
   return (
-    <>
-      <SegmentedNavigation />
       <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
         <Container
           as="form"
@@ -158,7 +155,6 @@ function SignUp() {
           </Text>
         </Container>
       </Flex>
-    </>
   )
 }
 

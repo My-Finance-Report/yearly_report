@@ -512,7 +512,6 @@ export function FilterButton({
                   <Menu.CheckboxItem
                     value={option}
                     key={option}
-                    // The key part is controlling 'checked' and toggling via parent
                     checked={checked}
                     onCheckedChange={() => handleToggle(option)}
                   >
