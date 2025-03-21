@@ -95,6 +95,8 @@ BudgetCategoryLinkId = NewType("BudgetCategoryLinkId", int)
 BudgetEntryId = NewType("BudgetEntryId", int)
 AuditLogId = NewType("AuditLogId", int)
 TransactionReportId = NewType("TransactionReportId", int)
+PlaidItemId = NewType("PlaidItemId", int)
+PlaidAccountId = NewType("PlaidAccountId", int)
 
 
 @dataclass(kw_only=True)
@@ -146,6 +148,12 @@ class TransactionSource(Base):
     source_kind: Mapped[SourceKind] = mapped_column(
         Enum(SourceKind), default=SourceKind.account
     )
+    plaid_account_id: Mapped[PlaidAccountId | None] = mapped_column(
+        ForeignKey("plaid_account.id"), nullable=True
+    )
+
+    # Relationships
+    plaid_account: Mapped["PlaidAccount | None"] = relationship("PlaidAccount", back_populates="transaction_source")
 
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
@@ -437,3 +445,38 @@ class Report(Base):
         JSONType(ReportData), nullable=False
     )
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PlaidItem(Base):
+    __tablename__ = "plaid_item"
+
+    id: Mapped[PlaidItemId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    plaid_item_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    access_token: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    
+    # Relationships
+    accounts: Mapped[list["PlaidAccount"]] = relationship(back_populates="item")
+
+
+class PlaidAccount(Base):
+    __tablename__ = "plaid_account"
+
+    id: Mapped[PlaidAccountId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    plaid_item_id: Mapped[PlaidItemId] = mapped_column(ForeignKey("plaid_item.id"), nullable=False)
+    plaid_account_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    mask: Mapped[str | None] = mapped_column(String, nullable=True)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    subtype: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    
+    # Relationships
+    item: Mapped["PlaidItem"] = relationship(back_populates="accounts")
+    transaction_source: Mapped["TransactionSource"] = relationship("TransactionSource", uselist=False, back_populates="plaid_account")
