@@ -62,7 +62,7 @@ function ManageBudgets() {
   }
 
   return (
-    <Flex >
+    <Flex alignItems="center" justifyContent="center">
       {budget && budgetStatus ? (
         <ManageBudget budget={budget} budgetStatus={budgetStatus} />
       ) : (

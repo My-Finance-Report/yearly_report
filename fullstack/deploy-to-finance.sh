@@ -44,7 +44,7 @@ docker tag finance-worker:${IMAGE_TAG} ${ECR_WORKER_URL}
 docker tag finance-frontend:${IMAGE_TAG} ${ECR_FRONTEND_URL}
 
 echo "🚀 Pushing Images to ECR..."
-docker puh ${ECR_BACKEND_URL}
+docker push ${ECR_BACKEND_URL}
 docker push ${ECR_WORKER_URL}
 docker push ${ECR_FRONTEND_URL}
 
