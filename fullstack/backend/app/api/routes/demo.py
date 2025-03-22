@@ -158,8 +158,17 @@ def get_demo_aggregated_transactions(
 
     budgets_lookup: BudgetLookup = {}
 
+    HIDDEN_GROUPING_OPTIONS = [GroupByOption.year]
+    group_by_with_hidden_removed = [
+        g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS
+    ]
+
     groups = recursive_group(
-        transactions, group_by, category_lookup, ts_lookup, budgets_lookup
+        transactions,
+        group_by_with_hidden_removed,
+        category_lookup,
+        ts_lookup,
+        budgets_lookup,
     )
 
     grouping_option_choices = get_demo_grouping_options(

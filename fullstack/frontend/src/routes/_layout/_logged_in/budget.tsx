@@ -15,7 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 
-export const Route = createFileRoute("/_layout/budget")({
+export const Route = createFileRoute("/_layout/_logged_in/budget")({
   component: ManageBudgets,
 })
 
@@ -62,7 +62,7 @@ function ManageBudgets() {
   }
 
   return (
-    <Flex >
+    <Flex alignItems="center" justifyContent="center">
       {budget && budgetStatus ? (
         <ManageBudget budget={budget} budgetStatus={budgetStatus} />
       ) : (

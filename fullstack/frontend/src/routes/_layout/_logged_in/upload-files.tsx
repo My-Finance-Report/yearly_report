@@ -20,9 +20,9 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { UploadsService } from "../../client"
-import type { UploadedPdfOut } from "../../client"
-import { isLoggedIn } from "../../hooks/useAuth"
+import { UploadsService } from "@/client"
+import type { UploadedPdfOut } from "@/client"
+import { isLoggedIn } from "@/hooks/useAuth"
 import { useState } from "react"
 
 interface SortConfig {
@@ -31,7 +31,7 @@ interface SortConfig {
   columnName: string
 }
 
-export const Route = createFileRoute("/_layout/upload-files")({
+export const Route = createFileRoute("/_layout/_logged_in/upload-files")({
   component: UploadFiles,
 })
 
@@ -50,7 +50,6 @@ function UploadFiles() {
         "The files were processed successfully.",
         "success",
       )
-      console.log("toasted")
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
     },
     onError: () => {

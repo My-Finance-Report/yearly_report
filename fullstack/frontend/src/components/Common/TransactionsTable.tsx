@@ -5,7 +5,6 @@ import {
   Button,
   Collapsible,
   HStack,
-  Progress,
   Table,
   TableBody,
   TableCell,
@@ -64,8 +63,16 @@ export function TransactionsTable({
           <TableColumnHeader>
             {isMobile ? null : isBudget ? "BUDGET" : ""}
           </TableColumnHeader>
-          <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
-          <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
+          {isMobile ? (
+            <TableColumnHeader textAlign="end" colSpan={1}>
+              EXPENSE / DEPOSIT
+            </TableColumnHeader>
+          ) : (
+            <>
+              <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
+              <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
+            </>
+          )}
           {!isMobile && (
             <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
           )}
@@ -86,16 +93,22 @@ export function TransactionsTable({
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Totals</TableCell>
           <TableCell></TableCell>
-          <TableCell textAlign="end">
-            {formatAmount(data.overall_withdrawals)}
-          </TableCell>
-          <TableCell textAlign="end">
-            {formatAmount(data.overall_deposits)}
-          </TableCell>
-          {!isMobile && (
+          {isMobile ? (
+            <TableCell textAlign="end">
+              {formatAmount(data.overall_withdrawals)} / {formatAmount(data.overall_deposits)}
+            </TableCell>
+          ) : (
+            <>
+              <TableCell textAlign="end">
+                {formatAmount(data.overall_withdrawals)}
+              </TableCell>
+              <TableCell textAlign="end">
+                {formatAmount(data.overall_deposits)}
+              </TableCell>
             <TableCell textAlign="end">
               {formatAmount(data.overall_balance)}
             </TableCell>
+            </>
           )}
         </TableRow>
       </TableBody>
@@ -182,16 +195,23 @@ function RenderGroups({
               ) : (
                 <TableCell></TableCell>
               )}
+              {isMobile ? (
+                <TableCell textAlign="end">
+                  {formatAmount(group.total_withdrawals)} / {formatAmount(group.total_deposits)}
+                </TableCell>
+              ):
+                (
+                  <>
               <TableCell textAlign="end">
                 {formatAmount(group.total_withdrawals)}
               </TableCell>
               <TableCell textAlign="end">
                 {formatAmount(group.total_deposits)}
               </TableCell>
-              {!isMobile && (
                 <TableCell textAlign="end">
                   {formatAmount(group.total_balance)}
                 </TableCell>
+                </>
               )}
             </TableRow>
 
@@ -212,16 +232,22 @@ function RenderGroups({
                               <TableColumnHeader>BUDGET</TableColumnHeader>
                               ):
                               <TableColumnHeader></TableColumnHeader>}
+                              {isMobile ? (
+                              <TableColumnHeader textAlign="end" colSpan={1}>
+                                EXPENSE / DEPOSIT
+                              </TableColumnHeader>
+                              ) : (
+                                <>
                               <TableColumnHeader textAlign="end">
                                 EXPENSE
                               </TableColumnHeader>
                               <TableColumnHeader textAlign="end">
                                 DEPOSIT
                               </TableColumnHeader>
-                              {!isMobile && (
                                 <TableColumnHeader textAlign="end">
                                   TOTAL
                                 </TableColumnHeader>
+                                </>
                               )}
                             </TableRow>
                           </TableHeader>
@@ -355,8 +381,9 @@ function PercentageBar({
   if (budgetedTotal) {
     return <Text color={value > 100 ? "red" : "green"}>{value.toFixed()}% (${totalToUse} was budgeted)</Text>
   }
+  return null
 
-  return (
+/*   return (
     <Progress.Root value={value} maxW="sm">
       <HStack gap="5" minW={200}>
         <Progress.Track maxW={150} minW={150} flex="1">
@@ -365,4 +392,5 @@ function PercentageBar({
       </HStack>
     </Progress.Root>
   );
+ */
 }

@@ -80,13 +80,12 @@ export function SegmentedNavigation() {
               color={"#5F62F6"}
               bgColor={"white"}
               borderColor={"#5F62F6"}
-              borderRadius={200}
-              onClick={() => navigate({ to: "/landing" })}
+              onClick={() => navigate({ to: "/" })}
             >
               How does it work? <FiChevronRight />
             </Button>
             <a target="_blank" href="https://cal.com/matt-carroll">
-              <Button variant="outline" bgColor={"white"} color={"#5F62F6"} borderColor={"#5F62F6"} borderRadius={200}>
+              <Button variant="outline" bgColor={"white"} color={"#5F62F6"} borderColor={"#5F62F6"} >
                 Schedule a call with me 
                 <FiChevronRight />
               </Button>
@@ -103,7 +102,7 @@ export function SegmentedNavigation() {
         minH={20}
         width="100%"
       >
-        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="24px" fontWeight="bold" color="colors.ui.main">
+        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="20px" fontWeight="bold" color="colors.ui.main">
           My Financé
         </Text>
 
@@ -158,19 +157,13 @@ export function SegmentedNavigation() {
               <Flex gap={2}>
             <Button
               variant="outline"
-              color={"#5F62F6"}
-              bgColor={"white"}
-              borderRadius={200}
                 onClick={() => navigate({ to: "/login" })}
             >
                 Log in
               </Button>
           <Button
               variant="solid"
-              color={"white"}
-              bgColor={"#5F62F6"}
-              borderRadius={200}
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: "/signup" })}
             >
               Sign Up
               </Button>
@@ -216,18 +209,12 @@ function MobileMenu({
         <Flex gap={2}>
             <Button
               variant="outline"
-              color={"#5F62F6"}
-              bgColor={"white"}
-              borderRadius={200}
-                onClick={() => navigate({ to: "/login" })}
+               onClick={() => navigate({ to: "/login" })}
             >
                 Log in
               </Button>
           <Button
               variant="solid"
-              color={"white"}
-              bgColor={"#5F62F6"}
-              borderRadius={200}
                 onClick={() => navigate({ to: "/signup" })}
             >
               Sign Up

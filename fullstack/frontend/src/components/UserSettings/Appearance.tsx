@@ -6,7 +6,6 @@ import { Radio, RadioGroup } from "@/components/ui/radio"
 const Appearance = () => {
   const { colorMode, toggleColorMode } = useColorMode()
 
-  console.log(colorMode)
 
   return (
     <>

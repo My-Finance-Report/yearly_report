@@ -150,7 +150,7 @@ def delete_user_me(
 @router.post("/signup", response_model=UserOut)
 def register_user(
     user_in: UserRegister, session: Session = Depends(get_auth_db)
-) -> User:
+) -> UserOut:
     """
     Create new user without the need to be logged in.
     """
@@ -162,10 +162,21 @@ def register_user(
             detail="The user with this email already exists in the system",
         )
 
-    user_create = UserRegister(**user_in.dict())
+    user_create = UserRegister(
+        full_name=user_in.full_name,
+        email=user_in.email,
+        password=user_in.password,
+    )
     user = crud.create_user(session=session, user=user_create)
 
-    return user
+    print(user.settings)
+    return UserOut(
+        full_name=user.full_name or "no name user",
+        email=user.email,
+        id=user.id,
+        is_superuser=user.is_superuser,
+        settings=user.settings,
+    )
 
 
 @router.get("/{user_id}", response_model=UserOut)

@@ -16,12 +16,11 @@ import {
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import type { UserRegister } from "../client"
-import useAuth, { isLoggedIn } from "../hooks/useAuth"
-import { confirmPasswordRules, emailPattern, passwordRules } from "../utils"
-import { SegmentedNavigation } from "@/components/Common/SegmentedNavigation"
+import type { UserRegister } from "@/client"
+import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { confirmPasswordRules, emailPattern, passwordRules } from "../../utils"
 
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
   beforeLoad: async () => {
     if (isLoggedIn()) {
@@ -70,8 +69,6 @@ function SignUp() {
   }
 
   return (
-    <>
-      <SegmentedNavigation />
       <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
         <Container
           as="form"
@@ -90,6 +87,7 @@ function SignUp() {
               minLength={3}
               {...register("full_name", { required: "Full Name is required" })}
               placeholder="Full Name"
+              autoComplete="name"
               type="text"
             />
             {errors.full_name && (
@@ -106,6 +104,7 @@ function SignUp() {
                 pattern: emailPattern,
               })}
               placeholder="Email"
+              autoComplete="username"
               type="email"
             />
             {errors.email && (
@@ -119,6 +118,7 @@ function SignUp() {
               id="password"
               {...register("password", passwordRules())}
               placeholder="Password"
+              autoComplete="new-password"
               type="password"
             />
             {errors.password && (
@@ -132,6 +132,7 @@ function SignUp() {
               id="confirm_password"
               {...register("confirm_password", confirmPasswordRules(getValues))}
               placeholder="Repeat Password"
+              autoComplete="new-password"
               type="password"
             />
             {errors.confirm_password && (
@@ -154,7 +155,6 @@ function SignUp() {
           </Text>
         </Container>
       </Flex>
-    </>
   )
 }
 

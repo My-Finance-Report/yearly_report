@@ -44,11 +44,14 @@ class JSONType(TypeDecorator[T], Generic[T]):
         return None
 
     def process_result_value(
-        self, value: dict[str, str] | None, _dialect: Dialect
+        self, value: dict[str, str] | str | None, _dialect: Dialect
     ) -> T | None:
         """Convert JSON from the database back into the correct dataclass."""
         if value is not None:
-            return self.dataclass_type(**value)
+            if isinstance(value, dict):
+                return self.dataclass_type(**value)
+            else:
+                return self.dataclass_type(**json.loads(value))
         return None
 
 
@@ -91,12 +94,15 @@ BudgetId = NewType("BudgetId", int)
 BudgetCategoryLinkId = NewType("BudgetCategoryLinkId", int)
 BudgetEntryId = NewType("BudgetEntryId", int)
 AuditLogId = NewType("AuditLogId", int)
+TransactionReportId = NewType("TransactionReportId", int)
+PlaidItemId = NewType("PlaidItemId", int)
+PlaidAccountId = NewType("PlaidAccountId", int)
 
 
 @dataclass(kw_only=True)
 class UserSettings:
     has_budget: bool = False
-    power_user_filters: bool = True
+    power_user_filters: bool = False
 
 
 class User(Base):
@@ -142,6 +148,12 @@ class TransactionSource(Base):
     source_kind: Mapped[SourceKind] = mapped_column(
         Enum(SourceKind), default=SourceKind.account
     )
+    plaid_account_id: Mapped[PlaidAccountId | None] = mapped_column(
+        ForeignKey("plaid_account.id"), nullable=True
+    )
+
+    # Relationships
+    plaid_account: Mapped["PlaidAccount | None"] = relationship("PlaidAccount", back_populates="transaction_source")
 
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
@@ -374,3 +386,97 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+
+class TransactionBase(BaseModel):
+    description: str
+    category_id: int
+    date_of_transaction: datetime
+    amount: float
+    transaction_source_id: int
+    kind: TransactionKind
+    uploaded_pdf_id: None | int = None
+    archived: bool = False
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
+
+
+class CategoryBase(BaseModel):
+    name: str
+    source_id: int
+    archived: bool = False
+
+    class Config:
+        orm_mode = True
+
+
+class TransactionSourceBase(BaseModel):
+    name: str
+    archived: bool = False
+    source_kind: SourceKind = SourceKind.account
+
+    class Config:
+        orm_mode = True
+
+
+@dataclass
+class ReportData(BaseModel):
+    transactions: list[TransactionBase]
+    transaction_sources: list[TransactionSourceBase]
+    categories: list[CategoryBase]
+
+
+class Report(Base):
+    __tablename__ = "report"
+
+    id: Mapped[TransactionReportId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    public_token: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
+    report_data: Mapped[ReportData] = mapped_column(
+        JSONType(ReportData), nullable=False
+    )
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PlaidItem(Base):
+    __tablename__ = "plaid_item"
+
+    id: Mapped[PlaidItemId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    plaid_item_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    access_token: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    
+    # Relationships
+    accounts: Mapped[list["PlaidAccount"]] = relationship(back_populates="item")
+
+
+class PlaidAccount(Base):
+    __tablename__ = "plaid_account"
+
+    id: Mapped[PlaidAccountId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    plaid_item_id: Mapped[PlaidItemId] = mapped_column(ForeignKey("plaid_item.id"), nullable=False)
+    plaid_account_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    mask: Mapped[str | None] = mapped_column(String, nullable=True)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    subtype: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    
+    # Relationships
+    item: Mapped["PlaidItem"] = relationship(back_populates="accounts")
+    transaction_source: Mapped["TransactionSource"] = relationship("TransactionSource", uselist=False, back_populates="plaid_account")

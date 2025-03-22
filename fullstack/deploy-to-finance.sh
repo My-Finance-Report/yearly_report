@@ -63,6 +63,8 @@ ssh ${REMOTE_SERVER} << EOF
 
     echo "🚀 Starting containers..."
     docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+
+    chmod +x /home/ec2-user/code/finance_app/backup_db
 EOF
 
 echo "✅ Deployment Completed!"

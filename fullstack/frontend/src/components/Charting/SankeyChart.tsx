@@ -120,7 +120,7 @@ export function GenericSankeyChart({
   )
 }
 
-export const Desc = ({ description }: { description: string | undefined }) => {
+export const Desc = ({ description,mt  }: { description: string | undefined, mt?: string | undefined }) => {
   if (!description) {
     return null
   }
@@ -128,7 +128,7 @@ export const Desc = ({ description }: { description: string | undefined }) => {
   return (
     <PopoverRoot>
       <PopoverTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="sm" mt={mt} variant="outline">
           <FiInfo />
         </Button>
       </PopoverTrigger>

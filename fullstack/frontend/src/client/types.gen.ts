@@ -152,6 +152,40 @@ export type NewPassword = {
     new_password: string;
 };
 
+/**
+ * Response model for a Plaid account.
+ */
+export type PlaidAccountResponse = {
+    plaid_account_id: string;
+    name: string;
+    mask?: (string | null);
+    type: string;
+    subtype?: (string | null);
+    id: number;
+    created_at: string;
+};
+
+/**
+ * Request model for exchanging a public token.
+ */
+export type PlaidExchangeTokenRequest = {
+    public_token: string;
+};
+
+/**
+ * Request model for creating a link token.
+ */
+export type PlaidLinkTokenRequest = {
+    [key: string]: unknown;
+};
+
+/**
+ * Response model for a link token.
+ */
+export type PlaidLinkTokenResponse = {
+    link_token: string;
+};
+
 export type PossibleSankeyInput = {
     category_id: number;
     source_id: number;
@@ -524,6 +558,20 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type PlaidGetLinkTokenData = {
+    requestBody: PlaidLinkTokenRequest;
+};
+
+export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
+
+export type PlaidExchangeTokenData = {
+    requestBody: PlaidExchangeTokenRequest;
+};
+
+export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
+
+export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;
 };
@@ -541,6 +589,8 @@ export type SankeyCreateSankeyConfigResponse = ({
 });
 
 export type SankeyGetSankeyConfigInfoResponse = (SankeyConfigInfo);
+
+export type SitemapSitemapResponse = (unknown);
 
 export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 

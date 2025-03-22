@@ -11,53 +11,31 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SignupImport } from './routes/signup'
-import { Route as ResetPasswordImport } from './routes/reset-password'
-import { Route as RecoverPasswordImport } from './routes/recover-password'
-import { Route as LoginImport } from './routes/login'
-import { Route as LandingImport } from './routes/landing'
-import { Route as DemoImport } from './routes/demo'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
-import { Route as LayoutUploadFilesImport } from './routes/_layout/upload-files'
-import { Route as LayoutTransactionsImport } from './routes/_layout/transactions'
-import { Route as LayoutSettingsImport } from './routes/_layout/settings'
-import { Route as LayoutSankeyConfigImport } from './routes/_layout/sankey-config'
-import { Route as LayoutManageAccountsImport } from './routes/_layout/manage-accounts'
-import { Route as LayoutBudgetImport } from './routes/_layout/budget'
-import { Route as LayoutAdminImport } from './routes/_layout/admin'
+import { Route as LayoutTermsImport } from './routes/_layout/terms'
+import { Route as LayoutSignupImport } from './routes/_layout/signup'
+import { Route as LayoutResetPasswordImport } from './routes/_layout/reset-password'
+import { Route as LayoutRecoverPasswordImport } from './routes/_layout/recover-password'
+import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
+import { Route as LayoutOldImport } from './routes/_layout/old'
+import { Route as LayoutLoginImport } from './routes/_layout/login'
+import { Route as LayoutLandingImport } from './routes/_layout/landing'
+import { Route as LayoutHowImport } from './routes/_layout/how'
+import { Route as LayoutFaqImport } from './routes/_layout/faq'
+import { Route as LayoutDemoImport } from './routes/_layout/demo'
+import { Route as LayoutContactMeImport } from './routes/_layout/contact-me'
+import { Route as LayoutLoggedinImport } from './routes/_layout/_logged_in'
+import { Route as LayoutLoggedinUploadFilesImport } from './routes/_layout/_logged_in/upload-files'
+import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_logged_in/transactions'
+import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
+import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
+import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
+import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
+import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
+import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
 
 // Create/Update Routes
-
-const SignupRoute = SignupImport.update({
-  path: '/signup',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const ResetPasswordRoute = ResetPasswordImport.update({
-  path: '/reset-password',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const RecoverPasswordRoute = RecoverPasswordImport.update({
-  path: '/recover-password',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const LoginRoute = LoginImport.update({
-  path: '/login',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const LandingRoute = LandingImport.update({
-  path: '/landing',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const DemoRoute = DemoImport.update({
-  path: '/demo',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const LayoutRoute = LayoutImport.update({
   id: '/_layout',
@@ -69,39 +47,114 @@ const LayoutIndexRoute = LayoutIndexImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutUploadFilesRoute = LayoutUploadFilesImport.update({
+const LayoutTermsRoute = LayoutTermsImport.update({
+  path: '/terms',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutSignupRoute = LayoutSignupImport.update({
+  path: '/signup',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutResetPasswordRoute = LayoutResetPasswordImport.update({
+  path: '/reset-password',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutRecoverPasswordRoute = LayoutRecoverPasswordImport.update({
+  path: '/recover-password',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutPrivacyRoute = LayoutPrivacyImport.update({
+  path: '/privacy',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutOldRoute = LayoutOldImport.update({
+  path: '/old',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutLoginRoute = LayoutLoginImport.update({
+  path: '/login',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutLandingRoute = LayoutLandingImport.update({
+  path: '/landing',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutHowRoute = LayoutHowImport.update({
+  path: '/how',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutFaqRoute = LayoutFaqImport.update({
+  path: '/faq',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutDemoRoute = LayoutDemoImport.update({
+  path: '/demo',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutContactMeRoute = LayoutContactMeImport.update({
+  path: '/contact-me',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutLoggedinRoute = LayoutLoggedinImport.update({
+  id: '/_logged_in',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutLoggedinUploadFilesRoute = LayoutLoggedinUploadFilesImport.update({
   path: '/upload-files',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
-const LayoutTransactionsRoute = LayoutTransactionsImport.update({
-  path: '/transactions',
-  getParentRoute: () => LayoutRoute,
-} as any)
+const LayoutLoggedinTransactionsRoute = LayoutLoggedinTransactionsImport.update(
+  {
+    path: '/transactions',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any,
+)
 
-const LayoutSettingsRoute = LayoutSettingsImport.update({
+const LayoutLoggedinSettingsRoute = LayoutLoggedinSettingsImport.update({
   path: '/settings',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
-const LayoutSankeyConfigRoute = LayoutSankeyConfigImport.update({
-  path: '/sankey-config',
-  getParentRoute: () => LayoutRoute,
+const LayoutLoggedinSankeyConfigRoute = LayoutLoggedinSankeyConfigImport.update(
+  {
+    path: '/sankey-config',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any,
+)
+
+const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
+  path: '/plaid',
+  getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
-const LayoutManageAccountsRoute = LayoutManageAccountsImport.update({
-  path: '/manage-accounts',
-  getParentRoute: () => LayoutRoute,
-} as any)
+const LayoutLoggedinManageAccountsRoute =
+  LayoutLoggedinManageAccountsImport.update({
+    path: '/manage-accounts',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
 
-const LayoutBudgetRoute = LayoutBudgetImport.update({
+const LayoutLoggedinBudgetRoute = LayoutLoggedinBudgetImport.update({
   path: '/budget',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
-const LayoutAdminRoute = LayoutAdminImport.update({
+const LayoutLoggedinAdminRoute = LayoutLoggedinAdminImport.update({
   path: '/admin',
-  getParentRoute: () => LayoutRoute,
+  getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -112,61 +165,93 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
     }
-    '/demo': {
-      preLoaderRoute: typeof DemoImport
-      parentRoute: typeof rootRoute
-    }
-    '/landing': {
-      preLoaderRoute: typeof LandingImport
-      parentRoute: typeof rootRoute
-    }
-    '/login': {
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
-    }
-    '/recover-password': {
-      preLoaderRoute: typeof RecoverPasswordImport
-      parentRoute: typeof rootRoute
-    }
-    '/reset-password': {
-      preLoaderRoute: typeof ResetPasswordImport
-      parentRoute: typeof rootRoute
-    }
-    '/signup': {
-      preLoaderRoute: typeof SignupImport
-      parentRoute: typeof rootRoute
-    }
-    '/_layout/admin': {
-      preLoaderRoute: typeof LayoutAdminImport
+    '/_layout/_logged_in': {
+      preLoaderRoute: typeof LayoutLoggedinImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/budget': {
-      preLoaderRoute: typeof LayoutBudgetImport
+    '/_layout/contact-me': {
+      preLoaderRoute: typeof LayoutContactMeImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/manage-accounts': {
-      preLoaderRoute: typeof LayoutManageAccountsImport
+    '/_layout/demo': {
+      preLoaderRoute: typeof LayoutDemoImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/sankey-config': {
-      preLoaderRoute: typeof LayoutSankeyConfigImport
+    '/_layout/faq': {
+      preLoaderRoute: typeof LayoutFaqImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/settings': {
-      preLoaderRoute: typeof LayoutSettingsImport
+    '/_layout/how': {
+      preLoaderRoute: typeof LayoutHowImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/transactions': {
-      preLoaderRoute: typeof LayoutTransactionsImport
+    '/_layout/landing': {
+      preLoaderRoute: typeof LayoutLandingImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/upload-files': {
-      preLoaderRoute: typeof LayoutUploadFilesImport
+    '/_layout/login': {
+      preLoaderRoute: typeof LayoutLoginImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/old': {
+      preLoaderRoute: typeof LayoutOldImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/privacy': {
+      preLoaderRoute: typeof LayoutPrivacyImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/recover-password': {
+      preLoaderRoute: typeof LayoutRecoverPasswordImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/reset-password': {
+      preLoaderRoute: typeof LayoutResetPasswordImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/signup': {
+      preLoaderRoute: typeof LayoutSignupImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/terms': {
+      preLoaderRoute: typeof LayoutTermsImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/': {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
+    }
+    '/_layout/_logged_in/admin': {
+      preLoaderRoute: typeof LayoutLoggedinAdminImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/budget': {
+      preLoaderRoute: typeof LayoutLoggedinBudgetImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/manage-accounts': {
+      preLoaderRoute: typeof LayoutLoggedinManageAccountsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/plaid': {
+      preLoaderRoute: typeof LayoutLoggedinPlaidImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/sankey-config': {
+      preLoaderRoute: typeof LayoutLoggedinSankeyConfigImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/settings': {
+      preLoaderRoute: typeof LayoutLoggedinSettingsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/transactions': {
+      preLoaderRoute: typeof LayoutLoggedinTransactionsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/upload-files': {
+      preLoaderRoute: typeof LayoutLoggedinUploadFilesImport
+      parentRoute: typeof LayoutLoggedinImport
     }
   }
 }
@@ -175,21 +260,30 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
-    LayoutAdminRoute,
-    LayoutBudgetRoute,
-    LayoutManageAccountsRoute,
-    LayoutSankeyConfigRoute,
-    LayoutSettingsRoute,
-    LayoutTransactionsRoute,
-    LayoutUploadFilesRoute,
+    LayoutLoggedinRoute.addChildren([
+      LayoutLoggedinAdminRoute,
+      LayoutLoggedinBudgetRoute,
+      LayoutLoggedinManageAccountsRoute,
+      LayoutLoggedinPlaidRoute,
+      LayoutLoggedinSankeyConfigRoute,
+      LayoutLoggedinSettingsRoute,
+      LayoutLoggedinTransactionsRoute,
+      LayoutLoggedinUploadFilesRoute,
+    ]),
+    LayoutContactMeRoute,
+    LayoutDemoRoute,
+    LayoutFaqRoute,
+    LayoutHowRoute,
+    LayoutLandingRoute,
+    LayoutLoginRoute,
+    LayoutOldRoute,
+    LayoutPrivacyRoute,
+    LayoutRecoverPasswordRoute,
+    LayoutResetPasswordRoute,
+    LayoutSignupRoute,
+    LayoutTermsRoute,
     LayoutIndexRoute,
   ]),
-  DemoRoute,
-  LandingRoute,
-  LoginRoute,
-  RecoverPasswordRoute,
-  ResetPasswordRoute,
-  SignupRoute,
 ])
 
 /* prettier-ignore-end */

@@ -5,8 +5,10 @@ from app.api.routes import (
     login,
     manage_accounts,
     manage_budgets,
+    plaid,
     private,
     sankey,
+    sitemap,
     transactions,
     uploads,
     users,
@@ -16,6 +18,8 @@ from app.core.config import settings
 
 api_router = APIRouter()
 api_router.include_router(login.router)
+api_router.include_router(plaid.router)
+api_router.include_router(sitemap.router)
 api_router.include_router(demo.router)
 api_router.include_router(transactions.router)
 api_router.include_router(manage_accounts.router)

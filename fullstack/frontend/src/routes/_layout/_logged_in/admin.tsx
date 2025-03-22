@@ -12,17 +12,17 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { z } from "zod"
 
-import { type UserOut, UsersService } from "../../client"
-import AddUser from "../../components/Admin/AddUser"
-import ActionsMenu from "../../components/Common/ActionsMenu"
-import Navbar from "../../components/Common/Navbar"
-import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx"
+import { type UserOut, UsersService } from "@/client"
+import AddUser from "@/components/Admin/AddUser"
+import ActionsMenu from "@/components/Common/ActionsMenu"
+import Navbar from "@/components/Common/Navbar"
+import { PaginationFooter } from "@/components/Common/PaginationFooter.tsx"
 
 const usersSearchSchema = z.object({
   page: z.number().catch(1),
 })
 
-export const Route = createFileRoute("/_layout/admin")({
+export const Route = createFileRoute("/_layout/_logged_in/admin")({
   component: Admin,
   validateSearch: (search) => usersSearchSchema.parse(search),
 })

@@ -12,12 +12,9 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-import {
-  Button,
-  Flex,
-} from "@chakra-ui/react";
+import { Button, Flex } from "@chakra-ui/react";
 
-import { Box, CloseButton, Tag, Text, Menu,  Portal } from "@chakra-ui/react";
+import { Box, CloseButton, Tag, Text, Menu, Portal } from "@chakra-ui/react";
 import {
   DndContext,
   type DragEndEvent,
@@ -41,7 +38,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
 import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import {  useState } from "react";
+import { useState } from "react";
+import useAuth from "@/hooks/useAuth";
 
 export interface FilterInfo {
   years: string[];
@@ -59,23 +57,28 @@ export interface FilterInfo {
 function getFilterSettings(
   filterInfo: FilterInfo,
   groupingOption: GroupByOption
-): {values: string[], setValues: React.Dispatch<React.SetStateAction<string[]>>} {
+): {
+  values: string[];
+  setValues: React.Dispatch<React.SetStateAction<string[]>>;
+} {
   switch (groupingOption) {
     case GroupByOption.year:
-      return {values: filterInfo.years, setValues: filterInfo.setYears};
+      return { values: filterInfo.years, setValues: filterInfo.setYears };
     case GroupByOption.account:
-      return {values: filterInfo.accounts, setValues: filterInfo.setAccounts};
+      return { values: filterInfo.accounts, setValues: filterInfo.setAccounts };
     case GroupByOption.month:
-      return {values: filterInfo.months, setValues: filterInfo.setMonths};
+      return { values: filterInfo.months, setValues: filterInfo.setMonths };
     case GroupByOption.category:
-      return {values: filterInfo.categories, setValues: filterInfo.setCategories};
+      return {
+        values: filterInfo.categories,
+        setValues: filterInfo.setCategories,
+      };
     case GroupByOption.budget:
-      return {values: filterInfo.budgets, setValues: filterInfo.setBudgets};
+      return { values: filterInfo.budgets, setValues: filterInfo.setBudgets };
     default:
       throw "Invalid grouping option";
   }
 }
-
 
 export function FilterGroup({
   filterInfo,
@@ -174,8 +177,68 @@ function InnerFilterGroup({
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
   collapsedItems: CollapsibleName[];
 }) {
+  const powerUser = useAuth().user?.settings?.power_user_filters ?? false;
+  return (
+    <div
+      style={{
+        backgroundColor: "background",
+        zIndex: 100,
+        minHeight: "150px",
+        padding: "1px 0",
+        marginBottom: "10px",
+      }}
+    >
+      <div>
+        <BoxWithText
+          text=""
+          setCollapsedItems={setCollapsedItems}
+          collapsedItems={collapsedItems}
+          isCollapsable={false}
+          COMPONENT_NAME="Filters"
+        >
+            <NonPowerUserButtons
+              setGroupingOptions={setGroupingOptions}
+              filterInfo={filterInfo}
+              groupingOptionsChoices={groupingOptionsChoices}
+            />
+          {powerUser && (
+            <PowerUserButtons
+              filterInfo={filterInfo}
+              setGroupingOptions={setGroupingOptions}
+              groupingOptionsChoices={groupingOptionsChoices}
+              groupingOptions={groupingOptions}
+              setShowDeposits={setShowDeposits}
+              showDeposits={showDeposits}
+            />
+          )
+          }
+        </BoxWithText>
+      </div>
+    </div>
+  );
+}
 
-  const includeBudget = !!(groupingOptionsChoices && groupingOptionsChoices[GroupByOption.budget]?.length > 1);
+function PowerUserButtons({
+  filterInfo,
+  setGroupingOptions,
+  groupingOptionsChoices,
+  groupingOptions,
+  setShowDeposits,
+  showDeposits,
+}: {
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
+  showDeposits: boolean;
+  groupingOptions: GroupByOption[];
+  filterInfo: FilterInfo;
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
+  groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
+}) {
+  const includeBudget = !!(
+    groupingOptionsChoices &&
+    groupingOptionsChoices[GroupByOption.budget]?.length > 1
+  );
+
+  const isMobile = useIsMobile();
 
   const handleToggleOption = (option: GroupByOption) => {
     setGroupingOptions((prev: GroupByOption[]) => {
@@ -231,102 +294,80 @@ function InnerFilterGroup({
     });
   };
 
-  const isMobile = useIsMobile();
-
-
   return (
-    <div
-      style={{
-        backgroundColor: "background",
-        zIndex: 100,
-        minHeight: "150px",
-        padding: "1px 0",
-        marginBottom: "10px",
-      }}
-    >
-      <div>
-        <BoxWithText
-          text=""
-          setCollapsedItems={setCollapsedItems}
-          collapsedItems={collapsedItems}
-          isCollapsable={false}
-          COMPONENT_NAME="Filters"
+    <>
+      <Flex
+        direction={isMobile ? "column" : "row"}
+        gap={4}
+        paddingTop={4}
+        alignItems={"start"}
+        justifyContent={"start"}
+      ></Flex>
+      <Box mt={4} backgroundColor={"background"} borderRadius="lg">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <NonPowerUserButtons setGroupingOptions={setGroupingOptions} filterInfo={filterInfo} groupingOptionsChoices={groupingOptionsChoices}/>
           <Flex
-            direction={isMobile ? "column" : "row"}
-            gap={4}
-            paddingTop={4}
-            alignItems={"start"}
+            direction="column"
             justifyContent={"start"}
-          ></Flex>
-          <Box mt={4} backgroundColor={"background"} borderRadius="lg">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <Flex
-                direction="column"
-                justifyContent={"start"}
-                gap={2}
-                alignItems={"start"}
+            gap={2}
+            alignItems={"start"}
+          >
+            <Flex direction="column" alignItems="start" gap={2}>
+              <WithdrawDepositSelectorSegmented
+                setShowDeposits={setShowDeposits}
+                showDeposits={showDeposits}
+              />
+              <SortableContext
+                items={groupingOptions}
+                strategy={horizontalListSortingStrategy}
               >
-                <Flex direction="column" alignItems="start" gap={2}>
-                  <WithdrawDepositSelectorSegmented
-                    setShowDeposits={setShowDeposits}
-                    showDeposits={showDeposits}
-                  />
-                  <SortableContext
-                    items={groupingOptions}
-                    strategy={horizontalListSortingStrategy}
-                  >
-                    {groupingOptions.map((option, index) => {
-                      const {values, setValues} = getFilterSettings(
-                        filterInfo,
-                        option
-                      );
-                      return (
-                        <Flex
-                          paddingLeft={1}
-                          marginLeft={index * 2}
-                          key={option}
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="start"
-                          gap={2}
-                        >
-                          <SortableItem
-                            key={option}
-                            filters={values}
-                            setFilters={setValues}
-                            moveItemUp={moveItemUp}
-                            moveItemDown={moveItemDown}
-                            isFirst={index === 0}
-                            isLast={index === groupingOptions.length - 1}
-                            choices={groupingOptionsChoices?.[option]}
-                            option={option}
-                            noX={groupingOptions.length === 1}
-                            onRemove={handleToggleOption}
-                          />
-                        </Flex>
-                      );
-                    })}
-                  </SortableContext>
-                  <Box key='blah' paddingLeft={groupingOptions.length * 2}>
-                    <GroupingConfig
-                      showBudgets={includeBudget}
-                      groupingOptions={groupingOptions}
-                      setGroupingOptions={setGroupingOptions}
-                    />
-                  </Box>
-                </Flex>
-              </Flex>
-            </DndContext>
-          </Box>
-        </BoxWithText>
-      </div>
-    </div>
+                {groupingOptions.map((option, index) => {
+                  const { values, setValues } = getFilterSettings(
+                    filterInfo,
+                    option
+                  );
+                  return (
+                    <Flex
+                      paddingLeft={1}
+                      marginLeft={index * 2}
+                      key={option}
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="start"
+                      gap={2}
+                    >
+                      <SortableItem
+                        key={option}
+                        filters={values}
+                        setFilters={setValues}
+                        moveItemUp={moveItemUp}
+                        moveItemDown={moveItemDown}
+                        isFirst={index === 0}
+                        isLast={index === groupingOptions.length - 1}
+                        choices={groupingOptionsChoices?.[option]}
+                        option={option}
+                        noX={groupingOptions.length === 1}
+                        onRemove={handleToggleOption}
+                      />
+                    </Flex>
+                  );
+                })}
+              </SortableContext>
+              <Box key="blah" paddingLeft={groupingOptions.length * 2}>
+                <GroupingConfig
+                  showBudgets={includeBudget}
+                  groupingOptions={groupingOptions}
+                  setGroupingOptions={setGroupingOptions}
+                />
+              </Box>
+            </Flex>
+          </Flex>
+        </DndContext>
+      </Box>
+    </>
   );
 }
 
@@ -364,50 +405,50 @@ const SortableItem = ({
   };
 
   return (
-      <Tag.Root
-        ref={setNodeRef}
-        py={noX ? 2 : 0}
-        minW={"260px"}
-        justifyContent="space-between"
-        style={style}
-        {...attributes}
-        {...listeners}
-      >
-        <Text ml={1} cursor="grab">
-          {option.charAt(0).toUpperCase() + option.slice(1)}
-        </Text>
-        <Flex p={1} gap={0} >
-          <FilterButton
-            filters={filters}
-            setFilters={setFilters}
-            options={choices ?? []}
-            name={option}
+    <Tag.Root
+      ref={setNodeRef}
+      py={noX ? 2 : 0}
+      minW={"260px"}
+      justifyContent="space-between"
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      <Text ml={1} cursor="grab">
+        {option.charAt(0).toUpperCase() + option.slice(1)}
+      </Text>
+      <Flex p={1} gap={0}>
+        <FilterButton
+          filters={filters}
+          setFilters={setFilters}
+          options={choices ?? []}
+          name={option}
+        />
+        <Button
+          size="xs"
+          variant="subtle"
+          disabled={isFirst}
+          onClick={() => moveItemUp(option)}
+        >
+          <FiChevronUp />
+        </Button>
+        <Button
+          size="xs"
+          variant="subtle"
+          disabled={isLast}
+          onClick={() => moveItemDown(option)}
+        >
+          <FiChevronDown />
+        </Button>
+        {!noX && (
+          <CloseButton
+            onClick={() => onRemove(option)}
+            size="xs"
+            variant="subtle"
           />
-          <Button
-            size="xs"
-            variant="subtle"
-            disabled={isFirst}
-            onClick={() => moveItemUp(option)}
-          >
-            <FiChevronUp />
-          </Button>
-          <Button
-            size="xs"
-            variant="subtle"
-            disabled={isLast}
-            onClick={() => moveItemDown(option)}
-          >
-            <FiChevronDown />
-          </Button>
-          {!noX && (
-            <CloseButton
-              onClick={() => onRemove(option)}
-              size="xs"
-              variant="subtle"
-            />
-          )}
-        </Flex>
-      </Tag.Root>
+        )}
+      </Flex>
+    </Tag.Root>
   );
 };
 interface FilterButtonProps {
@@ -417,8 +458,11 @@ interface FilterButtonProps {
   setFilters: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-export function FilterButton({ options, filters, setFilters }: FilterButtonProps) {
-
+export function FilterButton({
+  options,
+  filters,
+  setFilters,
+}: FilterButtonProps) {
   const handleToggle = (option: string) => {
     if (filters.includes(option)) {
       setFilters(filters.filter((f) => f !== option));
@@ -435,7 +479,7 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
     setFilters([]);
   };
 
-  const hasApplied = filters.length > 0
+  const hasApplied = filters.length > 0;
 
   return (
     <Menu.Root
@@ -468,7 +512,6 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
                   <Menu.CheckboxItem
                     value={option}
                     key={option}
-                    // The key part is controlling 'checked' and toggling via parent
                     checked={checked}
                     onCheckedChange={() => handleToggle(option)}
                   >
@@ -485,36 +528,83 @@ export function FilterButton({ options, filters, setFilters }: FilterButtonProps
   );
 }
 
-function NonPowerUserButtons({filterInfo, setGroupingOptions, groupingOptionsChoices}: {filterInfo: FilterInfo, setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>, groupingOptionsChoices: Record<GroupByOption, string[]> | undefined}) {
+function NonPowerUserButtons({
+  filterInfo,
+  setGroupingOptions,
+  groupingOptionsChoices,
+}: {
+  filterInfo: FilterInfo;
+  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
+  groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
+}) {
+  const excludingUnbudgeted =
+    groupingOptionsChoices?.[GroupByOption.budget]?.filter(
+      (budget) => budget !== "Unbudgeted"
+    ) ?? [];
+  const hasBudgets = excludingUnbudgeted.length > 0;
 
-
-  const excludingUnbudgeted = groupingOptionsChoices?.[GroupByOption.budget].filter(budget => budget !== "Unbudgeted") ?? []
-
-
-  const { setValues: setYears} =  getFilterSettings(filterInfo, GroupByOption.year)
-  const { setValues: setBudgets} =  getFilterSettings(filterInfo, GroupByOption.budget)
+  const { setValues: setYears } = getFilterSettings(
+    filterInfo,
+    GroupByOption.year
+  );
+  const { setValues: setBudgets } = getFilterSettings(
+    filterInfo,
+    GroupByOption.budget
+  );
 
   const setMonthlyBudget = () => {
-    setGroupingOptions([GroupByOption.budget, GroupByOption.month, GroupByOption.year]);
-   setYears([new Date().getFullYear().toString()])
-   setBudgets(excludingUnbudgeted)
-  }
+    setGroupingOptions([
+      GroupByOption.budget,
+      GroupByOption.month,
+      GroupByOption.year,
+    ]);
+    setYears([new Date().getFullYear().toString()]);
+    setBudgets(excludingUnbudgeted);
+  };
 
   const setYTD = () => {
-    setGroupingOptions([GroupByOption.year, GroupByOption.month,GroupByOption.category]);
-   setYears([new Date().getFullYear().toString()])
-  }
+    setGroupingOptions([
+      GroupByOption.month,
+      GroupByOption.category,
+      GroupByOption.year,
+    ]);
+    setYears([new Date().getFullYear().toString()]);
+  };
 
   const setLastYear = () => {
-    setGroupingOptions([GroupByOption.year, GroupByOption.month,GroupByOption.category]);
-    setYears([(new Date().getFullYear()-1).toString()])
-  }
+    setGroupingOptions([
+      GroupByOption.month,
+      GroupByOption.category,
+      GroupByOption.year,
+    ]);
+    setYears([(new Date().getFullYear() - 1).toString()]);
+
+  };
+
+  const setAllTime = () => {
+    setGroupingOptions([
+      GroupByOption.month,
+      GroupByOption.category,
+    ]);
+    setYears(groupingOptionsChoices?.[GroupByOption.year] ?? []);
+  };
 
   return (
-    <Flex gap={2} direction={'column'}>   
-      <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>Monthly Budget</Button>
-      <Button size="xs" variant="subtle" onClick={setYTD}>Year To Date</Button>
-      <Button size="xs" variant="subtle" onClick={setLastYear}>Last Year</Button>
+    <Flex gap={2} direction={"column"}>
+      {hasBudgets && (
+      <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
+        Monthly Budget
+      </Button>
+      )}
+      <Button size="xs" variant="subtle" onClick={setYTD}>
+        Year To Date
+      </Button>
+      <Button size="xs" variant="subtle" onClick={setLastYear}>
+        Last Year
+      </Button>
+      <Button size="xs" variant="subtle" onClick={setAllTime}>
+        All Time
+      </Button>
     </Flex>
   );
 }

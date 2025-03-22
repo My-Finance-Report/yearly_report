@@ -1,7 +1,7 @@
 from app.core.security import get_password_hash, verify_password
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
-from app.models import User
+from app.models import User, UserSettings
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -18,6 +18,7 @@ def create_user(*, session: Session, user: UserRegister) -> User:
         full_name=user.full_name,
         hashed_password=get_password_hash(user.password),
         email=user.email,
+        settings=UserSettings(),
     )
     session.add(new_user)
     session.commit()

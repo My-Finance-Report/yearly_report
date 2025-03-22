@@ -22,11 +22,17 @@ const useAuth = () => {
   const navigate = useNavigate()
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
-  const { data: user, isLoading } = useQuery<UserOut | null, Error>({
+  const { data: user, isLoading, error: authError } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
     enabled: isLoggedIn(),
   })
+
+    if (authError){
+        localStorage.removeItem("access_token")
+        queryClient.clear()
+        navigate({ to: "/login" })
+    }
 
   const signUpMutation = useMutation({
     mutationFn: (data: UserRegister) =>

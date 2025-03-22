@@ -29,36 +29,37 @@ this is mainly a project through which I will learn more about haskell, but I ex
 # User feedback / TODO
 
 
--> easy mode on filters
+-> add a last active at time on the user model
+
+-> uploads page on mobile is rough
 
 -> budget page should probably not use edit modal for create
 
 -> shareable report
 
--> welcome email
+-> redirect everything to the main url
 
--> check boxes are buggy in add filter group
+-> welcome email
 
 -> merge account function
 --> built backend but needs frontend
-
--> sort orders in table
 
 -> repro filter bug by getting a query that has no results
 
 -> nice to have: search
 
--> group uploaded files by account
 
 -> monthly emails (resend)
 
 -> stripe (when do people need to pay?)
+
 
 -> try to prevent color overlaps
 
 -> OAuth, nice but not required
 
 -> confirm the db backup is working
+ --> it isnt
 
 -> dashboard config and ability to save them (query params)
 --> parse the query params from the url
@@ -77,6 +78,5 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> privacy policy
 -> terms of service
 -> contact me page (add to other pages or footer)
-
 
 
