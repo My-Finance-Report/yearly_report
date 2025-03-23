@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
 from app.models import (
+    Category,
     PlaidAccount,
     PlaidItem,
     SourceKind,
@@ -16,6 +17,7 @@ from app.plaid.models import (
     PlaidExchangeTokenRequest,
     PlaidLinkTokenResponse,
 )
+from app.async_pipelines.uploaded_file_pipeline.configuration_creator import add_default_categories
 
 router = APIRouter(prefix="/plaid", tags=["plaid"])
 
@@ -28,7 +30,7 @@ def get_link_token(
     try:
         link_token = create_link_token(str(user.id))
         return PlaidLinkTokenResponse(link_token=link_token)
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=500, detail="Error creating link token:")
 
 
@@ -66,7 +68,6 @@ async def exchange_token(
         # Create Plaid accounts and transaction sources
         created_accounts = []
         for account in accounts_response["accounts"]:
-            # Create Plaid account
             plaid_account = PlaidAccount(
                 user_id=user.id,
                 plaid_item_id=plaid_item.id,
@@ -77,7 +78,7 @@ async def exchange_token(
                 subtype=str(account.get("subtype")),
             )
             session.add(plaid_account)
-            session.flush()  # Flush to get the ID
+            session.flush() 
 
             transaction_source = TransactionSource(
                 user_id=user.id,
@@ -86,6 +87,8 @@ async def exchange_token(
                 source_kind=get_source_kind_from_account_type(account["type"]),
             )
             session.add(transaction_source)
+
+            add_default_categories(session, user, transaction_source)
 
             created_accounts.append(
                 PlaidAccountResponse(

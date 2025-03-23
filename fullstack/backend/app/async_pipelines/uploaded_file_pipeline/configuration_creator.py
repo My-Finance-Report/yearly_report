@@ -163,6 +163,15 @@ def save_account_config(
 
     return transaction_source
 
+def add_default_categories(session:Session, user:User, source:TransactionSource) -> None:
+    cats_to_use = HARDCODED_CATEGORIES[source.source_kind]
+    categories = [
+        Category(name=cat, source_id=source.id, user_id=user.id)
+        for cat in cats_to_use
+    ]
+    session.add_all(categories)
+    session.commit()
+
 
 def create_configurations(process: InProcessFile) -> UploadConfiguration:
     session = process.session

@@ -17,6 +17,7 @@ from app.models import (
     User,
 )
 from app.plaid.client import get_plaid_client
+from app.async_pipelines.uploaded_file_pipeline.configuration_creator import add_default_categories
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ def sync_plaid_account_transactions(
     transaction_source = session.query(TransactionSource).filter(
         TransactionSource.plaid_account_id == plaid_account.id
     ).one()
-    
+
     # Set date range for transaction fetch
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days_back)
@@ -187,21 +188,23 @@ def add_new_transactions(
     transaction_source: TransactionSource,
     plaid_transactions: List[Any]
 ) -> int:
-    """Add new transactions from Plaid to our database."""
-    # Get categories for this transaction source
     categories = session.query(Category).filter(
         Category.source_id == transaction_source.id,
+        Category.user_id == user.id,
         Category.archived == False
     ).all()
-    
+
     if not categories:
-        logger.warning(f"No categories found for transaction source {transaction_source.id}")
-        return 0
-    
-    # Use the first category as default (will be recategorized later)
+        add_default_categories(session, user, transaction_source)
+        categories = session.query(Category).filter(
+            Category.source_id == transaction_source.id,
+            Category.user_id == user.id,
+            Category.archived == False
+        ).all()
+
     default_category = categories[0]
     
-    # Create new Transaction objects
+    
     new_transactions = []
     for pt in plaid_transactions:
         kind = get_transaction_kind(float(pt["amount"]))
@@ -209,7 +212,7 @@ def add_new_transactions(
         transaction = Transaction(
             description=pt["name"],
             category_id=default_category.id,
-            date_of_transaction=datetime.strptime(pt["date"], "%Y-%m-%d"),
+            date_of_transaction=pt["date"],
             amount=abs(float(pt["amount"])),
             transaction_source_id=transaction_source.id,
             kind=kind,
@@ -220,7 +223,6 @@ def add_new_transactions(
         )
         new_transactions.append(transaction)
     
-    # Bulk insert new transactions
     if new_transactions:
         session.bulk_save_objects(new_transactions)
         session.flush()
@@ -240,9 +242,8 @@ def update_modified_transactions(
         if not local_tx:
             continue
             
-        # Update transaction fields
         local_tx.description = pt["name"]
-        local_tx.date_of_transaction = datetime.strptime(pt["date"], "%Y-%m-%d")
+        local_tx.date_of_transaction = pt["date"]
         local_tx.amount = abs(float(pt["amount"]))
         local_tx.kind = get_transaction_kind(float(pt["amount"]))
         local_tx.last_updated = datetime.now()
@@ -274,7 +275,6 @@ async def sync_all_plaid_accounts(user_session: Session, user: User, days_back: 
     """
     
     try:
-        # Get all Plaid accounts for this user
         plaid_accounts = user_session.query(PlaidAccount).filter(
             PlaidAccount.user_id == user.id
         ).all()
