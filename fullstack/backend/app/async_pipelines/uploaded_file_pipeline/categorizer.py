@@ -124,7 +124,7 @@ def insert_categorized_transactions(in_process: InProcessFile) -> None:
             amount=t.partialTransactionAmount,
             transaction_source_id=in_process.transaction_source.id,
             kind=t.partialTransactionKind,
-            uploaded_pdf_id=in_process.file.id,
+            uploaded_pdf_id=in_process.file.id if in_process.file else None,
             user_id=in_process.user.id,
             archived=False,
         )

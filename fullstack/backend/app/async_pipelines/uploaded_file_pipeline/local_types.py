@@ -122,8 +122,8 @@ class Recategorization:
 class InProcessFile:
     session: Session
     user: User
-    file: UploadedPdf
-    job: ProcessFileJob
+    file: UploadedPdf | None = None
+    job: ProcessFileJob | None = None
     config: UploadConfiguration | None = None
     transaction_source: TransactionSource | None = None
     categories: list[Category] | None = None

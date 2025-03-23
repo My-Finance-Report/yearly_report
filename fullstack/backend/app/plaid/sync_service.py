@@ -11,6 +11,7 @@ from app.models import (
     PlaidAccount,
     PlaidItem,
     PlaidSyncLog,
+    ProcessFileJob,
     Transaction,
     TransactionKind,
     TransactionSource,
@@ -18,6 +19,10 @@ from app.models import (
 )
 from app.plaid.client import get_plaid_client
 from app.async_pipelines.uploaded_file_pipeline.configuration_creator import add_default_categories
+from app.async_pipelines.recategorize_pipeline.main import apply_previous_recategorizations
+from app.async_pipelines.uploaded_file_pipeline.categorizer import categorize_extracted_transactions, insert_categorized_transactions
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PartialTransaction, TransactionsWrapper
+from app.func_utils import pipe
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +75,7 @@ def has_transaction_changed(local_transaction: Transaction, plaid_transaction: A
         return True
     
     local_date = local_transaction.date_of_transaction.date()
-    plaid_date = datetime.strptime(plaid_transaction["date"], "%Y-%m-%d").date()
+    plaid_date = plaid_transaction["date"]
     if local_date != plaid_date:
         return True
     
@@ -182,6 +187,17 @@ def sync_plaid_account_transactions(
         raise
 
 
+def plaid_categorize_pipe(in_process: InProcessFile)->None: 
+    print("categorizing")
+    return pipe(
+    in_process,
+    #apply_previous_recategorizations, TODO reapply
+    categorize_extracted_transactions,
+    final=insert_categorized_transactions,
+    )
+
+
+
 def add_new_transactions(
     session: Session,
     user: User,
@@ -202,33 +218,28 @@ def add_new_transactions(
             Category.archived == False
         ).all()
 
-    default_category = categories[0]
-    
-    
-    new_transactions = []
-    for pt in plaid_transactions:
-        kind = get_transaction_kind(float(pt["amount"]))
-        
-        transaction = Transaction(
-            description=pt["name"],
-            category_id=default_category.id,
-            date_of_transaction=pt["date"],
-            amount=abs(float(pt["amount"])),
-            transaction_source_id=transaction_source.id,
-            kind=kind,
-            user_id=user.id,
-            external_id=pt["transaction_id"],
-            archived=False,
-            last_updated=datetime.now()
-        )
-        new_transactions.append(transaction)
-    
-    if new_transactions:
-        session.bulk_save_objects(new_transactions)
-        session.flush()
-    
-    return len(new_transactions)
-
+    in_process = InProcessFile(
+        session=session,
+        user=user,
+        transaction_source=transaction_source,
+        categories=categories,
+        transactions=TransactionsWrapper(
+            transactions=[
+                PartialTransaction(
+                    partialTransactionId=None,
+                    partialTransactionAmount=abs(float(pt["amount"])),
+                    partialTransactionDescription=pt["name"],
+                    partialTransactionDateOfTransaction=pt["date"].strftime("%m/%d/%Y"),
+                    partialTransactionKind=get_transaction_kind(float(pt["amount"])).value,
+                )
+                for pt in plaid_transactions
+            ]
+        ),
+    )
+   
+    plaid_categorize_pipe(in_process)
+    assert in_process.transactions, "must have"
+    return len(in_process.transactions.transactions)
 
 def update_modified_transactions(
     session: Session,
