@@ -21,6 +21,7 @@ dependencies = [
     "pydantic-settings<3.0.0,>=2.2.1",
     "sentry-sdk[fastapi]<2.0.0,>=1.40.6",
     "pyjwt<3.0.0,>=2.8.0",
+    "plaid-python>=14.0.0,<15.0.0",
 ]
 
 [tool.uv]
@@ -40,6 +41,9 @@ build-backend = "hatchling.build"
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv", "alembic"]
+[[tool.mypy.overrides]]
+module = "plaid.*"
+ignore_missing_imports = true
 
 [tool.ruff]
 target-version = "py310"
