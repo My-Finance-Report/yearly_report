@@ -15,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { FaPlus, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import { createFileRoute } from "@tanstack/react-router";
-import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useCustomToast from "../../../hooks/useCustomToast"
 import { PlaidGetPlaidAccountsResponse, PlaidService } from "@/client";
@@ -56,10 +55,12 @@ const toast = useCustomToast()
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
     mutationFn: async (public_token: string) => {
-      const response = await axios.post("/api/plaid/exchange_token", {
-        public_token,
+      const response = await PlaidService.exchangeToken({
+        requestBody: {
+          public_token,
+        },
       });
-      return response.data;
+      return response;
     },
     onSuccess: () => {
       toast(
@@ -190,7 +191,6 @@ const toast = useCustomToast()
             borderWidth="1px"
             borderRadius="lg"
             textAlign="center"
-            bg="gray.50"
           >
             <Text>No accounts connected yet. Click the button above to get started.</Text>
           </Box>
