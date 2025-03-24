@@ -13,12 +13,14 @@ from plaid.model.products import Products
 
 def get_plaid_client() -> plaid_api.PlaidApi:
     """Initialize and return a Plaid client."""
-    client_id = os.environ["PLAID_CLIENT_ID"]
-    secret = os.environ["PLAID_SECRET"]
-    environment = os.environ["PLAID_ENV"]
+    client_id = os.environ.get("PLAID_CLIENT_ID", "your_client_id")
+    secret = os.environ.get("PLAID_SECRET", "your_secret")
+    environment = os.environ.get("PLAID_ENV", "sandbox")
 
     configuration = plaid.Configuration(
-        host=plaid.Environment.Sandbox if environment == "sandbox" else plaid.Environment.Production,
+        host=plaid.Environment.Sandbox
+        if environment == "sandbox"
+        else plaid.Environment.Production,
         api_key={
             "clientId": client_id,
             "secret": secret,

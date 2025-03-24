@@ -61,6 +61,19 @@ services:
     networks:
       - default
 
+  plaid:
+    image: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/finance-fullstack/plaid:latest"
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    env_file:
+      - .env.production
+    networks:
+      - default
+
 
   frontend:
     image: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/finance-fullstack/frontend:latest"

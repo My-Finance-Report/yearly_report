@@ -6,10 +6,10 @@ from pydantic import BaseModel, Field, create_model
 from app.db import Session
 from app.models import (
     Category,
+    PlaidTransactionId,
     ProcessFileJob,
     Transaction,
     TransactionId,
-    PlaidTransactionId,
     TransactionSource,
     UploadConfiguration,
     UploadedPdf,
@@ -22,8 +22,11 @@ class PdfParseException(Exception):
 
 
 class PartialTransaction(BaseModel):
-    partialTransactionId: TransactionId | PlaidTransactionId | None = Field(
+    partialTransactionId: TransactionId | None = Field(
         ..., description="Unique identifier for the transaction"
+    )
+    partialPlaidTransactionId: PlaidTransactionId | None = Field(
+        ..., description="Plaid transaction identifier"
     )
     partialTransactionDateOfTransaction: str = Field(
         ..., description="Transaction date in MM/DD/YYYY format"
@@ -73,7 +76,7 @@ def create_categorized_transaction_model(categories: list[str]) -> type[BaseMode
     return create_model(
         "CategorizedTransaction",
         partialTransactionId=(
-            TransactionId | None,
+            TransactionId | PlaidTransactionId | None,
             Field(..., description="Unique identifier for the transaction"),
         ),
         partialTransactionDateOfTransaction=(

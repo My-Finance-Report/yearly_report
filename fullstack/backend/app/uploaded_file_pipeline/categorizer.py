@@ -80,9 +80,10 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
 
 
 def insert_categorized_transactions(in_process: InProcessFile) -> None:
-    assert in_process.transaction_source, "must have"
-    assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"
+    assert in_process.transaction_source, "must have"
+    assert in_process.file, "must have"
+    assert in_process.categorized_transactions, "must have"
 
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
 

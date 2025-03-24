@@ -200,7 +200,9 @@ class Transaction(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
-    external_id: Mapped[PlaidTransactionId | None] = mapped_column(String, nullable=True, index=True)
+    external_id: Mapped[PlaidTransactionId | None] = mapped_column(
+        String, nullable=True, index=True
+    )
     last_updated: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, default=lambda: datetime.now(timezone.utc)
     )
@@ -484,6 +486,7 @@ class PlaidAccount(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     mask: Mapped[str | None] = mapped_column(String, nullable=True)
     type: Mapped[str] = mapped_column(String, nullable=False)
+    cursor: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     subtype: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

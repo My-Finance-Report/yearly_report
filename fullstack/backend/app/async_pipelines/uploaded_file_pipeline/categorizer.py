@@ -57,6 +57,7 @@ class TransactionsCoerceType:
 def update_filejob_with_nickname(in_process: InProcessFile) -> InProcessFile:
     assert in_process.transaction_source, "must have"
     assert in_process.transactions, "must have"
+    assert in_process.file, "must have"
 
     dates = [
         t.partialTransactionDateOfTransaction
@@ -103,6 +104,19 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
                 out.extend(categorized.transactions)
         except Exception as e:
             logger.error(f"Failed to categorize batch: {e}")
+
+    # this is a weird protection against AI messing up the ids in the response
+    for transaction in out:
+        assert transaction.partialTransactionId in [
+            t.partialTransactionId for t in process.transactions.transactions
+        ], (
+            f"Transaction {transaction.partialTransactionId} not found in original transactions"
+        )
+        assert transaction.partialPlaidTransactionId in [
+            t.partialPlaidTransactionId for t in process.transactions.transactions
+        ], (
+            f"Transaction {transaction.partialPlaidTransactionId} not found in original transactions"
+        )
 
     return replace(process, categorized_transactions=out)
 
