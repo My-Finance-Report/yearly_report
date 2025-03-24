@@ -15,13 +15,14 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+from fullstack.backend.app.get_db_string import get_worker_database_url
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.environ["WORKER_DATABASE_URL"]
+DATABASE_URL = get_worker_database_url()
 
 engine = create_engine(DATABASE_URL)
 

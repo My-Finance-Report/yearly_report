@@ -7,11 +7,12 @@ from sqlalchemy.orm import sessionmaker
 from app import crud
 from app.core.config import settings
 from app.models import User
+from fullstack.backend.app.get_db_string import get_app_user_database_url
 
 from ..local_types import UserRegister
 
 # Create SQLAlchemy engine
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = get_app_user_database_url()
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Create session factory

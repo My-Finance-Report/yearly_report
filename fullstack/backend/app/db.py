@@ -15,11 +15,11 @@ from app.core import security
 from app.core.config import settings
 from app.local_types import TokenPayload
 from app.models import User
+from app.get_db_string import get_app_user_database_url
 
 load_dotenv()
 
-DATABASE_URL = os.environ["DATABASE_URL"]
-
+DATABASE_URL = get_app_user_database_url()
 
 engine = create_engine(
     DATABASE_URL, echo=False, pool_use_lifo=True, pool_size=20, max_overflow=40
