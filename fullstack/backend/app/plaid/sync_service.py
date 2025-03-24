@@ -1,3 +1,4 @@
+from dataclasses import replace
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -7,6 +8,7 @@ from plaid.model.transactions_get_request_options import TransactionsGetRequestO
 from sqlalchemy.orm import Session
 
 from app.models import (
+    AuditLog,
     Category,
     PlaidAccount,
     PlaidItem,
@@ -19,9 +21,8 @@ from app.models import (
 )
 from app.plaid.client import get_plaid_client
 from app.async_pipelines.uploaded_file_pipeline.configuration_creator import add_default_categories
-from app.async_pipelines.recategorize_pipeline.main import apply_previous_recategorizations
-from app.async_pipelines.uploaded_file_pipeline.categorizer import categorize_extracted_transactions, insert_categorized_transactions
-from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PartialTransaction, TransactionsWrapper
+from app.async_pipelines.uploaded_file_pipeline.categorizer import categorize_extracted_transactions
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile, PartialTransaction, Recategorization, TransactionsWrapper
 from app.func_utils import pipe
 
 logger = logging.getLogger(__name__)
@@ -190,11 +191,88 @@ def sync_plaid_account_transactions(
 def plaid_categorize_pipe(in_process: InProcessFile)->None: 
     print("categorizing")
     return pipe(
-    in_process,
-    #apply_previous_recategorizations, TODO reapply
-    categorize_extracted_transactions,
-    final=insert_categorized_transactions,
+        in_process,
+        apply_previous_plaid_recategorizations, 
+        categorize_extracted_transactions,
+        final=insert_categorized_plaid_transactions,
     )
+
+def apply_previous_plaid_recategorizations(in_process: InProcessFile) -> InProcessFile:
+    assert in_process.transaction_source, "must have"
+    assert in_process.transactions, "must have"
+    assert in_process.categories, "must have"
+    query = (
+        in_process.session.query(AuditLog, Transaction)
+        .join(Transaction, Transaction.id == AuditLog.transaction_id)
+        .filter(
+            Transaction.transaction_source_id == in_process.transaction_source.id,
+            Transaction.user_id == in_process.user.id,
+            Transaction.external_id.in_([t.partialTransactionId for t in in_process.transactions.transactions]),
+            ~Transaction.archived,
+            AuditLog.apply_to_future,
+        )
+        .all()
+    )
+
+    category_lookup = {cat.id: cat.name for cat in in_process.categories}
+
+    recats: list[Recategorization] = []
+    auditlog: AuditLog
+    transaction: Transaction
+    for auditlog, transaction in query:
+        if auditlog.change.new_kind and auditlog.change.old_kind:
+            recats.append(
+                Recategorization(
+                    description=transaction.description,
+                    previous_category=auditlog.change.old_kind,
+                    overrided_category=auditlog.change.new_kind,
+                )
+            )
+        if auditlog.change.new_category and auditlog.change.old_category:
+            recats.append(
+                Recategorization(
+                    description=transaction.description,
+                    previous_category=category_lookup[auditlog.change.old_category],
+                    overrided_category=category_lookup[auditlog.change.new_category],
+                )
+            )
+
+    return replace(
+        in_process,
+        previous_recategorizations=recats or None,
+    )
+
+
+
+
+def insert_categorized_plaid_transactions(in_process: InProcessFile) -> None:
+    assert in_process.transaction_source, "must have"
+    assert in_process.categorized_transactions, "must have"
+    assert in_process.categories, "must have"
+
+    category_lookup = {cat.name: cat.id for cat in in_process.categories}
+
+    transactions_to_insert = [
+        Transaction(
+            description=t.partialTransactionDescription,
+            category_id=category_lookup[t.category],
+            date_of_transaction=datetime.strptime(
+                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            ),
+            amount=t.partialTransactionAmount,
+            transaction_source_id=in_process.transaction_source.id,
+            kind=t.partialTransactionKind,
+            external_id=t.partialTransactionId,
+            uploaded_pdf_id=in_process.file.id if in_process.file else None,
+            user_id=in_process.user.id,
+            archived=False,
+        )
+        for t in in_process.categorized_transactions
+    ]
+    breakpoint()
+
+    in_process.session.bulk_save_objects(transactions_to_insert)
+    in_process.session.commit()
 
 
 
@@ -218,6 +296,8 @@ def add_new_transactions(
             Category.archived == False
         ).all()
 
+    
+    print(plaid_transactions)
     in_process = InProcessFile(
         session=session,
         user=user,
@@ -226,7 +306,7 @@ def add_new_transactions(
         transactions=TransactionsWrapper(
             transactions=[
                 PartialTransaction(
-                    partialTransactionId=None,
+                    partialTransactionId=pt["transaction_id"],
                     partialTransactionAmount=abs(float(pt["amount"])),
                     partialTransactionDescription=pt["name"],
                     partialTransactionDateOfTransaction=pt["date"].strftime("%m/%d/%Y"),

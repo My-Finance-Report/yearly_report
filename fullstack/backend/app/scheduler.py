@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from app.db import get_auth_db, get_db_for_user
-from app.models import PlaidAccount, User
+from app.models import User
 from app.plaid.sync_service import sync_all_plaid_accounts
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,6 @@ async def sync_all_plaid_accounts_job():
     
     print("trying to pull users")
     users = session.query(User).all()
-    print("made it to here")
     
     for user in users:
         user_session = next(get_db_for_user(user.id))
@@ -25,9 +24,3 @@ async def sync_all_plaid_accounts_job():
     
     session.close()
 
-
-
-if __name__ == "__main__":
-    print("Starting Plaid sync job...")
-    sync_all_plaid_accounts_job()
-    print("Plaid sync job completed")

@@ -9,6 +9,7 @@ from app.models import (
     ProcessFileJob,
     Transaction,
     TransactionId,
+    PlaidTransactionId,
     TransactionSource,
     UploadConfiguration,
     UploadedPdf,
@@ -21,7 +22,7 @@ class PdfParseException(Exception):
 
 
 class PartialTransaction(BaseModel):
-    partialTransactionId: TransactionId | None = Field(
+    partialTransactionId: TransactionId | PlaidTransactionId | None = Field(
         ..., description="Unique identifier for the transaction"
     )
     partialTransactionDateOfTransaction: str = Field(

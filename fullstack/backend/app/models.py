@@ -84,6 +84,7 @@ class JobKind(str, enum.Enum):
 
 UserId = NewType("UserId", int)
 TransactionId = NewType("TransactionId", int)
+PlaidTransactionId = NewType("PlaidTransactionId", str)
 CategoryId = NewType("CategoryId", int)
 TransactionSourceId = NewType("TransactionSourceId", int)
 UploadConfigurationId = NewType("UploadConfigurationId", int)
@@ -199,7 +200,7 @@ class Transaction(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
-    external_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    external_id: Mapped[PlaidTransactionId | None] = mapped_column(String, nullable=True, index=True)
     last_updated: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, default=lambda: datetime.now(timezone.utc)
     )
