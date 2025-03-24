@@ -66,14 +66,17 @@ ssh ${REMOTE_SERVER} << EOF
     cd ${REMOTE_DIR}
     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
+    # Create a temporary env file for pulling containers
+    grep -v "^AWS_PROFILE" .env.production > .env.production.runtime
+    
     echo "Pulling containers..."
     docker-compose --env-file .env.production -f docker-compose.prod.yml pull
 
     echo "🚀 Starting containers..."
-    docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+    # Use the modified env file without AWS_PROFILE for running
+    docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
 
     chmod +x /home/ec2-user/code/finance_app/backup_db
 EOF
 
 echo "✅ Deployment Completed!"
-

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import time
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
@@ -14,8 +13,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
+from app.get_db_string import get_worker_database_url
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
-from fullstack.backend.app.get_db_string import get_worker_database_url
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 

@@ -1,4 +1,3 @@
-import os
 from collections.abc import Generator
 from typing import Any
 
@@ -13,9 +12,9 @@ from sqlalchemy import create_engine, text
 
 from app.core import security
 from app.core.config import settings
+from app.get_db_string import get_app_user_database_url
 from app.local_types import TokenPayload
 from app.models import User
-from app.get_db_string import get_app_user_database_url
 
 load_dotenv()
 

@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from fullstack.backend.app.get_db_string import get_worker_database_url
+from app.get_db_string import get_worker_database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
