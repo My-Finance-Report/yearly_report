@@ -1,6 +1,6 @@
 import logging
 from dataclasses import replace
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
@@ -51,12 +51,13 @@ def fetch_plaid_transactions(
     """Fetch transactions from Plaid API."""
     client = get_plaid_client()
 
-
     request = TransactionsSyncRequest(
         access_token=access_token,
-        cursor=plaid_account.cursor or "",  
-        count=100, 
-        options=TransactionsSyncRequestOptions(account_id=plaid_account.plaid_account_id)
+        cursor=plaid_account.cursor or "",
+        count=100,
+        options=TransactionsSyncRequestOptions(
+            account_id=plaid_account.plaid_account_id
+        ),
     )
 
     try:
@@ -129,7 +130,7 @@ def sync_plaid_account_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
-        
+
         # If no transactions were returned, we're done
         if not plaid_transactions:
             sync_log.added_count = 0
@@ -138,26 +139,6 @@ def sync_plaid_account_transactions(
             session.commit()
             return
 
-        # Get existing transactions for this account
-        existing_transactions = (
-            session.query(Transaction)
-            .filter(
-                Transaction.user_id == user.id,
-                Transaction.transaction_source_id == transaction_source.id,
-                Transaction.external_id.is_not(None),
-                ~Transaction.archived,
-            )
-            .all()
-        )
-
-        # Create lookup dictionaries
-        existing_by_external_id = {
-            t.external_id: t for t in existing_transactions if t.external_id
-        }
-        plaid_by_transaction_id = {
-            pt["transaction_id"]: pt for pt in plaid_transactions
-        }
-
         # All transactions from transactions_sync are new
         added_count = add_new_transactions(
             session,
@@ -165,11 +146,11 @@ def sync_plaid_account_transactions(
             transaction_source,
             plaid_transactions,
         )
-        
+
         # Update sync log with results
         sync_log.added_count = added_count
         sync_log.modified_count = 0  # For transactions_sync, we don't track modified
-        sync_log.removed_count = 0   # For transactions_sync, we don't track removed
+        sync_log.removed_count = 0  # For transactions_sync, we don't track removed
 
         session.commit()
 

@@ -76,8 +76,12 @@ def create_categorized_transaction_model(categories: list[str]) -> type[BaseMode
     return create_model(
         "CategorizedTransaction",
         partialTransactionId=(
-            TransactionId | PlaidTransactionId | None,
+            TransactionId | None,
             Field(..., description="Unique identifier for the transaction"),
+        ),
+        partialPlaidTransactionId=(
+            PlaidTransactionId | None,
+            Field(..., description="Plaid transaction identifier"),
         ),
         partialTransactionDateOfTransaction=(
             str,

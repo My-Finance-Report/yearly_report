@@ -40,6 +40,7 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
             transactions=[
                 PartialTransaction(
                     partialTransactionId=row.id,
+                    partialPlaidTransactionId=row.external_id,
                     partialTransactionAmount=row.amount,
                     partialTransactionDescription=row.description,
                     partialTransactionDateOfTransaction=row.date_of_transaction.strftime(
