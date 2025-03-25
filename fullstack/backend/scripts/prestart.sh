@@ -3,6 +3,8 @@
 set -e
 set -x
 
+unset AWS_PROFILE
+
 # Let the DB start
 python app/backend_pre_start.py
 

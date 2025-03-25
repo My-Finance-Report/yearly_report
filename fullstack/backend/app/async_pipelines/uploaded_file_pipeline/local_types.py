@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, create_model
 from app.db import Session
 from app.models import (
     Category,
+    PlaidTransactionId,
     ProcessFileJob,
     Transaction,
     TransactionId,
@@ -23,6 +24,9 @@ class PdfParseException(Exception):
 class PartialTransaction(BaseModel):
     partialTransactionId: TransactionId | None = Field(
         ..., description="Unique identifier for the transaction"
+    )
+    partialPlaidTransactionId: PlaidTransactionId | None = Field(
+        ..., description="Plaid transaction identifier"
     )
     partialTransactionDateOfTransaction: str = Field(
         ..., description="Transaction date in MM/DD/YYYY format"
@@ -75,6 +79,10 @@ def create_categorized_transaction_model(categories: list[str]) -> type[BaseMode
             TransactionId | None,
             Field(..., description="Unique identifier for the transaction"),
         ),
+        partialPlaidTransactionId=(
+            PlaidTransactionId | None,
+            Field(..., description="Plaid transaction identifier"),
+        ),
         partialTransactionDateOfTransaction=(
             str,
             Field(..., description="Transaction date in MM/DD/YYYY format"),
@@ -122,8 +130,8 @@ class Recategorization:
 class InProcessFile:
     session: Session
     user: User
-    file: UploadedPdf
-    job: ProcessFileJob
+    file: UploadedPdf | None = None
+    job: ProcessFileJob | None = None
     config: UploadConfiguration | None = None
     transaction_source: TransactionSource | None = None
     categories: list[Category] | None = None

@@ -48,6 +48,7 @@ def persist_config_to_job_record(in_process: InProcessFile) -> InProcessFile:
     an effect that persists the config id to the job for future ease of reprocess
     """
     assert in_process.config, "must have"
+    assert in_process.job, "must have"
 
     in_process.job.config_id = in_process.config.id
     in_process.session.add(in_process.job)

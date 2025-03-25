@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import time
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
@@ -14,14 +13,16 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
+from app.get_db_string import get_worker_database_url
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+from app.scheduler import sync_all_plaid_accounts_job
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.environ["WORKER_DATABASE_URL"]
+DATABASE_URL = get_worker_database_url()
 
 engine = create_engine(DATABASE_URL)
 
@@ -200,11 +201,16 @@ async def run_jobs(_user_session: Session, jobs: list[ProcessFileJob]) -> None:
 
 
 def worker() -> None:
+    iterations = 0
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
             process_next_jobs(session)
         time.sleep(POLL_INTERVAL)
+        if iterations % 60 == 0:
+            iterations = 0
+            asyncio.run(sync_all_plaid_accounts_job())
+        iterations += 1
 
 
 if __name__ == "__main__":

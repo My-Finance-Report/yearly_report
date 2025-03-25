@@ -17,6 +17,7 @@ from app.models import (
     AuditLog,
     Category,
     CategoryId,
+    PlaidTransactionId,
     Transaction,
     TransactionId,
     TransactionSource,
@@ -26,6 +27,7 @@ from app.models import (
 
 def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
     assert in_process.config, "must have"
+    assert in_process.file, "must have"
     query = in_process.session.query(Transaction).filter(
         Transaction.transaction_source_id == in_process.config.transaction_source_id,
         Transaction.user_id == in_process.user.id,
@@ -38,6 +40,7 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
             transactions=[
                 PartialTransaction(
                     partialTransactionId=row.id,
+                    partialPlaidTransactionId=row.external_id,
                     partialTransactionAmount=row.amount,
                     partialTransactionDescription=row.description,
                     partialTransactionDateOfTransaction=row.date_of_transaction.strftime(
@@ -53,6 +56,7 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
 
 def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile:
     assert in_process.transaction_source, "must have"
+    assert in_process.file, "must have"
     assert in_process.categories, "must have"
     query = (
         in_process.session.query(AuditLog, Transaction)
@@ -97,6 +101,9 @@ def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile
 
 
 def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
+    assert process.job, "must have"
+    assert process.job.config_id, "MUST have"
+    assert process.file, "must have"
     config: UploadConfiguration | None = None
     if process.job.config_id:
         config = (
@@ -143,6 +150,7 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
 def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
+    assert in_process.file, "must have"
     assert all(
         t.partialTransactionId is not None for t in in_process.categorized_transactions
     ), "must have"
@@ -151,7 +159,9 @@ def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     category_lookup: dict[str, CategoryId] = {
         cat.name: cat.id for cat in in_process.categories
     }
-    transaction_lookup: dict[TransactionId, CategorizedTransaction] = {
+    transaction_lookup: dict[
+        TransactionId | PlaidTransactionId, CategorizedTransaction
+    ] = {
         t.partialTransactionId: t
         for t in in_process.categorized_transactions
         if t.partialTransactionId is not None

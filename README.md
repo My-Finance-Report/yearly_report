@@ -26,8 +26,29 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
+
 # User feedback / TODO
 
+big milestones before launch:
+
+  -> RDS
+   -> done, but need to find an adminer alternative
+  -> Stripe
+  -> Plaid
+   -> done, but needs to be tested
+  -> Email
+
+-> update cert on the domain
+
+-> ability to toggle visibility of a filter group
+
+-> would be nice to have some tests around user creation
+
+-> nav bar is weird on tablet
+
+-> there is a bug in how we write the settings to the db on user table -- inconsistent
+
+-> some visual indicator something is happening when you upload a file
 
 -> add a last active at time on the user model
 
@@ -36,6 +57,11 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> budget page should probably not use edit modal for create
 
 -> shareable report
+
+-> running grant to sequence after a new table: 
+  GRANT USAGE, UPDATE ON SEQUENCE plaid_item_id_seq TO app_user;
+  GRANT USAGE, UPDATE ON SEQUENCE plaid_account_id_seq TO app_user;
+  GRANT USAGE, UPDATE ON SEQUENCE plaid_sync_log_id_seq TO app_user;
 
 -> redirect everything to the main url
 
@@ -48,18 +74,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 -> nice to have: search
 
-
--> monthly emails (resend)
-
--> stripe (when do people need to pay?)
-
-
 -> try to prevent color overlaps
-
--> OAuth, nice but not required
-
--> confirm the db backup is working
- --> it isnt
 
 -> dashboard config and ability to save them (query params)
 --> parse the query params from the url
@@ -67,16 +82,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
 
--> progress bar in the bottom tabel should support budget 
-
--> restyle the budgets page
- -> cleaner and remove the warning
- -> add some indication of budget progress on the landing page
-
 -> Expense should line up in the table
 
--> privacy policy
--> terms of service
--> contact me page (add to other pages or footer)
 
 

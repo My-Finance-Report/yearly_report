@@ -24,6 +24,7 @@ bin/check_for_deploy
 
 ECR_BACKEND_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/backend:${IMAGE_TAG}"
 ECR_WORKER_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/worker:${IMAGE_TAG}"
+ECR_PLAID_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/plaid:${IMAGE_TAG}"
 ECR_FRONTEND_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/frontend:${IMAGE_TAG}"
 
 echo "🔑 Logging into Amazon ECR..."
@@ -35,17 +36,24 @@ docker build --platform linux/amd64 -t finance-backend:${IMAGE_TAG} -f backend/D
 echo "🐳 Building Worker Image..."
 docker build --platform linux/amd64 -t finance-worker:${IMAGE_TAG} -f backend/Dockerfile.worker backend/
 
+echo "🐳 Building Plaid Image..."
+docker build --platform linux/amd64 -t finance-plaid:${IMAGE_TAG} -f backend/Dockerfile.plaid backend/
+
+
+
 echo "🐳 Building Frontend Image..."
 docker build --platform linux/amd64 --build-arg VITE_API_URL=$VITE_API_URL -t finance-frontend:${IMAGE_TAG} -f frontend/Dockerfile frontend/
 
 echo "🏷️ Tagging Images..."
 docker tag finance-backend:${IMAGE_TAG} ${ECR_BACKEND_URL}
 docker tag finance-worker:${IMAGE_TAG} ${ECR_WORKER_URL}
+docker tag finance-plaid:${IMAGE_TAG} ${ECR_PLAID_URL}
 docker tag finance-frontend:${IMAGE_TAG} ${ECR_FRONTEND_URL}
 
 echo "🚀 Pushing Images to ECR..."
 docker push ${ECR_BACKEND_URL}
 docker push ${ECR_WORKER_URL}
+docker push ${ECR_PLAID_URL}
 docker push ${ECR_FRONTEND_URL}
 
 echo "🔄 Syncing Deployment Files..."
@@ -58,14 +66,17 @@ ssh ${REMOTE_SERVER} << EOF
     cd ${REMOTE_DIR}
     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
+    # Create a temporary env file for pulling containers
+    grep -v "^AWS_PROFILE" .env.production > .env.production.runtime
+    
     echo "Pulling containers..."
     docker-compose --env-file .env.production -f docker-compose.prod.yml pull
 
     echo "🚀 Starting containers..."
-    docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+    # Use the modified env file without AWS_PROFILE for running
+    docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
 
     chmod +x /home/ec2-user/code/finance_app/backup_db
 EOF
 
 echo "✅ Deployment Completed!"
-
