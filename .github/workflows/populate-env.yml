@@ -8,6 +8,10 @@ jobs:
   get-secrets:
     runs-on: ubuntu-latest
     steps:
+    - name: echo stuff
+      run: |
+        echo "${{ secrets.AWS_ACCESS_KEY }}"
+        echo "${{ secrets.AWS_SECRET_KEY }}"
     - name: setup AWS creds
       uses: aws-actions/configure-aws-credentials@v4
       with:
