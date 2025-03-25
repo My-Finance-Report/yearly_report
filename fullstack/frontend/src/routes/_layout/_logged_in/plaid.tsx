@@ -35,9 +35,7 @@ const toast = useCustomToast()
 
   const createLinkTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await PlaidService.getLinkToken({
-        requestBody: {}
-      });
+      const response = await PlaidService.getLinkToken();
       return response;
     },
     onSuccess: (data) => {

@@ -102,6 +102,18 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
 
+    # Google OAuth settings
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def SERVER_HOST(self) -> str:
+        """Return the server host URL based on environment."""
+        if self.ENVIRONMENT == "local":
+            return self.FRONTEND_HOST
+        return self.FRONTEND_HOST
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

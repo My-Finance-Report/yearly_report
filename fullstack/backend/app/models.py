@@ -111,7 +111,7 @@ class User(Base):
 
     id: Mapped[UserId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(String, nullable=True)
     full_name: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     send_email: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -124,6 +124,13 @@ class User(Base):
         JSONType(UserSettings), nullable=False
     )
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
+    oauth_provider: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_access_token: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_refresh_token: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
 
 class UserSession(Base):

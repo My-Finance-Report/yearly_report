@@ -135,6 +135,11 @@ export type CategoryOut = {
     stylized_name: string;
 };
 
+export type GoogleCallbackData = {
+    access_token?: (string | null);
+    error?: (string | null);
+};
+
 export type GroupByOption = 'account' | 'category' | 'month' | 'year' | 'budget';
 
 export type HTTPValidationError = {
@@ -142,6 +147,10 @@ export type HTTPValidationError = {
 };
 
 export type JobStatus = 'completed' | 'pending' | 'processing' | 'failed';
+
+export type LoginGoogleData = {
+    url: string;
+};
 
 export type Message = {
     message: string;
@@ -170,13 +179,6 @@ export type PlaidAccountResponse = {
  */
 export type PlaidExchangeTokenRequest = {
     public_token: string;
-};
-
-/**
- * Request model for creating a link token.
- */
-export type PlaidLinkTokenRequest = {
-    [key: string]: unknown;
 };
 
 /**
@@ -558,9 +560,14 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
-export type PlaidGetLinkTokenData = {
-    requestBody: PlaidLinkTokenRequest;
+export type OauthLoginGoogleResponse = (LoginGoogleData);
+
+export type OauthGoogleCallbackData = {
+    code: string;
+    error?: (string | null);
 };
+
+export type OauthGoogleCallbackResponse = (GoogleCallbackData);
 
 export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
 

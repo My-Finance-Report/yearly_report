@@ -29,7 +29,7 @@ export function FAQPage() {
             Do you offer an integration with bank accounts?
           </Heading>
           <Text>
-            Yes, I have an integration with Plaid. Reach out to me{" "}
+            Yes, we have an integration with Plaid. Reach out to me{" "}
             <Link to="/contact" style={{ textDecoration: "underline", color: "blue" }}>
               here
             </Link>
