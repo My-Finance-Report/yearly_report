@@ -84,6 +84,7 @@ class JobKind(str, enum.Enum):
 
 UserId = NewType("UserId", int)
 TransactionId = NewType("TransactionId", int)
+PlaidTransactionId = NewType("PlaidTransactionId", str)
 CategoryId = NewType("CategoryId", int)
 TransactionSourceId = NewType("TransactionSourceId", int)
 UploadConfigurationId = NewType("UploadConfigurationId", int)
@@ -110,7 +111,7 @@ class User(Base):
 
     id: Mapped[UserId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(String, nullable=True)
     full_name: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     send_email: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -123,6 +124,13 @@ class User(Base):
         JSONType(UserSettings), nullable=False
     )
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
+    oauth_provider: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_access_token: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_refresh_token: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
 
 class UserSession(Base):
@@ -153,7 +161,9 @@ class TransactionSource(Base):
     )
 
     # Relationships
-    plaid_account: Mapped["PlaidAccount | None"] = relationship("PlaidAccount", back_populates="transaction_source")
+    plaid_account: Mapped["PlaidAccount | None"] = relationship(
+        "PlaidAccount", back_populates="transaction_source"
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
@@ -197,6 +207,12 @@ class Transaction(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    external_id: Mapped[PlaidTransactionId | None] = mapped_column(
+        String, nullable=True, index=True
+    )
+    last_updated: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, default=lambda: datetime.now(timezone.utc)
+    )
 
 
 class UploadedPdf(Base):
@@ -450,33 +466,64 @@ class Report(Base):
 class PlaidItem(Base):
     __tablename__ = "plaid_item"
 
-    id: Mapped[PlaidItemId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[PlaidItemId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     plaid_item_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     access_token: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-    
-    # Relationships
+
     accounts: Mapped[list["PlaidAccount"]] = relationship(back_populates="item")
 
 
 class PlaidAccount(Base):
     __tablename__ = "plaid_account"
 
-    id: Mapped[PlaidAccountId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[PlaidAccountId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
-    plaid_item_id: Mapped[PlaidItemId] = mapped_column(ForeignKey("plaid_item.id"), nullable=False)
+    plaid_item_id: Mapped[PlaidItemId] = mapped_column(
+        ForeignKey("plaid_item.id"), nullable=False
+    )
     plaid_account_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     mask: Mapped[str | None] = mapped_column(String, nullable=True)
     type: Mapped[str] = mapped_column(String, nullable=False)
+    cursor: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     subtype: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-    
+
     # Relationships
     item: Mapped["PlaidItem"] = relationship(back_populates="accounts")
-    transaction_source: Mapped["TransactionSource"] = relationship("TransactionSource", uselist=False, back_populates="plaid_account")
+    transaction_source: Mapped["TransactionSource"] = relationship(
+        "TransactionSource", uselist=False, back_populates="plaid_account"
+    )
+
+
+class PlaidSyncLog(Base):
+    __tablename__ = "plaid_sync_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    plaid_item_id: Mapped[PlaidItemId] = mapped_column(
+        ForeignKey("plaid_item.id"), nullable=False
+    )
+    plaid_account_id: Mapped[PlaidAccountId | None] = mapped_column(
+        ForeignKey("plaid_account.id"), nullable=True
+    )
+    sync_type: Mapped[str] = mapped_column(String, nullable=False)
+    start_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    added_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    modified_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    removed_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )

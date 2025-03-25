@@ -28,7 +28,18 @@ export function HowPage() {
 
                 <Box>
                     <Heading as="h3" size="md">
-                        1. Upload Your Bank Statements
+                        1a. Link Your Accounts
+                    </Heading>
+                    <Text>
+                        Link your accounts via{' '}
+                            <Link href="/plaid" color="blue.500" textDecoration="underline">
+                            Plaid 
+                        </Link>. The app will automatically begin to sync your transactions
+                    </Text>
+                </Box>
+                <Box>
+                    <Heading as="h3" size="md">
+                        1b. Upload Your Bank Statements
                     </Heading>
                     <Text>
                         Head over to the{' '}

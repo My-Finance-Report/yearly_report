@@ -4,6 +4,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.get_db_string import get_worker_database_url
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -28,7 +30,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-DATABASE_URL = os.environ["WORKER_DATABASE_URL"]
+DATABASE_URL = get_worker_database_url()
 
 def get_url():
     val=str(DATABASE_URL)

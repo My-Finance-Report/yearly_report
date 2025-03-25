@@ -29,12 +29,11 @@ export function FAQPage() {
             Do you offer an integration with bank accounts?
           </Heading>
           <Text>
-            Not directly. You can upload bank statements for now. If you 
-            want an integration with Plaid, reach out to me{" "}
+            Yes, we have an integration with Plaid. Reach out to me{" "}
             <Link to="/contact" style={{ textDecoration: "underline", color: "blue" }}>
               here
             </Link>
-            . I’ll build the integration if a few people ask.
+            {" "}and I can help you get set up.
           </Text>
         </Box>
 

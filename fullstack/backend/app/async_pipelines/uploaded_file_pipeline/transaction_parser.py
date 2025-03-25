@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 def generate_transactions_prompt(process: InProcessFile) -> str:
     """Generate the AI prompt for parsing transactions."""
 
-    assert process.transaction_source, "must have transaction source by here"
+    assert process.transaction_source, "must have"
+    assert process.file, "must have"
 
     return f"""
     Parse the following PDF content into a JSON array of transactions.
@@ -44,6 +45,8 @@ def generate_transactions_prompt(process: InProcessFile) -> str:
 
 
 def already_processed(process: InProcessFile) -> bool:
+    assert process.job, "must have"
+
     val = (
         process.session.query(ProcessFileJob)
         .filter(
@@ -58,9 +61,12 @@ def already_processed(process: InProcessFile) -> bool:
 
 
 def apply_upload_config(process: InProcessFile) -> InProcessFile:
-    config: None | UploadConfiguration = None
+    assert process.job, "must have"
+    assert process.file, "must have"
+
     logger.info(f"Applying upload configuration for file: {process.file.filename}")
 
+    config: None | UploadConfiguration = None
     if process.job.config_id:
         config = (
             process.session.query(UploadConfiguration)
@@ -109,6 +115,7 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
 
 def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
     """Remove existing transactions if the file has been processed before."""
+    assert process.file, "must have"
 
     logger.info(f"Removing previous transactions for file: {process.file.filename}")
     query = process.session.query(Transaction).filter(

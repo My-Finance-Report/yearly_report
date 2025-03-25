@@ -19,6 +19,7 @@ import { Route as LayoutResetPasswordImport } from './routes/_layout/reset-passw
 import { Route as LayoutRecoverPasswordImport } from './routes/_layout/recover-password'
 import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
 import { Route as LayoutOldImport } from './routes/_layout/old'
+import { Route as LayoutOauthCallbackImport } from './routes/_layout/oauth-callback'
 import { Route as LayoutLoginImport } from './routes/_layout/login'
 import { Route as LayoutLandingImport } from './routes/_layout/landing'
 import { Route as LayoutHowImport } from './routes/_layout/how'
@@ -74,6 +75,11 @@ const LayoutPrivacyRoute = LayoutPrivacyImport.update({
 
 const LayoutOldRoute = LayoutOldImport.update({
   path: '/old',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutOauthCallbackRoute = LayoutOauthCallbackImport.update({
+  path: '/oauth-callback',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -193,6 +199,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoginImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/oauth-callback': {
+      preLoaderRoute: typeof LayoutOauthCallbackImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/old': {
       preLoaderRoute: typeof LayoutOldImport
       parentRoute: typeof LayoutImport
@@ -276,6 +286,7 @@ export const routeTree = rootRoute.addChildren([
     LayoutHowRoute,
     LayoutLandingRoute,
     LayoutLoginRoute,
+    LayoutOauthCallbackRoute,
     LayoutOldRoute,
     LayoutPrivacyRoute,
     LayoutRecoverPasswordRoute,
