@@ -1,6 +1,9 @@
 name: Populate env file
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
+permissions:
+  id-token: write
+  contents: read 
 jobs:
   get-secrets:
     runs-on: ubuntu-latest
