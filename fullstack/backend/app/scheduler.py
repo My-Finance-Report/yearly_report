@@ -18,7 +18,7 @@ async def sync_all_plaid_accounts_job() -> None:
 
     for user in users:
         user_session = next(get_db_for_user(user.id))
-        await sync_all_plaid_accounts(user_session, user, days_back=7)
+        await sync_all_plaid_accounts(user_session, user, days_back=365)
         user_session.close()
 
     session.close()

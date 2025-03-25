@@ -94,7 +94,7 @@ def has_transaction_changed(
 
 
 def sync_plaid_account_transactions(
-    session: Session, user: User, plaid_account: PlaidAccount, days_back: int = 30
+    session: Session, user: User, plaid_account: PlaidAccount, days_back: int
 ) -> None:
     plaid_item = (
         session.query(PlaidItem)
@@ -342,7 +342,7 @@ def archive_removed_transactions(
 
 
 async def sync_all_plaid_accounts(
-    user_session: Session, user: User, days_back: int = 30
+    user_session: Session, user: User, days_back: int
 ) -> None:
     """
     Sync all Plaid accounts for a specific user.
@@ -358,7 +358,10 @@ async def sync_all_plaid_accounts(
         for account in plaid_accounts:
             sync_plaid_account_transactions(user_session, user, account, days_back)
 
-        print(f"Synced all Plaid accounts for user {user.id}")
+        if plaid_accounts:
+            print(f"Synced all Plaid accounts for user {user.id}")
+        else:
+            print(f"No Plaid accounts found for user {user.id}")
 
     except Exception as e:
         logger.error(f"Error syncing Plaid accounts for user {user.id}: {str(e)}")

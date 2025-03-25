@@ -32,9 +32,12 @@ this is mainly a project through which I will learn more about haskell, but I ex
 big milestones before launch:
 
   -> RDS
+   -> done, but need to find an adminer alternative
   -> Stripe
   -> Plaid
-  --> make sure that plaid sync is more efficent with pulling
+   -> (only doing previous 7 days, probably want 365)
+   -> worker is using far too much memory
+
   -> OAuth
   -> Email
 

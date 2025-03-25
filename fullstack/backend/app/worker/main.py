@@ -15,6 +15,7 @@ from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeli
 from app.db import get_db_for_user
 from app.get_db_string import get_worker_database_url
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+from app.scheduler import sync_all_plaid_accounts_job
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 
@@ -200,11 +201,16 @@ async def run_jobs(_user_session: Session, jobs: list[ProcessFileJob]) -> None:
 
 
 def worker() -> None:
+    iterations = 0
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
             process_next_jobs(session)
         time.sleep(POLL_INTERVAL)
+        if iterations % 60 == 0:
+            iterations = 0
+            asyncio.run(sync_all_plaid_accounts_job())
+        iterations += 1
 
 
 if __name__ == "__main__":
