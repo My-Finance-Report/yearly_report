@@ -35,10 +35,7 @@ big milestones before launch:
    -> done, but need to find an adminer alternative
   -> Stripe
   -> Plaid
-   -> (only doing previous 7 days, probably want 365)
-   -> worker is using far too much memory
-
-  -> OAuth
+   -> done, but needs to be tested
   -> Email
 
 -> update cert on the domain
