@@ -1,0 +1,17 @@
+name: Populate env file
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  get-secrets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Grab Secrets
+      uses: aws-actions/aws-secretsmanager-get-secrets@v2
+      with:
+        # get all secrets for the myFinance app.. a little brittle but makes adding new secrets easy
+        secret-ids: |
+          myFinance/*
+        name-transformation: none
+        parse-json-secrets: false
+    - name: Check Env
+      run: echo "$MYFINANCE_PLAID_SECRET"
