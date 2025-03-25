@@ -7,6 +7,8 @@ jobs:
     steps:
     - name: Grab Secrets
       uses: aws-actions/aws-secretsmanager-get-secrets@v2
+      env:
+        AWS_REGION: us-east-2
       with:
         # get all secrets for the myFinance app.. a little brittle but makes adding new secrets easy
         secret-ids: |
