@@ -13,7 +13,7 @@ jobs:
         ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         SECRET: ${{ secrets.AWS_SECRET_KEY }}
       run: |
-        echo "${ACCESS_KEY} - ${SECRET}"
+        echo "$ACCESS_KEY - $SECRET"
     - name: setup AWS creds
       uses: aws-actions/configure-aws-credentials@v4
       with:
