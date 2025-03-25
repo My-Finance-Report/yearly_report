@@ -9,6 +9,9 @@ import useCustomToast from "@/hooks/useCustomToast"
 import {
   Container,
   HStack,
+  Button,
+  Box,
+  Flex,
   Spinner,
   Table,
   TableBody,
@@ -19,7 +22,7 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { UploadsService } from "@/client"
 import type { UploadedPdfOut } from "@/client"
 import { isLoggedIn } from "@/hooks/useAuth"
@@ -101,6 +104,18 @@ function UploadFiles() {
         handleUpload={handleUpload}
         isLoading={uploadMutation.isPending}
       />
+      <Flex align="center" my={4} justifyContent="center">
+        <Box flex="1" h="1px" bg="gray.200" maxWidth="20%" />
+        <Text px={3} fontSize="sm" color="gray.500">OR</Text>
+        <Box flex="1" h="1px" bg="gray.200" maxWidth="20%" />
+      </Flex>
+      <Flex justifyContent="center" direction='row'alignItems="center">
+      <Text>
+        <Button>
+          <Link color="blue.500" to="/plaid">Link Account Directly</Link>
+        </Button>
+      </Text>
+</Flex>
 
       {isLoading ? (
         <Spinner />
