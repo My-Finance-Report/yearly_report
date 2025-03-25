@@ -9,6 +9,8 @@ jobs:
       uses: aws-actions/aws-secretsmanager-get-secrets@v2
       env:
         AWS_REGION: us-east-2
+        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       with:
         # get all secrets for the myFinance app.. a little brittle but makes adding new secrets easy
         secret-ids: |
