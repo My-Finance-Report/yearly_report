@@ -30,6 +30,7 @@ jobs:
       with:
         input: templates/.env.template
         output: .env.${{ env.DOMAIN }}
+        debug: true
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
