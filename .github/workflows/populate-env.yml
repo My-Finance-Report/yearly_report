@@ -27,7 +27,7 @@ jobs:
         # get all secrets for the myFinance app.. a little brittle but makes adding new secrets easy
         secret-ids: |
           myFinance/*
-        name-transformation: none
+        name-transformation: uppercase
         parse-json-secrets: false
     - name: Check Env
       run: echo "$MYFINANCE_PLAID_SECRET"
