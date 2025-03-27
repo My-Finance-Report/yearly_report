@@ -24,12 +24,12 @@ jobs:
         name-transformation: uppercase
         parse-json-secrets: false
     - name: populate template file
-      uses: edgardleal/mustache-template-action@v1.0.0
-      env:
-        DOMAIN: dev
+      uses: pedrolamas/handlebars-action@v2
       with:
-        input: templates/.env.template
-        output: .env.dev
+        files: 'templates/.env.template'
+        output-filename: '.env.dev'
+        html-escape: false
+        dry-run: true
     - name: cat file
       run: cat .env.dev
     - name: upload artifact
