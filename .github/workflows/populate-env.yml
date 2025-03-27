@@ -29,8 +29,9 @@ jobs:
         DOMAIN: dev
       with:
         input: templates/.env.template
-        output: .env.${{ env.DOMAIN }}
-        debug: true
+        output: .env.dev
+    - name: cat file
+      run: cat .env.dev
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
