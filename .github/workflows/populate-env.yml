@@ -24,6 +24,7 @@ jobs:
         name-transformation: uppercase
         parse-json-secrets: false
     - name: populate template file
+      id: populate_template
       uses: pedrolamas/handlebars-action@v2
       with:
         files: 'templates/.env.template'
@@ -31,7 +32,7 @@ jobs:
         html-escape: false
         dry-run: true
     - name: cat file
-      run: cat .env.dev
+      run: cat ${{ steps.populate_template.outputs.outputFile.path }}
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
