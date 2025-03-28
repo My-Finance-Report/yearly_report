@@ -34,7 +34,9 @@ jobs:
         html-escape: false
         dry-run: false
     - name: cat file
-      run: echo "${{ toJson(steps.populate_template.outputs) }}"
+      run: |
+        ls -a templates
+        cat templates/env_filled_in
     # - name: upload artifact
     #   uses: actions/upload-artifact@v4
     #   with:
