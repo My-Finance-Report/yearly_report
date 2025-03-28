@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { Spinner, Text, Box } from "@chakra-ui/react";
+import { Spinner, Text, Box, VStack, Heading, HStack, Button } from "@chakra-ui/react";
+import { FaLink, FaUpload } from "react-icons/fa";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
 import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup";
@@ -9,7 +11,6 @@ import { Legend } from "@/components/Common/Legend";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
 import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
 import { isLoggedIn } from "@/hooks/useAuth";
 
@@ -132,6 +133,7 @@ function InnerTransactions({getFunction}: {
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
+        justifyContent:  "center",
         gap: "4px",
         marginBottom: isMobile ? 0 : 48,
         padding: "10px",
@@ -204,7 +206,7 @@ function BlahComponent({
   }
 
   return (
-    <div>
+    <Box >
       {data?.groups && activeGrouping ? (
         <div
           style={{
@@ -228,17 +230,47 @@ function BlahComponent({
           />
         </div>
       ) : (
-        <Link to="/upload-files" href="/upload-files">
-          <Text>
-            No transactions found.{" "}
-            <Text as="span" textDecoration="underline" color="blue.500">
-              Click here
-            </Text>{" "}
-            to upload files.
-          </Text>
-        </Link>
+        
+            <NullState />
       )}
-    </div>
+    </Box>
   );
 }
 
+
+function NullState(){
+  return (
+    <Box 
+      p={8} 
+      textAlign="center" 
+      borderWidth="1px" 
+      borderRadius="lg" 
+      boxShadow="sm"
+    >
+      <VStack gap={6}>
+        <Heading size="md">Welcome Aboard!</Heading>
+        <Text >
+          Get started by connecting accounts or uploading statements 
+        </Text>
+        <HStack gap={4} pt={4}>
+          <Link to="/plaid">
+            <Button 
+              variant="solid"
+            >
+              <Box mr={2} display="inline-block"><FaLink /></Box>
+              Link Accounts
+            </Button>
+          </Link>
+          <Link to="/upload-files">
+            <Button 
+              variant="outline"
+            >
+              <Box mr={2} display="inline-block"><FaUpload /></Box>
+              Upload Files
+            </Button>
+          </Link>
+        </HStack>
+      </VStack>
+    </Box>
+  )
+}

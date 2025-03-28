@@ -12,7 +12,7 @@ function Layout() {
     const { isLoading } = useAuth()
 
     return (
-            <Flex direction="column" justifyContent={'space-between'} minH="100vh" backgroundColor="background">
+        <Flex direction="column" justifyContent='space-between' minH="100vh" backgroundColor="background">
             <SegmentedNavigation />
             {isLoading ? (
                 <Flex justify="center" align="center" height="100vh" width="full" mb={20}>

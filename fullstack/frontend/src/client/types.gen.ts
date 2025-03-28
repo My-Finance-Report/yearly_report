@@ -135,6 +135,10 @@ export type CategoryOut = {
     stylized_name: string;
 };
 
+export type CheckoutSession = {
+    checkout_url: string;
+};
+
 export type GoogleCallbackData = {
     access_token?: (string | null);
     error?: (string | null);
@@ -203,6 +207,17 @@ export type PossibleSankeyLinkage = {
     target_source_name: string;
 };
 
+export type PriceDetails = {
+    id: number;
+    name: string;
+    description?: (string | null);
+    price: number;
+    currency: string;
+    interval: string;
+    tier: SubscriptionTier;
+    max_sources: number;
+};
+
 export type PrivateUserCreate = {
     email: string;
     password: string;
@@ -266,6 +281,25 @@ export type SankeySibling = {
 };
 
 export type SourceKind = 'account' | 'investment' | 'card';
+
+export type SubscriptionDetails = {
+    tier: SubscriptionTier;
+    status: SubscriptionStatus;
+    current_period_end?: (string | null);
+    cancel_at_period_end?: boolean;
+    max_sources: number;
+    current_sources: number;
+};
+
+export type SubscriptionLimits = {
+    has_reached_limit: boolean;
+    current_count: number;
+    max_allowed: number;
+};
+
+export type SubscriptionStatus = 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid';
+
+export type SubscriptionTier = 'free' | 'premium' | 'business';
 
 export type Token = {
     access_token: string;
@@ -598,6 +632,30 @@ export type SankeyCreateSankeyConfigResponse = ({
 export type SankeyGetSankeyConfigInfoResponse = (SankeyConfigInfo);
 
 export type SitemapSitemapResponse = (unknown);
+
+export type SubscriptionGetSubscriptionStatusResponse = (SubscriptionDetails);
+
+export type SubscriptionCheckSubscriptionLimitsResponse = (SubscriptionLimits);
+
+export type SubscriptionGetSubscriptionPlansResponse = (Array<PriceDetails>);
+
+export type SubscriptionCreateCheckoutSessionData = {
+    priceId: number;
+};
+
+export type SubscriptionCreateCheckoutSessionResponse = (CheckoutSession);
+
+export type SubscriptionCancelSubscriptionResponse = (Message);
+
+export type SubscriptionStripeWebhookData = {
+    stripeSignature?: string;
+};
+
+export type SubscriptionStripeWebhookResponse = ({
+    [key: string]: (string);
+});
+
+export type SubscriptionSyncPricesResponse = (Message);
 
 export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 
