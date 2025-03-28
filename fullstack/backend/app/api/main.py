@@ -10,11 +10,11 @@ from app.api.routes import (
     private,
     sankey,
     sitemap,
+    subscription,
     transactions,
     uploads,
     users,
     utils,
-    subscription,
 )
 from app.core.config import settings
 

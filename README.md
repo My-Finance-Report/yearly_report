@@ -31,11 +31,11 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 big milestones before launch:
 
-  -> RDS
-   -> done, but need to find an adminer alternative
   -> Stripe
+  --> account exists but not implemented
   -> Plaid
    -> done, but needs to be tested
+   -> seems to be a bug on the sync frequency
   -> Email
 
 -> update cert on the domain
@@ -47,8 +47,6 @@ big milestones before launch:
 -> nav bar is weird on tablet
 
 -> there is a bug in how we write the settings to the db on user table -- inconsistent
-
--> some visual indicator something is happening when you upload a file
 
 -> add a last active at time on the user model
 

@@ -1,14 +1,14 @@
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel
 
-from app.models import SubscriptionTier, SubscriptionStatus
+from app.models import SubscriptionStatus, SubscriptionTier
 
 
 class SubscriptionDetails(BaseModel):
     tier: SubscriptionTier
     status: SubscriptionStatus
-    current_period_end: Optional[datetime] = None
+    current_period_end: datetime | None = None
     cancel_at_period_end: bool = False
     max_sources: int
     current_sources: int
@@ -26,7 +26,7 @@ class SubscriptionLimits(BaseModel):
 class PriceDetails(BaseModel):
     id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     price: float
     currency: str
     interval: str

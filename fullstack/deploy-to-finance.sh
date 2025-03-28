@@ -24,7 +24,6 @@ bin/check_for_deploy
 
 ECR_BACKEND_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/backend:${IMAGE_TAG}"
 ECR_WORKER_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/worker:${IMAGE_TAG}"
-ECR_PLAID_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/plaid:${IMAGE_TAG}"
 ECR_FRONTEND_URL="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}/frontend:${IMAGE_TAG}"
 
 echo "🔑 Logging into Amazon ECR..."
@@ -36,9 +35,6 @@ docker build --platform linux/amd64 -t finance-backend:${IMAGE_TAG} -f backend/D
 echo "🐳 Building Worker Image..."
 docker build --platform linux/amd64 -t finance-worker:${IMAGE_TAG} -f backend/Dockerfile.worker backend/
 
-echo "🐳 Building Plaid Image..."
-docker build --platform linux/amd64 -t finance-plaid:${IMAGE_TAG} -f backend/Dockerfile.plaid backend/
-
 
 
 echo "🐳 Building Frontend Image..."
@@ -47,13 +43,11 @@ docker build --platform linux/amd64 --build-arg VITE_API_URL=$VITE_API_URL -t fi
 echo "🏷️ Tagging Images..."
 docker tag finance-backend:${IMAGE_TAG} ${ECR_BACKEND_URL}
 docker tag finance-worker:${IMAGE_TAG} ${ECR_WORKER_URL}
-docker tag finance-plaid:${IMAGE_TAG} ${ECR_PLAID_URL}
 docker tag finance-frontend:${IMAGE_TAG} ${ECR_FRONTEND_URL}
 
 echo "🚀 Pushing Images to ECR..."
 docker push ${ECR_BACKEND_URL}
 docker push ${ECR_WORKER_URL}
-docker push ${ECR_PLAID_URL}
 docker push ${ECR_FRONTEND_URL}
 
 echo "🔄 Syncing Deployment Files..."
