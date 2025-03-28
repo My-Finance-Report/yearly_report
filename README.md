@@ -39,6 +39,7 @@ big milestones before launch:
   -> Email
 
 -> update cert on the domain
+-> null state on the accounts page
 
 -> ability to toggle visibility of a filter group
 
