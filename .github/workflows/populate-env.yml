@@ -35,11 +35,8 @@ jobs:
         output-filename: 'templates/env_filled_in'
         html-escape: false
         dry-run: false
-    - name: cat file
-      run: |
-        cat templates/env_filled_in
-    # - name: upload artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: .env.dev
-    #     path: .env.dev
+    - name: upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: templates/env_filled_in
+        path: .env.dev
