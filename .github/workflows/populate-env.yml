@@ -32,7 +32,7 @@ jobs:
         files: 'templates/.env.template'
         output-filename: 'templates/env_filled_in'
         html-escape: false
-        dry-run: true
+        dry-run: false
     - name: cat file
       run: echo "${{ toJson(steps.populate_template.outputs) }}"
     # - name: upload artifact
