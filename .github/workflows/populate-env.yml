@@ -28,6 +28,8 @@ jobs:
     - name: populate template file
       id: populate_template
       uses: pedrolamas/handlebars-action@v2
+      env:
+        DOMAIN: dev
       with:
         files: 'templates/.env.template'
         output-filename: 'templates/env_filled_in'
