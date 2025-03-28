@@ -30,7 +30,7 @@ jobs:
       uses: pedrolamas/handlebars-action@v2
       with:
         files: 'templates/.env.template'
-        output-filename: '.env.dev'
+        output-filename: ./.env.dev
         html-escape: false
         dry-run: true
     - name: cat file
