@@ -23,6 +23,8 @@ jobs:
           myFinance/*
         name-transformation: uppercase
         parse-json-secrets: false
+    - name: checkout code
+      uses: actions/checkout@v4
     - name: populate template file
       id: populate_template
       uses: pedrolamas/handlebars-action@v2
