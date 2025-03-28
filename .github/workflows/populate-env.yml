@@ -32,7 +32,7 @@ jobs:
         html-escape: false
         dry-run: true
     - name: cat file
-      run: cat ${{ steps.populate_template.outputs.outputFile.path }}
+      run: ls -aR .
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
