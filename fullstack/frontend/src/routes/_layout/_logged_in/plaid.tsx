@@ -130,7 +130,7 @@ const toast = useCustomToast()
 
   return (
     <Box p={5}>
-      <VStack align="stretch" gap={6}>
+      <VStack align="" gap={6}>
         <Heading size="lg">Connect Your Financial Accounts</Heading>
         <Text>
           Securely connect your bank accounts, credit cards, and investment accounts to
@@ -140,14 +140,13 @@ const toast = useCustomToast()
         <Button
           colorScheme="blue"
           size="lg"
+          maxWidth="200px"
           onClick={handleConnectAccount}
           disabled={!ready && !isLoading}
           mb={6}
         >
-          <Flex align="center" gap={2}>
             <FaPlus />
-            <span>Connect an Account</span>
-          </Flex>
+            Connect an Account
           {isLoading && <Spinner ml={2} size="sm" />}
         </Button>
 

@@ -10,6 +10,7 @@ from app.api.routes import (
     private,
     sankey,
     sitemap,
+    subscription,
     transactions,
     uploads,
     users,
@@ -30,7 +31,7 @@ api_router.include_router(sankey.router)
 api_router.include_router(uploads.router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
-
+api_router.include_router(subscription.router)
 
 if settings.ENVIRONMENT == "local":
     api_router.include_router(private.router)

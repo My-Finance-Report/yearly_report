@@ -29,6 +29,9 @@ import { Route as LayoutContactMeImport } from './routes/_layout/contact-me'
 import { Route as LayoutLoggedinImport } from './routes/_layout/_logged_in'
 import { Route as LayoutLoggedinUploadFilesImport } from './routes/_layout/_logged_in/upload-files'
 import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_logged_in/transactions'
+import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
+import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
+import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
@@ -126,6 +129,25 @@ const LayoutLoggedinUploadFilesRoute = LayoutLoggedinUploadFilesImport.update({
 const LayoutLoggedinTransactionsRoute = LayoutLoggedinTransactionsImport.update(
   {
     path: '/transactions',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any,
+)
+
+const LayoutLoggedinSubscriptionSuccessRoute =
+  LayoutLoggedinSubscriptionSuccessImport.update({
+    path: '/subscription-success',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
+
+const LayoutLoggedinSubscriptionCancelRoute =
+  LayoutLoggedinSubscriptionCancelImport.update({
+    path: '/subscription-cancel',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
+
+const LayoutLoggedinSubscriptionRoute = LayoutLoggedinSubscriptionImport.update(
+  {
+    path: '/subscription',
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
 )
@@ -255,6 +277,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinSettingsImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/subscription': {
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/subscription-cancel': {
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionCancelImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/subscription-success': {
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionSuccessImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/transactions': {
       preLoaderRoute: typeof LayoutLoggedinTransactionsImport
       parentRoute: typeof LayoutLoggedinImport
@@ -277,6 +311,9 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinPlaidRoute,
       LayoutLoggedinSankeyConfigRoute,
       LayoutLoggedinSettingsRoute,
+      LayoutLoggedinSubscriptionRoute,
+      LayoutLoggedinSubscriptionCancelRoute,
+      LayoutLoggedinSubscriptionSuccessRoute,
       LayoutLoggedinTransactionsRoute,
       LayoutLoggedinUploadFilesRoute,
     ]),
