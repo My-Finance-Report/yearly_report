@@ -31,15 +31,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 big milestones before launch:
 
-  -> Stripe
+-> Stripe
   --> account exists but not implemented
-  -> Plaid
-   -> done, but needs to be tested
-   -> seems to be a bug on the sync frequency
-  -> Email
+-> Plaid
+  --> done, but needs to be tested
+  --> seems to be a bug on the sync frequency
+-> Email
+
+-> worker needs to be on own server
 
 -> update cert on the domain
--> null state on the accounts page
+
 
 -> ability to toggle visibility of a filter group
 
@@ -82,6 +84,5 @@ big milestones before launch:
 --> doesnt rerun on category delete
 
 -> Expense should line up in the table
-
 
 
