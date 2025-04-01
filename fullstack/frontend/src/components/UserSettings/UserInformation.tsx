@@ -22,6 +22,7 @@ import {
 import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern, handleError } from "../../utils"
+import PowerUserToggle from "./PowerUserToggle"
 
 const UserInformation = () => {
   const queryClient = useQueryClient()
@@ -157,6 +158,7 @@ const UserInformation = () => {
       <Button mt={4} variant="outline" onClick={handleLogout}>
         Logout
       </Button>
+      <PowerUserToggle />
     </Container>
   )
 }

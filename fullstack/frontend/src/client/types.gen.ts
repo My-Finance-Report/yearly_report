@@ -402,6 +402,7 @@ export type UserUpdate = {
 
 export type UserUpdateMe = {
     email: string;
+    settings?: (UserSettings | null);
 };
 
 export type ValidationError = {

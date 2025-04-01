@@ -83,6 +83,7 @@ class UserUpdate(BaseModel):
 
 class UserUpdateMe(BaseModel):
     email: str
+    settings: UserSettings | None = None
 
 
 class TransactionSourceOut(TransactionSourceBase):

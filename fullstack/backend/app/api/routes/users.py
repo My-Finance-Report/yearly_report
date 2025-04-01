@@ -96,20 +96,34 @@ def update_user_me(
     session: Session = Depends(get_db),
     user_in: UserUpdateMe,
     current_user: User = Depends(get_current_user),
-) -> Any:
+) -> UserOut:
     """
     Update own user.
     """
-    if user_in.email:
+
+    db_user = session.query(User).filter(User.id == current_user.id).one()
+
+
+    if user_in.email and db_user.email != user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
             )
+        db_user.email = user_in.email
+    
+    if user_in.settings:
+        db_user.settings = user_in.settings
 
     session.commit()
-    session.refresh(current_user)
-    return current_user
+    session.refresh(db_user)
+    return UserOut(
+        full_name=db_user.full_name or "no name user",
+        email=db_user.email,
+        id=db_user.id,
+        is_superuser=db_user.is_superuser,
+        settings=db_user.settings,
+    )
 
 
 @router.patch("/me/password", response_model=Message)
