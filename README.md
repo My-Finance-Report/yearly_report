@@ -38,9 +38,10 @@ big milestones before launch:
   --> seems to be a bug on the sync frequency
 -> Email
 
--> would be nice to have some tests around user creation
+-> rethink navbar -> remove uploads, put in link with plaid, add account management
+-> track uploads on the account level
 
--> nav bar is weird on tablet
+-> would be nice to have some tests around user creation
 
 -> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
 
