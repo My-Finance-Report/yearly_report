@@ -11,7 +11,6 @@ import {
   Badge,
   Icon,
   Table,
-  TableRow,
 } from "@chakra-ui/react";
 import { AccountsService, UploadsService } from "@/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,10 +39,7 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
     queryKey: ["uploadedFiles", accountId],
     queryFn: () => UploadsService.getUploads(),
     select: (data) => data.filter(file => {
-      // Since we don't have source_id in the UploadedPdfOut type, we need to check
-      // if the file is associated with this account in another way
-      // This is a temporary solution until we update the API
-      return file.id && accountId && file.id % 10 === accountId % 10;
+      return file.transaction_source_id === accountId;
     }),
   });
 

@@ -13,6 +13,7 @@ from app.models import (
     JobStatus,
     TransactionBase,
     TransactionSourceBase,
+    TransactionSourceId,
     UserId,
     UserSettings,
 )
@@ -251,6 +252,7 @@ class UploadedPdfOut(UploadedPdfBase):
     id: int
     nickname: str | None = None
     job: ProcessFileJobOut | None = None
+    transaction_source_id: TransactionSourceId | None = None
 
 
 class TransactionGroup(BaseModel):

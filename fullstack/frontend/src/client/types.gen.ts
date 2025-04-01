@@ -355,6 +355,7 @@ export type UploadedPdfOut = {
     archived?: boolean;
     id: number;
     job?: (ProcessFileJobOut | null);
+    transaction_source_id?: (number | null);
 };
 
 export type UserNewPassword = {

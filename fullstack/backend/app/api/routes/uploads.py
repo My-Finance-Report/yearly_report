@@ -20,7 +20,11 @@ from app.models import (
     JobStatus,
     ProcessFileJob,
     Transaction,
+    TransactionSourceId,
+    UploadConfiguration,
+    UploadConfigurationId,
     UploadedPdf,
+    UploadedPdfId,
     User,
 )
 from app.worker.enqueue_job import enqueue_or_reset_job
@@ -156,16 +160,23 @@ def get_uploads(
         .filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id)
         .all()
     )
-    job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
+    job_lookup:dict[UploadedPdfId, ProcessFileJobOut] = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
+    transaction_source_lookup:dict[UploadConfigurationId, TransactionSourceId] = {config.id: config.transaction_source_id for config in session.query(UploadConfiguration).filter(UploadConfiguration.user_id == user.id).all()}
 
-    val = [
-        UploadedPdfOut.model_validate(file).model_copy(
-            update={"job": job_lookup.get(file.id)}
-        )
-        for file in files
-    ]
+    vals = []
 
-    return sorted(val, key=lambda x: x.filename, reverse=True)
+    for file in files:
+        job = job_lookup.get(file.id)
+
+        if job is None or job.config_id is None:
+            continue
+        config_id = transaction_source_lookup[UploadConfigurationId(job.config_id)]
+
+        vals.append(UploadedPdfOut.model_validate(file).model_copy(
+            update={"job": job, "transaction_source_id": config_id}
+        ))
+
+    return sorted(vals, key=lambda x: x.filename, reverse=True)
 
 
 @router.post("/", response_model=list[UploadedPdfOut])
