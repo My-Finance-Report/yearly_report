@@ -103,7 +103,6 @@ def update_user_me(
 
     db_user = session.query(User).filter(User.id == current_user.id).one()
 
-
     if user_in.email and db_user.email != user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
@@ -111,7 +110,7 @@ def update_user_me(
                 status_code=409, detail="User with this email already exists"
             )
         db_user.email = user_in.email
-    
+
     if user_in.settings:
         db_user.settings = user_in.settings
 

@@ -22,7 +22,6 @@ import {
 import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern, handleError } from "../../utils"
-import PowerUserToggle from "./PowerUserToggle"
 
 const UserInformation = () => {
   const queryClient = useQueryClient()
@@ -80,7 +79,7 @@ const UserInformation = () => {
 
   return (
     <Container maxW="full">
-      <Heading size="sm" py={4}>
+      <Heading size="md" py={4}>
         User Information
       </Heading>
       <Box
@@ -158,7 +157,6 @@ const UserInformation = () => {
       <Button mt={4} variant="outline" onClick={handleLogout}>
         Logout
       </Button>
-      <PowerUserToggle />
     </Container>
   )
 }
