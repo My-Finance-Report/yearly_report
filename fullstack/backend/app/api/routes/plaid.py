@@ -19,6 +19,7 @@ from app.plaid.models import (
     PlaidExchangeTokenRequest,
     PlaidLinkTokenResponse,
 )
+from app.telegram_utils import send_telegram_message
 
 router = APIRouter(prefix="/plaid", tags=["plaid"])
 
@@ -28,6 +29,9 @@ def get_link_token(
     user: User = Depends(get_current_user),
 ) -> PlaidLinkTokenResponse:
     """Create a link token for Plaid Link."""
+    send_telegram_message(
+        message=f"User requested link token {user.id}",
+    )
     try:
         link_token = create_link_token(str(user.id))
         return PlaidLinkTokenResponse(link_token=link_token)

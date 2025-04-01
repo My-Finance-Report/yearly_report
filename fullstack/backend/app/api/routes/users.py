@@ -26,6 +26,7 @@ from app.local_types import (
 from app.models import (
     User,
 )
+from app.telegram_utils import send_telegram_message
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -40,14 +41,25 @@ def read_users(
     session: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> UsersPublic:
     """
-    Retrieve users.
+    Retrieve users. NOTE: this doesnt work due to RLS policy
     """
+
     count = session.query(func.count()).select_from(User).scalar()
 
     users = session.query(User).offset(skip).limit(limit).all()
 
     return UsersPublic(
-        data=[UserOut.model_validate(user) for user in users], count=count
+        data=[
+            UserOut(
+                full_name=user.full_name or "no name user",
+                email=user.email,
+                id=user.id,
+                is_superuser=user.is_superuser,
+                settings=user.settings,
+            )
+            for user in users
+        ],
+        count=count,
     )
 
 
@@ -161,6 +173,10 @@ def register_user(
             status_code=400,
             detail="The user with this email already exists in the system",
         )
+
+    send_telegram_message(
+        message=f"User registered successfully {user_in.email}",
+    )
 
     user_create = UserRegister(
         full_name=user_in.full_name,

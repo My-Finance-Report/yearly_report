@@ -13,6 +13,7 @@ from app.models import (
     TransactionSource,
     TransactionSourceId,
 )
+from app.telegram_utils import send_telegram_message
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
@@ -118,6 +119,7 @@ def get_demo_aggregated_transactions(
         description="Filter for transactions",
     ),
 ) -> AggregatedTransactions:
+    send_telegram_message("demo has been viewed")
     demo_data = get_demo_data()
     transactions = demo_data.transactions
     category_lookup = {c.id: c for c in demo_data.categories}

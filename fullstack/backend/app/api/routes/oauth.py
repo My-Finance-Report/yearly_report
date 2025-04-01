@@ -16,6 +16,7 @@ from app.core.oauth import (
 )
 from app.db import get_auth_db
 from app.models import User, UserSettings
+from app.telegram_utils import send_telegram_message
 
 router = APIRouter(tags=["oauth"])
 
@@ -117,6 +118,10 @@ async def google_callback(
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         jwt_token = security.create_access_token(
             user.id, expires_delta=access_token_expires
+        )
+
+        send_telegram_message(
+            message=f"User logged in successfully with oauth {user.id}",
         )
 
         # Return the token to the frontend
