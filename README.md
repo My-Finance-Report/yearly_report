@@ -32,24 +32,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 big milestones before launch:
 
 -> Stripe
-  --> account exists but not implemented
+  --> sort of exists but needs more work
 -> Plaid
   --> done, but needs to be tested
   --> seems to be a bug on the sync frequency
 -> Email
 
--> worker needs to be on own server
-
--> update cert on the domain
-
-
--> ability to toggle visibility of a filter group
-
 -> would be nice to have some tests around user creation
 
 -> nav bar is weird on tablet
 
--> there is a bug in how we write the settings to the db on user table -- inconsistent
+-> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
 
 -> add a last active at time on the user model
 
