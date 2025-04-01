@@ -16,7 +16,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  FiBriefcase,
   FiDollarSign,
   FiHome,
   FiList,
@@ -31,7 +30,6 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
   { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
-  { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
@@ -189,7 +187,7 @@ function MobileMenu({
 
   // Group navigation items by category
   const mainNavItems = finalItems.filter(item => 
-    ["/transactions", "/manage-accounts", "/upload-files", "/budget"].includes(item.value)
+    ["/transactions", "/manage-accounts", "/budget"].includes(item.value)
   );
   const settingsItems = finalItems.filter(item => 
     ["/settings"].includes(item.value)
@@ -265,7 +263,6 @@ function MobileMenu({
             </Flex>
           </Box>
 
-          {/* Settings */}
           <Box mb={4}>
             <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
               Settings

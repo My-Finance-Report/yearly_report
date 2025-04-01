@@ -19,6 +19,7 @@ import { CategoriesManager } from "./CategoriesManager";
 import { DeleteButton, ReprocessButton } from "./ReprocessButton";
 import useCustomToast from "@/hooks/useCustomToast";
 import { FaEdit, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface AccountDetailsProps {
   accountId: number;
@@ -87,6 +88,8 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
     }
   };
 
+  const isMobile = useIsMobile()
+
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg"  shadow="sm">
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
@@ -98,7 +101,7 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 size="md"
-                width="auto"
+                width="400px"
               />
               <Button size="sm" onClick={handleUpdateName}>Save</Button>
               <Button 
@@ -174,16 +177,16 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
                         <Table.Cell>{file.filename}</Table.Cell>
                         <Table.Cell>{new Date(file.upload_time).toLocaleDateString()}</Table.Cell>
                         <Table.Cell>
-                          <HStack>
-                            <ReprocessButton 
-                              fileId={file.id} 
-                              onReprocess={handleFileUpdate} 
-                            />
+                          <Flex direction={isMobile ? "column" : "row"} gap={2}>
+                              <ReprocessButton 
+                                jobId={file.id} 
+                                onReprocess={handleFileUpdate} 
+                              />
                             <DeleteButton 
                               fileId={file.id} 
                               onReprocess={handleFileUpdate}
                             />
-                          </HStack>
+                          </Flex>
                         </Table.Cell>
                       </Table.Row>
                     ))}
