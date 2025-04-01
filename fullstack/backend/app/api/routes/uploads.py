@@ -160,8 +160,15 @@ def get_uploads(
         .filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id)
         .all()
     )
-    job_lookup:dict[UploadedPdfId, ProcessFileJobOut] = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
-    transaction_source_lookup:dict[UploadConfigurationId, TransactionSourceId] = {config.id: config.transaction_source_id for config in session.query(UploadConfiguration).filter(UploadConfiguration.user_id == user.id).all()}
+    job_lookup: dict[UploadedPdfId, ProcessFileJobOut] = {
+        job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs
+    }
+    transaction_source_lookup: dict[UploadConfigurationId, TransactionSourceId] = {
+        config.id: config.transaction_source_id
+        for config in session.query(UploadConfiguration)
+        .filter(UploadConfiguration.user_id == user.id)
+        .all()
+    }
 
     vals = []
 
@@ -172,9 +179,11 @@ def get_uploads(
             continue
         config_id = transaction_source_lookup[UploadConfigurationId(job.config_id)]
 
-        vals.append(UploadedPdfOut.model_validate(file).model_copy(
-            update={"job": job, "transaction_source_id": config_id}
-        ))
+        vals.append(
+            UploadedPdfOut.model_validate(file).model_copy(
+                update={"job": job, "transaction_source_id": config_id}
+            )
+        )
 
     return sorted(vals, key=lambda x: x.filename, reverse=True)
 
