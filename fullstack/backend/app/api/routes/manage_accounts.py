@@ -26,19 +26,9 @@ def get_transaction_sources(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TransactionSourceOut]:
-    has_transactions = (
-        session.query(Transaction.transaction_source_id)
-        .filter(Transaction.user_id == user.id)
-        .distinct()
-        .all()
-    )
-
-    source_ids_with_transactions = [t.transaction_source_id for t in has_transactions]
-
     db_sources = (
         session.query(TransactionSource)
         .filter(
-            TransactionSource.id.in_(source_ids_with_transactions),
             TransactionSource.user_id == user.id,
         )
         .all()

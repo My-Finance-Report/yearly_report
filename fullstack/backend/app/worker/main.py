@@ -16,6 +16,7 @@ from app.db import get_db_for_user
 from app.get_db_string import get_worker_database_url
 from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
 from app.scheduler import sync_all_plaid_accounts_job
+from app.telegram_utils import send_telegram_message
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 
@@ -109,7 +110,7 @@ def process_next_jobs(session: Session) -> None:
 
     job = fetch_and_lock_next_job(session)
     if not job:
-        logger.info("No job available.")
+        logger.info(f"{datetime.now(timezone.utc)}: No job available.")
         return
 
     all_jobs.append(job)
@@ -151,6 +152,7 @@ def try_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> bool:
         user_session.commit()
         return True
     except (Exception, PendingRollbackError) as e:
+        send_telegram_message(f"Job failed in worker: {e}")
         logger.error(f"Job failed: {e}")
         for job in jobs:
             job.status = JobStatus.failed

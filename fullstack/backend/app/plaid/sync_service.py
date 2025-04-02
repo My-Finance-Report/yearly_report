@@ -32,6 +32,7 @@ from app.models import (
     User,
 )
 from app.plaid.client import get_plaid_client
+from app.telegram_utils import send_telegram_message
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +276,6 @@ def add_new_transactions(
             .all()
         )
 
-    print(plaid_transactions)
     in_process = InProcessFile(
         session=session,
         user=user,
@@ -364,5 +364,8 @@ async def sync_all_plaid_accounts(
             print(f"No Plaid accounts found for user {user.id}")
 
     except Exception as e:
+        send_telegram_message(
+            f"Error syncing Plaid accounts for user {user.id}: {str(e)}"
+        )
         logger.error(f"Error syncing Plaid accounts for user {user.id}: {str(e)}")
         raise

@@ -181,12 +181,12 @@ function ManageAccounts() {
               <Text>Connect Account</Text>
             </Flex>
           </Button>
-          <Button onClick={onUploadOpen}>
-            <Flex align="center">
-              <Icon as={FaFileUpload} mr={2} />
-              <Text>Upload Files</Text>
-            </Flex>
-          </Button>
+            <Button onClick={onUploadOpen}>
+              <Flex align="center">
+                <Icon as={FaFileUpload} mr={2} />
+                <Text>Upload Files</Text>
+              </Flex>
+            </Button>
         </Flex>
       </Flex>
 

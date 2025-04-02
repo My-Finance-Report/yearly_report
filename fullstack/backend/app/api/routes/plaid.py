@@ -93,6 +93,9 @@ async def exchange_token(
             )
             session.add(transaction_source)
 
+            session.commit()
+            session.refresh(transaction_source)
+
             add_default_categories(session, user, transaction_source)
 
             created_accounts.append(
@@ -108,9 +111,12 @@ async def exchange_token(
             )
 
         session.commit()
+        send_telegram_message(
+            message=f"Successfully added Plaid accounts for user {user.id}"
+        )
         return created_accounts
     except Exception as e:
-        print(e)
+        send_telegram_message(message=f"Error getting accounts: {str(e)}")
         raise HTTPException(status_code=500, detail="Error getting accounts")
 
 

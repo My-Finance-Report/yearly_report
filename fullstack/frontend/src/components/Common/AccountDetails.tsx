@@ -133,26 +133,34 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
         <Button 
           variant="ghost" 
           mr={2}
-          color={activeTab === 0 ? "blue.500" : undefined}
           borderColor={activeTab === 0 ? "blue.500" : undefined}
-          _hover={{ bg: "gray.100" }}
           onClick={() => setActiveTab(0)}
         >
           Categories
         </Button>
-        <Button 
-          variant="ghost" 
-          color={activeTab === 1 ? "blue.500" : undefined}
-          borderColor={activeTab === 1 ? "blue.500" : undefined}
-          _hover={{ bg: "gray.100" }}
-          onClick={() => setActiveTab(1)}
-        >
-          Uploaded Files
-        </Button>
+        {isPlaidLinked ? (
+          <Button
+            variant="ghost" 
+            borderColor={activeTab === 1 ? "blue.500" : undefined}
+            onClick={() => setActiveTab(1)}
+          >
+            Data Syncs
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            color={activeTab === 1 ? "blue.500" : undefined}
+            borderColor={activeTab === 1 ? "blue.500" : undefined}
+            _hover={{ bg: "gray.100" }}
+            onClick={() => setActiveTab(1)}
+          >
+            Uploaded Files
+          </Button>
+        )}
       </Flex>
 
       <Box>
-        {activeTab === 1 ? (
+        {activeTab === 1 && !isPlaidLinked ? (
           <Box>
             {isLoadingFiles ? (
               <Text>Loading files...</Text>
@@ -193,8 +201,20 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
               <Text>No files uploaded yet.</Text>
             )}
           </Box>
-        ) : (
+        ) : activeTab === 0 ? (
           <CategoriesManager accountId={accountId} />
+        ) : isPlaidLinked && (
+          <Box p={4} borderWidth="1px" borderRadius="md">
+            <Flex align="center" gap={3}>
+              <Icon as={FaUniversity} color="blue.500" boxSize={5} />
+              <VStack align="start" gap={1}>
+                <Text fontWeight="medium">Data Syncs Automatically</Text>
+                <Text fontSize="sm" >
+                  This account is connected to Plaid and transactions are synced daily.
+                </Text>
+              </VStack>
+            </Flex>
+          </Box>
         )}
       </Box>
     </Box>
