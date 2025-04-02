@@ -7,9 +7,10 @@ import { FaSync } from "react-icons/fa";
 interface RecategorizeButtonProps {
   sourceId: number;
   onRecategorize?: () => void;
+  disabled?: boolean;
 }
 
-export function RecategorizeButton({ sourceId, onRecategorize }: RecategorizeButtonProps) {
+export function RecategorizeButton({ sourceId, onRecategorize, disabled = false }: RecategorizeButtonProps) {
   const showToast = useCustomToast();
   
   const handleRecategorize = async () => {
@@ -38,6 +39,7 @@ export function RecategorizeButton({ sourceId, onRecategorize }: RecategorizeBut
       size="sm" 
       colorScheme="teal" 
       onClick={handleRecategorize}
+      disabled={disabled}
     >
       <Icon as={FaSync} mr={2} />
       Recategorize

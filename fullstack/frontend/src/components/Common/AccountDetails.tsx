@@ -124,10 +124,32 @@ export function AccountDetails({
   const isMobile = useIsMobile()
 
   return (
-    <Box p={4} borderWidth="1px" borderRadius="lg"  shadow="sm">
+    <Box 
+      p={4} 
+      borderWidth="1px" 
+      borderRadius="lg" 
+      shadow="sm"
+      position="relative"
+      opacity={isArchived ? 0.7 : 1}
+      bg={isArchived ? "gray.50" : undefined}
+      _dark={{
+        bg: isArchived ? "gray.800" : undefined,
+      }}
+    >
+      {isArchived && (
+        <Badge 
+          position="absolute" 
+          top={2} 
+          left={2} 
+          colorScheme="red" 
+          variant="solid"
+        >
+          Archived
+        </Badge>
+      )}
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Flex alignItems="center" gap={3}>
-          <Icon as={getAccountIcon()} color="blue.500" boxSize={6} />
+        <Flex alignItems="center" gap={3} mt={isArchived ? 8 : 0}>
+          <Icon as={getAccountIcon()} color={isArchived ? "gray.500" : "blue.500"} boxSize={6} />
           {isEditing ? (
             <HStack>
               <Input 
@@ -135,8 +157,9 @@ export function AccountDetails({
                 onChange={(e) => setNewName(e.target.value)}
                 size="md"
                 width="400px"
+                disabled={isArchived}
               />
-              <Button size="sm" onClick={handleUpdateName}>Save</Button>
+              <Button size="sm" onClick={handleUpdateName} disabled={isArchived}>Save</Button>
               <Button 
                 size="sm" 
                 variant="ghost" 
@@ -144,33 +167,35 @@ export function AccountDetails({
                   setIsEditing(false);
                   setNewName(accountName);
                 }}
+                disabled={isArchived}
               >
                 Cancel
               </Button>
             </HStack>
           ) : (
             <Flex alignItems="center">
-              <Heading size="md">{accountName}</Heading>
+              <Heading size="md" color={isArchived ? "gray.500" : undefined} _dark={{ color: isArchived ? "gray.400" : undefined }}>{accountName}</Heading>
               <Button
                 aria-label="Edit account name"
                 size="xs"
                 variant="ghost"
                 ml={2}
                 onClick={() => setIsEditing(true)}
+                disabled={isArchived}
               >
                 <EditIcon mr={1} /> 
               </Button>
             </Flex>
           )}
           {isPlaidLinked && (
-            <Badge variant="outline" mr={1}>Connected</Badge>
+            <Badge variant="outline" mr={1} colorScheme={isArchived ? "gray" : "blue"}>Connected</Badge>
           )}
-          <Badge variant="outline" color={getAccountTypeColor()}>
+          <Badge variant="outline" color={isArchived ? "gray.500" : getAccountTypeColor()} _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}>
             {getAccountTypeLabel()}
           </Badge>
         </Flex>
         <Flex gap={2}>
-          <RecategorizeButton sourceId={accountId} />
+          <RecategorizeButton sourceId={accountId} disabled={isArchived} />
           <ArchiveButton sourceId={accountId} isArchived={isArchived} />
         </Flex>
       </Flex>
@@ -181,6 +206,7 @@ export function AccountDetails({
           mr={2}
           borderColor={activeTab === 0 ? "blue.500" : undefined}
           onClick={() => setActiveTab(0)}
+          disabled={isArchived}
         >
           Categories
         </Button>
@@ -189,6 +215,7 @@ export function AccountDetails({
             variant="ghost" 
             borderColor={activeTab === 1 ? "blue.500" : undefined}
             onClick={() => setActiveTab(1)}
+            disabled={isArchived}
           >
             Data Syncs
           </Button>
@@ -199,6 +226,7 @@ export function AccountDetails({
             borderColor={activeTab === 1 ? "blue.500" : undefined}
             _hover={{ bg: "gray.100" }}
             onClick={() => setActiveTab(1)}
+            disabled={isArchived}
           >
             Uploaded Files
           </Button>
@@ -231,10 +259,12 @@ export function AccountDetails({
                               <ReprocessButton 
                                 jobId={file.id} 
                                 onReprocess={handleFileUpdate} 
+                                disabled={isArchived}
                               />
                             <DeleteButton 
                               fileId={file.id} 
                               onReprocess={handleFileUpdate}
+                              disabled={isArchived}
                             />
                           </Flex>
                         </Table.Cell>

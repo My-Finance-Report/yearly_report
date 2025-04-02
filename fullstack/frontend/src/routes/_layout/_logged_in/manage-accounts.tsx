@@ -24,6 +24,7 @@ import {
   SelectContent,
   SelectItem,
   createListCollection,
+  Badge,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -270,9 +271,19 @@ function ManageAccounts() {
                 {accounts.map((account, index) => (
                   <SelectItem 
                     key={account.id} 
-                    item={{ label: account.name, value: index.toString() }}
+                    item={{ 
+                      label: account.name, 
+                      value: index.toString() 
+                    }}
                   >
-                    {account.name}
+                    <Flex align="center">
+                      {account.name}
+                      {account.archived && (
+                        <Badge ml={2} colorScheme="red" variant="solid" size="sm">
+                          Archived
+                        </Badge>
+                      )}
+                    </Flex>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -291,17 +302,15 @@ function ManageAccounts() {
         </Box>
       ) : (
         <Box textAlign="center" p={10} borderWidth="1px" borderRadius="lg">
-          <Flex direction="column" gap={4} align="stretch">
-            <Text fontSize="lg">You don't have any accounts yet.</Text>
-            <Text>Create a new account or link your bank to get started.</Text>
-            <Flex gap={2} mt={4}>
-              <Button onClick={onAddAccountOpen}>
-                <Flex align="center">
-                  <Icon as={FaPlus} mr={2} />
-                  <Text>Add Account</Text>
-                </Flex>
-              </Button>
-            </Flex>
+          <Text fontSize="lg">You don't have any accounts yet.</Text>
+          <Text>Create a new account or link your bank to get started.</Text>
+          <Flex gap={2} mt={4}>
+            <Button onClick={onAddAccountOpen}>
+              <Flex align="center">
+                <Icon as={FaPlus} mr={2} />
+                <Text>Add Account</Text>
+              </Flex>
+            </Button>
           </Flex>
         </Box>
       )}
