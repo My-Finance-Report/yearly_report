@@ -18,7 +18,9 @@ import { CategoriesManager } from "./CategoriesManager";
 import { DeleteButton, ReprocessButton } from "./ReprocessButton";
 import { RecategorizeButton } from "./RecategorizeButton";
 import useCustomToast from "@/hooks/useCustomToast";
-import { FaEdit, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+
+import {  EditIcon } from "@chakra-ui/icons"
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface AccountDetailsProps {
@@ -126,7 +128,7 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
               size="sm" 
               onClick={() => setIsEditing(true)}
             >
-              <Icon as={FaEdit} mr={2} />
+              <Icon as={EditIcon} mr={2} />
               Edit
             </Button>
           )}
