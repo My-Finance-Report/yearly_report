@@ -142,7 +142,7 @@ def get_plaid_accounts(
 
 def get_source_kind_from_account_type(account_type: str) -> SourceKind:
     """Map Plaid account types to SourceKind."""
-    INVESTMENT_ACCOUNT_TYPES =[
+    INVESTMENT_ACCOUNT_TYPES = [
         "brokerage",
         "401a",
         "401k",
@@ -170,8 +170,9 @@ def get_source_kind_from_account_type(account_type: str) -> SourceKind:
 
     if any(credit_type in account_type for credit_type in CREDIT_ACCOUNT_TYPES):
         return SourceKind.card
-    elif any(investment_type in account_type for investment_type in INVESTMENT_ACCOUNT_TYPES):
+    elif any(
+        investment_type in account_type for investment_type in INVESTMENT_ACCOUNT_TYPES
+    ):
         return SourceKind.investment
     else:
         return SourceKind.account
-        

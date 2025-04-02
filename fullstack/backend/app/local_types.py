@@ -89,6 +89,7 @@ class UserUpdateMe(BaseModel):
 
 class TransactionSourceOut(TransactionSourceBase):
     id: int
+    is_plaid_connected: bool = False
 
 
 class CategoryOut(CategoryBase):

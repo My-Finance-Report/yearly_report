@@ -144,9 +144,9 @@ function ManageAccounts() {
 
   // Check if an account is linked to Plaid
   const isPlaidLinked = (accountId: number) => {
-    // Check if the account ID is from Plaid based on the account data
+    // Check if the account is connected to Plaid based on the is_plaid_connected field
     const account = accounts?.find((a) => a.id === accountId)
-    return account?.name.toLowerCase().includes("plaid") || false
+    return account?.is_plaid_connected || false
   }
 
   // Get account type

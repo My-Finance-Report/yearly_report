@@ -299,7 +299,9 @@ def build_grouping_option_choices(
     all_dates = (
         session.query(Transaction.date_of_transaction)
         .filter(Transaction.user_id == user.id)
-        .join(TransactionSource, TransactionSource.id == Transaction.transaction_source_id)
+        .join(
+            TransactionSource, TransactionSource.id == Transaction.transaction_source_id
+        )
         .filter(~TransactionSource.archived)
         .distinct()
         .order_by(Transaction.date_of_transaction)
@@ -518,10 +520,13 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-    transactions_query = session.query(Transaction).filter(
-        Transaction.user_id == user.id
-    ).join(TransactionSource, TransactionSource.id == Transaction.transaction_source_id).filter(
-        ~TransactionSource.archived
+    transactions_query = (
+        session.query(Transaction)
+        .filter(Transaction.user_id == user.id)
+        .join(
+            TransactionSource, TransactionSource.id == Transaction.transaction_source_id
+        )
+        .filter(~TransactionSource.archived)
     )
 
     if not group_by:

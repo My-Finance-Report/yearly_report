@@ -36,7 +36,11 @@ def get_transaction_sources(
 
     return [
         TransactionSourceOut(
-            name=db_source.name, archived=db_source.archived, id=db_source.id
+            name=db_source.name, 
+            archived=db_source.archived, 
+            id=db_source.id,
+            source_kind=db_source.source_kind,
+            is_plaid_connected=db_source.plaid_account_id is not None
         )
         for db_source in db_sources
     ]
@@ -67,7 +71,11 @@ def create_transaction_source(
     session.refresh(new_source)
 
     return TransactionSourceOut(
-        name=new_source.name, archived=new_source.archived, id=new_source.id
+        name=new_source.name, 
+        archived=new_source.archived, 
+        id=new_source.id,
+        source_kind=new_source.source_kind,
+        is_plaid_connected=new_source.plaid_account_id is not None
     )
 
 
@@ -93,7 +101,11 @@ def update_transaction_source(
     session.commit()
     session.refresh(db_source)
     return TransactionSourceOut(
-        name=db_source.name, archived=db_source.archived, id=db_source.id
+        name=db_source.name, 
+        archived=db_source.archived, 
+        id=db_source.id,
+        source_kind=db_source.source_kind,
+        is_plaid_connected=db_source.plaid_account_id is not None
     )
 
 
@@ -354,5 +366,9 @@ def toggle_archive_transaction_source(
     session.commit()
     session.refresh(db_source)
     return TransactionSourceOut(
-        name=db_source.name, archived=db_source.archived, id=db_source.id
+        name=db_source.name, 
+        archived=db_source.archived, 
+        id=db_source.id,
+        source_kind=db_source.source_kind,
+        is_plaid_connected=db_source.plaid_account_id is not None
     )
