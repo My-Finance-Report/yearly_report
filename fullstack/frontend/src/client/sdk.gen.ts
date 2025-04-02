@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadPublicSavedFiltersData, SavedFiltersReadPublicSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -777,6 +777,162 @@ export class SankeyService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/sankey/config-info'
+        });
+    }
+    
+}
+
+export class SavedFiltersService {
+    /**
+     * Create Saved Filter
+     * Create a new saved filter.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static createSavedFilter(data: SavedFiltersCreateSavedFilterData): CancelablePromise<SavedFiltersCreateSavedFilterResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/saved-filters/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Saved Filters
+     * Retrieve saved filters.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static readSavedFilters(data: SavedFiltersReadSavedFiltersData = {}): CancelablePromise<SavedFiltersReadSavedFiltersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/saved-filters/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Public Saved Filters
+     * Retrieve public saved filters from all users.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static readPublicSavedFilters(data: SavedFiltersReadPublicSavedFiltersData = {}): CancelablePromise<SavedFiltersReadPublicSavedFiltersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/saved-filters/public',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Saved Filter
+     * Get a specific saved filter by ID.
+     * @param data The data for the request.
+     * @param data.filterId
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static readSavedFilter(data: SavedFiltersReadSavedFilterData): CancelablePromise<SavedFiltersReadSavedFilterResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/saved-filters/{filter_id}',
+            path: {
+                filter_id: data.filterId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Saved Filter
+     * Update a saved filter.
+     * @param data The data for the request.
+     * @param data.filterId
+     * @param data.requestBody
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static updateSavedFilter(data: SavedFiltersUpdateSavedFilterData): CancelablePromise<SavedFiltersUpdateSavedFilterResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/saved-filters/{filter_id}',
+            path: {
+                filter_id: data.filterId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Saved Filter
+     * Delete a saved filter.
+     * @param data The data for the request.
+     * @param data.filterId
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static deleteSavedFilter(data: SavedFiltersDeleteSavedFilterData): CancelablePromise<SavedFiltersDeleteSavedFilterResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/saved-filters/{filter_id}',
+            path: {
+                filter_id: data.filterId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Saved Filter By Name
+     * Get a specific saved filter by name.
+     * @param data The data for the request.
+     * @param data.filterName
+     * @returns SavedFilter Successful Response
+     * @throws ApiError
+     */
+    public static readSavedFilterByName(data: SavedFiltersReadSavedFilterByNameData): CancelablePromise<SavedFiltersReadSavedFilterByNameResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/saved-filters/by-name/{filter_name}',
+            path: {
+                filter_name: data.filterName
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     

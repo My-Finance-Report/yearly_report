@@ -280,6 +280,37 @@ export type SankeySibling = {
     source_id: number;
 };
 
+export type SavedFilter = {
+    name: string;
+    description?: (string | null);
+    filter_data: {
+        [key: string]: unknown;
+    };
+    is_public?: boolean;
+    id: number;
+    user_id: number;
+    created_at: string;
+    updated_at: string;
+};
+
+export type SavedFilterCreate = {
+    name: string;
+    description?: (string | null);
+    filter_data: {
+        [key: string]: unknown;
+    };
+    is_public?: boolean;
+};
+
+export type SavedFilterUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    filter_data?: ({
+    [key: string]: unknown;
+} | null);
+    is_public?: (boolean | null);
+};
+
 export type SourceKind = 'account' | 'investment' | 'card';
 
 export type SubscriptionDetails = {
@@ -647,6 +678,51 @@ export type SankeyCreateSankeyConfigResponse = ({
 });
 
 export type SankeyGetSankeyConfigInfoResponse = (SankeyConfigInfo);
+
+export type SavedFiltersCreateSavedFilterData = {
+    requestBody: SavedFilterCreate;
+};
+
+export type SavedFiltersCreateSavedFilterResponse = (SavedFilter);
+
+export type SavedFiltersReadSavedFiltersData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type SavedFiltersReadSavedFiltersResponse = (Array<SavedFilter>);
+
+export type SavedFiltersReadPublicSavedFiltersData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type SavedFiltersReadPublicSavedFiltersResponse = (Array<SavedFilter>);
+
+export type SavedFiltersReadSavedFilterData = {
+    filterId: number;
+};
+
+export type SavedFiltersReadSavedFilterResponse = (SavedFilter);
+
+export type SavedFiltersUpdateSavedFilterData = {
+    filterId: number;
+    requestBody: SavedFilterUpdate;
+};
+
+export type SavedFiltersUpdateSavedFilterResponse = (SavedFilter);
+
+export type SavedFiltersDeleteSavedFilterData = {
+    filterId: number;
+};
+
+export type SavedFiltersDeleteSavedFilterResponse = (SavedFilter);
+
+export type SavedFiltersReadSavedFilterByNameData = {
+    filterName: string;
+};
+
+export type SavedFiltersReadSavedFilterByNameResponse = (SavedFilter);
 
 export type SitemapSitemapResponse = (unknown);
 

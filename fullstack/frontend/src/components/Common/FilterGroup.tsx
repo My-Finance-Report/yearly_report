@@ -33,13 +33,16 @@ import {
 import BoxWithText, { type CollapsibleName } from "./BoxWithText";
 import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
+import { SavedFilterControls } from "./SavedFilterControls";
 
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
 import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
+import { useFilterState } from "@/hooks/useFilterState";
+import { useSearch } from "@tanstack/react-router";
 
 export interface FilterInfo {
   years: string[];
@@ -80,8 +83,31 @@ function getFilterSettings(
   }
 }
 
+export function useFilterInfoWithUrlState(defaultValues?: {
+  years?: string[];
+  accounts?: string[];
+  months?: string[];
+  categories?: string[];
+  budgets?: string[];
+}): FilterInfo {
+  // Use the hook to get filter state that persists in URL
+  const filterState = useFilterState(defaultValues);
+  
+  return {
+    years: filterState.years,
+    accounts: filterState.accounts,
+    months: filterState.months,
+    categories: filterState.categories,
+    budgets: filterState.budgets,
+    setYears: filterState.setYears,
+    setAccounts: filterState.setAccounts,
+    setMonths: filterState.setMonths,
+    setCategories: filterState.setCategories,
+    setBudgets: filterState.setBudgets
+  };
+}
+
 export function FilterGroup({
-  filterInfo,
   groupingOptionsChoices,
   groupingOptions,
   setShowDeposits,
@@ -92,7 +118,6 @@ export function FilterGroup({
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
-  filterInfo: FilterInfo;
   groupingOptions: GroupByOption[];
   groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
@@ -102,6 +127,8 @@ export function FilterGroup({
   const isMobile = useIsMobile();
 
   const [open, setOpen] = useState(false);
+
+  const filterInfo = useFilterInfoWithUrlState();
 
   if (isMobile) {
     return (
@@ -537,6 +564,27 @@ function NonPowerUserButtons({
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
 }) {
+  const { user } = useAuth();
+  const search = useSearch();
+  
+  // Load filter from URL parameter if provided
+  useEffect(() => {
+    if (search.filter) {
+      import('@/hooks/useSavedFilters').then(({ useSavedFilters }) => {
+        const { loadFilterByName } = useSavedFilters();
+        loadFilterByName(search.filter).then(filterData => {
+          if (filterData) {
+            if (filterData.years) filterInfo.setYears(filterData.years);
+            if (filterData.accounts) filterInfo.setAccounts(filterData.accounts);
+            if (filterData.months) filterInfo.setMonths(filterData.months);
+            if (filterData.categories) filterInfo.setCategories(filterData.categories);
+            if (filterData.budgets) filterInfo.setBudgets(filterData.budgets);
+          }
+        });
+      });
+    }
+  }, [search.filter]);
+
   const excludingUnbudgeted =
     groupingOptionsChoices?.[GroupByOption.budget]?.filter(
       (budget) => budget !== "Unbudgeted"
@@ -590,21 +638,27 @@ function NonPowerUserButtons({
   };
 
   return (
-    <Flex gap={2} direction={"column"}>
-      {hasBudgets && (
-      <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
-        Monthly Budget
-      </Button>
-      )}
-      <Button size="xs" variant="subtle" onClick={setYTD}>
-        Year To Date
-      </Button>
-      <Button size="xs" variant="subtle" onClick={setLastYear}>
-        Last Year
-      </Button>
-      <Button size="xs" variant="subtle" onClick={setAllTime}>
-        All Time
-      </Button>
-    </Flex>
+    <Box>
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+        <Text fontWeight="bold">Filters</Text>
+        {user && <SavedFilterControls filterInfo={filterInfo} />}
+      </Flex>
+      <Flex direction="column" gap={2}>
+        {hasBudgets && (
+        <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
+          Monthly Budget
+        </Button>
+        )}
+        <Button size="xs" variant="subtle" onClick={setYTD}>
+          Year To Date
+        </Button>
+        <Button size="xs" variant="subtle" onClick={setLastYear}>
+          Last Year
+        </Button>
+        <Button size="xs" variant="subtle" onClick={setAllTime}>
+          All Time
+        </Button>
+      </Flex>
+    </Box>
   );
 }

@@ -101,6 +101,8 @@ PlaidItemId = NewType("PlaidItemId", int)
 PlaidAccountId = NewType("PlaidAccountId", int)
 SubscriptionId = NewType("SubscriptionId", int)
 PriceId = NewType("PriceId", int)
+PlaidSyncLogId = NewType("PlaidSyncLogId", int)
+SavedFilterId = NewType("SavedFilterId", int)
 
 
 @dataclass(kw_only=True)
@@ -136,6 +138,9 @@ class User(Base):
     )
     subscription: Mapped["Subscription"] = relationship(
         "Subscription", back_populates="user", uselist=False
+    )
+    saved_filters: Mapped[list["SavedFilter"]] = relationship(
+        "SavedFilter", back_populates="user"
     )
 
 
@@ -609,3 +614,30 @@ class Subscription(Base):
     # Relationships
     price: Mapped["Price | None"] = relationship("Price")
     user: Mapped["User"] = relationship("User", back_populates="subscription")
+
+
+class SavedFilter(Base):
+    """Model for saved filter configurations."""
+    
+    __tablename__ = "saved_filter"
+    
+    id: Mapped[SavedFilterId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    filter_data: Mapped[dict] = mapped_column(JSON, nullable=False)  # Stores the filter configuration
+    
+    # Link to the user who created this filter
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user: Mapped["User"] = relationship("User", back_populates="saved_filters")
+    
+    # Filter can be public (shareable) or private
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
+    )
+
