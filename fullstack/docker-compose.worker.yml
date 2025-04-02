@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  worker:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/finance-fullstack/worker:latest
+    restart: always
+    env_file:
+      - .env.production.runtime

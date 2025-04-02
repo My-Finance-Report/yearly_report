@@ -355,6 +355,7 @@ export type UploadedPdfOut = {
     archived?: boolean;
     id: number;
     job?: (ProcessFileJobOut | null);
+    transaction_source_id?: (number | null);
 };
 
 export type UserNewPassword = {
@@ -402,6 +403,7 @@ export type UserUpdate = {
 
 export type UserUpdateMe = {
     email: string;
+    settings?: (UserSettings | null);
 };
 
 export type ValidationError = {
@@ -463,6 +465,20 @@ export type AccountsMergeAccountsData = {
 };
 
 export type AccountsMergeAccountsResponse = (unknown);
+
+export type AccountsTriggerRecategorizationData = {
+    sourceId: number;
+};
+
+export type AccountsTriggerRecategorizationResponse = ({
+    [key: string]: unknown;
+});
+
+export type AccountsToggleArchiveTransactionSourceData = {
+    sourceId: number;
+};
+
+export type AccountsToggleArchiveTransactionSourceResponse = (TransactionSourceOut);
 
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 

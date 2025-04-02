@@ -13,7 +13,6 @@ async def sync_all_plaid_accounts_job() -> None:
     logger.info(f"Starting scheduled Plaid sync job at {datetime.now()}")
     session = next(get_auth_db())
 
-    print("trying to pull users")
     users = session.query(User).all()
 
     for user in users:

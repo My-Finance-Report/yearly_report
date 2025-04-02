@@ -26,6 +26,7 @@ from app.local_types import (
 from app.models import (
     User,
 )
+from app.telegram_utils import send_telegram_message
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -40,14 +41,25 @@ def read_users(
     session: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> UsersPublic:
     """
-    Retrieve users.
+    Retrieve users. NOTE: this doesnt work due to RLS policy
     """
+
     count = session.query(func.count()).select_from(User).scalar()
 
     users = session.query(User).offset(skip).limit(limit).all()
 
     return UsersPublic(
-        data=[UserOut.model_validate(user) for user in users], count=count
+        data=[
+            UserOut(
+                full_name=user.full_name or "no name user",
+                email=user.email,
+                id=user.id,
+                is_superuser=user.is_superuser,
+                settings=user.settings,
+            )
+            for user in users
+        ],
+        count=count,
     )
 
 
@@ -84,20 +96,33 @@ def update_user_me(
     session: Session = Depends(get_db),
     user_in: UserUpdateMe,
     current_user: User = Depends(get_current_user),
-) -> Any:
+) -> UserOut:
     """
     Update own user.
     """
-    if user_in.email:
+
+    db_user = session.query(User).filter(User.id == current_user.id).one()
+
+    if user_in.email and db_user.email != user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
             )
+        db_user.email = user_in.email
+
+    if user_in.settings:
+        db_user.settings = user_in.settings
 
     session.commit()
-    session.refresh(current_user)
-    return current_user
+    session.refresh(db_user)
+    return UserOut(
+        full_name=db_user.full_name or "no name user",
+        email=db_user.email,
+        id=db_user.id,
+        is_superuser=db_user.is_superuser,
+        settings=db_user.settings,
+    )
 
 
 @router.patch("/me/password", response_model=Message)
@@ -161,6 +186,10 @@ def register_user(
             status_code=400,
             detail="The user with this email already exists in the system",
         )
+
+    send_telegram_message(
+        message=f"User registered successfully {user_in.email}",
+    )
 
     user_create = UserRegister(
         full_name=user_in.full_name,

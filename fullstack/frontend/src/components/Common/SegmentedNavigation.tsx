@@ -16,7 +16,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  FiBriefcase,
   FiDollarSign,
   FiHome,
   FiList,
@@ -31,7 +30,6 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
   { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
-  { value: "/upload-files", label: "Uploads", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
@@ -187,6 +185,17 @@ function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
 
+  // Group navigation items by category
+  const mainNavItems = finalItems.filter(item => 
+    ["/transactions", "/manage-accounts", "/budget"].includes(item.value)
+  );
+  const settingsItems = finalItems.filter(item => 
+    ["/settings"].includes(item.value)
+  );
+  const adminItems = finalItems.filter(item => 
+    ["/admin"].includes(item.value)
+  );
+
   return (
     <DrawerRoot
       open={open}
@@ -200,44 +209,110 @@ function MobileMenu({
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-
-          <DrawerHeader>
-        {user ? (
-            <DrawerTitle>{user.full_name}</DrawerTitle>
-        ):
-        (
-        <Flex gap={2}>
-            <Button
-              variant="outline"
-               onClick={() => navigate({ to: "/login" })}
-            >
+        <DrawerHeader>
+          {user ? (
+            <Flex alignItems="center" gap={2}>
+              <Box
+                width="10px"
+                height="10px"
+                borderRadius="50%"
+                backgroundColor="green.400"
+              />
+              <DrawerTitle>{user.full_name}</DrawerTitle>
+            </Flex>
+          ) : (
+            <Flex gap={2}>
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/login" })}
+              >
                 Log in
               </Button>
-          <Button
-              variant="solid"
+              <Button
+                variant="solid"
                 onClick={() => navigate({ to: "/signup" })}
-            >
-              Sign Up
+              >
+                Sign Up
               </Button>
-              </Flex>
-            )}
-          </DrawerHeader>
+            </Flex>
+          )}
+        </DrawerHeader>
         <DrawerBody>
-          {finalItems.map(({ value, label, icon }) => (
-            <Button
-              key={value}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigate({ to: value });
-                setOpen(false);
-              }}
-              mb={2}
-            >
-              <Box as={icon} />
-              {label}
-            </Button>
-          ))}
+          {/* Main Navigation */}
+          <Box mb={4}>
+            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
+              Main Navigation
+            </Text>
+            <Flex direction="column" gap={2}>
+              {mainNavItems.map(({ value, label, icon }) => (
+                <Button
+                  key={value}
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  onClick={() => {
+                    navigate({ to: value });
+                    setOpen(false);
+                  }}
+                >
+                  <Flex align="center" gap={2}>
+                    <Box as={icon} />
+                    <Text>{label}</Text>
+                  </Flex>
+                </Button>
+              ))}
+            </Flex>
+          </Box>
+
+          <Box mb={4}>
+            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
+              Settings
+            </Text>
+            <Flex direction="column" gap={2}>
+              {settingsItems.map(({ value, label, icon }) => (
+                <Button
+                  key={value}
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  onClick={() => {
+                    navigate({ to: value });
+                    setOpen(false);
+                  }}
+                >
+                  <Flex align="center" gap={2}>
+                    <Box as={icon} />
+                    <Text>{label}</Text>
+                  </Flex>
+                </Button>
+              ))}
+            </Flex>
+          </Box>
+
+          {/* Admin (if applicable) */}
+          {adminItems.length > 0 && (
+            <Box mb={4}>
+              <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
+                Administration
+              </Text>
+              <Flex direction="column" gap={2}>
+                {adminItems.map(({ value, label, icon }) => (
+                  <Button
+                    key={value}
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    onClick={() => {
+                      navigate({ to: value });
+                      setOpen(false);
+                    }}
+                  >
+                    <Flex align="center" gap={2}>
+                      <Box as={icon} />
+                      <Text>{label}</Text>
+                    </Flex>
+                  </Button>
+                ))}
+              </Flex>
+            </Box>
+          )}
         </DrawerBody>
         <DrawerFooter>
           <DrawerActionTrigger asChild>

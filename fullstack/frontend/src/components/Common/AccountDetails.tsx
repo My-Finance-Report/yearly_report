@@ -1,0 +1,237 @@
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Input,
+  Text,
+  HStack,
+  VStack,
+  Badge,
+  Icon,
+  Table,
+} from "@chakra-ui/react";
+import { AccountsService, UploadsService } from "@/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CategoriesManager } from "./CategoriesManager";
+import { DeleteButton, ReprocessButton } from "./ReprocessButton";
+import { RecategorizeButton } from "./RecategorizeButton";
+import { ArchiveButton } from "./ArchiveButton";
+import useCustomToast from "@/hooks/useCustomToast";
+import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+
+import {  EditIcon } from "@chakra-ui/icons"
+import { useIsMobile } from "@/hooks/useIsMobile";
+
+interface AccountDetailsProps {
+  accountId: number;
+  accountName: string;
+  accountType: string;
+  isPlaidLinked: boolean;
+  isArchived?: boolean;
+}
+
+export function AccountDetails({ 
+  accountId, 
+  accountName, 
+  accountType, 
+  isPlaidLinked,
+  isArchived = false
+}: AccountDetailsProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(accountName);
+  const queryClient = useQueryClient();
+  const toast = useCustomToast();
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Query for uploaded files associated with this account
+  const { data: uploadedFiles, isLoading: isLoadingFiles } = useQuery({
+    queryKey: ["uploadedFiles", accountId],
+    queryFn: () => UploadsService.getUploads(),
+    select: (data) => data.filter(file => {
+      return file.transaction_source_id === accountId;
+    }),
+  });
+
+  // Mutation to update account name
+  const updateAccountMutation = useMutation({
+    mutationFn: () => 
+      AccountsService.updateTransactionSource({
+        sourceId: accountId,
+        requestBody: { name: newName }
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      setIsEditing(false);
+      toast("Account updated", "The account name was updated successfully.", "success");
+    },
+    onError: () => {
+      toast("Update failed", "There was an error updating the account name.", "error");
+    }
+  });
+
+  const handleUpdateName = () => {
+    if (newName.trim() && newName !== accountName) {
+      updateAccountMutation.mutate();
+    } else {
+      setIsEditing(false);
+      setNewName(accountName);
+    }
+  };
+
+  const handleFileUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["uploadedFiles", accountId] });
+  };
+
+  const getAccountIcon = () => {
+    switch (accountType) {
+      case "credit":
+        return FaCreditCard;
+      case "investment":
+        return FaMoneyBillWave;
+      default:
+        return FaUniversity;
+    }
+  };
+
+  const isMobile = useIsMobile()
+
+  return (
+    <Box p={4} borderWidth="1px" borderRadius="lg"  shadow="sm">
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+        <Flex alignItems="center" gap={3}>
+          <Icon as={getAccountIcon()} color="blue.500" boxSize={6} />
+          {isEditing ? (
+            <HStack>
+              <Input 
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                size="md"
+                width="400px"
+              />
+              <Button size="sm" onClick={handleUpdateName}>Save</Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => {
+                  setIsEditing(false);
+                  setNewName(accountName);
+                }}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          ) : (
+            <Heading size="md">{accountName}</Heading>
+          )}
+          {isPlaidLinked && (
+            <Badge colorScheme="green">Plaid</Badge>
+          )}
+        </Flex>
+        <Flex gap={2}>
+          <RecategorizeButton sourceId={accountId} />
+          <ArchiveButton sourceId={accountId} isArchived={isArchived} />
+          {!isEditing && (
+            <Button 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+            >
+              <Icon as={EditIcon} mr={2} />
+              Edit
+            </Button>
+          )}
+        </Flex>
+      </Flex>
+
+      <Flex mb={4}>
+        <Button 
+          variant="ghost" 
+          mr={2}
+          borderColor={activeTab === 0 ? "blue.500" : undefined}
+          onClick={() => setActiveTab(0)}
+        >
+          Categories
+        </Button>
+        {isPlaidLinked ? (
+          <Button
+            variant="ghost" 
+            borderColor={activeTab === 1 ? "blue.500" : undefined}
+            onClick={() => setActiveTab(1)}
+          >
+            Data Syncs
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            color={activeTab === 1 ? "blue.500" : undefined}
+            borderColor={activeTab === 1 ? "blue.500" : undefined}
+            _hover={{ bg: "gray.100" }}
+            onClick={() => setActiveTab(1)}
+          >
+            Uploaded Files
+          </Button>
+        )}
+      </Flex>
+
+      <Box>
+        {activeTab === 1 && !isPlaidLinked ? (
+          <Box>
+            {isLoadingFiles ? (
+              <Text>Loading files...</Text>
+            ) : uploadedFiles && uploadedFiles.length > 0 ? (
+              <VStack align="stretch" gap={4}>
+                <Text fontWeight="bold">Uploaded Files</Text>
+                <Table.Root variant="outline">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Cell>Filename</Table.Cell>
+                      <Table.Cell>Upload Date</Table.Cell>
+                      <Table.Cell>Actions</Table.Cell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {uploadedFiles.map((file) => (
+                      <Table.Row key={file.id}>
+                        <Table.Cell>{file.filename}</Table.Cell>
+                        <Table.Cell>{new Date(file.upload_time).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>
+                          <Flex direction={isMobile ? "column" : "row"} gap={2}>
+                              <ReprocessButton 
+                                jobId={file.id} 
+                                onReprocess={handleFileUpdate} 
+                              />
+                            <DeleteButton 
+                              fileId={file.id} 
+                              onReprocess={handleFileUpdate}
+                            />
+                          </Flex>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </VStack>
+            ) : (
+              <Text>No files uploaded yet.</Text>
+            )}
+          </Box>
+        ) : activeTab === 0 ? (
+          <CategoriesManager accountId={accountId} />
+        ) : isPlaidLinked && (
+          <Box p={4} borderWidth="1px" borderRadius="md">
+            <Flex align="center" gap={3}>
+              <Icon as={FaUniversity} color="blue.500" boxSize={5} />
+              <VStack align="start" gap={1}>
+                <Text fontWeight="medium">Data Syncs Automatically</Text>
+                <Text fontSize="sm" >
+                  This account is connected to Plaid and transactions are synced daily.
+                </Text>
+              </VStack>
+            </Flex>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+}

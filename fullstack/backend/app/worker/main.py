@@ -10,12 +10,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessFile
+from app.async_pipelines.recategorize_plaid_pipeline.main import (
+    recategorize_account_pipeline,
+)
+from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
 from app.get_db_string import get_worker_database_url
-from app.models import JobKind, JobStatus, ProcessFileJob, UploadedPdf, User
+from app.models import JobKind, JobStatus, UploadedPdf, User, WorkerJob
 from app.scheduler import sync_all_plaid_accounts_job
+from app.telegram_utils import send_telegram_message
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
 
@@ -40,10 +44,10 @@ def reset_stuck_jobs(session: Session) -> None:
 
     # Fetch stuck jobs
     stuck_jobs = (
-        session.query(ProcessFileJob)
+        session.query(WorkerJob)
         .filter(
-            ProcessFileJob.status == "processing",
-            ProcessFileJob.last_tried_at < now - timeout,
+            WorkerJob.status == "processing",
+            WorkerJob.last_tried_at < now - timeout,
         )
         .all()
     )
@@ -60,14 +64,14 @@ def reset_stuck_jobs(session: Session) -> None:
     logger.info(f"Reset {len(stuck_jobs)} stuck jobs.")
 
 
-def fetch_users_other_jobs(session: Session, user_id: int) -> list[ProcessFileJob]:
+def fetch_users_other_jobs(session: Session, user_id: int) -> list[WorkerJob]:
     jobs = (
-        session.query(ProcessFileJob)
+        session.query(WorkerJob)
         .filter(
-            ProcessFileJob.status == JobStatus.pending,
-            ProcessFileJob.attempt_count < MAX_ATTEMPTS,
-            ProcessFileJob.archived.is_(False),
-            ProcessFileJob.user_id == user_id,
+            WorkerJob.status == JobStatus.pending,
+            WorkerJob.attempt_count < MAX_ATTEMPTS,
+            WorkerJob.archived.is_(False),
+            WorkerJob.user_id == user_id,
         )
         .limit(6)
         .all()
@@ -83,13 +87,13 @@ def fetch_users_other_jobs(session: Session, user_id: int) -> list[ProcessFileJo
     return jobs
 
 
-def fetch_and_lock_next_job(session: Session) -> ProcessFileJob | None:
+def fetch_and_lock_next_job(session: Session) -> WorkerJob | None:
     job = (
-        session.query(ProcessFileJob)
+        session.query(WorkerJob)
         .filter(
-            ProcessFileJob.status == "pending",
-            ProcessFileJob.attempt_count < MAX_ATTEMPTS,
-            ProcessFileJob.archived.is_(False),
+            WorkerJob.status == "pending",
+            WorkerJob.attempt_count < MAX_ATTEMPTS,
+            WorkerJob.archived.is_(False),
         )
         .first()
     )
@@ -109,7 +113,7 @@ def process_next_jobs(session: Session) -> None:
 
     job = fetch_and_lock_next_job(session)
     if not job:
-        logger.info("No job available.")
+        logger.info(f"{datetime.now(timezone.utc)}: No job available.")
         return
 
     all_jobs.append(job)
@@ -120,7 +124,7 @@ def process_next_jobs(session: Session) -> None:
     user_session = create_user_specific_session(job.user_id)
 
     all_user_jobs = (
-        user_session.query(ProcessFileJob).filter(ProcessFileJob.id.in_(job_ids)).all()
+        user_session.query(WorkerJob).filter(WorkerJob.id.in_(job_ids)).all()
     )
 
     assert all(job.user_id == job.user_id for job in all_user_jobs), (
@@ -141,7 +145,7 @@ def process_next_jobs(session: Session) -> None:
     )
 
 
-def try_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> bool:
+def try_jobs(user_session: Session, jobs: list[WorkerJob]) -> bool:
     try:
         asyncio.run(run_jobs(user_session, jobs))
 
@@ -151,6 +155,7 @@ def try_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> bool:
         user_session.commit()
         return True
     except (Exception, PendingRollbackError) as e:
+        send_telegram_message(f"Job failed in worker: {e}")
         logger.error(f"Job failed: {e}")
         for job in jobs:
             job.status = JobStatus.failed
@@ -161,10 +166,11 @@ def try_jobs(user_session: Session, jobs: list[ProcessFileJob]) -> bool:
 
 
 FUNC_LOOKUP: dict[
-    JobKind, Callable[[list[InProcessFile]], Coroutine[Any, Any, None]]
+    JobKind, Callable[[list[InProcessJob]], Coroutine[Any, Any, None]]
 ] = {
     JobKind.full_upload: uploaded_file_pipeline,
     JobKind.recategorize: recategorize_file_pipeline,
+    JobKind.plaid_recategorize: recategorize_account_pipeline,
 }
 
 
@@ -172,26 +178,27 @@ def create_user_specific_session(user_id: int) -> Session:
     return next(get_db_for_user(user_id))
 
 
-async def run_jobs(_user_session: Session, jobs: list[ProcessFileJob]) -> None:
-    in_process_files: dict[JobKind, list[InProcessFile]] = defaultdict(list)
+async def run_jobs(_user_session: Session, jobs: list[WorkerJob]) -> None:
+    in_process_files: dict[JobKind, list[InProcessJob]] = defaultdict(list)
 
     for job in jobs:
         job_specific_session = create_user_specific_session(job.user_id)
         specific_job = (
-            job_specific_session.query(ProcessFileJob)
-            .filter(ProcessFileJob.id == job.id)
-            .one()
+            job_specific_session.query(WorkerJob).filter(WorkerJob.id == job.id).one()
         )
 
-        pdf = job_specific_session.get(UploadedPdf, specific_job.pdf_id)
-        if not pdf:
-            raise ValueError("PDF record not found!")
+        if specific_job.pdf_id is not None:
+            pdf = job_specific_session.get(UploadedPdf, specific_job.pdf_id)
+            if not pdf:
+                raise ValueError("PDF record not found!")
+        else:
+            pdf = None
 
         user = job_specific_session.get(User, specific_job.user_id)
         if not user:
             raise ValueError("User record not found!")
         in_process_files[specific_job.kind].append(
-            InProcessFile(
+            InProcessJob(
                 session=job_specific_session, user=user, file=pdf, job=specific_job
             )
         )

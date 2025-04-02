@@ -12,6 +12,7 @@ from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
 from app.models import User
+from app.telegram_utils import send_telegram_message
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -35,10 +36,18 @@ def login_access_token(
     )
 
     if not user:
+        send_telegram_message(
+            message="User failed to log in",
+        )
         raise HTTPException(status_code=400, detail="Incorrect email or password")
+
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    send_telegram_message(
+        message=f"User logged in successfully {user.id}",
+    )
     return Token(
         access_token=security.create_access_token(
             user.id, expires_delta=access_token_expires

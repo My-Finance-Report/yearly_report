@@ -56,7 +56,7 @@ export function DeleteButton({
       variant="outline"
       onClick={handleReprocess}
     >
-      Delete File and Transactions
+      Delete
     </Button>
   )
 }

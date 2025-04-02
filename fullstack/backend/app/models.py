@@ -80,6 +80,7 @@ class JobStatus(str, enum.Enum):
 class JobKind(str, enum.Enum):
     full_upload = "full_upload"
     recategorize = "recategorize"
+    plaid_recategorize = "plaid_recategorize"
 
 
 UserId = NewType("UserId", int)
@@ -88,7 +89,7 @@ PlaidTransactionId = NewType("PlaidTransactionId", str)
 CategoryId = NewType("CategoryId", int)
 TransactionSourceId = NewType("TransactionSourceId", int)
 UploadConfigurationId = NewType("UploadConfigurationId", int)
-ProcessFileJobId = NewType("ProcessFileJobId", int)
+WorkerJobId = NewType("WorkerJobId", int)
 UploadedPdfId = NewType("UploadedPdfId", int)
 ColChartConfigId = NewType("ColChartConfigId", int)
 BudgetId = NewType("BudgetId", int)
@@ -308,10 +309,10 @@ class ColChartConfig(Base):
     )
 
 
-class ProcessFileJob(Base):
+class WorkerJob(Base):
     __tablename__ = "process_file_job"
 
-    id: Mapped[ProcessFileJobId] = mapped_column(
+    id: Mapped[WorkerJobId] = mapped_column(
         Integer, primary_key=True, autoincrement=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -323,8 +324,8 @@ class ProcessFileJob(Base):
     config_id: Mapped[UploadConfigurationId | None] = mapped_column(
         ForeignKey("upload_configuration.id"), nullable=True
     )
-    pdf_id: Mapped[UploadedPdfId] = mapped_column(
-        ForeignKey("uploaded_pdf.id"), nullable=False
+    pdf_id: Mapped[UploadedPdfId | None] = mapped_column(
+        ForeignKey("uploaded_pdf.id"), nullable=True
     )
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)

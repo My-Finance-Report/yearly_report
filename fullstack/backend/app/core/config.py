@@ -83,6 +83,15 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str | None = None
     EMAILS_FROM_NAME: str | None = None
 
+    # Telegram settings
+    TELEGRAM_BOT_TOKEN: str | None = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_CHAT_ID: str | None = os.getenv("TELEGRAM_CHAT_ID")
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def telegram_enabled(self) -> bool:
+        return bool(self.TELEGRAM_BOT_TOKEN and self.TELEGRAM_CHAT_ID)
+
     @model_validator(mode="after")
     def _set_default_emails_from(self) -> Self:
         if not self.EMAILS_FROM_NAME:

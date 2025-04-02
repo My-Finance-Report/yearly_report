@@ -31,23 +31,17 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 big milestones before launch:
 
-  -> Stripe
-  --> account exists but not implemented
-  -> Plaid
-   -> done, but needs to be tested
-   -> seems to be a bug on the sync frequency
-  -> Email
+-> Stripe
+  --> sort of exists but needs more work
+-> Plaid
+  -> bug where i got logged off after plaid
+-> Email
 
--> update cert on the domain
--> null state on the accounts page
-
--> ability to toggle visibility of a filter group
+-> should be able to remove / archive an account from the dashboard
 
 -> would be nice to have some tests around user creation
 
--> nav bar is weird on tablet
-
--> there is a bug in how we write the settings to the db on user table -- inconsistent
+-> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
 
 -> add a last active at time on the user model
 
@@ -82,6 +76,5 @@ big milestones before launch:
 --> doesnt rerun on category delete
 
 -> Expense should line up in the table
-
 
 

@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.orm import Session
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
-    InProcessFile,
+    InProcessJob,
     PartialAccountCategoryConfig,
     PartialUploadConfig,
 )
@@ -175,7 +175,7 @@ def add_default_categories(
     session.commit()
 
 
-def create_configurations(process: InProcessFile) -> UploadConfiguration:
+def create_configurations(process: InProcessJob) -> UploadConfiguration:
     assert process.file is not None, "must have"
 
     session = process.session
