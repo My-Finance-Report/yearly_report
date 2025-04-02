@@ -1,28 +1,51 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import {
-  Button,
   Box,
+  Button,
+  FieldLabel,
+  FieldRoot,
   Flex,
   Input,
   Textarea,
-  Select,
-  FieldRoot,
-  FieldLabel,
-} from "@chakra-ui/react";
+  SelectContent,
+  SelectItem,
+  SelectItemGroup,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  createListCollection,
+} from "@chakra-ui/react"
 import {
   DialogRoot,
   DialogContent,
   DialogHeader,
   DialogBody,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { FilterInfo } from './FilterGroup';
-import { useSavedFilters, FilterData } from '@/hooks/useSavedFilters';
-import { FiBookmark, FiShare2, FiSave } from 'react-icons/fi';
+} from "@/components/ui/dialog"
+import { FilterInfo } from './FilterGroup'
+import { useSavedFilters, FilterData } from '@/hooks/useSavedFilters'
+import { FiBookmark, FiShare2, FiSave } from 'react-icons/fi'
+import { SavedFilter } from "@/client"
 
 interface SavedFilterControlsProps {
   filterInfo: FilterInfo;
+}
+
+interface FilterSelectItem {
+  label: string;
+  value: string;
+  description: string | null | undefined;
+}
+
+function formatFiltersForSelect(filters: SavedFilter[]): { items: FilterSelectItem[] } {
+  return {
+    items: filters.map((filter) => ({
+      label: filter.name,
+      value: filter.id.toString(),
+      description: filter.description,
+    }))
+  };
 }
 
 export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
@@ -40,7 +63,6 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
   
   const [filterName, setFilterName] = useState(currentFilter?.name || '');
   const [filterDescription, setFilterDescription] = useState(currentFilter?.description || '');
-  const [isPublic, setIsPublic] = useState(currentFilter?.is_public || false);
   const [selectedFilterId, setSelectedFilterId] = useState<number | null>(null);
   
   const cancelRef = useRef<HTMLButtonElement | null>(null);
@@ -62,7 +84,6 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
     
     saveCurrentFilter(filterName, getCurrentFilterData(), {
       description: filterDescription,
-      isPublic,
     });
     
     setIsSaveDialogOpen(false);
@@ -72,7 +93,7 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
   const handleLoadFilter = () => {
     if (!selectedFilterId) return;
     
-    const filter = [...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId);
+    const filter: SavedFilter | undefined = [...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId);
     if (!filter) return;
     
     setCurrentFilter(filter);
@@ -115,6 +136,12 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
     setIsSaveDialogOpen(!isSaveDialogOpen);
   };
 
+  // Format filters for select component
+  const myFilters = formatFiltersForSelect(savedFilters);
+  const otherFilters = formatFiltersForSelect(
+    publicFilters.filter(f => !savedFilters.some(sf => sf.id === f.id))
+  );
+
   return (
     <Flex gap={2}>
       {/* Load Filter Button */}
@@ -127,41 +154,42 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
         <DialogContent>
           <DialogHeader>Load Saved Filter</DialogHeader>
           <DialogBody>
-            <FieldRoot mb={4}>
-              <FieldLabel htmlFor="filter-select">Select a filter</FieldLabel>
-              <Select
+            <FieldRoot>
+              <FieldLabel htmlFor="filter-select">Saved Filters</FieldLabel>
+              <SelectRoot
                 id="filter-select"
                 placeholder="Select a filter"
-                value={selectedFilterId?.toString() || ''}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedFilterId(Number(e.target.value))}
+                value={selectedFilterId ? [selectedFilterId.toString()] : []}
+                collection={createListCollection({
+                  items: [...myFilters.items, ...otherFilters.items]
+                })}
+                onValueChange={(val) => setSelectedFilterId(Number(val.value[0]))}
               >
-                {savedFilters.length > 0 && (
-                  <>
-                    <optgroup label="My Filters">
-                      {savedFilters.map((filter) => (
-                        <option key={filter.id} value={filter.id.toString()}>
-                          {filter.name}
-                        </option>
+                <SelectTrigger>
+                  <SelectValueText placeholder="Select a filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {myFilters.items.length > 0 && (
+                    <SelectItemGroup title="My Filters">
+                      {myFilters.items.map((filter) => (
+                        <SelectItem key={filter.value} item={filter}>
+                          {filter.label}
+                        </SelectItem>
                       ))}
-                    </optgroup>
-                  </>
-                )}
-                
-                {publicFilters.length > 0 && (
-                  <>
-                    <optgroup label="Public Filters">
-                      {publicFilters
-                        .filter(f => !savedFilters.some(sf => sf.id === f.id))
-                        .map((filter) => (
-                          <option key={filter.id} value={filter.id.toString()}>
-                            {filter.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  </>
-                )}
-              </Select>
-            </FieldRoot>
+                    </SelectItemGroup>
+                  )}
+                  
+                  {otherFilters.items.length > 0 && (
+                    <SelectItemGroup title="Public Filters">
+                      {otherFilters.items.map((filter) => (
+                        <SelectItem key={filter.value} item={filter}>
+                          {filter.label}
+                        </SelectItem>
+                      ))}
+                    </SelectItemGroup>
+                  )}
+                </SelectContent>
+              </SelectRoot>
             
             {selectedFilterId && (
               <Box>
@@ -171,6 +199,8 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
                 </Box>
               </Box>
             )}
+
+            </FieldRoot>
           </DialogBody>
           
           <DialogFooter>

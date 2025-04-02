@@ -42,7 +42,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
 import { useFilterState } from "@/hooks/useFilterState";
-import { useSearch } from "@tanstack/react-router";
+import { Route as TransactionsRoute } from "@/routes/_layout/_logged_in/transactions";
 
 export interface FilterInfo {
   years: string[];
@@ -564,26 +564,35 @@ function NonPowerUserButtons({
   setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
 }) {
-  const { user } = useAuth();
-  const search = useSearch();
+  const search = TransactionsRoute.useSearch();
   
-  // Load filter from URL parameter if provided
   useEffect(() => {
-    if (search.filter) {
+    const filterName = search.filter;
+    if (typeof filterName === 'string' && filterName.trim() !== '') {
       import('@/hooks/useSavedFilters').then(({ useSavedFilters }) => {
         const { loadFilterByName } = useSavedFilters();
-        loadFilterByName(search.filter).then(filterData => {
+        loadFilterByName(filterName).then(filterData => {
           if (filterData) {
-            if (filterData.years) filterInfo.setYears(filterData.years);
-            if (filterData.accounts) filterInfo.setAccounts(filterData.accounts);
-            if (filterData.months) filterInfo.setMonths(filterData.months);
-            if (filterData.categories) filterInfo.setCategories(filterData.categories);
-            if (filterData.budgets) filterInfo.setBudgets(filterData.budgets);
+            if (filterData.years && Array.isArray(filterData.years)) {
+              filterInfo.setYears(filterData.years);
+            }
+            if (filterData.accounts && Array.isArray(filterData.accounts)) {
+              filterInfo.setAccounts(filterData.accounts);
+            }
+            if (filterData.months && Array.isArray(filterData.months)) {
+              filterInfo.setMonths(filterData.months);
+            }
+            if (filterData.categories && Array.isArray(filterData.categories)) {
+              filterInfo.setCategories(filterData.categories);
+            }
+            if (filterData.budgets && Array.isArray(filterData.budgets)) {
+              filterInfo.setBudgets(filterData.budgets);
+            }
           }
         });
       });
     }
-  }, [search.filter]);
+  }, [search.filter, filterInfo]);
 
   const excludingUnbudgeted =
     groupingOptionsChoices?.[GroupByOption.budget]?.filter(
@@ -640,8 +649,7 @@ function NonPowerUserButtons({
   return (
     <Box>
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Text fontWeight="bold">Filters</Text>
-        {user && <SavedFilterControls filterInfo={filterInfo} />}
+        <SavedFilterControls filterInfo={filterInfo} />
       </Flex>
       <Flex direction="column" gap={2}>
         {hasBudgets && (

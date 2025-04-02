@@ -69,14 +69,8 @@ def read_public_saved_filters(
     """
     Retrieve public saved filters from all users.
     """
-    filters = (
-        db.query(SavedFilter)
-        .filter(SavedFilter.is_public == True)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return filters
+    #todo
+    return []
 
 
 @router.get("/{filter_id}", response_model=SavedFilterSchema)
@@ -143,7 +137,7 @@ def update_saved_filter(
     if saved_filter.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    update_data = filter_in.dict(exclude_unset=True)
+    update_data = filter_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(saved_filter, field, value)
     

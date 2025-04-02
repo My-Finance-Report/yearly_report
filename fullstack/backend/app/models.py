@@ -616,6 +616,17 @@ class Subscription(Base):
     user: Mapped["User"] = relationship("User", back_populates="subscription")
 
 
+@dataclass
+class FilterData:
+    """Dataclass representing the structure of a saved filter configuration."""
+    date_range: dict[str, str] | None = None
+    categories: list[str] | None = None
+    amounts: dict[str, float] | None = None
+    search_term: str | None = None
+    accounts: list[str] | None = None
+    tags: list[str] | None = None
+
+
 class SavedFilter(Base):
     """Model for saved filter configurations."""
     
@@ -624,7 +635,7 @@ class SavedFilter(Base):
     id: Mapped[SavedFilterId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
-    filter_data: Mapped[dict] = mapped_column(JSON, nullable=False)  # Stores the filter configuration
+    filter_data: Mapped[FilterData] = mapped_column(JSONType(FilterData), nullable=False)  # Stores the filter configuration
     
     # Link to the user who created this filter
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
@@ -640,4 +651,3 @@ class SavedFilter(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
-

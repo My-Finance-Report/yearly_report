@@ -366,9 +366,7 @@ def apply_account_filter(
     transactions: SqlQuery[Transaction],
     accounts: list[str],
 ) -> SqlQuery[Transaction]:
-    return transactions.join(
-        TransactionSource, TransactionSource.id == Transaction.transaction_source_id
-    ).filter(TransactionSource.name.in_(accounts))
+    return transactions.filter(TransactionSource.name.in_(accounts))
 
 
 def apply_year_filter(

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Spinner, Text, Box, VStack, Heading, HStack, Button } from "@chakra-ui/react";
 import { FaLink, FaUpload } from "react-icons/fa";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
 import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup";
@@ -21,8 +22,13 @@ import type {
 } from "@/client";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
+const transactionsSearchSchema = z.object({
+  filter: z.string().optional(),
+});
+
 export const Route = createFileRoute("/_layout/_logged_in/transactions")({
   component: Transactions,
+  validateSearch: (search) => transactionsSearchSchema.parse(search),
 });
 
 function Transactions() { 
@@ -144,7 +150,6 @@ function InnerTransactions({getFunction}: {
       >
         <FilterGroup
           setShowDeposits={setShowDeposits}
-          filterInfo={filterInfo}
           groupingOptionsChoices={
             data?.grouping_options_choices as {
               [key in GroupByOption]: string[];

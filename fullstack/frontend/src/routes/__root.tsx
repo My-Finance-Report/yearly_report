@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router"
 import React, { Suspense } from "react"
+import { z } from "zod"
 
 import NotFound from "../components/Common/NotFound"
 
@@ -21,6 +22,10 @@ const loadDevtools = () =>
 const TanStackDevtools =
   process.env.NODE_ENV === "production" ? () => null : React.lazy(loadDevtools)
 
+export const rootSearchSchema = z.object({
+  filter: z.string().optional(),
+})
+
 export const Route = createRootRoute({
   component: () => (
     <>
@@ -31,4 +36,5 @@ export const Route = createRootRoute({
     </>
   ),
   notFoundComponent: () => <NotFound />,
+  validateSearch: (search) => rootSearchSchema.parse(search),
 })
