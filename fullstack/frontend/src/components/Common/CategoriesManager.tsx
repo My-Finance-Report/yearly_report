@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   HStack,
-  Heading,
   Input,
   Spinner,
   TableBody,
@@ -161,10 +160,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
               Add Category
             </Button>
           </HStack>
-          <Heading size="sm">
-            Note: if you add or remove a category we will recategorize your
-            transactions
-          </Heading>
         </VStack>
       )}
     </Box>
