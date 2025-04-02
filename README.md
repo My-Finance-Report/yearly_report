@@ -34,12 +34,10 @@ big milestones before launch:
 -> Stripe
   --> sort of exists but needs more work
 -> Plaid
-  --> done, but needs to be tested
-  --> seems to be a bug on the sync frequency
+  -> bug where i got logged off after plaid
 -> Email
 
--> rethink navbar -> remove uploads, put in link with plaid, add account management
--> track uploads on the account level
+-> should be able to remove / archive an account from the dashboard
 
 -> would be nice to have some tests around user creation
 

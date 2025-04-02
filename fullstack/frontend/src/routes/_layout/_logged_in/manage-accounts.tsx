@@ -232,6 +232,7 @@ function ManageAccounts() {
               accountName={accounts[selectedAccountIndex].name}
               accountType={getAccountType()}
               isPlaidLinked={isPlaidLinked(accounts[selectedAccountIndex].id)}
+              isArchived={accounts[selectedAccountIndex].archived}
             />
           )}
         </Box>

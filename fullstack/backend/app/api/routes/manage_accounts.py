@@ -330,3 +330,29 @@ def trigger_recategorization(
     )
 
     return {"status": "success", "message": "Recategorization job has been queued"}
+
+
+@router.post("/{source_id}/toggle-archive", response_model=TransactionSourceOut)
+def toggle_archive_transaction_source(
+    source_id: int,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TransactionSourceOut:
+    """Toggle the archive status of a transaction source."""
+    db_source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .one()
+    )
+
+    if not db_source:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    # Toggle the archived status
+    db_source.archived = not db_source.archived
+
+    session.commit()
+    session.refresh(db_source)
+    return TransactionSourceOut(
+        name=db_source.name, archived=db_source.archived, id=db_source.id
+    )

@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CategoriesManager } from "./CategoriesManager";
 import { DeleteButton, ReprocessButton } from "./ReprocessButton";
 import { RecategorizeButton } from "./RecategorizeButton";
+import { ArchiveButton } from "./ArchiveButton";
 import useCustomToast from "@/hooks/useCustomToast";
 import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 
@@ -28,9 +29,16 @@ interface AccountDetailsProps {
   accountName: string;
   accountType: string;
   isPlaidLinked: boolean;
+  isArchived?: boolean;
 }
 
-export function AccountDetails({ accountId, accountName, accountType, isPlaidLinked }: AccountDetailsProps) {
+export function AccountDetails({ 
+  accountId, 
+  accountName, 
+  accountType, 
+  isPlaidLinked,
+  isArchived = false
+}: AccountDetailsProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(accountName);
   const queryClient = useQueryClient();
@@ -123,6 +131,7 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
         </Flex>
         <Flex gap={2}>
           <RecategorizeButton sourceId={accountId} />
+          <ArchiveButton sourceId={accountId} isArchived={isArchived} />
           {!isEditing && (
             <Button 
               size="sm" 

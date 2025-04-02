@@ -474,6 +474,12 @@ export type AccountsTriggerRecategorizationResponse = ({
     [key: string]: unknown;
 });
 
+export type AccountsToggleArchiveTransactionSourceData = {
+    sourceId: number;
+};
+
+export type AccountsToggleArchiveTransactionSourceResponse = (TransactionSourceOut);
+
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
 export type BudgetsCreateBudgetData = {
