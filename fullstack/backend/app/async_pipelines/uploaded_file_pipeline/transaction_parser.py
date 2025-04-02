@@ -6,16 +6,16 @@ from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
     create_configurations,
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
-    InProcessFile,
+    InProcessJob,
     TransactionsWrapper,
 )
 from app.models import (
     Category,
     JobStatus,
-    ProcessFileJob,
     Transaction,
     TransactionSource,
     UploadConfiguration,
+    WorkerJob,
 )
 from app.open_ai_utils import ChatMessage, make_chat_request
 
@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_transactions_prompt(process: InProcessFile) -> str:
+def generate_transactions_prompt(process: InProcessJob) -> str:
     """Generate the AI prompt for parsing transactions."""
 
     assert process.transaction_source, "must have"
@@ -44,14 +44,14 @@ def generate_transactions_prompt(process: InProcessFile) -> str:
     """
 
 
-def already_processed(process: InProcessFile) -> bool:
+def already_processed(process: InProcessJob) -> bool:
     assert process.job, "must have"
 
     val = (
-        process.session.query(ProcessFileJob)
+        process.session.query(WorkerJob)
         .filter(
-            ProcessFileJob.id == process.job.id,
-            ProcessFileJob.status == JobStatus.completed,
+            WorkerJob.id == process.job.id,
+            WorkerJob.status == JobStatus.completed,
         )
         .one_or_none()
     )
@@ -60,7 +60,7 @@ def already_processed(process: InProcessFile) -> bool:
     return bool(val)
 
 
-def apply_upload_config(process: InProcessFile) -> InProcessFile:
+def apply_upload_config(process: InProcessJob) -> InProcessJob:
     assert process.job, "must have"
     assert process.file, "must have"
 
@@ -113,7 +113,7 @@ def apply_upload_config(process: InProcessFile) -> InProcessFile:
     )
 
 
-def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
+def archive_transactions_if_necessary(process: InProcessJob) -> InProcessJob:
     """Remove existing transactions if the file has been processed before."""
     assert process.file, "must have"
 
@@ -132,7 +132,7 @@ def archive_transactions_if_necessary(process: InProcessFile) -> InProcessFile:
     return process
 
 
-def request_llm_parse_of_transactions(process: InProcessFile) -> InProcessFile:
+def request_llm_parse_of_transactions(process: InProcessJob) -> InProcessJob:
     """Request AI to parse transactions from the extracted text."""
     if process.config is None:
         raise ValueError(

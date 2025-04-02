@@ -18,10 +18,14 @@ from app.local_types import ProcessFileJobOut, UploadedPdfOut
 from app.models import (
     JobKind,
     JobStatus,
-    ProcessFileJob,
     Transaction,
+    TransactionSourceId,
+    UploadConfiguration,
+    UploadConfigurationId,
     UploadedPdf,
+    UploadedPdfId,
     User,
+    WorkerJob,
 )
 from app.worker.enqueue_job import enqueue_or_reset_job
 
@@ -123,8 +127,8 @@ def reprocess_file(
 ) -> ProcessFileJobOut:
     """Reprocess an uploaded file by job ID."""
     job = (
-        session.query(ProcessFileJob)
-        .filter(ProcessFileJob.id == job_id, ProcessFileJob.user_id == user.id)
+        session.query(WorkerJob)
+        .filter(WorkerJob.id == job_id, WorkerJob.user_id == user.id)
         .one_or_none()
     )
 
@@ -152,20 +156,38 @@ def get_uploads(
     file_ids = [file.id for file in files]
 
     jobs = (
-        session.query(ProcessFileJob)
-        .filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id)
+        session.query(WorkerJob)
+        .filter(WorkerJob.pdf_id.in_(file_ids), WorkerJob.user_id == user.id)
         .all()
     )
-    job_lookup = {job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs}
+    job_lookup: dict[UploadedPdfId, ProcessFileJobOut] = {
+        job.pdf_id: ProcessFileJobOut.model_validate(job)
+        for job in jobs
+        if job.pdf_id is not None
+    }
+    transaction_source_lookup: dict[UploadConfigurationId, TransactionSourceId] = {
+        config.id: config.transaction_source_id
+        for config in session.query(UploadConfiguration)
+        .filter(UploadConfiguration.user_id == user.id)
+        .all()
+    }
 
-    val = [
-        UploadedPdfOut.model_validate(file).model_copy(
-            update={"job": job_lookup.get(file.id)}
+    vals = []
+
+    for file in files:
+        job = job_lookup.get(file.id)
+
+        if job is None or job.config_id is None:
+            continue
+        config_id = transaction_source_lookup[UploadConfigurationId(job.config_id)]
+
+        vals.append(
+            UploadedPdfOut.model_validate(file).model_copy(
+                update={"job": job, "transaction_source_id": config_id}
+            )
         )
-        for file in files
-    ]
 
-    return sorted(val, key=lambda x: x.filename, reverse=True)
+    return sorted(vals, key=lambda x: x.filename, reverse=True)
 
 
 @router.post("/", response_model=list[UploadedPdfOut])
@@ -187,10 +209,10 @@ def is_uploading(
     user: User = Depends(get_current_user),
 ) -> bool:
     return bool(
-        session.query(ProcessFileJob)
+        session.query(WorkerJob)
         .filter(
-            ProcessFileJob.user_id == user.id,
-            ProcessFileJob.status.in_([JobStatus.pending, JobStatus.processing]),
+            WorkerJob.user_id == user.id,
+            WorkerJob.status.in_([JobStatus.pending, JobStatus.processing]),
         )
         .all()
     )
@@ -211,8 +233,8 @@ def delete_file(
     session.query(Transaction).filter(
         Transaction.uploaded_pdf_id == file.id, Transaction.user_id == user.id
     ).delete()
-    session.query(ProcessFileJob).filter(
-        ProcessFileJob.pdf_id == file.id, ProcessFileJob.user_id == user.id
+    session.query(WorkerJob).filter(
+        WorkerJob.pdf_id == file.id, WorkerJob.user_id == user.id
     ).delete()
     session.delete(file)
 

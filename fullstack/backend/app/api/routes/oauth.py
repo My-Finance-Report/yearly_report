@@ -102,6 +102,10 @@ async def google_callback(
             session.add(user)
             session.commit()
 
+            send_telegram_message(
+                message=f"New user created via oauth: {user.id}",
+            )
+
         else:
             # Update existing user with new tokens
             user.oauth_provider = "google"

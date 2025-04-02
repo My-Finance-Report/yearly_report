@@ -87,11 +87,14 @@ async def exchange_token(
 
             transaction_source = TransactionSource(
                 user_id=user.id,
-                name=f"{account['name']} (Plaid)",
+                name=f"{account['name']}",
                 plaid_account_id=plaid_account.id,
                 source_kind=get_source_kind_from_account_type(account["type"]),
             )
             session.add(transaction_source)
+
+            session.commit()
+            session.refresh(transaction_source)
 
             add_default_categories(session, user, transaction_source)
 
@@ -108,9 +111,12 @@ async def exchange_token(
             )
 
         session.commit()
+        send_telegram_message(
+            message=f"Successfully added Plaid accounts for user {user.id}"
+        )
         return created_accounts
     except Exception as e:
-        print(e)
+        send_telegram_message(message=f"Error getting accounts: {str(e)}")
         raise HTTPException(status_code=500, detail="Error getting accounts")
 
 
@@ -136,9 +142,37 @@ def get_plaid_accounts(
 
 def get_source_kind_from_account_type(account_type: str) -> SourceKind:
     """Map Plaid account types to SourceKind."""
-    if account_type == "credit":
+    INVESTMENT_ACCOUNT_TYPES = [
+        "brokerage",
+        "401a",
+        "401k",
+        "403b",
+        "457b",
+        "529",
+        "ira",
+        "roth ira",
+        "roth 401k",
+        "sep ira",
+        "simple ira",
+        "esa",
+        "isa",
+        "lira",
+        "variable annuity",
+    ]
+    CREDIT_ACCOUNT_TYPES = [
+        "credit card",
+        "line of credit",
+        "mortgage",
+        "home equity",
+        "auto",
+        "student",
+    ]
+
+    if any(credit_type in account_type for credit_type in CREDIT_ACCOUNT_TYPES):
         return SourceKind.card
-    elif account_type == "investment":
+    elif any(
+        investment_type in account_type for investment_type in INVESTMENT_ACCOUNT_TYPES
+    ):
         return SourceKind.investment
     else:
         return SourceKind.account

@@ -34,13 +34,12 @@ big milestones before launch:
 -> Stripe
   --> sort of exists but needs more work
 -> Plaid
-  --> done, but needs to be tested
-  --> seems to be a bug on the sync frequency
+  -> bug where i got logged off after plaid
 -> Email
 
--> would be nice to have some tests around user creation
+-> should be able to remove / archive an account from the dashboard
 
--> nav bar is weird on tablet
+-> would be nice to have some tests around user creation
 
 -> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
 

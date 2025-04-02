@@ -1,11 +1,10 @@
 import { AccountsService } from "@/client"
 
-import { CheckIcon, CloseIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons"
+import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
   HStack,
-  Heading,
   Input,
   Spinner,
   TableBody,
@@ -37,12 +36,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
     queryFn: () => AccountsService.getCategories({ sourceId: accountId }),
   })
 
-  const deleteCategoryMutation = useMutation({
-    mutationFn: (categoryId: number) =>
-      AccountsService.deleteCategory({ categoryId }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] }),
-  })
+
 
   const updateCategoryMutation = useMutation({
     mutationFn: ({
@@ -143,17 +137,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                         >
                           <EditIcon /> Edit
                         </Button>
-                        <Button
-                          size="sm"
-                          colorScheme="red"
-                          aria-label="Delete"
-                          onClick={() =>
-                            deleteCategoryMutation.mutate(category.id)
-                          }
-                        >
-                          <DeleteIcon />
-                          Delete
-                        </Button>
                       </HStack>
                     )}
                   </TableCell>
@@ -177,10 +160,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
               Add Category
             </Button>
           </HStack>
-          <Heading size="sm">
-            Note: if you add or remove a category we will recategorize your
-            transactions
-          </Heading>
         </VStack>
       )}
     </Box>

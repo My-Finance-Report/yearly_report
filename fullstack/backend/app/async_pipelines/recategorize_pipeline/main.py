@@ -7,7 +7,7 @@ from app.async_pipelines.uploaded_file_pipeline.categorizer import (
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
-    InProcessFile,
+    InProcessJob,
     PartialTransaction,
     Recategorization,
     TransactionsWrapper,
@@ -25,15 +25,17 @@ from app.models import (
 )
 
 
-def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
-    assert in_process.config, "must have"
-    assert in_process.file, "must have"
+def apply_existing_transactions(in_process: InProcessJob) -> InProcessJob:
+    assert in_process.config, "must have config"
     query = in_process.session.query(Transaction).filter(
         Transaction.transaction_source_id == in_process.config.transaction_source_id,
         Transaction.user_id == in_process.user.id,
-        Transaction.uploaded_pdf_id == in_process.file.id,
         ~Transaction.archived,
     )
+    if in_process.file:
+        query = query.filter(
+            Transaction.uploaded_pdf_id == in_process.file.id,
+        )
     return replace(
         in_process,
         transactions=TransactionsWrapper(
@@ -54,17 +56,15 @@ def apply_existing_transactions(in_process: InProcessFile) -> InProcessFile:
     )
 
 
-def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile:
-    assert in_process.transaction_source, "must have"
-    assert in_process.file, "must have"
-    assert in_process.categories, "must have"
+def apply_previous_recategorizations(in_process: InProcessJob) -> InProcessJob:
+    assert in_process.transaction_source, "must have transaction source"
+    assert in_process.categories, "must have categories"
     query = (
         in_process.session.query(AuditLog, Transaction)
         .join(Transaction, Transaction.id == AuditLog.transaction_id)
         .filter(
             Transaction.transaction_source_id == in_process.transaction_source.id,
             Transaction.user_id == in_process.user.id,
-            Transaction.uploaded_pdf_id == in_process.file.id,
             ~Transaction.archived,
             AuditLog.apply_to_future,
         )
@@ -100,10 +100,9 @@ def apply_previous_recategorizations(in_process: InProcessFile) -> InProcessFile
     )
 
 
-def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
-    assert process.job, "must have"
-    assert process.job.config_id, "MUST have"
-    assert process.file, "must have"
+def apply_upload_config_no_create(process: InProcessJob) -> InProcessJob:
+    assert process.job, "must have job"
+    assert process.job.config_id, "MUST have config id"
     config: UploadConfiguration | None = None
     if process.job.config_id:
         config = (
@@ -113,6 +112,7 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
         )
 
     if not config:
+        assert process.file, "must have file"
         query = (
             process.session.query(UploadConfiguration)
             .filter(UploadConfiguration.user_id == process.user.id)
@@ -147,10 +147,9 @@ def apply_upload_config_no_create(process: InProcessFile) -> InProcessFile:
     )
 
 
-def insert_recategorized_transactions(in_process: InProcessFile) -> None:
-    assert in_process.transaction_source, "must have"
-    assert in_process.categorized_transactions, "must have"
-    assert in_process.file, "must have"
+def insert_recategorized_transactions(in_process: InProcessJob) -> None:
+    assert in_process.transaction_source, "must have transaction source"
+    assert in_process.categorized_transactions, "must have categorized transactions"
     assert all(
         t.partialTransactionId is not None for t in in_process.categorized_transactions
     ), "must have"
@@ -172,7 +171,6 @@ def insert_recategorized_transactions(in_process: InProcessFile) -> None:
         .filter(
             Transaction.id.in_(transaction_lookup.keys()),
             Transaction.user_id == in_process.user.id,
-            Transaction.uploaded_pdf_id == in_process.file.id,
         )
         .all()
     )
@@ -187,7 +185,7 @@ def insert_recategorized_transactions(in_process: InProcessFile) -> None:
     in_process.session.commit()
 
 
-async def recategorize_file_pipeline(in_process_files: list[InProcessFile]) -> None:
+async def recategorize_file_pipeline(in_process_files: list[InProcessJob]) -> None:
     in_process_with_config = [
         apply_upload_config_no_create(in_process) for in_process in in_process_files
     ]
@@ -195,7 +193,7 @@ async def recategorize_file_pipeline(in_process_files: list[InProcessFile]) -> N
     await async_batch_reprocess_files_with_config(in_process_with_config)
 
 
-async def reprocess_file_async(in_process: InProcessFile) -> None:
+async def reprocess_file_async(in_process: InProcessJob) -> None:
     def blah() -> None:
         return pipe(
             in_process,
@@ -210,11 +208,11 @@ async def reprocess_file_async(in_process: InProcessFile) -> None:
     return await asyncio.to_thread(blah)
 
 
-async def reprocess_files_with_config_async(files: list[InProcessFile]) -> None:
+async def reprocess_files_with_config_async(files: list[InProcessJob]) -> None:
     """Process multiple files with pre-determined configuration in parallel."""
     await asyncio.gather(*[reprocess_file_async(file) for file in files])
 
 
-async def async_batch_reprocess_files_with_config(files: list[InProcessFile]) -> None:
+async def async_batch_reprocess_files_with_config(files: list[InProcessJob]) -> None:
     """Process multiple files with pre-determined configuration."""
     await reprocess_files_with_config_async(files)

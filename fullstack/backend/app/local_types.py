@@ -13,6 +13,7 @@ from app.models import (
     JobStatus,
     TransactionBase,
     TransactionSourceBase,
+    TransactionSourceId,
     UserId,
     UserSettings,
 )
@@ -83,10 +84,12 @@ class UserUpdate(BaseModel):
 
 class UserUpdateMe(BaseModel):
     email: str
+    settings: UserSettings | None = None
 
 
 class TransactionSourceOut(TransactionSourceBase):
     id: int
+    is_plaid_connected: bool = False
 
 
 class CategoryOut(CategoryBase):
@@ -250,6 +253,7 @@ class UploadedPdfOut(UploadedPdfBase):
     id: int
     nickname: str | None = None
     job: ProcessFileJobOut | None = None
+    transaction_source_id: TransactionSourceId | None = None
 
 
 class TransactionGroup(BaseModel):
