@@ -5,7 +5,7 @@ from typing import cast
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
-    InProcessFile,
+    InProcessJob,
     PartialTransaction,
     create_categorized_transactions_wrapper,
 )
@@ -45,7 +45,7 @@ class _WrapperClass:
     transactions: list[CategorizedTransaction]
 
 
-def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
+def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
     assert process.transactions, "didnt find transactions"
     assert process.categories, "must have"
 
@@ -79,7 +79,7 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
     return replace(process, categorized_transactions=out)
 
 
-def insert_categorized_transactions(in_process: InProcessFile) -> None:
+def insert_categorized_transactions(in_process: InProcessJob) -> None:
     assert in_process.categories, "must have"
     assert in_process.transaction_source, "must have"
     assert in_process.file, "must have"

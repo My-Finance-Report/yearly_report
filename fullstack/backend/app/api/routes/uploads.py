@@ -18,7 +18,6 @@ from app.local_types import ProcessFileJobOut, UploadedPdfOut
 from app.models import (
     JobKind,
     JobStatus,
-    ProcessFileJob,
     Transaction,
     TransactionSourceId,
     UploadConfiguration,
@@ -26,6 +25,7 @@ from app.models import (
     UploadedPdf,
     UploadedPdfId,
     User,
+    WorkerJob,
 )
 from app.worker.enqueue_job import enqueue_or_reset_job
 
@@ -127,8 +127,8 @@ def reprocess_file(
 ) -> ProcessFileJobOut:
     """Reprocess an uploaded file by job ID."""
     job = (
-        session.query(ProcessFileJob)
-        .filter(ProcessFileJob.id == job_id, ProcessFileJob.user_id == user.id)
+        session.query(WorkerJob)
+        .filter(WorkerJob.id == job_id, WorkerJob.user_id == user.id)
         .one_or_none()
     )
 
@@ -156,12 +156,14 @@ def get_uploads(
     file_ids = [file.id for file in files]
 
     jobs = (
-        session.query(ProcessFileJob)
-        .filter(ProcessFileJob.pdf_id.in_(file_ids), ProcessFileJob.user_id == user.id)
+        session.query(WorkerJob)
+        .filter(WorkerJob.pdf_id.in_(file_ids), WorkerJob.user_id == user.id)
         .all()
     )
     job_lookup: dict[UploadedPdfId, ProcessFileJobOut] = {
-        job.pdf_id: ProcessFileJobOut.model_validate(job) for job in jobs
+        job.pdf_id: ProcessFileJobOut.model_validate(job)
+        for job in jobs
+        if job.pdf_id is not None
     }
     transaction_source_lookup: dict[UploadConfigurationId, TransactionSourceId] = {
         config.id: config.transaction_source_id
@@ -207,10 +209,10 @@ def is_uploading(
     user: User = Depends(get_current_user),
 ) -> bool:
     return bool(
-        session.query(ProcessFileJob)
+        session.query(WorkerJob)
         .filter(
-            ProcessFileJob.user_id == user.id,
-            ProcessFileJob.status.in_([JobStatus.pending, JobStatus.processing]),
+            WorkerJob.user_id == user.id,
+            WorkerJob.status.in_([JobStatus.pending, JobStatus.processing]),
         )
         .all()
     )
@@ -231,8 +233,8 @@ def delete_file(
     session.query(Transaction).filter(
         Transaction.uploaded_pdf_id == file.id, Transaction.user_id == user.id
     ).delete()
-    session.query(ProcessFileJob).filter(
-        ProcessFileJob.pdf_id == file.id, ProcessFileJob.user_id == user.id
+    session.query(WorkerJob).filter(
+        WorkerJob.pdf_id == file.id, WorkerJob.user_id == user.id
     ).delete()
     session.delete(file)
 

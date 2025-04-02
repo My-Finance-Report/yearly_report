@@ -5,7 +5,7 @@ from typing import cast
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
-    InProcessFile,
+    InProcessJob,
     PartialTransaction,
     Recategorization,
     create_categorized_transactions_wrapper,
@@ -54,7 +54,7 @@ class TransactionsCoerceType:
     transactions: list[CategorizedTransaction]
 
 
-def update_filejob_with_nickname(in_process: InProcessFile) -> InProcessFile:
+def update_filejob_with_nickname(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have"
     assert in_process.transactions, "must have"
     assert in_process.file, "must have"
@@ -72,9 +72,9 @@ def update_filejob_with_nickname(in_process: InProcessFile) -> InProcessFile:
     return in_process
 
 
-def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
+def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
     assert process.transactions, "didnt find transactions"
-    assert process.categories, "must have"
+    assert process.categories, "must have categories"
 
     logger.info(
         f"Categorizing {len(process.transactions.transactions)} transactions..."
@@ -121,10 +121,10 @@ def categorize_extracted_transactions(process: InProcessFile) -> InProcessFile:
     return replace(process, categorized_transactions=out)
 
 
-def insert_categorized_transactions(in_process: InProcessFile) -> None:
-    assert in_process.transaction_source, "must have"
-    assert in_process.categorized_transactions, "must have"
-    assert in_process.categories, "must have"
+def insert_categorized_transactions(in_process: InProcessJob) -> None:
+    assert in_process.transaction_source, "must have transaction source"
+    assert in_process.categorized_transactions, "must have categorized transactions"
+    assert in_process.categories, "must have categories"
 
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
 

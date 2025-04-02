@@ -7,13 +7,13 @@ from app.db import Session
 from app.models import (
     Category,
     PlaidTransactionId,
-    ProcessFileJob,
     Transaction,
     TransactionId,
     TransactionSource,
     UploadConfiguration,
     UploadedPdf,
     User,
+    WorkerJob,
 )
 
 
@@ -127,11 +127,11 @@ class Recategorization:
 
 
 @dataclass(frozen=True)
-class InProcessFile:
+class InProcessJob:
     session: Session
     user: User
     file: UploadedPdf | None = None
-    job: ProcessFileJob | None = None
+    job: WorkerJob | None = None
     config: UploadConfiguration | None = None
     transaction_source: TransactionSource | None = None
     categories: list[Category] | None = None

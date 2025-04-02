@@ -307,3 +307,26 @@ def merge_accounts(
 
     session.delete(db_to_merge)
     session.commit()
+
+
+@router.post("/{source_id}/recategorize", response_model=dict)
+def trigger_recategorization(
+    source_id: int,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    """Trigger recategorization for all transactions in a specific transaction source."""
+    source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .one()
+    )
+
+    if not source:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    enqueue_recategorization(
+        session=session, user_id=user.id, transaction_source_id=source_id
+    )
+
+    return {"status": "success", "message": "Recategorization job has been queued"}

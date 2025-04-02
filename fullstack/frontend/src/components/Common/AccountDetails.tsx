@@ -16,6 +16,7 @@ import { AccountsService, UploadsService } from "@/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CategoriesManager } from "./CategoriesManager";
 import { DeleteButton, ReprocessButton } from "./ReprocessButton";
+import { RecategorizeButton } from "./RecategorizeButton";
 import useCustomToast from "@/hooks/useCustomToast";
 import { FaEdit, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -118,15 +119,18 @@ export function AccountDetails({ accountId, accountName, accountType, isPlaidLin
             <Badge colorScheme="green">Plaid</Badge>
           )}
         </Flex>
-        {!isEditing && (
-          <Button 
-            size="sm" 
-            onClick={() => setIsEditing(true)}
-          >
-            <Icon as={FaEdit} mr={2} />
-            Edit
-          </Button>
-        )}
+        <Flex gap={2}>
+          <RecategorizeButton sourceId={accountId} />
+          {!isEditing && (
+            <Button 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+            >
+              <Icon as={FaEdit} mr={2} />
+              Edit
+            </Button>
+          )}
+        </Flex>
       </Flex>
 
       <Flex mb={4}>

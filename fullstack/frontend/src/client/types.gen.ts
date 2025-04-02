@@ -466,6 +466,14 @@ export type AccountsMergeAccountsData = {
 
 export type AccountsMergeAccountsResponse = (unknown);
 
+export type AccountsTriggerRecategorizationData = {
+    sourceId: number;
+};
+
+export type AccountsTriggerRecategorizationResponse = ({
+    [key: string]: unknown;
+});
+
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
 export type BudgetsCreateBudgetData = {

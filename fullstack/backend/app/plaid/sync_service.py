@@ -14,7 +14,7 @@ from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
     add_default_categories,
 )
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
-    InProcessFile,
+    InProcessJob,
     PartialTransaction,
     Recategorization,
     TransactionsWrapper,
@@ -162,7 +162,7 @@ def sync_plaid_account_transactions(
         raise
 
 
-def plaid_categorize_pipe(in_process: InProcessFile) -> None:
+def plaid_categorize_pipe(in_process: InProcessJob) -> None:
     print("categorizing")
     return pipe(
         in_process,
@@ -172,7 +172,7 @@ def plaid_categorize_pipe(in_process: InProcessFile) -> None:
     )
 
 
-def apply_previous_plaid_recategorizations(in_process: InProcessFile) -> InProcessFile:
+def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have"
     assert in_process.transactions, "must have"
     assert in_process.categories, "must have"
@@ -220,7 +220,7 @@ def apply_previous_plaid_recategorizations(in_process: InProcessFile) -> InProce
     )
 
 
-def insert_categorized_plaid_transactions(in_process: InProcessFile) -> None:
+def insert_categorized_plaid_transactions(in_process: InProcessJob) -> None:
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"
@@ -276,7 +276,7 @@ def add_new_transactions(
             .all()
         )
 
-    in_process = InProcessFile(
+    in_process = InProcessJob(
         session=session,
         user=user,
         transaction_source=transaction_source,
