@@ -1,15 +1,15 @@
 import { AccountsService, UploadsService, PlaidService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
-  Container,
-  Button,
-  VStack,
-  Text,
-  Flex,
-  Spinner,
   Box,
-  useDisclosure,
+  Button,
+  Container,
+  Flex,
+  Heading,
   Icon,
+  Spinner,
+  Text,
+  useDisclosure,
   DialogRoot,
   DialogBackdrop,
   DialogBody,
@@ -53,6 +53,7 @@ function ManageAccounts() {
   const toast = useCustomToast()
   const { open: isUploadOpen, onOpen: onUploadOpen, onClose: onUploadClose } = useDisclosure()
   const { open: isPlaidOpen, onOpen: onPlaidOpen, onClose: onPlaidClose } = useDisclosure()
+  const { open: isAddAccountOpen, onOpen: onAddAccountOpen, onClose: onAddAccountClose } = useDisclosure()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>(0)
 
@@ -142,21 +143,17 @@ function ManageAccounts() {
     }
   }, [ready, linkToken, open])
 
-  // Check if an account is linked to Plaid
   const isPlaidLinked = (accountId: number) => {
-    // Check if the account is connected to Plaid based on the is_plaid_connected field
     const account = accounts?.find((a) => a.id === accountId)
     return account?.is_plaid_connected || false
   }
 
-  // Get account type
   const getAccountType = () => {
     return "depository"
   }
 
   const isPlaidLoading = createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
 
-  // Handle account selection change
   const handleAccountChange = (details: { value: string[] }) => {
     if (details.value.length > 0) {
       setSelectedAccountIndex(parseInt(details.value[0], 10));
@@ -174,21 +171,77 @@ function ManageAccounts() {
   return (
     <Container mt={8} maxW="container.xl" minH="75vh">
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <Flex gap={2}>
-          <Button onClick={onPlaidOpen}>
-            <Flex align="center">
-              <Icon as={FaUniversity} mr={2} />
-              <Text>Connect Account</Text>
-            </Flex>
-          </Button>
-            <Button onClick={onUploadOpen}>
-              <Flex align="center">
-                <Icon as={FaFileUpload} mr={2} />
-                <Text>Upload Files</Text>
-              </Flex>
-            </Button>
-        </Flex>
+        <Button onClick={onAddAccountOpen}>
+          <Flex align="center">
+            <Icon as={FaPlus} mr={2} />
+            <Text>Add Account</Text>
+          </Flex>
+        </Button>
       </Flex>
+
+      {/* Add Account Options Dialog */}
+      <DialogRoot open={isAddAccountOpen} onOpenChange={onAddAccountClose}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a New Account</DialogTitle>
+              <DialogCloseTrigger />
+            </DialogHeader>
+            <DialogBody>
+              <Flex direction="column" gap={4} align="stretch">
+                <Box 
+                  p={4} 
+                  borderWidth="1px" 
+                  borderRadius="md" 
+                  cursor="pointer" 
+                  _hover={{ bg: "gray.50" }}
+                  onClick={() => {
+                    onAddAccountClose();
+                    onPlaidOpen();
+                  }}
+                >
+                  <Flex align="center">
+                    <Icon as={FaUniversity} boxSize={6} color="blue.500" />
+                    <Box ml={4}>
+                      <Heading size="sm">Connect Bank Account</Heading>
+                      <Text fontSize="sm" mt={1}>
+                        Securely connect your bank account via Plaid for automatic transaction syncing.
+                        Your login credentials are never stored.
+                      </Text>
+                    </Box>
+                  </Flex>
+                </Box>
+                
+                <Box borderBottomWidth="1px" my={2} />
+                
+                <Box 
+                  p={4} 
+                  borderWidth="1px" 
+                  borderRadius="md" 
+                  cursor="pointer" 
+                  _hover={{ bg: "gray.50" }}
+                  onClick={() => {
+                    onAddAccountClose();
+                    onUploadOpen();
+                  }}
+                >
+                  <Flex align="center">
+                    <Icon as={FaFileUpload} boxSize={6} color="green.500" />
+                    <Box ml={4}>
+                      <Heading size="sm">Upload Account Statements</Heading>
+                      <Text fontSize="sm" mt={1}>
+                        Upload CSV or PDF statements from your bank. This is a good option if you
+                        prefer not to connect your account directly or if your bank isn't supported.
+                      </Text>
+                    </Box>
+                  </Flex>
+                </Box>
+              </Flex>
+            </DialogBody>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
 
       {isLoadingAccounts ? (
         <Flex justify="center" align="center" height="300px">
@@ -238,46 +291,20 @@ function ManageAccounts() {
         </Box>
       ) : (
         <Box textAlign="center" p={10} borderWidth="1px" borderRadius="lg">
-          <VStack align="stretch" gap={4}>
+          <Flex direction="column" gap={4} align="stretch">
             <Text fontSize="lg">You don't have any accounts yet.</Text>
             <Text>Create a new account or link your bank to get started.</Text>
             <Flex gap={2} mt={4}>
-              <Button colorScheme="blue" onClick={onPlaidOpen}>
+              <Button onClick={onAddAccountOpen}>
                 <Flex align="center">
                   <Icon as={FaPlus} mr={2} />
-                  <Text>Connect Account</Text>
-                </Flex>
-              </Button>
-              <Button colorScheme="green" onClick={onUploadOpen}>
-                <Flex align="center">
-                  <Icon as={FaFileUpload} mr={2} />
-                  <Text>Upload Files</Text>
+                  <Text>Add Account</Text>
                 </Flex>
               </Button>
             </Flex>
-          </VStack>
+          </Flex>
         </Box>
       )}
-
-      <DialogRoot open={isUploadOpen} onOpenChange={onUploadClose}>
-        <DialogBackdrop />
-        <DialogPositioner>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Files</DialogTitle>
-              <DialogCloseTrigger />
-            </DialogHeader>
-
-            <DialogBody>
-              <FileDropzone handleUpload={handleUpload} isLoading={uploadMutation.isPending} />
-
-              <DialogCloseTrigger asChild>
-                <Button onClick={onUploadClose}>Cancel</Button>
-              </DialogCloseTrigger>
-            </DialogBody>
-          </DialogContent>
-        </DialogPositioner>
-      </DialogRoot>
 
       {/* Connect Plaid Dialog */}
       <DialogRoot open={isPlaidOpen} onOpenChange={onPlaidClose}>
@@ -288,17 +315,16 @@ function ManageAccounts() {
               <DialogTitle>Connect Bank Account</DialogTitle>
               <DialogCloseTrigger />
             </DialogHeader>
-
             <DialogBody>
-              <VStack spaceY={4} align="stretch" mb={4}>
+              <Flex direction="column" gap={4} align="stretch" mb={4}>
                 <Text>
                   Connect your bank account securely using Plaid. This will allow you to:
                 </Text>
-                <VStack align="start" pl={4}>
+                <Flex direction="column" align="start" pl={4}>
                   <Text>• Automatically import transactions</Text>
                   <Text>• Keep your account balance up-to-date</Text>
                   <Text>• Sync new transactions daily</Text>
-                </VStack>
+                </Flex>
                 <Text>
                   Your login credentials are never stored on our servers. All data is encrypted and securely transmitted.
                 </Text>
@@ -308,7 +334,7 @@ function ManageAccounts() {
                     {accounts.length >= 1 && !accounts.some((a) => isPlaidLinked(a.id)) && " You don't have any Plaid-connected accounts yet."}
                   </Text>
                 )}
-              </VStack>
+              </Flex>
 
               <Flex justify="space-between" mt={4}>
                 <DialogCloseTrigger asChild>
@@ -318,6 +344,25 @@ function ManageAccounts() {
                   {isPlaidLoading ? "Preparing..." : "Connect Bank Account"}
                 </Button>
               </Flex>
+            </DialogBody>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
+
+      {/* Upload Files Dialog */}
+      <DialogRoot open={isUploadOpen} onOpenChange={onUploadClose}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Files</DialogTitle>
+              <DialogCloseTrigger />
+            </DialogHeader>
+            <DialogBody>
+              <FileDropzone handleUpload={handleUpload} isLoading={uploadMutation.isPending} />
+              <DialogCloseTrigger asChild>
+                <Button onClick={onUploadClose}>Cancel</Button>
+              </DialogCloseTrigger>
             </DialogBody>
           </DialogContent>
         </DialogPositioner>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -45,7 +45,12 @@ export function AccountDetails({
   const toast = useCustomToast();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Query for uploaded files associated with this account
+  useEffect(() => {
+    if (!isEditing) {
+      setNewName(accountName);
+    }
+  }, [accountName, isEditing]);
+
   const { data: uploadedFiles, isLoading: isLoadingFiles } = useQuery({
     queryKey: ["uploadedFiles", accountId],
     queryFn: () => UploadsService.getUploads(),
@@ -54,7 +59,6 @@ export function AccountDetails({
     }),
   });
 
-  // Mutation to update account name
   const updateAccountMutation = useMutation({
     mutationFn: () => 
       AccountsService.updateTransactionSource({
@@ -95,6 +99,28 @@ export function AccountDetails({
     }
   };
 
+  const getAccountTypeColor = () => {
+    switch (accountType) {
+      case "credit":
+        return "red";
+      case "investment":
+        return "blue";
+      default:
+        return "green";
+    }
+  };
+
+  const getAccountTypeLabel = () => {
+    switch (accountType) {
+      case "credit":
+        return "Credit";
+      case "investment":
+        return "Investment";
+      default:
+        return "Bank";
+    }
+  };
+
   const isMobile = useIsMobile()
 
   return (
@@ -123,24 +149,29 @@ export function AccountDetails({
               </Button>
             </HStack>
           ) : (
-            <Heading size="md">{accountName}</Heading>
+            <Flex alignItems="center">
+              <Heading size="md">{accountName}</Heading>
+              <Button
+                aria-label="Edit account name"
+                size="xs"
+                variant="ghost"
+                ml={2}
+                onClick={() => setIsEditing(true)}
+              >
+                <EditIcon mr={1} /> 
+              </Button>
+            </Flex>
           )}
           {isPlaidLinked && (
-            <Badge colorScheme="green">Plaid</Badge>
+            <Badge variant="outline" mr={1}>Connected</Badge>
           )}
+          <Badge variant="outline" color={getAccountTypeColor()}>
+            {getAccountTypeLabel()}
+          </Badge>
         </Flex>
         <Flex gap={2}>
           <RecategorizeButton sourceId={accountId} />
           <ArchiveButton sourceId={accountId} isArchived={isArchived} />
-          {!isEditing && (
-            <Button 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              <Icon as={EditIcon} mr={2} />
-              Edit
-            </Button>
-          )}
         </Flex>
       </Flex>
 

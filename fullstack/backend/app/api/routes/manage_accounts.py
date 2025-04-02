@@ -31,6 +31,7 @@ def get_transaction_sources(
         .filter(
             TransactionSource.user_id == user.id,
         )
+        .order_by(TransactionSource.id.asc())
         .all()
     )
 

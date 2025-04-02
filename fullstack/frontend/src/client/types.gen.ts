@@ -343,6 +343,7 @@ export type TransactionSourceOut = {
     archived?: boolean;
     source_kind?: SourceKind;
     id: number;
+    is_plaid_connected?: boolean;
 };
 
 export type UploadedPdfOut = {
