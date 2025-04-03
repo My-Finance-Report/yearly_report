@@ -37,6 +37,8 @@ def apply_year_filter(
     transactions: list[Transaction],
     years: FilterEntries,
 ) -> list[Transaction]:
+    if years.all:
+        return transactions
     return [
         t
         for t in transactions
@@ -48,11 +50,16 @@ def apply_month_filter(
     transactions: list[Transaction],
     months: FilterEntries,
 ) -> list[Transaction]:
+    if months.all:
+        return transactions
     month_numbers = (
         [int(m.value.lower()) for m in months.specifics or []]
         if months.specifics
         else []
     )
+
+    print(month_numbers)
+    print([t.date_of_transaction.month for t in transactions])
     return [t for t in transactions if t.date_of_transaction.month in month_numbers]
 
 
@@ -102,7 +109,7 @@ def get_demo_aggregated_transactions(
 
     category_filter = current_filter.lookup.get(GroupByOption.category)
     if category_filter and category_filter.specifics:
-        category_args =  [
+        category_args = [
             c for c in category_filter.specifics if c.value in category_lookup_by_name
         ]
     else:
@@ -111,7 +118,9 @@ def get_demo_aggregated_transactions(
     transaction_source_filter = current_filter.lookup.get(GroupByOption.account)
     if transaction_source_filter and transaction_source_filter.specifics:
         transaction_source_args = [
-            ts for ts in transaction_source_filter.specifics if ts.value in ts_lookup_by_name
+            ts
+            for ts in transaction_source_filter.specifics
+            if ts.value in ts_lookup_by_name
         ]
     else:
         transaction_source_args = None
@@ -119,12 +128,8 @@ def get_demo_aggregated_transactions(
     calls = [
         (apply_month_filter, current_filter.lookup.get(GroupByOption.month)),
         (apply_year_filter, current_filter.lookup.get(GroupByOption.year)),
-        (
-            apply_category_filter, category_args
-        ),
-        (
-            apply_account_filter, transaction_source_args
-        ),
+        (apply_category_filter, category_args),
+        (apply_account_filter, transaction_source_args),
     ]
 
     for a_callable, arg in calls:

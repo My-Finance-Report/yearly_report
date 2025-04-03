@@ -143,6 +143,12 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
           visible: true,
           specifics: [],
           index: 0
+        },
+        month: {
+          all: true,
+          visible: true,
+          specifics: [],
+          index: 1
         }
       }
     });

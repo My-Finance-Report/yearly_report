@@ -601,7 +601,7 @@ function NonPowerUserButtons({
     const newFilter = {
       is_default: false,
       lookup: {
-        [GroupByOption.budget]: {specifics: hasBudgets ? [{value: "Unbudgeted"}] : [], all: false, visible: true, index: 0},
+        [GroupByOption.budget]: {specifics: null, all: true, visible: true, index: 0},
         [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 1},
         [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
       }
@@ -614,7 +614,8 @@ function NonPowerUserButtons({
       is_default: false,
       lookup: {
         [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 1}
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 1},
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
       }
     };
     
@@ -625,7 +626,9 @@ function NonPowerUserButtons({
     const newFilter = {
       is_default: false,
       lookup: {
-        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], all: false, visible: true, index: 0}
+        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], all: false, visible: false, index: 0},
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
+        [GroupByOption.account]: {specifics: [], all: true, visible: true, index: 0}
       }
     };
     
