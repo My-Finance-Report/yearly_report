@@ -9,7 +9,6 @@ node_modules/
 *.csv
 bank_files/*
 .DS_Store
-*.txt
 *.db
 *.env
 generated_code/*

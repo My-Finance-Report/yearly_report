@@ -22,7 +22,7 @@ import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "@/client";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useFilters } from "@/hooks/useFilters";
+import { FilterProvider, useFilters } from "@/contexts/FilterContext";
 
 const transactionsSearchSchema = z.object({
   filter: z.string().optional(),
@@ -35,35 +35,40 @@ export const Route = createFileRoute("/_layout/_logged_in/transactions")({
 
 function Transactions() { 
   const getFunction = TransactionsService.getAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} />
+  return (
+    <FilterProvider>
+      <InnerTransactions getFunction={getFunction} />
+    </FilterProvider>
+  )
 }
 
 export function DemoTransactions() { 
   const getFunction = DemoService.getDemoAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} />
+  return (
+    <FilterProvider>
+      <InnerTransactions getFunction={getFunction} />
+    </FilterProvider>
+  )
 }
-
-
 
 function InnerTransactions({getFunction}: {
   getFunction: (
-  data:TransactionsGetAggregatedTransactionsData | undefined
+  data:TransactionsGetAggregatedTransactionsData 
   ) => Promise<TransactionsGetAggregatedTransactionsResponse>;
 }) {
-
-
 
   const isMobile = useIsMobile();
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
 
-
-  const {currentFilter, setDefaultFilter} = useFilters();
+  const {currentFilter, initializeDefaultFilter} = useFilters();
 
   useEffect(() => {
-    setDefaultFilter()
-  }, [setDefaultFilter]);
+    if (!currentFilter) {
+      initializeDefaultFilter();
+    }
+  }, [initializeDefaultFilter, currentFilter]);
 
   const { data, isLoading, error, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -71,9 +76,10 @@ function InnerTransactions({getFunction}: {
   >({
     queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () =>
-      getFunction(
-        {requestBody:currentFilter}
-      ),
+    {
+      console.log('calling api with ', currentFilter)
+      return getFunction({requestBody : currentFilter})
+    },
     enabled: isLoggedIn() && !!currentFilter,
   });
 

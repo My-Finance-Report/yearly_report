@@ -3,7 +3,8 @@ import { FiCheck } from "react-icons/fi";
 import { Text } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { FilterData_Input, FilterEntries } from "@/client";
-import { useFilters } from "@/hooks/useFilters";
+import { useFilters } from "@/contexts/FilterContext";
+import { useEffect } from "react";
 
 export enum GroupByOption {
   category = "category",
@@ -31,7 +32,13 @@ export function GroupingConfig({
   showBudgets,
 }: GroupingConfigProps) {
 
-  const { setCurrentFilter} = useFilters();
+  const { setCurrentFilter, currentFilter, initializeDefaultFilter } = useFilters();
+
+  useEffect(() => {
+    if (!currentFilter) {
+      initializeDefaultFilter();
+    }
+  }, [currentFilter, initializeDefaultFilter]);
 
   const handleToggleOption = (option: GroupByOption) => {
     setCurrentFilter((prev: FilterData_Input | null) => {
@@ -40,7 +47,6 @@ export function GroupingConfig({
       const newLookup = { ...prev.lookup };
       
       if (newLookup[option]) {
-        // Remove the option
         const { [option]: removed, ...rest } = newLookup;
         return { ...prev, lookup: rest };
       } else {
@@ -49,7 +55,7 @@ export function GroupingConfig({
           (max, entry) => Math.max(max, (entry as FilterEntries).index), -1
         ) as number;
         
-        return {
+        const calculatedLookup = {
           ...prev,
           lookup: {
             ...newLookup,
@@ -61,6 +67,7 @@ export function GroupingConfig({
             }
           }
         };
+        return calculatedLookup;
       }
     });
   };

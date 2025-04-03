@@ -23,7 +23,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { useFilters } from '@/hooks/useFilters'
+import { useFilters } from "@/contexts/FilterContext";
 import { FiBookmark,  FiSave } from 'react-icons/fi'
 import { SavedFilter } from "@/client"
 

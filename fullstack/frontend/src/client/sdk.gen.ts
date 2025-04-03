@@ -1075,7 +1075,7 @@ export class TransactionsService {
      */
     public static getAggregatedTransactions(data: TransactionsGetAggregatedTransactionsData = {}): CancelablePromise<TransactionsGetAggregatedTransactionsResponse> {
         return __request(OpenAPI, {
-            method: 'GET',
+            method: 'POST',
             url: '/api/v1/transactions/aggregated',
             body: data.requestBody,
             mediaType: 'application/json',

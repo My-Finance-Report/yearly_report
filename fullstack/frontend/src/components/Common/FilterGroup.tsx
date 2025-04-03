@@ -31,7 +31,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import BoxWithText, { type CollapsibleName } from "./BoxWithText";
-import {  GroupByOption, GroupingConfig } from "./GroupingConfig";
 import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
 import { SavedFilterControls } from "./SavedFilterControls";
 
@@ -39,11 +38,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
 import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
-import { useFilters } from "@/hooks/useFilters";
-
-
+import { useFilters } from "@/contexts/FilterContext";
+import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 
 export function FilterGroup({
   groupingOptionsChoices,
@@ -177,12 +175,10 @@ function PowerUserButtons({
   );
 
   const isMobile = useIsMobile();
-  const {setCurrentFilter, currentFilter} = useFilters();
-
-  console.log(currentFilter);
+  const {setCurrentFilter, currentFilter, initializeDefaultFilter} = useFilters();
 
   if (!currentFilter) {
-    return null;
+    initializeDefaultFilter();
   }
 
   const handleToggleOption = (option: GroupByOption) => {
@@ -192,12 +188,9 @@ function PowerUserButtons({
       const newLookup = { ...prev.lookup };
       
       if (newLookup[option]) {
-        // Remove the option
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [option]: removed, ...rest } = newLookup;
         return { ...prev, lookup: rest };
       } else {
-        // Add the option with the next available index
         const maxIndex = Object.values(newLookup).reduce(
           (max, entry) => Math.max(max, (entry as FilterEntries).index), -1
         ) as number;
@@ -278,7 +271,6 @@ function PowerUserButtons({
       if (currentIndex === undefined || currentIndex <= 0) return prev;
       
       // Find the option with index = currentIndex - 1
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const optionToSwap = Object.entries(prev.lookup).find(([key, entry]) => (entry as FilterEntries).index === currentIndex - 1)?.[0] as GroupByOption | undefined;
       
       if (!optionToSwap) return prev;
@@ -350,10 +342,15 @@ function PowerUserButtons({
                 showDeposits={showDeposits}
               />
               <SortableContext
-                items={Object.keys(currentFilter?.lookup || {})}
+                items={Object.keys(currentFilter?.lookup || {}).sort((a, b) => 
+                  (currentFilter?.lookup?.[a as GroupByOption] as FilterEntries).index - 
+                  (currentFilter?.lookup?.[b as GroupByOption] as FilterEntries).index
+                )}
                 strategy={horizontalListSortingStrategy}
               >
-                {Object.entries(currentFilter?.lookup || {}).map(([option, value]) => {
+                {Object.entries(currentFilter?.lookup || {})
+                  .sort((a, b) => (a[1] as FilterEntries).index - (b[1] as FilterEntries).index)
+                  .map(([option, value]) => {
                   const typedOption = option as GroupByOption;
                   const typedValue = value as FilterEntries;
                   return (
@@ -513,7 +510,6 @@ export function FilterButton({
       return;
     }
     
-    // Create a copy of the current filter
     const updatedFilter = { ...currentFilter };
     
     updatedFilter.lookup = {
@@ -568,7 +564,7 @@ export function FilterButton({
             </Flex>
             <Menu.ItemGroup>
               {options.map((option) => {
-                const checked = currentValues.includes({value: option});
+                const checked = currentValues.map(value => value.value).includes(option);
                 return (
                   <Menu.CheckboxItem
                     value={option}
@@ -595,51 +591,58 @@ function NonPowerUserButtons({
   groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
 }) {
 
-  const excludingUnbudgeted =
-    groupingOptionsChoices?.[GroupByOption.budget]?.filter(
-      (budget) => budget !== "Unbudgeted"
-    ) ?? [];
-  const hasBudgets = excludingUnbudgeted.length > 0;
+  const hasBudgets = groupingOptionsChoices?.[GroupByOption.budget]?.length || 0 > 0;
 
-  const { setCurrentFilter } = useFilters();
+  const { setCurrentFilter, currentFilter } = useFilters();
 
+  useEffect(() => {
+    console.log("Current filter in NonPowerUserButtons:", currentFilter);
+  }, [currentFilter]);
 
   const setMonthlyBudget = () => {
-    setCurrentFilter({
+    const newFilter = {
+      is_default: false,
       lookup: {
-        [GroupByOption.budget]: {specifics: excludingUnbudgeted.map(budget => ({value: budget})), all: false, visible: true, index: 0},
+        [GroupByOption.budget]: {specifics: hasBudgets ? [{value: "Unbudgeted"}] : [], all: false, visible: true, index: 0},
         [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 1},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: true, index: 2}
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
       }
-    });
+    };
+    setCurrentFilter(newFilter);
   };
 
   const setYTD = () => {
-    setCurrentFilter({
+    const newFilter = {
+      is_default: false,
       lookup: {
         [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: true, index: 1}
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 1}
       }
-    });
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   const setLastYear = () => {
-    setCurrentFilter({
+    const newFilter = {
+      is_default: false,
       lookup: {
-        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: true, index: 1}
+        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], all: false, visible: true, index: 0}
       }
-    });
-
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   const setAllTime = () => {
-    setCurrentFilter(
-      {lookup:{
-        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: true, index: 1}
-      }}
-    );
+    const newFilter = {
+      is_default: false,
+      lookup: {
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0}
+      }
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   return (

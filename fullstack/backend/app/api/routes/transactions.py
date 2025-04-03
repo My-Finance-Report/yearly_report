@@ -3,7 +3,7 @@ from datetime import datetime
 from itertools import groupby
 from typing import cast
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import ColumnExpressionArgument, false, func, or_
 from sqlalchemy.orm import Query as SqlQuery
 
@@ -455,7 +455,7 @@ def apply_month_filter(
         "december": 12,
     }
     month_numbers = (
-        [month_lookup[m.value.lower()] for m in months.specifics]
+        [int(m.value.lower()) for m in months.specifics]
         if months.specifics
         else []
     )
@@ -509,7 +509,7 @@ def enrich_with_budget_info(
     return agg
 
 
-@router.get(
+@router.post(
     "/aggregated",
     dependencies=[Depends(get_current_user)],
     response_model=AggregatedTransactions,
@@ -519,6 +519,7 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
+
     if not current_filter:
         current_filter = FilterData()
 
@@ -583,9 +584,9 @@ def get_aggregated_transactions(
     overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
-    group_by_with_hidden_removed = [
+    group_by_with_hidden_removed = sorted([
         key for key, entries in current_filter.lookup.items() if entries.visible
-    ]
+    ], key=lambda x: current_filter.lookup[x].index)
 
     groups = recursive_group(
         transactions,
