@@ -503,7 +503,7 @@ export class DemoService {
      */
     public static getDemoAggregatedTransactions(data: DemoGetDemoAggregatedTransactionsData = {}): CancelablePromise<DemoGetDemoAggregatedTransactionsResponse> {
         return __request(OpenAPI, {
-            method: 'GET',
+            method: 'POST',
             url: '/api/v1/demo/demo_aggregated',
             body: data.requestBody,
             mediaType: 'application/json',

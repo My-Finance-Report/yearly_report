@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import useCustomToast from '../hooks/useCustomToast';
 import { SavedFiltersService, SavedFilterCreate, FilterData_Input, SavedFilter } from '@/client';
@@ -23,38 +23,33 @@ interface FilterContextType {
   loadFilterByName: (name: string) => Promise<FilterData_Input | null>;
 }
 
-// Create the context with a default value
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
-// Provider component
-export function FilterProvider({ children }: { children: ReactNode }) {
+export function FilterProvider({ children, isDemo }: { children: ReactNode, isDemo?: boolean }) {
   const queryClient = useQueryClient();
   const toast = useCustomToast();
   
-  // State for the current filter
   const [currentFilter, setCurrentFilter] = useState<FilterData_Input | null>(null);
   
-  // Track if we've attempted to initialize the filter
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Query for saved filters
+
+    
+  
   const { data: savedFilters = [], isLoading: isSavedFiltersLoading } = useQuery({
     queryKey: ['savedFilters'],
     queryFn: () => SavedFiltersService.readSavedFilters({}),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !isDemo,
   });
   
-  // Query for public filters
   const { data: publicFilters = [], isLoading: isPublicFiltersLoading } = useQuery({
     queryKey: ['publicFilters'],
     queryFn: () => SavedFiltersService.readPublicSavedFilters({}),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !isDemo,
   });
   
-  // Overall loading state
   const isLoading = isSavedFiltersLoading || isPublicFiltersLoading;
   
-  // Create a new filter
   const createFilterMutation = useMutation({
     mutationFn: (data: SavedFilterCreate) => SavedFiltersService.createSavedFilter({ requestBody: data }),
     onSuccess: () => {
@@ -65,16 +60,15 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         'success'
       );
     },
-    onError: (error) => {
+    onError: () => {
       toast(
         'Failed to save filter',
-        error.message || 'There was an error saving your filter',
+        isDemo? "you can't save filters in demo mode :(" : 'There was an error saving your filter',
         'error'
       );
     },
   });
   
-  // Delete a filter
   const deleteFilterMutation = useMutation({
     mutationFn: (id: number) => SavedFiltersService.deleteSavedFilter({ filterId: id }),
     onSuccess: () => {
@@ -94,7 +88,6 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     },
   });
   
-  // Load a filter by name
   const loadFilterByName = async (name: string): Promise<FilterData_Input | null> => {
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({ filterName: name });
@@ -134,7 +127,6 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // If no default filter found in saved filters, check public filters
     const defaultPublicFilter = publicFilters.find((filter) => filter.filter_data.is_default);
     
     if (defaultPublicFilter) {
@@ -143,7 +135,6 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // If no default filter found at all, create a basic default filter
     setCurrentFilter({
       is_default: true,
       lookup: {
@@ -158,7 +149,6 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     setIsInitialized(true);
   };
   
-  // Update an existing filter
   const updateFilter = (
     id: number,
     { name, description }: { name: string; description: string | null }
@@ -192,14 +182,13 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   
   // Auto-initialize the default filter when data is loaded
   useEffect(() => {
-    if (!isLoading && !isInitialized) {
+    if (!isInitialized && !isLoading) {
       initializeDefaultFilter();
     }
-  }, [isLoading, savedFilters, publicFilters]);
+  }, [isInitialized, isLoading, isDemo]);
   
   // Create the context value
   const contextValue: FilterContextType = {
-    // Data
     savedFilters,
     publicFilters,
     currentFilter,
@@ -233,4 +222,4 @@ export function useFilters() {
   }
   
   return context;
-}
+};

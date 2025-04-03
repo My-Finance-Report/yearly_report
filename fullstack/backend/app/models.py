@@ -634,16 +634,22 @@ class FilterEntries(BaseModel):
     specifics: list[FilterEntry] | None = None
     all: bool = True
     visible: bool | None = None
-    index: int 
+    index: int
 
 
 class FilterData(BaseModel):
     is_default: bool = True
     lookup: dict[GroupByOption, FilterEntries] = Field(
         default_factory=lambda: {
-            GroupByOption.category: FilterEntries(all=True, specifics=None, visible=True, index=0),
-            GroupByOption.month: FilterEntries(all=True, visible=True, specifics=None, index=1),
-            GroupByOption.account: FilterEntries(all=True, visible=True, specifics=None, index=2),
+            GroupByOption.category: FilterEntries(
+                all=True, specifics=None, visible=True, index=0
+            ),
+            GroupByOption.month: FilterEntries(
+                all=True, visible=True, specifics=None, index=1
+            ),
+            GroupByOption.account: FilterEntries(
+                all=True, visible=True, specifics=None, index=2
+            ),
         }
     )
 

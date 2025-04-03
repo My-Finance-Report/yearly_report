@@ -3,7 +3,7 @@ from datetime import datetime
 from itertools import groupby
 from typing import cast
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy import ColumnExpressionArgument, false, func, or_
 from sqlalchemy.orm import Query as SqlQuery
 
@@ -440,24 +440,8 @@ def apply_month_filter(
     months: FilterEntries,
 ) -> SqlQuery[Transaction]:
     # Similarly for month; pass months as integers (1 through 12)
-    month_lookup = {
-        "january": 1,
-        "february": 2,
-        "march": 3,
-        "april": 4,
-        "may": 5,
-        "june": 6,
-        "july": 7,
-        "august": 8,
-        "september": 9,
-        "october": 10,
-        "november": 11,
-        "december": 12,
-    }
     month_numbers = (
-        [int(m.value.lower()) for m in months.specifics]
-        if months.specifics
-        else []
+        [int(m.value.lower()) for m in months.specifics] if months.specifics else []
     )
     return transactions.filter(
         func.extract("month", Transaction.date_of_transaction).in_(month_numbers)
@@ -519,9 +503,10 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-
     if not current_filter:
         current_filter = FilterData()
+
+    grouping_option_choices = build_grouping_option_choices(session, user)
 
     transactions_query = (
         session.query(Transaction)
@@ -557,7 +542,7 @@ def get_aggregated_transactions(
             group_by_ordering=[],
             overall_deposits=0.0,
             overall_balance=0.0,
-            grouping_options_choices={},
+            grouping_options_choices=grouping_option_choices,
         )
 
     if GroupByOption.category in current_filter.lookup:
@@ -584,9 +569,10 @@ def get_aggregated_transactions(
     overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
     overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
 
-    group_by_with_hidden_removed = sorted([
-        key for key, entries in current_filter.lookup.items() if entries.visible
-    ], key=lambda x: current_filter.lookup[x].index)
+    group_by_with_hidden_removed = sorted(
+        [key for key, entries in current_filter.lookup.items() if entries.visible],
+        key=lambda x: current_filter.lookup[x].index,
+    )
 
     groups = recursive_group(
         transactions,
@@ -595,8 +581,6 @@ def get_aggregated_transactions(
         ts_lookup,
         budget_lookup,
     )
-
-    grouping_option_choices = build_grouping_option_choices(session, user)
 
     overall_balance = overall_deposits - overall_withdrawals
     val = AggregatedTransactions(

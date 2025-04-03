@@ -1,4 +1,5 @@
 import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -89,15 +90,17 @@ def read_public_saved_filters(
     Retrieve public saved filters from all users.
     """
     # todo
-    return [SavedFilterSchema(
-        id=1,
-        name="Default Filter",
-        description="Default filter description",
-        filter_data=FilterData(),
-        created_at=datetime.datetime.now(),
-        updated_at=datetime.datetime.now(),
-        user_id=current_user.id,
-    )]
+    return [
+        SavedFilterSchema(
+            id=1,
+            name="Default Filter",
+            description="Default filter description",
+            filter_data=FilterData(),
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
+            user_id=current_user.id,
+        )
+    ]
 
 
 @router.get("/{filter_id}", response_model=SavedFilterSchema)

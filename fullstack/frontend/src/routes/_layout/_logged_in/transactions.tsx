@@ -13,7 +13,6 @@ import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
-import { isLoggedIn } from "@/hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
 import type {
@@ -45,7 +44,7 @@ function Transactions() {
 export function DemoTransactions() { 
   const getFunction = DemoService.getDemoAggregatedTransactions
   return (
-    <FilterProvider>
+    <FilterProvider isDemo={true}>
       <InnerTransactions getFunction={getFunction} />
     </FilterProvider>
   )
@@ -79,8 +78,7 @@ function InnerTransactions({getFunction}: {
     {
       return getFunction({requestBody : currentFilter})
     },
-    enabled: isLoggedIn() && !!currentFilter,
-  });
+ });
 
 
   useEffect(() => {
