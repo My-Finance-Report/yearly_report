@@ -125,12 +125,10 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    console.log("Initializing default filter...");
     
     const defaultFilter = savedFilters.find((filter) => filter.filter_data.is_default);
     
     if (defaultFilter) {
-      console.log("Setting default filter from saved filters:", defaultFilter.name);
       setCurrentFilter(defaultFilter.filter_data);
       setIsInitialized(true);
       return;
@@ -140,14 +138,12 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     const defaultPublicFilter = publicFilters.find((filter) => filter.filter_data.is_default);
     
     if (defaultPublicFilter) {
-      console.log("Setting default filter from public filters:", defaultPublicFilter.name);
       setCurrentFilter(defaultPublicFilter.filter_data);
       setIsInitialized(true);
       return;
     }
     
     // If no default filter found at all, create a basic default filter
-    console.log("No default filter found, creating a basic one");
     setCurrentFilter({
       is_default: true,
       lookup: {

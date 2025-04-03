@@ -124,7 +124,6 @@ function InnerFilterGroup({
   collapsedItems: CollapsibleName[];
 }) {
   const powerUser = useAuth().user?.settings?.power_user_filters ?? false;
-  console.log(powerUser);
   return (
     <div
       style={{
@@ -596,7 +595,6 @@ function NonPowerUserButtons({
   const { setCurrentFilter, currentFilter } = useFilters();
 
   useEffect(() => {
-    console.log("Current filter in NonPowerUserButtons:", currentFilter);
   }, [currentFilter]);
 
   const setMonthlyBudget = () => {

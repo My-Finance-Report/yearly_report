@@ -77,7 +77,6 @@ function InnerTransactions({getFunction}: {
     queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () =>
     {
-      console.log('calling api with ', currentFilter)
       return getFunction({requestBody : currentFilter})
     },
     enabled: isLoggedIn() && !!currentFilter,
@@ -147,7 +146,7 @@ function InnerTransactions({getFunction}: {
         />
       </Box>
       )}
-    <Box marginTop={isMobile ? '40px' : '0px'}>
+      <Box marginTop={isMobile ? '40px' : '0px'}>
         <BlahComponent
           isLoading={isLoading}
           data={data}
