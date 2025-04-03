@@ -23,6 +23,7 @@ import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 
 import {  EditIcon } from "@chakra-ui/icons"
 import { useIsMobile } from "@/hooks/useIsMobile";
+import PlaidSyncStatus from "./PlaidSyncStatus";
 
 interface AccountDetailsProps {
   accountId: number;
@@ -280,17 +281,7 @@ export function AccountDetails({
         ) : activeTab === 0 ? (
           <CategoriesManager accountId={accountId} />
         ) : isPlaidLinked && (
-          <Box p={4} borderWidth="1px" borderRadius="md">
-            <Flex align="center" gap={3}>
-              <Icon as={FaUniversity} color="blue.500" boxSize={5} />
-              <VStack align="start" gap={1}>
-                <Text fontWeight="medium">Data Syncs Automatically</Text>
-                <Text fontSize="sm" >
-                  This account is connected to Plaid and transactions are synced daily.
-                </Text>
-              </VStack>
-            </Flex>
-          </Box>
+          <PlaidSyncStatus accountId={accountId} />
         )}
       </Box>
     </Box>

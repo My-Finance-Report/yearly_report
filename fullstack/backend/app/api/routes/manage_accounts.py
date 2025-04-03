@@ -5,11 +5,14 @@ from app.api.routes.manage_budgets import get_stylized_name_lookup
 from app.db import get_current_user, get_db
 from app.local_types import (
     CategoryOut,
+    PlaidSyncLogOut,
     TransactionSourceOut,
 )
 from app.models import (
     Category,
     CategoryBase,
+    PlaidSyncLog,
+    PlaidSyncLogId,
     Transaction,
     TransactionSource,
     TransactionSourceBase,
@@ -373,3 +376,52 @@ def toggle_archive_transaction_source(
         source_kind=db_source.source_kind,
         is_plaid_connected=db_source.plaid_account_id is not None,
     )
+
+
+@router.get("/{source_id}/sync-logs", response_model=list[PlaidSyncLogOut])
+def get_account_sync_logs(
+    source_id: int,
+    limit: int = 10,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[PlaidSyncLogOut]:
+    """Retrieve the most recent sync logs for a Plaid-connected account."""
+    db_source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
+
+    if not db_source:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    if not db_source.plaid_account_id:
+        raise HTTPException(
+            status_code=400, detail="This account is not connected to Plaid."
+        )
+
+    sync_logs = (
+        session.query(PlaidSyncLog)
+        .filter(
+            PlaidSyncLog.user_id == user.id,
+            PlaidSyncLog.plaid_account_id == db_source.plaid_account_id,
+        )
+        .order_by(PlaidSyncLog.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        PlaidSyncLogOut(
+            id=PlaidSyncLogId(log.id),
+            sync_type=log.sync_type,
+            start_date=log.start_date,
+            end_date=log.end_date,
+            added_count=log.added_count,
+            modified_count=log.modified_count,
+            removed_count=log.removed_count,
+            error_message=log.error_message,
+            created_at=log.created_at,
+        )
+        for log in sync_logs
+    ]

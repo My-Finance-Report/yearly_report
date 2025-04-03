@@ -265,7 +265,14 @@ function ManageAccounts() {
               onValueChange={handleAccountChange}
             >
               <SelectTrigger>
-                <SelectValueText placeholder="Select an account" />
+                <Flex align="center" width="100%">
+                  <SelectValueText placeholder="Select an account" />
+                  {accounts[selectedAccountIndex]?.archived && (
+                    <Badge ml={2} colorScheme="red" variant="solid" size="sm">
+                      Archived
+                    </Badge>
+                  )}
+                </Flex>
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((account, index) => (

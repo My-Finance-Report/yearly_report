@@ -217,6 +217,21 @@ export type PlaidLinkTokenResponse = {
     link_token: string;
 };
 
+/**
+ * Response model for Plaid sync logs.
+ */
+export type PlaidSyncLogOut = {
+    id: number;
+    sync_type: string;
+    start_date?: (string | null);
+    end_date?: (string | null);
+    added_count?: (number | null);
+    modified_count?: (number | null);
+    removed_count?: (number | null);
+    error_message?: (string | null);
+    created_at: string;
+};
+
 export type PossibleSankeyInput = {
     category_id: number;
     source_id: number;
@@ -527,6 +542,13 @@ export type AccountsToggleArchiveTransactionSourceData = {
 };
 
 export type AccountsToggleArchiveTransactionSourceResponse = (TransactionSourceOut);
+
+export type AccountsGetAccountSyncLogsData = {
+    limit?: number;
+    sourceId: number;
+};
+
+export type AccountsGetAccountSyncLogsResponse = (Array<PlaidSyncLogOut>);
 
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 

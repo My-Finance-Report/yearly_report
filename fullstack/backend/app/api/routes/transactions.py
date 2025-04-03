@@ -690,7 +690,6 @@ def get_aggregated_transactions(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AggregatedTransactions:
-
     ctx = TransactionContext(
         current_filter=current_filter or FilterData(), session=session, user=user
     )

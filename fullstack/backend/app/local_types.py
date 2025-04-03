@@ -11,6 +11,7 @@ from app.models import (
     CategoryId,
     GroupByOption,
     JobStatus,
+    PlaidSyncLogId,
     TransactionBase,
     TransactionSourceBase,
     TransactionSourceId,
@@ -369,3 +370,17 @@ class SankeyConfigInfo(BaseModel):
 class SankeyConfigCreatePayload(BaseModel):
     inputs: list[SankeyInputCreate]
     links: list[SankeyLinkageCreate]
+
+
+class PlaidSyncLogOut(BaseModel):
+    """Response model for Plaid sync logs."""
+
+    id: PlaidSyncLogId
+    sync_type: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    added_count: int | None = None
+    modified_count: int | None = None
+    removed_count: int | None = None
+    error_message: str | None = None
+    created_at: datetime
