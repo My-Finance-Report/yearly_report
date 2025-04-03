@@ -139,6 +139,31 @@ export type CheckoutSession = {
     checkout_url: string;
 };
 
+export type FilterData_Input = {
+    is_default?: boolean;
+    lookup?: {
+        [key: string]: FilterEntries;
+    };
+};
+
+export type FilterData_Output = {
+    is_default?: boolean;
+    lookup?: {
+        [key: string]: FilterEntries;
+    };
+};
+
+export type FilterEntries = {
+    specifics?: (Array<FilterEntry> | null);
+    all?: boolean;
+    visible?: (boolean | null);
+    index: number;
+};
+
+export type FilterEntry = {
+    value: string;
+};
+
 export type GoogleCallbackData = {
     access_token?: (string | null);
     error?: (string | null);
@@ -283,10 +308,7 @@ export type SankeySibling = {
 export type SavedFilter = {
     name: string;
     description?: (string | null);
-    filter_data: {
-        [key: string]: unknown;
-    };
-    is_public?: boolean;
+    filter_data: FilterData_Output;
     id: number;
     user_id: number;
     created_at: string;
@@ -296,19 +318,13 @@ export type SavedFilter = {
 export type SavedFilterCreate = {
     name: string;
     description?: (string | null);
-    filter_data: {
-        [key: string]: unknown;
-    };
-    is_public?: boolean;
+    filter_data: FilterData_Input;
 };
 
 export type SavedFilterUpdate = {
     name?: (string | null);
     description?: (string | null);
-    filter_data?: ({
-    [key: string]: unknown;
-} | null);
-    is_public?: (boolean | null);
+    filter_data?: (FilterData_Input | null);
 };
 
 export type SourceKind = 'account' | 'investment' | 'card';
@@ -588,30 +604,7 @@ export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
 
 export type DemoGetDemoAggregatedTransactionsData = {
-    /**
-     * Filter for transactions
-     */
-    accounts?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    budgets?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    categories?: (Array<(string)> | null);
-    /**
-     * List of grouping options in order (e.g. category, month)
-     */
-    groupBy?: Array<GroupByOption>;
-    /**
-     * Filter for transactions
-     */
-    months?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    years?: (Array<(string)> | null);
+    requestBody?: (FilterData_Input | null);
 };
 
 export type DemoGetDemoAggregatedTransactionsResponse = (AggregatedTransactions);
@@ -753,30 +746,7 @@ export type SubscriptionSyncPricesResponse = (Message);
 export type TransactionsGetTransactionsResponse = (Array<TransactionOut>);
 
 export type TransactionsGetAggregatedTransactionsData = {
-    /**
-     * Filter for transactions
-     */
-    accounts?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    budgets?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    categories?: (Array<(string)> | null);
-    /**
-     * List of grouping options in order (e.g. category, month)
-     */
-    groupBy?: (Array<GroupByOption> | null);
-    /**
-     * Filter for transactions
-     */
-    months?: (Array<(string)> | null);
-    /**
-     * Filter for transactions
-     */
-    years?: (Array<(string)> | null);
+    requestBody?: (FilterData_Input | null);
 };
 
 export type TransactionsGetAggregatedTransactionsResponse = (AggregatedTransactions);

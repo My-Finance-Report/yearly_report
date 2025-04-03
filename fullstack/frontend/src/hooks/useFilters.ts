@@ -1,52 +1,25 @@
-import { useState } from 'react';
+import  { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import useCustomToast from './useCustomToast';
-import { SavedFiltersService } from '@/client';
+import { SavedFiltersService,  SavedFilterCreate, FilterData_Input } from '@/client';
 
-export interface SavedFilter {
-  id: number;
-  name: string;
-  description?: string;
-  filter_data: Record<string, unknown>;
-  is_public: boolean;
-  created_at: string;
-  updated_at: string;
-  user_id: number;
-}
-
-export interface FilterData {
-  years?: string[];
-  accounts?: string[];
-  months?: string[];
-  categories?: string[];
-  budgets?: string[];
-}
-
-export function useSavedFilters() {
+export function useFilters() {
   const toast = useCustomToast();
   const queryClient = useQueryClient();
-  const [currentFilter, setCurrentFilter] = useState<SavedFilter | null>(null);
+  const [currentFilter, setCurrentFilter] = useState<FilterData_Input | null>(null);
 
-  // Fetch all user's saved filters
   const { data: savedFilters = [], isLoading } = useQuery({
     queryKey: ['saved-filters'],
     queryFn: () => SavedFiltersService.readSavedFilters(),
   });
 
-  // Fetch public filters
   const { data: publicFilters = [] } = useQuery({
     queryKey: ['public-filters'],
     queryFn: () => SavedFiltersService.readPublicSavedFilters(),
   });
 
-  // Create a new saved filter
   const createFilterMutation = useMutation({
-    mutationFn: (filterData: { 
-      name: string; 
-      description?: string; 
-      filter_data: FilterData; 
-      is_public: boolean;
-    }) => SavedFiltersService.createSavedFilter({requestBody: filterData}),
+    mutationFn: (filterData: SavedFilterCreate) => SavedFiltersService.createSavedFilter({requestBody: filterData}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-filters'] });
       toast(
@@ -55,7 +28,7 @@ export function useSavedFilters() {
         'success',
       );
     },
-    onError: (error) => {
+    onError: () => {
       toast(
         'Error saving filter',
         'There was an error saving your filter. Please try again.',
@@ -64,19 +37,17 @@ export function useSavedFilters() {
     },
   });
 
-  // Update an existing saved filter
   const updateFilterMutation = useMutation({
     mutationFn: ({ 
       id, 
       data 
     }: { 
       id: number; 
-      data: Partial<{ 
-        name: string; 
-        description?: string; 
-        filter_data: FilterData; 
-        is_public: boolean;
-      }> 
+      data: { 
+        name?: string | null; 
+        description?: string | null; 
+        filter_data?: FilterData_Input | null; 
+      } 
     }) => SavedFiltersService.updateSavedFilter({filterId: id, requestBody: data}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-filters'] });
@@ -86,7 +57,7 @@ export function useSavedFilters() {
         'success',
       );
     },
-    onError: (error) => {
+    onError: () => {
       toast(
         'Error updating filter',
         'There was an error updating your filter. Please try again.',
@@ -109,7 +80,7 @@ export function useSavedFilters() {
         'success',
       );
     },
-    onError: (error) => {
+    onError: () => {
       toast(
         'Error deleting filter',
         'There was an error deleting your filter. Please try again.',
@@ -118,13 +89,12 @@ export function useSavedFilters() {
     },
   });
 
-  // Load a filter by name (for URL sharing)
-  const loadFilterByName = async (name: string): Promise<FilterData | null> => {
+  const loadFilterByName = async (name: string): Promise<FilterData_Input | null> => {
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({filterName: name});
-      setCurrentFilter(filter);
+      setCurrentFilter(filter.filter_data);
       return filter.filter_data;
-    } catch (error) {
+    } catch {
       toast(
         'Error loading filter',
         `Could not load filter "${name}". It may not exist or you don't have access to it.`,
@@ -134,42 +104,75 @@ export function useSavedFilters() {
     }
   };
 
-  // Save current filter state
   const saveCurrentFilter = (
-    name: string, 
-    filterData: FilterData, 
-    options?: { description?: string; isPublic?: boolean }
+    {name, description}: {name: string; description: string | null}
   ) => {
-    if (currentFilter) {
-      // Update existing filter
-      updateFilterMutation.mutate({
-        id: currentFilter.id,
-        data: {
-          name,
-          description: options?.description,
-          filter_data: filterData,
-          is_public: options?.isPublic ?? currentFilter.is_public,
-        },
-      });
-    } else {
-      // Create new filter
-      createFilterMutation.mutate({
-        name,
-        description: options?.description,
-        filter_data: filterData,
-        is_public: options?.isPublic ?? false,
-      });
+    if (!currentFilter) return;
+    createFilterMutation.mutate({name, description, filter_data: currentFilter});
+  };
+
+  const setDefaultFilter = () => {
+    // First check if there's already a current filter set
+    if (currentFilter) return;
+    
+    // Try to find a filter marked as default in saved filters
+    const defaultFilter = savedFilters.find((filter) => filter.filter_data.is_default);
+    
+    if (defaultFilter) {
+      console.log("Setting default filter from saved filters:", defaultFilter.name);
+      setCurrentFilter(defaultFilter.filter_data);
+      return;
     }
+    
+    // If no default filter found in saved filters, check public filters
+    const defaultPublicFilter = publicFilters.find((filter) => filter.filter_data.is_default);
+    
+    if (defaultPublicFilter) {
+      console.log("Setting default filter from public filters:", defaultPublicFilter.name);
+      setCurrentFilter(defaultPublicFilter.filter_data);
+      return;
+    }
+    
+    // If no default filter found at all, create a basic default filter
+    console.log("No default filter found, creating a basic one");
+    setCurrentFilter({
+      is_default: true,
+      lookup: {
+        category: {
+          all: true,
+          visible: true,
+          specifics: [],
+          index: 0
+        }
+      }
+    });
+  };
+
+  const updateFilter = (
+    id: number,
+    data: {
+      name?: string;
+      description?: string | null;
+      filter_data?: FilterData_Input;
+    }
+  ) => {
+    updateFilterMutation.mutate({ id, data });
+  };
+
+  const deleteFilter = (id: number) => {
+    deleteFilterMutation.mutate(id);
   };
 
   return {
-    savedFilters,
-    publicFilters,
-    isLoading,
+    savedFilters: savedFilters,
+    publicFilters: publicFilters,
     currentFilter,
+    setDefaultFilter,
     setCurrentFilter,
+    isLoading,
     saveCurrentFilter,
+    updateFilter,
+    deleteFilter,
     loadFilterByName,
-    deleteFilter: deleteFilterMutation.mutate,
   };
 }

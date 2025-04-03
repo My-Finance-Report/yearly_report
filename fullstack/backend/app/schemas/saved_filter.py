@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -8,9 +7,8 @@ from app.models import FilterData
 
 class SavedFilterBase(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     filter_data: FilterData
-    is_public: bool = False
 
 
 class SavedFilterCreate(SavedFilterBase):
@@ -18,10 +16,9 @@ class SavedFilterCreate(SavedFilterBase):
 
 
 class SavedFilterUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    filter_data: Optional[FilterData] = None
-    is_public: Optional[bool] = None
+    name: str | None = None
+    description: str | None = None
+    filter_data: FilterData | None = None
 
 
 class SavedFilterInDB(SavedFilterBase):

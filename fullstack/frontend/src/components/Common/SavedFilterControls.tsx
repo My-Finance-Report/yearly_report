@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import {
   Box,
@@ -23,14 +23,11 @@ import {
   DialogBody,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { FilterInfo } from './FilterGroup'
-import { useSavedFilters, FilterData } from '@/hooks/useSavedFilters'
-import { FiBookmark, FiShare2, FiSave } from 'react-icons/fi'
+import { useFilters } from '@/hooks/useFilters'
+import { FiBookmark,  FiSave } from 'react-icons/fi'
 import { SavedFilter } from "@/client"
 
-interface SavedFilterControlsProps {
-  filterInfo: FilterInfo;
-}
+
 
 interface FilterSelectItem {
   label: string;
@@ -48,83 +45,49 @@ function formatFiltersForSelect(filters: SavedFilter[]): { items: FilterSelectIt
   };
 }
 
-export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
+export function SavedFilterControls() {
   const navigate = useNavigate();
   const {
     savedFilters,
     publicFilters,
-    currentFilter,
     setCurrentFilter,
     saveCurrentFilter,
-  } = useSavedFilters();
+  } = useFilters();
 
   const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
-  
-  const [filterName, setFilterName] = useState(currentFilter?.name || '');
-  const [filterDescription, setFilterDescription] = useState(currentFilter?.description || '');
+ //TODO names 
+  const [filterName, setFilterName] = useState('');
+  const [filterDescription, setFilterDescription] = useState('');
   const [selectedFilterId, setSelectedFilterId] = useState<number | null>(null);
   
   const cancelRef = useRef<HTMLButtonElement | null>(null);
 
-  // Get current filter data
-  const getCurrentFilterData = (): FilterData => {
-    return {
-      years: filterInfo.years,
-      accounts: filterInfo.accounts,
-      months: filterInfo.months,
-      categories: filterInfo.categories,
-      budgets: filterInfo.budgets,
-    };
-  };
-
-  // Handle saving a filter
   const handleSaveFilter = () => {
     if (!filterName.trim()) return;
     
-    saveCurrentFilter(filterName, getCurrentFilterData(), {
-      description: filterDescription,
-    });
-    
+    const newFilter = {
+      name: filterName,
+      description: filterDescription || null,
+    };
+    saveCurrentFilter(newFilter);
     setIsSaveDialogOpen(false);
   };
 
-  // Handle loading a filter
+
   const handleLoadFilter = () => {
     if (!selectedFilterId) return;
     
-    const filter: SavedFilter | undefined = [...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId);
+    const filter = [...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId);
     if (!filter) return;
     
-    setCurrentFilter(filter);
-    
-    // Apply the filter data to the current filter state
-    const { filter_data } = filter;
-    if (filter_data.years) filterInfo.setYears(filter_data.years as string[]);
-    if (filter_data.accounts) filterInfo.setAccounts(filter_data.accounts as string[]);
-    if (filter_data.months) filterInfo.setMonths(filter_data.months as string[]);
-    if (filter_data.categories) filterInfo.setCategories(filter_data.categories as string[]);
-    if (filter_data.budgets) filterInfo.setBudgets(filter_data.budgets as string[]);
-    
+    setCurrentFilter(filter.filter_data);
     setIsLoadDialogOpen(false);
     
-    // Update the URL to include the filter name
     navigate({
-      search: (prev: Record<string, unknown>) => ({ ...prev, filter: filter.name }),
+      search: (prev: Record<string, unknown>) => ({ ...prev, filter: filter?.name }),
       replace: true,
     });
-  };
-
-  // Handle sharing a filter
-  const handleShareFilter = () => {
-    if (!currentFilter) return;
-    
-    // Create a URL with the filter name
-    const url = new URL(window.location.href);
-    url.searchParams.set('filter', currentFilter.name);
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(url.toString());
   };
 
   // Handle dialog open state changes
@@ -149,21 +112,27 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
         <FiBookmark style={{ marginRight: '0.5rem' }} />
         Load Filter
       </Button>
-      
+
+      {/* Save Filter Button */}
+      <Button size="sm" variant="outline" onClick={() => setIsSaveDialogOpen(true)}>
+        <FiSave style={{ marginRight: '0.5rem' }} />
+        Save Filter
+      </Button>
+
+
+      {/* Load Filter Dialog */}
       <DialogRoot open={isLoadDialogOpen} onOpenChange={handleLoadDialogOpenChange}>
         <DialogContent>
           <DialogHeader>Load Saved Filter</DialogHeader>
           <DialogBody>
             <FieldRoot>
-              <FieldLabel htmlFor="filter-select">Saved Filters</FieldLabel>
+              <FieldLabel>Select a filter</FieldLabel>
               <SelectRoot
-                id="filter-select"
-                placeholder="Select a filter"
-                value={selectedFilterId ? [selectedFilterId.toString()] : []}
+                value={[selectedFilterId?.toString() || '']}
                 collection={createListCollection({
                   items: [...myFilters.items, ...otherFilters.items]
                 })}
-                onValueChange={(val) => setSelectedFilterId(Number(val.value[0]))}
+                onValueChange={(value) => setSelectedFilterId(Number(value))}
               >
                 <SelectTrigger>
                   <SelectValueText placeholder="Select a filter" />
@@ -171,9 +140,16 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
                 <SelectContent>
                   {myFilters.items.length > 0 && (
                     <SelectItemGroup title="My Filters">
-                      {myFilters.items.map((filter) => (
-                        <SelectItem key={filter.value} item={filter}>
-                          {filter.label}
+                      {myFilters.items.map((item) => (
+                        <SelectItem key={item.value} item={item}>
+                          <Box>
+                            <Box fontWeight="medium">{item.label}</Box>
+                            {item.description && (
+                              <Box fontSize="sm" color="gray.500">
+                                {item.description}
+                              </Box>
+                            )}
+                          </Box>
                         </SelectItem>
                       ))}
                     </SelectItemGroup>
@@ -181,90 +157,68 @@ export function SavedFilterControls({ filterInfo }: SavedFilterControlsProps) {
                   
                   {otherFilters.items.length > 0 && (
                     <SelectItemGroup title="Public Filters">
-                      {otherFilters.items.map((filter) => (
-                        <SelectItem key={filter.value} item={filter}>
-                          {filter.label}
+                      {otherFilters.items.map((item) => (
+                        <SelectItem key={item.value} item={item}>
+                          <Box>
+                            <Box fontWeight="medium">{item.label}</Box>
+                            {item.description && (
+                              <Box fontSize="sm" color="gray.500">
+                                {item.description}
+                              </Box>
+                            )}
+                          </Box>
                         </SelectItem>
                       ))}
                     </SelectItemGroup>
                   )}
                 </SelectContent>
               </SelectRoot>
-            
-            {selectedFilterId && (
-              <Box>
-                <FieldLabel>Description</FieldLabel>
-                <Box p={2} bg="gray.100" borderRadius="md" fontSize="sm">
-                  {[...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId)?.description || 'No description provided.'}
-                </Box>
-              </Box>
-            )}
-
             </FieldRoot>
           </DialogBody>
-          
           <DialogFooter>
-            <Button variant="outline" mr={3} onClick={() => setIsLoadDialogOpen(false)} ref={cancelRef}>
+            <Button ref={cancelRef} onClick={() => setIsLoadDialogOpen(false)}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleLoadFilter} disabled={!selectedFilterId}>
-              Load Filter
+            <Button colorScheme="blue" onClick={handleLoadFilter} ml={3}>
+              Load
             </Button>
           </DialogFooter>
         </DialogContent>
       </DialogRoot>
-      
-      {/* Save Filter Button */}
-      <Button size="sm" variant="outline" onClick={() => setIsSaveDialogOpen(true)}>
-        <FiSave style={{ marginRight: '0.5rem' }} />
-        Save Filter
-      </Button>
-      
+
+      {/* Save Filter Dialog */}
       <DialogRoot open={isSaveDialogOpen} onOpenChange={handleSaveDialogOpenChange}>
         <DialogContent>
           <DialogHeader>Save Filter</DialogHeader>
           <DialogBody>
             <FieldRoot mb={4}>
-              <FieldLabel htmlFor="filter-name">Filter Name</FieldLabel>
+              <FieldLabel>Filter Name</FieldLabel>
               <Input
-                id="filter-name"
                 value={filterName}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setFilterName(e.target.value)}
+                onChange={(e) => setFilterName(e.target.value)}
                 placeholder="Enter a name for your filter"
               />
             </FieldRoot>
             
-            <FieldRoot mb={4}>
-              <FieldLabel htmlFor="filter-description">Description (optional)</FieldLabel>
+            <FieldRoot>
+              <FieldLabel>Description (optional)</FieldLabel>
               <Textarea
-                id="filter-description"
-                value={filterDescription}
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFilterDescription(e.target.value)}
-                placeholder="Describe what this filter shows"
-                rows={3}
+                value={filterDescription || ''}
+                onChange={(e) => setFilterDescription(e.target.value)}
+                placeholder="Enter a description for your filter"
               />
             </FieldRoot>
-            
           </DialogBody>
-          
           <DialogFooter>
-            <Button variant="outline" mr={3} onClick={() => setIsSaveDialogOpen(false)} ref={cancelRef}>
+            <Button ref={cancelRef} onClick={() => setIsSaveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSaveFilter} disabled={!filterName.trim()}>
-              Save Filter
+            <Button colorScheme="blue" onClick={handleSaveFilter} ml={3}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </DialogRoot>
-      
-      {/* Share Filter Button (only visible if there's a current filter) */}
-      {currentFilter && (
-        <Button size="sm" variant="outline" onClick={handleShareFilter}>
-          <FiShare2 style={{ marginRight: '0.5rem' }} />
-          Share
-        </Button>
-      )}
     </Flex>
   );
 }

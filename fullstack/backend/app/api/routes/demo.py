@@ -4,11 +4,12 @@ from app.api.routes.demo_data import get_demo_data
 from app.api.routes.transactions import BudgetLookup, recursive_group
 from app.local_types import (
     AggregatedTransactions,
-    GroupByOption,
 )
 from app.models import (
     Category,
     CategoryId,
+    FilterData,
+    GroupByOption,
     Transaction,
     TransactionSource,
     TransactionSourceId,
@@ -93,33 +94,13 @@ def get_demo_grouping_options(
     response_model=AggregatedTransactions,
 )
 def get_demo_aggregated_transactions(
-    group_by: list[GroupByOption] = Query(
-        [GroupByOption.category],
-        description="List of grouping options in order (e.g. category, month)",
-    ),
-    years: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    months: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    categories: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    accounts: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    _budgets: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
+    current_filter: FilterData | None = None
 ) -> AggregatedTransactions:
+    if not current_filter:
+        current_filter = FilterData()
     demo_data = get_demo_data()
     transactions = demo_data.transactions
+
     category_lookup = {c.id: c for c in demo_data.categories}
 
     ts_lookup = {ts.id: ts for ts in demo_data.sources}
@@ -128,10 +109,10 @@ def get_demo_aggregated_transactions(
     category_lookup_by_name = {c.name: c.id for c in demo_data.categories}
 
     calls = [
-        (apply_month_filter, months),
-        (apply_year_filter, years),
-        (apply_category_filter, [category_lookup_by_name[c] for c in categories or []]),
-        (apply_account_filter, [ts_lookup_by_name[ts] for ts in accounts or []]),
+        (apply_month_filter, current_filter.lookup[GroupByOption.month]),
+        (apply_year_filter, current_filter.lookup[GroupByOption.year]),
+        (apply_category_filter, [category_lookup_by_name[c] for c in current_filter.lookup[GroupByOption.category] or []]),
+        (apply_account_filter, [ts_lookup_by_name[ts] for ts in current_filter.lookup[GroupByOption.account] or []]),
     ]
 
     for a_callable, arg in calls:
@@ -160,7 +141,7 @@ def get_demo_aggregated_transactions(
 
     HIDDEN_GROUPING_OPTIONS = [GroupByOption.year]
     group_by_with_hidden_removed = [
-        g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS
+        g for g in current_filter.group_by if g not in HIDDEN_GROUPING_OPTIONS
     ]
 
     groups = recursive_group(

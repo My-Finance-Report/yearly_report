@@ -6,7 +6,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
-import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup";
+import { FilterGroup } from "@/components/Common/FilterGroup";
 import { GroupByOption } from "@/components/Common/GroupingConfig";
 import { Legend } from "@/components/Common/Legend";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
@@ -18,9 +18,11 @@ import { isLoggedIn } from "@/hooks/useAuth";
 import { useColorPalette } from "@/hooks/useColor";
 import type {
   AggregatedTransactions,
+  TransactionsGetAggregatedTransactionsData,
   TransactionsGetAggregatedTransactionsResponse,
 } from "@/client";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useFilters } from "@/hooks/useFilters";
 
 const transactionsSearchSchema = z.object({
   filter: z.string().optional(),
@@ -44,65 +46,41 @@ export function DemoTransactions() {
 
 
 function InnerTransactions({getFunction}: {
-  getFunction: (params: {
-    groupBy: GroupByOption[];
-    years: string[];
-    accounts: string[];
-    months: string[];
-    categories: string[];
-    budgets: string[];
-  }) => Promise<TransactionsGetAggregatedTransactionsResponse>;
+  getFunction: (
+  data:TransactionsGetAggregatedTransactionsData | undefined
+  ) => Promise<TransactionsGetAggregatedTransactionsResponse>;
 }) {
 
 
-  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.month, GroupByOption.category, GroupByOption.budget]);
 
   const isMobile = useIsMobile();
 
-  const [accounts, setAccounts] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [months, setMonths] = useState<string[]>([]);
-  const [years, setYears] = useState<string[]>([]);
-  const [budgets, setBudgets] = useState<string[]>([]);
-
-  const filterInfo: FilterInfo = {
-    budgets,
-    years,
-    accounts,
-    months,
-    categories,
-    setYears,
-    setAccounts,
-    setMonths,
-    setCategories,
-    setBudgets,
-  };
-
-
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
+
+
+  const {currentFilter, setDefaultFilter} = useFilters();
+
+  useEffect(() => {
+    setDefaultFilter()
+  }, [setDefaultFilter]);
 
   const { data, isLoading, error, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
-    queryKey: ["aggregatedTransactions", getFunction.name, groupingOptions],
+    queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () =>
-      getFunction({
-        groupBy: groupingOptions,
-        years,
-        accounts,
-        months,
-        categories,
-        budgets,
-      }),
-    enabled: isLoggedIn(),
+      getFunction(
+        {requestBody:currentFilter}
+      ),
+    enabled: isLoggedIn() && !!currentFilter,
   });
 
 
   useEffect(() => {
     refetch();
-  }, [filterInfo]);
+  }, [currentFilter]);
 
   const { getColorForName } = useColorPalette();
 
@@ -123,7 +101,7 @@ function InnerTransactions({getFunction}: {
     }
   }, [data?.groups]);
 
-  const hasData = data?.groups && activeGrouping
+  const hasData = data?.groups && activeGrouping && data.grouping_options_choices
 
 
   const namesForLegends = data?.groups.flatMap((group) =>
@@ -151,13 +129,9 @@ function InnerTransactions({getFunction}: {
         <FilterGroup
           setShowDeposits={setShowDeposits}
           groupingOptionsChoices={
-            data?.grouping_options_choices as {
-              [key in GroupByOption]: string[];
-            }
+            data?.grouping_options_choices as { [key in GroupByOption]: string[] } 
           }
           showDeposits={showDeposits}
-          groupingOptions={groupingOptions}
-          setGroupingOptions={setGroupingOptions}
           setCollapsedItems={setCollapsedItems}
           collapsedItems={collapsedItems}
         />

@@ -2,6 +2,8 @@ import { useCheckboxGroup, Menu, Button, Portal } from "@chakra-ui/react";
 import { FiCheck } from "react-icons/fi";
 import { Text } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
+import { FilterData_Input, FilterEntries } from "@/client";
+import { useFilters } from "@/hooks/useFilters";
 
 export enum GroupByOption {
   category = "category",
@@ -21,22 +23,45 @@ const availableOptions: GroupByOption[] = [
 
 interface GroupingConfigProps {
   groupingOptions: GroupByOption[];
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   showBudgets: boolean;
 }
 
 export function GroupingConfig({
   groupingOptions,
-  setGroupingOptions,
   showBudgets,
 }: GroupingConfigProps) {
+
+  const { setCurrentFilter} = useFilters();
+
   const handleToggleOption = (option: GroupByOption) => {
-    setGroupingOptions((prev: GroupByOption[]) => {
-      return prev.includes(option)
-        ? prev.length > 1
-          ? prev.filter((o) => o !== option)
-          : prev
-        : [...prev, option];
+    setCurrentFilter((prev: FilterData_Input | null) => {
+      if (!prev) return prev;
+      
+      const newLookup = { ...prev.lookup };
+      
+      if (newLookup[option]) {
+        // Remove the option
+        const { [option]: removed, ...rest } = newLookup;
+        return { ...prev, lookup: rest };
+      } else {
+        // Add the option with the next available index
+        const maxIndex = Object.values(newLookup).reduce(
+          (max, entry) => Math.max(max, (entry as FilterEntries).index), -1
+        ) as number;
+        
+        return {
+          ...prev,
+          lookup: {
+            ...newLookup,
+            [option]: {
+              all: true,
+              visible: true,
+              specifics: [],
+              index: maxIndex + 1
+            }
+          }
+        };
+      }
     });
   };
 

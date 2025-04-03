@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
 
 from pydantic import BaseModel
 
@@ -10,6 +9,7 @@ from app.models import (
     BudgetId,
     CategoryBase,
     CategoryId,
+    GroupByOption,
     JobStatus,
     TransactionBase,
     TransactionSourceBase,
@@ -263,14 +263,6 @@ class TransactionGroup(BaseModel):
     total_deposits: float
     total_balance: float
     transactions: list[TransactionOut]
-
-
-class GroupByOption(str, Enum):
-    account = "account"
-    category = "category"
-    month = "month"
-    year = "year"
-    budget = "budget"
 
 
 class AggregatedGroup(BaseModel):

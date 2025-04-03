@@ -497,12 +497,7 @@ export class DemoService {
     /**
      * Get Demo Aggregated Transactions
      * @param data The data for the request.
-     * @param data.groupBy List of grouping options in order (e.g. category, month)
-     * @param data.years Filter for transactions
-     * @param data.months Filter for transactions
-     * @param data.categories Filter for transactions
-     * @param data.accounts Filter for transactions
-     * @param data.budgets Filter for transactions
+     * @param data.requestBody
      * @returns AggregatedTransactions Successful Response
      * @throws ApiError
      */
@@ -510,14 +505,8 @@ export class DemoService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/demo/demo_aggregated',
-            query: {
-                group_by: data.groupBy,
-                years: data.years,
-                months: data.months,
-                categories: data.categories,
-                accounts: data.accounts,
-                _budgets: data.budgets
-            },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
@@ -840,8 +829,8 @@ export class SavedFiltersService {
             method: 'GET',
             url: '/api/v1/saved-filters/public',
             query: {
-                skip: data.skip,
-                limit: data.limit
+                _skip: data.skip,
+                _limit: data.limit
             },
             errors: {
                 422: 'Validation Error'
@@ -1080,12 +1069,7 @@ export class TransactionsService {
     /**
      * Get Aggregated Transactions
      * @param data The data for the request.
-     * @param data.groupBy List of grouping options in order (e.g. category, month)
-     * @param data.years Filter for transactions
-     * @param data.months Filter for transactions
-     * @param data.categories Filter for transactions
-     * @param data.accounts Filter for transactions
-     * @param data.budgets Filter for transactions
+     * @param data.requestBody
      * @returns AggregatedTransactions Successful Response
      * @throws ApiError
      */
@@ -1093,14 +1077,8 @@ export class TransactionsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/transactions/aggregated',
-            query: {
-                group_by: data.groupBy,
-                years: data.years,
-                months: data.months,
-                categories: data.categories,
-                accounts: data.accounts,
-                budgets: data.budgets
-            },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
