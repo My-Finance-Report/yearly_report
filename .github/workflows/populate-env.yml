@@ -66,6 +66,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       working-directory: fullstack/${{ matrix.image_name_and_folder }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest -f .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
+        pwd && ls -a
+        # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest -f 
+        # docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+        # docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
