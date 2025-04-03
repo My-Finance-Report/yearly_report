@@ -10,6 +10,7 @@ node_modules/
 bank_files/*
 .DS_Store
 *.txt
+!requirements.txt
 *.db
 *.env
 generated_code/*

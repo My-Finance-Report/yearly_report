@@ -5,7 +5,7 @@ permissions:
   id-token: write
   contents: read 
 jobs:
-  get-secrets:
+  make-env-file:
     runs-on: ubuntu-latest
     steps:
     - name: setup AWS creds
@@ -38,5 +38,37 @@ jobs:
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: .env.test
+        name: .env.production
         path: templates/env_filled_in
+  ecr-login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+  push-ecr:
+    strategy:
+      matrix:
+        image_name_and_folder: [backend, frontend]
+    runs-on: ubuntu-latest
+    needs: [ecr-login]
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ needs.ecr-login.outputs.registry }}
+        ECR_REPOSITORY: finance-fullstack
+        IMAGE_NAME: ${{ matrix.image_name_and_folder }}
+        IMAGE_TAG: ${{ github.sha }}
+      working-directory: fullstack/${{ matrix.image_name_and_folder }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest -f .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
