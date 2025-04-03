@@ -138,18 +138,18 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
     setCurrentFilter({
       is_default: true,
       lookup: {
-        category: {
+        month: {
           all: true,
           visible: true,
           specifics: [],
           index: 0
         },
-        month: {
+       category: {
           all: true,
           visible: true,
           specifics: [],
           index: 1
-        }
+        },
       }
     });
     setIsInitialized(true);

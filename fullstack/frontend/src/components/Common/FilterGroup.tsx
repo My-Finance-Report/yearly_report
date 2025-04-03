@@ -36,7 +36,7 @@ import { SavedFilterControls } from "./SavedFilterControls";
 
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
-import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiCheck, FiChevronDown, FiChevronUp, FiEye, FiEyeOff } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
@@ -413,9 +413,32 @@ const SortableItem = ({
       id: option,
     });
 
+  const { currentFilter, setCurrentFilter } = useFilters();
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const isVisible = currentFilter?.lookup?.[option]?.visible ?? true;
+
+  const toggleVisibility = () => {
+    if (!currentFilter?.lookup) return;
+    
+    setCurrentFilter((prev) => {
+      if (!prev?.lookup) return prev;
+      
+      return {
+        ...prev,
+        lookup: {
+          ...prev.lookup,
+          [option]: {
+            ...prev.lookup[option],
+            visible: !isVisible
+          }
+        }
+      };
+    });
   };
 
   return (
@@ -432,10 +455,19 @@ const SortableItem = ({
         {option.charAt(0).toUpperCase() + option.slice(1)}
       </Text>
       <Flex p={1} gap={0}>
+        
         <FilterButton
           options={choices ?? []}
           name={option}
         />
+        <Button
+          size="xs"
+          variant="subtle"
+          onClick={toggleVisibility}
+          title={isVisible ? "Hide this grouping" : "Show this grouping"}
+        >
+          {isVisible ? <FiEye /> : <FiEyeOff />}
+        </Button>
         <Button
           size="xs"
           variant="subtle"
@@ -606,6 +638,7 @@ function NonPowerUserButtons({
         [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
       }
     };
+    console.log(newFilter)
     setCurrentFilter(newFilter);
   };
 

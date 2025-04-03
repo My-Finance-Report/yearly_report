@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes.demo_data import get_demo_data
-from app.api.routes.transactions import BudgetLookup, recursive_group
+from app.api.routes.transactions import BudgetLookup, recursive_grouping
 from app.local_types import (
     AggregatedTransactions,
 )
@@ -161,7 +161,7 @@ def get_demo_aggregated_transactions(
         key=lambda x: current_filter.lookup[x].index,
     )
 
-    groups = recursive_group(
+    groups = recursive_grouping(
         transactions,
         group_by_with_hidden_removed,
         category_lookup,
