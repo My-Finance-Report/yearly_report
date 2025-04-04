@@ -39,6 +39,23 @@ def get_link_token(
         raise HTTPException(status_code=500, detail="Error creating link token:")
 
 
+def find_unique_name(name: str, session: Session, user: User) -> str:
+    existing_names = session.query(TransactionSource.name).filter(
+        TransactionSource.user_id == user.id,
+        TransactionSource.name.contains(name),
+    ).all()
+
+    if not existing_names:
+        return name
+
+    for i in range(2, 100):
+        new_name = f"{name} ({i})"
+        if new_name not in existing_names:
+            return new_name
+
+    raise HTTPException(status_code=500, detail="Failed to generate unique name")
+
+
 @router.post("/exchange_token", response_model=list[PlaidAccountResponse])
 async def exchange_token(
     request: PlaidExchangeTokenRequest,
@@ -87,7 +104,7 @@ async def exchange_token(
 
             transaction_source = TransactionSource(
                 user_id=user.id,
-                name=f"{account['name']}",
+                name=find_unique_name(f"{account['name']}", session, user),
                 plaid_account_id=plaid_account.id,
                 source_kind=get_source_kind_from_account_type(account["type"]),
             )
