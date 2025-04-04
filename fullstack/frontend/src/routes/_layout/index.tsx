@@ -75,7 +75,7 @@ function Landing() {
           </Box>
           <Box flex="1" textAlign="center">
             <Image
-              src="/assets/images/landing.png"
+              src="/assets/images/landing.jpg"
               alt="My Financé illustration"
               borderRadius="md"
               mx="auto"

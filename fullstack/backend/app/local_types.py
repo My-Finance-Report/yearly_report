@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
 
 from pydantic import BaseModel
 
@@ -10,7 +9,9 @@ from app.models import (
     BudgetId,
     CategoryBase,
     CategoryId,
+    GroupByOption,
     JobStatus,
+    PlaidSyncLogId,
     TransactionBase,
     TransactionSourceBase,
     TransactionSourceId,
@@ -265,14 +266,6 @@ class TransactionGroup(BaseModel):
     transactions: list[TransactionOut]
 
 
-class GroupByOption(str, Enum):
-    account = "account"
-    category = "category"
-    month = "month"
-    year = "year"
-    budget = "budget"
-
-
 class AggregatedGroup(BaseModel):
     # Use a generic name for the grouping key and value.
     group_id: int | str
@@ -377,3 +370,17 @@ class SankeyConfigInfo(BaseModel):
 class SankeyConfigCreatePayload(BaseModel):
     inputs: list[SankeyInputCreate]
     links: list[SankeyLinkageCreate]
+
+
+class PlaidSyncLogOut(BaseModel):
+    """Response model for Plaid sync logs."""
+
+    id: PlaidSyncLogId
+    sync_type: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    added_count: int | None = None
+    modified_count: int | None = None
+    removed_count: int | None = None
+    error_message: str | None = None
+    created_at: datetime

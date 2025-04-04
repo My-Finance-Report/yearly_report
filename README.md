@@ -37,7 +37,7 @@ big milestones before launch:
   -> bug where i got logged off after plaid
 -> Email
 
--> should be able to remove / archive an account from the dashboard
+-> need to update the how does this work page 
 
 -> would be nice to have some tests around user creation
 

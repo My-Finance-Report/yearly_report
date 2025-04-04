@@ -3,100 +3,87 @@ import { useEffect, useState } from "react";
 import { Spinner, Text, Box, VStack, Heading, HStack, Button } from "@chakra-ui/react";
 import { FaLink, FaUpload } from "react-icons/fa";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
-import { FilterGroup, FilterInfo } from "@/components/Common/FilterGroup";
+import { FilterGroup } from "@/components/Common/FilterGroup";
 import { GroupByOption } from "@/components/Common/GroupingConfig";
 import { Legend } from "@/components/Common/Legend";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { useQuery } from "@tanstack/react-query";
 import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
-import { isLoggedIn } from "@/hooks/useAuth";
 
 import { useColorPalette } from "@/hooks/useColor";
 import type {
   AggregatedTransactions,
+  TransactionsGetAggregatedTransactionsData,
   TransactionsGetAggregatedTransactionsResponse,
 } from "@/client";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { FilterProvider, useFilters } from "@/contexts/FilterContext";
+
+const transactionsSearchSchema = z.object({
+  filter: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_layout/_logged_in/transactions")({
   component: Transactions,
+  validateSearch: (search) => transactionsSearchSchema.parse(search),
 });
 
 function Transactions() { 
   const getFunction = TransactionsService.getAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} />
+  return (
+    <FilterProvider>
+      <InnerTransactions getFunction={getFunction} />
+    </FilterProvider>
+  )
 }
 
 export function DemoTransactions() { 
   const getFunction = DemoService.getDemoAggregatedTransactions
-  return <InnerTransactions getFunction={getFunction} />
+  return (
+    <FilterProvider isDemo={true}>
+      <InnerTransactions getFunction={getFunction} />
+    </FilterProvider>
+  )
 }
 
-
-
 function InnerTransactions({getFunction}: {
-  getFunction: (params: {
-    groupBy: GroupByOption[];
-    years: string[];
-    accounts: string[];
-    months: string[];
-    categories: string[];
-    budgets: string[];
-  }) => Promise<TransactionsGetAggregatedTransactionsResponse>;
+  getFunction: (
+  data:TransactionsGetAggregatedTransactionsData 
+  ) => Promise<TransactionsGetAggregatedTransactionsResponse>;
 }) {
-
-
-  const [groupingOptions, setGroupingOptions] = useState<GroupByOption[]>([GroupByOption.month, GroupByOption.category, GroupByOption.budget]);
 
   const isMobile = useIsMobile();
 
-  const [accounts, setAccounts] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [months, setMonths] = useState<string[]>([]);
-  const [years, setYears] = useState<string[]>([]);
-  const [budgets, setBudgets] = useState<string[]>([]);
-
-  const filterInfo: FilterInfo = {
-    budgets,
-    years,
-    accounts,
-    months,
-    categories,
-    setYears,
-    setAccounts,
-    setMonths,
-    setCategories,
-    setBudgets,
-  };
-
-
   const [showDeposits, setShowDeposits] = useState<boolean>(false);
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
+
+  const {currentFilter, initializeDefaultFilter} = useFilters();
+
+  useEffect(() => {
+    if (!currentFilter) {
+      initializeDefaultFilter();
+    }
+  }, [initializeDefaultFilter, currentFilter]);
 
   const { data, isLoading, error, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
-    queryKey: ["aggregatedTransactions", getFunction.name, groupingOptions],
+    queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () =>
-      getFunction({
-        groupBy: groupingOptions,
-        years,
-        accounts,
-        months,
-        categories,
-        budgets,
-      }),
-    enabled: isLoggedIn(),
-  });
+    {
+      return getFunction({requestBody : currentFilter})
+    },
+ });
 
 
   useEffect(() => {
     refetch();
-  }, [filterInfo]);
+  }, [currentFilter]);
 
   const { getColorForName } = useColorPalette();
 
@@ -117,7 +104,7 @@ function InnerTransactions({getFunction}: {
     }
   }, [data?.groups]);
 
-  const hasData = data?.groups && activeGrouping
+  const hasData = data?.groups && activeGrouping && data.grouping_options_choices
 
 
   const namesForLegends = data?.groups.flatMap((group) =>
@@ -144,15 +131,10 @@ function InnerTransactions({getFunction}: {
       >
         <FilterGroup
           setShowDeposits={setShowDeposits}
-          filterInfo={filterInfo}
           groupingOptionsChoices={
-            data?.grouping_options_choices as {
-              [key in GroupByOption]: string[];
-            }
+            data?.grouping_options_choices as { [key in GroupByOption]: string[] } 
           }
           showDeposits={showDeposits}
-          groupingOptions={groupingOptions}
-          setGroupingOptions={setGroupingOptions}
           setCollapsedItems={setCollapsedItems}
           collapsedItems={collapsedItems}
         />
@@ -162,7 +144,7 @@ function InnerTransactions({getFunction}: {
         />
       </Box>
       )}
-    <Box marginTop={isMobile ? '40px' : '0px'}>
+      <Box marginTop={isMobile ? '40px' : '0px'}>
         <BlahComponent
           isLoading={isLoading}
           data={data}
