@@ -79,7 +79,6 @@ async def exchange_token(
         access_token = exchange_response["access_token"]
         item_id = exchange_response["item_id"]
 
-        # Create a new Plaid item
         plaid_item = PlaidItem(
             user_id=user.id,
             plaid_item_id=item_id,
