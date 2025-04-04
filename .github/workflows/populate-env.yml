@@ -64,8 +64,9 @@ jobs:
         ECR_REPOSITORY: finance-fullstack
         IMAGE_NAME: ${{ matrix.image_name_and_folder }}
         IMAGE_TAG: ${{ github.sha }}
+        VITE_API_URL: https://api.myfinancereport.com
       working-directory: fullstack/${{ matrix.image_name_and_folder }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest -f Dockerfile .
+        build.sh
         docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
