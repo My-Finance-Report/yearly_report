@@ -1,4 +1,4 @@
 #! /usr/bin/env bash
 set -euo pipefail
 
-docker build --platform linux/amd64 -t finance-backend:${IMAGE_TAG} -f Dockerfile .
+docker build --platform linux/amd64 -t finance-backend:${IMAGE_TAG} -t finance-backend:latest -f Dockerfile .
