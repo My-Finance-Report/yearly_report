@@ -22,10 +22,15 @@ COPY ./scripts /app/scripts
 COPY ./pyproject.toml ./alembic.ini /app/
 COPY ./app /app/app
 
-RUN chmod +x /app/scripts/prestart.sh
+# Make scripts executable
+RUN chmod +x /app/scripts/prestart.sh /app/scripts/start-prod.sh
 
-# Run prestart.sh before starting FastAPI
-CMD ["/bin/sh", "-c", "/app/scripts/prestart.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"]
+# Create log directory
+RUN mkdir -p /var/log/finance && \
+    chown -R nobody:nogroup /var/log/finance
 
-# Command to start FastAPI
-# CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Switch to non-root user
+USER nobody
+
+# Run prestart.sh and start FastAPI with logging in production
+CMD ["/app/scripts/start-prod.sh"]

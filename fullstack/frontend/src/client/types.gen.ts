@@ -217,9 +217,6 @@ export type PlaidLinkTokenResponse = {
     link_token: string;
 };
 
-/**
- * Response model for Plaid sync logs.
- */
 export type PlaidSyncLogOut = {
     id: number;
     sync_type: string;

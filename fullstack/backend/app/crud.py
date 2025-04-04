@@ -2,6 +2,7 @@ from app.core.security import get_password_hash, verify_password
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
 from app.models import User, UserSettings
+from app.telegram_utils import send_telegram_message
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -12,13 +13,13 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
 def create_user(*, session: Session, user: UserRegister) -> User:
     existing_user = session.query(User).filter(User.email == user.email).first()
     if existing_user:
-        return existing_user
+        raise ValueError("Email already registered")
 
     new_user = User(
         full_name=user.full_name,
         hashed_password=get_password_hash(user.password),
         email=user.email,
-        settings=UserSettings(),
+        settings=UserSettings(power_user_filters=True, has_budget=False),
     )
     session.add(new_user)
     session.commit()
@@ -42,6 +43,12 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
 
     if not db_user:
         return None
+    if db_user.requires_two_factor:
+        send_telegram_message(
+            message=f"User hit 2fa wall {db_user.id}",
+        )
+        raise NotImplementedError('todo')
     if not verify_password(password, db_user.hashed_password):
+        print("hashed pw", db_user.hashed_password)
         return None
     return db_user

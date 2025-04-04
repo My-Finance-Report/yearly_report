@@ -167,7 +167,10 @@ def delete_user_me(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
 
-    session.delete(current_user)
+    # attach the user to their own session:
+    to_delete_user = session.query(User).filter(User.id == current_user.id).one()
+
+    session.delete(to_delete_user)
     session.commit()
     return Message(message="User deleted successfully")
 

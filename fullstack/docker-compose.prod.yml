@@ -30,6 +30,8 @@ services:
       - .env.production
     environment:
       - AWS_DEFAULT_REGION=us-east-2
+    volumes:
+      - /var/log/finance:/var/log/finance
     networks:
       - traefik-public
       - default

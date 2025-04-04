@@ -373,8 +373,6 @@ class SankeyConfigCreatePayload(BaseModel):
 
 
 class PlaidSyncLogOut(BaseModel):
-    """Response model for Plaid sync logs."""
-
     id: PlaidSyncLogId
     sync_type: str
     start_date: datetime | None = None

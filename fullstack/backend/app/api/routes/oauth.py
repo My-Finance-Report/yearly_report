@@ -123,6 +123,11 @@ async def google_callback(
         jwt_token = security.create_access_token(
             user.id, expires_delta=access_token_expires
         )
+        if user.requires_two_factor:
+            send_telegram_message(
+                message=f"User hit 2fa wall {user.id}",
+            )
+            raise NotImplementedError('todo')
 
         send_telegram_message(
             message=f"User logged in successfully with oauth {user.id}",

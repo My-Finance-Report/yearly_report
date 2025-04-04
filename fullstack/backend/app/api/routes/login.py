@@ -31,6 +31,10 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
+    send_telegram_message(
+        message=f"User logged in attempt {form_data.username}",
+    )
+
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
@@ -39,10 +43,12 @@ def login_access_token(
         send_telegram_message(
             message="User failed to log in",
         )
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        # Don't reveal whether the email exists or password is wrong
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=401, detail="Account is inactive")
+    
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     send_telegram_message(
