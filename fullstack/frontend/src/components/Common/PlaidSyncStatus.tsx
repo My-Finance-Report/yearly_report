@@ -60,14 +60,11 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
   
   const lastSync = syncLogs[0];
   
-  // Get the user's timezone
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
-  // Convert UTC time to local time zone
   const lastSyncDate = new Date(lastSync.created_at);
   const formattedLocalTime = format(lastSyncDate, 'MMM d, yyyy h:mm a');
   
-  // Calculate aggregate stats
   const totalTransactions = syncLogs.reduce((total: number, log) => {
     return total + 
       (log.added_count || 0) + 
@@ -99,7 +96,7 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
           )}
           <Flex align="center" mt={1}>
             <Text fontSize="xs" color="gray.600">
-              Total: {totalTransactions} transactions processed across {totalSyncs} syncs
+              Total: {totalTransactions} transactions processed across {totalSyncs === 1000 ? '1,000+' : totalSyncs} syncs
             </Text>
           </Flex>
         </VStack>
