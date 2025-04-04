@@ -39,7 +39,9 @@ def get_link_token(
         raise HTTPException(status_code=500, detail="Error creating link token:")
 
 
-def find_unique_name(name: str, session: Session, user: User, prev_existing_names: list[str]) -> tuple[str, list[str]]:
+def find_unique_name(
+    name: str, session: Session, user: User, prev_existing_names: list[str]
+) -> tuple[str, list[str]]:
     existing_names = (
         session.query(TransactionSource.name)
         .filter(
@@ -92,11 +94,9 @@ async def exchange_token(
 
     existing_names: set[str] = set()
     try:
-        # Get accounts from Plaid
         client = get_plaid_client()
         request = AccountsGetRequest(access_token=access_token)
         accounts_response = client.accounts_get(request)
-        # Create Plaid accounts and transaction sources
         created_accounts = []
         for account in accounts_response["accounts"]:
             plaid_account = PlaidAccount(
@@ -111,11 +111,12 @@ async def exchange_token(
             session.add(plaid_account)
             session.flush()
 
-            name, new_existing_names = find_unique_name(f"{account['name']}", session, user, list(existing_names))
+            name, new_existing_names = find_unique_name(
+                f"{account['name']}", session, user, list(existing_names)
+            )
 
             for name in new_existing_names:
                 existing_names.add(name)
-
 
             transaction_source = TransactionSource(
                 user_id=user.id,
