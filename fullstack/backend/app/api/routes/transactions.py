@@ -1,10 +1,11 @@
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime
 from itertools import groupby
 from typing import cast
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import ColumnExpressionArgument, false, func, or_
+from fastapi import APIRouter, Depends
+from sqlalchemy import ColumnExpressionArgument, false, func, or_, true
 from sqlalchemy.orm import Query as SqlQuery
 
 from app.db import (
@@ -12,11 +13,11 @@ from app.db import (
     get_current_user,
     get_db,
 )
+from app.func_utils import pipe
 from app.local_types import (
     AggregatedGroup,
     AggregatedTransactions,
     CategoryOut,
-    GroupByOption,
     TransactionEdit,
     TransactionOut,
 )
@@ -29,6 +30,9 @@ from app.models import (
     BudgetEntryId,
     Category,
     CategoryId,
+    FilterData,
+    FilterEntries,
+    GroupByOption,
     Transaction,
     TransactionSource,
     TransactionSourceId,
@@ -196,7 +200,7 @@ group_by_id_funcs: dict[GroupByOption, GroupByIdFunc] = {
 }
 
 
-def recursive_group(
+def recursive_grouping(
     txns: list[Transaction],
     group_options: list[GroupByOption],
     category_lookup: CategoryLookup,
@@ -244,7 +248,7 @@ def recursive_group(
         group_name = name_fn(key)
 
         if len(group_options) > 1:
-            subgroups = recursive_group(
+            subgroups = recursive_grouping(
                 group_list,
                 group_options[1:],
                 category_lookup,
@@ -355,45 +359,70 @@ def build_grouping_option_choices(
 
 def apply_category_filter(
     transactions: SqlQuery[Transaction],
-    categories: list[str],
+    categories: FilterEntries,
 ) -> SqlQuery[Transaction]:
+    if categories.all:
+        return transactions
+
     return transactions.join(Category, Category.id == Transaction.category_id).filter(
-        Category.name.in_(categories)
+        Category.name.in_(
+            [c.value for c in categories.specifics] if categories.specifics else []
+        )
     )
 
 
 def apply_account_filter(
     transactions: SqlQuery[Transaction],
-    accounts: list[str],
+    accounts: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    return transactions.join(
-        TransactionSource, TransactionSource.id == Transaction.transaction_source_id
-    ).filter(TransactionSource.name.in_(accounts))
+    if accounts.all:
+        return transactions
+
+    return (
+        transactions.filter(
+            TransactionSource.name.in_([a.value for a in accounts.specifics])
+        )
+        if accounts.specifics
+        else transactions
+    )
 
 
 def apply_year_filter(
     transactions: SqlQuery[Transaction],
-    years: list[str],
+    years: FilterEntries,
 ) -> SqlQuery[Transaction]:
+    if years.all:
+        return transactions
+
     return transactions.filter(
-        func.extract("year", Transaction.date_of_transaction).in_(list(map(int, years)))
+        func.extract("year", Transaction.date_of_transaction).in_(
+            list(
+                map(int, [y.value for y in years.specifics] if years.specifics else [])
+            )
+        )
     )
 
 
 def apply_budget_filter(
     transactions: SqlQuery[Transaction],
-    budgets: list[str],
+    budgets: FilterEntries,
 ) -> SqlQuery[Transaction]:
     MAGIC_WORD_FOR_NO_BUDGET = "Unbudgeted"
 
     # Separate out any real budget names from the special magic word
-    normal_budgets = [b for b in budgets if b != MAGIC_WORD_FOR_NO_BUDGET]
+    normal_budgets = (
+        [b.value for b in budgets.specifics if b.value != MAGIC_WORD_FOR_NO_BUDGET]
+        if budgets.specifics
+        else []
+    )
 
     # If we have normal budget names, build an IN(...) condition; else use `false()`
     # (i.e. no normal budgets matched)
     budget_filter: ColumnExpressionArgument[bool]
     if normal_budgets:
         budget_filter = BudgetEntry.name.in_(normal_budgets)
+    elif budgets.all:
+        budget_filter = true()
     else:
         # No normal budgets in the list, so base condition is always false
         # (we'll check "Unbudgeted" separately below)
@@ -401,7 +430,9 @@ def apply_budget_filter(
 
     # If the magic word "Unbudgeted" is in budgets, include transactions
     # where BudgetEntry is NULL as well.
-    if MAGIC_WORD_FOR_NO_BUDGET in budgets:
+    if budgets.specifics and MAGIC_WORD_FOR_NO_BUDGET in [
+        b.value for b in budgets.specifics
+    ]:
         budget_filter = or_(budget_filter, BudgetEntry.id.is_(None))
 
     return (
@@ -419,10 +450,12 @@ def apply_budget_filter(
 
 def apply_month_filter(
     transactions: SqlQuery[Transaction],
-    months: list[str],
+    months: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    # Similarly for month; pass months as integers (1 through 12)
-    month_lookup = {
+    if months.all:
+        return transactions
+
+    MONTH_LOOKUP = {
         "january": 1,
         "february": 2,
         "march": 3,
@@ -435,8 +468,25 @@ def apply_month_filter(
         "october": 10,
         "november": 11,
         "december": 12,
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 4,
+        "5": 5,
+        "6": 6,
+        "7": 7,
+        "8": 8,
+        "9": 9,
+        "10": 10,
+        "11": 11,
+        "12": 12,
     }
-    month_numbers = [month_lookup[m.lower()] for m in months]
+
+    month_numbers = (
+        [MONTH_LOOKUP[m.value.lower()] for m in months.specifics]
+        if months.specifics
+        else []
+    )
     return transactions.filter(
         func.extract("month", Transaction.date_of_transaction).in_(month_numbers)
     )
@@ -487,39 +537,9 @@ def enrich_with_budget_info(
     return agg
 
 
-@router.get(
-    "/aggregated",
-    dependencies=[Depends(get_current_user)],
-    response_model=AggregatedTransactions,
-)
-def get_aggregated_transactions(
-    group_by: list[GroupByOption] | None = Query(
-        None,
-        description="List of grouping options in order (e.g. category, month)",
-    ),
-    years: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    months: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    categories: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    accounts: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    budgets: list[str] | None = Query(
-        default=None,
-        description="Filter for transactions",
-    ),
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> AggregatedTransactions:
+def build_transactions(
+    session: Session, user: User, current_filter: FilterData
+) -> list[Transaction]:
     transactions_query = (
         session.query(Transaction)
         .filter(Transaction.user_id == user.id)
@@ -529,12 +549,9 @@ def get_aggregated_transactions(
         .filter(~TransactionSource.archived)
     )
 
-    if not group_by:
-        group_by = [GroupByOption.category, GroupByOption.month, GroupByOption.account]
-
     FILTER_FUNCTIONS: dict[
         GroupByOption,
-        Callable[[SqlQuery[Transaction], list[str]], SqlQuery[Transaction]],
+        Callable[[SqlQuery[Transaction], FilterEntries], SqlQuery[Transaction]],
     ] = {
         GroupByOption.year: apply_year_filter,
         GroupByOption.month: apply_month_filter,
@@ -543,81 +560,152 @@ def get_aggregated_transactions(
         GroupByOption.budget: apply_budget_filter,
     }
 
-    FILTER_FUNCTION_ARGUMENTS: dict[GroupByOption, list[str] | None] = {
-        GroupByOption.year: years,
-        GroupByOption.month: months,
-        GroupByOption.category: categories,
-        GroupByOption.account: accounts,
-        GroupByOption.budget: budgets,
-    }
-
-    for option in group_by:
+    for option, argument in current_filter.lookup.items():
         filter_func = FILTER_FUNCTIONS[option]
-        argument = FILTER_FUNCTION_ARGUMENTS[option]
-        if argument and len(argument) > 0:
+        if argument.specifics and len(argument.specifics) > 0:
             transactions_query = filter_func(transactions_query, argument)
 
-    transactions = transactions_query.all()
+    return transactions_query.order_by(Transaction.transaction_source_id).all()
 
-    if not transactions:
-        return AggregatedTransactions(
-            groups=[],
-            overall_withdrawals=0.0,
-            group_by_ordering=group_by,
-            overall_deposits=0.0,
-            overall_balance=0.0,
-            grouping_options_choices={},
-        )
 
-    if GroupByOption.category in group_by:
-        category_ids = {txn.category_id for txn in transactions}
-        category_lookup = {
-            c.id: c
-            for c in session.query(Category).filter(Category.id.in_(category_ids))
-        }
-    else:
-        category_lookup = {}
-
-    budget_lookup = get_budget_lookup(session, user)
-
-    ts_ids = {txn.transaction_source_id for txn in transactions}
-    ts_lookup = {
-        ts.id: ts
-        for ts in session.query(TransactionSource).filter(
-            TransactionSource.id.in_(ts_ids)
-        )
-    }
-
-    transactions.sort(key=lambda t: t.transaction_source_id)
-
-    overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
-    overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
-
-    HIDDEN_GROUPING_OPTIONS = [GroupByOption.year]
-    group_by_with_hidden_removed = [
-        g for g in group_by if g not in HIDDEN_GROUPING_OPTIONS
-    ]
-
-    groups = recursive_group(
-        transactions,
-        group_by_with_hidden_removed,
-        category_lookup,
-        ts_lookup,
-        budget_lookup,
-    )
-
-    grouping_option_choices = build_grouping_option_choices(session, user)
-
-    overall_balance = overall_deposits - overall_withdrawals
-    val = AggregatedTransactions(
-        groups=groups,
-        group_by_ordering=group_by,
-        overall_withdrawals=overall_withdrawals,
-        overall_deposits=overall_deposits,
-        overall_balance=overall_balance,
+def build_empty_result(
+    grouping_option_choices: dict[GroupByOption, list[str]],
+) -> AggregatedTransactions:
+    return AggregatedTransactions(
+        groups=[],
+        overall_withdrawals=0.0,
+        group_by_ordering=[],
+        overall_deposits=0.0,
+        overall_balance=0.0,
         grouping_options_choices=grouping_option_choices,
     )
-    return enrich_with_budget_info(session, user, val)
+
+
+@dataclass(kw_only=True)
+class TransactionContext:
+    current_filter: FilterData = field(default_factory=FilterData)
+    session: Session
+    user: User
+    transactions: list[Transaction] = field(default_factory=list)
+    grouping_option_choices: dict[GroupByOption, list[str]] = field(
+        default_factory=dict
+    )
+    category_lookup: dict[CategoryId, Category] = field(default_factory=dict)
+    budget_lookup: dict[CategoryId, BudgetEntry] = field(default_factory=dict)
+    transaction_source_lookup: dict[TransactionSourceId, TransactionSource] = field(
+        default_factory=dict
+    )
+    overall_withdrawals: float = 0.0
+    overall_deposits: float = 0.0
+    overall_balance: float = 0.0
+    group_by_with_hidden_removed: list[GroupByOption] = field(default_factory=list)
+    groups: list[AggregatedGroup] = field(default_factory=list)
+    result: AggregatedTransactions | None = None
+
+
+def fetch_transactions(ctx: TransactionContext) -> TransactionContext:
+    ctx.transactions = build_transactions(ctx.session, ctx.user, ctx.current_filter)
+    return ctx
+
+
+def fetch_grouping_options(ctx: TransactionContext) -> TransactionContext:
+    ctx.grouping_option_choices = build_grouping_option_choices(ctx.session, ctx.user)
+    return ctx
+
+
+def build_all_lookups(ctx: TransactionContext) -> TransactionContext:
+    if not ctx.transactions:
+        return ctx
+
+    ctx.category_lookup, ctx.budget_lookup, ctx.transaction_source_lookup = (
+        build_lookups(ctx.session, ctx.user, ctx.transactions, ctx.current_filter)
+    )
+    return ctx
+
+
+def compute_totals(ctx: TransactionContext) -> TransactionContext:
+    if not ctx.transactions:
+        return ctx
+
+    ctx.overall_withdrawals, ctx.overall_deposits, ctx.overall_balance = (
+        calculate_totals(ctx.transactions)
+    )
+    return ctx
+
+
+def get_group_by_options(ctx: TransactionContext) -> TransactionContext:
+    ctx.group_by_with_hidden_removed = get_visible_group_by_options(ctx.current_filter)
+    return ctx
+
+
+def handle_empty_transactions(ctx: TransactionContext) -> TransactionContext:
+    if not ctx.transactions:
+        ctx.result = build_empty_result(ctx.grouping_option_choices)
+    return ctx
+
+
+def group_transactions(ctx: TransactionContext) -> TransactionContext:
+    if not ctx.transactions or ctx.result:
+        return ctx
+
+    ctx.groups = recursive_grouping(
+        ctx.transactions,
+        ctx.group_by_with_hidden_removed,
+        ctx.category_lookup,
+        ctx.transaction_source_lookup,
+        ctx.budget_lookup,
+    )
+    return ctx
+
+
+def build_result(ctx: TransactionContext) -> TransactionContext:
+    if ctx.result:
+        return ctx
+
+    ctx.result = AggregatedTransactions(
+        groups=ctx.groups,
+        group_by_ordering=list(ctx.current_filter.lookup.keys()),
+        overall_withdrawals=ctx.overall_withdrawals,
+        overall_deposits=ctx.overall_deposits,
+        overall_balance=ctx.overall_balance,
+        grouping_options_choices=ctx.grouping_option_choices,
+    )
+    return ctx
+
+
+def add_budget_info(ctx: TransactionContext) -> AggregatedTransactions:
+    if not ctx.result:
+        return build_empty_result(ctx.grouping_option_choices)
+
+    return enrich_with_budget_info(ctx.session, ctx.user, ctx.result)
+
+
+@router.post(
+    "/aggregated",
+    dependencies=[Depends(get_current_user)],
+    response_model=AggregatedTransactions,
+)
+def get_aggregated_transactions(
+    current_filter: FilterData | None = None,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> AggregatedTransactions:
+    ctx = TransactionContext(
+        current_filter=current_filter or FilterData(), session=session, user=user
+    )
+
+    return pipe(
+        ctx,
+        fetch_transactions,
+        fetch_grouping_options,
+        build_all_lookups,
+        compute_totals,
+        get_group_by_options,
+        handle_empty_transactions,
+        group_transactions,
+        build_result,
+        final=add_budget_info,
+    )
 
 
 def make_audit_entry(old: Transaction, new: TransactionEdit) -> list[AuditLog]:
@@ -749,3 +837,52 @@ def list_all_categories(
         )
         for category in categories_query.all()
     ]
+
+
+def build_lookups(
+    session: Session,
+    user: User,
+    transactions: list[Transaction],
+    current_filter: FilterData,
+) -> tuple[
+    dict[CategoryId, Category],
+    dict[CategoryId, BudgetEntry],
+    dict[TransactionSourceId, TransactionSource],
+]:
+    # Build category lookup if needed
+    if GroupByOption.category in current_filter.lookup:
+        category_ids = {txn.category_id for txn in transactions}
+        category_lookup = {
+            c.id: c
+            for c in session.query(Category).filter(Category.id.in_(category_ids))
+        }
+    else:
+        category_lookup = {}
+
+    # Build budget lookup
+    budget_lookup = get_budget_lookup(session, user)
+
+    # Build transaction source lookup
+    ts_ids = {txn.transaction_source_id for txn in transactions}
+    ts_lookup = {
+        ts.id: ts
+        for ts in session.query(TransactionSource).filter(
+            TransactionSource.id.in_(ts_ids)
+        )
+    }
+
+    return category_lookup, budget_lookup, ts_lookup
+
+
+def calculate_totals(transactions: list[Transaction]) -> tuple[float, float, float]:
+    overall_withdrawals = sum(t.amount for t in transactions if t.kind == "withdrawal")
+    overall_deposits = sum(t.amount for t in transactions if t.kind == "deposit")
+    overall_balance = overall_deposits - overall_withdrawals
+    return overall_withdrawals, overall_deposits, overall_balance
+
+
+def get_visible_group_by_options(current_filter: FilterData) -> list[GroupByOption]:
+    return sorted(
+        [key for key, entries in current_filter.lookup.items() if entries.visible],
+        key=lambda x: current_filter.lookup[x].index,
+    )

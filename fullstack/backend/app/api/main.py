@@ -9,6 +9,7 @@ from app.api.routes import (
     plaid,
     private,
     sankey,
+    saved_filters,
     sitemap,
     subscription,
     transactions,
@@ -32,6 +33,7 @@ api_router.include_router(uploads.router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
 api_router.include_router(subscription.router)
+api_router.include_router(saved_filters.router)
 
 if settings.ENVIRONMENT == "local":
     api_router.include_router(private.router)

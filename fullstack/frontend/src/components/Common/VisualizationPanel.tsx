@@ -40,6 +40,7 @@ export function VisualizationPanel({
 
   const isMobile = useIsMobile()
 
+
   let layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"
 
   if (collapsedItems.includes("Pie Chart")) {
@@ -84,7 +85,6 @@ export function VisualizationPanel({
 }
 
 function squareOffData(data: GenericChartDataItem[]) {
-  // 1. Collect all unique keys (besides 'date')
   const allKeys: Set<string> = new Set();
   data.forEach((row: GenericChartDataItem) => {
     Object.keys(row).forEach((key) => {
@@ -116,24 +116,33 @@ function BarChart({
 
   const categoryKeys = new Set<string>()
   for (const group of sourceGroups) {
-    if (group.subgroups) {
+    if (group.subgroups && group.subgroups.length > 0) {
       for (const subgroup of group.subgroups) {
         categoryKeys.add(subgroup.group_name)
       }
     }
+    else{
+      categoryKeys.add(group.group_name)
+    }
   }
+
 
   const chartData: GenericChartDataItem[]  =  sourceGroups.map((group) => {
       const base: Record<string, number | string> = {
         date: group.group_id.toString(),
       }
 
-      if (group.subgroups) {
+      if (group.subgroups && group.subgroups.length > 0) {
         for (const subgroup of group.subgroups) {
           base[subgroup.group_name] = showDeposits
             ? subgroup.total_deposits
             : subgroup.total_withdrawals
         }
+      }
+      else{
+        base[group.group_name] = showDeposits
+          ? group.total_deposits
+          : group.total_withdrawals
       }
 
       return base
@@ -182,33 +191,24 @@ function PieBox({
   collapsedItems,
 }: ValidatedVisualizationProps) {
 
-const chartDataMap = sourceGroups.flatMap(group =>
-  group.subgroups?.map(subgroup => ({
-    group: group.group_name, 
-    amount: showDeposits
-      ? subgroup.total_deposits
-      : subgroup.total_withdrawals,
-  })) || [
-    {
-      group: group.group_name,
-      amount: showDeposits
-        ? group.total_deposits
-        : group.total_withdrawals,
-    },
-  ]
-).reduce(
-  (acc, { group, amount }) => {
-    acc[group] = (acc[group] || 0) + amount;
-    return acc;
-  },
-  {} as Record<string, number>,
-);
+  const chartData: Record<string, number> = {};
+  
+  sourceGroups.forEach(group => {
+    if (group.subgroups && group.subgroups.length > 0) {
+      group.subgroups.forEach(subgroup => {
+        const amount = showDeposits ? subgroup.total_deposits : subgroup.total_withdrawals;
+        chartData[subgroup.group_name] = (chartData[subgroup.group_name] || 0) + amount;
+      });
+    } else {
+      const amount = showDeposits ? group.total_deposits : group.total_withdrawals;
+      chartData[group.group_name] = (chartData[group.group_name] || 0) + amount;
+    }
+  });
 
-  const description = `${showDeposits ? "Deposits" : "Expenses"
-    } by ${sourceGroups[0].groupby_kind}`
+  const description = `${showDeposits ? "Deposits" : "Expenses"} by ${sourceGroups[0]?.groupby_kind || 'Group'}`;
 
-
-  if (!chartDataMap) return null
+  if (Object.keys(chartData).length === 0) return null;
+  
   return (
     <BoxWithText
       text={""}
@@ -217,7 +217,7 @@ const chartDataMap = sourceGroups.flatMap(group =>
       COMPONENT_NAME="Pie Chart"
     >
       <GenericPieChart
-        data={Object.entries(chartDataMap).map(([key, value]) => ({ name: key, value }))}
+        data={Object.entries(chartData).map(([key, value]) => ({ name: key, value }))}
         dataKey="value"
         description={description}
         nameKey="name"
@@ -226,4 +226,3 @@ const chartDataMap = sourceGroups.flatMap(group =>
     </BoxWithText>
   )
 }
-

@@ -9,9 +9,10 @@ import { Button } from "@chakra-ui/react"
 interface ReprocessButtonProps {
   jobId: number
   onReprocess: (response: UploadsReprocessFileResponse) => void
+  disabled?: boolean
 }
 
-export function ReprocessButton({ jobId, onReprocess }: ReprocessButtonProps) {
+export function ReprocessButton({ jobId, onReprocess, disabled = false }: ReprocessButtonProps) {
 
   const showToast = useCustomToast();
   const handleReprocess = async () => {
@@ -26,7 +27,7 @@ export function ReprocessButton({ jobId, onReprocess }: ReprocessButtonProps) {
   }
 
   return (
-    <Button size="sm" colorScheme="blue" onClick={handleReprocess}>
+    <Button size="sm" colorScheme="blue" onClick={handleReprocess} disabled={disabled}>
       Reprocess
     </Button>
   )
@@ -35,9 +36,11 @@ export function ReprocessButton({ jobId, onReprocess }: ReprocessButtonProps) {
 export function DeleteButton({
   fileId,
   onReprocess,
+  disabled = false,
 }: {
   fileId: number
   onReprocess: (response: UploadsDeleteFileResponse) => void
+  disabled?: boolean
 }) {
   const handleReprocess = async () => {
     try {
@@ -50,12 +53,7 @@ export function DeleteButton({
   }
 
   return (
-    <Button
-      size="sm"
-      color="red.400"
-      variant="outline"
-      onClick={handleReprocess}
-    >
+    <Button size="sm" colorScheme="red" onClick={handleReprocess} disabled={disabled}>
       Delete
     </Button>
   )

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -23,6 +23,7 @@ import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 
 import {  EditIcon } from "@chakra-ui/icons"
 import { useIsMobile } from "@/hooks/useIsMobile";
+import PlaidSyncStatus from "./PlaidSyncStatus";
 
 interface AccountDetailsProps {
   accountId: number;
@@ -45,7 +46,12 @@ export function AccountDetails({
   const toast = useCustomToast();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Query for uploaded files associated with this account
+  useEffect(() => {
+    if (!isEditing) {
+      setNewName(accountName);
+    }
+  }, [accountName, isEditing]);
+
   const { data: uploadedFiles, isLoading: isLoadingFiles } = useQuery({
     queryKey: ["uploadedFiles", accountId],
     queryFn: () => UploadsService.getUploads(),
@@ -54,7 +60,6 @@ export function AccountDetails({
     }),
   });
 
-  // Mutation to update account name
   const updateAccountMutation = useMutation({
     mutationFn: () => 
       AccountsService.updateTransactionSource({
@@ -95,13 +100,57 @@ export function AccountDetails({
     }
   };
 
+  const getAccountTypeColor = () => {
+    switch (accountType) {
+      case "credit":
+        return "red";
+      case "investment":
+        return "blue";
+      default:
+        return "green";
+    }
+  };
+
+  const getAccountTypeLabel = () => {
+    switch (accountType) {
+      case "credit":
+        return "Credit";
+      case "investment":
+        return "Investment";
+      default:
+        return "Bank";
+    }
+  };
+
   const isMobile = useIsMobile()
 
   return (
-    <Box p={4} borderWidth="1px" borderRadius="lg"  shadow="sm">
+    <Box 
+      p={4} 
+      borderWidth="1px" 
+      borderRadius="lg" 
+      shadow="sm"
+      position="relative"
+      opacity={isArchived ? 0.7 : 1}
+      bg={isArchived ? "gray.50" : undefined}
+      _dark={{
+        bg: isArchived ? "gray.800" : undefined,
+      }}
+    >
+      {isArchived && (
+        <Badge 
+          position="absolute" 
+          top={2} 
+          left={2} 
+          colorScheme="red" 
+          variant="solid"
+        >
+          Archived
+        </Badge>
+      )}
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Flex alignItems="center" gap={3}>
-          <Icon as={getAccountIcon()} color="blue.500" boxSize={6} />
+        <Flex alignItems="center" gap={3} mt={isArchived ? 8 : 0}>
+          <Icon as={getAccountIcon()} color={isArchived ? "gray.500" : "blue.500"} boxSize={6} />
           {isEditing ? (
             <HStack>
               <Input 
@@ -109,8 +158,9 @@ export function AccountDetails({
                 onChange={(e) => setNewName(e.target.value)}
                 size="md"
                 width="400px"
+                disabled={isArchived}
               />
-              <Button size="sm" onClick={handleUpdateName}>Save</Button>
+              <Button size="sm" onClick={handleUpdateName} disabled={isArchived}>Save</Button>
               <Button 
                 size="sm" 
                 variant="ghost" 
@@ -118,29 +168,36 @@ export function AccountDetails({
                   setIsEditing(false);
                   setNewName(accountName);
                 }}
+                disabled={isArchived}
               >
                 Cancel
               </Button>
             </HStack>
           ) : (
-            <Heading size="md">{accountName}</Heading>
+            <Flex alignItems="center">
+              <Heading size="md" color={isArchived ? "gray.500" : undefined} _dark={{ color: isArchived ? "gray.400" : undefined }}>{accountName}</Heading>
+              <Button
+                aria-label="Edit account name"
+                size="xs"
+                variant="ghost"
+                ml={2}
+                onClick={() => setIsEditing(true)}
+                disabled={isArchived}
+              >
+                <EditIcon mr={1} /> 
+              </Button>
+            </Flex>
           )}
           {isPlaidLinked && (
-            <Badge colorScheme="green">Plaid</Badge>
+            <Badge variant="outline" mr={1} colorScheme={isArchived ? "gray" : "blue"}>Connected</Badge>
           )}
+          <Badge variant="outline" color={isArchived ? "gray.500" : getAccountTypeColor()} _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}>
+            {getAccountTypeLabel()}
+          </Badge>
         </Flex>
         <Flex gap={2}>
-          <RecategorizeButton sourceId={accountId} />
+          <RecategorizeButton sourceId={accountId} disabled={isArchived} />
           <ArchiveButton sourceId={accountId} isArchived={isArchived} />
-          {!isEditing && (
-            <Button 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              <Icon as={EditIcon} mr={2} />
-              Edit
-            </Button>
-          )}
         </Flex>
       </Flex>
 
@@ -150,6 +207,7 @@ export function AccountDetails({
           mr={2}
           borderColor={activeTab === 0 ? "blue.500" : undefined}
           onClick={() => setActiveTab(0)}
+          disabled={isArchived}
         >
           Categories
         </Button>
@@ -158,6 +216,7 @@ export function AccountDetails({
             variant="ghost" 
             borderColor={activeTab === 1 ? "blue.500" : undefined}
             onClick={() => setActiveTab(1)}
+            disabled={isArchived}
           >
             Data Syncs
           </Button>
@@ -168,6 +227,7 @@ export function AccountDetails({
             borderColor={activeTab === 1 ? "blue.500" : undefined}
             _hover={{ bg: "gray.100" }}
             onClick={() => setActiveTab(1)}
+            disabled={isArchived}
           >
             Uploaded Files
           </Button>
@@ -200,10 +260,12 @@ export function AccountDetails({
                               <ReprocessButton 
                                 jobId={file.id} 
                                 onReprocess={handleFileUpdate} 
+                                disabled={isArchived}
                               />
                             <DeleteButton 
                               fileId={file.id} 
                               onReprocess={handleFileUpdate}
+                              disabled={isArchived}
                             />
                           </Flex>
                         </Table.Cell>
@@ -219,17 +281,7 @@ export function AccountDetails({
         ) : activeTab === 0 ? (
           <CategoriesManager accountId={accountId} />
         ) : isPlaidLinked && (
-          <Box p={4} borderWidth="1px" borderRadius="md">
-            <Flex align="center" gap={3}>
-              <Icon as={FaUniversity} color="blue.500" boxSize={5} />
-              <VStack align="start" gap={1}>
-                <Text fontWeight="medium">Data Syncs Automatically</Text>
-                <Text fontSize="sm" >
-                  This account is connected to Plaid and transactions are synced daily.
-                </Text>
-              </VStack>
-            </Flex>
-          </Box>
+          <PlaidSyncStatus accountId={accountId} />
         )}
       </Box>
     </Box>

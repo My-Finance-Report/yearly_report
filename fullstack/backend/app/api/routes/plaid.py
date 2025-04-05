@@ -39,6 +39,33 @@ def get_link_token(
         raise HTTPException(status_code=500, detail="Error creating link token:")
 
 
+def find_unique_name(
+    name: str, session: Session, user: User, prev_existing_names: list[str]
+) -> tuple[str, list[str]]:
+    existing_names = (
+        session.query(TransactionSource.name)
+        .filter(
+            TransactionSource.user_id == user.id,
+            TransactionSource.name.contains(name),
+        )
+        .all()
+    )
+
+    existing_names_strings: list[str] = [name[0] for name in existing_names]
+    existing_names_strings.extend(prev_existing_names)
+
+    if not existing_names:
+        return name, []
+
+    for i in range(2, 100):
+        new_name = f"{name} ({i})"
+        if new_name not in existing_names_strings:
+            existing_names_strings.append(new_name)
+            return (new_name, existing_names_strings)
+
+    raise HTTPException(status_code=500, detail="Failed to generate unique name")
+
+
 @router.post("/exchange_token", response_model=list[PlaidAccountResponse])
 async def exchange_token(
     request: PlaidExchangeTokenRequest,
@@ -52,7 +79,6 @@ async def exchange_token(
         access_token = exchange_response["access_token"]
         item_id = exchange_response["item_id"]
 
-        # Create a new Plaid item
         plaid_item = PlaidItem(
             user_id=user.id,
             plaid_item_id=item_id,
@@ -65,12 +91,11 @@ async def exchange_token(
         print(e)
         raise HTTPException(status_code=500, detail="Error exchanging token")
 
+    existing_names: set[str] = set()
     try:
-        # Get accounts from Plaid
         client = get_plaid_client()
         request = AccountsGetRequest(access_token=access_token)
         accounts_response = client.accounts_get(request)
-        # Create Plaid accounts and transaction sources
         created_accounts = []
         for account in accounts_response["accounts"]:
             plaid_account = PlaidAccount(
@@ -85,9 +110,16 @@ async def exchange_token(
             session.add(plaid_account)
             session.flush()
 
+            name, new_existing_names = find_unique_name(
+                f"{account['name']}", session, user, list(existing_names)
+            )
+
+            for name in new_existing_names:
+                existing_names.add(name)
+
             transaction_source = TransactionSource(
                 user_id=user.id,
-                name=f"{account['name']}",
+                name=name,
                 plaid_account_id=plaid_account.id,
                 source_kind=get_source_kind_from_account_type(account["type"]),
             )

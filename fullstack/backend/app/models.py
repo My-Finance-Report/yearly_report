@@ -1,5 +1,4 @@
 import enum
-import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -22,7 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-T = TypeVar("T")  # This represents any dataclass type
+T = TypeVar("T", bound=BaseModel)  # This represents any dataclass type
 
 
 class JSONType(TypeDecorator[T], Generic[T]):
@@ -38,25 +37,36 @@ class JSONType(TypeDecorator[T], Generic[T]):
         self.dataclass_type = dataclass_type
 
     def process_bind_param(self, value: T | None, _dialect: Dialect) -> str | None:
-        """Convert a dataclass into JSON when writing to the database."""
+        """Convert a BaseModel into JSON when writing to the database."""
         if value is not None:
-            return json.dumps(value.__dict__)
+            return value.model_dump_json()
         return None
 
     def process_result_value(
-        self, value: dict[str, str] | str | None, _dialect: Dialect
+        self, value: dict[str, str] | str | bytes | bytearray | None, _dialect: Dialect
     ) -> T | None:
         """Convert JSON from the database back into the correct dataclass."""
-        if value is not None:
-            if isinstance(value, dict):
-                return self.dataclass_type(**value)
-            else:
-                return self.dataclass_type(**json.loads(value))
-        return None
+        if value is None:
+            return None
+
+        if isinstance(value, dict):
+            # this is a failover from previous json handling
+            return self.dataclass_type.model_validate(value)
+        else:
+            # If we have a string/bytes, use model_validate_json
+            return self.dataclass_type.model_validate_json(value)
 
 
 class Base(DeclarativeBase):
     __rls_enabled__ = True
+
+
+class GroupByOption(str, enum.Enum):
+    account = "account"
+    category = "category"
+    month = "month"
+    year = "year"
+    budget = "budget"
 
 
 class SourceKind(str, enum.Enum):
@@ -101,10 +111,12 @@ PlaidItemId = NewType("PlaidItemId", int)
 PlaidAccountId = NewType("PlaidAccountId", int)
 SubscriptionId = NewType("SubscriptionId", int)
 PriceId = NewType("PriceId", int)
+PlaidSyncLogId = NewType("PlaidSyncLogId", int)
+SavedFilterId = NewType("SavedFilterId", int)
 
 
 @dataclass(kw_only=True)
-class UserSettings:
+class UserSettings(BaseModel):
     has_budget: bool = False
     power_user_filters: bool = False
 
@@ -136,6 +148,9 @@ class User(Base):
     )
     subscription: Mapped["Subscription"] = relationship(
         "Subscription", back_populates="user", uselist=False
+    )
+    saved_filters: Mapped[list["SavedFilter"]] = relationship(
+        "SavedFilter", back_populates="user"
     )
 
 
@@ -609,3 +624,56 @@ class Subscription(Base):
     # Relationships
     price: Mapped["Price | None"] = relationship("Price")
     user: Mapped["User"] = relationship("User", back_populates="subscription")
+
+
+class FilterEntry(BaseModel):
+    value: str
+
+
+class FilterEntries(BaseModel):
+    specifics: list[FilterEntry] | None = None
+    all: bool = True
+    visible: bool | None = None
+    index: int
+
+
+class FilterData(BaseModel):
+    is_default: bool = True
+    lookup: dict[GroupByOption, FilterEntries] = Field(
+        default_factory=lambda: {
+            GroupByOption.category: FilterEntries(
+                all=True, specifics=None, visible=True, index=0
+            ),
+            GroupByOption.month: FilterEntries(
+                all=True, visible=True, specifics=None, index=1
+            ),
+            GroupByOption.account: FilterEntries(
+                all=True, visible=True, specifics=None, index=2
+            ),
+        }
+    )
+
+
+class SavedFilter(Base):
+    """Model for saved filter configurations."""
+
+    __tablename__ = "saved_filter"
+
+    id: Mapped[SavedFilterId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    filter_data: Mapped[FilterData] = mapped_column(
+        JSONType(FilterData), nullable=False
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    user: Mapped["User"] = relationship("User", back_populates="saved_filters")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

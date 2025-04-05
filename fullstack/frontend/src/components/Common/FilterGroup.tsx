@@ -12,6 +12,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
+import { FilterData_Input, FilterEntries } from "@/client";
 import { Button, Flex } from "@chakra-ui/react";
 
 import { Box, CloseButton, Tag, Text, Menu, Portal } from "@chakra-ui/react";
@@ -26,82 +27,39 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import BoxWithText, { type CollapsibleName } from "./BoxWithText";
-import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
+import { SavedFilterControls } from "./SavedFilterControls";
 
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
-import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiCheck, FiChevronDown, FiChevronUp, FiEye, FiEyeOff } from "react-icons/fi";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "@/hooks/useAuth";
-
-export interface FilterInfo {
-  years: string[];
-  accounts: string[];
-  months: string[];
-  categories: string[];
-  budgets: string[];
-  setYears: React.Dispatch<React.SetStateAction<string[]>>;
-  setAccounts: React.Dispatch<React.SetStateAction<string[]>>;
-  setMonths: React.Dispatch<React.SetStateAction<string[]>>;
-  setCategories: React.Dispatch<React.SetStateAction<string[]>>;
-  setBudgets: React.Dispatch<React.SetStateAction<string[]>>;
-}
-
-function getFilterSettings(
-  filterInfo: FilterInfo,
-  groupingOption: GroupByOption
-): {
-  values: string[];
-  setValues: React.Dispatch<React.SetStateAction<string[]>>;
-} {
-  switch (groupingOption) {
-    case GroupByOption.year:
-      return { values: filterInfo.years, setValues: filterInfo.setYears };
-    case GroupByOption.account:
-      return { values: filterInfo.accounts, setValues: filterInfo.setAccounts };
-    case GroupByOption.month:
-      return { values: filterInfo.months, setValues: filterInfo.setMonths };
-    case GroupByOption.category:
-      return {
-        values: filterInfo.categories,
-        setValues: filterInfo.setCategories,
-      };
-    case GroupByOption.budget:
-      return { values: filterInfo.budgets, setValues: filterInfo.setBudgets };
-    default:
-      throw "Invalid grouping option";
-  }
-}
+import { useFilters } from "@/contexts/FilterContext";
+import { GroupByOption, GroupingConfig } from "./GroupingConfig";
 
 export function FilterGroup({
-  filterInfo,
   groupingOptionsChoices,
-  groupingOptions,
   setShowDeposits,
   showDeposits,
-  setGroupingOptions,
   setCollapsedItems,
   collapsedItems,
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
-  filterInfo: FilterInfo;
-  groupingOptions: GroupByOption[];
   groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
   collapsedItems: CollapsibleName[];
 }) {
   const isMobile = useIsMobile();
 
   const [open, setOpen] = useState(false);
+
 
   if (isMobile) {
     return (
@@ -123,12 +81,9 @@ export function FilterGroup({
           </DrawerHeader>
           <DrawerBody>
             <InnerFilterGroup
-              filterInfo={filterInfo}
               groupingOptionsChoices={groupingOptionsChoices}
-              groupingOptions={groupingOptions}
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
-              setGroupingOptions={setGroupingOptions}
               setCollapsedItems={setCollapsedItems}
               collapsedItems={collapsedItems}
             />
@@ -146,12 +101,9 @@ export function FilterGroup({
 
   return (
     <InnerFilterGroup
-      filterInfo={filterInfo}
       groupingOptionsChoices={groupingOptionsChoices}
-      groupingOptions={groupingOptions}
       setShowDeposits={setShowDeposits}
       showDeposits={showDeposits}
-      setGroupingOptions={setGroupingOptions}
       setCollapsedItems={setCollapsedItems}
       collapsedItems={collapsedItems}
     />
@@ -159,21 +111,15 @@ export function FilterGroup({
 }
 
 function InnerFilterGroup({
-  groupingOptions,
-  filterInfo,
   groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
-  setGroupingOptions,
   setCollapsedItems,
   collapsedItems,
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
-  filterInfo: FilterInfo;
-  groupingOptions: GroupByOption[];
-  groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
+  groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined;
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
   collapsedItems: CollapsibleName[];
 }) {
@@ -197,16 +143,11 @@ function InnerFilterGroup({
           COMPONENT_NAME="Filters"
         >
             <NonPowerUserButtons
-              setGroupingOptions={setGroupingOptions}
-              filterInfo={filterInfo}
               groupingOptionsChoices={groupingOptionsChoices}
             />
           {powerUser && (
             <PowerUserButtons
-              filterInfo={filterInfo}
-              setGroupingOptions={setGroupingOptions}
               groupingOptionsChoices={groupingOptionsChoices}
-              groupingOptions={groupingOptions}
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
             />
@@ -219,19 +160,13 @@ function InnerFilterGroup({
 }
 
 function PowerUserButtons({
-  filterInfo,
-  setGroupingOptions,
   groupingOptionsChoices,
-  groupingOptions,
   setShowDeposits,
   showDeposits,
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
-  groupingOptions: GroupByOption[];
-  filterInfo: FilterInfo;
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
-  groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
+  groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined;
 }) {
   const includeBudget = !!(
     groupingOptionsChoices &&
@@ -239,14 +174,138 @@ function PowerUserButtons({
   );
 
   const isMobile = useIsMobile();
+  const {setCurrentFilter, currentFilter, initializeDefaultFilter} = useFilters();
+
+  if (!currentFilter) {
+    initializeDefaultFilter();
+  }
 
   const handleToggleOption = (option: GroupByOption) => {
-    setGroupingOptions((prev: GroupByOption[]) => {
-      return prev.includes(option)
-        ? prev.length > 1
-          ? prev.filter((o) => o !== option)
-          : prev
-        : [...prev, option];
+    setCurrentFilter((prev: FilterData_Input | null) => {
+      if (!prev) return prev;
+      
+      const newLookup = { ...prev.lookup };
+      
+      if (newLookup[option]) {
+        const { [option]: removed, ...rest } = newLookup;
+        return { ...prev, lookup: rest };
+      } else {
+        const maxIndex = Object.values(newLookup).reduce(
+          (max, entry) => Math.max(max, (entry as FilterEntries).index), -1
+        ) as number;
+        
+        return {
+          ...prev,
+          lookup: {
+            ...newLookup,
+            [option]: {
+              all: true,
+              visible: true,
+              specifics: [],
+              index: maxIndex + 1
+            }
+          }
+        };
+      }
+    });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !currentFilter || !currentFilter.lookup) return;
+
+    const activeOption = active.id as GroupByOption;
+    const overOption = over.id as GroupByOption;
+    
+    const activeIndex = currentFilter.lookup[activeOption]?.index;
+    const overIndex = currentFilter.lookup[overOption]?.index;
+    
+    if (activeIndex === undefined || overIndex === undefined) return;
+    
+    setCurrentFilter((prev: FilterData_Input | null) => {
+      if (!prev || !prev.lookup) return prev;
+      
+      // Create a new lookup object with swapped indices
+      const newLookup = { ...prev.lookup };
+      
+      // Update all indices between activeIndex and overIndex
+      Object.entries(newLookup).forEach(([option, entry]) => {
+        const optionKey = option as GroupByOption;
+        const filterEntry = entry as FilterEntries;
+        
+        if (activeIndex < overIndex) {
+          // Moving down
+          if (filterEntry.index > activeIndex && filterEntry.index <= overIndex) {
+            newLookup[optionKey] = { 
+              ...filterEntry, 
+              index: filterEntry.index - 1 
+            };
+          }
+        } else {
+          // Moving up
+          if (filterEntry.index >= overIndex && filterEntry.index < activeIndex) {
+            newLookup[optionKey] = { 
+              ...filterEntry, 
+              index: filterEntry.index + 1 
+            };
+          }
+        }
+      });
+      
+      // Set the active option to the target index
+      newLookup[activeOption] = { 
+        ...newLookup[activeOption] as FilterEntries, 
+        index: overIndex 
+      };
+      
+      return { ...prev, lookup: newLookup };
+    });
+  };
+
+  const moveItemUp = (option: GroupByOption) => {
+    setCurrentFilter((prev) => {
+      if (!prev || !prev.lookup) return prev;
+      
+      const currentIndex = prev.lookup[option]?.index;
+      if (currentIndex === undefined || currentIndex <= 0) return prev;
+      
+      // Find the option with index = currentIndex - 1
+      const optionToSwap = Object.entries(prev.lookup).find(([key, entry]) => (entry as FilterEntries).index === currentIndex - 1)?.[0] as GroupByOption | undefined;
+      
+      if (!optionToSwap) return prev;
+      
+      // Create a new lookup object with swapped indices
+      const newLookup = { ...prev.lookup };
+      newLookup[option] = { ...newLookup[option] as FilterEntries, index: currentIndex - 1 };
+      newLookup[optionToSwap] = { ...newLookup[optionToSwap] as FilterEntries, index: currentIndex };
+      
+      return { ...prev, lookup: newLookup };
+    });
+  };
+
+  const moveItemDown = (option: GroupByOption) => {
+    setCurrentFilter((prev) => {
+      if (!prev || !prev.lookup) return prev;
+      
+      const currentIndex = prev.lookup[option]?.index;
+      if (currentIndex === undefined) return prev;
+      
+      // Find the maximum index in the lookup
+      const maxIndex = Math.max(...Object.values(prev.lookup).map(value => (value as FilterEntries).index));
+      
+      if (currentIndex >= maxIndex) return prev;
+      
+      // Find the option with index = currentIndex + 1
+      const optionToSwap = Object.entries(prev.lookup).find(([_, value]) => (value as FilterEntries).index === currentIndex + 1)?.[0] as GroupByOption | undefined;
+      
+      if (!optionToSwap) return prev;
+      
+      // Create a new lookup object with swapped indices
+      const newLookup = { ...prev.lookup };
+      newLookup[option] = { ...newLookup[option] as FilterEntries, index: currentIndex + 1 };
+      newLookup[optionToSwap] = { ...newLookup[optionToSwap] as FilterEntries, index: currentIndex };
+      
+      return { ...prev, lookup: newLookup };
     });
   };
 
@@ -254,45 +313,6 @@ function PowerUserButtons({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = groupingOptions.indexOf(active.id as GroupByOption);
-    const newIndex = groupingOptions.indexOf(over.id as GroupByOption);
-    setGroupingOptions(arrayMove(groupingOptions, oldIndex, newIndex));
-  };
-
-  const moveItemUp = (option: GroupByOption) => {
-    setGroupingOptions((prev) => {
-      const index = prev.indexOf(option);
-      if (index > 0) {
-        const newOptions = [...prev];
-        [newOptions[index - 1], newOptions[index]] = [
-          newOptions[index],
-          newOptions[index - 1],
-        ];
-        return newOptions;
-      }
-      return prev;
-    });
-  };
-
-  const moveItemDown = (option: GroupByOption) => {
-    setGroupingOptions((prev) => {
-      const index = prev.indexOf(option);
-      if (index < prev.length - 1) {
-        const newOptions = [...prev];
-        [newOptions[index], newOptions[index + 1]] = [
-          newOptions[index + 1],
-          newOptions[index],
-        ];
-        return newOptions;
-      }
-      return prev;
-    });
-  };
 
   return (
     <>
@@ -321,46 +341,44 @@ function PowerUserButtons({
                 showDeposits={showDeposits}
               />
               <SortableContext
-                items={groupingOptions}
+                items={Object.keys(currentFilter?.lookup || {}).sort((a, b) => 
+                  (currentFilter?.lookup?.[a as GroupByOption] as FilterEntries).index - 
+                  (currentFilter?.lookup?.[b as GroupByOption] as FilterEntries).index
+                )}
                 strategy={horizontalListSortingStrategy}
               >
-                {groupingOptions.map((option, index) => {
-                  const { values, setValues } = getFilterSettings(
-                    filterInfo,
-                    option
-                  );
+                {Object.entries(currentFilter?.lookup || {})
+                  .sort((a, b) => (a[1] as FilterEntries).index - (b[1] as FilterEntries).index)
+                  .map(([option, value]) => {
+                  const typedOption = option as GroupByOption;
+                  const typedValue = value as FilterEntries;
                   return (
                     <Flex
                       paddingLeft={1}
-                      marginLeft={index * 2}
+                      marginLeft={typedValue.index * 2}
                       key={option}
                       direction="row"
                       alignItems="center"
-                      justifyContent="start"
-                      gap={2}
                     >
                       <SortableItem
                         key={option}
-                        filters={values}
-                        setFilters={setValues}
                         moveItemUp={moveItemUp}
                         moveItemDown={moveItemDown}
-                        isFirst={index === 0}
-                        isLast={index === groupingOptions.length - 1}
-                        choices={groupingOptionsChoices?.[option]}
-                        option={option}
-                        noX={groupingOptions.length === 1}
+                        isFirst={typedValue.index === 0}
+                        isLast={typedValue.index === (Object.keys(currentFilter?.lookup || {}).length - 1)}
+                        choices={groupingOptionsChoices?.[typedOption]}
+                        option={typedOption}
+                        noX={Object.keys(currentFilter?.lookup || {}).length === 1}
                         onRemove={handleToggleOption}
                       />
                     </Flex>
                   );
                 })}
               </SortableContext>
-              <Box key="blah" paddingLeft={groupingOptions.length * 2}>
+              <Box key="blah" paddingLeft={Object.keys(currentFilter?.lookup || {}).length * 2}>
                 <GroupingConfig
                   showBudgets={includeBudget}
-                  groupingOptions={groupingOptions}
-                  setGroupingOptions={setGroupingOptions}
+                  groupingOptions={Object.keys(currentFilter?.lookup || {}).map(key => key as GroupByOption)}
                 />
               </Box>
             </Flex>
@@ -373,8 +391,6 @@ function PowerUserButtons({
 
 const SortableItem = ({
   option,
-  filters,
-  setFilters,
   onRemove,
   noX,
   choices,
@@ -385,8 +401,6 @@ const SortableItem = ({
 }: {
   option: GroupByOption;
   choices: string[] | undefined;
-  filters: string[];
-  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
   noX: boolean;
   onRemove: (option: GroupByOption) => void;
   moveItemUp: (option: GroupByOption) => void;
@@ -399,9 +413,32 @@ const SortableItem = ({
       id: option,
     });
 
+  const { currentFilter, setCurrentFilter } = useFilters();
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const isVisible = currentFilter?.lookup?.[option]?.visible ?? true;
+
+  const toggleVisibility = () => {
+    if (!currentFilter?.lookup) return;
+    
+    setCurrentFilter((prev) => {
+      if (!prev?.lookup) return prev;
+      
+      return {
+        ...prev,
+        lookup: {
+          ...prev.lookup,
+          [option]: {
+            ...prev.lookup[option],
+            visible: !isVisible
+          }
+        }
+      };
+    });
   };
 
   return (
@@ -418,12 +455,19 @@ const SortableItem = ({
         {option.charAt(0).toUpperCase() + option.slice(1)}
       </Text>
       <Flex p={1} gap={0}>
+        
         <FilterButton
-          filters={filters}
-          setFilters={setFilters}
           options={choices ?? []}
           name={option}
         />
+        <Button
+          size="xs"
+          variant="subtle"
+          onClick={toggleVisibility}
+          title={isVisible ? "Hide this grouping" : "Show this grouping"}
+        >
+          {isVisible ? <FiEye /> : <FiEyeOff />}
+        </Button>
         <Button
           size="xs"
           variant="subtle"
@@ -451,35 +495,79 @@ const SortableItem = ({
     </Tag.Root>
   );
 };
+
 interface FilterButtonProps {
   options: string[];
   name: string;
-  filters: string[];
-  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export function FilterButton({
+  name,
   options,
-  filters,
-  setFilters,
 }: FilterButtonProps) {
+  const { currentFilter, setCurrentFilter } = useFilters();
+
+  if (!currentFilter) {
+    return null;
+  }
+
   const handleToggle = (option: string) => {
-    if (filters.includes(option)) {
-      setFilters(filters.filter((f) => f !== option));
-    } else {
-      setFilters([...filters, option]);
+    if (!currentFilter.lookup) {
+      return;
     }
+    
+    const updatedFilter = { ...currentFilter };
+    
+    const currentValues = updatedFilter.lookup?.[name]?.specifics || [];
+    
+    if (currentValues.some(value => value.value === option)) {
+      updatedFilter.lookup = {
+        ...updatedFilter.lookup,
+        [name]: {specifics: currentValues.filter(value => value.value !== option), all: false, visible: true, index: currentFilter.lookup[name].index}
+      };
+
+    } else {
+      updatedFilter.lookup = {
+        ...updatedFilter.lookup,
+        [name]: {specifics: [...currentValues, {value: option}], all: false, visible: true, index: currentFilter.lookup[name].index}
+      };
+    }
+    
+    setCurrentFilter(updatedFilter);
   };
 
   const handleSelectAll = () => {
-    setFilters(options);
+    if (!currentFilter.lookup) {
+      return;
+    }
+    
+    const updatedFilter = { ...currentFilter };
+    
+    updatedFilter.lookup = {
+      ...updatedFilter.lookup,
+      [name]: {specifics: options.map(option => ({value: option})), all: false, visible: true, index: currentFilter.lookup[name].index}
+    };
+    
+    setCurrentFilter(updatedFilter);
   };
 
   const handleUnselectAll = () => {
-    setFilters([]);
+    if (!currentFilter.lookup) {
+      return;
+    }
+    
+    const updatedFilter = { ...currentFilter };
+    
+    updatedFilter.lookup = {
+      ...updatedFilter.lookup,
+      [name]: {specifics: [], all: false, visible: true, index: currentFilter.lookup[name].index}
+    };
+    
+    setCurrentFilter(updatedFilter);
   };
 
-  const hasApplied = filters.length > 0;
+  const currentValues = currentFilter.lookup?.[name]?.specifics || [];
+  const hasApplied = currentValues.length > 0;
 
   return (
     <Menu.Root
@@ -507,7 +595,7 @@ export function FilterButton({
             </Flex>
             <Menu.ItemGroup>
               {options.map((option) => {
-                const checked = filters.includes(option);
+                const checked = currentValues.map(value => value.value).includes(option);
                 return (
                   <Menu.CheckboxItem
                     value={option}
@@ -529,82 +617,89 @@ export function FilterButton({
 }
 
 function NonPowerUserButtons({
-  filterInfo,
-  setGroupingOptions,
   groupingOptionsChoices,
 }: {
-  filterInfo: FilterInfo;
-  setGroupingOptions: React.Dispatch<React.SetStateAction<GroupByOption[]>>;
   groupingOptionsChoices: Record<GroupByOption, string[]> | undefined;
 }) {
-  const excludingUnbudgeted =
-    groupingOptionsChoices?.[GroupByOption.budget]?.filter(
-      (budget) => budget !== "Unbudgeted"
-    ) ?? [];
-  const hasBudgets = excludingUnbudgeted.length > 0;
 
-  const { setValues: setYears } = getFilterSettings(
-    filterInfo,
-    GroupByOption.year
-  );
-  const { setValues: setBudgets } = getFilterSettings(
-    filterInfo,
-    GroupByOption.budget
-  );
+  const hasBudgets = groupingOptionsChoices?.[GroupByOption.budget]?.length || 0 > 0;
+
+  const { setCurrentFilter, currentFilter } = useFilters();
+
+  useEffect(() => {
+  }, [currentFilter]);
 
   const setMonthlyBudget = () => {
-    setGroupingOptions([
-      GroupByOption.budget,
-      GroupByOption.month,
-      GroupByOption.year,
-    ]);
-    setYears([new Date().getFullYear().toString()]);
-    setBudgets(excludingUnbudgeted);
+    const newFilter = {
+      is_default: false,
+      lookup: {
+        [GroupByOption.budget]: {specifics: null, all: true, visible: true, index: 0},
+        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 1},
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
+      }
+    };
+    console.log(newFilter)
+    setCurrentFilter(newFilter);
   };
 
   const setYTD = () => {
-    setGroupingOptions([
-      GroupByOption.month,
-      GroupByOption.category,
-      GroupByOption.year,
-    ]);
-    setYears([new Date().getFullYear().toString()]);
+    const newFilter = {
+      is_default: false,
+      lookup: {
+        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 1},
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
+      }
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   const setLastYear = () => {
-    setGroupingOptions([
-      GroupByOption.month,
-      GroupByOption.category,
-      GroupByOption.year,
-    ]);
-    setYears([(new Date().getFullYear() - 1).toString()]);
-
+    const newFilter = {
+      is_default: false,
+      lookup: {
+        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], all: false, visible: false, index: 0},
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
+        [GroupByOption.account]: {specifics: [], all: true, visible: true, index: 0}
+      }
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   const setAllTime = () => {
-    setGroupingOptions([
-      GroupByOption.month,
-      GroupByOption.category,
-    ]);
-    setYears(groupingOptionsChoices?.[GroupByOption.year] ?? []);
+    const newFilter = {
+      is_default: false,
+      lookup: {
+        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0}
+      }
+    };
+    
+    setCurrentFilter(newFilter);
   };
 
   return (
-    <Flex gap={2} direction={"column"}>
-      {hasBudgets && (
-      <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
-        Monthly Budget
-      </Button>
-      )}
-      <Button size="xs" variant="subtle" onClick={setYTD}>
-        Year To Date
-      </Button>
-      <Button size="xs" variant="subtle" onClick={setLastYear}>
-        Last Year
-      </Button>
-      <Button size="xs" variant="subtle" onClick={setAllTime}>
-        All Time
-      </Button>
-    </Flex>
+    <Box>
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+        <SavedFilterControls />
+      </Flex>
+      <Flex direction="column" gap={2}>
+        {hasBudgets && (
+        <Button size="xs" variant="subtle" onClick={setMonthlyBudget}>
+          Monthly Budget
+        </Button>
+        )}
+        <Button size="xs" variant="subtle" onClick={setYTD}>
+          Year To Date
+        </Button>
+        <Button size="xs" variant="subtle" onClick={setLastYear}>
+          Last Year
+        </Button>
+        <Button size="xs" variant="subtle" onClick={setAllTime}>
+          All Time
+        </Button>
+      </Flex>
+    </Box>
   );
 }
