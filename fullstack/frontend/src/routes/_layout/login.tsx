@@ -13,6 +13,7 @@ import {
   Link as RouterLink,
   createFileRoute,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
@@ -21,6 +22,9 @@ import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
+import TwoFactorVerification from "@/components/TwoFactorVerification"
+import TwoFactorSetup from "@/components/TwoFactorSetup"
+
 interface LoginFormData {
   username: string;
   password: string;
@@ -36,9 +40,19 @@ export const Route = createFileRoute("/_layout/login")({
 })
 
 function Login() {
-  const { loginMutation, error, resetError } = useAuth()
+  const { 
+    loginMutation, 
+    error, 
+    resetError, 
+    requires2FA, 
+    requires2FASetup, 
+    tempToken,
+    reset2FAStates 
+  } = useAuth()
+
   const [blahError, setError] = useState(false)
   const showToast = useCustomToast()
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -69,7 +83,6 @@ function Login() {
       const {url} = await OauthService.loginGoogle()
       
       if (url) {
-        // Redirect to Google's authorization page
         window.location.href = url;
       } else {
         showToast("Error", "Failed to initiate Google login", "error");
@@ -81,6 +94,43 @@ function Login() {
       setIsGoogleLoading(false);
     }
   };
+
+  const handleBack = () => {
+    reset2FAStates();
+  };
+
+  const handleSuccessfulVerification = (accessToken: string) => {
+    localStorage.setItem("access_token", accessToken);
+    
+    reset2FAStates();
+    
+    navigate({ to: "/" });
+  };
+
+  if (requires2FA) {
+    if (!tempToken) {
+      throw new Error("No temp token found");
+    }
+    return (
+      <Container maxW="sm" py={8}>
+        <TwoFactorVerification 
+          onCancel={handleBack}
+          onSuccess={handleSuccessfulVerification}
+          temp_token={tempToken}
+        />
+      </Container>
+    );
+  }
+
+  if (requires2FASetup) {
+    return (
+      <Container maxW="sm" py={8}>
+        <TwoFactorSetup 
+          onComplete={handleBack}
+        />
+      </Container>
+    );
+  }
 
   return (
     <Container

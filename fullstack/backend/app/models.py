@@ -137,7 +137,9 @@ class User(Base):
     settings: Mapped[UserSettings] = mapped_column(
         JSONType(UserSettings), nullable=False
     )
-    requires_two_factor: Mapped[bool] = mapped_column(Boolean, default=False)
+    requires_two_factor: Mapped[bool] = mapped_column(Boolean, default=True)
+    totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user")
     oauth_provider: Mapped[str | None] = mapped_column(String, nullable=True)
     oauth_id: Mapped[str | None] = mapped_column(String, nullable=True)

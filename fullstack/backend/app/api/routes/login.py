@@ -35,29 +35,56 @@ def login_access_token(
         message=f"User logged in attempt {form_data.username}",
     )
 
-    user = crud.authenticate(
+    user_or_auth_info = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
 
-    if not user:
+    if not user_or_auth_info:
         send_telegram_message(
             message="User failed to log in",
         )
         # Don't reveal whether the email exists or password is wrong
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    elif not user.is_active:
+    # Check if the result is a dictionary with 2FA info
+    if isinstance(user_or_auth_info, dict):
+        if user_or_auth_info.get("requires_2fa"):
+            send_telegram_message(
+                message=f"User {form_data.username} needs 2FA verification",
+            )
+            # Return the 2FA challenge response with 200 status code
+            return Token(
+                access_token=None,
+                token_type="bearer",
+                requires_2fa=True,
+                temp_token=user_or_auth_info.get("temp_token")
+            )
+        elif user_or_auth_info.get("requires_2fa_setup"):
+            send_telegram_message(
+                message=f"User {form_data.username} needs to set up 2FA",
+            )
+            # Return the 2FA setup requirement response with 200 status code
+            return Token(
+                access_token=None,
+                token_type="bearer",
+                requires_2fa_setup=True,
+                temp_token=user_or_auth_info.get("temp_token")
+            )
+
+    # If we get here, user_or_auth_info is a User object
+    user = user_or_auth_info
+    if not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-
     send_telegram_message(
         message=f"User logged in successfully {user.id}",
     )
     return Token(
         access_token=security.create_access_token(
             user.id, expires_delta=access_token_expires
-        )
+        ),
+        token_type="bearer",
     )
 
 

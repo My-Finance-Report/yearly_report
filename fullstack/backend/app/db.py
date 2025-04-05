@@ -72,6 +72,37 @@ def get_current_user(
     return user
 
 
+def get_current_user_from_temp_token(
+    token: str | bytes = Depends(reusable_oauth2),
+    session: Session = Depends(get_auth_db),
+) -> User:
+    """
+    Similar to get_current_user but designed to work with temporary tokens
+    issued during the 2FA setup process.
+    """
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+
+    except (InvalidTokenError, ValidationError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
+
+    # Query the user by ID
+    user = session.query(User).filter(User.id == token_data.sub).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+
+    return user
+
+
 def get_current_active_superuser(
     current_user: User = Depends(get_current_user),
 ) -> User:

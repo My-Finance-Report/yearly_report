@@ -7,6 +7,10 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+
+def enrich(message: str) -> str:
+    return f"{message}\n\n{settings.ENVIRONMENT}"
+
 def send_telegram_message(
     message: str, chat_id: str | None = None, disable_notification: bool = False
 ) -> bool:
@@ -25,7 +29,7 @@ def send_telegram_message(
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         data = {
             "chat_id": chat_id,
-            "text": message,
+            "text": enrich(message),
             "parse_mode": "HTML",
             "disable_notification": disable_notification,
         }

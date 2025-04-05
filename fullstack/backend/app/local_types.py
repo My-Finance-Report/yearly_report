@@ -21,8 +21,11 @@ from app.models import (
 
 
 class Token(BaseModel):
-    access_token: str
+    access_token: str | None = None
     token_type: str = "bearer"
+    requires_2fa: bool = False
+    requires_2fa_setup: bool = False
+    temp_token: str | None = None
 
 
 class TokenPayload(BaseModel):

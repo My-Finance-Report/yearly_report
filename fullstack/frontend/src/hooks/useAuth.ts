@@ -19,6 +19,9 @@ const isLoggedIn = () => {
 
 const useAuth = () => {
   const [error, setError] = useState<string | null>(null)
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [requires2FASetup, setRequires2FASetup] = useState(false)
+  const [tempToken, setTempToken] = useState<string | null>(null)
   const navigate = useNavigate()
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
@@ -61,10 +64,44 @@ const useAuth = () => {
   })
 
   const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      formData: data,
-    })
-    localStorage.setItem("access_token", response.access_token)
+    try {
+      const response = await LoginService.loginAccessToken({
+        formData: data,
+      })
+
+      
+      if (response.requires_2fa) {
+        setRequires2FA(true)
+        if (response.temp_token) {
+          setTempToken(response.temp_token)
+          throw { type: '2fa_required', token: response.temp_token }
+        }
+      }
+      
+      if (response.requires_2fa_setup) {
+        setRequires2FASetup(true)
+        setTempToken(response.temp_token)
+        throw { type: '2fa_setup_required' }
+      }
+      
+      if (response.access_token) {
+        localStorage.setItem("access_token", response.access_token)
+      }
+      
+      return response
+    } catch (error: unknown) {
+      if (
+        error && 
+        typeof error === 'object' && 
+        'type' in error && 
+        (error.type === '2fa_required' || error.type === '2fa_setup_required')
+      ) {
+        throw error
+      }
+      
+      console.error("Login error:", error)
+      throw error
+    }
   }
 
   const loginMutation = useMutation({
@@ -72,11 +109,18 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/" })
     },
-    onError: (err: ApiError) => {
-      let errDetail = (err.body as {detail: string})?.detail
-
+    onError: (err: Error | ApiError | { type: string; token?: string }) => {
+      // Don't show error for 2FA cases, as they're handled separately
+      if (typeof err === 'object' && 'type' in err && (err.type === '2fa_required' || err.type === '2fa_setup_required')) {
+        return
+      }
+      
+      let errDetail = "Something went wrong"
+      
       if (err instanceof AxiosError) {
         errDetail = err.message
+      } else if ((err as ApiError).body) {
+        errDetail = ((err as ApiError).body as {detail: string})?.detail
       }
 
       if (Array.isArray(errDetail)) {
@@ -93,6 +137,12 @@ const useAuth = () => {
     navigate({ to: "/login" })
   }
 
+  const reset2FAStates = () => {
+    setRequires2FA(false)
+    setRequires2FASetup(false)
+    setTempToken(null)
+  }
+
   return {
     signUpMutation,
     loginMutation,
@@ -100,7 +150,11 @@ const useAuth = () => {
     user,
     isLoading,
     error,
+    requires2FA,
+    requires2FASetup,
+    tempToken,
     resetError: () => setError(null),
+    reset2FAStates,
   }
 }
 
