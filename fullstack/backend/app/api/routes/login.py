@@ -48,7 +48,7 @@ def login_access_token(
 
     elif not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
-    
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     send_telegram_message(

@@ -25,12 +25,6 @@ COPY ./app /app/app
 # Make scripts executable
 RUN chmod +x /app/scripts/prestart.sh /app/scripts/start-prod.sh
 
-# Create log directory
-RUN mkdir -p /var/log/finance && \
-    chown -R nobody:nogroup /var/log/finance
-
-# Switch to non-root user
-USER nobody
 
 # Run prestart.sh and start FastAPI with logging in production
 CMD ["/app/scripts/start-prod.sh"]

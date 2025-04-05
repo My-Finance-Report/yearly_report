@@ -127,7 +127,7 @@ async def google_callback(
             send_telegram_message(
                 message=f"User hit 2fa wall {user.id}",
             )
-            raise NotImplementedError('todo')
+            raise NotImplementedError("todo")
 
         send_telegram_message(
             message=f"User logged in successfully with oauth {user.id}",

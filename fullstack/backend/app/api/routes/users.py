@@ -190,10 +190,6 @@ def register_user(
             detail="The user with this email already exists in the system",
         )
 
-    send_telegram_message(
-        message=f"User registered successfully {user_in.email}",
-    )
-
     user_create = UserRegister(
         full_name=user_in.full_name,
         email=user_in.email,
@@ -201,7 +197,9 @@ def register_user(
     )
     user = crud.create_user(session=session, user=user_create)
 
-    print(user.settings)
+    send_telegram_message(
+        message=f"User registered successfully {user_in.email} {user.id}",
+    )
     return UserOut(
         full_name=user.full_name or "no name user",
         email=user.email,
@@ -230,57 +228,3 @@ def read_user_by_id(
         )
     return user
 
-
-@router.patch(
-    "/{user_id}",
-    dependencies=[Depends(get_current_active_superuser)],
-    response_model=UserOut,
-)
-def update_user(
-    *,
-    session: Session = Depends(get_db),
-    user_id: uuid.UUID,
-    user_in: UserUpdate,
-) -> Any:
-    """
-    Update a user.
-    """
-    db_user = session.get(User, user_id)
-    if not db_user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this id does not exist in the system",
-        )
-
-    if user_in.email:
-        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
-
-    session.commit()
-    session.refresh(db_user)
-    return db_user
-
-
-@router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
-def delete_user(
-    user_id: int,
-    session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Message:
-    """
-    Delete a user.
-    """
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user == current_user:
-        raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
-        )
-
-    session.delete(user)
-    session.commit()
-    return Message(message="User deleted successfully")

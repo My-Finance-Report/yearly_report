@@ -6,12 +6,12 @@ from app.telegram_utils import send_telegram_message
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
-    user = session.query(User).filter(User.email == email).first()
+    user = session.query(User).filter(User.email == email).one_or_none()
     return user
 
 
 def create_user(*, session: Session, user: UserRegister) -> User:
-    existing_user = session.query(User).filter(User.email == user.email).first()
+    existing_user = session.query(User).filter(User.email == user.email).one_or_none()
     if existing_user:
         raise ValueError("Email already registered")
 
@@ -47,7 +47,7 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         send_telegram_message(
             message=f"User hit 2fa wall {db_user.id}",
         )
-        raise NotImplementedError('todo')
+        raise NotImplementedError("todo")
     if not verify_password(password, db_user.hashed_password):
         print("hashed pw", db_user.hashed_password)
         return None

@@ -3,9 +3,6 @@
 set -e
 set -x
 
-# Create log directory if it doesn't exist
-mkdir -p /var/log/finance
-
 # Run prestart script
 /app/scripts/prestart.sh
 

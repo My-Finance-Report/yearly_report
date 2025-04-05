@@ -51,6 +51,12 @@ echo "🚀 Running Deployment on ${REMOTE_SERVER}..."
 ssh ${REMOTE_SERVER} << EOF
     set -e
     cd ${REMOTE_DIR}
+
+    # Create log directory with proper permissions
+    sudo mkdir -p /var/log/finance
+    sudo chown -R ec2-user:ec2-user /var/log/finance
+    sudo chmod -R 755 /var/log/finance
+
     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
     # Create a temporary env file for pulling containers
