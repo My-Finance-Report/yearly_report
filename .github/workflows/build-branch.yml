@@ -1,5 +1,5 @@
 name: build-branch
-run-name: Branch build \#${{ github.run_number }} on PR ${{ github.event.number }}
+run-name: "Branch build #${{ github.run_number }} on PR ${{ github.event.number }}"
 on: [ pull_request ]
 jobs:
   build:
