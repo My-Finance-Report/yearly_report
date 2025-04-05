@@ -67,6 +67,6 @@ jobs:
         VITE_API_URL: https://api.myfinancereport.com
       working-directory: fullstack/${{ matrix.image_name_and_folder }}
       run: |
-        ./build.sh
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+        ./build.sh && \
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG && \
         docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
