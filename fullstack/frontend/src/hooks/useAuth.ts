@@ -13,29 +13,46 @@ import {
 } from "../client"
 import useCustomToast from "./useCustomToast"
 
-const isLoggedIn = () => {
-  return localStorage.getItem("access_token") !== null
+const isLoggedIn = async (): Promise<boolean> => {
+  try {
+    console.log("Checking if user is logged in...");
+    await UsersService.readUserMe();
+    console.log("User is logged in!");
+    return true;
+  } catch (error) {
+    console.log("User is not logged in:", error);
+    return false;
+  }
+}
+
+const isSessionActive = (): boolean => {
+  return sessionStorage.getItem("session_active") === "true"
 }
 
 const useAuth = () => {
-  const [error, setError] = useState<string | null>(null)
+  const [loginError, setLoginError] = useState<string | null>(null)
   const [requires2FA, setRequires2FA] = useState(false)
   const [requires2FASetup, setRequires2FASetup] = useState(false)
   const [tempToken, setTempToken] = useState<string | null>(null)
   const navigate = useNavigate()
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
+  
+  // This query will use the HttpOnly cookie automatically
   const { data: user, isLoading, error: authError } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: isLoggedIn(),
+    // We still need some way to know if we should try to fetch the user
+    enabled: isSessionActive(),
+    retry: false,
   })
 
-    if (authError){
-        localStorage.removeItem("access_token")
-        queryClient.clear()
-        navigate({ to: "/login" })
-    }
+  if (authError) {
+    // Clear the session indicator
+    sessionStorage.removeItem("session_active")
+    queryClient.clear()
+    navigate({ to: "/login" })
+  }
 
   const signUpMutation = useMutation({
     mutationFn: (data: UserRegister) =>
@@ -69,24 +86,27 @@ const useAuth = () => {
         formData: data,
       })
 
-      
       if (response.requires_2fa) {
-        setRequires2FA(true)
-        if (response.temp_token) {
-          setTempToken(response.temp_token)
-          throw { type: '2fa_required', token: response.temp_token }
+        if (!response.temp_token) {
+          throw new Error("No temp token found");
         }
+        setRequires2FA(true)
+        setTempToken(response.temp_token)
+        throw { type: '2fa_required', token: response.temp_token }
       }
       
       if (response.requires_2fa_setup) {
+        if (!response.temp_token) {
+          throw new Error("No temp token found");
+        }
         setRequires2FASetup(true)
         setTempToken(response.temp_token)
         throw { type: '2fa_setup_required' }
       }
       
-      if (response.access_token) {
-        localStorage.setItem("access_token", response.access_token)
-      }
+      // With HttpOnly cookies, we don't need to manually store the token
+      // But we do need to mark that a session is active
+      sessionStorage.setItem("session_active", "true")
       
       return response
     } catch (error: unknown) {
@@ -127,14 +147,32 @@ const useAuth = () => {
         errDetail = "Something went wrong"
       }
 
-      setError(errDetail)
+      setLoginError(errDetail)
     },
   })
 
-  const logout = () => {
-    localStorage.removeItem("access_token")
-    queryClient.clear()
-    navigate({ to: "/login" })
+  // Custom function to call the logout endpoint
+  const callLogoutEndpoint = async () => {
+    try {
+      // Call the logout endpoint using fetch directly
+      await LoginService.logout()
+      return true;
+    } catch {
+      console.error("Logout API error:");
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await callLogoutEndpoint();
+    } catch {
+      console.error("Logout error:");
+    } finally {
+      sessionStorage.removeItem("session_active")
+      queryClient.clear()
+      navigate({ to: "/login" })
+    }
   }
 
   const reset2FAStates = () => {
@@ -149,14 +187,14 @@ const useAuth = () => {
     logout,
     user,
     isLoading,
-    error,
+    error: loginError,
     requires2FA,
     requires2FASetup,
     tempToken,
-    resetError: () => setError(null),
+    resetError: () => setLoginError(null),
     reset2FAStates,
   }
 }
 
-export { isLoggedIn }
+export { isLoggedIn, isSessionActive }
 export default useAuth

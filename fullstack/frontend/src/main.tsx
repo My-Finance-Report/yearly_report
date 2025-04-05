@@ -10,14 +10,14 @@ import { routeTree } from "./routeTree.gen"
 
 import { StrictMode } from "react"
 import { OpenAPI } from "./client"
+import axios from 'axios'
 import "./index.css"
 import theme from "./theme"
 
+// Configure the OpenAPI client
 OpenAPI.BASE = import.meta.env.VITE_API_URL
-
-OpenAPI.TOKEN = async () => {
-  return localStorage.getItem("access_token") || ""
-}
+OpenAPI.WITH_CREDENTIALS = true 
+axios.defaults.withCredentials = true 
 
 const queryClient = new QueryClient()
 

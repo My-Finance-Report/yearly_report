@@ -15,7 +15,7 @@ import useCustomToast from "../hooks/useCustomToast";
 
 interface TwoFactorSetupProps {
   onComplete?: () => void;
-  tempToken?: string;
+  tempToken: string;
 }
 
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, tempToken }) => {
@@ -34,17 +34,11 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
     setLoading(true);
     
     try {
-      // If we have a tempToken, we need to set it in the Authorization header
-      const headers: Record<string, string> = {};
-      if (tempToken) {
-        headers['Authorization'] = `Bearer ${tempToken}`;
-      }
-      
       const response = await TwoFactorService.enable2Fa({
         requestBody: {
-          password
+          password,
+          temp_token: tempToken
         },
-        headers
       });
       
       setQrCode(response.qr_code);
@@ -74,15 +68,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
     setLoading(true);
     
     try {
-      // If we have a tempToken, we need to set it in the Authorization header
-      const headers: Record<string, string> = {};
-      if (tempToken) {
-        headers['Authorization'] = `Bearer ${tempToken}`;
-      }
-      
       await TwoFactorService.verify2Fa({
         requestBody: {
-          code
+          code,
+          temp_token: tempToken
         },
       });
       

@@ -53,8 +53,9 @@ function OAuthCallback() {
           return
         }
         
-        // Store the token and redirect to home
-        localStorage.setItem("access_token", access_token)
+        // The token is now stored in an HttpOnly cookie by the server
+        // Just mark the session as active and redirect to home
+        sessionStorage.setItem("session_active", "true")
         showToast("Login Successful", "You have successfully signed in with Google", "success")
         navigate({ to: "/" })
       } catch (error) {

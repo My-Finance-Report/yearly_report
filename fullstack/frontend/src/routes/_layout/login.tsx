@@ -20,10 +20,11 @@ import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import { emailPattern } from "../../utils"
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
-import useCustomToast from "../../hooks/useCustomToast"
+import useCustomToast from "@/hooks/useCustomToast"
 import { OauthService } from "@/client"
 import TwoFactorVerification from "@/components/TwoFactorVerification"
 import TwoFactorSetup from "@/components/TwoFactorSetup"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface LoginFormData {
   username: string;
@@ -33,7 +34,7 @@ interface LoginFormData {
 export const Route = createFileRoute("/_layout/login")({
   component: Login,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isLoggedIn()) {
       throw redirect({ to: "/transactions" })
     }
   },
@@ -53,6 +54,7 @@ function Login() {
   const [blahError, setError] = useState(false)
   const showToast = useCustomToast()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
@@ -99,8 +101,12 @@ function Login() {
     reset2FAStates();
   };
 
-  const handleSuccessfulVerification = (accessToken: string) => {
-    localStorage.setItem("access_token", accessToken);
+  const handleSuccessfulVerification = () => {
+    // Set the session as active to enable user queries
+    sessionStorage.setItem("session_active", "true")
+    
+    // Force a refresh of the current user data
+    queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     
     reset2FAStates();
     
@@ -123,10 +129,14 @@ function Login() {
   }
 
   if (requires2FASetup) {
+    if (!tempToken) {
+      throw new Error("No temp token found");
+    }
     return (
       <Container maxW="sm" py={8}>
         <TwoFactorSetup 
           onComplete={handleBack}
+          tempToken={tempToken}
         />
       </Container>
     );

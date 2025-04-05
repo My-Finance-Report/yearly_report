@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import func
 
 from app import crud
@@ -148,10 +148,16 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserOut)
-def read_user_me(current_user: User = Depends(get_current_user)) -> User:
+def read_user_me(current_user: User = Depends(get_current_user), request: Request = None) -> User:
     """
     Get current user.
     """
+    # Debug information
+    print("ME endpoint called")
+    if request:
+        print("Request cookies:", request.cookies)
+        print("Request headers:", request.headers.get("authorization"))
+    
     return current_user
 
 
@@ -227,4 +233,3 @@ def read_user_by_id(
             detail="The user doesn't have enough privileges",
         )
     return user
-

@@ -3,8 +3,9 @@ import base64
 import pyotp
 import qrcode
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.security import OAuth2PasswordBearer
+import json
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from jwt.exceptions import InvalidTokenError
@@ -31,14 +32,10 @@ router = APIRouter(prefix="/two-factor", tags=["two-factor"])
 @router.post("/enable", response_model=Enable2FAResponse)
 def enable_2fa(
     request: Enable2FARequest,
-    temp_token: str = Query(None),
-    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_auth_db),
 ):
     """Start the 2FA setup process"""
-    if not crud.verify_password(request.password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid password")
-    
+    current_user: User = get_current_user_from_temp_token(token=request.temp_token, session=session)
     if current_user.totp_enabled:
         raise HTTPException(status_code=400, detail="2FA is already enabled")
     
@@ -52,7 +49,7 @@ def enable_2fa(
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(
         current_user.email,
-        issuer_name="Finance App"
+        issuer_name="My Finance"
     )
     
     # Create QR code
@@ -80,9 +77,9 @@ def enable_2fa(
 def verify_2fa(
     request: Verify2FARequest,
     session: Session = Depends(get_auth_db),
-) -> Verify2FAResponse:
+) -> Response:
 
-    current_user: User = get_current_user_from_temp_token(token=request.temp_token)
+    current_user: User = get_current_user_from_temp_token(token=request.temp_token, session=session)
     if not current_user.totp_secret:
         raise HTTPException(status_code=400, detail="2FA is not set up")
     
@@ -95,20 +92,43 @@ def verify_2fa(
     
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return Verify2FAResponse(
-        success=True,
-        access_token=security.create_access_token(
-            current_user.id, expires_delta=access_token_expires
-        ),
-        token_type="bearer",
+    access_token = security.create_access_token(
+        current_user.id, expires_delta=access_token_expires
     )
+    
+    # Create response data
+    response_data = {
+        "success": True,
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
+    
+    # Create response object
+    response = Response(
+        content=json.dumps(response_data),
+        media_type="application/json"
+    )
+    
+    # Set HttpOnly cookie
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax",
+        secure=False,
+        path="/"
+    )
+    
+    return response
 
 
 @router.post("/verify-login", response_model=Token)
 def verify_2fa_login(
     request: TwoFactorLoginRequest,
     session: Session = Depends(get_auth_db),
-):
+) -> Response:
     """Verify the 2FA code during login"""
     # Extract the user ID from the temporary token
     try:
@@ -140,17 +160,39 @@ def verify_2fa_login(
     
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
+    )
     
     send_telegram_message(
         message=f"User {user.id} successfully verified 2FA during login",
     )
     
-    return Token(
-        access_token=security.create_access_token(
-            user.id, expires_delta=access_token_expires
-        ),
-        token_type="bearer",
+    # Create response data
+    response_data = {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
+    
+    # Create response object
+    response = Response(
+        content=json.dumps(response_data),
+        media_type="application/json"
     )
+    
+    # Set HttpOnly cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax",
+        secure=False,
+        path="/"
+    )
+    
+    return response
 
 
 @router.post("/disable", response_model=Verify2FAResponse)

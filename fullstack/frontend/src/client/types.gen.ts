@@ -144,6 +144,7 @@ export type CheckoutSession = {
  */
 export type Enable2FARequest = {
     password: string;
+    temp_token: string;
 };
 
 /**
@@ -494,6 +495,7 @@ export type ValidationError = {
  */
 export type Verify2FARequest = {
     code: string;
+    temp_token: string;
 };
 
 /**
@@ -667,6 +669,8 @@ export type LoginLoginAccessTokenData = {
 
 export type LoginLoginAccessTokenResponse = (Token);
 
+export type LoginLogoutResponse = (unknown);
+
 export type LoginTestTokenResponse = (UserOut);
 
 export type LoginRecoverPasswordData = {
@@ -819,7 +823,6 @@ export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
 
 export type TwoFactorEnable2FaData = {
     requestBody: Enable2FARequest;
-    tempToken?: string;
 };
 
 export type TwoFactorEnable2FaResponse = (Enable2FAResponse);

@@ -4,7 +4,7 @@ from typing import Any
 import jwt
 import sqlalchemy.orm as orm
 from dotenv import load_dotenv
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -32,6 +32,15 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
+def get_token_from_cookie(request: Request) -> str:
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing access token cookie",
+        )
+    return token
+
 
 def get_auth_db() -> Generator[Session, Any, None]:
     """Returns a database session that does NOT enforce RLS (used for authentication)."""
@@ -46,7 +55,7 @@ def get_auth_db() -> Generator[Session, Any, None]:
 
 
 def get_current_user(
-    token: str | bytes = Depends(reusable_oauth2),
+    token: str | bytes = Depends(get_token_from_cookie),
     session: Session = Depends(get_auth_db),
 ) -> User:
     try:

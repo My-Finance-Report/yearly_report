@@ -1,8 +1,8 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
@@ -19,15 +19,16 @@ from app.utils import (
     send_email,
     verify_password_reset_token,
 )
+import json
 
 router = APIRouter(tags=["login"])
 
 
-@router.post("/login/access-token")
+@router.post("/login/access-token", response_model=Token)
 def login_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Session = Depends(get_auth_db),
-) -> Token:
+) -> Response:
     """
     OAuth2 compatible token login, get an access token for future requests
     """
@@ -53,39 +54,92 @@ def login_access_token(
                 message=f"User {form_data.username} needs 2FA verification",
             )
             # Return the 2FA challenge response with 200 status code
-            return Token(
-                access_token=None,
-                token_type="bearer",
-                requires_2fa=True,
-                temp_token=user_or_auth_info.get("temp_token")
+            response_data = {
+                "access_token": None, 
+                "token_type": "bearer", 
+                "requires_2fa": True, 
+                "temp_token": user_or_auth_info.get("temp_token")
+            }
+            return Response(
+                content=json.dumps(response_data),
+                media_type="application/json"
             )
         elif user_or_auth_info.get("requires_2fa_setup"):
             send_telegram_message(
                 message=f"User {form_data.username} needs to set up 2FA",
             )
             # Return the 2FA setup requirement response with 200 status code
-            return Token(
-                access_token=None,
-                token_type="bearer",
-                requires_2fa_setup=True,
-                temp_token=user_or_auth_info.get("temp_token")
+            response_data = {
+                "access_token": None, 
+                "token_type": "bearer", 
+                "requires_2fa_setup": True, 
+                "temp_token": user_or_auth_info.get("temp_token")
+            }
+            return Response(
+                content=json.dumps(response_data),
+                media_type="application/json"
             )
 
     # If we get here, user_or_auth_info is a User object
     user = user_or_auth_info
+    
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(
+        user.id, expires_delta=access_token_expires
+    )
+    
+    # Create response with token
+    token_data = {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
+    
+    # Create a Response object with the token data
+    response = Response(
+        content=json.dumps(token_data),
+        media_type="application/json"
+    )
+    
+    # Set HttpOnly cookie
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax",
+        secure=False,
+    )
+    
     send_telegram_message(
         message=f"User logged in successfully {user.id}",
     )
-    return Token(
-        access_token=security.create_access_token(
-            user.id, expires_delta=access_token_expires
-        ),
-        token_type="bearer",
+    
+    return response
+
+
+@router.post("/logout")
+def logout():
+    """
+    Logout endpoint that clears the access token cookie
+    """
+    response = Response(
+        content=json.dumps({"message": "Successfully logged out"}),
+        media_type="application/json"
     )
+    
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        domain=None,
+        secure=False,
+        samesite="lax"
+    )
+    
+    return response
 
 
 @router.post("/login/test-token", response_model=UserOut)

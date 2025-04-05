@@ -1,4 +1,4 @@
-import { UserOut } from "@/client";
+import { UserOut, UsersService } from "@/client";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import {
@@ -13,19 +13,19 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiDollarSign,
   FiHome,
   FiList,
+  FiMenu,
   FiSettings,
   FiUsers,
-  FiMenu,
   FiChevronRight,
 } from "react-icons/fi";
-import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useState, useEffect } from "react";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -35,13 +35,28 @@ const navigationItems = [
 ];
 
 export function SegmentedNavigation() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useRouterState().location;
-  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
+  const isSessionActive = sessionStorage.getItem("session_active") === "true";
+  
+  const { data: currentUser, isError } = useQuery<UserOut | null, Error>({
+    queryKey: ["currentUser"],
+    queryFn: UsersService.readUserMe,
+    enabled: isSessionActive,
+    retry: false,
+    staleTime: 1000 * 60 * 5,  // 5 minutes
+    gcTime: 1000 * 60 * 10,    // 10 minutes
+  });
+
+  useEffect(() => {
+    if (isError && isSessionActive) {
+      sessionStorage.removeItem("session_active");
+      navigate({ to: "/login" });
+    }
+  }, [isError, isSessionActive, navigate]);
+
   const isMobile = useIsMobile();
 
-  // Example: final nav items + "Admin" if user is superuser
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : currentUser
