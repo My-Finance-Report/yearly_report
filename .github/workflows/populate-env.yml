@@ -68,6 +68,6 @@ jobs:
       working-directory: fullstack/${{ matrix.image_name_and_folder }}
       run: |
         ls -a . && \
-        build.sh && \
+        ./build.sh && \
         docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG && \
         docker push $ECR_REGISTRY/$ECR_REPOSITORY/$IMAGE_NAME:latest
