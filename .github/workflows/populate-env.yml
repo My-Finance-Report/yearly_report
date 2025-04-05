@@ -1,6 +1,8 @@
-name: Populate env file
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: Build Main
+run-name: Post-merge build for commit ${{ github.sha }}
+on:
+  push:
+    branches: main
 permissions:
   id-token: write
   contents: read 
