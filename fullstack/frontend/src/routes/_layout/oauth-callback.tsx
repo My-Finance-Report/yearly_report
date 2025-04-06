@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
+import { activateSession } from "@/hooks/useAuth"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
 })
@@ -40,10 +41,8 @@ function OAuthCallback() {
         
         // Exchange the code for a token with our backend
         await OauthService.googleCallback({code})
-        // The token is now stored in an HttpOnly cookie by the server
-        // Just mark the session as active and redirect to home
 
-        sessionStorage.setItem("session_active", "true")
+        activateSession()
 
         showToast("Login Successful", "You have successfully signed in with Google", "success")
         navigate({ to: "/" })

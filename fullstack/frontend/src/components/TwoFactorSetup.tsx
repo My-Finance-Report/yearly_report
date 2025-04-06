@@ -13,6 +13,7 @@ import {
 import { TwoFactorService } from "@/client";
 import useCustomToast from "../hooks/useCustomToast";
 import { useNavigate } from '@tanstack/react-router';
+import { activateSession } from '@/hooks/useAuth';
 
 interface TwoFactorSetupProps {
   onComplete?: () => void;
@@ -45,7 +46,9 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
         "2FA rejected successfully!", 
         "success"
       );
-      navigate({ to: "/" });
+      
+      activateSession()
+      navigate({ to: "/transactions" });
     } catch (error) {
       console.error('Failed to reject 2FA:', error);
       setError('Failed to reject 2FA');
@@ -54,8 +57,6 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
         "Failed to reject 2FA.", 
         "error"
       );
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -126,7 +127,8 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
       );
     } finally {
       setLoading(false);
-      navigate({ to: "/" });
+      sessionStorage.setItem("session_active", "true");
+      navigate({ to: "/transactions" });
     }
   };
 
@@ -174,12 +176,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
                 Enable 2FA
               </Button>
               <Button 
-                type="submit" 
                 variant="outline"
                 color="red.500"
                 mt={4}
                 onClick={handleNoTwoFA}
-                loading={loading}
                 disabled={loading}
               >
                 Don't Enable 2FA

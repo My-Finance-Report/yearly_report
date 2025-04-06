@@ -22,9 +22,14 @@ const isSessionValid = async (): Promise<boolean> => {
   }
 }
 
-const isSessionActive = (): boolean => {
+const isSessionActive_NOT_AUTH = (): boolean => {
   return sessionStorage.getItem("session_active") === "true"
 }
+
+const activateSession = () => {
+  sessionStorage.setItem("session_active", "true");
+}
+
 
 const useAuth = () => {
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -38,7 +43,7 @@ const useAuth = () => {
   const { data: user, isLoading, error: authError } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: isSessionActive(),
+    enabled: isSessionActive_NOT_AUTH(),
     retry: false,
   })
 
@@ -121,7 +126,7 @@ const useAuth = () => {
       }
       
       // With HttpOnly cookies, we don't need to manually store the token
-      sessionStorage.setItem("session_active", "true");
+      activateSession();
       
       return { success: true };
     } catch (error: unknown) {
@@ -205,5 +210,5 @@ const useAuth = () => {
   };
 };
 
-export { isSessionActive, isSessionValid };
+export { isSessionActive_NOT_AUTH as isSessionActive, isSessionValid, activateSession };
 export default useAuth;

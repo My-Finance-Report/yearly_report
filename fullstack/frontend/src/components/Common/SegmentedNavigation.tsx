@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiDollarSign,
@@ -23,9 +23,9 @@ import {
   FiUsers,
   FiMenu,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import {isSessionActive} from "@/hooks/useAuth";
+import useAuth, { isSessionActive } from "@/hooks/useAuth";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -37,14 +37,49 @@ const navigationItems = [
 export function SegmentedNavigation() {
   const navigate = useNavigate();
   const location = useRouterState().location;
-const { data: currentUser } = useQuery<UserOut | null, Error>({
+  const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
+  
+  // Use the user from useAuth hook as a fallback
+  const { data: currentUser } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
-    queryFn: UsersService.readUserMe,
-    retry: false,
-    enabled: isSessionActive(),
+    queryFn: async () => {
+      try {
+        return await UsersService.readUserMe();
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        return null;
+      }
+    },
+    initialData: authUser || null,
+    // Don't retry on 401 errors
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes("401")) {
+        return false;
+      }
+      return failureCount < 3;
+    }
+  });
 
-  })
-
+  // Effect to refetch user data when session status changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (isSessionActive()) {
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Initial check
+    if (isSessionActive() && !currentUser) {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    }
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [queryClient, currentUser]);
 
   const isMobile = useIsMobile();
 
@@ -55,7 +90,8 @@ const { data: currentUser } = useQuery<UserOut | null, Error>({
       ? navigationItems
       : [];
 
-  const isDevelopment = window.location.hostname === "localhost" 
+  // Check if we're running on localhost (development environment)
+  const isDevelopment = window.location.hostname === "localhost";
 
   return (
     <Flex
