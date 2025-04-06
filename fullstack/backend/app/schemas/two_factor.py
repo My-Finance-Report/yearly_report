@@ -30,3 +30,7 @@ class TwoFactorLoginRequest(BaseModel):
     """Request to complete login with 2FA."""
     code: str
     temp_token: str
+
+class TwoFactorRejectRequest(BaseModel):
+    """Request to reject 2FA setup during login."""
+    temp_token: str

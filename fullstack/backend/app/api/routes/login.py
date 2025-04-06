@@ -1,13 +1,10 @@
-from datetime import timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
-from app.core import security
-from app.core.config import settings
 from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
@@ -20,6 +17,8 @@ from app.utils import (
     verify_password_reset_token,
 )
 import json
+
+from app.api.routes.two_factor import make_token_and_respond
 
 router = APIRouter(tags=["login"])
 
@@ -70,39 +69,11 @@ def login_access_token(
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
 
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
-    )
-    
-    # Create response with token
-    token_data = {
-        "access_token": access_token,
-        "token_type": "bearer",
-    }
-    
-    # Create a Response object with the token data
-    response = Response(
-        content=json.dumps(token_data),
-        media_type="application/json"
-    )
-    
-    # Set HttpOnly cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False,
-    )
-    
     send_telegram_message(
         message=f"User logged in successfully {user.id}",
     )
-    
-    return response
+
+    return make_token_and_respond(user_id=user.id)
 
 
 @router.post("/logout")

@@ -432,6 +432,13 @@ export type TwoFactorLoginRequest = {
     temp_token: string;
 };
 
+/**
+ * Request to reject 2FA setup during login.
+ */
+export type TwoFactorRejectRequest = {
+    temp_token: string;
+};
+
 export type UploadedPdfOut = {
     filename: string;
     nickname?: (string | null);
@@ -838,6 +845,12 @@ export type TwoFactorVerify2FaLoginData = {
 };
 
 export type TwoFactorVerify2FaLoginResponse = (Token);
+
+export type TwoFactorReject2FaData = {
+    requestBody: TwoFactorRejectRequest;
+};
+
+export type TwoFactorReject2FaResponse = (Token);
 
 export type TwoFactorDisable2FaData = {
     requestBody: Enable2FARequest;

@@ -19,6 +19,8 @@ interface TwoFactorSetupProps {
   tempToken: string;
 }
 
+
+
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, tempToken }) => {
   const [step, setStep] = useState<'init' | 'verify'>('init');
   const [qrCode, setQrCode] = useState<string>('');
@@ -29,6 +31,17 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
   const [error, setError] = useState<string>('');
   const showToast = useCustomToast();
   const navigate = useNavigate();
+
+
+  const handleNoTwoFA = async () => {
+      const response = await TwoFactorService.reject2Fa({
+        requestBody: {
+          temp_token: tempToken
+        },
+      });
+
+  }
+
 
   const handleEnable = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,15 +146,28 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
                 )}
               </Box>
               
+              <Flex gap={2}>
               <Button 
                 type="submit" 
-                colorScheme="blue" 
                 mt={4}
+                variant="outline"
                 loading={loading}
                 disabled={loading}
               >
                 Enable 2FA
               </Button>
+              <Button 
+                type="submit" 
+                variant="outline"
+                color="red.500"
+                mt={4}
+                onClick={handleNoTwoFA}
+                loading={loading}
+                disabled={loading}
+              >
+                Don't Enable 2FA
+              </Button>
+              </Flex>
             </Box>
           </>
         ) : (
