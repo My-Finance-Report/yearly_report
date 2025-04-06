@@ -39,23 +39,12 @@ function OAuthCallback() {
         }
         
         // Exchange the code for a token with our backend
-        const {error: callbackError, access_token} = await OauthService.googleCallback({code})
-        
-        if (callbackError) {
-          showToast("Authentication Error", callbackError, "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!access_token) {
-          showToast("Authentication Error", "No access token received from server", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
+        await OauthService.googleCallback({code})
         // The token is now stored in an HttpOnly cookie by the server
         // Just mark the session as active and redirect to home
+
         sessionStorage.setItem("session_active", "true")
+
         showToast("Login Successful", "You have successfully signed in with Google", "success")
         navigate({ to: "/" })
       } catch (error) {

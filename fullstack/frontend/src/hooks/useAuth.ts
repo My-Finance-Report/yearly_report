@@ -67,7 +67,7 @@ const useAuth = () => {
           "Your account has been created and you've been logged in successfully.",
           "success",
         );
-
+        console.log("redirecting to setup")
         navigate({ to: "/setup_two_fa" , search: { tempToken: tempToken } });
       } catch (error: unknown) {
         console.log(error)
@@ -134,6 +134,7 @@ const useAuth = () => {
     mutationFn: login,
     onSuccess: (result) => {
       if (result.success) {
+        console.log("redirecting here")
         navigate({ to: "/" });
       }
     },

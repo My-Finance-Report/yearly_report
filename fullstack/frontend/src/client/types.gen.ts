@@ -180,11 +180,6 @@ export type FilterEntry = {
     value: string;
 };
 
-export type GoogleCallbackData = {
-    access_token?: (string | null);
-    error?: (string | null);
-};
-
 export type GroupByOption = 'account' | 'category' | 'month' | 'year' | 'budget';
 
 export type HTTPValidationError = {
@@ -705,7 +700,7 @@ export type OauthGoogleCallbackData = {
     error?: (string | null);
 };
 
-export type OauthGoogleCallbackResponse = (GoogleCallbackData);
+export type OauthGoogleCallbackResponse = (unknown);
 
 export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
 

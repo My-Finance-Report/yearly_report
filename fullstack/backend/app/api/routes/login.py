@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
-from app.api.routes.two_factor import make_token_and_respond
 from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
@@ -45,33 +44,7 @@ def login_access_token(
         # Don't reveal whether the email exists or password is wrong
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if user_in_progress.requires_2fa or user_in_progress.requires_2fa_setup:
-        send_telegram_message(
-            message=f"User {form_data.username} needs 2FA verification",
-        )
-        # Return the 2FA challenge response with 200 status code
-        response_data = {
-            "access_token": None,
-            "token_type": "bearer",
-            "requires_2fa": user_in_progress.requires_2fa,
-            "requires_2fa_setup": user_in_progress.requires_2fa_setup,
-            "temp_token": user_in_progress.temp_token,
-        }
-        return Response(
-            content=json.dumps(response_data), media_type="application/json"
-        )
-
-    # If we get here, user_in_progress is a User object
-    user = user_in_progress.user
-
-    if not user.is_active:
-        raise HTTPException(status_code=401, detail="Account is inactive")
-
-    send_telegram_message(
-        message=f"User logged in successfully {user.id}",
-    )
-
-    return make_token_and_respond(user_id=user.id)
+    return crud.handle_and_respond_to_in_progress_login(user_in_progress, 'basic')
 
 
 @router.post("/logout")

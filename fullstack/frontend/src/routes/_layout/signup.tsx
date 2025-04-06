@@ -16,25 +16,18 @@ import { FcGoogle } from "react-icons/fc";
 import {
   Link as RouterLink,
   createFileRoute,
-  redirect,
 } from "@tanstack/react-router";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { UserRegister } from "@/client";
-import useAuth, { isSessionActive } from "@/hooks/useAuth";
+import useAuth  from "@/hooks/useAuth";
 import { confirmPasswordRules, emailPattern, passwordRules } from "../../utils";
 
 export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
-  beforeLoad: async () => {
-    if (await isSessionActive()) {
-      throw redirect({
-        to: "/",
-      });
-    }
-  },
+
 });
 
 interface UserRegisterForm extends UserRegister {
@@ -96,12 +89,6 @@ function SignUp() {
     }
   };
   
-  useEffect(() => {
-    if (requires2FA || requires2FASetup) {
-      navigate({ to: "/login" });
-    }
-  }, [requires2FA, requires2FASetup, navigate]);
-
   return (
     <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
       <Container

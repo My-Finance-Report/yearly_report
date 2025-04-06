@@ -673,7 +673,7 @@ export class OauthService {
      * @param data The data for the request.
      * @param data.code
      * @param data.error
-     * @returns GoogleCallbackData Successful Response
+     * @returns unknown Successful Response
      * @throws ApiError
      */
     public static googleCallback(data: OauthGoogleCallbackData): CancelablePromise<OauthGoogleCallbackResponse> {

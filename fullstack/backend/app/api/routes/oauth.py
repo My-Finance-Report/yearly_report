@@ -1,15 +1,17 @@
 import secrets
+from typing import Any
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime
 
 import google.oauth2.credentials
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.core import security
 from app.core.config import settings
 from app.core.oauth import (
+    GoogleTokenResponse,
     exchange_code_for_tokens,
     get_google_authorization_url,
     get_google_user_info,
@@ -17,6 +19,7 @@ from app.core.oauth import (
 from app.db import get_auth_db
 from app.models import User, UserSettings
 from app.telegram_utils import send_telegram_message
+from app.api.routes.two_factor import make_token_and_respond
 
 router = APIRouter(tags=["oauth"])
 
@@ -44,11 +47,50 @@ async def login_google() -> LoginGoogleData:
     # Return the URL for the frontend to handle the redirect
     return LoginGoogleData(url=auth_url)
 
+def get_and_update_user(session:Session,user_info: Any, token_response: GoogleTokenResponse)->User:
+    # Check if user exists
+    email = user_info.get("email")
+    if not email:
+        raise ValueError("Email not provided by google")
 
-@dataclass
-class GoogleCallbackData:
-    access_token: str | None = None
-    error: str | None = None
+    user = crud.get_user_by_email(session=session, email=email)
+
+    if not user:
+        # Create a new user
+        user = User(
+            email=email,
+            full_name=user_info.get("name"),
+            is_active=True,
+            is_superuser=False,
+            hashed_password=None,
+            oauth_provider="google",
+            oauth_id=user_info.get("id"),
+            oauth_access_token=token_response.access_token,
+            oauth_refresh_token=token_response.refresh_token,
+            oauth_token_expires_at=token_response.expires_at,
+            settings=UserSettings(has_budget=False, power_user_filters=False),
+        )
+        session.add(user)
+        session.commit()
+
+        send_telegram_message(
+            message=f"New user created via oauth: {user.id}",
+        )
+
+    else:
+        # Update existing user with new tokens
+        user.oauth_provider = "google"
+        user.oauth_id = user_info.get("id")
+        user.oauth_access_token = token_response.access_token
+        user.oauth_refresh_token = token_response.refresh_token
+        user.oauth_token_expires_at = token_response.expires_at
+        if user_info.get("name"):
+            user.full_name = user_info.get("name")
+        session.add(user)
+        session.commit()
+
+    return user
+
 
 
 @router.get("/oauth/google/callback")
@@ -56,85 +98,26 @@ async def google_callback(
     code: str = Query(...),
     error: str | None = Query(None),
     session: Session = Depends(get_auth_db),
-) -> GoogleCallbackData:
+) -> Response:
     """
     Handle the callback from Google OAuth.
     This endpoint is called by the frontend after receiving the code from Google.
     """
     if error:
-        return GoogleCallbackData(error=error)
+        return Response(content=error, status_code=400)
 
     try:
-        # Exchange the authorization code for tokens
-        access_token, refresh_token, expires_at = exchange_code_for_tokens(code)
+        token_response = exchange_code_for_tokens(code)
 
-        # Create credentials object
         credentials = google.oauth2.credentials.Credentials(  # type: ignore [no-untyped-call]
-            token=access_token,
-            refresh_token=refresh_token,
+            token=token_response.access_token,
+            refresh_token=token_response.refresh_token,
         )
 
-        # Get user info from Google
         user_info = get_google_user_info(credentials)
-
-        # Check if user exists
-        email = user_info.get("email")
-        if not email:
-            return GoogleCallbackData(error="Email not provided by Google")
-
-        user = crud.get_user_by_email(session=session, email=email)
-
-        if not user:
-            # Create a new user
-            user = User(
-                email=email,
-                full_name=user_info.get("name"),
-                is_active=True,
-                is_superuser=False,
-                hashed_password=None,
-                oauth_provider="google",
-                oauth_id=user_info.get("id"),
-                oauth_access_token=access_token,
-                oauth_refresh_token=refresh_token,
-                oauth_token_expires_at=expires_at,
-                settings=UserSettings(has_budget=False, power_user_filters=False),
-            )
-            session.add(user)
-            session.commit()
-
-            send_telegram_message(
-                message=f"New user created via oauth: {user.id}",
-            )
-
-        else:
-            # Update existing user with new tokens
-            user.oauth_provider = "google"
-            user.oauth_id = user_info.get("id")
-            user.oauth_access_token = access_token
-            user.oauth_refresh_token = refresh_token
-            user.oauth_token_expires_at = expires_at
-            if user_info.get("name"):
-                user.full_name = user_info.get("name")
-            session.add(user)
-            session.commit()
-
-        # Generate JWT token
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        jwt_token = security.create_access_token(
-            user.id, expires_delta=access_token_expires
-        )
-        if user.requires_two_factor:
-            send_telegram_message(
-                message=f"User hit 2fa wall {user.id}",
-            )
-            raise NotImplementedError("todo")
-
-        send_telegram_message(
-            message=f"User logged in successfully with oauth {user.id}",
-        )
-
-        # Return the token to the frontend
-        return GoogleCallbackData(access_token=jwt_token)
+        user = get_and_update_user(session=session, user_info=user_info, token_response=token_response)
+        in_progress_login_user = crud.determine_two_fa_status_from_user(user)
+        return crud.handle_and_respond_to_in_progress_login(in_progress_login_user, 'oauth')
 
     except Exception as e:
-        return GoogleCallbackData(error=str(e))
+        return Response(content=str(e), status_code=500)

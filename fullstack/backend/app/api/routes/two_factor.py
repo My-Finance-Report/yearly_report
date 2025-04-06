@@ -122,38 +122,7 @@ def verify_2fa(
 
     # Enable 2FA for the user
     crud.activate_2fa(session=session, user_id=current_user.id)
-
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(
-        current_user.id, expires_delta=access_token_expires
-    )
-
-    # Create response data
-    response_data = {
-        "success": True,
-        "access_token": access_token,
-        "token_type": "bearer",
-    }
-
-    # Create response object
-    response = Response(
-        content=json.dumps(response_data), media_type="application/json"
-    )
-
-    # Set HttpOnly cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False,
-        path="/",
-    )
-
-    return response
+    return make_token_and_respond(user_id=current_user.id)
 
 
 @router.post("/verify-login", response_model=Token)

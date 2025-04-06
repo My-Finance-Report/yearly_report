@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -52,7 +53,13 @@ def get_google_authorization_url(state: str) -> str:
     return val[0]
 
 
-def exchange_code_for_tokens(code: str) -> tuple[str, str, datetime]:
+@dataclass
+class GoogleTokenResponse:
+    access_token: str
+    refresh_token: str
+    expires_at: datetime
+
+def exchange_code_for_tokens(code: str) -> GoogleTokenResponse:
     """Exchange authorization code for access and refresh tokens."""
     # Get the redirect URI from the request
     redirect_uri = f"{settings.SERVER_HOST}/oauth-callback"
@@ -65,7 +72,11 @@ def exchange_code_for_tokens(code: str) -> tuple[str, str, datetime]:
         seconds=credentials.expiry.timestamp() - datetime.now().timestamp()
     )
 
-    return credentials.token, credentials.refresh_token, expires_at
+    return GoogleTokenResponse(
+        access_token=credentials.token,
+        refresh_token=credentials.refresh_token,
+        expires_at=expires_at,
+    )
 
 
 def get_google_user_info(credentials: Credentials) -> Any:
