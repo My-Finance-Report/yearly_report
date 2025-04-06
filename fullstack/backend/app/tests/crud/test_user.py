@@ -36,7 +36,8 @@ def test_authenticate_user(db: Session) -> None:
         password=password,
     )
     assert authenticated_user
-    assert user.email == authenticated_user.email
+    assert authenticated_user.user.email == email
+    assert user.email == authenticated_user.user.email
 
 
 def test_not_authenticate_user(db: Session) -> None:

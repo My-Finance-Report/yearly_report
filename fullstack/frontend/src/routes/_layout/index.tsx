@@ -11,12 +11,12 @@ import {
   Highlight,
 } from "@chakra-ui/react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/")({
   component: Landing,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({
         to: "/transactions",
       })

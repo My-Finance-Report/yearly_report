@@ -638,7 +638,6 @@ function NonPowerUserButtons({
         [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
       }
     };
-    console.log(newFilter)
     setCurrentFilter(newFilter);
   };
 

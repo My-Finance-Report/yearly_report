@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiDollarSign,
@@ -26,7 +26,6 @@ import {
 } from "react-icons/fi";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import  {  isSessionActive } from "@/hooks/useAuth"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -113,7 +112,7 @@ const { data: currentUser } = useQuery<UserOut | null, Error>({
 
         {isMobile ? (
           <MobileMenu
-            user={currentUser}
+            user={currentUser ?? undefined}
             navigate={navigate}
             finalItems={finalItems}
           />

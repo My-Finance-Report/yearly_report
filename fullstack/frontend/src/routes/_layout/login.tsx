@@ -16,7 +16,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import useAuth, { isSessionActive } from "@/hooks/useAuth"
 import { emailPattern } from "../../utils"
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
@@ -34,7 +34,7 @@ interface LoginFormData {
 export const Route = createFileRoute("/_layout/login")({
   component: Login,
   beforeLoad: async () => {
-    if (await isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({ to: "/transactions" })
     }
   },
@@ -113,7 +113,6 @@ function Login() {
     navigate({ to: "/" });
   };
 
-  console.log(requires2FA, requires2FASetup, tempToken)
 
   if (requires2FA) {
     if (!tempToken) {

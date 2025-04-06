@@ -30,7 +30,7 @@ def create_temp_token(subject: str | Any) -> str:
     return encoded_jwt
 
 
-def verify_temp_token(token: str) -> dict | None:
+def verify_temp_token(token: str) -> Any | None:
     """Verify a temporary token used for 2FA verification."""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])

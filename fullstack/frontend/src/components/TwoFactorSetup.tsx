@@ -34,12 +34,29 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
 
 
   const handleNoTwoFA = async () => {
-      const response = await TwoFactorService.reject2Fa({
+    try{
+      await TwoFactorService.reject2Fa({
         requestBody: {
           temp_token: tempToken
         },
       });
-
+      showToast(
+        "Success", 
+        "2FA rejected successfully!", 
+        "success"
+      );
+      navigate({ to: "/" });
+    } catch (error) {
+      console.error('Failed to reject 2FA:', error);
+      setError('Failed to reject 2FA');
+      showToast(
+        "Error", 
+        "Failed to reject 2FA.", 
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
 

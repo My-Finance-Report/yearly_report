@@ -25,7 +25,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { UploadsService } from "@/client"
 import type { UploadedPdfOut } from "@/client"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import { useState } from "react"
 
 interface SortConfig {
@@ -64,7 +64,7 @@ function UploadFiles() {
     {
       queryKey: ["uploadedFiles"],
       queryFn: () => UploadsService.getUploads(),
-      enabled: isLoggedIn(),
+      enabled: isSessionActive(),
     },
   )
 

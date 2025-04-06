@@ -1,10 +1,14 @@
 from dataclasses import dataclass
-from app.core.security import get_password_hash, verify_password, create_temp_token, verify_temp_token
+
+from app.core.security import (
+    create_temp_token,
+    get_password_hash,
+    verify_password,
+    verify_temp_token,
+)
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
 from app.models import User, UserSettings
-from app.telegram_utils import send_telegram_message
-from fastapi import HTTPException
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -49,17 +53,19 @@ class InProgressUserLogin:
     requires_2fa: bool
     requires_2fa_setup: bool
     temp_token: str | None
-    user: User  
+    user: User
 
-def authenticate(*, session: Session, email: str, password: str) ->   InProgressUserLogin | None:
+
+def authenticate(
+    *, session: Session, email: str, password: str
+) -> InProgressUserLogin | None:
     db_user = get_user_by_email(session=session, email=email)
 
     if not db_user:
         return None
     if not verify_password(password, db_user.hashed_password):
         return None
-        
-    
+
     # If 2FA is enabled for the user
     if db_user.totp_enabled:
         print("2FA is enabled for the user")
@@ -68,7 +74,7 @@ def authenticate(*, session: Session, email: str, password: str) ->   InProgress
             requires_2fa=True,
             requires_2fa_setup=False,
             temp_token=temp_token,
-            user=db_user
+            user=db_user,
         )
 
     # User is required to set up 2FA but hasn't done so yet
@@ -79,16 +85,13 @@ def authenticate(*, session: Session, email: str, password: str) ->   InProgress
             requires_2fa_setup=True,
             temp_token=temp_token,
             requires_2fa=False,
-            user=db_user
+            user=db_user,
         )
-    
+
     # the user has denied 2FA
     print("2FA is not required for the user")
     return InProgressUserLogin(
-        user=db_user,
-        requires_2fa=False,
-        requires_2fa_setup=False,
-        temp_token=None
+        user=db_user, requires_2fa=False, requires_2fa_setup=False, temp_token=None
     )
 
 
@@ -97,11 +100,11 @@ def get_user_by_temp_token(*, session: Session, token: str) -> User | None:
     payload = verify_temp_token(token)
     if not payload:
         return None
-    
+
     user_id = payload.get("sub")
     if not user_id:
         return None
-    
+
     return get_user(session=session, id=int(user_id))
 
 
@@ -110,7 +113,7 @@ def enable_2fa(*, session: Session, user_id: int, secret: str) -> User:
     user = get_user(session=session, id=user_id)
     if not user:
         raise ValueError("User not found")
-    
+
     user.totp_secret = secret
     session.commit()
     return user
@@ -121,10 +124,10 @@ def activate_2fa(*, session: Session, user_id: int) -> User:
     user = get_user(session=session, id=user_id)
     if not user:
         raise ValueError("User not found")
-    
+
     if not user.totp_secret:
         raise ValueError("TOTP secret not set")
-    
+
     user.totp_enabled = True
     session.commit()
     return user
@@ -135,7 +138,7 @@ def disable_2fa(*, session: Session, user_id: int) -> User:
     user = get_user(session=session, id=user_id)
     if not user:
         raise ValueError("User not found")
-    
+
     user.totp_enabled = False
     user.totp_secret = None
     session.commit()

@@ -1,3 +1,4 @@
+import json
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -5,6 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
+from app.api.routes.two_factor import make_token_and_respond
 from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
@@ -16,9 +18,6 @@ from app.utils import (
     send_email,
     verify_password_reset_token,
 )
-import json
-
-from app.api.routes.two_factor import make_token_and_respond
 
 router = APIRouter(tags=["login"])
 
@@ -52,20 +51,19 @@ def login_access_token(
         )
         # Return the 2FA challenge response with 200 status code
         response_data = {
-                "access_token": None, 
-                "token_type": "bearer", 
-                "requires_2fa": user_in_progress.requires_2fa, 
-                "requires_2fa_setup": user_in_progress.requires_2fa_setup,
-                "temp_token": user_in_progress.temp_token
-            }
+            "access_token": None,
+            "token_type": "bearer",
+            "requires_2fa": user_in_progress.requires_2fa,
+            "requires_2fa_setup": user_in_progress.requires_2fa_setup,
+            "temp_token": user_in_progress.temp_token,
+        }
         return Response(
-            content=json.dumps(response_data),
-            media_type="application/json"
+            content=json.dumps(response_data), media_type="application/json"
         )
 
     # If we get here, user_in_progress is a User object
     user = user_in_progress.user
-    
+
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
 
@@ -77,23 +75,19 @@ def login_access_token(
 
 
 @router.post("/logout")
-def logout():
+def logout() -> Response:
     """
     Logout endpoint that clears the access token cookie
     """
     response = Response(
         content=json.dumps({"message": "Successfully logged out"}),
-        media_type="application/json"
+        media_type="application/json",
     )
-    
+
     response.delete_cookie(
-        key="access_token",
-        path="/",
-        domain=None,
-        secure=False,
-        samesite="lax"
+        key="access_token", path="/", domain=None, secure=False, samesite="lax"
     )
-    
+
     return response
 
 
@@ -136,6 +130,8 @@ def reset_password(
     """
     Reset password
     """
+    if not body.token.access_token:
+        raise HTTPException(status_code=400, detail="Invalid token")
     email = verify_password_reset_token(token=body.token.access_token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")

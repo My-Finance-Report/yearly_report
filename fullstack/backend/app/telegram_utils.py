@@ -7,9 +7,9 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-
 def enrich(message: str) -> str:
     return f"{message}\n\n{settings.ENVIRONMENT}"
+
 
 def send_telegram_message(
     message: str, chat_id: str | None = None, disable_notification: bool = False

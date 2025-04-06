@@ -13,7 +13,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
 import { type ApiError, LoginService } from "@/client"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { emailPattern, handleError } from "../../utils"
 
@@ -24,7 +24,7 @@ interface FormData {
 export const Route = createFileRoute("/_layout/recover-password")({
   component: RecoverPassword,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({
         to: "/",
       })

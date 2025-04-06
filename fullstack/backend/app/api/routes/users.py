@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 
 from app import crud
@@ -20,7 +20,6 @@ from app.local_types import (
     UserOut,
     UserRegister,
     UsersPublic,
-    UserUpdate,
     UserUpdateMe,
 )
 from app.models import (
@@ -148,16 +147,11 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserOut)
-def read_user_me(current_user: User = Depends(get_current_user), request: Request = None) -> User:
+def read_user_me(current_user: User = Depends(get_current_user)) -> User:
     """
     Get current user.
     """
-    # Debug information
-    print("ME endpoint called")
-    if request:
-        print("Request cookies:", request.cookies)
-        print("Request headers:", request.headers.get("authorization"))
-    
+
     return current_user
 
 

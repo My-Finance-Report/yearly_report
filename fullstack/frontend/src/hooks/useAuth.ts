@@ -13,7 +13,7 @@ import {
 } from "../client"
 import useCustomToast from "./useCustomToast"
 
-const isLoggedIn = async (): Promise<boolean> => {
+const isSessionValid = async (): Promise<boolean> => {
   try {
     await UsersService.readUserMe();
     return true;
@@ -104,7 +104,6 @@ const useAuth = () => {
 
       if (response.requires_2fa_setup) {
         setRequires2FASetup(true);
-        console.log("setting temp token to", response.temp_token)
         setTempToken(response.temp_token);
         return { success: false, requires2FA: false, requires2FASetup: true, token: response.temp_token };
       }
@@ -199,5 +198,5 @@ const useAuth = () => {
   };
 };
 
-export { isLoggedIn, isSessionActive };
+export { isSessionActive, isSessionValid };
 export default useAuth;

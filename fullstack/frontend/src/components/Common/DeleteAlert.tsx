@@ -2,6 +2,7 @@ import {
   Button,
   Dialog,
   DialogBody,
+  DialogPositioner,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -15,12 +16,11 @@ import useCustomToast from "../../hooks/useCustomToast"
 
 interface DeleteProps {
   type: string
-  id: number
   isOpen: boolean
   onClose: () => void
 }
 
-const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
+const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const cancelRef = React.useRef<HTMLButtonElement | null>(null)
@@ -29,9 +29,9 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
     formState: { isSubmitting },
   } = useForm()
 
-  const deleteEntity = async (id: number) => {
+  const deleteEntity = async () => {
     if (type === "User") {
-      await UsersService.deleteUser({ userId: id })
+      await UsersService.deleteUserMe()
     } else {
       throw new Error(`Unexpected type: ${type}`)
     }
@@ -62,7 +62,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   })
 
   const onSubmit = async () => {
-    mutation.mutate(id)
+    mutation.mutate()
   }
 
   return (
@@ -72,6 +72,8 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
       role="alertdialog"
       size={{ base: "sm", md: "md" }}
     >
+
+        <DialogPositioner>
       <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogHeader>Delete {type}</DialogHeader>
 
@@ -94,6 +96,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
           </Button>
         </DialogFooter>
       </DialogContent>
+</DialogPositioner>
     </Dialog.Root>
   )
 }

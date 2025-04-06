@@ -32,6 +32,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
+
 def get_token_from_cookie(request: Request) -> str:
     token = request.cookies.get("access_token")
     if not token:

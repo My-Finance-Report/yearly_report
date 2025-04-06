@@ -20,7 +20,7 @@ import {
   SelectValueText,
 } from "@/components/ui/select"
 
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
@@ -46,7 +46,7 @@ export function SankeyConfigPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["sankeyConfigInfo"],
     queryFn: SankeyService.getSankeyConfigInfo,
-    enabled: isLoggedIn(),
+    enabled: isSessionActive(),
   })
 
   const findInputFromId: Record<number, PossibleSankeyInput> | undefined =
