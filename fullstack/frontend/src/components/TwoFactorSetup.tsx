@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { TwoFactorService } from "@/client";
 import useCustomToast from "../hooks/useCustomToast";
+import { useNavigate } from '@tanstack/react-router';
 
 interface TwoFactorSetupProps {
   onComplete?: () => void;
@@ -27,6 +28,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
   const [code, setCode] = useState<string>('');
   const [error, setError] = useState<string>('');
   const showToast = useCustomToast();
+  const navigate = useNavigate();
 
   const handleEnable = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,18 +51,19 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
         "Scan the QR code with your authenticator app", 
         "success"
       );
-    } catch (error) {
-      console.error('Failed to enable 2FA:', error);
-      setError('Failed to enable 2FA. Please check your password and try again.');
+
+    } catch  {
+      setError('Failed to enable 2FA');
       showToast(
         "Error", 
-        "Failed to enable 2FA. Please check your password and try again.", 
+        "Failed to enable 2FA.", 
         "error"
       );
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +86,9 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
       if (onComplete) {
         onComplete();
       }
-    } catch (error) {
-      console.error('Failed to verify 2FA code:', error);
-      setError('Invalid verification code. Please try again.');
+    } catch {
+      console.error('Failed to verify 2FA code:');
+      setError('Invalid verification code');
       showToast(
         "Error", 
         "Invalid verification code. Please try again.", 
@@ -93,6 +96,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
       );
     } finally {
       setLoading(false);
+      navigate({ to: "/" });
     }
   };
 

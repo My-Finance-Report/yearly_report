@@ -19,16 +19,17 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import type { UserRegister } from "@/client";
-import useAuth, { isLoggedIn } from "@/hooks/useAuth";
+import useAuth, { isSessionActive } from "@/hooks/useAuth";
 import { confirmPasswordRules, emailPattern, passwordRules } from "../../utils";
 
 export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({
         to: "/",
       });
@@ -66,7 +67,9 @@ function SignUp() {
     }
   };
 
-  const { signUpMutation, loginMutation } = useAuth();
+  const { signUpMutation, requires2FA, requires2FASetup } = useAuth();
+  const navigate = useNavigate();
+  
   const {
     register,
     handleSubmit,
@@ -88,15 +91,16 @@ function SignUp() {
 
     try {
       await signUpMutation.mutateAsync(data);
-
-      await loginMutation.mutateAsync({
-        username: data.email,
-        password: data.password,
-      });
     } catch (error) {
       console.error(error);
     }
   };
+  
+  useEffect(() => {
+    if (requires2FA || requires2FASetup) {
+      navigate({ to: "/login" });
+    }
+  }, [requires2FA, requires2FASetup, navigate]);
 
   return (
     <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">

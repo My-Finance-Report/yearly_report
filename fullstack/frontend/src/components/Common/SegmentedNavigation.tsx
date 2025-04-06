@@ -19,13 +19,14 @@ import {
   FiDollarSign,
   FiHome,
   FiList,
-  FiMenu,
   FiSettings,
   FiUsers,
+  FiMenu,
   FiChevronRight,
 } from "react-icons/fi";
+import { useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useState, useEffect } from "react";
+import  {  isSessionActive } from "@/hooks/useAuth"
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -37,26 +38,17 @@ const navigationItems = [
 export function SegmentedNavigation() {
   const navigate = useNavigate();
   const location = useRouterState().location;
-  const isSessionActive = sessionStorage.getItem("session_active") === "true";
-  
-  const { data: currentUser, isError } = useQuery<UserOut | null, Error>({
+const { data: currentUser } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    enabled: isSessionActive,
     retry: false,
-    staleTime: 1000 * 60 * 5,  // 5 minutes
-    gcTime: 1000 * 60 * 10,    // 10 minutes
-  });
 
-  useEffect(() => {
-    if (isError && isSessionActive) {
-      sessionStorage.removeItem("session_active");
-      navigate({ to: "/login" });
-    }
-  }, [isError, isSessionActive, navigate]);
+  })
+
 
   const isMobile = useIsMobile();
 
+  // Example: final nav items + "Admin" if user is superuser
   const finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : currentUser

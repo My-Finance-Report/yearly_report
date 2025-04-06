@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from app.core.security import get_password_hash, verify_password, create_temp_token, verify_temp_token
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
@@ -43,7 +44,14 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User
     return db_user
 
 
-def authenticate(*, session: Session, email: str, password: str) -> User | dict:
+@dataclass(kw_only=True)
+class InProgressUserLogin:
+    requires_2fa: bool
+    requires_2fa_setup: bool
+    temp_token: str | None
+    user: User  
+
+def authenticate(*, session: Session, email: str, password: str) ->   InProgressUserLogin | None:
     db_user = get_user_by_email(session=session, email=email)
 
     if not db_user:
@@ -51,24 +59,37 @@ def authenticate(*, session: Session, email: str, password: str) -> User | dict:
     if not verify_password(password, db_user.hashed_password):
         return None
         
-    # If 2FA is enabled for the user, or if the user is required to use 2FA but hasn't set it up yet
-    if db_user.totp_enabled:
-        temp_token = create_temp_token(db_user.id)
-        return {
-            "requires_2fa": True,
-            "temp_token": temp_token,
-            "user": db_user
-        }
-    elif db_user.requires_two_factor and not db_user.totp_enabled:
-        # User is required to set up 2FA but hasn't done so yet
-        temp_token = create_temp_token(db_user.id)
-        return {
-            "requires_2fa_setup": True,
-            "temp_token": temp_token,
-            "user": db_user
-        }
     
-    return db_user
+    # If 2FA is enabled for the user
+    if db_user.totp_enabled:
+        print("2FA is enabled for the user")
+        temp_token = create_temp_token(db_user.id)
+        return InProgressUserLogin(
+            requires_2fa=True,
+            requires_2fa_setup=False,
+            temp_token=temp_token,
+            user=db_user
+        )
+
+    # User is required to set up 2FA but hasn't done so yet
+    elif db_user.requires_two_factor and not db_user.totp_enabled:
+        print("2FA is required but not set up for the user")
+        temp_token = create_temp_token(db_user.id)
+        return InProgressUserLogin(
+            requires_2fa_setup=True,
+            temp_token=temp_token,
+            requires_2fa=False,
+            user=db_user
+        )
+    
+    # the user has denied 2FA
+    print("2FA is not required for the user")
+    return InProgressUserLogin(
+        user=db_user,
+        requires_2fa=False,
+        requires_2fa_setup=False,
+        temp_token=None
+    )
 
 
 def get_user_by_temp_token(*, session: Session, token: str) -> User | None:

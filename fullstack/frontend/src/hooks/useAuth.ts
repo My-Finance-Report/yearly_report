@@ -15,12 +15,9 @@ import useCustomToast from "./useCustomToast"
 
 const isLoggedIn = async (): Promise<boolean> => {
   try {
-    console.log("Checking if user is logged in...");
     await UsersService.readUserMe();
-    console.log("User is logged in!");
     return true;
-  } catch (error) {
-    console.log("User is not logged in:", error);
+  } catch {
     return false;
   }
 }
@@ -38,11 +35,9 @@ const useAuth = () => {
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
   
-  // This query will use the HttpOnly cookie automatically
   const { data: user, isLoading, error: authError } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
-    // We still need some way to know if we should try to fetch the user
     enabled: isSessionActive(),
     retry: false,
   })
@@ -58,104 +53,112 @@ const useAuth = () => {
     mutationFn: (data: UserRegister) =>
       UsersService.registerUser({ requestBody: data }),
 
-    onSuccess: () => {
-      navigate({ to: "/login" })
-      showToast(
-        "Account created.",
-        "Your account has been created successfully.",
-        "success",
-      )
+    onSuccess: async (_, variables) => {
+      try {
+        const { email, password } = variables;
+        
+        const { success, token } = await login({
+          username: email,
+          password: password,
+        });
+        
+        showToast(
+          "Account created",
+          "Your account has been created and you've been logged in successfully.",
+          "success",
+        );
+
+        navigate({ to: "/setup_two_fa" , search: { tempToken: token } });
+      } catch (error: unknown) {
+        console.log(error)
+     
+      }
     },
     onError: (err: ApiError) => {
-      let errDetail = (err.body as { detail: string })?.detail
+      let errDetail = (err.body as { detail: string })?.detail;
 
       if (err instanceof AxiosError) {
-        errDetail = err.message
+        errDetail = err.message;
       }
 
-      showToast("Something went wrong.", errDetail, "error")
+      showToast("Something went wrong.", errDetail, "error");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-  })
+  });
 
-  const login = async (data: AccessToken) => {
+  interface LoginResult {
+    success: boolean;
+    requires2FA?: boolean;
+    requires2FASetup?: boolean;
+    token?: string;
+    error?: unknown;
+  }
+
+  const login = async (data: AccessToken): Promise<LoginResult> => {
     try {
       const response = await LoginService.loginAccessToken({
         formData: data,
-      })
+      });
+
+      if (response.requires_2fa_setup) {
+        setRequires2FASetup(true);
+        console.log("setting temp token to", response.temp_token)
+        setTempToken(response.temp_token);
+        return { success: false, requires2FA: false, requires2FASetup: true, token: response.temp_token };
+      }
 
       if (response.requires_2fa) {
-        if (!response.temp_token) {
-          throw new Error("No temp token found");
-        }
-        setRequires2FA(true)
-        setTempToken(response.temp_token)
-        throw { type: '2fa_required', token: response.temp_token }
-      }
-      
-      if (response.requires_2fa_setup) {
-        if (!response.temp_token) {
-          throw new Error("No temp token found");
-        }
-        setRequires2FASetup(true)
-        setTempToken(response.temp_token)
-        throw { type: '2fa_setup_required' }
+        setRequires2FA(true);
+        setTempToken(response.temp_token);
+        return { success: false, requires2FA: true, requires2FASetup: false, token: response.temp_token };
       }
       
       // With HttpOnly cookies, we don't need to manually store the token
-      // But we do need to mark that a session is active
-      sessionStorage.setItem("session_active", "true")
+      sessionStorage.setItem("session_active", "true");
       
-      return response
+      return { success: true };
     } catch (error: unknown) {
-      if (
-        error && 
-        typeof error === 'object' && 
-        'type' in error && 
-        (error.type === '2fa_required' || error.type === '2fa_setup_required')
-      ) {
-        throw error
-      }
-      
-      console.error("Login error:", error)
-      throw error
+      console.error("Login error:", error);
+      return { success: false, error };
     }
-  }
+  };
 
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => {
-      navigate({ to: "/" })
+    onSuccess: (result) => {
+      if (result.success) {
+        navigate({ to: "/" });
+      }
     },
-    onError: (err: Error | ApiError | { type: string; token?: string }) => {
+    onError: (err: unknown) => {
       // Don't show error for 2FA cases, as they're handled separately
-      if (typeof err === 'object' && 'type' in err && (err.type === '2fa_required' || err.type === '2fa_setup_required')) {
-        return
+      if (typeof err === 'object' && err !== null && 'requires2FA' in err) {
+        return;
       }
       
-      let errDetail = "Something went wrong"
+      let errDetail = "Something went wrong";
       
       if (err instanceof AxiosError) {
-        errDetail = err.message
-      } else if ((err as ApiError).body) {
-        errDetail = ((err as ApiError).body as {detail: string})?.detail
+        errDetail = err.message;
+      } else if (typeof err === 'object' && err !== null && 'error' in err && err.error) {
+        errDetail = String(err.error);
       }
 
       if (Array.isArray(errDetail)) {
-        errDetail = "Something went wrong"
+        errDetail = "Something went wrong";
       }
 
-      setLoginError(errDetail)
+      setLoginError(errDetail);
     },
-  })
+  });
 
   // Custom function to call the logout endpoint
   const callLogoutEndpoint = async () => {
     try {
       // Call the logout endpoint using fetch directly
-      await LoginService.logout()
+      await LoginService.logout();
       return true;
     } catch {
       console.error("Logout API error:");
@@ -169,17 +172,17 @@ const useAuth = () => {
     } catch {
       console.error("Logout error:");
     } finally {
-      sessionStorage.removeItem("session_active")
-      queryClient.clear()
-      navigate({ to: "/login" })
+      sessionStorage.removeItem("session_active");
+      queryClient.clear();
+      navigate({ to: "/login" });
     }
-  }
+  };
 
   const reset2FAStates = () => {
-    setRequires2FA(false)
-    setRequires2FASetup(false)
-    setTempToken(null)
-  }
+    setRequires2FA(false);
+    setRequires2FASetup(false);
+    setTempToken(null);
+  };
 
   return {
     signUpMutation,
@@ -193,8 +196,8 @@ const useAuth = () => {
     tempToken,
     resetError: () => setLoginError(null),
     reset2FAStates,
-  }
-}
+  };
+};
 
-export { isLoggedIn, isSessionActive }
-export default useAuth
+export { isLoggedIn, isSessionActive };
+export default useAuth;

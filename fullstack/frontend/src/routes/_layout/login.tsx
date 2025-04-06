@@ -113,9 +113,15 @@ function Login() {
     navigate({ to: "/" });
   };
 
+  console.log(requires2FA, requires2FASetup, tempToken)
+
   if (requires2FA) {
     if (!tempToken) {
-      throw new Error("No temp token found");
+      showToast("Error", "Authentication token is missing. Please try logging in again.", "error")
+      reset2FAStates()
+      return (
+        null
+      )
     }
     return (
       <Container maxW="sm" py={8}>

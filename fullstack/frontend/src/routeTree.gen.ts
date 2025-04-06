@@ -32,6 +32,7 @@ import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
 import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
 import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
+import { Route as LayoutLoggedinSetuptwofaImport } from './routes/_layout/_logged_in/setup_two_fa'
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
@@ -151,6 +152,11 @@ const LayoutLoggedinSubscriptionRoute = LayoutLoggedinSubscriptionImport.update(
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
 )
+
+const LayoutLoggedinSetuptwofaRoute = LayoutLoggedinSetuptwofaImport.update({
+  path: '/setup_two_fa',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
 
 const LayoutLoggedinSettingsRoute = LayoutLoggedinSettingsImport.update({
   path: '/settings',
@@ -277,6 +283,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinSettingsImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/setup_two_fa': {
+      preLoaderRoute: typeof LayoutLoggedinSetuptwofaImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/subscription': {
       preLoaderRoute: typeof LayoutLoggedinSubscriptionImport
       parentRoute: typeof LayoutLoggedinImport
@@ -311,6 +321,7 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinPlaidRoute,
       LayoutLoggedinSankeyConfigRoute,
       LayoutLoggedinSettingsRoute,
+      LayoutLoggedinSetuptwofaRoute,
       LayoutLoggedinSubscriptionRoute,
       LayoutLoggedinSubscriptionCancelRoute,
       LayoutLoggedinSubscriptionSuccessRoute,
