@@ -57,7 +57,7 @@ const useAuth = () => {
       try {
         const { email, password } = variables;
         
-        const { success, token } = await login({
+        const {  tempToken } = await login({
           username: email,
           password: password,
         });
@@ -68,7 +68,7 @@ const useAuth = () => {
           "success",
         );
 
-        navigate({ to: "/setup_two_fa" , search: { tempToken: token } });
+        navigate({ to: "/setup_two_fa" , search: { tempToken: tempToken } });
       } catch (error: unknown) {
         console.log(error)
      
@@ -92,7 +92,7 @@ const useAuth = () => {
     success: boolean;
     requires2FA?: boolean;
     requires2FASetup?: boolean;
-    token?: string;
+    tempToken?: string;
     error?: unknown;
   }
 
@@ -103,15 +103,21 @@ const useAuth = () => {
       });
 
       if (response.requires_2fa_setup) {
+        if (!response.temp_token) {
+          throw new Error("Temp token not found");
+        }
         setRequires2FASetup(true);
         setTempToken(response.temp_token);
-        return { success: false, requires2FA: false, requires2FASetup: true, token: response.temp_token };
+        return { success: false, requires2FA: false, requires2FASetup: true, tempToken: response.temp_token };
       }
 
       if (response.requires_2fa) {
+        if (!response.temp_token) {
+          throw new Error("Temp token not found");
+        }
         setRequires2FA(true);
         setTempToken(response.temp_token);
-        return { success: false, requires2FA: true, requires2FASetup: false, token: response.temp_token };
+        return { success: false, requires2FA: true, requires2FASetup: false, tempToken: response.temp_token };
       }
       
       // With HttpOnly cookies, we don't need to manually store the token
