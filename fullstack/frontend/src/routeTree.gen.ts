@@ -15,12 +15,15 @@ import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutTermsImport } from './routes/_layout/terms'
 import { Route as LayoutSignupImport } from './routes/_layout/signup'
+import { Route as LayoutSetuptwofaImport } from './routes/_layout/setup_two_fa'
 import { Route as LayoutResetPasswordImport } from './routes/_layout/reset-password'
 import { Route as LayoutRecoverPasswordImport } from './routes/_layout/recover-password'
 import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
+import { Route as LayoutOauthCallbackLocalImport } from './routes/_layout/oauth-callback-local'
 import { Route as LayoutOauthCallbackImport } from './routes/_layout/oauth-callback'
 import { Route as LayoutLoginImport } from './routes/_layout/login'
 import { Route as LayoutLandingImport } from './routes/_layout/landing'
+import { Route as LayoutInputtwofaImport } from './routes/_layout/input_two_fa'
 import { Route as LayoutHowImport } from './routes/_layout/how'
 import { Route as LayoutFaqImport } from './routes/_layout/faq'
 import { Route as LayoutDemoImport } from './routes/_layout/demo'
@@ -32,7 +35,6 @@ import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
 import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
 import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
-import { Route as LayoutLoggedinSetuptwofaImport } from './routes/_layout/_logged_in/setup_two_fa'
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
@@ -62,6 +64,11 @@ const LayoutSignupRoute = LayoutSignupImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutSetuptwofaRoute = LayoutSetuptwofaImport.update({
+  path: '/setup_two_fa',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutResetPasswordRoute = LayoutResetPasswordImport.update({
   path: '/reset-password',
   getParentRoute: () => LayoutRoute,
@@ -77,6 +84,11 @@ const LayoutPrivacyRoute = LayoutPrivacyImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutOauthCallbackLocalRoute = LayoutOauthCallbackLocalImport.update({
+  path: '/oauth-callback-local',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutOauthCallbackRoute = LayoutOauthCallbackImport.update({
   path: '/oauth-callback',
   getParentRoute: () => LayoutRoute,
@@ -89,6 +101,11 @@ const LayoutLoginRoute = LayoutLoginImport.update({
 
 const LayoutLandingRoute = LayoutLandingImport.update({
   path: '/landing',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutInputtwofaRoute = LayoutInputtwofaImport.update({
+  path: '/input_two_fa',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -152,11 +169,6 @@ const LayoutLoggedinSubscriptionRoute = LayoutLoggedinSubscriptionImport.update(
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
 )
-
-const LayoutLoggedinSetuptwofaRoute = LayoutLoggedinSetuptwofaImport.update({
-  path: '/setup_two_fa',
-  getParentRoute: () => LayoutLoggedinRoute,
-} as any)
 
 const LayoutLoggedinSettingsRoute = LayoutLoggedinSettingsImport.update({
   path: '/settings',
@@ -223,6 +235,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutHowImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/input_two_fa': {
+      preLoaderRoute: typeof LayoutInputtwofaImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/landing': {
       preLoaderRoute: typeof LayoutLandingImport
       parentRoute: typeof LayoutImport
@@ -235,6 +251,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutOauthCallbackImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/oauth-callback-local': {
+      preLoaderRoute: typeof LayoutOauthCallbackLocalImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/privacy': {
       preLoaderRoute: typeof LayoutPrivacyImport
       parentRoute: typeof LayoutImport
@@ -245,6 +265,10 @@ declare module '@tanstack/react-router' {
     }
     '/_layout/reset-password': {
       preLoaderRoute: typeof LayoutResetPasswordImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/setup_two_fa': {
+      preLoaderRoute: typeof LayoutSetuptwofaImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/signup': {
@@ -283,10 +307,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinSettingsImport
       parentRoute: typeof LayoutLoggedinImport
     }
-    '/_layout/_logged_in/setup_two_fa': {
-      preLoaderRoute: typeof LayoutLoggedinSetuptwofaImport
-      parentRoute: typeof LayoutLoggedinImport
-    }
     '/_layout/_logged_in/subscription': {
       preLoaderRoute: typeof LayoutLoggedinSubscriptionImport
       parentRoute: typeof LayoutLoggedinImport
@@ -321,7 +341,6 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinPlaidRoute,
       LayoutLoggedinSankeyConfigRoute,
       LayoutLoggedinSettingsRoute,
-      LayoutLoggedinSetuptwofaRoute,
       LayoutLoggedinSubscriptionRoute,
       LayoutLoggedinSubscriptionCancelRoute,
       LayoutLoggedinSubscriptionSuccessRoute,
@@ -333,12 +352,15 @@ export const routeTree = rootRoute.addChildren([
     LayoutDemoRoute,
     LayoutFaqRoute,
     LayoutHowRoute,
+    LayoutInputtwofaRoute,
     LayoutLandingRoute,
     LayoutLoginRoute,
     LayoutOauthCallbackRoute,
+    LayoutOauthCallbackLocalRoute,
     LayoutPrivacyRoute,
     LayoutRecoverPasswordRoute,
     LayoutResetPasswordRoute,
+    LayoutSetuptwofaRoute,
     LayoutSignupRoute,
     LayoutTermsRoute,
     LayoutIndexRoute,

@@ -23,6 +23,12 @@ def parse_cors(v: Any) -> list[str] | str:
         return v
     raise ValueError(v)
 
+def get_env()->str: 
+    val =  os.getenv("ENVIRONMENT", "local")
+    if val not in ["local", "staging", "production"]:
+        raise ValueError(f"Invalid environment: {val}")
+    return val
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -37,7 +43,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     FRONTEND_HOST: str = os.getenv("FRONTEND_HOST") or "localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = (
-        os.getenv("ENVIRONMENT") or "local"  # type: ignore[assignment]
+        os.getenv("ENVIRONMENT", "local")  # type: ignore[assignment]
     )
 
     BACKEND_CORS_ORIGINS: Annotated[

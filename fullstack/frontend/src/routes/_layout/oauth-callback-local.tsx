@@ -4,9 +4,22 @@ import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
 import { activateSession } from "@/hooks/useAuth"
-export const Route = createFileRoute("/_layout/oauth-callback")({
+export const Route = createFileRoute("/_layout/oauth-callback-local")({
   component: OAuthCallback,
 })
+
+function handleOAuthResponse(response: Response, navigate) {
+
+  if (response.requires_2fa_setup) {
+        navigate({ to: "/setup_two_fa" , search: { tempToken: response.temp_token } });
+  }
+  if (response.requires_2fa) {
+    console.log("sending you to input_two_fa")
+    navigate({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
+  }
+
+  return navigate({ to: "/" })
+}
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -16,37 +29,10 @@ function OAuthCallback() {
   useEffect(() => {
     const exchangeCodeForToken = async () => {
       try {
-        const params = new URLSearchParams(window.location.search)
-        const code = params.get("code")
-        const error = params.get("error")
-        const state = params.get("state")
-        
-        if (error) {
-          showToast("Authentication Error", error, "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!code) {
-          showToast("Authentication Error", "No authorization code received", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!state) {
-          showToast("Authentication Error", "No state received", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
         // Exchange the code for a token with our backend
-        const response = await OauthService.googleCallbackLocal({code})
-        console.log(response)
+        const response = await OauthService.googleCallbackLocal({code: "1"})
 
-        activateSession()
-
-        showToast("Login Successful", "You have successfully signed in with Google", "success")
-        navigate({ to: "/" })
+        handleOAuthResponse(response as unknown as Response, navigate)
       } catch (error) {
         console.error("OAuth callback error:", error)
         showToast("Authentication Error", "Failed to complete authentication", "error")

@@ -45,20 +45,12 @@ export function SegmentedNavigation() {
     queryKey: ["currentUser"],
     queryFn: async () => {
       try {
-        return await UsersService.readUserMe();
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
+        return await UsersService.readUserMeOptional();
+      } catch {
         return null;
       }
     },
     initialData: authUser || null,
-    // Don't retry on 401 errors
-    retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.includes("401")) {
-        return false;
-      }
-      return failureCount < 3;
-    }
   });
 
   // Effect to refetch user data when session status changes
