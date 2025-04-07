@@ -41,13 +41,13 @@ async def login_google() -> LoginGoogleData:
     # Get the Google authorization URL
     auth_url = get_google_authorization_url(state)
 
+    #TODO set env variables in prod so this doesnt trip
     # Return the URL for the frontend to handle the redirect
-    if get_env() == "local" and get_env() != "production":
-        mock_auth_url = "http://127.0.0.1:5173/oauth-callback-local"
-        return LoginGoogleData(url=mock_auth_url)
+    #if get_env() == "local" and get_env() != "production":
+    #    mock_auth_url = "http://127.0.0.1:5173/oauth-callback-local"
+    #    return LoginGoogleData(url=mock_auth_url)
 
-    else:
-        return LoginGoogleData(url=auth_url)
+    return LoginGoogleData(url=auth_url)
 
 
 def get_and_update_user(
