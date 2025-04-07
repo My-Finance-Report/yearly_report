@@ -18,6 +18,7 @@ from app.db import get_auth_db, get_current_user, get_current_user_from_temp_tok
 from app.local_types import Token, TokenPayload
 from app.models import User
 from app.schemas.two_factor import (
+    Disable2FARequest,
     Enable2FARequest,
     Enable2FAResponse,
     TwoFactorLoginRequest,
@@ -212,7 +213,7 @@ def reject_2fa(
 
 @router.post("/disable", response_model=Verify2FAResponse)
 def disable_2fa(
-    request: Enable2FARequest,
+    request: Disable2FARequest,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_auth_db),
 ) -> Verify2FAResponse:

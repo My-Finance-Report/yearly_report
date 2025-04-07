@@ -3,9 +3,14 @@ from pydantic import BaseModel
 
 class Enable2FARequest(BaseModel):
     """Request to start the 2FA setup process."""
+    temp_token: str
 
+class Disable2FARequest(BaseModel):
+    """Request to disable 2FA."""
     password: str
     temp_token: str
+
+
 
 
 class Enable2FAResponse(BaseModel):

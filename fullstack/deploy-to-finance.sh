@@ -113,3 +113,4 @@ ssh ${REMOTE_SERVER} << EOF
 EOF
 
 echo "✅ Deployment Completed!"
+say "we smashed that shit to prod baby"

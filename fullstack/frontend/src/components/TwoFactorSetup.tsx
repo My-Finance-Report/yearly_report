@@ -69,7 +69,6 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
     try {
       const response = await TwoFactorService.enable2Fa({
         requestBody: {
-          password,
           temp_token: tempToken
         },
       });
@@ -147,24 +146,6 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
               as="form"
               onSubmit={handleEnable}
             >
-              <Box mb={4}>
-                <Text fontWeight="medium" mb={1}>
-                  Confirm your password
-                </Text>
-                <Input 
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  mt={1}
-                />
-                {error && (
-                  <Text color="red.500" fontSize="sm" mt={1}>{error}</Text>
-                )}
-              </Box>
-              
               <Flex gap={2}>
               <Button 
                 type="submit" 
