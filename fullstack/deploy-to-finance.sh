@@ -76,3 +76,4 @@ ssh ${REMOTE_SERVER} << EOF
 EOF
 
 echo "✅ Deployment Completed!"
+say 'done'

@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { createFileRoute, NavigateFn, redirect, useNavigate } from "@tanstack/react-router"
 import { Container, Text, Center, VStack } from "@chakra-ui/react"
 import { OauthService } from "@/client"
+import { useQuery } from "@tanstack/react-query"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
 })
@@ -19,7 +20,7 @@ export function handleOAuthResponse(response: Response2FA, navigate: NavigateFn)
           return;
         }
         if (response.requires_2fa) {
-          redirect({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
+          navigate({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
           return
         }
 
@@ -30,48 +31,28 @@ export function handleOAuthResponse(response: Response2FA, navigate: NavigateFn)
 
 function OAuthCallback() {
   const navigate = useNavigate()
-  //const showToast = useCustomToast()
+ const params   = new URLSearchParams(window.location.search);
+  const code     = params.get('code');
+  const error    = params.get('error');
+  const state    = params.get('state');
 
+  const query = useQuery({
+    queryKey: ['oauth-callback', code],
+    queryFn: () => OauthService.googleCallback({ code: code! }),
+    enabled: !!code && !error && !!state,   
+  });
 
-  useEffect(() => {
-    const exchangeCodeForToken = async () => {
-      console.log("Exchange code for token")
-      try {
-        const params = new URLSearchParams(window.location.search)
-        const code = params.get("code")
-        const error = params.get("error")
-        const state = params.get("state")
-        
-        if (error) {
-          //showToast("Authentication Error", error, "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!code) {
-          //showToast("Authentication Error", "No authorization code received", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!state) {
-          //showToast("Authentication Error", "No state received", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        // Exchange the code for a token with our backend
-        const response = await OauthService.googleCallback({code})
-        handleOAuthResponse(response as Response2FA, navigate) //todo typing
-      } catch (error) {
-        console.error("OAuth callback error:", error)
-        //showToast("Authentication Error", "Failed to complete authentication", "error")
-        navigate({ to: "/login" })
-      }
+useEffect(() => {
+    if (error || !code || !state) {
+      navigate({ to: '/login' });
+      return;
     }
-    
-    exchangeCodeForToken()
-  }, [navigate])
+    if (!query.isSuccess) return;          
+
+
+    handleOAuthResponse(query.data as Response2FA, navigate);
+  }, [code, error, state, query.isSuccess, query.data, navigate]);
+
   
   return (
     <Container h="100vh">
