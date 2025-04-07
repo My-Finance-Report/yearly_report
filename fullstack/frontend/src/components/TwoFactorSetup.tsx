@@ -169,7 +169,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, temp
               <Button 
                 type="submit" 
                 mt={4}
-                variant="outline"
+                variant="solid"
                 loading={loading}
                 disabled={loading}
               >

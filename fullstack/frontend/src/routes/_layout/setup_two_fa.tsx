@@ -15,7 +15,7 @@ const setupTwoFaSearchSchema = z.object({
 
 
 
-export const Route = createFileRoute("/_layout/_logged_in/setup_two_fa")({
+export const Route = createFileRoute("/_layout/setup_two_fa")({
   component: SetupTwoFa,
   validateSearch: (search) => setupTwoFaSearchSchema.parse(search),
 })

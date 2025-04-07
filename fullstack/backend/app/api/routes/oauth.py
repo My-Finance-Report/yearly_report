@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.core.config import get_env
 from app.core.oauth import (
     GoogleTokenResponse,
     exchange_code_for_tokens,
@@ -41,7 +42,12 @@ async def login_google() -> LoginGoogleData:
     auth_url = get_google_authorization_url(state)
 
     # Return the URL for the frontend to handle the redirect
-    return LoginGoogleData(url=auth_url)
+    if get_env() == "local" and get_env() != "production":
+        mock_auth_url = "http://127.0.0.1:5173/oauth-callback-local"
+        return LoginGoogleData(url=mock_auth_url)
+
+    else:
+        return LoginGoogleData(url=auth_url)
 
 
 def get_and_update_user(
@@ -113,13 +119,21 @@ async def google_callback(
         )
 
         user_info = get_google_user_info(credentials)
+
         user = get_and_update_user(
             session=session, user_info=user_info, token_response=token_response
         )
-        in_progress_login_user = crud.determine_two_fa_status_from_user(user)
-        return crud.handle_and_respond_to_in_progress_login(
-            in_progress_login_user, "oauth"
-        )
+
+        return after_google_portion_of_auth(user)
 
     except Exception as e:
         return Response(content=str(e), status_code=500)
+
+
+def after_google_portion_of_auth(user: User) -> Response:
+    """
+    shared helper to make sure the local mock and the prod instance both work the same
+    """
+
+    in_progress_login_user = crud.determine_two_fa_status_from_user(user)
+    return crud.handle_and_respond_to_in_progress_login(in_progress_login_user, "oauth")

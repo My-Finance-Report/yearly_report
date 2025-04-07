@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, NavigateFn, useNavigate } from "@tanstack/react-router"
 import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
@@ -7,6 +7,28 @@ import { activateSession } from "@/hooks/useAuth"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
 })
+
+export interface Response2FA {
+  requires_2fa_setup: boolean
+  requires_2fa: boolean
+  temp_token: string | null
+}
+
+//export for local helper
+export function handleOAuthResponse(response: Response2FA, navigate: NavigateFn) {
+        if (response.requires_2fa_setup) {
+          navigate({ to: "/setup_two_fa" , search: { tempToken: response.temp_token } });
+          return;
+        }
+        if (response.requires_2fa) {
+          navigate({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
+          return;
+        }
+
+        navigate({ to: "/" })
+
+}
+
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -40,7 +62,8 @@ function OAuthCallback() {
         }
         
         // Exchange the code for a token with our backend
-        await OauthService.googleCallback({code})
+        const response = await OauthService.googleCallbackLocal({code})
+        handleOAuthResponse(response as Response2FA, navigate) //todo typing
 
         activateSession()
 

@@ -92,6 +92,7 @@ def determine_two_fa_status_from_user(user: User) -> InProgressUserLogin:
     )
 
 
+# TODO type these responses
 def handle_and_respond_to_in_progress_login(
     user: InProgressUserLogin, source: Literal["oauth", "basic"]
 ) -> Response:

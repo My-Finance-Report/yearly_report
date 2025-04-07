@@ -43,6 +43,10 @@ def get_token_from_cookie(request: Request) -> str:
     return token
 
 
+def get_token_from_cookie_optional(request: Request) -> str | None:
+    return request.cookies.get("access_token")
+
+
 def get_auth_db() -> Generator[Session, Any, None]:
     """Returns a database session that does NOT enforce RLS (used for authentication)."""
 
@@ -80,6 +84,31 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+
+    return user
+
+
+def get_current_user_optional(
+    token: str | bytes = Depends(get_token_from_cookie_optional),
+    session: Session = Depends(get_auth_db),
+) -> User | None:
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+
+        token_data = TokenPayload(**payload)
+
+    except (InvalidTokenError, ValidationError):
+        return None
+
+    # Query the user by ID
+    user = session.query(User).filter(User.id == token_data.sub).first()
+
+    if not user:
+        return None
+    if not user.is_active:
+        return None
 
     return user
 

@@ -702,6 +702,13 @@ export type OauthGoogleCallbackData = {
 
 export type OauthGoogleCallbackResponse = (unknown);
 
+export type OauthGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type OauthGoogleCallbackLocalResponse = (unknown);
+
 export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
 
 export type PlaidExchangeTokenData = {
@@ -903,6 +910,8 @@ export type UsersUpdatePasswordMeData = {
 };
 
 export type UsersUpdatePasswordMeResponse = (Message);
+
+export type UsersReadUserMeOptionalResponse = ((UserOut | null));
 
 export type UsersRegisterUserData = {
     requestBody: UserRegister;

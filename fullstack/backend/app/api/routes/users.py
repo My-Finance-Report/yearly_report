@@ -12,6 +12,7 @@ from app.db import (
     get_auth_db,
     get_current_active_superuser,
     get_current_user,
+    get_current_user_optional,
     get_db,
 )
 from app.local_types import (
@@ -152,6 +153,16 @@ def read_user_me(current_user: User = Depends(get_current_user)) -> User:
     Get current user.
     """
 
+    return current_user
+
+
+@router.get("/me-optional", response_model=UserOut | None)
+def read_user_me_optional(
+    current_user: User | None = Depends(get_current_user_optional),
+) -> User | None:
+    """
+    Get current user.
+    """
     return current_user
 
 

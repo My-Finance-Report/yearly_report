@@ -15,8 +15,8 @@ import useCustomToast from "./useCustomToast"
 
 const isSessionValid = async (): Promise<boolean> => {
   try {
-    await UsersService.readUserMe();
-    return true;
+    const result = await UsersService.readUserMeOptional();
+    return result !== null;
   } catch {
     return false;
   }
@@ -47,10 +47,11 @@ const useAuth = () => {
     retry: false,
   })
 
+
   if (authError) {
-    // Clear the session indicator
     sessionStorage.removeItem("session_active")
     queryClient.clear()
+    console.log("redirecting to login in useAuth")
     navigate({ to: "/login" })
   }
 
@@ -72,7 +73,6 @@ const useAuth = () => {
           "Your account has been created and you've been logged in successfully.",
           "success",
         );
-        console.log("redirecting to setup")
         navigate({ to: "/setup_two_fa" , search: { tempToken: tempToken } });
       } catch (error: unknown) {
         console.log(error)
