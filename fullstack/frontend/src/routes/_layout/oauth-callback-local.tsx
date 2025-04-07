@@ -5,7 +5,7 @@ import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
 import { handleOAuthResponse, Response2FA } from "./oauth-callback"
 export const Route =  createFileRoute("/_layout/oauth-callback-local")({
-  component: OAuthCallback,
+  component: OAuthCallbackLocal,
   beforeLoad: async () => {
     if (import.meta.env.DEV) {
       throw redirect({ to: "/" })
@@ -13,7 +13,7 @@ export const Route =  createFileRoute("/_layout/oauth-callback-local")({
   }
 })
 
-function OAuthCallback() {
+function OAuthCallbackLocal() {
   const navigate = useNavigate()
   const showToast = useCustomToast()
   const [isLoading, setIsLoading] = useState(true)
@@ -54,4 +54,4 @@ function OAuthCallback() {
   )
 }
 
-export default OAuthCallback
+export default OAuthCallbackLocal
