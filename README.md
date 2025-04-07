@@ -37,11 +37,13 @@ big milestones before launch:
   -> bug where i got logged off after plaid
 -> Email
 
--> nav bar is stale once you login
+-> new user create via oauth does not work 
+
 
 -> need to update the how does this work page 
 
 -> would be nice to have some tests around user creation
+
 
 -> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
 
