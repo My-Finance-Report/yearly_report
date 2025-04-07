@@ -62,7 +62,7 @@ function OAuthCallback() {
         }
         
         // Exchange the code for a token with our backend
-        const response = await OauthService.googleCallbackLocal({code})
+        const response = await OauthService.googleCallback({code})
         handleOAuthResponse(response as Response2FA, navigate) //todo typing
 
         activateSession()
