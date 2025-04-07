@@ -44,7 +44,7 @@ def login_access_token(
         # Don't reveal whether the email exists or password is wrong
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    return crud.handle_and_respond_to_in_progress_login(user_in_progress, 'basic')
+    return crud.handle_and_respond_to_in_progress_login(user_in_progress, "basic")
 
 
 @router.post("/logout")

@@ -1,15 +1,12 @@
 import secrets
-from typing import Any
 from dataclasses import dataclass
-from datetime import datetime
+from typing import Any
 
 import google.oauth2.credentials
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.core import security
-from app.core.config import settings
 from app.core.oauth import (
     GoogleTokenResponse,
     exchange_code_for_tokens,
@@ -19,7 +16,6 @@ from app.core.oauth import (
 from app.db import get_auth_db
 from app.models import User, UserSettings
 from app.telegram_utils import send_telegram_message
-from app.api.routes.two_factor import make_token_and_respond
 
 router = APIRouter(tags=["oauth"])
 
@@ -47,7 +43,10 @@ async def login_google() -> LoginGoogleData:
     # Return the URL for the frontend to handle the redirect
     return LoginGoogleData(url=auth_url)
 
-def get_and_update_user(session:Session,user_info: Any, token_response: GoogleTokenResponse)->User:
+
+def get_and_update_user(
+    session: Session, user_info: Any, token_response: GoogleTokenResponse
+) -> User:
     # Check if user exists
     email = user_info.get("email")
     if not email:
@@ -92,7 +91,6 @@ def get_and_update_user(session:Session,user_info: Any, token_response: GoogleTo
     return user
 
 
-
 @router.get("/oauth/google/callback")
 async def google_callback(
     code: str = Query(...),
@@ -115,9 +113,13 @@ async def google_callback(
         )
 
         user_info = get_google_user_info(credentials)
-        user = get_and_update_user(session=session, user_info=user_info, token_response=token_response)
+        user = get_and_update_user(
+            session=session, user_info=user_info, token_response=token_response
+        )
         in_progress_login_user = crud.determine_two_fa_status_from_user(user)
-        return crud.handle_and_respond_to_in_progress_login(in_progress_login_user, 'oauth')
+        return crud.handle_and_respond_to_in_progress_login(
+            in_progress_login_user, "oauth"
+        )
 
     except Exception as e:
         return Response(content=str(e), status_code=500)

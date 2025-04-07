@@ -1,8 +1,10 @@
+import json
 from dataclasses import dataclass
 from typing import Literal
-import json
+
 from fastapi import HTTPException, Response
 
+from app.api.routes.two_factor import make_token_and_respond
 from app.core.security import (
     create_temp_token,
     get_password_hash,
@@ -12,7 +14,6 @@ from app.core.security import (
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
 from app.models import User, UserSettings
-from app.api.routes.two_factor import make_token_and_respond
 from app.telegram_utils import send_telegram_message
 
 
@@ -60,17 +61,18 @@ class InProgressUserLogin:
     temp_token: str | None
     user: User
 
-def determine_two_fa_status_from_user(user:User)-> InProgressUserLogin:
+
+def determine_two_fa_status_from_user(user: User) -> InProgressUserLogin:
     # If 2FA is enabled for the user
     if user.totp_enabled:
-            print("2FA is enabled for the user")
-            temp_token = create_temp_token(user.id)
-            return InProgressUserLogin(
-                requires_2fa=True,
-                requires_2fa_setup=False,
-                temp_token=temp_token,
-                user=user,
-            )
+        print("2FA is enabled for the user")
+        temp_token = create_temp_token(user.id)
+        return InProgressUserLogin(
+            requires_2fa=True,
+            requires_2fa_setup=False,
+            temp_token=temp_token,
+            user=user,
+        )
 
     # User is required to set up 2FA but hasn't done so yet
     elif user.requires_two_factor and not user.totp_enabled:
@@ -89,34 +91,34 @@ def determine_two_fa_status_from_user(user:User)-> InProgressUserLogin:
         user=user, requires_2fa=False, requires_2fa_setup=False, temp_token=None
     )
 
-def handle_and_respond_to_in_progress_login(user: InProgressUserLogin, source: Literal['oauth', 'basic'])-> Response:
-        if user.requires_2fa or user.requires_2fa_setup:
-            send_telegram_message(
-                message=f"User {user.user.email} needs 2FA verification",
-            )
-            # Return the 2FA challenge response with 200 status code
-            response_data = {
-                "access_token": None,
-                "token_type": "bearer",
-                "requires_2fa": user.requires_2fa,
-                "requires_2fa_setup": user.requires_2fa_setup,
-                "temp_token": user.temp_token,
-            }
-            return Response(
-                content=json.dumps(response_data), media_type="application/json"
-            )
 
-
-        if not user.user.is_active:
-            raise HTTPException(status_code=401, detail="Account is inactive")
-
+def handle_and_respond_to_in_progress_login(
+    user: InProgressUserLogin, source: Literal["oauth", "basic"]
+) -> Response:
+    if user.requires_2fa or user.requires_2fa_setup:
         send_telegram_message(
-            message=f"User logged in successfully {user.user.id} via {source}",
+            message=f"User {user.user.email} needs 2FA verification",
+        )
+        # Return the 2FA challenge response with 200 status code
+        response_data = {
+            "access_token": None,
+            "token_type": "bearer",
+            "requires_2fa": user.requires_2fa,
+            "requires_2fa_setup": user.requires_2fa_setup,
+            "temp_token": user.temp_token,
+        }
+        return Response(
+            content=json.dumps(response_data), media_type="application/json"
         )
 
-        return make_token_and_respond(user_id=user.user.id)
-   
+    if not user.user.is_active:
+        raise HTTPException(status_code=401, detail="Account is inactive")
 
+    send_telegram_message(
+        message=f"User logged in successfully {user.user.id} via {source}",
+    )
+
+    return make_token_and_respond(user_id=user.user.id)
 
 
 def authenticate(
@@ -129,9 +131,7 @@ def authenticate(
     if not verify_password(password, db_user.hashed_password):
         return None
 
-
     return determine_two_fa_status_from_user(db_user)
-
 
 
 def get_user_by_temp_token(*, session: Session, token: str) -> User | None:

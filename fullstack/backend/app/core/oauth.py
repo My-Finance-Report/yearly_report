@@ -59,6 +59,7 @@ class GoogleTokenResponse:
     refresh_token: str
     expires_at: datetime
 
+
 def exchange_code_for_tokens(code: str) -> GoogleTokenResponse:
     """Exchange authorization code for access and refresh tokens."""
     # Get the redirect URI from the request
