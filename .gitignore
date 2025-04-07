@@ -5,7 +5,6 @@ bank_files/*
 *.db
 *.env
 generated_code/*
-*.html
 *.pdf
 .stack-work/*
 .stack-work/dist/*

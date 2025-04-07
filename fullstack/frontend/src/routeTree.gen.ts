@@ -25,6 +25,7 @@ import { Route as LayoutHowImport } from './routes/_layout/how'
 import { Route as LayoutFaqImport } from './routes/_layout/faq'
 import { Route as LayoutDemoImport } from './routes/_layout/demo'
 import { Route as LayoutContactMeImport } from './routes/_layout/contact-me'
+import { Route as LayoutChangeLogImport } from './routes/_layout/change-log'
 import { Route as LayoutLoggedinImport } from './routes/_layout/_logged_in'
 import { Route as LayoutLoggedinUploadFilesImport } from './routes/_layout/_logged_in/upload-files'
 import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_logged_in/transactions'
@@ -108,6 +109,11 @@ const LayoutDemoRoute = LayoutDemoImport.update({
 
 const LayoutContactMeRoute = LayoutContactMeImport.update({
   path: '/contact-me',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutChangeLogRoute = LayoutChangeLogImport.update({
+  path: '/change-log',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -195,6 +201,10 @@ declare module '@tanstack/react-router' {
     }
     '/_layout/_logged_in': {
       preLoaderRoute: typeof LayoutLoggedinImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/change-log': {
+      preLoaderRoute: typeof LayoutChangeLogImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/contact-me': {
@@ -318,6 +328,7 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinTransactionsRoute,
       LayoutLoggedinUploadFilesRoute,
     ]),
+    LayoutChangeLogRoute,
     LayoutContactMeRoute,
     LayoutDemoRoute,
     LayoutFaqRoute,
