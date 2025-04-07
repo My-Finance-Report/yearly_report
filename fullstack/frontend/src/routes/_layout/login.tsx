@@ -13,14 +13,19 @@ import {
   Link as RouterLink,
   createFileRoute,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import useAuth, { isSessionActive } from "@/hooks/useAuth"
 import { emailPattern } from "../../utils"
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
-import useCustomToast from "../../hooks/useCustomToast"
+import useCustomToast from "@/hooks/useCustomToast"
 import { OauthService } from "@/client"
+import TwoFactorVerification from "@/components/TwoFactorVerification"
+import TwoFactorSetup from "@/components/TwoFactorSetup"
+import { useQueryClient } from "@tanstack/react-query"
+
 interface LoginFormData {
   username: string;
   password: string;
@@ -29,16 +34,27 @@ interface LoginFormData {
 export const Route = createFileRoute("/_layout/login")({
   component: Login,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({ to: "/transactions" })
     }
   },
 })
 
 function Login() {
-  const { loginMutation, error, resetError } = useAuth()
+  const { 
+    loginMutation, 
+    error, 
+    resetError, 
+    requires2FA, 
+    requires2FASetup, 
+    tempToken,
+    reset2FAStates 
+  } = useAuth()
+
   const [blahError, setError] = useState(false)
   const showToast = useCustomToast()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
@@ -69,7 +85,6 @@ function Login() {
       const {url} = await OauthService.loginGoogle()
       
       if (url) {
-        // Redirect to Google's authorization page
         window.location.href = url;
       } else {
         showToast("Error", "Failed to initiate Google login", "error");
@@ -81,6 +96,56 @@ function Login() {
       setIsGoogleLoading(false);
     }
   };
+
+  const handleBack = () => {
+    reset2FAStates();
+  };
+
+  const handleSuccessfulVerification = () => {
+    // Set the session as active to enable user queries
+    sessionStorage.setItem("session_active", "true")
+    
+    // Force a refresh of the current user data
+    queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+    
+    reset2FAStates();
+    
+    navigate({ to: "/" });
+  };
+
+
+  if (requires2FA) {
+    if (!tempToken) {
+      showToast("Error", "Authentication token is missing. Please try logging in again.", "error")
+      reset2FAStates()
+      return (
+        null
+      )
+    }
+    return (
+      <Container maxW="sm" py={8}>
+        <TwoFactorVerification 
+          onCancel={handleBack}
+          onSuccess={handleSuccessfulVerification}
+          temp_token={tempToken}
+        />
+      </Container>
+    );
+  }
+
+  if (requires2FASetup) {
+    if (!tempToken) {
+      throw new Error("No temp token found");
+    }
+    return (
+      <Container maxW="sm" py={8}>
+        <TwoFactorSetup 
+          onComplete={handleBack}
+          tempToken={tempToken}
+        />
+      </Container>
+    );
+  }
 
   return (
     <Container

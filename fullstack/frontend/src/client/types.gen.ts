@@ -139,6 +139,22 @@ export type CheckoutSession = {
     checkout_url: string;
 };
 
+/**
+ * Request to start the 2FA setup process.
+ */
+export type Enable2FARequest = {
+    password: string;
+    temp_token: string;
+};
+
+/**
+ * Response containing the TOTP secret and QR code.
+ */
+export type Enable2FAResponse = {
+    secret: string;
+    qr_code: string;
+};
+
 export type FilterData_Input = {
     is_default?: boolean;
     lookup?: {
@@ -162,11 +178,6 @@ export type FilterEntries = {
 
 export type FilterEntry = {
     value: string;
-};
-
-export type GoogleCallbackData = {
-    access_token?: (string | null);
-    error?: (string | null);
 };
 
 export type GroupByOption = 'account' | 'category' | 'month' | 'year' | 'budget';
@@ -217,9 +228,6 @@ export type PlaidLinkTokenResponse = {
     link_token: string;
 };
 
-/**
- * Response model for Plaid sync logs.
- */
 export type PlaidSyncLogOut = {
     id: number;
     sync_type: string;
@@ -364,8 +372,11 @@ export type SubscriptionStatus = 'active' | 'canceled' | 'incomplete' | 'incompl
 export type SubscriptionTier = 'free' | 'premium' | 'business';
 
 export type Token = {
-    access_token: string;
+    access_token?: (string | null);
     token_type?: string;
+    requires_2fa?: boolean;
+    requires_2fa_setup?: boolean;
+    temp_token?: (string | null);
 };
 
 export type TransactionEdit = {
@@ -406,6 +417,21 @@ export type TransactionSourceOut = {
     source_kind?: SourceKind;
     id: number;
     is_plaid_connected?: boolean;
+};
+
+/**
+ * Request to complete login with 2FA.
+ */
+export type TwoFactorLoginRequest = {
+    code: string;
+    temp_token: string;
+};
+
+/**
+ * Request to reject 2FA setup during login.
+ */
+export type TwoFactorRejectRequest = {
+    temp_token: string;
 };
 
 export type UploadedPdfOut = {
@@ -455,15 +481,6 @@ export type UsersPublic = {
     count: number;
 };
 
-export type UserUpdate = {
-    id: number;
-    password: (string | null);
-    full_name: string;
-    email: string;
-    is_superuser?: boolean;
-    is_active?: boolean;
-};
-
 export type UserUpdateMe = {
     email: string;
     settings?: (UserSettings | null);
@@ -473,6 +490,23 @@ export type ValidationError = {
     loc: Array<(string | number)>;
     msg: string;
     type: string;
+};
+
+/**
+ * Request to verify a 2FA code.
+ */
+export type Verify2FARequest = {
+    code: string;
+    temp_token: string;
+};
+
+/**
+ * Response after verifying a 2FA code.
+ */
+export type Verify2FAResponse = {
+    success: boolean;
+    access_token: string;
+    token_type: string;
 };
 
 export type AccountsGetTransactionSourcesResponse = (Array<TransactionSourceOut>);
@@ -637,6 +671,8 @@ export type LoginLoginAccessTokenData = {
 
 export type LoginLoginAccessTokenResponse = (Token);
 
+export type LoginLogoutResponse = (unknown);
+
 export type LoginTestTokenResponse = (UserOut);
 
 export type LoginRecoverPasswordData = {
@@ -664,7 +700,7 @@ export type OauthGoogleCallbackData = {
     error?: (string | null);
 };
 
-export type OauthGoogleCallbackResponse = (GoogleCallbackData);
+export type OauthGoogleCallbackResponse = (unknown);
 
 export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
 
@@ -787,6 +823,36 @@ export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
 
 export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
 
+export type TwoFactorEnable2FaData = {
+    requestBody: Enable2FARequest;
+};
+
+export type TwoFactorEnable2FaResponse = (Enable2FAResponse);
+
+export type TwoFactorVerify2FaData = {
+    requestBody: Verify2FARequest;
+};
+
+export type TwoFactorVerify2FaResponse = (Verify2FAResponse);
+
+export type TwoFactorVerify2FaLoginData = {
+    requestBody: TwoFactorLoginRequest;
+};
+
+export type TwoFactorVerify2FaLoginResponse = (Token);
+
+export type TwoFactorReject2FaData = {
+    requestBody: TwoFactorRejectRequest;
+};
+
+export type TwoFactorReject2FaResponse = (Token);
+
+export type TwoFactorDisable2FaData = {
+    requestBody: Enable2FARequest;
+};
+
+export type TwoFactorDisable2FaResponse = (Verify2FAResponse);
+
 export type UploadsReprocessFileData = {
     jobId: number;
 };
@@ -849,19 +915,6 @@ export type UsersReadUserByIdData = {
 };
 
 export type UsersReadUserByIdResponse = (UserOut);
-
-export type UsersUpdateUserData = {
-    requestBody: UserUpdate;
-    userId: string;
-};
-
-export type UsersUpdateUserResponse = (UserOut);
-
-export type UsersDeleteUserData = {
-    userId: number;
-};
-
-export type UsersDeleteUserResponse = (Message);
 
 export type UtilsTestEmailData = {
     emailTo: string;

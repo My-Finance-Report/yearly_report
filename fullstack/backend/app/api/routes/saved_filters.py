@@ -57,6 +57,7 @@ def read_saved_filters(
     """
     Retrieve saved filters.
     """
+    return []  # TODO
     filters = (
         db.query(SavedFilter)
         .filter(SavedFilter.user_id == current_user.id)

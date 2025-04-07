@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadPublicSavedFiltersData, SavedFiltersReadPublicSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginLogoutResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadPublicSavedFiltersData, SavedFiltersReadPublicSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, TwoFactorEnable2FaData, TwoFactorEnable2FaResponse, TwoFactorVerify2FaData, TwoFactorVerify2FaResponse, TwoFactorVerify2FaLoginData, TwoFactorVerify2FaLoginResponse, TwoFactorReject2FaData, TwoFactorReject2FaResponse, TwoFactorDisable2FaData, TwoFactorDisable2FaResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -562,6 +562,19 @@ export class LoginService {
     }
     
     /**
+     * Logout
+     * Logout endpoint that clears the access token cookie
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static logout(): CancelablePromise<LoginLogoutResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/logout'
+        });
+    }
+    
+    /**
      * Test Token
      * Test access token
      * @returns UserOut Successful Response
@@ -660,7 +673,7 @@ export class OauthService {
      * @param data The data for the request.
      * @param data.code
      * @param data.error
-     * @returns GoogleCallbackData Successful Response
+     * @returns unknown Successful Response
      * @throws ApiError
      */
     public static googleCallback(data: OauthGoogleCallbackData): CancelablePromise<OauthGoogleCallbackResponse> {
@@ -1163,6 +1176,108 @@ export class TransactionsService {
     
 }
 
+export class TwoFactorService {
+    /**
+     * Enable 2Fa
+     * Start the 2FA setup process
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Enable2FAResponse Successful Response
+     * @throws ApiError
+     */
+    public static enable2Fa(data: TwoFactorEnable2FaData): CancelablePromise<TwoFactorEnable2FaResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/two-factor/enable',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Verify 2Fa
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Verify2FAResponse Successful Response
+     * @throws ApiError
+     */
+    public static verify2Fa(data: TwoFactorVerify2FaData): CancelablePromise<TwoFactorVerify2FaResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/two-factor/verify',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Verify 2Fa Login
+     * Verify the 2FA code during login
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Token Successful Response
+     * @throws ApiError
+     */
+    public static verify2FaLogin(data: TwoFactorVerify2FaLoginData): CancelablePromise<TwoFactorVerify2FaLoginResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/two-factor/verify-login',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Reject 2Fa
+     * Reject the 2FA setup during login
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Token Successful Response
+     * @throws ApiError
+     */
+    public static reject2Fa(data: TwoFactorReject2FaData): CancelablePromise<TwoFactorReject2FaResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/two-factor/reject-tfa',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Disable 2Fa
+     * Disable 2FA for a user
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Verify2FAResponse Successful Response
+     * @throws ApiError
+     */
+    public static disable2Fa(data: TwoFactorDisable2FaData): CancelablePromise<TwoFactorDisable2FaResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/two-factor/disable',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+}
+
 export class UploadsService {
     /**
      * Reprocess File
@@ -1392,51 +1507,6 @@ export class UsersService {
     public static readUserById(data: UsersReadUserByIdData): CancelablePromise<UsersReadUserByIdResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/users/{user_id}',
-            path: {
-                user_id: data.userId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Update User
-     * Update a user.
-     * @param data The data for the request.
-     * @param data.userId
-     * @param data.requestBody
-     * @returns UserOut Successful Response
-     * @throws ApiError
-     */
-    public static updateUser(data: UsersUpdateUserData): CancelablePromise<UsersUpdateUserResponse> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/users/{user_id}',
-            path: {
-                user_id: data.userId
-            },
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Delete User
-     * Delete a user.
-     * @param data The data for the request.
-     * @param data.userId
-     * @returns Message Successful Response
-     * @throws ApiError
-     */
-    public static deleteUser(data: UsersDeleteUserData): CancelablePromise<UsersDeleteUserResponse> {
-        return __request(OpenAPI, {
-            method: 'DELETE',
             url: '/api/v1/users/{user_id}',
             path: {
                 user_id: data.userId

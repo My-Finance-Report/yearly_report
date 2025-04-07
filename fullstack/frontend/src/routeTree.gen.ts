@@ -18,7 +18,6 @@ import { Route as LayoutSignupImport } from './routes/_layout/signup'
 import { Route as LayoutResetPasswordImport } from './routes/_layout/reset-password'
 import { Route as LayoutRecoverPasswordImport } from './routes/_layout/recover-password'
 import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
-import { Route as LayoutOldImport } from './routes/_layout/old'
 import { Route as LayoutOauthCallbackImport } from './routes/_layout/oauth-callback'
 import { Route as LayoutLoginImport } from './routes/_layout/login'
 import { Route as LayoutLandingImport } from './routes/_layout/landing'
@@ -32,6 +31,7 @@ import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
 import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
 import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
+import { Route as LayoutLoggedinSetuptwofaImport } from './routes/_layout/_logged_in/setup_two_fa'
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
@@ -73,11 +73,6 @@ const LayoutRecoverPasswordRoute = LayoutRecoverPasswordImport.update({
 
 const LayoutPrivacyRoute = LayoutPrivacyImport.update({
   path: '/privacy',
-  getParentRoute: () => LayoutRoute,
-} as any)
-
-const LayoutOldRoute = LayoutOldImport.update({
-  path: '/old',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -152,6 +147,11 @@ const LayoutLoggedinSubscriptionRoute = LayoutLoggedinSubscriptionImport.update(
   } as any,
 )
 
+const LayoutLoggedinSetuptwofaRoute = LayoutLoggedinSetuptwofaImport.update({
+  path: '/setup_two_fa',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
+
 const LayoutLoggedinSettingsRoute = LayoutLoggedinSettingsImport.update({
   path: '/settings',
   getParentRoute: () => LayoutLoggedinRoute,
@@ -225,10 +225,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutOauthCallbackImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/old': {
-      preLoaderRoute: typeof LayoutOldImport
-      parentRoute: typeof LayoutImport
-    }
     '/_layout/privacy': {
       preLoaderRoute: typeof LayoutPrivacyImport
       parentRoute: typeof LayoutImport
@@ -277,6 +273,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinSettingsImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/setup_two_fa': {
+      preLoaderRoute: typeof LayoutLoggedinSetuptwofaImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/subscription': {
       preLoaderRoute: typeof LayoutLoggedinSubscriptionImport
       parentRoute: typeof LayoutLoggedinImport
@@ -311,6 +311,7 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinPlaidRoute,
       LayoutLoggedinSankeyConfigRoute,
       LayoutLoggedinSettingsRoute,
+      LayoutLoggedinSetuptwofaRoute,
       LayoutLoggedinSubscriptionRoute,
       LayoutLoggedinSubscriptionCancelRoute,
       LayoutLoggedinSubscriptionSuccessRoute,
@@ -324,7 +325,6 @@ export const routeTree = rootRoute.addChildren([
     LayoutLandingRoute,
     LayoutLoginRoute,
     LayoutOauthCallbackRoute,
-    LayoutOldRoute,
     LayoutPrivacyRoute,
     LayoutRecoverPasswordRoute,
     LayoutResetPasswordRoute,

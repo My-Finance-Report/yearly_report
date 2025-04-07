@@ -4,7 +4,7 @@ from typing import Any
 import jwt
 import sqlalchemy.orm as orm
 from dotenv import load_dotenv
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -33,6 +33,16 @@ reusable_oauth2 = OAuth2PasswordBearer(
 )
 
 
+def get_token_from_cookie(request: Request) -> str:
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing access token cookie",
+        )
+    return token
+
+
 def get_auth_db() -> Generator[Session, Any, None]:
     """Returns a database session that does NOT enforce RLS (used for authentication)."""
 
@@ -46,9 +56,42 @@ def get_auth_db() -> Generator[Session, Any, None]:
 
 
 def get_current_user(
+    token: str | bytes = Depends(get_token_from_cookie),
+    session: Session = Depends(get_auth_db),
+) -> User:
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+
+        token_data = TokenPayload(**payload)
+
+    except (InvalidTokenError, ValidationError) as e:
+        print("Invalid token", e)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
+
+    # Query the user by ID
+    user = session.query(User).filter(User.id == token_data.sub).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+
+    return user
+
+
+def get_current_user_from_temp_token(
     token: str | bytes = Depends(reusable_oauth2),
     session: Session = Depends(get_auth_db),
 ) -> User:
+    """
+    Similar to get_current_user but designed to work with temporary tokens
+    issued during the 2FA setup process.
+    """
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]

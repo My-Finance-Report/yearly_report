@@ -17,7 +17,7 @@ import {
   LoginService,
   type NewPassword,
 } from "@/client"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
 
@@ -28,7 +28,7 @@ interface NewPasswordForm extends NewPassword {
 export const Route = createFileRoute("/_layout/reset-password")({
   component: ResetPassword,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isSessionActive()) {
       throw redirect({
         to: "/",
       })

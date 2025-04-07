@@ -123,16 +123,25 @@ services:
 
       - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=8000
 
+      # Rate limiting middleware for login
+      - traefik.http.middlewares.login-ratelimit.ratelimit.average=5
+      - traefik.http.middlewares.login-ratelimit.ratelimit.burst=5
+      - traefik.http.middlewares.login-ratelimit.ratelimit.period=5m
+      
+      # Apply rate limiting only to login endpoint
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-login.rule=Host(`api.${DOMAIN?Variable not set}`) && PathPrefix(`/api/v1/login/access-token`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-login.middlewares=login-ratelimit
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-login.priority=110
+
+      # Main backend routes (excluding login)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=Host(`api.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
 
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.rule=Host(`api.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.entrypoints=https
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=true
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
-
-      # Enable redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
 
   frontend:
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'

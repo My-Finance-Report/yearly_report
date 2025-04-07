@@ -1,0 +1,57 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        },
+        "access": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "default",
+            "stream": "ext://sys.stdout"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "INFO",
+            "formatter": "default",
+            "filename": "/var/log/finance/app.log",
+            "maxBytes": 10485760,
+            "backupCount": 5
+        },
+        "access_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "INFO",
+            "formatter": "access",
+            "filename": "/var/log/finance/access.log",
+            "maxBytes": 10485760,
+            "backupCount": 5
+        }
+    },
+    "loggers": {
+        "uvicorn": {
+            "handlers": ["console", "file"],
+            "level": "INFO"
+        },
+        "uvicorn.access": {
+            "handlers": ["console", "access_file"],
+            "level": "INFO",
+            "propagate": false
+        },
+        "uvicorn.error": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": false
+        },
+        "app": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": false
+        }
+    }
+}

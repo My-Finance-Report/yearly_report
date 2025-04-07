@@ -1,4 +1,4 @@
-import { UserOut } from "@/client";
+import { UserOut, UsersService } from "@/client";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import {
@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   FiDollarSign,
@@ -22,10 +22,10 @@ import {
   FiSettings,
   FiUsers,
   FiMenu,
-  FiChevronRight,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import useAuth, { isSessionActive } from "@/hooks/useAuth";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -35,10 +35,52 @@ const navigationItems = [
 ];
 
 export function SegmentedNavigation() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useRouterState().location;
-  const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
+  const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
+  
+  // Use the user from useAuth hook as a fallback
+  const { data: currentUser } = useQuery<UserOut | null, Error>({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      try {
+        return await UsersService.readUserMe();
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        return null;
+      }
+    },
+    initialData: authUser || null,
+    // Don't retry on 401 errors
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes("401")) {
+        return false;
+      }
+      return failureCount < 3;
+    }
+  });
+
+  // Effect to refetch user data when session status changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (isSessionActive()) {
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Initial check
+    if (isSessionActive() && !currentUser) {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    }
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [queryClient, currentUser]);
+
   const isMobile = useIsMobile();
 
   // Example: final nav items + "Admin" if user is superuser
@@ -48,7 +90,8 @@ export function SegmentedNavigation() {
       ? navigationItems
       : [];
 
-  const isDemo = location.pathname.startsWith("/demo");
+  // Check if we're running on localhost (development environment)
+  const isDevelopment = window.location.hostname === "localhost";
 
   return (
     <Flex
@@ -59,7 +102,7 @@ export function SegmentedNavigation() {
       backgroundColor="background"
       width="100%"
     >
-      {isDemo && (
+      {isDevelopment && (
         <Flex
           bgColor="#5F62F6"
           color="white"
@@ -71,24 +114,7 @@ export function SegmentedNavigation() {
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={20} fontWeight={500}>Want a visual breakdown of your income, expenses and trends — like this?</Text>
-          <Flex direction={isMobile ? "column" : "row"} gap={3}>
-            <Button
-              variant="outline"
-              color={"#5F62F6"}
-              bgColor={"white"}
-              borderColor={"#5F62F6"}
-              onClick={() => navigate({ to: "/" })}
-            >
-              How does it work? <FiChevronRight />
-            </Button>
-            <a target="_blank" href="https://cal.com/matt-carroll">
-              <Button variant="outline" bgColor={"white"} color={"#5F62F6"} borderColor={"#5F62F6"} >
-                Schedule a call with me 
-                <FiChevronRight />
-              </Button>
-            </a>
-          </Flex>
+          <Text fontSize={20} fontWeight={500}>You cant auth from localhost, it needs to be 127.0.0.1 to match the backend because http only cookies</Text>
         </Flex>
       )}
 
@@ -106,7 +132,7 @@ export function SegmentedNavigation() {
 
         {isMobile ? (
           <MobileMenu
-            user={currentUser}
+            user={currentUser ?? undefined}
             navigate={navigate}
             finalItems={finalItems}
           />

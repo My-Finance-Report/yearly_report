@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
+import { activateSession } from "@/hooks/useAuth"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
 })
@@ -39,22 +40,10 @@ function OAuthCallback() {
         }
         
         // Exchange the code for a token with our backend
-        const {error: callbackError, access_token} = await OauthService.googleCallback({code})
-        
-        if (callbackError) {
-          showToast("Authentication Error", callbackError, "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        if (!access_token) {
-          showToast("Authentication Error", "No access token received from server", "error")
-          navigate({ to: "/login" })
-          return
-        }
-        
-        // Store the token and redirect to home
-        localStorage.setItem("access_token", access_token)
+        await OauthService.googleCallback({code})
+
+        activateSession()
+
         showToast("Login Successful", "You have successfully signed in with Google", "success")
         navigate({ to: "/" })
       } catch (error) {

@@ -30,7 +30,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { AccountDetails } from "@/components/Common/AccountDetails"
 import { FaFileUpload, FaPlus, FaUniversity } from "react-icons/fa"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import FileDropzone from "@/components/Common/Dropzone"
 import { useCallback, useEffect, useState } from "react"
 import { usePlaidLink } from "react-plaid-link"
@@ -47,7 +47,7 @@ function ManageAccounts() {
   } = useQuery({
     queryKey: ["accounts"],
     queryFn: AccountsService.getTransactionSources,
-    enabled: isLoggedIn(),
+    enabled: isSessionActive(),
   })
 
   const queryClient = useQueryClient()
@@ -311,14 +311,6 @@ function ManageAccounts() {
         <Box textAlign="center" p={10} borderWidth="1px" borderRadius="lg">
           <Text fontSize="lg">You don't have any accounts yet.</Text>
           <Text>Create a new account or link your bank to get started.</Text>
-          <Flex gap={2} mt={4}>
-            <Button onClick={onAddAccountOpen}>
-              <Flex align="center">
-                <Icon as={FaPlus} mr={2} />
-                <Text>Add Account</Text>
-              </Flex>
-            </Button>
-          </Flex>
         </Box>
       )}
 

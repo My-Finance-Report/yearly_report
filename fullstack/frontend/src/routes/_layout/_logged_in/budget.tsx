@@ -1,6 +1,6 @@
 import { BudgetsService } from "@/client"
 import { ManageBudget } from "@/components/Common/BudgetManager"
-import { isLoggedIn } from "@/hooks/useAuth"
+import { isSessionActive } from "@/hooks/useAuth"
 import {
   Box,
   Button,
@@ -27,7 +27,7 @@ function ManageBudgets() {
   } = useQuery({
     queryKey: ["budgets"],
     queryFn: BudgetsService.getBudget,
-    enabled: isLoggedIn(),
+    enabled: isSessionActive(),
   })
 
   const {
@@ -37,7 +37,7 @@ function ManageBudgets() {
     } = useQuery({
       queryKey: ["budgetStatus"],
       queryFn: BudgetsService.getBudgetStatus,
-      enabled: isLoggedIn(),
+      enabled: isSessionActive(),
     })
 
 
