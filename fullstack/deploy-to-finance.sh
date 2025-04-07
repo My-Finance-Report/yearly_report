@@ -43,15 +43,9 @@ fi
 
 echo "✅ Branch check passed. Proceeding with deployment..."
 
-# Check for uncommitted changes before running deploy checks
-if ! git diff --quiet; then
-    echo "❌ You have uncommitted changes. Please commit or stash them before deploying."
-    git status
-    exit 1
-fi
-
 # Run deploy checks and verify no changes were made
 echo "🔍 Running pre-deploy checks..."
+bin/regen
 bin/check_for_deploy
 
 # Check if deploy checks created any changes
