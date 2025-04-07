@@ -21,7 +21,7 @@ function OAuthCallbackLocal() {
   useEffect(() => {
     const exchangeCodeForToken = async () => {
       try {
-        const response = await OauthService.googleCallbackLocal({code: "1"})
+        const response = await OauthService.googleCallback({code: "1"}) //make this local for local testing
         return handleOAuthResponse(response as Response2FA, navigate) 
 
       } catch (error) {

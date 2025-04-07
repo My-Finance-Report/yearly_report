@@ -140,10 +140,17 @@ export type CheckoutSession = {
 };
 
 /**
+ * Request to disable 2FA.
+ */
+export type Disable2FARequest = {
+    password: string;
+    temp_token: string;
+};
+
+/**
  * Request to start the 2FA setup process.
  */
 export type Enable2FARequest = {
-    password: string;
     temp_token: string;
 };
 
@@ -702,13 +709,6 @@ export type OauthGoogleCallbackData = {
 
 export type OauthGoogleCallbackResponse = (unknown);
 
-export type OauthGoogleCallbackLocalData = {
-    code: string;
-    error?: (string | null);
-};
-
-export type OauthGoogleCallbackLocalResponse = (unknown);
-
 export type PlaidGetLinkTokenResponse = (PlaidLinkTokenResponse);
 
 export type PlaidExchangeTokenData = {
@@ -724,6 +724,13 @@ export type PrivateCreateUserData = {
 };
 
 export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 
@@ -855,7 +862,7 @@ export type TwoFactorReject2FaData = {
 export type TwoFactorReject2FaResponse = (Token);
 
 export type TwoFactorDisable2FaData = {
-    requestBody: Enable2FARequest;
+    requestBody: Disable2FARequest;
 };
 
 export type TwoFactorDisable2FaResponse = (Verify2FAResponse);
