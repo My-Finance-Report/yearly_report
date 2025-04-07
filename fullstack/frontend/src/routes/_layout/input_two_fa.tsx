@@ -2,7 +2,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { 
   Container,
-  Loader,
   Text, 
 } from "@chakra-ui/react"
 
@@ -16,22 +15,21 @@ const inputTwoFaSearchSchema = z.object({
 })
 
 
-
 export const Route = createFileRoute("/_layout/input_two_fa")({
   component: InputTwoFa,
   validateSearch: (search) => inputTwoFaSearchSchema.parse(search),
 })
 
 
-
 function InputTwoFa() {
 
-  console.log("InputTwoFa")
   const { 
     reset2FAStates 
   } = useAuth()
   const handleBack = () => {
+
     reset2FAStates();
+    return navigate({ to: "/login" })
   };
 
   const queryClient = useQueryClient()
@@ -43,7 +41,6 @@ function InputTwoFa() {
     queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     
     reset2FAStates();
-    
     navigate({ to: "/" });
   };
 

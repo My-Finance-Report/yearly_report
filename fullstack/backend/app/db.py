@@ -87,6 +87,7 @@ def get_current_user(
 
     return user
 
+
 def get_current_user_optional(
     token: str | bytes = Depends(get_token_from_cookie_optional),
     session: Session = Depends(get_auth_db),
@@ -98,7 +99,7 @@ def get_current_user_optional(
 
         token_data = TokenPayload(**payload)
 
-    except (InvalidTokenError, ValidationError) as e:
+    except (InvalidTokenError, ValidationError):
         return None
 
     # Query the user by ID

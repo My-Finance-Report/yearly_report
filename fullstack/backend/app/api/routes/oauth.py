@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.core.config import get_env
 from app.core.oauth import (
     GoogleTokenResponse,
     exchange_code_for_tokens,
@@ -16,7 +17,6 @@ from app.core.oauth import (
 from app.db import get_auth_db
 from app.models import User, UserSettings
 from app.telegram_utils import send_telegram_message
-from app.core.config import Settings, get_env
 
 router = APIRouter(tags=["oauth"])
 
@@ -43,7 +43,7 @@ async def login_google() -> LoginGoogleData:
 
     # Return the URL for the frontend to handle the redirect
     if get_env() == "local" and get_env() != "production":
-        mock_auth_url = f"http://127.0.0.1:5173/oauth-callback-local"
+        mock_auth_url = "http://127.0.0.1:5173/oauth-callback-local"
         return LoginGoogleData(url=mock_auth_url)
 
     else:
@@ -129,46 +129,11 @@ async def google_callback(
     except Exception as e:
         return Response(content=str(e), status_code=500)
 
-def after_google_portion_of_auth(user)->Response:
-    '''
+
+def after_google_portion_of_auth(user: User) -> Response:
+    """
     shared helper to make sure the local mock and the prod instance both work the same
-    '''
+    """
 
     in_progress_login_user = crud.determine_two_fa_status_from_user(user)
-    print(in_progress_login_user)
-    return crud.handle_and_respond_to_in_progress_login(
-        in_progress_login_user, "oauth"
-    )
-
-
-@router.get("/oauth/google/callback-local")
-async def google_callback_local(
-    code: str = Query(...),
-    error: str | None = Query(None),
-    session: Session = Depends(get_auth_db),
-) -> Response:
-    """
-    Handle the callback from Google OAuth.
-    This endpoint is called by the frontend after receiving the code from Google.
-    """
-    if get_env() != "local":
-        return Response(status_code=404)
-
-    if get_env() == "production":
-        return Response(status_code=404)
-
-    if error:
-        return Response(content=error, status_code=400)
-
-    try:
-
-
-        user = session.query(User).filter(User.id == int(code)).first()
-
-        if not user:
-            return Response(content="User not found", status_code=404)
-
-        return after_google_portion_of_auth(user)
-
-    except Exception as e:
-        return Response(content=str(e), status_code=500)
+    return crud.handle_and_respond_to_in_progress_login(in_progress_login_user, "oauth")

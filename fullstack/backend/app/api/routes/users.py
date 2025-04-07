@@ -155,8 +155,11 @@ def read_user_me(current_user: User = Depends(get_current_user)) -> User:
 
     return current_user
 
+
 @router.get("/me-optional", response_model=UserOut | None)
-def read_user_me_optional(current_user: User | None = Depends(get_current_user_optional)) -> User | None:
+def read_user_me_optional(
+    current_user: User | None = Depends(get_current_user_optional),
+) -> User | None:
     """
     Get current user.
     """
