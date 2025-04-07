@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
 import { handleOAuthResponse, Response2FA } from "./oauth-callback"
-export const Route = import.meta.env.DEV  ? createFileRoute("/_layout/oauth-callback-local")({
+export const Route =  createFileRoute("/_layout/oauth-callback-local")({
   component: OAuthCallback,
-}) : null
+  beforeLoad: async () => {
+    if (import.meta.env.DEV) {
+      throw redirect({ to: "/" })
+    }
+  }
+})
 
 function OAuthCallback() {
   const navigate = useNavigate()
