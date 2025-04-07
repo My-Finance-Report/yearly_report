@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react"
-import { createFileRoute, NavigateFn, useNavigate } from "@tanstack/react-router"
-import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
-import useCustomToast from "../../hooks/useCustomToast"
+import { useEffect } from "react"
+import { createFileRoute, NavigateFn, redirect, useNavigate } from "@tanstack/react-router"
+import { Container, Text, Center, VStack } from "@chakra-ui/react"
 import { OauthService } from "@/client"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
@@ -20,8 +19,8 @@ export function handleOAuthResponse(response: Response2FA, navigate: NavigateFn)
           return;
         }
         if (response.requires_2fa) {
-          navigate({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
-          return;
+          redirect({ to: "/input_two_fa" , search: { tempToken: response.temp_token } });
+          return
         }
 
         navigate({ to: "/" })
@@ -31,11 +30,12 @@ export function handleOAuthResponse(response: Response2FA, navigate: NavigateFn)
 
 function OAuthCallback() {
   const navigate = useNavigate()
-  const showToast = useCustomToast()
-  const [isLoading, setIsLoading] = useState(true)
-  
+  //const showToast = useCustomToast()
+
+
   useEffect(() => {
     const exchangeCodeForToken = async () => {
+      console.log("Exchange code for token")
       try {
         const params = new URLSearchParams(window.location.search)
         const code = params.get("code")
@@ -43,50 +43,41 @@ function OAuthCallback() {
         const state = params.get("state")
         
         if (error) {
-          showToast("Authentication Error", error, "error")
+          //showToast("Authentication Error", error, "error")
           navigate({ to: "/login" })
           return
         }
         
         if (!code) {
-          showToast("Authentication Error", "No authorization code received", "error")
+          //showToast("Authentication Error", "No authorization code received", "error")
           navigate({ to: "/login" })
           return
         }
         
         if (!state) {
-          showToast("Authentication Error", "No state received", "error")
+          //showToast("Authentication Error", "No state received", "error")
           navigate({ to: "/login" })
           return
         }
         
         // Exchange the code for a token with our backend
         const response = await OauthService.googleCallback({code})
-        return handleOAuthResponse(response as Response2FA, navigate) //todo typing
+        handleOAuthResponse(response as Response2FA, navigate) //todo typing
       } catch (error) {
         console.error("OAuth callback error:", error)
-        showToast("Authentication Error", "Failed to complete authentication", "error")
+        //showToast("Authentication Error", "Failed to complete authentication", "error")
         navigate({ to: "/login" })
-      } finally {
-        setIsLoading(false)
       }
     }
     
     exchangeCodeForToken()
-  }, [navigate, showToast])
+  }, [navigate])
   
   return (
     <Container h="100vh">
       <Center h="100%">
         <VStack>
-          {isLoading ? (
-            <>
-              <Spinner size="xl" />
-              <Text>Completing authentication...</Text>
-            </>
-          ) : (
-            <Text>Redirecting...</Text>
-          )}
+          <Text>Completing authentication...</Text>
         </VStack>
       </Center>
     </Container>
