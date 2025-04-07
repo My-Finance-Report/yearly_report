@@ -22,7 +22,7 @@ function OAuthCallbackLocal() {
     const exchangeCodeForToken = async () => {
       try {
         const response = await OauthService.googleCallbackLocal({code: "1"})
-        handleOAuthResponse(response as Response2FA, navigate) 
+        return handleOAuthResponse(response as Response2FA, navigate) 
 
       } catch (error) {
         console.error("OAuth callback error:", error)

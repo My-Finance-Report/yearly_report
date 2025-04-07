@@ -3,7 +3,6 @@ import { createFileRoute, NavigateFn, useNavigate } from "@tanstack/react-router
 import { Container, Spinner, Text, Center, VStack } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { OauthService } from "@/client"
-import { activateSession } from "@/hooks/useAuth"
 export const Route = createFileRoute("/_layout/oauth-callback")({
   component: OAuthCallback,
 })
@@ -63,12 +62,7 @@ function OAuthCallback() {
         
         // Exchange the code for a token with our backend
         const response = await OauthService.googleCallback({code})
-        handleOAuthResponse(response as Response2FA, navigate) //todo typing
-
-        activateSession()
-
-        showToast("Login Successful", "You have successfully signed in with Google", "success")
-        navigate({ to: "/" })
+        return handleOAuthResponse(response as Response2FA, navigate) //todo typing
       } catch (error) {
         console.error("OAuth callback error:", error)
         showToast("Authentication Error", "Failed to complete authentication", "error")
