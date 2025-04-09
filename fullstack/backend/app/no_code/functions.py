@@ -1,8 +1,8 @@
 
 from abc import ABC
 from typing import get_origin, get_args, TypeVar, Union, Any
-from app.schemas.no_code import Generator, Output, PipelineEnd, PipelineStart, Transformation
-from app.no_code.generators import FirstTenTransactionGenerator, SumTransformation, AverageTransformation, ShowValue, ShowList
+from app.schemas.no_code import Generator, Output, Parameter, ParameterType, PipelineEnd, PipelineStart, Transformation
+from app.no_code.generators import FirstNTransactionGenerator, SumTransformation, AverageTransformation, ShowValue, ShowList
 import enum
 from pydantic import BaseModel
 
@@ -19,27 +19,33 @@ class ToolType(str, enum.Enum):
     show_value = "show_value"
     show_list = "show_list"
 
-tool_type_map = {
-    ToolType.first_ten_transactions: FirstTenTransactionGenerator,
-    ToolType.sum: SumTransformation,
-    ToolType.average: AverageTransformation,
-    ToolType.show_value: ShowValue,
-    ToolType.show_list: ShowList,
-}
+
 
 
 class NoCodeTool(BaseModel):
     name: str
     description: str
     tool: ToolType
+    parameters: list[Parameter] | None =None
+
+
+tool_type_map = {
+    ToolType.first_ten_transactions: lambda params: FirstNTransactionGenerator({params.name : params.value for params in params}),
+    ToolType.sum: lambda _params: SumTransformation(),
+    ToolType.average: lambda _params: AverageTransformation(),
+    ToolType.show_value: lambda _params: ShowValue(),
+    ToolType.show_list: lambda _params: ShowList(),
+}
+
 
 
 def make_tools()->list[NoCodeTool]:
     return [
         NoCodeTool(
-            name="First 10 Transactions",
-            description="Get the first 10 transactions for the user",
+            name="First n Transactions",
+            description="Get the first n transactions for the user",
             tool=ToolType.first_ten_transactions,
+            parameters=[Parameter(name="n", type=ParameterType.INT)],
         ),
         NoCodeTool(
             name="Sum",
@@ -66,9 +72,11 @@ def make_tools()->list[NoCodeTool]:
 
 
 def convert_to_pipeline(pipeline: list[NoCodeTool]) -> tuple[Generator[T], list[Transformation[T,T]], Output[T]]:
-    pipe = [tool_type_map[tool.tool]() for tool in pipeline]
-    # we can ignore because we know the types from this linting checkout
+    pipe = [tool_type_map[tool.tool](tool.parameters) for tool in pipeline]
     lint_pipeline(pipe)
+
+
+    # we can ignore because we know the types from linting
     return pipe[0], pipe[1:-1], pipe[-1] #type: ignore 
 
 

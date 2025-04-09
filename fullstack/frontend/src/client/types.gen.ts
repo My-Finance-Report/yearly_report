@@ -208,13 +208,29 @@ export type NewPassword = {
     new_password: string;
 };
 
-export type NoCodeTool = {
+export type NoCodeTool_Input = {
     name: string;
     description: string;
     tool: ToolType;
+    parameters?: (Array<Parameter> | null);
 };
 
-export type OutputType = 'show_value';
+export type NoCodeTool_Output = {
+    name: string;
+    description: string;
+    tool: ToolType;
+    parameters?: (Array<Parameter> | null);
+};
+
+export type OutputType = 'show_value' | 'show_list';
+
+export type Parameter = {
+    name: string;
+    type: ParameterType;
+    value?: (number | string | null);
+};
+
+export type ParameterType = 'int' | 'float' | 'string';
 
 export type PipelineEnd = {
     result: Primitive;
@@ -404,7 +420,7 @@ export type Token = {
     temp_token?: (string | null);
 };
 
-export type ToolType = 'first_ten_transactions' | 'sum' | 'average' | 'show_value';
+export type ToolType = 'first_ten_transactions' | 'sum' | 'average' | 'show_value' | 'show_list';
 
 export type TransactionEdit = {
     description: string;
@@ -720,10 +736,10 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
-export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool>);
+export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool_Output>);
 
 export type NoCodeSaveNoCodeToolData = {
-    requestBody: Array<NoCodeTool>;
+    requestBody: Array<NoCodeTool_Input>;
 };
 
 export type NoCodeSaveNoCodeToolResponse = (PipelineEnd);

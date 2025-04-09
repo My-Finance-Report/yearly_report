@@ -655,7 +655,7 @@ export class NoCodeService {
     /**
      * Get No Code Tool
      * Create a link token for Plaid Link.
-     * @returns NoCodeTool Successful Response
+     * @returns NoCodeTool_Output Successful Response
      * @throws ApiError
      */
     public static getNoCodeTool(): CancelablePromise<NoCodeGetNoCodeToolResponse> {

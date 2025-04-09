@@ -1,5 +1,6 @@
 import enum
 from typing import Generic, TypeVar
+from pydantic import BaseModel
 from pydantic.generics import GenericModel
 from abc import ABC, abstractmethod
 from app.core.db import Session
@@ -12,6 +13,17 @@ from dataclasses import dataclass
 
 T = TypeVar("T")
 V = TypeVar("V")
+
+class ParameterType(str, enum.Enum):
+    INT = "int"
+    FLOAT = "float"
+    STRING = "string"
+
+class Parameter(BaseModel):
+    name: str 
+    type: ParameterType
+    value: int | float | str | None = None
+
 
 @dataclass
 class PipelineStart:
@@ -55,6 +67,14 @@ class Transformation(ABC, Generic[T, V]):
         pass
 
 class Generator(ABC, Generic[T]):
+
+    def __init__(self, kwargs: dict[str, int]):
+        self.kwargs = kwargs
+
+    @property
+    @abstractmethod
+    def parameters(self) -> list[Parameter]:
+        ...
 
     @property
     @abstractmethod

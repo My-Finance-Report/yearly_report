@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { NoCodeService, NoCodeTool, PipelineEnd } from "@/client"
-import { Container, Button,Box, Heading, Text, TableBody, TableRow, TableRoot, TableCell, TableHeader } from "@chakra-ui/react"
+import { Container, Button,Box, Heading, Text, TableBody, TableRow, TableRoot, TableCell, TableHeader, Input } from "@chakra-ui/react"
 import { useState } from "react"
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
@@ -125,6 +125,33 @@ function NoCodeBuilder() {
                 Step {idx + 1}: {node.name}
               </Text>
               <Text>{node.description}</Text>
+              {node.parameters && (
+                <Box mt={2}>
+                  {node.parameters?.map((param, paramIdx) => (
+                    <>
+                    <Text key={`${param.name}-${paramIdx}`}>
+                      {param.name}:
+                    </Text>
+                    <Input
+                      type={param.type === 'int' ? "number" : "text"}
+                      value={param.value || ""}
+                      onChange={(e) => {
+                        const updatedParams = [...node.parameters];
+                        updatedParams[paramIdx] = {
+                          ...param,
+                          value: e.target.value,
+                        };
+                        setPipeline((prev) =>
+                          prev.map((n, i) =>
+                            i === idx ? { ...n, parameters: updatedParams } : n
+                          )
+                        );
+                      }}
+                    />
+                    </>
+                  ))}
+                </Box>
+              )}
             </Box>
           ))
         )}
