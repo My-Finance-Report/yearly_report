@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { NoCodeService, NoCodeTool, PipelineEnd } from "@/client"
+import { NoCodeService,  NoCodeTool_Input,  PipelineEnd } from "@/client"
 import { Container, Button,Box, Heading, Text, TableBody, TableRow, TableRoot, TableCell, TableHeader, Input } from "@chakra-ui/react"
 import { useState } from "react"
 
@@ -58,7 +58,7 @@ function NoCodeBuilder() {
   const [error, setError] = useState<string | null>(null)
 
  const mutation = useMutation({
-    mutationFn: (data: NoCodeTool[]) =>
+    mutationFn: (data: NoCodeTool_Input[]) =>
       NoCodeService.saveNoCodeTool({ requestBody: data }),
     onSuccess: (data) => {
         console.log("success", data)
@@ -75,7 +75,7 @@ function NoCodeBuilder() {
   }
 
 
-  const [pipeline, setPipeline] = useState<NoCodeTool[]>([]);
+  const [pipeline, setPipeline] = useState<NoCodeTool_Input[]>([]);
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -85,7 +85,7 @@ function NoCodeBuilder() {
     return <div>No tools found</div>
   }
 
-  function handleAddNode(node: NoCodeTool) {
+  function handleAddNode(node: NoCodeTool_Input) {
     setPipeline((prev) => [...prev, node]);
   }
 
@@ -136,7 +136,7 @@ function NoCodeBuilder() {
                       type={param.type === 'int' ? "number" : "text"}
                       value={param.value || ""}
                       onChange={(e) => {
-                        const updatedParams = [...node.parameters];
+                        const updatedParams = [...(node.parameters || [])];
                         updatedParams[paramIdx] = {
                           ...param,
                           value: e.target.value,
