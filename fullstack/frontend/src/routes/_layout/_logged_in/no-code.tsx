@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { NoCodeService, NoCodeTool, Primitive } from "@/client"
-import { Container, Button,Box, Heading, Text, Table, TableBody, TableRow, TableRoot, TableCell, TableHeader } from "@chakra-ui/react"
+import { NoCodeService, NoCodeTool, PipelineEnd } from "@/client"
+import { Container, Button,Box, Heading, Text, TableBody, TableRow, TableRoot, TableCell, TableHeader } from "@chakra-ui/react"
 import { useState } from "react"
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
@@ -10,19 +10,19 @@ export const Route = createFileRoute("/_layout/_logged_in/no-code")({
 })
 
 
-function ShowValue({ value }: { value: Primitive }) {
-    return <Text>{value.value}</Text>
+function ShowValue( {pipelineEnd}: { pipelineEnd: PipelineEnd }) {
+    return <Text>{pipelineEnd.result.value.value}</Text>
 }
 
-function ShowList({ result: results}: { result: Primitive[] }) {
-    console.log("in listing",results)
+function ShowList({ pipelineEnd }: { pipelineEnd: {result: {value: {id: number, amount: number, description: string}[]}} }) {
+    console.log("in listing",pipelineEnd.result.value)
     return (
         <TableRoot>
             <TableHeader>
                 <TableRow>
-                    {results.value.map((result, index) => {
+                    {pipelineEnd.result.value.map((data, index) => {
                     if(index ===0){
-                        return Object.entries(result.value).map(([key, value]) => (
+                        return Object.entries(data).map(([key, _value]) => (
                             <TableCell key={key}>{key}</TableCell>
                         ))
                     }
@@ -30,9 +30,9 @@ function ShowList({ result: results}: { result: Primitive[] }) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {results.value.map((result) => (
-                    <TableRow key={result.name}>
-                        {Object.entries(result.value).map(([key, value]) => (
+                {pipelineEnd.result.value.map((data) => (
+                    <TableRow key={data.id}>
+                        {Object.entries(data).map(([key, value]) => (
                             <TableCell key={key}>{value}</TableCell>
                         ))}
                     </TableRow>
@@ -54,7 +54,8 @@ function NoCodeBuilder() {
     queryFn: () => NoCodeService.getNoCodeTool(),
   });
 
-  const [result, setResult] = useState<Primitive | null>(null)
+  const [result, setResult] = useState<PipelineEnd | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
  const mutation = useMutation({
     mutationFn: (data: NoCodeTool[]) =>
@@ -63,9 +64,9 @@ function NoCodeBuilder() {
         console.log("success", data)
         setResult(data)
     },
-    onError: () => {
-        console.log("error")
+    onError: (error: {body: {detail: string}}) => {
         setResult(null)
+        setError(error.body?.detail)
     },
   })
 
@@ -74,7 +75,6 @@ function NoCodeBuilder() {
   }
 
 
-  // We'll store the pipeline as an array of chosen nodes
   const [pipeline, setPipeline] = useState<NoCodeTool[]>([]);
 
   if (isLoading) {
@@ -146,11 +146,15 @@ function NoCodeBuilder() {
         Reset
       </Button>
 
-
+      {error && (
+        <Box mt={4}>
+          <Text fontWeight="bold" color="red">{error}</Text>
+        </Box>
+      )}
       {result && (
         <Box mt={4}>
           <Text fontWeight="bold">Result</Text>
-          {Display && <Display {...result} />}
+          {Display && <Display pipelineEnd={result} />}
         </Box>
       )}
     </Container>
