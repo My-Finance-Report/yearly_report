@@ -654,7 +654,6 @@ export class LoginService {
 export class NoCodeService {
     /**
      * Get No Code Tool
-     * Create a link token for Plaid Link.
      * @returns NoCodeTool_Output Successful Response
      * @throws ApiError
      */

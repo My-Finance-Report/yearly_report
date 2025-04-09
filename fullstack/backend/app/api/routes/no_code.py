@@ -1,9 +1,6 @@
-from abc import ABC
-import enum
-from typing import Generic, TypeVar
+from typing import  TypeVar
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from pydantic import BaseModel
 
 from app.db import Session, get_current_user, get_db
 from app.models import (
@@ -19,7 +16,6 @@ router = APIRouter(prefix="/no_code", tags=["no_code"])
 def get_no_code_tool(
     user: User = Depends(get_current_user),
 ) -> list[NoCodeTool]:
-    """Create a link token for Plaid Link."""
     return make_tools()
 
 

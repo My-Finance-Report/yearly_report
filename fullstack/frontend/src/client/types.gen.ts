@@ -233,7 +233,7 @@ export type Parameter = {
 export type ParameterType = 'int' | 'float' | 'string';
 
 export type PipelineEnd = {
-    result: Primitive;
+    result: PrimitiveResult;
     output_type: OutputType;
 };
 
@@ -302,9 +302,9 @@ export type PriceDetails = {
     max_sources: number;
 };
 
-export type Primitive = {
+export type PrimitiveResult = {
     name: string;
-    value: unknown;
+    value: (Array<(number)> | Array<(string)> | Array<Array<(number)>> | Array<Array<(string)>>);
 };
 
 export type PrivateUserCreate = {

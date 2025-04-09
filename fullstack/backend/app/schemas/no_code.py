@@ -35,14 +35,20 @@ class Primitive(GenericModel, Generic[T]):
     name: str
     value: T
 
+PrimitiveResultValue = list[int] | list[float] | list[str] | list[list[int]] | list[list[float]] | list[list[str]]
+
+class PrimitiveResult(BaseModel):
+    name: str
+    value: PrimitiveResultValue
+
+
 class OutputType(str, enum.Enum):
     show_value = "show_value"
     show_list = "show_list"
     
-
 @dataclass
 class PipelineEnd:
-    result: Primitive
+    result: PrimitiveResult
     output_type: OutputType
 
 
