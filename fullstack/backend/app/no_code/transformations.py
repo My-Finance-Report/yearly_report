@@ -15,7 +15,7 @@ class SumTransformation(Transformation[Primitive[list[T]], Primitive[Decimal]]):
     def output_type(self) -> type[Primitive[Decimal]]:
         return Primitive[Decimal]
     
-    def get_summable_value(self, value:Primitive[T]) -> Decimal:
+    def get_summable_value(self, value:T) -> Decimal:
         if isinstance(value, NoCodeTransaction):
             return Decimal(value.amount)
         elif isinstance(value, Decimal):
@@ -35,7 +35,7 @@ class AverageTransformation(Transformation[Primitive[list[T]], Primitive[Decimal
     def output_type(self) -> type[Primitive[Decimal]]:
         return Primitive[Decimal]
 
-    def get_averageable_value(self, value:Primitive[T]) -> Decimal:
+    def get_averageable_value(self, value:T) -> Decimal:
         if isinstance(value, NoCodeTransaction):
             return Decimal(value.amount)
         elif isinstance(value, Decimal):

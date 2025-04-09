@@ -1,7 +1,7 @@
 
 from abc import ABC
-from typing import  TypeVar, Any
-from app.schemas.no_code import Generator, Output, Parameter, ParameterType, PipelineEnd, PipelineStart, Transformation
+from typing import  Callable, TypeVar, Any
+from app.schemas.no_code import Generator, Output, Parameter, ParameterType, PipelineEnd, PipelineStart, Primitive, Transformation
 from app.no_code.generators import FirstNTransactionGenerator
 from app.no_code.outputs import ShowValue, ShowList
 from app.no_code.transformations import SumTransformation, AverageTransformation

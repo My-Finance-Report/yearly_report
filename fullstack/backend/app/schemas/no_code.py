@@ -10,6 +10,8 @@ from typing import Generic, TypeVar
 
 from dataclasses import dataclass
 
+from fullstack.backend.app.no_code.generators import NoCodeTransaction
+
 
 T = TypeVar("T")
 V = TypeVar("V")
@@ -31,11 +33,14 @@ class PipelineStart:
     session: Session
 
 
-class Primitive(GenericModel, Generic[T]):
+class Primitive(BaseModel, Generic[T]):
     name: str
     value: T
 
-PrimitiveResultValue = list[int] | list[float] | list[str] | list[list[int]] | list[list[float]] | list[list[str]]
+
+Blah= int | float | str | NoCodeTransaction
+
+PrimitiveResultValue = Blah | list[Blah] 
 
 class PrimitiveResult(BaseModel):
     name: str
@@ -84,7 +89,7 @@ class Generator(ABC, Generic[T]):
 
     @property
     @abstractmethod
-    def output_type(self):
+    def output_type(self) -> type[Primitive[T]]:
         ...
 
     @abstractmethod
