@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { NoCodeService, NoCodeTool } from "@/client"
-import { Container, Button,Box, Heading, Text } from "@chakra-ui/react"
+import { NoCodeService, NoCodeTool, Primitive } from "@/client"
+import { Container, Button,Box, Heading, Text, Table, TableBody, TableRow, TableRoot, TableCell, TableHeader } from "@chakra-ui/react"
 import { useState } from "react"
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
@@ -10,20 +10,62 @@ export const Route = createFileRoute("/_layout/_logged_in/no-code")({
 })
 
 
+function ShowValue({ value }: { value: Primitive }) {
+    return <Text>{value.value}</Text>
+}
+
+function ShowList({ result: results}: { result: Primitive[] }) {
+    console.log("in listing",results)
+    return (
+        <TableRoot>
+            <TableHeader>
+                <TableRow>
+                    {results.value.map((result, index) => {
+                    if(index ===0){
+                        return Object.entries(result.value).map(([key, value]) => (
+                            <TableCell key={key}>{key}</TableCell>
+                        ))
+                    }
+})}
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {results.value.map((result) => (
+                    <TableRow key={result.name}>
+                        {Object.entries(result.value).map(([key, value]) => (
+                            <TableCell key={key}>{value}</TableCell>
+                        ))}
+                    </TableRow>
+                ))}
+            </TableBody>
+        </TableRoot>
+)
+
+}
+
+const MAP_TO_SHOW = {
+    "show_value": ShowValue,
+    "show_list": ShowList    
+}
+
 function NoCodeBuilder() {
   const { data: fetchedTools, isLoading } = useQuery({
     queryKey: ["no-code-tools"],
     queryFn: () => NoCodeService.getNoCodeTool(),
   });
 
+  const [result, setResult] = useState<Primitive | null>(null)
+
  const mutation = useMutation({
     mutationFn: (data: NoCodeTool[]) =>
       NoCodeService.saveNoCodeTool({ requestBody: data }),
-    onSuccess: () => {
-        console.log("success")
+    onSuccess: (data) => {
+        console.log("success", data)
+        setResult(data)
     },
     onError: () => {
         console.log("error")
+        setResult(null)
     },
   })
 
@@ -46,6 +88,10 @@ function NoCodeBuilder() {
   function handleAddNode(node: NoCodeTool) {
     setPipeline((prev) => [...prev, node]);
   }
+
+  console.log(result)
+
+  const Display = MAP_TO_SHOW[result?.output_type || "show_value"] || null
 
   return (
     <Container maxW="lg" my={8}>
@@ -92,8 +138,21 @@ function NoCodeBuilder() {
       >
         Save Pipeline
       </Button>
+      <Button
+        colorScheme="blue"
+        mt={4}
+        onClick={() => setPipeline([])}
+      >
+        Reset
+      </Button>
+
+
+      {result && (
+        <Box mt={4}>
+          <Text fontWeight="bold">Result</Text>
+          {Display && <Display {...result} />}
+        </Box>
+      )}
     </Container>
   )
-
-
 }

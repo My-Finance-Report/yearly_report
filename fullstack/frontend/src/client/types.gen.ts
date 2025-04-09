@@ -214,6 +214,13 @@ export type NoCodeTool = {
     tool: ToolType;
 };
 
+export type OutputType = 'show_value';
+
+export type PipelineEnd = {
+    result: Primitive;
+    output_type: OutputType;
+};
+
 /**
  * Response model for a Plaid account.
  */
@@ -277,6 +284,11 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type Primitive = {
+    name: string;
+    value: unknown;
 };
 
 export type PrivateUserCreate = {
@@ -392,7 +404,7 @@ export type Token = {
     temp_token?: (string | null);
 };
 
-export type ToolType = 'first_ten_transactions' | 'sum' | 'average';
+export type ToolType = 'first_ten_transactions' | 'sum' | 'average' | 'show_value';
 
 export type TransactionEdit = {
     description: string;
@@ -714,7 +726,7 @@ export type NoCodeSaveNoCodeToolData = {
     requestBody: Array<NoCodeTool>;
 };
 
-export type NoCodeSaveNoCodeToolResponse = (unknown);
+export type NoCodeSaveNoCodeToolResponse = (PipelineEnd);
 
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 
