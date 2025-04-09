@@ -2,22 +2,24 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel
 from pydantic.generics import GenericModel
 from abc import ABC, abstractmethod
+from app.core.db import Session
+from app.models import User
+
 from typing import Union, List, Generic, TypeVar
 
-ValueType = TypeVar("ValueType", int, float, str)
+T = TypeVar("T")
 
 class PrimitiveMetadata(BaseModel):
     source_type: str
     source_details: dict
 
-class Primitive(GenericModel, Generic[ValueType]):
+class Primitive(GenericModel, Generic[T]):
     name: str
-    value: ValueType
+    value: T
     metadata: PrimitiveMetadata
 
-FullPrimitive = Union[Primitive[ValueType], List[Primitive[ValueType]]]
 
-class Transformation(ABC, Generic[ValueType]):
+class Transformation(ABC, Generic[T]):
 
     @property
     @abstractmethod
@@ -30,14 +32,14 @@ class Transformation(ABC, Generic[ValueType]):
         ...
 
     @abstractmethod
-    def transform(self, data: FullPrimitive[ValueType]) -> FullPrimitive[ValueType]:
+    def transform(self, user: User, session: Session, data: Primitive[T]) -> Union[Primitive[T], List[Primitive[T]]]:
         """
         Consumes one or more Primitives of type NumericType
         and returns a single Primitive of the same type (or possibly a new type).
         """
         pass
 
-class Generator(ABC, Generic[ValueType]):
+class Generator(ABC, Generic[T]):
 
     @property
     @abstractmethod
@@ -45,11 +47,11 @@ class Generator(ABC, Generic[ValueType]):
         ...
 
     @abstractmethod
-    def generate(self) -> FullPrimitive[ValueType]:
+    def generate(self, user: User, session: Session) -> Union[Primitive[T], List[Primitive[T]]]:
         pass
 
 
-class Output(ABC, Generic[ValueType]):
+class Output(ABC, Generic[T]):
 
     @property
     @abstractmethod
@@ -57,7 +59,7 @@ class Output(ABC, Generic[ValueType]):
         ...
 
     @abstractmethod
-    def produce(self, data: FullPrimitive[ValueType]) -> None:
+    def produce(self, user: User, session: Session, data: Union[Primitive[T], List[Primitive[T]]]) -> None:
         pass
 
 
