@@ -130,8 +130,13 @@ const toast = useCustomToast()
 
   return (
     <Box p={5}>
+      <Box mb={6} bg="red.800" p={4} borderRadius="lg" boxShadow="sm">
+            <Text fontSize="lg" color="white" fontWeight="bold">
+          Heads up! It often takes a few minutes for your accounts to sync after connecting them.
+        </Text>
+      </Box>
       <VStack align="" gap={6}>
-        <Heading size="lg">Connect Your Financial Accounts</Heading>
+        <Heading size="lg">Connect Your Accounts</Heading>
         <Text>
           Securely connect your bank accounts, credit cards, and investment accounts to
           automatically import transactions and track your finances.
@@ -147,7 +152,6 @@ const toast = useCustomToast()
         >
             <FaPlus />
             Connect an Account
-          {isLoading && <Spinner ml={2} size="sm" />}
         </Button>
 
         <Heading size="md" mb={4}>

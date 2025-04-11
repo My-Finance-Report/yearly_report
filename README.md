@@ -39,6 +39,7 @@ big milestones before launch:
 
 -> new user create via oauth does not work 
 
+-> Make sure its clear that something is happening asyncrounously when you upload
 
 -> need to update the how does this work page 
 

@@ -207,6 +207,13 @@ async def run_jobs(_user_session: Session, jobs: list[WorkerJob]) -> None:
     await callable(in_process_files[job.kind])
 
 
+def handle_plaid() -> None:
+    try:
+        asyncio.run(sync_all_plaid_accounts_job())
+    except Exception as e:
+        send_telegram_message(f"Failed to sync Plaid accounts: {e}")
+
+
 def worker() -> None:
     iterations = 0
     while True:
@@ -216,7 +223,7 @@ def worker() -> None:
         time.sleep(POLL_INTERVAL)
         if iterations % 60 == 0:
             iterations = 0
-            asyncio.run(sync_all_plaid_accounts_job())
+            handle_plaid()
         iterations += 1
 
 

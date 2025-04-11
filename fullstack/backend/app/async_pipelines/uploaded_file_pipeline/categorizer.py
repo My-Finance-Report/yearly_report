@@ -3,6 +3,8 @@ from dataclasses import replace
 from datetime import datetime
 from typing import cast
 
+from dateutil import parser
+
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
     InProcessJob,
@@ -17,6 +19,18 @@ from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+
+def safe_parse_date(date_str: str) -> datetime:
+    try:
+        return datetime.strptime(date_str, "%m/%d/%Y")
+    except ValueError:
+        try:
+            if "/" in date_str:
+                return parser.parse(date_str, dayfirst=True)
+        except Exception:
+            raise ValueError(f"Unrecognized date format: {date_str}")
+    raise ValueError(f"Unrecognized date format: {date_str}")
 
 
 def generate_categorization_prompt(
@@ -132,9 +146,7 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
         Transaction(
             description=t.partialTransactionDescription,
             category_id=category_lookup[t.category],
-            date_of_transaction=datetime.strptime(
-                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
-            ),
+            date_of_transaction=safe_parse_date(t.partialTransactionDateOfTransaction),
             amount=t.partialTransactionAmount,
             transaction_source_id=in_process.transaction_source.id,
             kind=t.partialTransactionKind,
