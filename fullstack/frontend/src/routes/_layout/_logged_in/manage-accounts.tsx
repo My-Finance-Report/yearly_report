@@ -184,7 +184,7 @@ function ManageAccounts() {
         <DialogPositioner>
           <DialogContent>
             <DialogHeader>
-          <Box mb={6} bg="red.800" p={4} borderRadius="lg" boxShadow="sm">
+          <Box mb={6} bg="yellow.800" p={4} borderRadius="lg" boxShadow="sm">
                 <Text fontSize="lg" color="white" fontWeight="bold">
                   Heads up! It often takes a few minutes for your accounts to sync after connecting them.
                 </Text>
@@ -199,7 +199,6 @@ function ManageAccounts() {
                   borderWidth="1px" 
                   borderRadius="md" 
                   cursor="pointer" 
-                  _hover={{ bg: "gray.50" }}
                   onClick={() => {
                     onAddAccountClose();
                     onPlaidOpen();
@@ -224,7 +223,6 @@ function ManageAccounts() {
                   borderWidth="1px" 
                   borderRadius="md" 
                   cursor="pointer" 
-                  _hover={{ bg: "gray.50" }}
                   onClick={() => {
                     onAddAccountClose();
                     onUploadOpen();
