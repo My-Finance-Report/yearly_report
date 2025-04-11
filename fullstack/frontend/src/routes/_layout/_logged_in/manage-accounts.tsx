@@ -30,7 +30,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { AccountDetails } from "@/components/Common/AccountDetails"
 import { FaFileUpload, FaPlus, FaUniversity } from "react-icons/fa"
-import { isSessionActive } from "@/hooks/useAuth"
 import FileDropzone from "@/components/Common/Dropzone"
 import { useCallback, useEffect, useState } from "react"
 import { usePlaidLink } from "react-plaid-link"
@@ -47,7 +46,6 @@ function ManageAccounts() {
   } = useQuery({
     queryKey: ["accounts"],
     queryFn: AccountsService.getTransactionSources,
-    enabled: isSessionActive(),
   })
 
   const queryClient = useQueryClient()
