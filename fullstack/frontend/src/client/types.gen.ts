@@ -951,4 +951,4 @@ export type UtilsTestEmailResponse = (Message);
 
 export type UtilsHealthCheckResponse = (boolean);
 
-export type WorkerStatusCreateSavedFilterResponse = (WorkerStatusOut);
+export type WorkerStatusGetStatusResponse = (Array<WorkerStatusOut>);
