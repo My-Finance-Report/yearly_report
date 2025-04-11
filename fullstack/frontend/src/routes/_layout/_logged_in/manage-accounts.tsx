@@ -186,6 +186,11 @@ function ManageAccounts() {
         <DialogPositioner>
           <DialogContent>
             <DialogHeader>
+          <Box mb={6} bg="red.800" p={4} borderRadius="lg" boxShadow="sm">
+                <Text fontSize="lg" color="white" fontWeight="bold">
+                  Heads up! It often takes a few minutes for your accounts to sync after connecting them.
+                </Text>
+              </Box>
               <DialogTitle>Add a New Account</DialogTitle>
               <DialogCloseTrigger />
             </DialogHeader>
