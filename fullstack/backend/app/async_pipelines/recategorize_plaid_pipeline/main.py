@@ -13,8 +13,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessJob,
 )
 from app.func_utils import pipe
-from fullstack.backend.app.models import ProcessingState
-from fullstack.backend.app.worker.status import status_update_monad
+from app.models import ProcessingState
+from app.worker.status import status_update_monad
 
 
 async def recategorize_account_pipeline(in_process_files: list[InProcessJob]) -> None:

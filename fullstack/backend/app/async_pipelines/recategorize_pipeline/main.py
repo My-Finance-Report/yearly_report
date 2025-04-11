@@ -24,7 +24,7 @@ from app.models import (
     TransactionSource,
     UploadConfiguration,
 )
-from fullstack.backend.app.worker.status import status_update_monad
+from app.worker.status import status_update_monad
 
 
 def apply_existing_transactions(in_process: InProcessJob) -> InProcessJob:

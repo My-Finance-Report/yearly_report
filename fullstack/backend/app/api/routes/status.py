@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
 from app.models import  User
-from fullstack.backend.app.local_types import WorkerStatusOut
-from fullstack.backend.app.worker.status import get_latest_batch
+from app.local_types import WorkerStatusOut
+from app.worker.status import get_latest_batch
 
 router = APIRouter(prefix="/worker-status", tags=["worker-status"])
 

@@ -21,8 +21,8 @@ from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     request_llm_parse_of_transactions,
 )
 from app.func_utils import pipe
-from fullstack.backend.app.models import ProcessingState
-from fullstack.backend.app.worker.status import status_update_monad
+from app.models import ProcessingState
+from app.worker.status import status_update_monad
 
 P = ParamSpec("P")
 R = TypeVar("R")
