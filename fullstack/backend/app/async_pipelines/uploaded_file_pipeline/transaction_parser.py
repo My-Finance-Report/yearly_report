@@ -31,7 +31,7 @@ def generate_transactions_prompt(process: InProcessJob) -> list[str]:
 
     base_prompt = f"""
         Parse the following PDF content into a JSON array of transactions.
-        Structure the dates as MM/DD/YYYY.
+        Structure the dates as %m/%d/%Y.
         Each transaction should have the fields: 'transactionDate', 'description', 'kind', and 'amount'.
 
         For banks, 'withdrawal' and 'deposit' should be clear.
@@ -178,4 +178,6 @@ def request_llm_parse_of_transactions(process: InProcessJob) -> InProcessJob:
         if parsed_transactions:
             all_parsed_transactions.extend(parsed_transactions.transactions)
 
-    return replace(process, transactions=TransactionsWrapper(transactions=all_parsed_transactions))
+    return replace(
+        process, transactions=TransactionsWrapper(transactions=all_parsed_transactions)
+    )

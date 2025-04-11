@@ -29,7 +29,7 @@ class PartialTransaction(BaseModel):
         ..., description="Plaid transaction identifier"
     )
     partialTransactionDateOfTransaction: str = Field(
-        ..., description="Transaction date in MM/DD/YYYY format"
+        ..., description="Transaction date in %m/%d/%Y format"
     )
     partialTransactionDescription: str = Field(
         ..., description="Description of the transaction"
