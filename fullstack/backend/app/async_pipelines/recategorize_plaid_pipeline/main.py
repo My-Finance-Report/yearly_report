@@ -13,6 +13,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessJob,
 )
 from app.func_utils import pipe
+from fullstack.backend.app.models import ProcessingState
+from fullstack.backend.app.worker.status import status_update_monad
 
 
 async def recategorize_account_pipeline(in_process_files: list[InProcessJob]) -> None:
@@ -23,19 +25,20 @@ async def recategorize_account_pipeline(in_process_files: list[InProcessJob]) ->
     print(f"batch processing {len(in_process_with_config)}")
     await async_batch_recategorize_with_config(in_process_with_config)
 
-
 async def recategorize_account_async(in_process: InProcessJob) -> None:
     def blah() -> None:
         return pipe(
             in_process,
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying previous recategorizations"),
             apply_previous_recategorizations,
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying existing transactions"),
             apply_existing_transactions,
+            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches of transactions"),
             categorize_extracted_transactions,
+            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
             final=insert_recategorized_transactions,
         )
-
     return await asyncio.to_thread(blah)
-
 
 async def recategorize_accounts_with_config_async(files: list[InProcessJob]) -> None:
     await asyncio.gather(*[recategorize_account_async(file) for file in files])

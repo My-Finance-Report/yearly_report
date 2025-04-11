@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta, timezone
 from typing import Any
+import uuid
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
@@ -197,9 +198,11 @@ async def run_jobs(_user_session: Session, jobs: list[WorkerJob]) -> None:
         user = job_specific_session.get(User, specific_job.user_id)
         if not user:
             raise ValueError("User record not found!")
+
+        batch_uuid = uuid.uuid5()
         in_process_files[specific_job.kind].append(
             InProcessJob(
-                session=job_specific_session, user=user, file=pdf, job=specific_job
+                session=job_specific_session, user=user, file=pdf, job=specific_job, batch_id=batch_uuid
             )
         )
 

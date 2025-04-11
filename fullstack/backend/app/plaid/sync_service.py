@@ -6,6 +6,7 @@ from typing import Any
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.unitofwork import ProcessState
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
@@ -26,6 +27,7 @@ from app.models import (
     PlaidAccount,
     PlaidItem,
     PlaidSyncLog,
+    ProcessingState,
     Transaction,
     TransactionKind,
     TransactionSource,
@@ -33,6 +35,7 @@ from app.models import (
 )
 from app.plaid.client import get_plaid_client
 from app.telegram_utils import send_telegram_message
+from fullstack.backend.app.worker.status import status_update_monad, update_worker_status
 
 logger = logging.getLogger(__name__)
 
@@ -163,11 +166,14 @@ def sync_plaid_account_transactions(
 
 
 def plaid_categorize_pipe(in_process: InProcessJob) -> None:
-    print("categorizing")
+
     return pipe(
         in_process,
+        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Applying previous recategorizations"),
         apply_previous_plaid_recategorizations,
+        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches"),
         categorize_extracted_transactions,
+        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing batching to database"),
         final=insert_categorized_plaid_transactions,
     )
 
