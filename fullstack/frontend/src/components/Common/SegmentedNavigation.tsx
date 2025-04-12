@@ -26,6 +26,7 @@ import {
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import useAuth, { isSessionActive } from "@/hooks/useAuth";
+import { CollapsibleWorkerStatus } from "./WorkerStatus";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -197,7 +198,8 @@ export function SegmentedNavigation() {
                 navigate({ to: newValue.value });
               }}
             />
-  <UserBadge currentUser={currentUser} />
+          <CollapsibleWorkerStatus/>
+          <UserBadge currentUser={currentUser} />
           </>
         )}
       </Flex>

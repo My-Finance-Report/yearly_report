@@ -131,7 +131,6 @@ export function AccountDetails({
       borderRadius="lg" 
       shadow="sm"
       position="relative"
-      opacity={isArchived ? 0.7 : 1}
       bg={isArchived ? "gray.50" : undefined}
       _dark={{
         bg: isArchived ? "gray.800" : undefined,

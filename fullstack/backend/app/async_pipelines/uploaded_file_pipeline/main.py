@@ -74,7 +74,7 @@ async def process_file_async(in_process: InProcessJob) -> None:
             persist_config_to_job_record,
             lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying previous recategorizations"),
             apply_previous_recategorizations,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Removing existing transactions if they exsit"),
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Removing existing transactions if they exist"),
             archive_transactions_if_necessary,
             lambda x: status_update_monad(x, status=ProcessingState.parsing_transactions, additional_info="Parsing transactions from file"),
             request_llm_parse_of_transactions,
@@ -83,6 +83,7 @@ async def process_file_async(in_process: InProcessJob) -> None:
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
             update_filejob_with_nickname,
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
+            
             final=insert_categorized_transactions,
         )
     return await asyncio.to_thread(blah)
