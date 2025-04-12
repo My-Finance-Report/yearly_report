@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
-from app.models import ProcessingState, User, WorkerStatus
+
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
+from app.models import ProcessingState, User, WorkerStatus
 
 
 def get_latest_batch(session: Session, user: User)-> list[WorkerStatus]:
@@ -11,10 +13,10 @@ def get_latest_batch(session: Session, user: User)-> list[WorkerStatus]:
     batch_id = latest_status.batch_id
     return get_batch_status(session, user, batch_id)
 
-def get_batch_status(session:Session, user: User, batch_id:str) -> list[WorkerStatus]: 
-    return [row for row in session.query(WorkerStatus).filter(WorkerStatus.user_id == user.id, WorkerStatus.batch_id == batch_id)]
+def get_batch_status(session:Session, user: User, batch_id:str) -> list[WorkerStatus]:
+    return list(session.query(WorkerStatus).filter(WorkerStatus.user_id == user.id, WorkerStatus.batch_id == batch_id))
 
-def update_worker_status(session:Session, user: User, status: ProcessingState, additional_info: str, batch_id: str)-> WorkerStatus: 
+def update_worker_status(session:Session, user: User, status: ProcessingState, additional_info: str, batch_id: str)-> WorkerStatus:
     new_status = WorkerStatus(user_id = user.id,batch_id=batch_id, status=status, additional_info=additional_info, created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
     session.add(new_status)
     session.commit()

@@ -710,4 +710,4 @@ class WorkerStatus(Base):
     )
     additional_info: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    
+

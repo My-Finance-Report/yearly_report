@@ -101,7 +101,7 @@ export function WorkerStatus() {
   });
 
   if (isLoading) {
-    return <Box flex={1}>Loading...</Box>;
+    return null
   }
 
   return (
@@ -129,11 +129,11 @@ export function CollapsibleWorkerStatus() {
   const statusDisclosure = useDisclosure();
 
   if (isLoading) {
-    return <Box flex={1}>Loading...</Box>;
+    return null;
   }
 
   if (!data || data.length === 0) {
-    return <Box flex={1}>No status available</Box>;
+    return null
   }
 
   const latestStatus = data[data.length - 1];

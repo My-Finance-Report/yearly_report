@@ -11,13 +11,13 @@ from app.api.routes import (
     sankey,
     saved_filters,
     sitemap,
+    status,
     subscription,
     transactions,
     two_factor,
     uploads,
     users,
     utils,
-    status,
 )
 from app.core.config import settings
 
