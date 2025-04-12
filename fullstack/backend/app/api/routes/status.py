@@ -17,4 +17,4 @@ def get_status(
 ) ->list[WorkerStatusOut]:
  
     outputs = get_latest_batch(session=db, user=current_user)
-    return [WorkerStatusOut(id=row.id, batch_id=row.batch_id, status=row.status, created_at=row.created_at, updated_at=row.updated_at, additional_info=row.additional_info) for row in outputs]
+    return [WorkerStatusOut(id=row.id, batch_id=row.batch_id, status=row.status, created_at=row.created_at, updated_at=row.updated_at, additional_info=row.additional_info or "") for row in outputs]
