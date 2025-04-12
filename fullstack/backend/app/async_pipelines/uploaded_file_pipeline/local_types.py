@@ -130,6 +130,7 @@ class Recategorization:
 class InProcessJob:
     session: Session
     user: User
+    batch_id: str
     file: UploadedPdf | None = None
     job: WorkerJob | None = None
     config: UploadConfiguration | None = None

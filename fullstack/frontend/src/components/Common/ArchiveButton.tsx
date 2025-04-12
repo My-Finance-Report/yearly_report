@@ -83,7 +83,6 @@ export function ArchiveButton({ sourceId, isArchived }: ArchiveButtonProps) {
                   <Button variant="outline">Cancel</Button>
                 </DialogCloseTrigger>
                 <Button
-                  colorScheme={isArchived ? "green" : "gray"}
                   onClick={handleToggleArchive}
                   loading={toggleArchiveMutation.isPending}
                 >

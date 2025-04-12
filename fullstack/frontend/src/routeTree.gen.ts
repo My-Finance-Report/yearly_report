@@ -32,6 +32,7 @@ import { Route as LayoutChangeLogImport } from './routes/_layout/change-log'
 import { Route as LayoutLoggedinImport } from './routes/_layout/_logged_in'
 import { Route as LayoutLoggedinUploadFilesImport } from './routes/_layout/_logged_in/upload-files'
 import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_logged_in/transactions'
+import { Route as LayoutLoggedinTestImport } from './routes/_layout/_logged_in/test'
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
 import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
 import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
@@ -150,6 +151,11 @@ const LayoutLoggedinTransactionsRoute = LayoutLoggedinTransactionsImport.update(
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
 )
+
+const LayoutLoggedinTestRoute = LayoutLoggedinTestImport.update({
+  path: '/test',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
 
 const LayoutLoggedinSubscriptionSuccessRoute =
   LayoutLoggedinSubscriptionSuccessImport.update({
@@ -319,6 +325,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinSubscriptionSuccessImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/test': {
+      preLoaderRoute: typeof LayoutLoggedinTestImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/transactions': {
       preLoaderRoute: typeof LayoutLoggedinTransactionsImport
       parentRoute: typeof LayoutLoggedinImport
@@ -344,6 +354,7 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinSubscriptionRoute,
       LayoutLoggedinSubscriptionCancelRoute,
       LayoutLoggedinSubscriptionSuccessRoute,
+      LayoutLoggedinTestRoute,
       LayoutLoggedinTransactionsRoute,
       LayoutLoggedinUploadFilesRoute,
     ]),

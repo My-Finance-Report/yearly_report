@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { Spinner, Text, Box, VStack, Heading, HStack, Button } from "@chakra-ui/react";
-import { FaLink, FaUpload } from "react-icons/fa";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Spinner, Text, Box} from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
 import { FilterGroup } from "@/components/Common/FilterGroup";
+import { NullState } from "@/components/Common/LandingPageNullState";
 import { GroupByOption } from "@/components/Common/GroupingConfig";
 import { Legend } from "@/components/Common/Legend";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
@@ -212,47 +212,9 @@ function BlahComponent({
           />
         </div>
       ) : (
-        
-            <NullState />
+        <NullState />
       )}
     </Box>
   );
 }
 
-
-function NullState(){
-  return (
-    <Box 
-      p={8} 
-      textAlign="center" 
-      borderWidth="1px" 
-      borderRadius="lg" 
-      boxShadow="sm"
-    >
-      <VStack gap={6}>
-        <Heading size="md">Welcome Aboard!</Heading>
-        <Text >
-          Get started by connecting accounts or uploading statements 
-        </Text>
-        <HStack gap={4} pt={4}>
-          <Link to="/plaid">
-            <Button 
-              variant="solid"
-            >
-              <Box mr={2} display="inline-block"><FaLink /></Box>
-              Link Accounts
-            </Button>
-          </Link>
-          <Link to="/upload-files">
-            <Button 
-              variant="outline"
-            >
-              <Box mr={2} display="inline-block"><FaUpload /></Box>
-              Upload Files
-            </Button>
-          </Link>
-        </HStack>
-      </VStack>
-    </Box>
-  )
-}

@@ -18,11 +18,13 @@ from app.models import (
     Category,
     CategoryId,
     PlaidTransactionId,
+    ProcessingState,
     Transaction,
     TransactionId,
     TransactionSource,
     UploadConfiguration,
 )
+from app.worker.status import log_completed, status_update_monad
 
 
 def apply_existing_transactions(in_process: InProcessJob) -> InProcessJob:
@@ -147,7 +149,7 @@ def apply_upload_config_no_create(process: InProcessJob) -> InProcessJob:
     )
 
 
-def insert_recategorized_transactions(in_process: InProcessJob) -> None:
+def insert_recategorized_transactions(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have transaction source"
     assert in_process.categorized_transactions, "must have categorized transactions"
     assert all(
@@ -184,28 +186,37 @@ def insert_recategorized_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.commit()
 
+    return in_process
+
 
 async def recategorize_file_pipeline(in_process_files: list[InProcessJob]) -> None:
     in_process_with_config = [
         apply_upload_config_no_create(in_process) for in_process in in_process_files
     ]
-    print(f"batch processing {len(in_process_with_config)}")
     await async_batch_reprocess_files_with_config(in_process_with_config)
 
 
 async def reprocess_file_async(in_process: InProcessJob) -> None:
-    def blah() -> None:
+
+    def pipeline_runner() -> None:
         return pipe(
             in_process,
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Building the configuration"),
             apply_upload_config_no_create,
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying previous recategorizations"),
             apply_previous_recategorizations,
+            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying existing transactions"),
             apply_existing_transactions,
+            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches of transactions"),
             categorize_extracted_transactions,
+            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
             update_filejob_with_nickname,
-            final=insert_recategorized_transactions,
+            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
+            insert_recategorized_transactions,
+            final= lambda x: log_completed(x, additional_info="Completed recategorization"),
         )
 
-    return await asyncio.to_thread(blah)
+    return await asyncio.to_thread(pipeline_runner)
 
 
 async def reprocess_files_with_config_async(files: list[InProcessJob]) -> None:

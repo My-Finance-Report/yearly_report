@@ -12,6 +12,7 @@ from app.models import (
     GroupByOption,
     JobStatus,
     PlaidSyncLogId,
+    ProcessingState,
     TransactionBase,
     TransactionSourceBase,
     TransactionSourceId,
@@ -385,3 +386,18 @@ class PlaidSyncLogOut(BaseModel):
     removed_count: int | None = None
     error_message: str | None = None
     created_at: datetime
+
+
+class WorkerStatusOut(BaseModel):
+    id: int
+    batch_id: str
+    status: ProcessingState
+    created_at: datetime
+    updated_at: datetime
+    additional_info: str 
+
+    
+
+
+
+

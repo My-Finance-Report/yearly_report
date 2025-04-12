@@ -17,6 +17,7 @@ from app.api.routes import (
     uploads,
     users,
     utils,
+    status,
 )
 from app.core.config import settings
 
@@ -36,6 +37,7 @@ api_router.include_router(utils.router)
 api_router.include_router(subscription.router)
 api_router.include_router(saved_filters.router)
 api_router.include_router(two_factor.router)
+api_router.include_router(status.router)
 
 if settings.ENVIRONMENT == "local":
     api_router.include_router(private.router)
