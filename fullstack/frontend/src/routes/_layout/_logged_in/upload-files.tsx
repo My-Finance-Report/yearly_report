@@ -47,10 +47,11 @@ function UploadFiles() {
     onSuccess: () => {
       toast(
         "Files uploaded",
-        "The files were processed successfully.",
+        "The files are being processed.",
         "success",
       )
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
+      queryClient.invalidateQueries({ queryKey: ["currentStatus"] })
     },
     onError: () => {
       toast("Upload failed", "There was an error uploading the files.", "error")
