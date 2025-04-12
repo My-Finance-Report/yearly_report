@@ -1,6 +1,16 @@
 import { UserOut, UsersService } from "@/client";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Portal,
+  Flex,
+  HStack,
+  Text,
+  Button,
+  Avatar,
+  Menu,
+  Separator,
+} from "@chakra-ui/react";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -27,6 +37,7 @@ import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import useAuth, { isSessionActive } from "@/hooks/useAuth";
 import { CollapsibleWorkerStatus } from "./WorkerStatus";
+import { LuEllipsis } from "react-icons/lu";
 
 const navigationItems = [
   { value: "/transactions", label: "Dashboard", icon: FiHome },
@@ -35,59 +46,56 @@ const navigationItems = [
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
 
-
-function UserBadge({currentUser}:{currentUser: UserOut | null}){
-  const {isLoading} = useAuth()
-  const navigate = useNavigate()
+function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
+  const { isLoading, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoading) {
-    return null
+    return null;
   }
 
-return currentUser ? (
+  return currentUser ? (
     <HStack
-      onClick={() => navigate({ to: "/settings" })}
       cursor="pointer"
       px={3}
       py={1}
       borderRadius="md"
-      backgroundColor="green.600"
     >
-      <Box
-        width="8px"
-        height="8px"
-        borderRadius="50%"
-        backgroundColor="green.300"
-      />
-      <Text fontSize="sm" color="white">
-        {currentUser?.full_name}
-      </Text>
+      <Avatar.Root onClick={() => navigate({ to: "/settings" })}>
+        <Avatar.Fallback name={currentUser?.full_name} />
+      </Avatar.Root>
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <LuEllipsis />
+        </Menu.Trigger>
+        <Portal>
+          <Menu.Positioner>
+            <Menu.Content>
+              <Menu.Item onClick={()=>logout()} value="logout">Log out</Menu.Item>
+              <Menu.Item onClick={()=>navigate({ to: "/settings" })} value="settings">User Settings</Menu.Item>
+            </Menu.Content>
+          </Menu.Positioner>
+        </Portal>
+      </Menu.Root>
     </HStack>
   ) : (
     <Flex gap={2}>
-  <Button
-    variant="outline"
-      onClick={() => navigate({ to: "/login" })}
-  >
-      Log in
-    </Button>
-<Button
-    variant="solid"
-      onClick={() => navigate({ to: "/signup" })}
-  >
-    Sign Up
-    </Button>
+      <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
+        Log in
+      </Button>
+      <Button variant="solid" onClick={() => navigate({ to: "/signup" })}>
+        Sign Up
+      </Button>
     </Flex>
-  )}
-
-
+  );
+}
 
 export function SegmentedNavigation() {
   const navigate = useNavigate();
   const location = useRouterState().location;
   const queryClient = useQueryClient();
   const { user: authUser } = useAuth();
-  
+
   // Use the user from useAuth hook as a fallback
   const { data: currentUser } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
@@ -108,16 +116,16 @@ export function SegmentedNavigation() {
         queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       }
     };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
+
+    window.addEventListener("storage", handleStorageChange);
+
     // Initial check
     if (isSessionActive() && !currentUser) {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     }
-    
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, [queryClient, currentUser]);
 
@@ -154,7 +162,10 @@ export function SegmentedNavigation() {
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={20} fontWeight={500}>You cant auth from localhost, it needs to be 127.0.0.1 to match the backend because http only cookies</Text>
+          <Text fontSize={20} fontWeight={500}>
+            You cant auth from localhost, it needs to be 127.0.0.1 to match the
+            backend because http only cookies
+          </Text>
         </Flex>
       )}
 
@@ -166,7 +177,13 @@ export function SegmentedNavigation() {
         minH={20}
         width="100%"
       >
-        <Text cursor="click" onClick={() => navigate({ to: "/transactions" })} fontSize="20px" fontWeight="bold" color="colors.ui.main">
+        <Text
+          cursor="click"
+          onClick={() => navigate({ to: "/transactions" })}
+          fontSize="20px"
+          fontWeight="bold"
+          color="colors.ui.main"
+        >
           My Financé
         </Text>
 
@@ -198,8 +215,11 @@ export function SegmentedNavigation() {
                 navigate({ to: newValue.value });
               }}
             />
-          <CollapsibleWorkerStatus/>
-          <UserBadge currentUser={currentUser} />
+            <Flex direction={"row"} justifyContent={"center"} gap={3}>
+              <CollapsibleWorkerStatus />
+              <Separator orientation="vertical" />
+              <UserBadge currentUser={currentUser} />
+            </Flex>
           </>
         )}
       </Flex>
@@ -219,13 +239,13 @@ function MobileMenu({
   const [open, setOpen] = useState(false);
 
   // Group navigation items by category
-  const mainNavItems = finalItems.filter(item => 
+  const mainNavItems = finalItems.filter((item) =>
     ["/transactions", "/manage-accounts", "/budget"].includes(item.value)
   );
-  const settingsItems = finalItems.filter(item => 
+  const settingsItems = finalItems.filter((item) =>
     ["/settings"].includes(item.value)
   );
-  const adminItems = finalItems.filter(item => 
+  const adminItems = finalItems.filter((item) =>
     ["/admin"].includes(item.value)
   );
 

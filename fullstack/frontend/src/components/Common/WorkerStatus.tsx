@@ -1,5 +1,4 @@
 import { WorkerStatusService, WorkerStatusOut } from "@/client";
-import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Box,
@@ -10,15 +9,54 @@ import {
   Dialog,
   DialogPositioner,
   DialogContent,
-  DialogFooter,
+ DialogFooter,
   Button,
   DialogTrigger,
   Portal,
   DialogBackdrop,
   DialogCloseTrigger,
+  Flex,
+  CloseButton,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { LuCheck, LuX } from "react-icons/lu";
+
+function determineColor(workerStatus: WorkerStatusOut, isLast: boolean) {
+  let color =
+    workerStatus.status == "failed" ? "red" : isLast ? "yellow" : "green";
+
+  if (isLast && workerStatus.status == "completed") {
+    color = "green";
+  }
+  return color;
+}
+
+function determineIcon(workerStatus: WorkerStatusOut, isLast: boolean, inTimeline: boolean){
+    const Wrapper = inTimeline ? TimelineIndicator : Box
+
+  let displayStatusIcon =
+    workerStatus.status == "failed" ? (
+      <Wrapper>
+        <LuX />
+      </Wrapper>
+    ) : isLast ? (
+      <Spinner size="sm" />
+    ) : (
+      <Wrapper>
+        <LuCheck />
+      </Wrapper>
+    );
+  if (isLast && workerStatus.status == "completed") {
+    displayStatusIcon = (
+      <Wrapper>
+        <LuCheck />
+      </Wrapper>
+    );
+  }
+
+  return displayStatusIcon
+}
+
 
 function TimelineEntry({
   workerStatus,
@@ -29,35 +67,16 @@ function TimelineEntry({
   isLast: boolean;
   includeDesc?: boolean;
 }) {
-  let color =
-    workerStatus.status == "failed" ? "red" : isLast ? "yellow" : "green";
 
-  let displayStatusIcon =
-    workerStatus.status == "failed" ? (
-      <TimelineIndicator>
-        <LuX />
-      </TimelineIndicator>
-    ) : isLast ? (
-      <Spinner size="sm" />
-    ) : (
-      <TimelineIndicator>
-        <LuCheck />
-      </TimelineIndicator>
-    );
-  if (isLast && workerStatus.status == "completed") {
-    displayStatusIcon = (
-      <TimelineIndicator>
-        <LuCheck />
-      </TimelineIndicator>
-    );
-    color = "green";
-  }
+
+  const color = determineColor(workerStatus,isLast)
+  const DisplayStatusIcon = determineIcon(workerStatus,isLast, true)
 
   return (
     <Timeline.Item>
       <Timeline.Connector>
         <Timeline.Separator />
-        {displayStatusIcon}
+        {DisplayStatusIcon}
       </Timeline.Connector>
       <Timeline.Content textStyle="xs">
         <Timeline.Title>
@@ -118,26 +137,27 @@ export function CollapsibleWorkerStatus() {
   return (
     <Dialog.Root
       onExitComplete={statusDisclosure.onClose}
-      size={{ base: "sm", md: "md" }}
+ motionPreset="slide-in-bottom"
     >
       <DialogTrigger>
-        <Box cursor="pointer" p={2}>
-          <Timeline.Root size="sm">
-            <TimelineEntry
-              workerStatus={latestStatus}
-              isLast={true}
-            />
-          </Timeline.Root>
-        </Box>
+        <Flex alignItems="center" gap={2} cursor="pointer" p={2}>
+          <Badge p={2} colorPalette={determineColor(latestStatus, true)}>
+          {determineIcon(latestStatus, true, false)}
+            {latestStatus.status}</Badge>
+        </Flex>
       </DialogTrigger>
       <Portal>
         <DialogBackdrop />
         <DialogPositioner>
           <DialogContent>
-            <DialogCloseTrigger position="absolute" right={4} top={4}>
-              <CloseIcon />
-            </DialogCloseTrigger>
-            <Box p={4}>
+            <Dialog.Header>
+                <Dialog.Title>Background Task Status</Dialog.Title>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton position="absolute" right={4} top={4} size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Header>
+           
+            <Box p={4} pl={10} flex={"column"}>
               <Timeline.Root size="sm" mt={2}>
                 {data.map((status, index) => (
                   <TimelineEntry
