@@ -12,12 +12,14 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
 from app.models import (
     Category,
     JobStatus,
+    ProcessingState,
     Transaction,
     TransactionSource,
     UploadConfiguration,
     WorkerJob,
 )
 from app.open_ai_utils import ChatMessage, make_chat_request
+from app.worker.status import update_worker_status
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -155,7 +157,6 @@ def archive_transactions_if_necessary(process: InProcessJob) -> InProcessJob:
     logger.info(f"Removing previous transactions: {query.count()}")
 
     query.delete()
-
     process.session.commit()
 
     return process
@@ -171,7 +172,8 @@ def request_llm_parse_of_transactions(process: InProcessJob) -> InProcessJob:
     prompts = generate_transactions_prompt(process)
     all_parsed_transactions = []
 
-    for prompt in prompts:
+    for batch, prompt in enumerate(prompts, start=1):
+        update_worker_status(process.session, process.user, status=ProcessingState.parsing_transactions, additional_info=f"Handling batch {batch} of {len(prompts)}", batch_id=process.batch_id)
         parsed_transactions = make_chat_request(
             TransactionsWrapper, [ChatMessage(role="user", content=prompt)]
         )

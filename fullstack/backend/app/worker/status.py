@@ -5,7 +5,6 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
 
 
 def get_latest_batch(session: Session, user: User)-> list[WorkerStatus]:
-    # TODO need to check on desc clause
     latest_status = session.query(WorkerStatus).filter(WorkerStatus.user_id == user.id).order_by(WorkerStatus.created_at.desc()).first()
     if latest_status is None:
         return []

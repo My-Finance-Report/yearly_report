@@ -13,8 +13,9 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     create_categorized_transactions_wrapper,
 )
 from app.func_utils import make_batches
-from app.models import Transaction
+from app.models import ProcessingState, Transaction
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
+from app.worker.status import update_worker_status
 
 logging.basicConfig(level=logging.INFO)
 
@@ -101,8 +102,10 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
 
     out: list[CategorizedTransaction] = []
     batch: list[PartialTransaction]
-    for batch in make_batches(process.transactions.transactions):
+    batches = make_batches(process.transactions.transactions)
+    for index, batch in enumerate(batches):
         try:
+            update_worker_status(process.session, process.user, status=ProcessingState.categorizing_transactions, additional_info=f"Categorizing batch {index+1} of {len(batches)}", batch_id=process.batch_id)
             categorized = cast(
                 TransactionsCoerceType,
                 make_chat_request(
@@ -159,3 +162,4 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
+    update_worker_status(in_process.session, in_process.user, status=ProcessingState.completed, additional_info="Completed upload", batch_id=in_process.batch_id)

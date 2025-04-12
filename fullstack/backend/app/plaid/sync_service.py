@@ -2,11 +2,11 @@ import logging
 from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any
+import uuid
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.unitofwork import ProcessState
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
@@ -130,6 +130,8 @@ def sync_plaid_account_transactions(
 
     try:
         # Fetch transactions from Plaid
+
+
         plaid_transactions = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
@@ -156,7 +158,9 @@ def sync_plaid_account_transactions(
         sync_log.modified_count = 0  # For transactions_sync, we don't track modified
         sync_log.removed_count = 0  # For transactions_sync, we don't track removed
 
+
         session.commit()
+        update_worker_status(session, user, status=ProcessingState.completed, additional_info="Completed Plaid sync", batch_id=sync_log.id)
 
     except Exception as e:
         logger.error(f"Error syncing Plaid account {plaid_account.id}: {str(e)}")
@@ -285,6 +289,7 @@ def add_new_transactions(
     in_process = InProcessJob(
         session=session,
         user=user,
+        batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
         categories=categories,
         transactions=TransactionsWrapper(

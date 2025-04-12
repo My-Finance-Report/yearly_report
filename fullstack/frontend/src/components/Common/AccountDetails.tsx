@@ -189,9 +189,9 @@ export function AccountDetails({
             </Flex>
           )}
           {isPlaidLinked && (
-            <Badge variant="outline" mr={1} colorScheme={isArchived ? "gray" : "blue"}>Connected</Badge>
+            <Badge variant="outline" mr={1} colorPalette={isArchived ? "gray" : "blue"}>Connected</Badge>
           )}
-          <Badge variant="outline" color={isArchived ? "gray.500" : getAccountTypeColor()} _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}>
+          <Badge variant="outline" colorPalette={isArchived ? "gray.500" : getAccountTypeColor()} _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}>
             {getAccountTypeLabel()}
           </Badge>
         </Flex>
@@ -225,7 +225,6 @@ export function AccountDetails({
             variant="ghost" 
             color={activeTab === 1 ? "blue.500" : undefined}
             borderColor={activeTab === 1 ? "blue.500" : undefined}
-            _hover={{ bg: "gray.100" }}
             onClick={() => setActiveTab(1)}
             disabled={isArchived}
           >

@@ -1,5 +1,6 @@
+import { Flex } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
-import { WorkerStatus } from "@/components/Common/WorkerStatus"
+import { WorkerStatus,CollapsibleWorkerStatus } from "@/components/Common/WorkerStatus"
 
 
 export const Route = createFileRoute("/_layout/_logged_in/test")({
@@ -8,6 +9,9 @@ export const Route = createFileRoute("/_layout/_logged_in/test")({
 
 function Test(){
     return (
-        <WorkerStatus/>
+        <Flex direction="row">
+            <WorkerStatus/>
+            <CollapsibleWorkerStatus/>
+        </Flex>
     )
 }

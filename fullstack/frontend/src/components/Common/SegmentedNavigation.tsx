@@ -34,6 +34,53 @@ const navigationItems = [
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
 
+
+function UserBadge({currentUser}:{currentUser: UserOut | null}){
+  const {isLoading} = useAuth()
+  const navigate = useNavigate()
+
+  if (isLoading) {
+    return null
+  }
+
+return currentUser ? (
+    <HStack
+      onClick={() => navigate({ to: "/settings" })}
+      cursor="pointer"
+      px={3}
+      py={1}
+      borderRadius="md"
+      backgroundColor="green.600"
+    >
+      <Box
+        width="8px"
+        height="8px"
+        borderRadius="50%"
+        backgroundColor="green.300"
+      />
+      <Text fontSize="sm" color="white">
+        {currentUser?.full_name}
+      </Text>
+    </HStack>
+  ) : (
+    <Flex gap={2}>
+  <Button
+    variant="outline"
+      onClick={() => navigate({ to: "/login" })}
+  >
+      Log in
+    </Button>
+<Button
+    variant="solid"
+      onClick={() => navigate({ to: "/signup" })}
+  >
+    Sign Up
+    </Button>
+    </Flex>
+  )}
+
+
+
 export function SegmentedNavigation() {
   const navigate = useNavigate();
   const location = useRouterState().location;
@@ -150,41 +197,7 @@ export function SegmentedNavigation() {
                 navigate({ to: newValue.value });
               }}
             />
-            {currentUser ? (
-              <HStack
-                onClick={() => navigate({ to: "/settings" })}
-                cursor="pointer"
-                px={3}
-                py={1}
-                borderRadius="md"
-                backgroundColor="green.600"
-              >
-                <Box
-                  width="8px"
-                  height="8px"
-                  borderRadius="50%"
-                  backgroundColor="green.300"
-                />
-                <Text fontSize="sm" color="white">
-                  {currentUser?.full_name}
-                </Text>
-              </HStack>
-            ) : (
-              <Flex gap={2}>
-            <Button
-              variant="outline"
-                onClick={() => navigate({ to: "/login" })}
-            >
-                Log in
-              </Button>
-          <Button
-              variant="solid"
-                onClick={() => navigate({ to: "/signup" })}
-            >
-              Sign Up
-              </Button>
-              </Flex>
-            )}
+  <UserBadge currentUser={currentUser} />
           </>
         )}
       </Flex>

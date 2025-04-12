@@ -199,10 +199,10 @@ async def run_jobs(_user_session: Session, jobs: list[WorkerJob]) -> None:
         if not user:
             raise ValueError("User record not found!")
 
-        batch_uuid = uuid.uuid5()
+        batch_uuid = uuid.uuid4().hex
         in_process_files[specific_job.kind].append(
             InProcessJob(
-                session=job_specific_session, user=user, file=pdf, job=specific_job, batch_id=batch_uuid
+               session=job_specific_session, user=user, file=pdf, job=specific_job, batch_id=batch_uuid
             )
         )
 
