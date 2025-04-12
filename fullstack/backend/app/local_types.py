@@ -394,9 +394,9 @@ class WorkerStatusOut(BaseModel):
     status: ProcessingState
     created_at: datetime
     updated_at: datetime
-    additional_info: str 
+    additional_info: str
 
-    
+
 
 
 

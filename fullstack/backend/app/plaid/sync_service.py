@@ -1,8 +1,8 @@
 import logging
+import uuid
 from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any
-import uuid
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
