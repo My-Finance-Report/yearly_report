@@ -26,3 +26,8 @@ def status_update_monad(in_process: InProcessJob, status: ProcessingState, addit
     update_worker_status(in_process.session, in_process.user, status=status, additional_info=additional_info, batch_id=in_process.batch_id)
     return in_process
 
+def log_completed(in_process: InProcessJob, additional_info: str,status: ProcessingState=ProcessingState.completed)->None:
+    status_update_monad(in_process, status=status, additional_info=additional_info)
+    return None
+
+

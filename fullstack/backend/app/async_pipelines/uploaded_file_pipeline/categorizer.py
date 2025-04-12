@@ -138,7 +138,7 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
     return replace(process, categorized_transactions=out)
 
 
-def insert_categorized_transactions(in_process: InProcessJob) -> None:
+def insert_categorized_transactions(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have transaction source"
     assert in_process.categorized_transactions, "must have categorized transactions"
     assert in_process.categories, "must have categories"
@@ -162,4 +162,4 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
-    update_worker_status(in_process.session, in_process.user, status=ProcessingState.completed, additional_info="Completed upload", batch_id=in_process.batch_id)
+    return in_process

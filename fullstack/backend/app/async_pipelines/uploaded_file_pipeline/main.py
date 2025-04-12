@@ -1,10 +1,4 @@
 import asyncio
-import cProfile
-import pstats
-from collections.abc import Callable
-from datetime import datetime
-from functools import wraps
-from typing import ParamSpec, TypeVar
 
 from app.async_pipelines.recategorize_pipeline.main import (
     apply_previous_recategorizations,
@@ -22,27 +16,7 @@ from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
 )
 from app.func_utils import pipe
 from app.models import ProcessingState
-from app.worker.status import status_update_monad
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-
-def profile_func(func: Callable[P, R]) -> Callable[P, R]:
-    @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        profiler = cProfile.Profile()
-        profiler.enable()
-        result = func(*args, **kwargs)
-        profiler.disable()
-
-        with open(f"{func.__name__}_{datetime.now()}.profile", "w") as f:
-            stats = pstats.Stats(profiler, stream=f).sort_stats("cumulative")
-            stats.print_stats()
-
-        return result
-
-    return wrapper
+from app.worker.status import log_completed, status_update_monad
 
 
 def persist_config_to_job_record(in_process: InProcessJob) -> InProcessJob:
@@ -83,8 +57,8 @@ async def process_file_async(in_process: InProcessJob) -> None:
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
             update_filejob_with_nickname,
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
-            
-            final=insert_categorized_transactions,
+            insert_categorized_transactions,
+            final=lambda x: log_completed(x, additional_info="Completed upload"),
         )
     return await asyncio.to_thread(blah)
 

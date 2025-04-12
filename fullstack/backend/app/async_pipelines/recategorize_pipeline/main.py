@@ -24,7 +24,7 @@ from app.models import (
     TransactionSource,
     UploadConfiguration,
 )
-from app.worker.status import status_update_monad
+from app.worker.status import log_completed, status_update_monad
 
 
 def apply_existing_transactions(in_process: InProcessJob) -> InProcessJob:
@@ -149,7 +149,7 @@ def apply_upload_config_no_create(process: InProcessJob) -> InProcessJob:
     )
 
 
-def insert_recategorized_transactions(in_process: InProcessJob) -> None:
+def insert_recategorized_transactions(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have transaction source"
     assert in_process.categorized_transactions, "must have categorized transactions"
     assert all(
@@ -186,6 +186,8 @@ def insert_recategorized_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.commit()
 
+    return in_process
+
 
 async def recategorize_file_pipeline(in_process_files: list[InProcessJob]) -> None:
     in_process_with_config = [
@@ -210,7 +212,8 @@ async def reprocess_file_async(in_process: InProcessJob) -> None:
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
             update_filejob_with_nickname,
             lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
-            final=insert_recategorized_transactions,
+            insert_recategorized_transactions,
+            final= lambda x: log_completed(x, additional_info="Completed recategorization"),
         )
 
     return await asyncio.to_thread(pipeline_runner)

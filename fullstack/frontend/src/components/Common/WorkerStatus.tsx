@@ -1,6 +1,8 @@
 import { WorkerStatusService, WorkerStatusOut } from "@/client";
+import {  format } from 'date-fns';
 import {
   Badge,
+  Text,
   Box,
   Timeline,
   Spinner,
@@ -118,10 +120,12 @@ export function WorkerStatus() {
 }
 
 export function CollapsibleWorkerStatus() {
+
   const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
   });
+
   const statusDisclosure = useDisclosure();
 
   if (isLoading) {
@@ -133,6 +137,8 @@ export function CollapsibleWorkerStatus() {
   }
 
   const latestStatus = data[data.length - 1];
+  const lastSyncDate = new Date(`${latestStatus.created_at}`);
+  const formattedLocalTime = format(lastSyncDate, 'MMM d, yyyy h:mm a');
 
   return (
     <Dialog.Root
@@ -151,7 +157,8 @@ export function CollapsibleWorkerStatus() {
         <DialogPositioner>
           <DialogContent>
             <Dialog.Header>
-                <Dialog.Title>Background Task Status</Dialog.Title>
+                <Dialog.Title>Transaction Upload Status</Dialog.Title>
+                <Text>{formattedLocalTime}</Text>
               <Dialog.CloseTrigger asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>

@@ -98,7 +98,7 @@ def has_transaction_changed(
 
 
 def sync_plaid_account_transactions(
-    session: Session, user: User, plaid_account: PlaidAccount, days_back: int
+    session: Session, user: User, plaid_account: PlaidAccount, days_back: int, batch_id: str
 ) -> None:
     plaid_item = (
         session.query(PlaidItem)
@@ -146,6 +146,7 @@ def sync_plaid_account_transactions(
             return
 
         # All transactions from transactions_sync are new
+
         added_count = add_new_transactions(
             session,
             user,
@@ -160,7 +161,7 @@ def sync_plaid_account_transactions(
 
 
         session.commit()
-        update_worker_status(session, user, status=ProcessingState.completed, additional_info="Completed Plaid sync", batch_id=sync_log.id)
+        update_worker_status(session, user, status=ProcessingState.completed, additional_info="Completed Plaid sync", batch_id=batch_id)
 
     except Exception as e:
         logger.error(f"Error syncing Plaid account {plaid_account.id}: {str(e)}")
@@ -367,7 +368,8 @@ async def sync_all_plaid_accounts(
         )
 
         for account in plaid_accounts:
-            sync_plaid_account_transactions(user_session, user, account, days_back)
+            batch_id = uuid.uuid4().hex
+            sync_plaid_account_transactions(user_session, user, account, days_back, batch_id)
 
         if plaid_accounts:
             print(f"Synced all Plaid accounts for user {user.id}")
