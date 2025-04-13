@@ -173,7 +173,13 @@ def request_llm_parse_of_transactions(process: InProcessJob) -> InProcessJob:
     all_parsed_transactions = []
 
     for batch, prompt in enumerate(prompts, start=1):
-        update_worker_status(process.session, process.user, status=ProcessingState.parsing_transactions, additional_info=f"Handling batch {batch} of {len(prompts)}", batch_id=process.batch_id)
+        update_worker_status(
+            process.session,
+            process.user,
+            status=ProcessingState.parsing_transactions,
+            additional_info=f"Handling batch {batch} of {len(prompts)}",
+            batch_id=process.batch_id,
+        )
         parsed_transactions = make_chat_request(
             TransactionsWrapper, [ChatMessage(role="user", content=prompt)]
         )

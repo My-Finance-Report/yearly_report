@@ -656,7 +656,6 @@ class FilterData(BaseModel):
     )
 
 
-
 class SavedFilter(Base):
     """Model for saved filter configurations."""
 
@@ -691,6 +690,7 @@ class ProcessingState(str, enum.Enum):
     failed = "failed"
     completed = "completed"
 
+
 class WorkerStatus(Base):
     __tablename__ = "worker_status"
 
@@ -709,5 +709,3 @@ class WorkerStatus(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     additional_info: Mapped[str | None] = mapped_column(String, nullable=True)
-
-

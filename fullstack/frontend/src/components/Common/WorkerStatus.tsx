@@ -1,5 +1,5 @@
 import { WorkerStatusService, WorkerStatusOut } from "@/client";
-import {  format } from 'date-fns';
+import { format } from 'date-fns';
 import {
   Badge,
   Text,

@@ -7,18 +7,22 @@ import { WorkerStatus } from "./WorkerStatus";
 import { WorkerStatusService } from "@/client";
 import { useQuery } from "@tanstack/react-query";
 
-export function NullState(){
+export function NullState({hasFetchedTransactions}: {hasFetchedTransactions: boolean}){
 
   const { data,isLoading } = useQuery({
     queryKey: ["currentStatus"],
     queryFn: () =>  WorkerStatusService.getStatus(),
+    enabled: hasFetchedTransactions
   });
 
-  const showWorkerProgress = data && data.length > 0
+  const showWorkerProgress = data && data.length > 0 
+
+
+
   if (isLoading) {
     return (<Spinner/>);
   }
-  if (showWorkerProgress ){
+  if (showWorkerProgress && hasFetchedTransactions){
     return (
         <WorkerStatus/>
     )

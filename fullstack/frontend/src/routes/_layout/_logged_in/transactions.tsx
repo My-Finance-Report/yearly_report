@@ -69,7 +69,7 @@ function InnerTransactions({getFunction}: {
     }
   }, [initializeDefaultFilter, currentFilter]);
 
-  const { data, isLoading, error, refetch } = useQuery<
+  const { data, isLoading, error, refetch, isFetched } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
     Error
   >({
@@ -98,13 +98,14 @@ function InnerTransactions({getFunction}: {
     AggregatedGroup[] | null
   >(null);
 
+
   useEffect(() => {
     if (data?.groups.length) {
       setActiveGrouping(data.groups);
     }
   }, [data?.groups]);
 
-  const hasData = data?.groups && activeGrouping && data.grouping_options_choices
+  const hasData = data?.groups  && data.grouping_options_choices
 
 
   const namesForLegends = data?.groups.flatMap((group) =>
@@ -145,8 +146,9 @@ function InnerTransactions({getFunction}: {
       </Box>
       )}
       <Box marginTop={isMobile ? '40px' : '0px'}>
-        <BlahComponent
+        <MainLayout
           isLoading={isLoading}
+          isFetched={isFetched}
           data={data}
           activeGrouping={activeGrouping}
           showDeposits={showDeposits}
@@ -160,7 +162,7 @@ function InnerTransactions({getFunction}: {
   );
 }
 
-function BlahComponent({
+function MainLayout({
   isLoading,
   data,
   activeGrouping,
@@ -169,6 +171,7 @@ function BlahComponent({
   collapsedItems,
   namesForLegends,
   isMobile,
+  isFetched,
 }: {
   isLoading: boolean;
   data: AggregatedTransactions | undefined;
@@ -178,18 +181,22 @@ function BlahComponent({
   collapsedItems: CollapsibleName[];
   namesForLegends: (string | undefined)[] | undefined;
   isMobile: boolean;
+  isFetched: boolean;
 }) {
-  if (isLoading) {
+  if (isLoading || !isFetched) {
+    console.log("spinnner in MainLayout")
     return (
       <Box>
         <Spinner />
       </Box>
     );
   }
+  // Check data availability after loading completes
+  const hasData = data?.groups && data.groups.length > 0;
 
   return (
     <Box >
-      {data?.groups && activeGrouping ? (
+      {hasData ? (
         <div
           style={{
             flexDirection: "column",
@@ -212,7 +219,7 @@ function BlahComponent({
           />
         </div>
       ) : (
-        <NullState />
+        <NullState hasFetchedTransactions={isFetched} />
       )}
     </Box>
   );

@@ -44,22 +44,51 @@ async def process_file_async(in_process: InProcessJob) -> None:
     def blah() -> None:
         return pipe(
             in_process,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Building the account"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Building the account",
+            ),
             persist_config_to_job_record,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying previous recategorizations"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Applying previous recategorizations",
+            ),
             apply_previous_recategorizations,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Removing existing transactions if they exist"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Removing existing transactions if they exist",
+            ),
             archive_transactions_if_necessary,
-            lambda x: status_update_monad(x, status=ProcessingState.parsing_transactions, additional_info="Parsing transactions from file"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.parsing_transactions,
+                additional_info="Parsing transactions from file",
+            ),
             request_llm_parse_of_transactions,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches of transactions"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Categorizing batches of transactions",
+            ),
             categorize_extracted_transactions,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Updating file nickname",
+            ),
             update_filejob_with_nickname,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Writing transactions to the database",
+            ),
             insert_categorized_transactions,
             final=lambda x: log_completed(x, additional_info="Completed upload"),
         )
+
     return await asyncio.to_thread(blah)
 
 
