@@ -217,7 +217,7 @@ export function SegmentedNavigation() {
             />
             <Flex direction={"row"} justifyContent={"center"} gap={3}>
               <CollapsibleWorkerStatus />
-              <Separator orientation="vertical" />
+              {currentUser && <Separator orientation="vertical" />}
               <UserBadge currentUser={currentUser} />
             </Flex>
           </>

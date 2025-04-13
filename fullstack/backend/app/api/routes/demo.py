@@ -37,7 +37,7 @@ def apply_year_filter(
     transactions: list[Transaction],
     years: FilterEntries,
 ) -> list[Transaction]:
-    if years.all:
+    if years.specifics is None:
         return transactions
     return [
         t
@@ -50,7 +50,7 @@ def apply_month_filter(
     transactions: list[Transaction],
     months: FilterEntries,
 ) -> list[Transaction]:
-    if months.all:
+    if months.specifics is None:
         return transactions
     month_numbers = (
         [int(m.value.lower()) for m in months.specifics or []]

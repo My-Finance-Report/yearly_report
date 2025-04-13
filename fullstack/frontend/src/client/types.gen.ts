@@ -178,7 +178,6 @@ export type FilterData_Output = {
 
 export type FilterEntries = {
     specifics?: (Array<FilterEntry> | null);
-    all?: boolean;
     visible?: (boolean | null);
     index: number;
 };
@@ -194,6 +193,8 @@ export type HTTPValidationError = {
 };
 
 export type JobStatus = 'completed' | 'pending' | 'processing' | 'failed';
+
+export type LandingStatus = 'has_transactions' | 'no_transactions_not_processing' | 'no_transactions_processing';
 
 export type LoginGoogleData = {
     url: string;
@@ -271,6 +272,13 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -723,6 +731,19 @@ export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
 
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
+
 export type SankeyGetSankeyDataResponse = (SankeyData);
 
 export type SankeyCreateSankeyConfigData = {
@@ -827,6 +848,8 @@ export type TransactionsListCategoriesData = {
 export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
 
 export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
+
+export type TransactionsGetLandingStatusResponse = (LandingStatus);
 
 export type TwoFactorEnable2FaData = {
     requestBody: Enable2FARequest;
