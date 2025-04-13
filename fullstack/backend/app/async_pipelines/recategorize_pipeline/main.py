@@ -197,23 +197,48 @@ async def recategorize_file_pipeline(in_process_files: list[InProcessJob]) -> No
 
 
 async def reprocess_file_async(in_process: InProcessJob) -> None:
-
     def pipeline_runner() -> None:
         return pipe(
             in_process,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Building the configuration"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Building the configuration",
+            ),
             apply_upload_config_no_create,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying previous recategorizations"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Applying previous recategorizations",
+            ),
             apply_previous_recategorizations,
-            lambda x: status_update_monad(x, status=ProcessingState.preparing_for_parse, additional_info="Applying existing transactions"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Applying existing transactions",
+            ),
             apply_existing_transactions,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches of transactions"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Categorizing batches of transactions",
+            ),
             categorize_extracted_transactions,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Updating file nickname"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Updating file nickname",
+            ),
             update_filejob_with_nickname,
-            lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing transactions to the database"),
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Writing transactions to the database",
+            ),
             insert_recategorized_transactions,
-            final= lambda x: log_completed(x, additional_info="Completed recategorization"),
+            final=lambda x: log_completed(
+                x, additional_info="Completed recategorization"
+            ),
         )
 
     return await asyncio.to_thread(pipeline_runner)

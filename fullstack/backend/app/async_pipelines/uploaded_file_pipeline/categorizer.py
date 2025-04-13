@@ -105,7 +105,13 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
     batches = make_batches(process.transactions.transactions)
     for index, batch in enumerate(batches):
         try:
-            update_worker_status(process.session, process.user, status=ProcessingState.categorizing_transactions, additional_info=f"Categorizing batch {index+1} of {len(batches)}", batch_id=process.batch_id)
+            update_worker_status(
+                process.session,
+                process.user,
+                status=ProcessingState.categorizing_transactions,
+                additional_info=f"Categorizing batch {index + 1} of {len(batches)}",
+                batch_id=process.batch_id,
+            )
             categorized = cast(
                 TransactionsCoerceType,
                 make_chat_request(

@@ -395,9 +395,3 @@ class WorkerStatusOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     additional_info: str
-
-
-
-
-
-

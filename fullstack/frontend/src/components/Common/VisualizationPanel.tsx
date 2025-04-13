@@ -16,7 +16,7 @@ import { GenericChartDataItem, GenericPieChart } from "../Charting/PieChart"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
 interface VisualizationProps {
-  sourceGroups: AggregatedGroup[] 
+  sourceGroups: AggregatedGroup[] | null 
   isLoading: boolean
   showDeposits: boolean
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
@@ -39,6 +39,10 @@ export function VisualizationPanel({
 }: VisualizationProps) {
 
   const isMobile = useIsMobile()
+
+  if (!sourceGroups) {
+    return null
+  }
 
 
   let layout = isMobile ? "bar bar bar bar" : "pie bar bar bar"

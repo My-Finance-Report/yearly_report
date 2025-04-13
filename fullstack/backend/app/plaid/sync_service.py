@@ -98,7 +98,11 @@ def has_transaction_changed(
 
 
 def sync_plaid_account_transactions(
-    session: Session, user: User, plaid_account: PlaidAccount, days_back: int, batch_id: str
+    session: Session,
+    user: User,
+    plaid_account: PlaidAccount,
+    days_back: int,
+    batch_id: str,
 ) -> None:
     plaid_item = (
         session.query(PlaidItem)
@@ -131,7 +135,6 @@ def sync_plaid_account_transactions(
     try:
         # Fetch transactions from Plaid
 
-
         plaid_transactions = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
@@ -159,9 +162,14 @@ def sync_plaid_account_transactions(
         sync_log.modified_count = 0  # For transactions_sync, we don't track modified
         sync_log.removed_count = 0  # For transactions_sync, we don't track removed
 
-
         session.commit()
-        update_worker_status(session, user, status=ProcessingState.completed, additional_info="Completed Plaid sync", batch_id=batch_id)
+        update_worker_status(
+            session,
+            user,
+            status=ProcessingState.completed,
+            additional_info="Completed Plaid sync",
+            batch_id=batch_id,
+        )
 
     except Exception as e:
         logger.error(f"Error syncing Plaid account {plaid_account.id}: {str(e)}")
@@ -171,14 +179,25 @@ def sync_plaid_account_transactions(
 
 
 def plaid_categorize_pipe(in_process: InProcessJob) -> None:
-
     return pipe(
         in_process,
-        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Applying previous recategorizations"),
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Applying previous recategorizations",
+        ),
         apply_previous_plaid_recategorizations,
-        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Categorizing batches"),
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Categorizing batches",
+        ),
         categorize_extracted_transactions,
-        lambda x: status_update_monad(x, status=ProcessingState.categorizing_transactions, additional_info="Writing batching to database"),
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Writing batching to database",
+        ),
         final=insert_categorized_plaid_transactions,
     )
 
@@ -369,7 +388,9 @@ async def sync_all_plaid_accounts(
 
         for account in plaid_accounts:
             batch_id = uuid.uuid4().hex
-            sync_plaid_account_transactions(user_session, user, account, days_back, batch_id)
+            sync_plaid_account_transactions(
+                user_session, user, account, days_back, batch_id
+            )
 
         if plaid_accounts:
             print(f"Synced all Plaid accounts for user {user.id}")
