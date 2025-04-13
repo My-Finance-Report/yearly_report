@@ -1,4 +1,4 @@
-import { Spinner, Box } from "@chakra-ui/react";
+import { Spinner, Box, Text, Flex } from "@chakra-ui/react";
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
@@ -8,11 +8,10 @@ import { MainLayoutSidebar } from "@/components/Common/Transactions/Sidebar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useColorPalette } from "@/hooks/useColor";
 import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "@/client";
-import {  FilterProvider, useFilters } from "@/contexts/FilterContext";
+import { useFilters } from "@/contexts/FilterContext";
 
 export function TransactionsView({isDemo}: {isDemo: boolean}) {
 
@@ -45,14 +44,6 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
     refetch();
   }, [currentFilter]);
 
-  const { getColorForName } = useColorPalette();
-
-  data?.groups.map((group) => {
-    getColorForName(group.group_name);
-    group.subgroups?.map((subgroup) => {
-      getColorForName(subgroup.group_name);
-    });
-  });
 
   const [activeGrouping, setActiveGrouping] = useState<
     AggregatedGroup[] | null
@@ -73,7 +64,7 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
 
   const hasData = data?.groups && data.groups.length > 0;
 
-  if (!hasData || isLoading) {
+  if (isLoading) {
     return (
       <Box>
         <Spinner />
@@ -81,8 +72,9 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
     );
   }
 
+  
+
   return (
-    <FilterProvider isDemo={isDemo}>
     <Box
       display={"flex"}
       flexDirection={isMobile ? "column" : "row"}
@@ -98,14 +90,16 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
         collapsedItems={collapsedItems}
         setCollapsedItems={setCollapsedItems}
       />
-      <Box marginTop={isMobile ? "40px" : "0px"}>
+      <Box marginTop={isMobile ? "40px" : "0px"} marginLeft={isMobile ? "0px" : "260px"}>
         <Box>
           <Box display="flex" flexDirection="column" justifyContent="center" alignItems="start">
-            <VisualizationPanel
-              sourceGroups={activeGrouping}
-              isLoading={isLoading}
-              showDeposits={showDeposits}
-                setCollapsedItems={setCollapsedItems}
+            {hasData ? (
+              <>
+              <VisualizationPanel
+                sourceGroups={activeGrouping}
+                isLoading={isLoading}
+                showDeposits={showDeposits}
+                  setCollapsedItems={setCollapsedItems}
                 collapsedItems={collapsedItems}
               />
               <TransactionsTable
@@ -114,10 +108,17 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
                 showWithdrawals={!showDeposits}
                 isMobile={isMobile}
               />
-            </Box>
+              </>
+            ) : (
+              <Flex justifyContent="center" alignItems="center">
+                <Text>The filters you set don't yield any transactions :(</Text>
+              </Flex>
+            )}
+          </Box>
         </Box>
       </Box>
     </Box>
-  </FilterProvider>
   );
 }
+
+

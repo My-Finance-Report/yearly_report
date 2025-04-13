@@ -24,7 +24,7 @@ export function MainLayoutSidebar({
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
 }) {
   return (
-    <Box>
+    <Box as={"aside"} position={"absolute"} top={"90px"} left={"10px"}>
       <FilterGroup
         setShowDeposits={setShowDeposits}
         groupingOptionsChoices={

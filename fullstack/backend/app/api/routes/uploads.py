@@ -4,8 +4,8 @@ import io
 import os
 import subprocess
 import tempfile
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -202,7 +202,13 @@ def upload_files(
     out: list[UploadedPdfOut] = []
     for file in files:
         batch_id = str(uuid.uuid4())
-        update_worker_status(session, user, ProcessingState.waiting, "waiting for the file to be picked up by a processor", batch_id)
+        update_worker_status(
+            session,
+            user,
+            ProcessingState.waiting,
+            "waiting for the file to be picked up by a processor",
+            batch_id,
+        )
         pdf = uploaded_pdf_from_raw_content(session, user, file)
         out.append(pdf)
     return out

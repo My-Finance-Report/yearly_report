@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { FilterProvider } from "@/contexts/FilterContext";
 import { z } from "zod";
 import { TransactionsService } from "@/client";
 import { TransactionsView } from "@/components/Common/Transactions/TransactionsView";
@@ -28,7 +29,11 @@ export function Transactions({
 
   switch (state) {
     case "has_transactions":
-      return <TransactionsView isDemo={isDemo} />;
+      return (
+        <FilterProvider isDemo={isDemo}>
+          <TransactionsView isDemo={isDemo} />
+        </FilterProvider>
+      );
     case "no_transactions_not_processing":
       return <NullState />;
     case "no_transactions_processing":

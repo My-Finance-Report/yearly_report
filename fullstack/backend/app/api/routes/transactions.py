@@ -1,7 +1,7 @@
 from collections.abc import Callable
-from enum import Enum
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from itertools import groupby
 from typing import cast
 
@@ -890,7 +890,7 @@ def get_visible_group_by_options(current_filter: FilterData) -> list[GroupByOpti
     )
 
 
-class LandingStatus(str,Enum):
+class LandingStatus(str, Enum):
     has_transactions = "has_transactions"
     no_transactions = "no_transactions_not_processing"
     no_transactions_processing = "no_transactions_processing"
@@ -904,18 +904,24 @@ def get_landing_status(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> LandingStatus:
-
-    transaction = session.query(Transaction).filter(
-        Transaction.user_id == user.id,
-    ).first()
+    transaction = (
+        session.query(Transaction)
+        .filter(
+            Transaction.user_id == user.id,
+        )
+        .first()
+    )
 
     if transaction:
         return LandingStatus.has_transactions
     else:
-        worker= session.query(WorkerStatus).filter(
-            WorkerStatus.user_id == user.id,
-        ).first()
+        worker = (
+            session.query(WorkerStatus)
+            .filter(
+                WorkerStatus.user_id == user.id,
+            )
+            .first()
+        )
         if worker:
             return LandingStatus.no_transactions_processing
         return LandingStatus.no_transactions
-
