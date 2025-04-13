@@ -10,7 +10,6 @@ import {
   Textarea,
   SelectContent,
   SelectItem,
-  SelectItemGroup,
   SelectRoot,
   SelectTrigger,
   SelectValueText,
@@ -49,7 +48,6 @@ export function SavedFilterControls() {
   const navigate = useNavigate();
   const {
     savedFilters,
-    publicFilters,
     setCurrentFilter,
     saveCurrentFilter,
   } = useFilters();
@@ -78,7 +76,7 @@ export function SavedFilterControls() {
   const handleLoadFilter = () => {
     if (!selectedFilterId) return;
     
-    const filter = [...savedFilters, ...publicFilters].find(f => f.id === selectedFilterId);
+    const filter = [...savedFilters].find(f => f.id === selectedFilterId);
     if (!filter) return;
     
     setCurrentFilter(filter.filter_data);
@@ -101,9 +99,7 @@ export function SavedFilterControls() {
 
   // Format filters for select component
   const myFilters = formatFiltersForSelect(savedFilters);
-  const otherFilters = formatFiltersForSelect(
-    publicFilters.filter(f => !savedFilters.some(sf => sf.id === f.id))
-  );
+
 
   return (
     <Flex gap={2}>
@@ -130,7 +126,7 @@ export function SavedFilterControls() {
               <SelectRoot
                 value={[selectedFilterId?.toString() || '']}
                 collection={createListCollection({
-                  items: [...myFilters.items, ...otherFilters.items]
+                  items: [...myFilters.items]
                 })}
                 onValueChange={(value) => setSelectedFilterId(Number(value))}
               >
@@ -138,8 +134,6 @@ export function SavedFilterControls() {
                   <SelectValueText placeholder="Select a filter" />
                 </SelectTrigger>
                 <SelectContent>
-                  {myFilters.items.length > 0 && (
-                    <SelectItemGroup title="My Filters">
                       {myFilters.items.map((item) => (
                         <SelectItem key={item.value} item={item}>
                           <Box>
@@ -152,25 +146,6 @@ export function SavedFilterControls() {
                           </Box>
                         </SelectItem>
                       ))}
-                    </SelectItemGroup>
-                  )}
-                  
-                  {otherFilters.items.length > 0 && (
-                    <SelectItemGroup title="Public Filters">
-                      {otherFilters.items.map((item) => (
-                        <SelectItem key={item.value} item={item}>
-                          <Box>
-                            <Box fontWeight="medium">{item.label}</Box>
-                            {item.description && (
-                              <Box fontSize="sm" color="gray.500">
-                                {item.description}
-                              </Box>
-                            )}
-                          </Box>
-                        </SelectItem>
-                      ))}
-                    </SelectItemGroup>
-                  )}
                 </SelectContent>
               </SelectRoot>
             </FieldRoot>

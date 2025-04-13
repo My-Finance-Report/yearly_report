@@ -30,7 +30,6 @@ import {
   horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
-import BoxWithText, { type CollapsibleName } from "./BoxWithText";
 import WithdrawDepositSelectorSegmented from "./WithdrawDepositSelector";
 import { SavedFilterControls } from "./SavedFilterControls";
 
@@ -47,14 +46,10 @@ export function FilterGroup({
   groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
-  setCollapsedItems,
-  collapsedItems,
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
   groupingOptionsChoices: { [key in GroupByOption]: string[] } | undefined;
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
-  collapsedItems: CollapsibleName[];
 }) {
   const isMobile = useIsMobile();
 
@@ -84,8 +79,6 @@ export function FilterGroup({
               groupingOptionsChoices={groupingOptionsChoices}
               setShowDeposits={setShowDeposits}
               showDeposits={showDeposits}
-              setCollapsedItems={setCollapsedItems}
-              collapsedItems={collapsedItems}
             />
           </DrawerBody>
           <DrawerFooter>
@@ -104,8 +97,6 @@ export function FilterGroup({
       groupingOptionsChoices={groupingOptionsChoices}
       setShowDeposits={setShowDeposits}
       showDeposits={showDeposits}
-      setCollapsedItems={setCollapsedItems}
-      collapsedItems={collapsedItems}
     />
   );
 }
@@ -114,14 +105,10 @@ function InnerFilterGroup({
   groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
-  setCollapsedItems,
-  collapsedItems,
 }: {
   setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
   showDeposits: boolean;
   groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined;
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
-  collapsedItems: CollapsibleName[];
 }) {
   const powerUser = useAuth().user?.settings?.power_user_filters ?? false;
   return (
@@ -135,12 +122,11 @@ function InnerFilterGroup({
       }}
     >
       <div>
-        <BoxWithText
-          text=""
-          setCollapsedItems={setCollapsedItems}
-          collapsedItems={collapsedItems}
-          isCollapsable={false}
-          COMPONENT_NAME="Filters"
+        <Box
+          borderWidth={1}
+          borderRadius="md"
+          p={2}
+          mr={2}
         >
             <NonPowerUserButtons
               groupingOptionsChoices={groupingOptionsChoices}
@@ -153,7 +139,7 @@ function InnerFilterGroup({
             />
           )
           }
-        </BoxWithText>
+        </Box>
       </div>
     </div>
   );
@@ -523,13 +509,13 @@ export function FilterButton({
     if (currentValues.some(value => value.value === option)) {
       updatedFilter.lookup = {
         ...updatedFilter.lookup,
-        [name]: {specifics: currentValues.filter(value => value.value !== option), all: false, visible: true, index: currentFilter.lookup[name].index}
+        [name]: {specifics: currentValues.filter(value => value.value !== option), visible: true, index: currentFilter.lookup[name].index}
       };
 
     } else {
       updatedFilter.lookup = {
         ...updatedFilter.lookup,
-        [name]: {specifics: [...currentValues, {value: option}], all: false, visible: true, index: currentFilter.lookup[name].index}
+        [name]: {specifics: [...currentValues, {value: option}], visible: true, index: currentFilter.lookup[name].index}
       };
     }
     
@@ -545,7 +531,7 @@ export function FilterButton({
     
     updatedFilter.lookup = {
       ...updatedFilter.lookup,
-      [name]: {specifics: options.map(option => ({value: option})), all: false, visible: true, index: currentFilter.lookup[name].index}
+      [name]: {specifics: options.map(option => ({value: option})), visible: true, index: currentFilter.lookup[name].index}
     };
     
     setCurrentFilter(updatedFilter);
@@ -560,7 +546,7 @@ export function FilterButton({
     
     updatedFilter.lookup = {
       ...updatedFilter.lookup,
-      [name]: {specifics: [], all: false, visible: true, index: currentFilter.lookup[name].index}
+      [name]: {specifics: [],  visible: true, index: currentFilter.lookup[name].index}
     };
     
     setCurrentFilter(updatedFilter);
@@ -630,24 +616,24 @@ function NonPowerUserButtons({
   }, [currentFilter]);
 
   const setMonthlyBudget = () => {
-    const newFilter = {
+    const newFilter:FilterData_Input = {
       is_default: false,
       lookup: {
-        [GroupByOption.budget]: {specifics: null, all: true, visible: true, index: 0},
-        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 1},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 2}
+        [GroupByOption.budget]: {specifics: null, visible: true, index: 0},
+        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], visible: true, index: 1},
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], visible: false, index: 2}
       }
     };
     setCurrentFilter(newFilter);
   };
 
   const setYTD = () => {
-    const newFilter = {
+    const newFilter:FilterData_Input = {
       is_default: false,
       lookup: {
-        [GroupByOption.month]: {specifics: [{value: new Date().getMonth().toString()}], all: false, visible: true, index: 0},
-        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], all: false, visible: false, index: 1},
-        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
+        [GroupByOption.month]: {specifics: null, visible: true, index: 0},
+        [GroupByOption.year]: {specifics: [{value: new Date().getFullYear().toString()}], visible: false, index: 1},
+        [GroupByOption.category]: {specifics: null, visible: true, index: 0},
       }
     };
     
@@ -655,12 +641,12 @@ function NonPowerUserButtons({
   };
 
   const setLastYear = () => {
-    const newFilter = {
+    const newFilter:FilterData_Input = {
       is_default: false,
       lookup: {
-        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], all: false, visible: false, index: 0},
-        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0},
-        [GroupByOption.account]: {specifics: [], all: true, visible: true, index: 0}
+        [GroupByOption.year]: {specifics: [{value: (new Date().getFullYear() - 1).toString()}], visible: false, index: 0},
+        [GroupByOption.category]: {specifics: null, visible: true, index: 0},
+        [GroupByOption.account]: {specifics: null, visible: true, index: 0}
       }
     };
     
@@ -668,10 +654,10 @@ function NonPowerUserButtons({
   };
 
   const setAllTime = () => {
-    const newFilter = {
+    const newFilter:FilterData_Input = {
       is_default: false,
       lookup: {
-        [GroupByOption.category]: {specifics: [], all: true, visible: true, index: 0}
+        [GroupByOption.category]: {specifics: null, visible: true, index: 0}
       }
     };
     

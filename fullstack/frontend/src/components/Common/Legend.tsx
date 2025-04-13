@@ -1,10 +1,10 @@
-import { Box, Flex, HStack, Text } from "@chakra-ui/react"
+import { Flex, HStack, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
 import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
-export function Legend({
+export function CollapsedItems({
   collapsedItems,
   setCollapsedItems,
 }: {
@@ -49,7 +49,6 @@ export function Legend({
   )
 }
 
-export default Legend
 
 function CollapsedWidget({
   name,
@@ -72,18 +71,3 @@ function CollapsedWidget({
   )
 }
 
-export function LegendItem({ name, color }: { name: string; color: string }) {
-  return (
-    <HStack borderRadius={"md"} borderWidth={1} p={3}>
-      <Box
-        width="16px"
-        borderWidth={1}
-        padding={3}
-        height="16px"
-        borderRadius="50%"
-        backgroundColor={color}
-      />
-      <Text>{name}</Text>
-    </HStack>
-  )
-}

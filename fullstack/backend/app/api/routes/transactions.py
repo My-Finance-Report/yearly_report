@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from enum import Enum
 from dataclasses import dataclass, field
 from datetime import datetime
 from itertools import groupby
@@ -37,6 +38,7 @@ from app.models import (
     TransactionSource,
     TransactionSourceId,
     User,
+    WorkerStatus,
 )
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -361,7 +363,7 @@ def apply_category_filter(
     transactions: SqlQuery[Transaction],
     categories: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    if categories.all:
+    if categories.specifics is None:
         return transactions
 
     return transactions.join(Category, Category.id == Transaction.category_id).filter(
@@ -375,7 +377,7 @@ def apply_account_filter(
     transactions: SqlQuery[Transaction],
     accounts: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    if accounts.all:
+    if accounts.specifics is None:
         return transactions
 
     return (
@@ -391,7 +393,7 @@ def apply_year_filter(
     transactions: SqlQuery[Transaction],
     years: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    if years.all:
+    if years.specifics is None:
         return transactions
 
     return transactions.filter(
@@ -421,7 +423,7 @@ def apply_budget_filter(
     budget_filter: ColumnExpressionArgument[bool]
     if normal_budgets:
         budget_filter = BudgetEntry.name.in_(normal_budgets)
-    elif budgets.all:
+    elif budgets.specifics is None:
         budget_filter = true()
     else:
         # No normal budgets in the list, so base condition is always false
@@ -452,7 +454,7 @@ def apply_month_filter(
     transactions: SqlQuery[Transaction],
     months: FilterEntries,
 ) -> SqlQuery[Transaction]:
-    if months.all:
+    if months.specifics is None:
         return transactions
 
     MONTH_LOOKUP = {
@@ -886,3 +888,34 @@ def get_visible_group_by_options(current_filter: FilterData) -> list[GroupByOpti
         [key for key, entries in current_filter.lookup.items() if entries.visible],
         key=lambda x: current_filter.lookup[x].index,
     )
+
+
+class LandingStatus(str,Enum):
+    has_transactions = "has_transactions"
+    no_transactions = "no_transactions_not_processing"
+    no_transactions_processing = "no_transactions_processing"
+
+
+@router.get(
+    "get_landing_status",
+    response_model=LandingStatus,
+)
+def get_landing_status(
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> LandingStatus:
+
+    transaction = session.query(Transaction).filter(
+        Transaction.user_id == user.id,
+    ).first()
+
+    if transaction:
+        return LandingStatus.has_transactions
+    else:
+        worker= session.query(WorkerStatus).filter(
+            WorkerStatus.user_id == user.id,
+        ).first()
+        if worker:
+            return LandingStatus.no_transactions_processing
+        return LandingStatus.no_transactions
+

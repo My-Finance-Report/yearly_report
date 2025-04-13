@@ -7,7 +7,6 @@ import { SavedFiltersService, SavedFilterCreate, FilterData_Input, SavedFilter }
 interface FilterContextType {
   // Data
   savedFilters: SavedFilter[];
-  publicFilters: SavedFilter[];
   currentFilter: FilterData_Input | null;
   
   // Status
@@ -30,25 +29,14 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
   const toast = useCustomToast();
   
   const [currentFilter, setCurrentFilter] = useState<FilterData_Input | null>(null);
-  
   const [isInitialized, setIsInitialized] = useState(false);
   
 
-    
-  
-  const { data: savedFilters = [], isLoading: isSavedFiltersLoading } = useQuery({
+  const { data: savedFilters = [], isLoading } = useQuery({
     queryKey: ['savedFilters'],
     queryFn: () => SavedFiltersService.readSavedFilters({}),
     enabled: !isDemo,
   });
-  
-  const { data: publicFilters = [], isLoading: isPublicFiltersLoading } = useQuery({
-    queryKey: ['publicFilters'],
-    queryFn: () => SavedFiltersService.readPublicSavedFilters({}),
-    enabled: !isDemo,
-  });
-  
-  const isLoading = isSavedFiltersLoading || isPublicFiltersLoading;
   
   const createFilterMutation = useMutation({
     mutationFn: (data: SavedFilterCreate) => SavedFiltersService.createSavedFilter({ requestBody: data }),
@@ -127,27 +115,18 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
       return;
     }
     
-    const defaultPublicFilter = publicFilters.find((filter) => filter.filter_data.is_default);
-    
-    if (defaultPublicFilter) {
-      setCurrentFilter(defaultPublicFilter.filter_data);
-      setIsInitialized(true);
-      return;
-    }
     
     setCurrentFilter({
       is_default: true,
       lookup: {
         month: {
-          all: true,
           visible: true,
-          specifics: [],
+          specifics: null,
           index: 0
         },
        category: {
-          all: true,
           visible: true,
-          specifics: [],
+          specifics: null,
           index: 1
         },
       }
@@ -192,11 +171,12 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
       initializeDefaultFilter();
     }
   }, [isInitialized, isLoading, isDemo]);
+
+
   
   // Create the context value
   const contextValue: FilterContextType = {
     savedFilters,
-    publicFilters,
     currentFilter,
     
     // Status
@@ -219,7 +199,6 @@ export function FilterProvider({ children, isDemo }: { children: ReactNode, isDe
   );
 }
 
-// Custom hook to use the filter context
 export function useFilters() {
   const context = useContext(FilterContext);
   

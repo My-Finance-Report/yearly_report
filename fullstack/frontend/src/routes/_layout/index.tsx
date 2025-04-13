@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { DemoTransactions } from "./_logged_in/transactions";
+import { Transactions } from "./_logged_in/transactions";
 import {
   Box,
   Flex,
@@ -135,7 +135,7 @@ function Landing() {
         p={isMobile ? 1 : 6}
         backgroundColor="background"
       >
-        <DemoTransactions />
+        <Transactions isDemo={true}/>
       </Box>
       <Box ref={pricingSectionRef} mt={24} textAlign="center" mb={10}>
         <Heading as="h3" size="2xl">

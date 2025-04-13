@@ -1,0 +1,123 @@
+import { Spinner, Box } from "@chakra-ui/react";
+import type { CollapsibleName } from "@/components/Common/BoxWithText";
+import { TransactionsTable } from "@/components/Common/TransactionsTable";
+import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
+import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
+import { MainLayoutSidebar } from "@/components/Common/Transactions/Sidebar";
+
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useColorPalette } from "@/hooks/useColor";
+import type {
+  TransactionsGetAggregatedTransactionsResponse,
+} from "@/client";
+import {  FilterProvider, useFilters } from "@/contexts/FilterContext";
+
+export function TransactionsView({isDemo}: {isDemo: boolean}) {
+
+  const getFunction = isDemo ? DemoService.getDemoAggregatedTransactions : TransactionsService.getAggregatedTransactions;
+
+
+  const [showDeposits, setShowDeposits] = useState<boolean>(false);
+  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
+
+  const { currentFilter, initializeDefaultFilter } = useFilters();
+
+  useEffect(() => {
+    if (!currentFilter) {
+      initializeDefaultFilter();
+    }
+  }, [initializeDefaultFilter, currentFilter]);
+
+
+  const { data, isLoading, refetch } = useQuery<
+    TransactionsGetAggregatedTransactionsResponse,
+    Error
+  >({
+    queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
+    queryFn: () => {
+      return getFunction({ requestBody: currentFilter });
+    },
+  });
+
+  useEffect(() => {
+    refetch();
+  }, [currentFilter]);
+
+  const { getColorForName } = useColorPalette();
+
+  data?.groups.map((group) => {
+    getColorForName(group.group_name);
+    group.subgroups?.map((subgroup) => {
+      getColorForName(subgroup.group_name);
+    });
+  });
+
+  const [activeGrouping, setActiveGrouping] = useState<
+    AggregatedGroup[] | null
+  >(null);
+
+  useEffect(() => {
+    if (data?.groups.length) {
+      setActiveGrouping(data.groups);
+    }
+  }, [data?.groups]);
+
+  const namesForLegends = data?.groups.flatMap((group) =>
+    group?.subgroups?.map((subgroup) => subgroup.group_name)
+  );
+
+  const isMobile = useIsMobile();
+
+
+  const hasData = data?.groups && data.groups.length > 0;
+
+  if (!hasData || isLoading) {
+    return (
+      <Box>
+        <Spinner />
+      </Box>
+    );
+  }
+
+  return (
+    <FilterProvider isDemo={isDemo}>
+    <Box
+      display={"flex"}
+      flexDirection={isMobile ? "column" : "row"}
+      justifyContent="center"
+      gap="4px"
+      marginBottom={isMobile ? 0 : 48}
+      padding={"10px"}
+    >
+      <MainLayoutSidebar
+        setShowDeposits={setShowDeposits}
+        data={data}
+        showDeposits={showDeposits}
+        collapsedItems={collapsedItems}
+        setCollapsedItems={setCollapsedItems}
+      />
+      <Box marginTop={isMobile ? "40px" : "0px"}>
+        <Box>
+          <Box display="flex" flexDirection="column" justifyContent="center" alignItems="start">
+            <VisualizationPanel
+              sourceGroups={activeGrouping}
+              isLoading={isLoading}
+              showDeposits={showDeposits}
+                setCollapsedItems={setCollapsedItems}
+                collapsedItems={collapsedItems}
+              />
+              <TransactionsTable
+                data={data}
+                toShowNames={namesForLegends}
+                showWithdrawals={!showDeposits}
+                isMobile={isMobile}
+              />
+            </Box>
+        </Box>
+      </Box>
+    </Box>
+  </FilterProvider>
+  );
+}

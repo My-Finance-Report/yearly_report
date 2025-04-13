@@ -1,5 +1,5 @@
 import { WorkerStatusService, WorkerStatusOut } from "@/client";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import {
   Badge,
   Text,
@@ -11,7 +11,7 @@ import {
   Dialog,
   DialogPositioner,
   DialogContent,
- DialogFooter,
+  DialogFooter,
   Button,
   DialogTrigger,
   Portal,
@@ -22,6 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { LuCheck, LuX } from "react-icons/lu";
+import useAuth from "@/hooks/useAuth";
 
 function determineColor(workerStatus: WorkerStatusOut, isLast: boolean) {
   let color =
@@ -33,8 +34,12 @@ function determineColor(workerStatus: WorkerStatusOut, isLast: boolean) {
   return color;
 }
 
-function determineIcon(workerStatus: WorkerStatusOut, isLast: boolean, inTimeline: boolean){
-    const Wrapper = inTimeline ? TimelineIndicator : Box
+function determineIcon(
+  workerStatus: WorkerStatusOut,
+  isLast: boolean,
+  inTimeline: boolean
+) {
+  const Wrapper = inTimeline ? TimelineIndicator : Box;
 
   let displayStatusIcon =
     workerStatus.status == "failed" ? (
@@ -56,9 +61,8 @@ function determineIcon(workerStatus: WorkerStatusOut, isLast: boolean, inTimelin
     );
   }
 
-  return displayStatusIcon
+  return displayStatusIcon;
 }
-
 
 function TimelineEntry({
   workerStatus,
@@ -69,10 +73,8 @@ function TimelineEntry({
   isLast: boolean;
   includeDesc?: boolean;
 }) {
-
-
-  const color = determineColor(workerStatus,isLast)
-  const DisplayStatusIcon = determineIcon(workerStatus,isLast, true)
+  const color = determineColor(workerStatus, isLast);
+  const DisplayStatusIcon = determineIcon(workerStatus, isLast, true);
 
   return (
     <Timeline.Item>
@@ -101,29 +103,36 @@ export function WorkerStatus() {
   });
 
   if (isLoading) {
-    return null
+    return null;
   }
 
   return (
-    <Box flex={1}>
-      <Timeline.Root size="sm">
-        {data?.map((status, index) => (
-          <TimelineEntry
-            key={status.id}
-            workerStatus={status}
-            isLast={index === data.length - 1}
-          />
-        ))}
-      </Timeline.Root>
-    </Box>
+    <Flex direction="column" alignItems="center" justifyContent="center">
+      <Box flex={1}>
+        <Text fontSize="lg" fontWeight="bold" mb={2}>
+          Transaction Upload Status
+        </Text>
+        <Timeline.Root size="sm">
+          {data?.map((status, index) => (
+            <TimelineEntry
+              key={status.id}
+              workerStatus={status}
+              isLast={index === data.length - 1}
+            />
+          ))}
+        </Timeline.Root>
+      </Box>
+    </Flex>
   );
 }
 
 export function CollapsibleWorkerStatus() {
+  const { user } = useAuth();
 
   const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
+    enabled: !!user?.id,
   });
 
   const statusDisclosure = useDisclosure();
@@ -133,23 +142,24 @@ export function CollapsibleWorkerStatus() {
   }
 
   if (!data || data.length === 0) {
-    return null
+    return null;
   }
 
   const latestStatus = data[data.length - 1];
   const lastSyncDate = new Date(`${latestStatus.created_at}`);
-  const formattedLocalTime = format(lastSyncDate, 'MMM d, yyyy h:mm a');
+  const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a");
 
   return (
     <Dialog.Root
       onExitComplete={statusDisclosure.onClose}
- motionPreset="slide-in-bottom"
+      motionPreset="slide-in-bottom"
     >
       <DialogTrigger>
         <Flex alignItems="center" gap={2} cursor="pointer" p={2}>
           <Badge p={2} colorPalette={determineColor(latestStatus, true)}>
-          {determineIcon(latestStatus, true, false)}
-            {latestStatus.status}</Badge>
+            {determineIcon(latestStatus, true, false)}
+            {latestStatus.status}
+          </Badge>
         </Flex>
       </DialogTrigger>
       <Portal>
@@ -157,13 +167,13 @@ export function CollapsibleWorkerStatus() {
         <DialogPositioner>
           <DialogContent>
             <Dialog.Header>
-                <Dialog.Title>Transaction Upload Status</Dialog.Title>
-                <Text>{formattedLocalTime}</Text>
+              <Dialog.Title>Transaction Upload Status</Dialog.Title>
+              <Text>{formattedLocalTime}</Text>
               <Dialog.CloseTrigger asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
-           
+
             <Box p={4} pl={10} flex={"column"}>
               <Timeline.Root size="sm" mt={2}>
                 {data.map((status, index) => (

@@ -37,8 +37,6 @@ function SingleSliceTooltip({
 
     const hoveredItem = payload[0]
 
-
-
     return (
         <Box p={2} className="rounded-md bg-black shadow-md ring-1 ring-black/5">
             <p className="mb-2 font-semibold" style={{ color: "white" }}>{hoveredItem.name}</p>
@@ -99,7 +97,7 @@ export function GenericPieChart({
 
 
     return (
-        <Box minH="308px" className="flex flex-col">
+        <Box minH="307px" className="flex flex-col">
             <CardContent className="flex-1 pb-0 align-center">
                 <ChartContainer
                     config={finalConfig}

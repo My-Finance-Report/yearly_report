@@ -52,7 +52,7 @@ export function VisualizationPanel({
   }
 
   return (
-    <Flex direction="column" gap={4} mb={4} align="center" justify="center">
+    <Flex direction="column" gap={4}  align="center" justify="center">
       {isLoading || !sourceGroups ? (
         <Spinner size="lg" />
       ) : (
@@ -60,7 +60,7 @@ export function VisualizationPanel({
           templateAreas={`"${layout}"`}
           templateColumns="1fr 1fr 1fr 1fr"
           templateRows="auto auto"
-          gap={4}
+          gap={3}
           w="100%"
         >
           {!isMobile && (

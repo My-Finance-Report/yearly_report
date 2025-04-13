@@ -5,6 +5,7 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime, timezone
+import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -18,6 +19,7 @@ from app.local_types import ProcessFileJobOut, UploadedPdfOut
 from app.models import (
     JobKind,
     JobStatus,
+    ProcessingState,
     Transaction,
     TransactionSourceId,
     UploadConfiguration,
@@ -28,6 +30,7 @@ from app.models import (
     WorkerJob,
 )
 from app.worker.enqueue_job import enqueue_or_reset_job
+from app.worker.status import update_worker_status
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -198,6 +201,8 @@ def upload_files(
 ) -> list[UploadedPdfOut]:
     out: list[UploadedPdfOut] = []
     for file in files:
+        batch_id = str(uuid.uuid4())
+        update_worker_status(session, user, ProcessingState.waiting, "waiting for the file to be picked up by a processor", batch_id)
         pdf = uploaded_pdf_from_raw_content(session, user, file)
         out.append(pdf)
     return out

@@ -10,6 +10,7 @@ import {
   Container,
   HStack,
   Spinner,
+  Flex,
   Table,
   TableBody,
   TableCell,
@@ -149,7 +150,9 @@ function UploadFiles() {
           </TableBody>
         </Table.Root>
       ) : (
-        <Text>No files uploaded yet.</Text>
+        <Flex mt={24} direction="column" alignItems="center">
+          <Text>Upload bank statements here, and we will generate your dashboard.</Text>
+        </Flex>
       )}
     </Container>
   )

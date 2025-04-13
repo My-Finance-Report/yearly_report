@@ -1,66 +1,24 @@
+import { Flex, Box, useDisclosure } from "@chakra-ui/react";
+import { OnboardDialogs } from "./OnboardModal/Onboarding";
+import { useEffect } from "react";
 
-import { Link } from "@tanstack/react-router";
+export function NullState(){
+  const {
+    open: isOnboardOpen,
+    setOpen: setIsOnboardOpen,
+    onClose
+  } = useDisclosure();
 
-import { Box, Heading, Text, VStack, HStack, Button, Spinner } from "@chakra-ui/react";
-import { FaLink, FaUpload } from "react-icons/fa";
-import { WorkerStatus } from "./WorkerStatus";
-import { WorkerStatusService } from "@/client";
-import { useQuery } from "@tanstack/react-query";
-
-export function NullState({hasFetchedTransactions}: {hasFetchedTransactions: boolean}){
-
-  const { data,isLoading } = useQuery({
-    queryKey: ["currentStatus"],
-    queryFn: () =>  WorkerStatusService.getStatus(),
-    enabled: hasFetchedTransactions
-  });
-
-  const showWorkerProgress = data && data.length > 0 
-
-
-
-  if (isLoading) {
-    return (<Spinner/>);
-  }
-  if (showWorkerProgress && hasFetchedTransactions){
-    return (
-        <WorkerStatus/>
-    )
-  }
+  useEffect(() => {
+    setIsOnboardOpen(true);
+  }, []);
 
   return (
-
-    <Box 
-      p={8} 
-      textAlign="center" 
-      borderWidth="1px" 
-      borderRadius="lg" 
-      boxShadow="sm"
-    >
-      <VStack gap={6}>
-        <Heading size="md">Welcome Aboard!</Heading>
-        <Text >
-          Get started by connecting accounts or uploading statements 
-        </Text>
-        <HStack gap={4} pt={4}>
-          <Link to="/plaid">
-            <Button 
-              variant="solid"
-            >
-              <Box mr={2} display="inline-block"><FaLink /></Box>
-              Link Accounts
-            </Button>
-          </Link>
-          <Link to="/upload-files">
-            <Button 
-              variant="outline"
-            >
-              <Box mr={2} display="inline-block"><FaUpload /></Box>
-              Upload Files
-            </Button>
-          </Link>
-        </HStack>
-      </VStack>
+    <Flex direction="column" alignItems="center" justifyContent="center" >
+        <Box maxWidth="400px">
+    <OnboardDialogs isOnboardOpen={isOnboardOpen} onOnboardClose={onClose} isDialog={false}/>
     </Box>
+    </Flex>
   )
 }
+
