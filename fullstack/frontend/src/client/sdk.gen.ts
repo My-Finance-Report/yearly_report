@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetResponse, BudgetsCreateBudgetData, BudgetsCreateBudgetResponse, BudgetsUpdateBudgetData, BudgetsUpdateBudgetResponse, BudgetsDeleteBudgetData, BudgetsDeleteBudgetResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginLogoutResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, PrivateGoogleCallbackLocalData, PrivateGoogleCallbackLocalResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadPublicSavedFiltersData, SavedFiltersReadPublicSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, TransactionsGetLandingStatusResponse, TwoFactorEnable2FaData, TwoFactorEnable2FaResponse, TwoFactorVerify2FaData, TwoFactorVerify2FaResponse, TwoFactorVerify2FaLoginData, TwoFactorVerify2FaLoginResponse, TwoFactorReject2FaData, TwoFactorReject2FaResponse, TwoFactorDisable2FaData, TwoFactorDisable2FaResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMeOptionalResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, WorkerStatusGetStatusResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginLogoutResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, PrivateGoogleCallbackLocalData, PrivateGoogleCallbackLocalResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadPublicSavedFiltersData, SavedFiltersReadPublicSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, TransactionsGetLandingStatusResponse, TwoFactorEnable2FaData, TwoFactorEnable2FaResponse, TwoFactorVerify2FaData, TwoFactorVerify2FaResponse, TwoFactorVerify2FaLoginData, TwoFactorVerify2FaLoginResponse, TwoFactorReject2FaData, TwoFactorReject2FaResponse, TwoFactorDisable2FaData, TwoFactorDisable2FaResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMeOptionalResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, WorkerStatusGetStatusResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -258,80 +258,6 @@ export class AccountsService {
 }
 
 export class BudgetsService {
-    /**
-     * Get Budget
-     * @returns unknown Successful Response
-     * @throws ApiError
-     */
-    public static getBudget(): CancelablePromise<BudgetsGetBudgetResponse> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/budgets/'
-        });
-    }
-    
-    /**
-     * Create Budget
-     * @param data The data for the request.
-     * @param data.requestBody
-     * @returns BudgetOut Successful Response
-     * @throws ApiError
-     */
-    public static createBudget(data: BudgetsCreateBudgetData): CancelablePromise<BudgetsCreateBudgetResponse> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/budgets/',
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Update Budget
-     * @param data The data for the request.
-     * @param data.budgetId
-     * @param data.requestBody
-     * @returns BudgetOut Successful Response
-     * @throws ApiError
-     */
-    public static updateBudget(data: BudgetsUpdateBudgetData): CancelablePromise<BudgetsUpdateBudgetResponse> {
-        return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/api/v1/budgets/{budget_id}',
-            path: {
-                budget_id: data.budgetId
-            },
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Delete Budget
-     * @param data The data for the request.
-     * @param data.budgetId
-     * @returns unknown Successful Response
-     * @throws ApiError
-     */
-    public static deleteBudget(data: BudgetsDeleteBudgetData): CancelablePromise<BudgetsDeleteBudgetResponse> {
-        return __request(OpenAPI, {
-            method: 'DELETE',
-            url: '/api/v1/budgets/{budget_id}',
-            path: {
-                budget_id: data.budgetId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
     /**
      * Get Budget Entries
      * @param data The data for the request.

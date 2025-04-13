@@ -36,12 +36,6 @@ export type Body_uploads_upload_files = {
     files: Array<((Blob | File))>;
 };
 
-export type BudgetBase = {
-    user_id: number;
-    name: string;
-    active?: boolean;
-};
-
 export type BudgetCategoryLinkBase = {
     budget_entry_id: number;
     category_id: number;
@@ -66,10 +60,6 @@ export type BudgetCategoryLinkStatus = {
     stylized_name: string;
     transactions: Array<TransactionOut>;
     total: string;
-};
-
-export type BudgetCreate = {
-    name: string;
 };
 
 export type BudgetEntryCreate = {
@@ -103,14 +93,6 @@ export type BudgetEntryStatus = {
         [key: string]: BudgetCategoryLinkStatus;
     };
     total: string;
-};
-
-export type BudgetOut = {
-    user_id: number;
-    name: string;
-    active?: boolean;
-    id: number;
-    entries: Array<BudgetEntryOut>;
 };
 
 export type BudgetStatus = {
@@ -602,27 +584,6 @@ export type AccountsGetAccountSyncLogsData = {
 };
 
 export type AccountsGetAccountSyncLogsResponse = (Array<PlaidSyncLogOut>);
-
-export type BudgetsGetBudgetResponse = ((BudgetOut | null));
-
-export type BudgetsCreateBudgetData = {
-    requestBody: BudgetCreate;
-};
-
-export type BudgetsCreateBudgetResponse = (BudgetOut);
-
-export type BudgetsUpdateBudgetData = {
-    budgetId: number;
-    requestBody: BudgetBase;
-};
-
-export type BudgetsUpdateBudgetResponse = (BudgetOut);
-
-export type BudgetsDeleteBudgetData = {
-    budgetId: number;
-};
-
-export type BudgetsDeleteBudgetResponse = (unknown);
 
 export type BudgetsGetBudgetEntriesData = {
     budgetId: number;

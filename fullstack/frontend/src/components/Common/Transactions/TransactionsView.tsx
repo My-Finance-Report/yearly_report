@@ -61,7 +61,6 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
 
   const isMobile = useIsMobile();
 
-
   const hasData = data?.groups && data.groups.length > 0;
 
   if (isLoading) {
@@ -71,8 +70,6 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
       </Box>
     );
   }
-
-  
 
   return (
     <Box
