@@ -49,7 +49,7 @@ function formatFiltersForSelect(filters: SavedFilterOut[]): {
 }
 
 export function SavedFilterControls() {
-  const { savedFilters, setCurrentFilter, currentFilter } = useFilters();
+  const { savedFilters, setCurrentFilter, currentFilter, initializeDefaultFilter } = useFilters();
 
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -73,6 +73,15 @@ export function SavedFilterControls() {
 
   const myFilters = formatFiltersForSelect(savedFilters);
 
+  const handleDeleteButtonClick = () => {
+    if (currentFilter?.name == "custom"){
+      //TODO
+      initializeDefaultFilter();
+    } else {
+      setIsDeleteDialogOpen(!isDeleteDialogOpen);
+    }
+  };
+
   return (
     <>
       <Flex direction="row" gap={2} position={"absolute"} top={3} right={5}>
@@ -85,21 +94,21 @@ export function SavedFilterControls() {
         </Button>
         <Button
           size="sm"
-          disabled={!currentFilter?.is_deleteable}
+          disabled={!currentFilter?.is_deleteable && currentFilter?.name != "custom"}
           variant="outline"
-          onClick={() => setIsDeleteDialogOpen(true)}
+          onClick={handleDeleteButtonClick}
         >
           <FiTrash />
         </Button>
       </Flex>
       {currentFilter?.name == "custom" ? (
-     <Text>Building a custom filter</Text> 
+     <Text mt={2}>Building a custom filter</Text> 
       ):
       (
       <FieldRoot mt={12}>
         <FieldLabel>Current Filter</FieldLabel>
         <SelectRoot
-          value={[currentFilter?.id?.toString() || myFilters.items[-1]?.value]}
+          value={[currentFilter?.id?.toString()]}
           collection={createListCollection({
             items: [...myFilters.items],
           })}
