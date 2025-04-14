@@ -15,21 +15,12 @@ import { useFilters } from "@/contexts/FilterContext"
 import { useIsMobile } from "@/hooks/useIsMobile"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
-import { Route } from "@/routes/_layout/_logged_in/transactions"
 
 export function TransactionsView({ isDemo }: { isDemo: boolean }) {
   const getFunction = isDemo
     ? DemoService.getDemoAggregatedTransactions
     : TransactionsService.getAggregatedTransactions
 
-  const { filter } = Route.useSearch()
-  const {loadFilterByName} = useFilters()
-
-  useEffect(() => {
-    if (filter) {
-      loadFilterByName(filter)
-    }
-  }, [filter, loadFilterByName])
 
   const [showDeposits, setShowDeposits] = useState<boolean>(false)
   const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
@@ -48,7 +39,7 @@ export function TransactionsView({ isDemo }: { isDemo: boolean }) {
   >({
     queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () => {
-      return getFunction({ requestBody: currentFilter })
+      return getFunction({ requestBody: currentFilter?.filter_data || {} })
     },
   })
 

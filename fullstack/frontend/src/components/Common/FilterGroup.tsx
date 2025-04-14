@@ -20,6 +20,7 @@ import { Box, Button, Text } from "@chakra-ui/react"
 import { useState } from "react"
 import { BsFunnel } from "react-icons/bs"
 import type { GroupByOption } from "./GroupingConfig"
+import { useFilters } from "@/contexts/FilterContext"
 
 export function FilterGroup({
   groupingOptionsChoices,

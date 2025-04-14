@@ -1,16 +1,17 @@
-import type { SavedFilter } from "@/client"
+import type { SavedFilter } from "@/client";
 import {
   DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogRoot,
-} from "@/components/ui/dialog"
-import { useFilters } from "@/contexts/FilterContext"
+} from "@/components/ui/dialog";
+import { useFilters } from "@/contexts/FilterContext";
 import {
   Box,
   Button,
   FieldLabel,
+  Dialog,
   FieldRoot,
   Flex,
   Input,
@@ -20,20 +21,22 @@ import {
   SelectTrigger,
   SelectValueText,
   Textarea,
+  Portal,
   createListCollection,
-} from "@chakra-ui/react"
-import { useNavigate } from "@tanstack/react-router"
-import { useRef, useState } from "react"
-import { FiBookmark, FiSave } from "react-icons/fi"
+  CloseButton,
+  Span,
+} from "@chakra-ui/react";
+import React, { useRef, useState } from "react";
+import { FiSave, FiTrash } from "react-icons/fi";
 
 interface FilterSelectItem {
-  label: string
-  value: string
-  description: string | null | undefined
+  label: string;
+  value: string;
+  description: string | null | undefined;
 }
 
 function formatFiltersForSelect(filters: SavedFilter[]): {
-  items: FilterSelectItem[]
+  items: FilterSelectItem[];
 } {
   return {
     items: filters.map((filter) => ({
@@ -41,167 +44,216 @@ function formatFiltersForSelect(filters: SavedFilter[]): {
       value: filter.id.toString(),
       description: filter.description,
     })),
-  }
+  };
 }
 
 export function SavedFilterControls() {
-  const navigate = useNavigate()
-  const { savedFilters, setCurrentFilter, saveCurrentFilter } = useFilters()
+  const { savedFilters, setCurrentFilter } = useFilters();
 
-  const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false)
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
-  //TODO names
-  const [filterName, setFilterName] = useState("")
-  const [filterDescription, setFilterDescription] = useState("")
-  const [selectedFilterId, setSelectedFilterId] = useState<number | null>(null)
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const cancelRef = useRef<HTMLButtonElement | null>(null)
+  const handleLoadFilter = (selectedFilterId: number) => {
+    if (!selectedFilterId) return;
+
+    const filter = [...savedFilters].find((f) => f.id === selectedFilterId);
+    if (!filter) return;
+
+    setCurrentFilter(filter);
+  };
+
+  const handleDeleteDialogOpenChange = () => {
+    setIsDeleteDialogOpen(!isDeleteDialogOpen);
+  };
+
+  const handleSaveDialogOpenChange = () => {
+    setIsSaveDialogOpen(!isSaveDialogOpen);
+  };
+
+  const myFilters = formatFiltersForSelect(savedFilters);
+
+  return (
+    <>
+      <Flex direction="row" gap={2} position={"absolute"} top={3} right={5}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setIsSaveDialogOpen(true)}
+        >
+          <FiSave />
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setIsDeleteDialogOpen(true)}
+        >
+          <FiTrash />
+        </Button>
+      </Flex>
+
+      <FieldRoot mt={12}>
+        <SelectRoot
+          collection={createListCollection({
+            items: [...myFilters.items],
+          })}
+          onValueChange={(value) => {
+            handleLoadFilter(Number(value.value));
+          }}
+        >
+          <SelectTrigger>
+            <SelectValueText placeholder="Select a filter" />
+          </SelectTrigger>
+          <SelectContent>
+            {myFilters.items.map((item) => (
+              <SelectItem key={item.value} item={item}>
+                <Box>
+                  <Box fontWeight="medium">{item.label}</Box>
+                  {item.description && (
+                    <Box fontSize="sm" color="gray.500">
+                      {item.description}
+                    </Box>
+                  )}
+                </Box>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </SelectRoot>
+      </FieldRoot>
+
+      <SaveDialog
+        isSaveDialogOpen={isSaveDialogOpen}
+        setIsSaveDialogOpen={setIsSaveDialogOpen}
+        handleSaveDialogOpenChange={handleSaveDialogOpenChange}
+      />
+      <DeleteDialog
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        handleDeleteDialogOpenChange={handleDeleteDialogOpenChange}
+      />
+    </>
+  );
+}
+
+function SaveDialog({
+  isSaveDialogOpen,
+  setIsSaveDialogOpen,
+  handleSaveDialogOpenChange,
+}: {
+  isSaveDialogOpen: boolean;
+  setIsSaveDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSaveDialogOpenChange: () => void;
+}) {
+  const [filterName, setFilterName] = useState("");
+  const [filterDescription, setFilterDescription] = useState("");
+
+  const { saveCurrentFilter } = useFilters();
+
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
 
   const handleSaveFilter = () => {
-    if (!filterName.trim()) return
+    if (!filterName.trim()) return;
 
     const newFilter = {
       name: filterName,
       description: filterDescription || null,
-    }
-    saveCurrentFilter(newFilter)
-    setIsSaveDialogOpen(false)
-  }
-
-  const handleLoadFilter = () => {
-    console.log(selectedFilterId)
-    if (!selectedFilterId) return
-
-    const filter = [...savedFilters].find((f) => f.id === selectedFilterId)
-    console.log(filter)
-    if (!filter) return
-
-    setCurrentFilter(filter.filter_data)
-    setIsLoadDialogOpen(false)
-
-    navigate({
-      search: (prev: Record<string, unknown>) => ({
-        ...prev,
-        filter: filter?.name,
-      }),
-      replace: true,
-    })
-  }
-
-  // Handle dialog open state changes
-  const handleLoadDialogOpenChange = () => {
-    setIsLoadDialogOpen(!isLoadDialogOpen)
-  }
-
-  const handleSaveDialogOpenChange = () => {
-    setIsSaveDialogOpen(!isSaveDialogOpen)
-  }
-
-  // Format filters for select component
-  const myFilters = formatFiltersForSelect(savedFilters)
+    };
+    saveCurrentFilter(newFilter);
+    setIsSaveDialogOpen(false);
+  };
 
   return (
-    <Flex gap={2}>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => setIsLoadDialogOpen(true)}
-      >
-        <FiBookmark style={{ marginRight: "0.5rem" }} />
-        Load Filter
-      </Button>
+    <DialogRoot
+      open={isSaveDialogOpen}
+      onOpenChange={handleSaveDialogOpenChange}
+    >
+      <DialogContent>
+        <DialogHeader>Save Filter</DialogHeader>
+        <DialogBody>
+          <FieldRoot mb={4}>
+            <FieldLabel>Filter Name</FieldLabel>
+            <Input
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              placeholder="Enter a name for your filter"
+            />
+          </FieldRoot>
 
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => setIsSaveDialogOpen(true)}
-      >
-        <FiSave style={{ marginRight: "0.5rem" }} />
-        Save Filter
-      </Button>
+          <FieldRoot>
+            <FieldLabel>Description (optional)</FieldLabel>
+            <Textarea
+              value={filterDescription || ""}
+              onChange={(e) => setFilterDescription(e.target.value)}
+              placeholder="Enter a description for your filter"
+            />
+          </FieldRoot>
+        </DialogBody>
+        <DialogFooter>
+          <Button ref={cancelRef} onClick={() => setIsSaveDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button colorScheme="blue" onClick={handleSaveFilter} ml={3}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+  );
+}
 
-      <DialogRoot
-        open={isLoadDialogOpen}
-        onOpenChange={handleLoadDialogOpenChange}
-      >
-        <DialogContent>
-          <DialogHeader>Load Saved Filter</DialogHeader>
-          <DialogBody>
-            <FieldRoot>
-              <FieldLabel>Select a filter</FieldLabel>
-              <SelectRoot
-                collection={createListCollection({
-                  items: [...myFilters.items],
-                })}
-                onValueChange={(value) => setSelectedFilterId(Number(value.value))}
+function DeleteDialog({
+  isDeleteDialogOpen,
+  setIsDeleteDialogOpen,
+  handleDeleteDialogOpenChange,
+}: {
+  handleDeleteDialogOpenChange: () => void;
+  isDeleteDialogOpen: boolean;
+  setIsDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const { deleteFilter, currentFilter } = useFilters();
+
+  const handleDelete = () => {
+    if (!currentFilter) return;
+    deleteFilter(currentFilter.id);
+    setIsDeleteDialogOpen(false);
+  };
+
+  return (
+    <DialogRoot
+      open={isDeleteDialogOpen}
+      onOpenChange={handleDeleteDialogOpenChange}
+    >
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.CloseTrigger
+                asChild
+                position="absolute"
+                top={3}
+                right={3}
               >
-                <SelectTrigger>
-                  <SelectValueText placeholder="Select a filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {myFilters.items.map((item) => (
-                    <SelectItem key={item.value} item={item}>
-                      <Box>
-                        <Box fontWeight="medium">{item.label}</Box>
-                        {item.description && (
-                          <Box fontSize="sm" color="gray.500">
-                            {item.description}
-                          </Box>
-                        )}
-                      </Box>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </SelectRoot>
-            </FieldRoot>
-          </DialogBody>
-          <DialogFooter>
-            <Button ref={cancelRef} onClick={() => setIsLoadDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue" onClick={handleLoadFilter} ml={3}>
-              Load
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
-
-      {/* Save Filter Dialog */}
-      <DialogRoot
-        open={isSaveDialogOpen}
-        onOpenChange={handleSaveDialogOpenChange}
-      >
-        <DialogContent>
-          <DialogHeader>Save Filter</DialogHeader>
-          <DialogBody>
-            <FieldRoot mb={4}>
-              <FieldLabel>Filter Name</FieldLabel>
-              <Input
-                value={filterName}
-                onChange={(e) => setFilterName(e.target.value)}
-                placeholder="Enter a name for your filter"
-              />
-            </FieldRoot>
-
-            <FieldRoot>
-              <FieldLabel>Description (optional)</FieldLabel>
-              <Textarea
-                value={filterDescription || ""}
-                onChange={(e) => setFilterDescription(e.target.value)}
-                placeholder="Enter a description for your filter"
-              />
-            </FieldRoot>
-          </DialogBody>
-          <DialogFooter>
-            <Button ref={cancelRef} onClick={() => setIsSaveDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue" onClick={handleSaveFilter} ml={3}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
-    </Flex>
-  )
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+              <Dialog.Title>Confirm Delete</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              <p>
+                Are you sure you want to delete{" "}
+                <Span fontWeight="bold">{currentFilter?.name}</Span>?
+              </p>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.ActionTrigger asChild>
+                <Button variant="outline">Cancel</Button>
+              </Dialog.ActionTrigger>
+              <Button onClick={handleDelete} colorPalette="red">
+                Delete
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </DialogRoot>
+  );
 }

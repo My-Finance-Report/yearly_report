@@ -1,5 +1,5 @@
+import { Route } from "@/routes/_layout/_logged_in/transactions"
 import {
-  type FilterData_Input,
   type SavedFilter,
   type SavedFilterCreate,
   SavedFiltersService,
@@ -13,12 +13,13 @@ import {
   useState,
 } from "react"
 import useCustomToast from "../hooks/useCustomToast"
+import { useNavigate } from "@tanstack/react-router"
 
 // Define the context type
 interface FilterContextType {
   // Data
   savedFilters: SavedFilter[]
-  currentFilter: FilterData_Input | null
+  currentFilter: SavedFilter | null
 
   // Status
   isLoading: boolean
@@ -27,9 +28,9 @@ interface FilterContextType {
   // Actions
   setCurrentFilter: (
     filter:
-      | FilterData_Input
+      | SavedFilter
       | null
-      | ((prev: FilterData_Input | null) => FilterData_Input | null),
+      | ((prev: SavedFilter | null) => SavedFilter | null),
   ) => void
   initializeDefaultFilter: () => void
   saveCurrentFilter: (data: {
@@ -41,7 +42,7 @@ interface FilterContextType {
     data: { name: string; description: string | null },
   ) => void
   deleteFilter: (id: number) => void
-  loadFilterByName: (name: string) => Promise<FilterData_Input | null>
+  loadFilterByName: (name: string) => Promise<SavedFilter | null>
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined)
@@ -53,7 +54,7 @@ export function FilterProvider({
   const queryClient = useQueryClient()
   const toast = useCustomToast()
 
-  const [currentFilter, setCurrentFilter] = useState<FilterData_Input | null>(
+  const [currentFilter, setCurrentFilter] = useState<SavedFilter | null>(
     null,
   )
   const [isInitialized, setIsInitialized] = useState(false)
@@ -63,6 +64,22 @@ export function FilterProvider({
     queryFn: () => SavedFiltersService.readSavedFilters({}),
     enabled: !isDemo,
   })
+
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (currentFilter) {
+      console.log("navigate", currentFilter)
+      navigate({
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          filter: currentFilter?.name,
+        }),
+        replace: true,
+    });
+
+    }
+  }, [currentFilter])
 
   const createFilterMutation = useMutation({
     mutationFn: (data: SavedFilterCreate) =>
@@ -91,6 +108,7 @@ export function FilterProvider({
       SavedFiltersService.deleteSavedFilter({ filterId: id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
+      setCurrentFilter(null)
       toast(
         "Filter deleted",
         "Your filter has been deleted successfully.",
@@ -108,13 +126,13 @@ export function FilterProvider({
 
   const loadFilterByName = async (
     name: string,
-  ): Promise<FilterData_Input | null> => {
+  ): Promise<SavedFilter | null> => {
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({
         filterName: name,
       })
-      setCurrentFilter(filter.filter_data)
-      return filter.filter_data
+      setCurrentFilter(filter)
+      return filter
     } catch {
       toast(
         "Failed to load filter",
@@ -133,12 +151,19 @@ export function FilterProvider({
     createFilterMutation.mutate({
       name,
       description,
-      filter_data: currentFilter,
+      filter_data: currentFilter.filter_data,
     })
   }
 
+  const { filter } = Route.useSearch()
   const initializeDefaultFilter = () => {
     if (isInitialized || isLoading) return
+
+    if (filter) {
+      loadFilterByName(filter)
+      setIsInitialized(true)
+      return
+    }
 
     if (currentFilter) {
       setIsInitialized(true)
@@ -150,26 +175,11 @@ export function FilterProvider({
     )
 
     if (defaultFilter) {
-      setCurrentFilter(defaultFilter.filter_data)
+      setCurrentFilter(defaultFilter)
       setIsInitialized(true)
       return
     }
 
-    setCurrentFilter({
-      is_default: true,
-      lookup: {
-        month: {
-          visible: true,
-          specifics: null,
-          index: 0,
-        },
-        category: {
-          visible: true,
-          specifics: null,
-          index: 1,
-        },
-      },
-    })
     setIsInitialized(true)
   }
 
@@ -183,7 +193,7 @@ export function FilterProvider({
       mutationFn: () =>
         SavedFiltersService.updateSavedFilter({
           filterId: id,
-          requestBody: { name, description, filter_data: currentFilter },
+          requestBody: { name, description, filter_data: currentFilter.filter_data },
         }),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
@@ -205,23 +215,17 @@ export function FilterProvider({
     updateMutation.mutate()
   }
 
-  // Auto-initialize the default filter when data is loaded
   useEffect(() => {
     if (!isInitialized && !isLoading) {
       initializeDefaultFilter()
     }
   }, [isInitialized, isLoading, isDemo])
 
-  // Create the context value
   const contextValue: FilterContextType = {
     savedFilters,
     currentFilter,
-
-    // Status
     isLoading,
     isInitialized,
-
-    // Actions
     setCurrentFilter,
     initializeDefaultFilter,
     saveCurrentFilter,

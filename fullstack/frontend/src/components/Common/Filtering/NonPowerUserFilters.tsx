@@ -1,6 +1,5 @@
 import type { FilterData_Input } from "@/client"
-import { Button, Flex } from "@chakra-ui/react"
-import type React from "react"
+import { Button, Flex,Text } from "@chakra-ui/react"
 
 import { SavedFilterControls } from "@/components/Common/SavedFilterControls"
 import { Box } from "@chakra-ui/react"
@@ -17,7 +16,7 @@ export function NonPowerUserButtons({
   const hasBudgets =
     groupingOptionsChoices?.[GroupByOption.budget]?.length || 0 > 0
 
-  const { setCurrentFilter, currentFilter } = useFilters()
+  const { setCurrentFilter, currentFilter, currentFilterName } = useFilters()
 
   useEffect(() => {}, [currentFilter])
 
