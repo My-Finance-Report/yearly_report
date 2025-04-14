@@ -11,7 +11,7 @@ function useMediaQuery(predicate: (width: number) => boolean) {
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
-  }, [predicate])
+  }, [predicate,window])
 
   return matches
 }

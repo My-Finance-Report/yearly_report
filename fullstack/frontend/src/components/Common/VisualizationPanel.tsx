@@ -32,11 +32,14 @@ export function VisualizationPanel({
   setCollapsedItems,
   collapsedItems,
 }: VisualizationProps) {
+
   const isDesktop = useIsDesktop()
 
   if (!sourceGroups) {
     return null
   }
+
+  console.log(isDesktop)
 
   return (
     <Flex
