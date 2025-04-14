@@ -53,7 +53,6 @@ export function VisualizationPanel({
       ) : (
         <Flex
           direction={isDesktop ? "row" : "column"}
-          wrap="wrap"
           gap={3}
           width="100%"
           justify="center"
