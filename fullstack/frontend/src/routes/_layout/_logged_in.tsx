@@ -5,7 +5,6 @@ export const Route = createFileRoute("/_layout/_logged_in")({
     component: Layout,
     beforeLoad: async () => {
         if (!isSessionValid()) {
-            console.log("throwing redirect")
             throw redirect({
                 to: "/",
             })

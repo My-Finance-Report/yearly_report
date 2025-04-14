@@ -7,12 +7,13 @@ function useMediaQuery(predicate: (width: number) => boolean) {
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const update = () => setMatches(predicate(window.innerWidth))
+    const update = () => setMatches(predicate(window.outerWidth))
 
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
-  }, [predicate])
+  }, [predicate, window])
+
 
   return matches
 }

@@ -75,14 +75,15 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
     <Box
     mx={isMobile ? 1 : 3}
     >
-      <MainLayoutSidebar
-        setShowDeposits={setShowDeposits}
-        data={data}
-        showDeposits={showDeposits}
-        collapsedItems={collapsedItems}
+      {!isDemo && (
+        <MainLayoutSidebar
+          setShowDeposits={setShowDeposits}
+          data={data}
+          showDeposits={showDeposits}
+          collapsedItems={collapsedItems}
         setCollapsedItems={setCollapsedItems}
-      />
-      <Box marginTop={isMobile ? "40px" : "0px"} marginLeft={isMobile ? "0px" : "320px"}>
+      />)}
+      <Box marginTop={isMobile ? "40px" : "0px"} marginLeft={isMobile || isDemo ? "0px" : "320px"}>
           <Box gap={3} display="flex" flexDirection="column" justifyContent="start" alignItems="start">
             {hasData ? (
               <>

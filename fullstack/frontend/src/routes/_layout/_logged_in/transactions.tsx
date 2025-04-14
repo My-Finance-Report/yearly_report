@@ -25,7 +25,17 @@ export function Transactions({
   const { data: state } = useQuery({
     queryKey: ["checkStatusOfLanding"],
     queryFn: TransactionsService.getLandingStatus,
+    enabled: !isDemo,
   });
+
+  if (isDemo) {
+    return (
+        <FilterProvider isDemo={isDemo}>
+          <TransactionsView isDemo={isDemo} />
+        </FilterProvider>
+      );
+  }
+
 
   switch (state) {
     case "has_transactions":

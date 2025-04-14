@@ -51,7 +51,6 @@ const useAuth = () => {
   if (authError) {
     sessionStorage.removeItem("session_active")
     queryClient.clear()
-    console.log("redirecting to login in useAuth")
     navigate({ to: "/login" })
   }
 
@@ -139,7 +138,6 @@ const useAuth = () => {
     mutationFn: login,
     onSuccess: (result) => {
       if (result.success) {
-        console.log("redirecting here")
         navigate({ to: "/" });
       }
     },
