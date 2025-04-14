@@ -25,8 +25,9 @@ export const Route = createFileRoute("/_layout/")({
 });
 
 function Landing() {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
   const navigate = useNavigate();
+
 
 
   const demoSectionRef = useRef<HTMLDivElement>(null);
@@ -134,6 +135,7 @@ function Landing() {
         m={isMobile ? 1 : 6}
         p={isMobile ? 1 : 6}
         backgroundColor="background"
+        width={isMobile ? "330px" : "90vw"}
       >
         <Transactions isDemo={true}/>
       </Box>

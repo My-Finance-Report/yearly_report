@@ -31,7 +31,6 @@ export function VisualizationPanel({
 }: VisualizationProps) {
   const isDesktop = useIsDesktop();
 
-  console.log(isDesktop);
 
   if (!sourceGroups) {
     return null;
