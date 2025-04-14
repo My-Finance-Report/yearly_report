@@ -324,20 +324,18 @@ export type SankeySibling = {
     source_id: number;
 };
 
-export type SavedFilter = {
-    name: string;
-    description?: (string | null);
-    filter_data: FilterData_Output;
-    id: number;
-    user_id: number;
-    created_at: string;
-    updated_at: string;
-};
-
 export type SavedFilterCreate = {
     name: string;
     description?: (string | null);
     filter_data: FilterData_Input;
+};
+
+export type SavedFilterOut = {
+    name: string;
+    description?: (string | null);
+    filter_data: FilterData_Output;
+    id: (number | string);
+    is_deleteable?: boolean;
 };
 
 export type SavedFilterUpdate = {
@@ -725,39 +723,39 @@ export type SavedFiltersCreateSavedFilterData = {
     requestBody: SavedFilterCreate;
 };
 
-export type SavedFiltersCreateSavedFilterResponse = (SavedFilter);
+export type SavedFiltersCreateSavedFilterResponse = (SavedFilterOut);
 
 export type SavedFiltersReadSavedFiltersData = {
     limit?: number;
     skip?: number;
 };
 
-export type SavedFiltersReadSavedFiltersResponse = (Array<SavedFilter>);
+export type SavedFiltersReadSavedFiltersResponse = (Array<SavedFilterOut>);
 
 export type SavedFiltersReadSavedFilterData = {
     filterId: number;
 };
 
-export type SavedFiltersReadSavedFilterResponse = (SavedFilter);
+export type SavedFiltersReadSavedFilterResponse = (SavedFilterOut);
 
 export type SavedFiltersUpdateSavedFilterData = {
     filterId: number;
     requestBody: SavedFilterUpdate;
 };
 
-export type SavedFiltersUpdateSavedFilterResponse = (SavedFilter);
+export type SavedFiltersUpdateSavedFilterResponse = (SavedFilterOut);
 
 export type SavedFiltersDeleteSavedFilterData = {
     filterId: number;
 };
 
-export type SavedFiltersDeleteSavedFilterResponse = (SavedFilter);
+export type SavedFiltersDeleteSavedFilterResponse = (unknown);
 
 export type SavedFiltersReadSavedFilterByNameData = {
     filterName: string;
 };
 
-export type SavedFiltersReadSavedFilterByNameResponse = (SavedFilter);
+export type SavedFiltersReadSavedFilterByNameResponse = (SavedFilterOut);
 
 export type SitemapSitemapResponse = (unknown);
 

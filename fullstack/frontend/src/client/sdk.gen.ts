@@ -765,7 +765,7 @@ export class SavedFiltersService {
      * Create a new saved filter.
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns SavedFilter Successful Response
+     * @returns SavedFilterOut Successful Response
      * @throws ApiError
      */
     public static createSavedFilter(data: SavedFiltersCreateSavedFilterData): CancelablePromise<SavedFiltersCreateSavedFilterResponse> {
@@ -786,7 +786,7 @@ export class SavedFiltersService {
      * @param data The data for the request.
      * @param data.skip
      * @param data.limit
-     * @returns SavedFilter Successful Response
+     * @returns SavedFilterOut Successful Response
      * @throws ApiError
      */
     public static readSavedFilters(data: SavedFiltersReadSavedFiltersData = {}): CancelablePromise<SavedFiltersReadSavedFiltersResponse> {
@@ -808,7 +808,7 @@ export class SavedFiltersService {
      * Get a specific saved filter by ID.
      * @param data The data for the request.
      * @param data.filterId
-     * @returns SavedFilter Successful Response
+     * @returns SavedFilterOut Successful Response
      * @throws ApiError
      */
     public static readSavedFilter(data: SavedFiltersReadSavedFilterData): CancelablePromise<SavedFiltersReadSavedFilterResponse> {
@@ -830,7 +830,7 @@ export class SavedFiltersService {
      * @param data The data for the request.
      * @param data.filterId
      * @param data.requestBody
-     * @returns SavedFilter Successful Response
+     * @returns SavedFilterOut Successful Response
      * @throws ApiError
      */
     public static updateSavedFilter(data: SavedFiltersUpdateSavedFilterData): CancelablePromise<SavedFiltersUpdateSavedFilterResponse> {
@@ -853,7 +853,7 @@ export class SavedFiltersService {
      * Delete a saved filter.
      * @param data The data for the request.
      * @param data.filterId
-     * @returns SavedFilter Successful Response
+     * @returns unknown Successful Response
      * @throws ApiError
      */
     public static deleteSavedFilter(data: SavedFiltersDeleteSavedFilterData): CancelablePromise<SavedFiltersDeleteSavedFilterResponse> {
@@ -874,7 +874,7 @@ export class SavedFiltersService {
      * Get a specific saved filter by name.
      * @param data The data for the request.
      * @param data.filterName
-     * @returns SavedFilter Successful Response
+     * @returns SavedFilterOut Successful Response
      * @throws ApiError
      */
     public static readSavedFilterByName(data: SavedFiltersReadSavedFilterByNameData): CancelablePromise<SavedFiltersReadSavedFilterByNameResponse> {

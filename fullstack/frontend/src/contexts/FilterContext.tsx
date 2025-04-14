@@ -1,6 +1,6 @@
 import { Route } from "@/routes/_layout/_logged_in/transactions"
 import {
-  type SavedFilter,
+  type SavedFilterOut,
   type SavedFilterCreate,
   SavedFiltersService,
 } from "@/client"
@@ -18,8 +18,8 @@ import { useNavigate } from "@tanstack/react-router"
 // Define the context type
 interface FilterContextType {
   // Data
-  savedFilters: SavedFilter[]
-  currentFilter: SavedFilter | null
+  savedFilters: SavedFilterOut[]
+  currentFilter: SavedFilterOut | null
 
   // Status
   isLoading: boolean
@@ -28,9 +28,9 @@ interface FilterContextType {
   // Actions
   setCurrentFilter: (
     filter:
-      | SavedFilter
+      | SavedFilterOut
       | null
-      | ((prev: SavedFilter | null) => SavedFilter | null),
+      | ((prev: SavedFilterOut | null) => SavedFilterOut | null),
   ) => void
   initializeDefaultFilter: () => void
   saveCurrentFilter: (data: {
@@ -42,7 +42,7 @@ interface FilterContextType {
     data: { name: string; description: string | null },
   ) => void
   deleteFilter: (id: number) => void
-  loadFilterByName: (name: string) => Promise<SavedFilter | null>
+  loadFilterByName: (name: string) => Promise<SavedFilterOut | null>
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined)
@@ -54,7 +54,7 @@ export function FilterProvider({
   const queryClient = useQueryClient()
   const toast = useCustomToast()
 
-  const [currentFilter, setCurrentFilter] = useState<SavedFilter | null>(
+  const [currentFilter, setCurrentFilter] = useState<SavedFilterOut | null>(
     null,
   )
   const [isInitialized, setIsInitialized] = useState(false)
@@ -126,7 +126,13 @@ export function FilterProvider({
 
   const loadFilterByName = async (
     name: string,
-  ): Promise<SavedFilter | null> => {
+  ): Promise<SavedFilterOut | null> => {
+    const filter = savedFilters.find((f) => f.name === name)
+    if (filter) {
+      setCurrentFilter(filter)
+      return filter
+    }
+
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({
         filterName: name,

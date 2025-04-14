@@ -1,4 +1,4 @@
-import type { SavedFilter } from "@/client";
+import type { SavedFilterOut } from "@/client";
 import {
   DialogBody,
   DialogContent,
@@ -35,7 +35,7 @@ interface FilterSelectItem {
   description: string | null | undefined;
 }
 
-function formatFiltersForSelect(filters: SavedFilter[]): {
+function formatFiltersForSelect(filters: SavedFilterOut[]): {
   items: FilterSelectItem[];
 } {
   return {
@@ -48,15 +48,15 @@ function formatFiltersForSelect(filters: SavedFilter[]): {
 }
 
 export function SavedFilterControls() {
-  const { savedFilters, setCurrentFilter } = useFilters();
+  const { savedFilters, setCurrentFilter, currentFilter } = useFilters();
 
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleLoadFilter = (selectedFilterId: number) => {
+  const handleLoadFilter = (selectedFilterId: string) => {
     if (!selectedFilterId) return;
 
-    const filter = [...savedFilters].find((f) => f.id === selectedFilterId);
+    const filter = [...savedFilters].find((f) => f.id.toString() === selectedFilterId);
     if (!filter) return;
 
     setCurrentFilter(filter);
@@ -84,6 +84,7 @@ export function SavedFilterControls() {
         </Button>
         <Button
           size="sm"
+          disabled={!currentFilter?.is_deleteable}
           variant="outline"
           onClick={() => setIsDeleteDialogOpen(true)}
         >
@@ -93,11 +94,12 @@ export function SavedFilterControls() {
 
       <FieldRoot mt={12}>
         <SelectRoot
+          value={[currentFilter?.id?.toString() || myFilters.items[0]?.value]}
           collection={createListCollection({
             items: [...myFilters.items],
           })}
           onValueChange={(value) => {
-            handleLoadFilter(Number(value.value));
+            handleLoadFilter(value.value[0]);
           }}
         >
           <SelectTrigger>
@@ -212,8 +214,8 @@ function DeleteDialog({
   const { deleteFilter, currentFilter } = useFilters();
 
   const handleDelete = () => {
-    if (!currentFilter) return;
-    deleteFilter(currentFilter.id);
+    if (!currentFilter?.is_deleteable) return;
+    deleteFilter(Number(currentFilter.id));
     setIsDeleteDialogOpen(false);
   };
 
