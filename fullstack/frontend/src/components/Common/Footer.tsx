@@ -2,7 +2,7 @@ import { Box, Flex, Link, Text } from "@chakra-ui/react";
 
 export function Footer() {
   return (
-    <Box as="footer" position="fixed" bottom={0} w="100%">
+    <Box as="footer" position="sticky" bottom={0} w="100%">
       <Flex
         alignSelf={'flex-end'}
         mx="auto"
@@ -11,6 +11,7 @@ export function Footer() {
         backgroundColor="background"
         flexWrap="wrap"
         p={2}
+        mt={2}
 
       >
         <Text fontSize="lg" fontWeight="bold">
