@@ -13,7 +13,9 @@ function Layout() {
         <Box backgroundColor="background" minHeight="100vh">
         <Flex direction="column" justifyContent='space-between' backgroundColor="background">
             <SegmentedNavigation />
+            <Box minHeight="100vh">
                 <Outlet />
+            </Box>
             <Footer/>
         </Flex>
         </Box>
