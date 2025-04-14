@@ -19,6 +19,11 @@ def apply_and_grant_rls(connection)->None:
                     CREATE POLICY user_isolation_policy ON {table_name}
                     USING (user_id = current_setting('app.current_user_id')::int);
                 """))
+
+                connection.execute(sa.text("""
+                    GRANT INSERT, SELECT, UPDATE ON {table_name} TO app_user;
+                """))
+
                 print(f"✔ RLS applied to {table_name}")
             else:
                 print(f"✓ Policy already exists for {table_name}")
@@ -33,4 +38,5 @@ def apply_and_grant_rls(connection)->None:
         connection.execute(sa.text(f"""
             GRANT USAGE, UPDATE ON SEQUENCE {schema}.{sequence} TO app_user;
         """))
+
         print(f"✔ Granted permissions on sequence {schema}.{sequence}")

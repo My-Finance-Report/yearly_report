@@ -5,8 +5,8 @@ import { TransactionsService } from "@/client";
 import { TransactionsView } from "@/components/Common/Transactions/TransactionsView";
 import { WorkerStatus } from "@/components/Common/WorkerStatus";
 import { NullState } from "@/components/Common/LandingPageNullState";
-import { Spinner } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
+import { PageSpinner } from "@/components/Common/PageSpinner";
 
 const transactionsSearchSchema = z.object({
   filter: z.string().optional(),
@@ -49,7 +49,9 @@ export function Transactions({
     case "no_transactions_processing":
       return <WorkerStatus />;
   }
-  return <Spinner />;
+  return (
+    <PageSpinner/>
+  );
 }
 
 

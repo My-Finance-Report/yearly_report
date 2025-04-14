@@ -1,6 +1,7 @@
-import { Spinner, Box, Text, Flex } from "@chakra-ui/react";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import type { CollapsibleName } from "@/components/Common/BoxWithText";
 import { TransactionsTable } from "@/components/Common/TransactionsTable";
+import { PageSpinner } from "@/components/Common/PageSpinner";
 import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
 import { AggregatedGroup, DemoService, TransactionsService } from "@/client";
 import { MainLayoutSidebar } from "@/components/Common/Transactions/Sidebar";
@@ -65,9 +66,7 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
 
   if (isLoading) {
     return (
-      <Box>
-        <Spinner />
-      </Box>
+      <PageSpinner/>
     );
   }
 
