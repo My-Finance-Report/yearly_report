@@ -182,6 +182,8 @@ class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
 class BudgetEntryCreate(BaseModel):
     amount: float
     name: str
+    budget_id: BudgetId
+    category_link_ids: list[int]
 
 
 class BudgetEntryBase(BaseModel):
@@ -231,7 +233,9 @@ class BudgetEntryStatus(BudgetEntryBase):
 
 
 class BudgetStatus(BudgetBase):
+    budget_id: BudgetId
     entry_status: list[BudgetEntryStatus]
+    entries: list[BudgetEntryOut]
     months_with_entries: list[str]
 
 

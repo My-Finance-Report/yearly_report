@@ -61,7 +61,6 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
 
   const isMobile = useIsMobile();
 
-
   const hasData = data?.groups && data.groups.length > 0;
 
   if (isLoading) {
@@ -72,16 +71,9 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
     );
   }
 
-  
-
   return (
     <Box
-      display={"flex"}
-      flexDirection={isMobile ? "column" : "row"}
-      justifyContent="center"
-      gap="4px"
-      marginBottom={isMobile ? 0 : 48}
-      padding={"10px"}
+    mx={isMobile ? 1 : 3}
     >
       <MainLayoutSidebar
         setShowDeposits={setShowDeposits}
@@ -90,9 +82,8 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
         collapsedItems={collapsedItems}
         setCollapsedItems={setCollapsedItems}
       />
-      <Box marginTop={isMobile ? "40px" : "0px"} marginLeft={isMobile ? "0px" : "260px"}>
-        <Box>
-          <Box display="flex" flexDirection="column" justifyContent="center" alignItems="start">
+      <Box marginTop={isMobile ? "40px" : "0px"} marginLeft={isMobile ? "0px" : "320px"}>
+          <Box gap={3} display="flex" flexDirection="column" justifyContent="start" alignItems="start">
             {hasData ? (
               <>
               <VisualizationPanel
@@ -115,7 +106,6 @@ export function TransactionsView({isDemo}: {isDemo: boolean}) {
               </Flex>
             )}
           </Box>
-        </Box>
       </Box>
     </Box>
   );

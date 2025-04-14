@@ -41,11 +41,6 @@ export default function LabeledBox({
   collapsedItems,
   setCollapsedItems,
   isCollapsable = true,
-  minH,
-  maxH,
-  width,
-  maxW,
-  minW = "50%",
   containerRef,
 }: LabeledBoxProps) {
   const labelStyles = {
@@ -87,11 +82,6 @@ export default function LabeledBox({
 
   return (
     <Box
-      width={width}
-      minH={minH}
-      maxH={maxH}
-      maxW={maxW}
-      minW={minW}
       borderWidth={1}
       borderRadius="md"
       ref={containerRef}

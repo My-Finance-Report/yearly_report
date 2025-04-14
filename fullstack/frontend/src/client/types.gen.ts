@@ -36,12 +36,6 @@ export type Body_uploads_upload_files = {
     files: Array<((Blob | File))>;
 };
 
-export type BudgetBase = {
-    user_id: number;
-    name: string;
-    active?: boolean;
-};
-
 export type BudgetCategoryLinkBase = {
     budget_entry_id: number;
     category_id: number;
@@ -68,13 +62,11 @@ export type BudgetCategoryLinkStatus = {
     total: string;
 };
 
-export type BudgetCreate = {
-    name: string;
-};
-
 export type BudgetEntryCreate = {
     amount: number;
     name: string;
+    budget_id: number;
+    category_link_ids: Array<(number)>;
 };
 
 export type BudgetEntryEdit = {
@@ -105,19 +97,13 @@ export type BudgetEntryStatus = {
     total: string;
 };
 
-export type BudgetOut = {
-    user_id: number;
-    name: string;
-    active?: boolean;
-    id: number;
-    entries: Array<BudgetEntryOut>;
-};
-
 export type BudgetStatus = {
     user_id: number;
     name: string;
     active?: boolean;
+    budget_id: number;
     entry_status: Array<BudgetEntryStatus>;
+    entries: Array<BudgetEntryOut>;
     months_with_entries: Array<(string)>;
 };
 
@@ -603,27 +589,6 @@ export type AccountsGetAccountSyncLogsData = {
 
 export type AccountsGetAccountSyncLogsResponse = (Array<PlaidSyncLogOut>);
 
-export type BudgetsGetBudgetResponse = ((BudgetOut | null));
-
-export type BudgetsCreateBudgetData = {
-    requestBody: BudgetCreate;
-};
-
-export type BudgetsCreateBudgetResponse = (BudgetOut);
-
-export type BudgetsUpdateBudgetData = {
-    budgetId: number;
-    requestBody: BudgetBase;
-};
-
-export type BudgetsUpdateBudgetResponse = (BudgetOut);
-
-export type BudgetsDeleteBudgetData = {
-    budgetId: number;
-};
-
-export type BudgetsDeleteBudgetResponse = (unknown);
-
 export type BudgetsGetBudgetEntriesData = {
     budgetId: number;
 };
@@ -676,7 +641,7 @@ export type BudgetsDeleteBudgetCategoryData = {
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
-export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
+export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
 
 export type DemoGetDemoAggregatedTransactionsData = {
     requestBody?: (FilterData_Input | null);

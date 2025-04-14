@@ -28,22 +28,20 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
-import type { BudgetOut, BudgetStatus } from "../../client";
-import EditBudgetEntry from "./EditBudgetEntry";
+import type { BudgetStatus } from "../../client";
+import { EditBudgetEntry, CreateBudgetEntry } from "./EditBudgetEntry";
 import { formatCurrency } from "../Charting/PieChart";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 export const ManageBudget = ({
-  budget,
   budgetStatus,
 }: {
-  budget: BudgetOut;
   budgetStatus: BudgetStatus;
 }) => {
   const queryClient = useQueryClient();
 
   const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> =
-    budget.entries.reduce(
+    budgetStatus.entries.reduce(
       (acc, entry) => {
         acc[entry.id] = entry;
         return acc;
@@ -65,12 +63,13 @@ export const ManageBudget = ({
 
   return (
     <VStack>
-      <CreateNew budgetId={budget.id} />
-      <Table.Root variant="outline" borderRadius="md">
-        <TableHeader>
-          <TableRow>
-            <TableColumnHeader>Budget Entry</TableColumnHeader>
-            <TableColumnHeader>
+      <CreateNew budgetId={budgetStatus.budget_id} />
+      {budgetStatus.entries.length > 0 ? (
+        <Table.Root variant="outline" borderRadius="md">
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeader>Budget Entry</TableColumnHeader>
+              <TableColumnHeader>
               Target <Text fontSize="xs">(/month)</Text>
             </TableColumnHeader>
             {!isMobile && <TableColumnHeader>Categories</TableColumnHeader>}
@@ -104,6 +103,11 @@ export const ManageBudget = ({
           ))}
         </TableBody>
       </Table.Root>
+      ):(
+        <Flex p={2} direction={"column"} alignItems="center" gap={2}>
+        <Text textAlign="center">No Budget Entries Yet</Text>
+        </Flex>
+      )}
       <ProjectionCards budgetStatus={budgetStatus} />
     </VStack>
   );
@@ -139,43 +143,24 @@ function ProjectionCards({ budgetStatus }: { budgetStatus: BudgetStatus }) {
 function CreateNew({ budgetId }: { budgetId: number }) {
   const [newEntry, setNewEntry] = useState<BudgetEntryOut | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
 
-  const addEntryMutation = useMutation({
-    mutationFn: () =>
-      BudgetsService.createBudgetEntry({
-        budgetId,
-        requestBody: { name: "", amount: 100 },
-      }),
-    onSuccess: (data: BudgetEntryOut) => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] });
-      setNewEntry(data);
-      setIsOpen(true);
-    },
-  });
 
-  const handleCreate = () => {
-    addEntryMutation.mutate();
-  };
 
   return (
     <HStack w="full">
-      <Button size="sm" onClick={handleCreate}>
+      <Button size="sm" onClick={() => setIsOpen(true)}>
         <FaPlus />
         Add Entry
       </Button>
 
-      {newEntry && (
-        <EditBudgetEntry
+      <CreateBudgetEntry
           isOpen={isOpen}
           onClose={() => {
             setIsOpen(false);
             setNewEntry(null);
           }}
-          budgetEntry={newEntry}
+          budgetId={budgetId}
         />
-      )}
     </HStack>
   );
 }
