@@ -121,7 +121,6 @@ function UsersTable() {
                   <Table.Cell textAlign="center">
                     <ActionsMenu
                       type="User"
-                      value={user}
                       disabled={currentUser?.id === user.id}
                     />
                   </Table.Cell>

@@ -69,6 +69,7 @@ export function PowerUserButtons({
         delete rest[option]
         return { ...prev, lookup: rest }
         }
+
       const maxIndex = Object.values(newLookup).reduce(
         (max, entry) => Math.max(max, (entry as FilterEntries).index),
         -1,

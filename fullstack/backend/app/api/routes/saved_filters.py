@@ -1,10 +1,8 @@
-import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
-from app.models import FilterData, SavedFilter, User
+from app.models import SavedFilter, User
 from app.schemas.saved_filter import (
     SavedFilter as SavedFilterSchema,
 )
@@ -57,7 +55,6 @@ def read_saved_filters(
     """
     Retrieve saved filters.
     """
-    return []  # TODO
     filters = (
         db.query(SavedFilter)
         .filter(SavedFilter.user_id == current_user.id)
@@ -76,31 +73,6 @@ def read_saved_filters(
             user_id=f.user_id,
         )
         for f in filters
-    ]
-
-
-@router.get("/public", response_model=list[SavedFilterSchema])
-def read_public_saved_filters(
-    *,
-    _db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    _skip: int = 0,
-    _limit: int = 100,
-) -> list[SavedFilterSchema]:
-    """
-    Retrieve public saved filters from all users.
-    """
-    # todo
-    return [
-        SavedFilterSchema(
-            id=1,
-            name="Default Filter",
-            description="Default filter description",
-            filter_data=FilterData(),
-            created_at=datetime.datetime.now(),
-            updated_at=datetime.datetime.now(),
-            user_id=current_user.id,
-        )
     ]
 
 

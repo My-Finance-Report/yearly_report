@@ -69,9 +69,11 @@ export function SavedFilterControls() {
   }
 
   const handleLoadFilter = () => {
+    console.log(selectedFilterId)
     if (!selectedFilterId) return
 
     const filter = [...savedFilters].find((f) => f.id === selectedFilterId)
+    console.log(filter)
     if (!filter) return
 
     setCurrentFilter(filter.filter_data)
@@ -100,7 +102,6 @@ export function SavedFilterControls() {
 
   return (
     <Flex gap={2}>
-      {/* Load Filter Button */}
       <Button
         size="sm"
         variant="outline"
@@ -110,7 +111,6 @@ export function SavedFilterControls() {
         Load Filter
       </Button>
 
-      {/* Save Filter Button */}
       <Button
         size="sm"
         variant="outline"
@@ -120,7 +120,6 @@ export function SavedFilterControls() {
         Save Filter
       </Button>
 
-      {/* Load Filter Dialog */}
       <DialogRoot
         open={isLoadDialogOpen}
         onOpenChange={handleLoadDialogOpenChange}
@@ -131,11 +130,10 @@ export function SavedFilterControls() {
             <FieldRoot>
               <FieldLabel>Select a filter</FieldLabel>
               <SelectRoot
-                value={[selectedFilterId?.toString() || ""]}
                 collection={createListCollection({
                   items: [...myFilters.items],
                 })}
-                onValueChange={(value) => setSelectedFilterId(Number(value))}
+                onValueChange={(value) => setSelectedFilterId(Number(value.value))}
               >
                 <SelectTrigger>
                   <SelectValueText placeholder="Select a filter" />
