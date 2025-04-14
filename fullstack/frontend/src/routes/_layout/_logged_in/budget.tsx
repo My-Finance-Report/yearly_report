@@ -1,6 +1,5 @@
 import { BudgetsService } from "@/client"
 import { ManageBudget } from "@/components/Common/BudgetManager"
-import { isSessionActive } from "@/hooks/useAuth"
 import {
   Container,
   Flex,
@@ -15,28 +14,18 @@ export const Route = createFileRoute("/_layout/_logged_in/budget")({
 })
 
 function ManageBudgets() {
-  const {
-    data: budget,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["budgets"],
-    queryFn: BudgetsService.getBudget,
-    enabled: isSessionActive(),
-  })
 
   const {
-      data: budgetStatus,
+      data,
       isLoading: statusLoading,
-      isError: statusIsError,
+      isError
     } = useQuery({
       queryKey: ["budgetStatus"],
       queryFn: BudgetsService.getBudgetStatus,
-      enabled: isSessionActive(),
     })
 
 
-  if (isError||statusIsError) {
+  if (isError) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
@@ -46,7 +35,7 @@ function ManageBudgets() {
     )
   }
 
-  if (isLoading || statusLoading) {
+  if (statusLoading) {
     return (
       <Container maxW="full">
         <Heading size="lg" textAlign="center" py={12}>
@@ -58,7 +47,7 @@ function ManageBudgets() {
 
   return (
     <Flex alignItems="center" justifyContent="center">
-        <ManageBudget budget={budget} budgetStatus={budgetStatus} />
+        <ManageBudget budgetStatus={data!} />
     </Flex>
   )
 }

@@ -6,11 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
 from app.local_types import (
-    BudgetBase,
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
     BudgetCategoryLinkStatus,
-    BudgetCreate,
     BudgetEntryCreate,
     BudgetEntryEdit,
     BudgetEntryOut,
@@ -93,7 +91,6 @@ def get_budget_out(session: Session, user: User) -> BudgetOut:
     )
 
 
-
 @router.get("/{budget_id}/entries", response_model=list[BudgetEntryOut])
 def get_budget_entries(
     budget_id: int,
@@ -140,11 +137,47 @@ def create_budget_entry(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> BudgetEntryOut:
-    new_entry = BudgetEntry(**entry.model_dump(), budget_id=budget_id, user_id=user.id)
+    new_entry = BudgetEntry(
+        amount=Decimal(entry.amount),
+        name=entry.name,
+        budget_id=budget_id,
+        user_id=user.id,
+    )
     session.add(new_entry)
     session.commit()
+
+    category_links = []
+    for category_link_id in entry.category_link_ids:
+        category_links.append(
+            BudgetCategoryLink(
+                budget_entry_id=new_entry.id,
+                category_id=category_link_id,
+                user_id=user.id,
+            )
+        )
+    session.add_all(category_links)
+    session.commit()
     session.refresh(new_entry)
-    return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links": []})
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
+
+    links_out: list[BudgetCategoryLinkOut] = [
+        BudgetCategoryLinkOut(
+            budget_entry_id=link.budget_entry_id,
+            category_id=link.category_id,
+            id=link.id,
+            stylized_name=stylized_name_lookup[link.category_id],
+        )
+        for link in category_links
+    ]
+
+    return BudgetEntryOut(
+        budget_id=new_entry.budget_id,
+        user_id=new_entry.user_id,
+        amount=new_entry.amount,
+        name=new_entry.name,
+        id=new_entry.id,
+        category_links=links_out,
+    )
 
 
 def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
@@ -343,11 +376,11 @@ def group_transactions_by_month(
     return dict(grouped_transactions)
 
 
-@router.get("/budget_status", response_model=BudgetStatus | None)
+@router.get("/budget_status", response_model=BudgetStatus)
 def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> BudgetStatus | None:
+) -> BudgetStatus:
     budget = get_budget_out(session=session, user=user)
 
     entry_statuses = []
@@ -394,9 +427,11 @@ def get_budget_status(
         )
 
     return BudgetStatus(
+        budget_id=budget.id,
         user_id=user.id,
         name=budget.name,
         active=True,
+        entries=budget.entries,
         entry_status=entry_statuses,
         months_with_entries=list(months_with_entries),
     )

@@ -432,7 +432,7 @@ export class BudgetsService {
     
     /**
      * Get Budget Status
-     * @returns unknown Successful Response
+     * @returns BudgetStatus Successful Response
      * @throws ApiError
      */
     public static getBudgetStatus(): CancelablePromise<BudgetsGetBudgetStatusResponse> {

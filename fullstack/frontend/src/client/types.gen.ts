@@ -65,6 +65,8 @@ export type BudgetCategoryLinkStatus = {
 export type BudgetEntryCreate = {
     amount: number;
     name: string;
+    budget_id: number;
+    category_link_ids: Array<(number)>;
 };
 
 export type BudgetEntryEdit = {
@@ -99,7 +101,9 @@ export type BudgetStatus = {
     user_id: number;
     name: string;
     active?: boolean;
+    budget_id: number;
     entry_status: Array<BudgetEntryStatus>;
+    entries: Array<BudgetEntryOut>;
     months_with_entries: Array<(string)>;
 };
 
@@ -637,7 +641,7 @@ export type BudgetsDeleteBudgetCategoryData = {
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
-export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
+export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
 
 export type DemoGetDemoAggregatedTransactionsData = {
     requestBody?: (FilterData_Input | null);
