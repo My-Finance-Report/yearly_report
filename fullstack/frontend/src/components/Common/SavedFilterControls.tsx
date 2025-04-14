@@ -19,6 +19,7 @@ import {
   SelectItem,
   SelectRoot,
   SelectTrigger,
+  Text,
   SelectValueText,
   Textarea,
   Portal,
@@ -91,7 +92,10 @@ export function SavedFilterControls() {
           <FiTrash />
         </Button>
       </Flex>
-
+      {currentFilter?.name == "custom" ? (
+     <Text>Building a custom filter</Text> 
+      ):
+      (
       <FieldRoot mt={12}>
         <FieldLabel>Current Filter</FieldLabel>
         <SelectRoot
@@ -122,6 +126,7 @@ export function SavedFilterControls() {
           </SelectContent>
         </SelectRoot>
       </FieldRoot>
+      )}
 
       <SaveDialog
         isSaveDialogOpen={isSaveDialogOpen}

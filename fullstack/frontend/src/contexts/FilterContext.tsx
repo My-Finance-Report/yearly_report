@@ -69,7 +69,6 @@ export function FilterProvider({
 
   useEffect(() => {
     if (currentFilter) {
-      console.log("navigate", currentFilter)
       navigate({
         search: (prev: Record<string, unknown>) => ({
           ...prev,
@@ -132,7 +131,6 @@ export function FilterProvider({
       setCurrentFilter(filter)
       return filter
     }
-
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({
         filterName: name,
@@ -140,11 +138,14 @@ export function FilterProvider({
       setCurrentFilter(filter)
       return filter
     } catch {
-      toast(
-        "Failed to load filter",
-        `Could not find filter with name: ${name}`,
-        "error",
-      )
+      navigate({
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          filter: savedFilters[0]?.name,
+        }),
+        replace: true,
+      })
+
       return null
     }
   }

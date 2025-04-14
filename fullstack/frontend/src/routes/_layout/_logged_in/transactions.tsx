@@ -10,6 +10,7 @@ import { z } from "zod"
 
 const transactionsSearchSchema = z.object({
   filter: z.string().optional(),
+  showAdvanced: z.boolean().optional(),
 })
 
 export const Route = createFileRoute("/_layout/_logged_in/transactions")({

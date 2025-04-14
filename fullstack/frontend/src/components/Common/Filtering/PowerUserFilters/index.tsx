@@ -1,11 +1,10 @@
-import type React from "react"
+import { Route } from "@/routes/_layout/_logged_in/transactions"
+import type { FilterEntries, SavedFilterOut } from "@/client";
+import { Button, Flex } from "@chakra-ui/react";
+import { handleDragEnd, moveItemDown, moveItemUp } from "./DragHelpers";
 
-import type {  FilterEntries, SavedFilterOut } from "@/client"
-import { Button, Flex } from "@chakra-ui/react"
-import { handleDragEnd, moveItemDown, moveItemUp } from "./DragHelpers"
-
-import WithdrawDepositSelectorSegmented from "@/components/Common/WithdrawDepositSelector"
-import { Box, CloseButton, Menu, Portal, Tag, Text } from "@chakra-ui/react"
+import WithdrawDepositSelectorSegmented from "@/components/Common/WithdrawDepositSelector";
+import { Box, CloseButton, Menu, Portal, Tag, Text } from "@chakra-ui/react";
 import {
   DndContext,
   KeyboardSensor,
@@ -13,70 +12,71 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-} from "@dnd-kit/core"
+} from "@dnd-kit/core";
 import {
   SortableContext,
   horizontalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable"
+} from "@dnd-kit/sortable";
 
 import {
   GroupByOption,
   GroupingConfig,
-} from "@/components/Common/GroupingConfig"
-import { useFilters } from "@/contexts/FilterContext"
-import { useIsMobile } from "@/hooks/useIsMobile"
-import { CSS } from "@dnd-kit/utilities"
-import { BsFunnel, BsFunnelFill } from "react-icons/bs"
+} from "@/components/Common/GroupingConfig";
+import { useFilters } from "@/contexts/FilterContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { CSS } from "@dnd-kit/utilities";
+import { BsFunnel, BsFunnelFill } from "react-icons/bs";
 import {
   FiCheck,
   FiChevronDown,
   FiChevronUp,
   FiEye,
   FiEyeOff,
-} from "react-icons/fi"
+} from "react-icons/fi";
+import { useNavigate } from "@tanstack/react-router";
 
 export function PowerUserButtons({
   groupingOptionsChoices,
   setShowDeposits,
   showDeposits,
 }: {
-  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
-  showDeposits: boolean
-  groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
+  showDeposits: boolean;
+  groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined;
 }) {
   const includeBudget = !!(
     groupingOptionsChoices &&
     groupingOptionsChoices[GroupByOption.budget]?.length > 1
-  )
+  );
 
-  const isMobile = useIsMobile()
-  const { setCurrentFilter, currentFilter, initializeDefaultFilter } =
-    useFilters()
-
-  if (!currentFilter) {
-    initializeDefaultFilter()
-  }
+  const isMobile = useIsMobile();
+  const { setCurrentFilter, currentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
     setCurrentFilter((prev: SavedFilterOut | null) => {
-      if (!prev) return prev
+      if (!prev) return null;
 
-      const newLookup = { ...prev.filter_data.lookup }
+      const newLookup = { ...prev.filter_data.lookup };
 
-        if (newLookup[option]) {
-        const rest = { ...newLookup }
-        delete rest[option]
-        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } }
-        }
+      if (newLookup[option]) {
+        const rest = { ...newLookup };
+        delete rest[option];
+        console.log("rest", rest);
+        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } };
+      }
 
       const maxIndex = Object.values(newLookup).reduce(
         (max, entry) => Math.max(max, (entry as FilterEntries).index),
-        -1,
-      ) as number
+        -1
+      ) as number;
+
 
       return {
-        ...prev,
+        name: "unsaved",
+        id: "unsaved",
+        description: null,
+        filter_data: {
         lookup: {
           ...newLookup,
           [option]: {
@@ -86,14 +86,37 @@ export function PowerUserButtons({
             index: maxIndex + 1,
           },
         },
-      }
-    })
-  }
+      },
+    }
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor),
-  )
+    useSensor(KeyboardSensor)
+  );
+
+  const { showAdvanced } = Route.useSearch()
+  const navigation = useNavigate();
+  const handleShowAdvanced = () => {
+    navigation({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        showAdvanced: true,
+      }),
+      replace: true,
+    });
+  };
+  if (!showAdvanced) {
+    return (
+      <Button variant="plain" size="sm" onClick={handleShowAdvanced}>
+        <Text textDecoration={"underline"}>
+          Show Advanced Filtering Options
+        </Text>{" "}
+        <FiEye />
+      </Button>
+    );
+  }
 
   return (
     <>
@@ -124,7 +147,9 @@ export function PowerUserButtons({
                 showDeposits={showDeposits}
               />
               <SortableContext
-                items={Object.keys(currentFilter?.filter_data?.lookup || {}).sort(
+                items={Object.keys(
+                  currentFilter?.filter_data?.lookup || {}
+                ).sort(
                   (a, b) =>
                     (
                       currentFilter?.filter_data?.lookup?.[
@@ -135,7 +160,7 @@ export function PowerUserButtons({
                       currentFilter?.filter_data?.lookup?.[
                         b as GroupByOption
                       ] as FilterEntries
-                    ).index,
+                    ).index
                 )}
                 strategy={horizontalListSortingStrategy}
               >
@@ -143,11 +168,11 @@ export function PowerUserButtons({
                   .sort(
                     (a, b) =>
                       (a[1] as FilterEntries).index -
-                      (b[1] as FilterEntries).index,
+                      (b[1] as FilterEntries).index
                   )
                   .map(([option, value]) => {
-                    const typedOption = option as GroupByOption
-                    const typedValue = value as FilterEntries
+                    const typedOption = option as GroupByOption;
+                    const typedValue = value as FilterEntries;
                     return (
                       <Flex
                         paddingLeft={1}
@@ -167,31 +192,36 @@ export function PowerUserButtons({
                           isFirst={typedValue.index === 0}
                           isLast={
                             typedValue.index ===
-                            Object.keys(currentFilter?.filter_data?.lookup || {}).length - 1
+                            Object.keys(
+                              currentFilter?.filter_data?.lookup || {}
+                            ).length -
+                              1
                           }
                           choices={groupingOptionsChoices?.[typedOption]}
                           option={typedOption}
                           noX={
-                            Object.keys(currentFilter?.filter_data?.lookup || {}).length ===
-                            1
+                            Object.keys(
+                              currentFilter?.filter_data?.lookup || {}
+                            ).length === 1
                           }
                           onRemove={handleToggleOption}
                         />
                       </Flex>
-                    )
+                    );
                   })}
               </SortableContext>
               <Box
                 key="blah"
                 paddingLeft={
-                  Object.keys(currentFilter?.filter_data?.lookup || {}).length * 2
+                  Object.keys(currentFilter?.filter_data?.lookup || {}).length *
+                  2
                 }
               >
                 <GroupingConfig
                   showBudgets={includeBudget}
-                  groupingOptions={Object.keys(currentFilter?.filter_data?.lookup || {}).map(
-                    (key) => key as GroupByOption,
-                  )}
+                  groupingOptions={Object.keys(
+                    currentFilter?.filter_data?.lookup || {}
+                  ).map((key) => key as GroupByOption)}
                 />
               </Box>
             </Flex>
@@ -199,7 +229,7 @@ export function PowerUserButtons({
         </DndContext>
       </Box>
     </>
-  )
+  );
 }
 
 const SortableItem = ({
@@ -212,34 +242,35 @@ const SortableItem = ({
   isFirst,
   isLast,
 }: {
-  option: GroupByOption
-  choices: string[] | undefined
-  noX: boolean
-  onRemove: (option: GroupByOption) => void
-  moveItemUp: (option: GroupByOption) => void
-  moveItemDown: (option: GroupByOption) => void
-  isFirst: boolean
-  isLast: boolean
+  option: GroupByOption;
+  choices: string[] | undefined;
+  noX: boolean;
+  onRemove: (option: GroupByOption) => void;
+  moveItemUp: (option: GroupByOption) => void;
+  moveItemDown: (option: GroupByOption) => void;
+  isFirst: boolean;
+  isLast: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: option,
-    })
+    });
 
-  const { currentFilter, setCurrentFilter } = useFilters()
+  const { currentFilter, setCurrentFilter } = useFilters();
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
+  };
 
-  const isVisible = currentFilter?.filter_data?.lookup?.[option]?.visible ?? true
+  const isVisible =
+    currentFilter?.filter_data?.lookup?.[option]?.visible ?? true;
 
   const toggleVisibility = () => {
-    if (!currentFilter?.filter_data?.lookup) return
+    if (!currentFilter?.filter_data?.lookup) return;
 
     setCurrentFilter((prev) => {
-      if (!prev?.filter_data?.lookup) return prev
+      if (!prev?.filter_data?.lookup) return prev;
 
       return {
         ...prev,
@@ -253,9 +284,9 @@ const SortableItem = ({
             },
           },
         },
-      }
-    })
-  }
+      };
+    });
+  };
 
   return (
     <Tag.Root
@@ -305,29 +336,30 @@ const SortableItem = ({
         )}
       </Flex>
     </Tag.Root>
-  )
-}
+  );
+};
 
 interface FilterButtonProps {
-  options: string[]
-  name: string
+  options: string[];
+  name: string;
 }
 
 export function FilterButton({ name, options }: FilterButtonProps) {
-  const { currentFilter, setCurrentFilter } = useFilters()
+  const { currentFilter, setCurrentFilter } = useFilters();
 
   if (!currentFilter) {
-    return null
+    return null;
   }
 
   const handleToggle = (option: string) => {
     if (!currentFilter.filter_data.lookup) {
-      return
+      return;
     }
 
-    const updatedFilter = { ...currentFilter }
+    const updatedFilter = { ...currentFilter };
 
-    const currentValues = updatedFilter.filter_data.lookup?.[name]?.specifics || []
+    const currentValues =
+      updatedFilter.filter_data.lookup?.[name]?.specifics || [];
 
     if (currentValues.some((value) => value.value === option)) {
       updatedFilter.filter_data.lookup = {
@@ -337,7 +369,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
           visible: true,
           index: currentFilter.filter_data.lookup[name].index,
         },
-      }
+      };
     } else {
       updatedFilter.filter_data.lookup = {
         ...updatedFilter.filter_data.lookup,
@@ -346,18 +378,18 @@ export function FilterButton({ name, options }: FilterButtonProps) {
           visible: true,
           index: currentFilter.filter_data.lookup[name].index,
         },
-      }
+      };
     }
 
-    setCurrentFilter(updatedFilter)
-  }
+    setCurrentFilter(updatedFilter);
+  };
 
   const handleSelectAll = () => {
     if (!currentFilter.filter_data.lookup) {
-      return
+      return;
     }
 
-    const updatedFilter = { ...currentFilter }
+    const updatedFilter = { ...currentFilter };
 
     updatedFilter.filter_data.lookup = {
       ...updatedFilter.filter_data.lookup,
@@ -366,17 +398,17 @@ export function FilterButton({ name, options }: FilterButtonProps) {
         visible: true,
         index: currentFilter.filter_data.lookup[name].index,
       },
-    }
+    };
 
-    setCurrentFilter(updatedFilter)
-  }
+    setCurrentFilter(updatedFilter);
+  };
 
   const handleUnselectAll = () => {
     if (!currentFilter.filter_data.lookup) {
-      return
+      return;
     }
 
-    const updatedFilter = { ...currentFilter }
+    const updatedFilter = { ...currentFilter };
 
     updatedFilter.filter_data.lookup = {
       ...updatedFilter.filter_data.lookup,
@@ -385,13 +417,14 @@ export function FilterButton({ name, options }: FilterButtonProps) {
         visible: true,
         index: currentFilter.filter_data.lookup[name].index,
       },
-    }
+    };
 
-    setCurrentFilter(updatedFilter)
-  }
+    setCurrentFilter(updatedFilter);
+  };
 
-  const currentValues = currentFilter.filter_data.lookup?.[name]?.specifics || []
-  const hasApplied = currentValues.length > 0
+  const currentValues =
+    currentFilter.filter_data.lookup?.[name]?.specifics || [];
+  const hasApplied = currentValues.length > 0;
 
   return (
     <Menu.Root
@@ -421,7 +454,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
               {options.map((option) => {
                 const checked = currentValues
                   .map((value) => value.value)
-                  .includes(option)
+                  .includes(option);
                 return (
                   <Menu.CheckboxItem
                     value={option}
@@ -432,12 +465,12 @@ export function FilterButton({ name, options }: FilterButtonProps) {
                     {option.charAt(0).toUpperCase() + option.slice(1)}
                     {checked && <FiCheck />}
                   </Menu.CheckboxItem>
-                )
+                );
               })}
             </Menu.ItemGroup>
           </Menu.Content>
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  )
+  );
 }

@@ -3,7 +3,6 @@ import { useFilters } from "@/contexts/FilterContext"
 import { AddIcon } from "@chakra-ui/icons"
 import { Button, Menu, Portal, useCheckboxGroup } from "@chakra-ui/react"
 import { Text } from "@chakra-ui/react"
-import { useEffect } from "react"
 import { FiCheck } from "react-icons/fi"
 
 export enum GroupByOption {
@@ -31,25 +30,21 @@ export function GroupingConfig({
   groupingOptions,
   showBudgets,
 }: GroupingConfigProps) {
-  const { setCurrentFilter, currentFilter, initializeDefaultFilter } =
-    useFilters()
-
-  useEffect(() => {
-    if (!currentFilter) {
-      initializeDefaultFilter()
-    }
-  }, [currentFilter, initializeDefaultFilter])
+  const { setCurrentFilter } = useFilters()
 
   const handleToggleOption = (option: GroupByOption) => {
+    console.log("in here")
+
     setCurrentFilter((prev: SavedFilterOut | null) => {
-      if (!prev) return prev
+      console.log(prev)
+      if (!prev) return null
 
       const newLookup = { ...prev.filter_data.lookup }
 
       if (newLookup[option]) {
         const rest = { ...newLookup }
         delete rest[option]
-        return { ...prev, lookup: rest }
+        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } }
       }
 
       // Add the option with the next available index
@@ -58,18 +53,23 @@ export function GroupingConfig({
         -1,
       ) as number
 
-      const calculatedLookup = {
-        ...prev,
-        lookup: {
-          ...newLookup,
+      const calculatedLookup: SavedFilterOut = {
+        name: "custom",
+        id: "custom",
+        description: null,
+        is_deleteable: false,
+        filter_data: {
+          ...prev.filter_data,
+          lookup: {
+            ...newLookup,
           [option]: {
-            all: true,
             visible: true,
             specifics: [],
             index: maxIndex + 1,
           },
         },
       }
+    }
       return calculatedLookup
     })
   }
