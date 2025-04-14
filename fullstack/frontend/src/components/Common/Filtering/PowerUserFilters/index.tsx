@@ -1,6 +1,6 @@
 import type React from "react"
 
-import type { FilterData_Input, FilterEntries } from "@/client"
+import type {  FilterEntries, SavedFilterOut } from "@/client"
 import { Button, Flex } from "@chakra-ui/react"
 import { handleDragEnd, moveItemDown, moveItemUp } from "./DragHelpers"
 
@@ -59,15 +59,15 @@ export function PowerUserButtons({
   }
 
   const handleToggleOption = (option: GroupByOption) => {
-    setCurrentFilter((prev: FilterData_Input | null) => {
+    setCurrentFilter((prev: SavedFilterOut | null) => {
       if (!prev) return prev
 
-      const newLookup = { ...prev.lookup }
+      const newLookup = { ...prev.filter_data.lookup }
 
         if (newLookup[option]) {
         const rest = { ...newLookup }
         delete rest[option]
-        return { ...prev, lookup: rest }
+        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } }
         }
 
       const maxIndex = Object.values(newLookup).reduce(
@@ -124,22 +124,22 @@ export function PowerUserButtons({
                 showDeposits={showDeposits}
               />
               <SortableContext
-                items={Object.keys(currentFilter?.lookup || {}).sort(
+                items={Object.keys(currentFilter?.filter_data?.lookup || {}).sort(
                   (a, b) =>
                     (
-                      currentFilter?.lookup?.[
+                      currentFilter?.filter_data?.lookup?.[
                         a as GroupByOption
                       ] as FilterEntries
                     ).index -
                     (
-                      currentFilter?.lookup?.[
+                      currentFilter?.filter_data?.lookup?.[
                         b as GroupByOption
                       ] as FilterEntries
                     ).index,
                 )}
                 strategy={horizontalListSortingStrategy}
               >
-                {Object.entries(currentFilter?.lookup || {})
+                {Object.entries(currentFilter?.filter_data?.lookup || {})
                   .sort(
                     (a, b) =>
                       (a[1] as FilterEntries).index -
@@ -167,12 +167,12 @@ export function PowerUserButtons({
                           isFirst={typedValue.index === 0}
                           isLast={
                             typedValue.index ===
-                            Object.keys(currentFilter?.lookup || {}).length - 1
+                            Object.keys(currentFilter?.filter_data?.lookup || {}).length - 1
                           }
                           choices={groupingOptionsChoices?.[typedOption]}
                           option={typedOption}
                           noX={
-                            Object.keys(currentFilter?.lookup || {}).length ===
+                            Object.keys(currentFilter?.filter_data?.lookup || {}).length ===
                             1
                           }
                           onRemove={handleToggleOption}
@@ -184,12 +184,12 @@ export function PowerUserButtons({
               <Box
                 key="blah"
                 paddingLeft={
-                  Object.keys(currentFilter?.lookup || {}).length * 2
+                  Object.keys(currentFilter?.filter_data?.lookup || {}).length * 2
                 }
               >
                 <GroupingConfig
                   showBudgets={includeBudget}
-                  groupingOptions={Object.keys(currentFilter?.lookup || {}).map(
+                  groupingOptions={Object.keys(currentFilter?.filter_data?.lookup || {}).map(
                     (key) => key as GroupByOption,
                   )}
                 />
@@ -233,21 +233,24 @@ const SortableItem = ({
     transition,
   }
 
-  const isVisible = currentFilter?.lookup?.[option]?.visible ?? true
+  const isVisible = currentFilter?.filter_data?.lookup?.[option]?.visible ?? true
 
   const toggleVisibility = () => {
-    if (!currentFilter?.lookup) return
+    if (!currentFilter?.filter_data?.lookup) return
 
     setCurrentFilter((prev) => {
-      if (!prev?.lookup) return prev
+      if (!prev?.filter_data?.lookup) return prev
 
       return {
         ...prev,
-        lookup: {
-          ...prev.lookup,
-          [option]: {
-            ...prev.lookup[option],
-            visible: !isVisible,
+        filter_data: {
+          ...prev.filter_data,
+          lookup: {
+            ...prev.filter_data.lookup,
+            [option]: {
+              ...prev.filter_data.lookup[option],
+              visible: !isVisible,
+            },
           },
         },
       }
@@ -318,30 +321,30 @@ export function FilterButton({ name, options }: FilterButtonProps) {
   }
 
   const handleToggle = (option: string) => {
-    if (!currentFilter.lookup) {
+    if (!currentFilter.filter_data.lookup) {
       return
     }
 
     const updatedFilter = { ...currentFilter }
 
-    const currentValues = updatedFilter.lookup?.[name]?.specifics || []
+    const currentValues = updatedFilter.filter_data.lookup?.[name]?.specifics || []
 
     if (currentValues.some((value) => value.value === option)) {
-      updatedFilter.lookup = {
-        ...updatedFilter.lookup,
+      updatedFilter.filter_data.lookup = {
+        ...updatedFilter.filter_data.lookup,
         [name]: {
           specifics: currentValues.filter((value) => value.value !== option),
           visible: true,
-          index: currentFilter.lookup[name].index,
+          index: currentFilter.filter_data.lookup[name].index,
         },
       }
     } else {
-      updatedFilter.lookup = {
-        ...updatedFilter.lookup,
+      updatedFilter.filter_data.lookup = {
+        ...updatedFilter.filter_data.lookup,
         [name]: {
           specifics: [...currentValues, { value: option }],
           visible: true,
-          index: currentFilter.lookup[name].index,
+          index: currentFilter.filter_data.lookup[name].index,
         },
       }
     }
@@ -350,18 +353,18 @@ export function FilterButton({ name, options }: FilterButtonProps) {
   }
 
   const handleSelectAll = () => {
-    if (!currentFilter.lookup) {
+    if (!currentFilter.filter_data.lookup) {
       return
     }
 
     const updatedFilter = { ...currentFilter }
 
-    updatedFilter.lookup = {
-      ...updatedFilter.lookup,
+    updatedFilter.filter_data.lookup = {
+      ...updatedFilter.filter_data.lookup,
       [name]: {
         specifics: options.map((option) => ({ value: option })),
         visible: true,
-        index: currentFilter.lookup[name].index,
+        index: currentFilter.filter_data.lookup[name].index,
       },
     }
 
@@ -369,25 +372,25 @@ export function FilterButton({ name, options }: FilterButtonProps) {
   }
 
   const handleUnselectAll = () => {
-    if (!currentFilter.lookup) {
+    if (!currentFilter.filter_data.lookup) {
       return
     }
 
     const updatedFilter = { ...currentFilter }
 
-    updatedFilter.lookup = {
-      ...updatedFilter.lookup,
+    updatedFilter.filter_data.lookup = {
+      ...updatedFilter.filter_data.lookup,
       [name]: {
         specifics: [],
         visible: true,
-        index: currentFilter.lookup[name].index,
+        index: currentFilter.filter_data.lookup[name].index,
       },
     }
 
     setCurrentFilter(updatedFilter)
   }
 
-  const currentValues = currentFilter.lookup?.[name]?.specifics || []
+  const currentValues = currentFilter.filter_data.lookup?.[name]?.specifics || []
   const hasApplied = currentValues.length > 0
 
   return (

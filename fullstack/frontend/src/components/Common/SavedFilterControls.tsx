@@ -93,8 +93,9 @@ export function SavedFilterControls() {
       </Flex>
 
       <FieldRoot mt={12}>
+        <FieldLabel>Current Filter</FieldLabel>
         <SelectRoot
-          value={[currentFilter?.id?.toString() || myFilters.items[0]?.value]}
+          value={[currentFilter?.id?.toString() || myFilters.items[-1]?.value]}
           collection={createListCollection({
             items: [...myFilters.items],
           })}

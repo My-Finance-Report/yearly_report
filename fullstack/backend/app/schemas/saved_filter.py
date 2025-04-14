@@ -32,6 +32,6 @@ class SavedFilterInDB(SavedFilterBase):
 
 
 class SavedFilterOut(SavedFilterBase):
-    id: int | str # uuid for defaults
+    id: int | str  # uuid for defaults
     is_deleteable: bool = True
     pass

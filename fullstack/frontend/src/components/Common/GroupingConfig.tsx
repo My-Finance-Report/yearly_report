@@ -1,4 +1,4 @@
-import type { FilterData_Input, FilterEntries } from "@/client"
+import type { FilterEntries, SavedFilterOut } from "@/client"
 import { useFilters } from "@/contexts/FilterContext"
 import { AddIcon } from "@chakra-ui/icons"
 import { Button, Menu, Portal, useCheckboxGroup } from "@chakra-ui/react"
@@ -41,10 +41,10 @@ export function GroupingConfig({
   }, [currentFilter, initializeDefaultFilter])
 
   const handleToggleOption = (option: GroupByOption) => {
-    setCurrentFilter((prev: FilterData_Input | null) => {
+    setCurrentFilter((prev: SavedFilterOut | null) => {
       if (!prev) return prev
 
-      const newLookup = { ...prev.lookup }
+      const newLookup = { ...prev.filter_data.lookup }
 
       if (newLookup[option]) {
         const rest = { ...newLookup }

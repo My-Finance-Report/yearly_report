@@ -1,16 +1,24 @@
-from datetime import datetime
 import uuid
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
-from app.models import FilterData, FilterEntries, FilterEntry, GroupByOption, SavedFilter, User
-from app.schemas.saved_filter import (
-    SavedFilterOut as SavedFilterSchema,
+from app.models import (
+    FilterData,
+    FilterEntries,
+    FilterEntry,
+    GroupByOption,
+    SavedFilter,
+    User,
 )
 from app.schemas.saved_filter import (
     SavedFilterCreate,
     SavedFilterUpdate,
+)
+from app.schemas.saved_filter import (
+    SavedFilterOut as SavedFilterSchema,
 )
 
 router = APIRouter(prefix="/saved-filters", tags=["saved-filters"])
@@ -42,7 +50,8 @@ def create_saved_filter(
         filter_data=saved_filter.filter_data,
     )
 
-def make_default_filters()->list[SavedFilterSchema]:
+
+def make_default_filters() -> list[SavedFilterSchema]:
     return [
         SavedFilterSchema(
             id=str(uuid.uuid4()),
@@ -52,12 +61,18 @@ def make_default_filters()->list[SavedFilterSchema]:
             filter_data=FilterData(
                 is_default=True,
                 lookup={
-                    GroupByOption.year: FilterEntries(visible=False, specifics=[FilterEntry(value=str(datetime.now().year))], index=1),
-                    GroupByOption.month: FilterEntries(visible=True, specifics=None, index=1),
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=1,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
                     GroupByOption.category: FilterEntries(
                         specifics=None, visible=True, index=0
                     ),
-                }
+                },
             ),
         ),
         SavedFilterSchema(
@@ -68,12 +83,18 @@ def make_default_filters()->list[SavedFilterSchema]:
             filter_data=FilterData(
                 is_default=True,
                 lookup={
-                    GroupByOption.year: FilterEntries(visible=False, specifics=[FilterEntry(value=str(datetime.now().year))], index=2),
-                    GroupByOption.month: FilterEntries(visible=True, specifics=None, index=1),
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=2,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
                     GroupByOption.category: FilterEntries(
                         specifics=None, visible=True, index=0
                     ),
-                }
+                },
             ),
         ),
         SavedFilterSchema(
@@ -84,12 +105,16 @@ def make_default_filters()->list[SavedFilterSchema]:
             filter_data=FilterData(
                 is_default=True,
                 lookup={
-                    GroupByOption.year: FilterEntries(visible=True, specifics=None, index=2),
-                    GroupByOption.month: FilterEntries(visible=True, specifics=None, index=1),
+                    GroupByOption.year: FilterEntries(
+                        visible=True, specifics=None, index=2
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
                     GroupByOption.category: FilterEntries(
                         specifics=None, visible=True, index=0
                     ),
-                }
+                },
             ),
         ),
         SavedFilterSchema(
@@ -100,14 +125,23 @@ def make_default_filters()->list[SavedFilterSchema]:
             filter_data=FilterData(
                 is_default=True,
                 lookup={
-                    GroupByOption.budget: FilterEntries(specifics=None, visible=True, index=0),
-                    GroupByOption.year: FilterEntries(visible=False, specifics=[FilterEntry(value=str(datetime.now().year))], index=2),
-                    GroupByOption.month: FilterEntries(visible=True, specifics=[FilterEntry(value=str(datetime.now().month))], index=1),
-                }
+                    GroupByOption.budget: FilterEntries(
+                        specifics=None, visible=True, index=0
+                    ),
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=2,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True,
+                        specifics=[FilterEntry(value=str(datetime.now().month))],
+                        index=1,
+                    ),
+                },
             ),
         ),
     ]
-
 
 
 @router.get("/", response_model=list[SavedFilterSchema])
