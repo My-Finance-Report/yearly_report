@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 
-
 function useMediaQuery(predicate: (width: number) => boolean) {
   const [matches, setMatches] = useState(false)
 
@@ -14,14 +13,13 @@ function useMediaQuery(predicate: (width: number) => boolean) {
     return () => window.removeEventListener("resize", update)
   }, [predicate])
 
-
   return matches
 }
 
 export function useIsMobile(breakpoint = 768) {
-  return useMediaQuery(width => width < breakpoint)
+  return useMediaQuery((width) => width < breakpoint)
 }
 
 export function useIsDesktop(breakpoint = 1260) {
-  return useMediaQuery(width => width >= breakpoint)
+  return useMediaQuery((width) => width >= breakpoint)
 }

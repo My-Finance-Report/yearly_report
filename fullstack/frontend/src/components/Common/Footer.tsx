@@ -1,10 +1,10 @@
-import { Box, Flex, Link, Text } from "@chakra-ui/react";
+import { Box, Flex, Link, Text } from "@chakra-ui/react"
 
 export function Footer() {
   return (
     <Box as="footer" position="sticky" bottom={0} w="100%">
       <Flex
-        alignSelf={'flex-end'}
+        alignSelf={"flex-end"}
         mx="auto"
         justify="space-between"
         align="center"
@@ -12,11 +12,8 @@ export function Footer() {
         flexWrap="wrap"
         p={2}
         mt={2}
-
       >
-        <Text fontSize="lg" fontWeight="bold">
-
-        </Text>
+        <Text fontSize="lg" fontWeight="bold"></Text>
 
         <Flex gap={6} flexWrap="wrap">
           <Link href="/contact-me" _hover={{ textDecoration: "underline" }}>
@@ -37,5 +34,5 @@ export function Footer() {
         </Flex>
       </Flex>
     </Box>
-  );
+  )
 }

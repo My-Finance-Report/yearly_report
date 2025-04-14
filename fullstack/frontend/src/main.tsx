@@ -8,16 +8,16 @@ import { Toaster } from "./components/ui/toaster"
 import { ChartColorProvider } from "./hooks/useColor"
 import { routeTree } from "./routeTree.gen"
 
+import axios from "axios"
 import { StrictMode } from "react"
 import { OpenAPI } from "./client"
-import axios from 'axios'
 import "./index.css"
 import theme from "./theme"
 
 // Configure the OpenAPI client
 OpenAPI.BASE = import.meta.env.VITE_API_URL
-OpenAPI.WITH_CREDENTIALS = true 
-axios.defaults.withCredentials = true 
+OpenAPI.WITH_CREDENTIALS = true
+axios.defaults.withCredentials = true
 
 const queryClient = new QueryClient()
 
@@ -39,10 +39,10 @@ ReactDOM.createRoot(root).render(
     <ChakraProvider value={theme}>
       <ColorModeProvider>
         <ChartColorProvider>
-          <Toaster/>
-            <QueryClientProvider client={queryClient}>
-              <RouterProvider router={router} />
-            </QueryClientProvider>
+          <Toaster />
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
         </ChartColorProvider>
       </ColorModeProvider>
     </ChakraProvider>

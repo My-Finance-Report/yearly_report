@@ -1,8 +1,8 @@
+import { useIsMobile } from "@/hooks/useIsMobile"
 import { Flex, HStack, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
 import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
-import { useIsMobile } from "@/hooks/useIsMobile"
 
 export function CollapsedItems({
   collapsedItems,
@@ -11,14 +11,13 @@ export function CollapsedItems({
   collapsedItems: CollapsibleName[]
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
 }) {
-
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
   if (isMobile) {
-    return null;
+    return null
   }
 
   return (
-    <div className="maxw-[200px]" style={{ position: "sticky", top: 80}}>
+    <div className="maxw-[200px]" style={{ position: "sticky", top: 80 }}>
       {collapsedItems.length > 0 && (
         <div style={{ paddingTop: "20px" }}>
           <BoxWithText
@@ -49,7 +48,6 @@ export function CollapsedItems({
   )
 }
 
-
 function CollapsedWidget({
   name,
   onClick,
@@ -70,4 +68,3 @@ function CollapsedWidget({
     </HStack>
   )
 }
-

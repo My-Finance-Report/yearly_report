@@ -1,54 +1,56 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { usePlaidLink } from "react-plaid-link";
-import { 
-  Box, 
-  Button, 
-  Heading, 
-  Text, 
-  VStack, 
-  Spinner, 
+import { type PlaidGetPlaidAccountsResponse, PlaidService } from "@/client"
+import {
+  Box,
+  Button,
+  CardBody,
   CardRoot,
-  CardBody, 
-  SimpleGrid,
-  Icon,
   Flex,
-} from "@chakra-ui/react";
-import { FaPlus, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+  Heading,
+  Icon,
+  SimpleGrid,
+  Spinner,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import React, { useState, useCallback, useEffect } from "react"
+import {
+  FaCreditCard,
+  FaMoneyBillWave,
+  FaPlus,
+  FaUniversity,
+} from "react-icons/fa"
+import { usePlaidLink } from "react-plaid-link"
 import useCustomToast from "../../../hooks/useCustomToast"
-import { PlaidGetPlaidAccountsResponse, PlaidService } from "@/client";
 
 export const Route = createFileRoute("/_layout/_logged_in/plaid")({
   component: PlaidIntegration,
-});
+})
 
 function PlaidIntegration() {
-  const [linkToken, setLinkToken] = useState<string | null>(null);
-const toast = useCustomToast()
-  const queryClient = useQueryClient();
+  const [linkToken, setLinkToken] = useState<string | null>(null)
+  const toast = useCustomToast()
+  const queryClient = useQueryClient()
 
-  const { data: accounts, isLoading: isLoadingAccounts } = useQuery<PlaidGetPlaidAccountsResponse>({
-    queryKey: ["plaidAccounts"],
-    queryFn: () => PlaidService.getPlaidAccounts()
-  });
+  const { data: accounts, isLoading: isLoadingAccounts } =
+    useQuery<PlaidGetPlaidAccountsResponse>({
+      queryKey: ["plaidAccounts"],
+      queryFn: () => PlaidService.getPlaidAccounts(),
+    })
 
   const createLinkTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await PlaidService.getLinkToken();
-      return response;
+      const response = await PlaidService.getLinkToken()
+      return response
     },
     onSuccess: (data) => {
-      setLinkToken(data.link_token);
+      setLinkToken(data.link_token)
     },
     onError: () => {
-      toast(
-        "Error",
-        "Could not create link token",
-        "error",
-      );
+      toast("Error", "Could not create link token", "error")
     },
-  });
+  })
 
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
@@ -57,32 +59,24 @@ const toast = useCustomToast()
         requestBody: {
           public_token,
         },
-      });
-      return response;
+      })
+      return response
     },
     onSuccess: () => {
-      toast(
-        "Success",
-        "Account connected successfully",
-        "success",
-      );
-      queryClient.invalidateQueries({ queryKey: ["plaidAccounts"] });
+      toast("Success", "Account connected successfully", "success")
+      queryClient.invalidateQueries({ queryKey: ["plaidAccounts"] })
     },
     onError: () => {
-      toast(
-        "Error",
-        "Failed to connect account",
-        "error",
-      );
+      toast("Error", "Failed to connect account", "error")
     },
-  });
+  })
 
   // Initialize Plaid Link
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: (public_token) => {
-      exchangeTokenMutation.mutate(public_token);
-      setLinkToken(null);
+      exchangeTokenMutation.mutate(public_token)
+      setLinkToken(null)
     },
     onExit: (err) => {
       if (err) {
@@ -90,56 +84,58 @@ const toast = useCustomToast()
           "Connection Error",
           err.display_message || "Error connecting to your bank",
           "error",
-        );
+        )
       }
     },
-  });
+  })
 
   useEffect(() => {
     if (!linkToken) {
-      createLinkTokenMutation.mutate();
+      createLinkTokenMutation.mutate()
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (!linkToken) {
-      createLinkTokenMutation.mutate();
+      createLinkTokenMutation.mutate()
     }
-  }, []);
+  }, [])
 
   const handleConnectAccount = useCallback(() => {
     if (ready && linkToken) {
-      open();
+      open()
     } else {
-      createLinkTokenMutation.mutate();
+      createLinkTokenMutation.mutate()
     }
-  }, [ready, linkToken, open]);
+  }, [ready, linkToken, open])
 
   const getAccountIcon = (type: string) => {
     switch (type) {
       case "credit":
-        return FaCreditCard;
+        return FaCreditCard
       case "investment":
-        return FaMoneyBillWave;
+        return FaMoneyBillWave
       default:
-        return FaUniversity;
+        return FaUniversity
     }
-  };
+  }
 
-  const isLoading = createLinkTokenMutation.isPending || exchangeTokenMutation.isPending;
+  const isLoading =
+    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
 
   return (
     <Box p={5}>
       <Box mb={6} bg="yellow.800" p={4} borderRadius="lg" boxShadow="sm">
-            <Text fontSize="lg" color="white" fontWeight="bold">
-          Heads up! It often takes a few minutes for your accounts to sync after connecting them.
+        <Text fontSize="lg" color="white" fontWeight="bold">
+          Heads up! It often takes a few minutes for your accounts to sync after
+          connecting them.
         </Text>
       </Box>
       <VStack align="" gap={6}>
         <Heading size="lg">Connect Your Accounts</Heading>
         <Text>
-          Securely connect your bank accounts, credit cards, and investment accounts to
-          automatically import transactions and track your finances.
+          Securely connect your bank accounts, credit cards, and investment
+          accounts to automatically import transactions and track your finances.
         </Text>
 
         <Button
@@ -150,8 +146,8 @@ const toast = useCustomToast()
           disabled={!ready && !isLoading}
           mb={6}
         >
-            <FaPlus />
-            Connect an Account
+          <FaPlus />
+          Connect an Account
         </Button>
 
         <Heading size="md" mb={4}>
@@ -187,16 +183,13 @@ const toast = useCustomToast()
             ))}
           </SimpleGrid>
         ) : (
-          <Box
-            p={5}
-            borderWidth="1px"
-            borderRadius="lg"
-            textAlign="center"
-          >
-            <Text>No accounts connected yet. Click the button above to get started.</Text>
+          <Box p={5} borderWidth="1px" borderRadius="lg" textAlign="center">
+            <Text>
+              No accounts connected yet. Click the button above to get started.
+            </Text>
           </Box>
         )}
       </VStack>
     </Box>
-  );
+  )
 }

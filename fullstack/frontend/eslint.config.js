@@ -1,7 +1,7 @@
-import globals from "globals";
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import react from "eslint-plugin-react";
+import js from "@eslint/js"
+import react from "eslint-plugin-react"
+import globals from "globals"
+import tseslint from "typescript-eslint"
 
 export default [
   // Base JavaScript settings
@@ -34,4 +34,4 @@ export default [
   {
     ignores: ["**/node_modules/**", "**/.vite/**", "**/src/client/**"],
   },
-];
+]

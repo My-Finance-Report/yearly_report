@@ -1,16 +1,19 @@
 "use client"
 
+import { UploadsService } from "@/client"
+import type { UploadedPdfOut } from "@/client"
 import FileDropzone from "@/components/Common/Dropzone"
 import {
   DeleteButton,
   ReprocessButton,
 } from "@/components/Common/ReprocessButton"
+import { isSessionActive } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import {
   Container,
+  Flex,
   HStack,
   Spinner,
-  Flex,
   Table,
   TableBody,
   TableCell,
@@ -21,14 +24,11 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { UploadsService } from "@/client"
-import type { UploadedPdfOut } from "@/client"
-import { isSessionActive } from "@/hooks/useAuth"
 import { useState } from "react"
 
 interface SortConfig {
-  keyExtractor: (obj: UploadedPdfOut) => string;
-  direction: "asc" | "desc";
+  keyExtractor: (obj: UploadedPdfOut) => string
+  direction: "asc" | "desc"
   columnName: string
 }
 
@@ -46,11 +46,7 @@ function UploadFiles() {
       return UploadsService.uploadFiles(data)
     },
     onSuccess: () => {
-      toast(
-        "Files uploaded",
-        "The files are being processed.",
-        "success",
-      )
+      toast("Files uploaded", "The files are being processed.", "success")
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
       queryClient.invalidateQueries({ queryKey: ["currentStatus"] })
     },
@@ -77,25 +73,36 @@ function UploadFiles() {
     refetch()
   }
 
- const [sortConfig, setSortConfig] = useState<SortConfig>({ keyExtractor: (obj: UploadedPdfOut) => obj.nickname || "", direction: "asc", columnName: "nickname" });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    keyExtractor: (obj: UploadedPdfOut) => obj.nickname || "",
+    direction: "asc",
+    columnName: "nickname",
+  })
 
   const sortedData = [...(data || [])].sort((a, b) => {
-    const valueA = sortConfig.keyExtractor(a);
-    const valueB = sortConfig.keyExtractor(b);
+    const valueA = sortConfig.keyExtractor(a)
+    const valueB = sortConfig.keyExtractor(b)
 
-    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
-    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
-    return 0;
-  });
+    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1
+    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1
+    return 0
+  })
 
-  const handleSort = (getKey: (obj: UploadedPdfOut) => string, columnName: string) => {
+  const handleSort = (
+    getKey: (obj: UploadedPdfOut) => string,
+    columnName: string,
+  ) => {
     setSortConfig((prev) => ({
       keyExtractor: getKey,
-      direction: prev.columnName === columnName ? (prev.direction === "asc" ? "desc" : "asc") : "asc",
-      columnName
-    }));
-  };
-
+      direction:
+        prev.columnName === columnName
+          ? prev.direction === "asc"
+            ? "desc"
+            : "asc"
+          : "asc",
+      columnName,
+    }))
+  }
 
   return (
     <Container maxW="large" py={8}>
@@ -112,14 +119,33 @@ function UploadFiles() {
         <Table.Root variant="outline" mt={24} rounded="md">
           <TableHeader>
             <TableRow>
-              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.filename, "filename")}>
-                Filename {sortConfig.columnName === "filename" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              <TableColumnHeader
+                cursor="pointer"
+                onClick={() => handleSort((obj) => obj.filename, "filename")}
+              >
+                Filename{" "}
+                {sortConfig.columnName === "filename" &&
+                  (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
-              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.nickname || "", "nickname")}>
-                Nickname {sortConfig.columnName === "nickname" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              <TableColumnHeader
+                cursor="pointer"
+                onClick={() =>
+                  handleSort((obj) => obj.nickname || "", "nickname")
+                }
+              >
+                Nickname{" "}
+                {sortConfig.columnName === "nickname" &&
+                  (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
-              <TableColumnHeader cursor="pointer" onClick={() => handleSort((obj)=> obj.job?.status || "Unknown", "status")}>
-                Status {sortConfig.columnName === "status" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+              <TableColumnHeader
+                cursor="pointer"
+                onClick={() =>
+                  handleSort((obj) => obj.job?.status || "Unknown", "status")
+                }
+              >
+                Status{" "}
+                {sortConfig.columnName === "status" &&
+                  (sortConfig.direction === "asc" ? "▲" : "▼")}
               </TableColumnHeader>
               <TableColumnHeader>Actions</TableColumnHeader>
             </TableRow>
@@ -151,7 +177,9 @@ function UploadFiles() {
         </Table.Root>
       ) : (
         <Flex mt={24} direction="column" alignItems="center">
-          <Text>Upload bank statements here, and we will generate your dashboard.</Text>
+          <Text>
+            Upload bank statements here, and we will generate your dashboard.
+          </Text>
         </Flex>
       )}
     </Container>

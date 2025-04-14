@@ -2,7 +2,7 @@
 
 import { Box, Button, Container, Field, Heading, Input } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
 
 import { useColorModeValue } from "@/components/ui/color-mode"
 
@@ -12,13 +12,33 @@ import {
   type UsersUpdatePasswordMeData,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
-import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
+import {  handleError, passwordRules } from "../../utils"
 
 interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
   old_password: string
   new_password: string
   confirm_password: string
 }
+
+const confirmPasswordRules = (
+  getValues: UseFormGetValues<UpdatePasswordForm>,
+  isRequired = true,
+) => {
+  const rules: RegisterOptions = {
+    validate: (value: string) => {
+      const password = getValues().old_password || getValues().new_password
+      return value === password ? true : "The passwords do not match"
+    },
+  }
+
+  if (isRequired) {
+    rules.required = "Password confirmation is required"
+  }
+
+  return rules
+}
+
+
 
 const ChangePassword = () => {
   const color = useColorModeValue("inherit", "ui.light")

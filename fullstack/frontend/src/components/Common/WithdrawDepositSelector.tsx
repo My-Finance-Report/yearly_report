@@ -1,7 +1,5 @@
 import { SegmentedControl } from "../ui/segmented-control"
 
-
-
 export default function WithdrawDepositSelectorSegmented({
   setShowDeposits,
   showDeposits,
@@ -19,7 +17,9 @@ export default function WithdrawDepositSelectorSegmented({
         value: option,
         label: option.charAt(0).toUpperCase() + option.slice(1),
       }))}
-      onValueChange={(value) => {setShowDeposits(value.value === "deposits")}}
+      onValueChange={(value) => {
+        setShowDeposits(value.value === "deposits")
+      }}
     />
   )
 }

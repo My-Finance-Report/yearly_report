@@ -1,25 +1,20 @@
-import {
-  Box,
-  Switch,
-  Heading,
-  Text,
-} from "@chakra-ui/react"
+import { Box, Heading, Switch, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
+import { useColorMode } from "@/components/ui/color-mode"
+import { HiCheck, HiMoon, HiSun, HiX } from "react-icons/hi"
 import { type ApiError, UsersService } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
 import { handleError } from "../../utils"
-import { HiCheck, HiX, HiMoon, HiSun } from "react-icons/hi"
-import { useColorMode } from "@/components/ui/color-mode"
 
 const AdvancedFeatures = () => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const { user: currentUser } = useAuth()
   const [isPowerUser, setIsPowerUser] = useState(
-    currentUser?.settings?.power_user_filters || false
+    currentUser?.settings?.power_user_filters || false,
   )
   const { colorMode, toggleColorMode } = useColorMode()
   const isDarkMode = colorMode === "dark"
@@ -39,7 +34,7 @@ const AdvancedFeatures = () => {
       showToast(
         "Success!",
         "Power user filter settings updated successfully.",
-        "success"
+        "success",
       )
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
@@ -61,8 +56,13 @@ const AdvancedFeatures = () => {
       <Heading size="md" mb={4}>
         Advanced Features
       </Heading>
-      
-      <Box display="grid" gridTemplateColumns="1fr auto" columnGap={4} rowGap={4}>
+
+      <Box
+        display="grid"
+        gridTemplateColumns="1fr auto"
+        columnGap={4}
+        rowGap={4}
+      >
         <Box>
           <Text fontWeight="medium">Power User Filters</Text>
           <Text fontSize="sm">
@@ -70,7 +70,13 @@ const AdvancedFeatures = () => {
           </Text>
         </Box>
         <Box display="flex" alignItems="center" justifyContent="center">
-          <Switch.Root variant='solid' size="lg" disabled={mutation.isPending} checked={isPowerUser} onCheckedChange={handleToggle}> 
+          <Switch.Root
+            variant="solid"
+            size="lg"
+            disabled={mutation.isPending}
+            checked={isPowerUser}
+            onCheckedChange={handleToggle}
+          >
             <Switch.HiddenInput />
             <Switch.Control>
               <Switch.Thumb>
@@ -79,18 +85,21 @@ const AdvancedFeatures = () => {
                 </Switch.ThumbIndicator>
               </Switch.Thumb>
             </Switch.Control>
-            <Switch.Label></Switch.Label>
+            <Switch.Label />
           </Switch.Root>
         </Box>
-        
+
         <Box>
           <Text fontWeight="medium">Dark Mode</Text>
-          <Text fontSize="sm">
-            Switch between light and dark theme
-          </Text>
+          <Text fontSize="sm">Switch between light and dark theme</Text>
         </Box>
         <Box display="flex" alignItems="center" justifyContent="center">
-          <Switch.Root variant='solid' size="lg" checked={isDarkMode} onCheckedChange={toggleColorMode}> 
+          <Switch.Root
+            variant="solid"
+            size="lg"
+            checked={isDarkMode}
+            onCheckedChange={toggleColorMode}
+          >
             <Switch.HiddenInput />
             <Switch.Control>
               <Switch.Thumb>
@@ -99,7 +108,7 @@ const AdvancedFeatures = () => {
                 </Switch.ThumbIndicator>
               </Switch.Thumb>
             </Switch.Control>
-            <Switch.Label></Switch.Label>
+            <Switch.Label />
           </Switch.Root>
         </Box>
       </Box>

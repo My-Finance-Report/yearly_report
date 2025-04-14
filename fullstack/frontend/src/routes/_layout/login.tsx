@@ -1,34 +1,34 @@
+import { OauthService } from "@/client"
+import TwoFactorSetup from "@/components/TwoFactorSetup"
+import TwoFactorVerification from "@/components/TwoFactorVerification"
 import { PasswordInput } from "@/components/ui/password-input"
-import { 
-  Button, 
-  Container, 
-  Field, 
-  Input, 
-  Link, 
-  Text, 
+import useAuth, { isSessionActive } from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import {
+  Box,
+  Button,
+  Container,
+  Field,
   Flex,
-  Box
+  Input,
+  Link,
+  Text,
 } from "@chakra-ui/react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Link as RouterLink,
   createFileRoute,
   redirect,
   useNavigate,
 } from "@tanstack/react-router"
-import { type SubmitHandler, useForm } from "react-hook-form"
-import useAuth, { isSessionActive } from "@/hooks/useAuth"
-import { emailPattern } from "../../utils"
 import { useState } from "react"
+import { type SubmitHandler, useForm } from "react-hook-form"
 import { FcGoogle } from "react-icons/fc"
-import useCustomToast from "@/hooks/useCustomToast"
-import { OauthService } from "@/client"
-import TwoFactorVerification from "@/components/TwoFactorVerification"
-import TwoFactorSetup from "@/components/TwoFactorSetup"
-import { useQueryClient } from "@tanstack/react-query"
+import { emailPattern } from "../../utils"
 
 interface LoginFormData {
-  username: string;
-  password: string;
+  username: string
+  password: string
 }
 
 export const Route = createFileRoute("/_layout/login")({
@@ -41,14 +41,14 @@ export const Route = createFileRoute("/_layout/login")({
 })
 
 function Login() {
-  const { 
-    loginMutation, 
-    error, 
-    resetError, 
-    requires2FA, 
-    requires2FASetup, 
+  const {
+    loginMutation,
+    error,
+    resetError,
+    requires2FA,
+    requires2FASetup,
     tempToken,
-    reset2FAStates 
+    reset2FAStates,
   } = useAuth()
 
   const [blahError, setError] = useState(false)
@@ -78,73 +78,71 @@ function Login() {
     }
   }
 
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const handleGoogleLogin = async () => {
     try {
-      setIsGoogleLoading(true);
-      const {url} = await OauthService.loginGoogle()
-      
+      setIsGoogleLoading(true)
+      const { url } = await OauthService.loginGoogle()
+
       if (url) {
-        window.location.href = url;
+        window.location.href = url
       } else {
-        showToast("Error", "Failed to initiate Google login", "error");
+        showToast("Error", "Failed to initiate Google login", "error")
       }
     } catch (error) {
-      console.error("Google login error:", error);
-      showToast("Error", "Failed to connect to authentication service", "error");
+      console.error("Google login error:", error)
+      showToast("Error", "Failed to connect to authentication service", "error")
     } finally {
-      setIsGoogleLoading(false);
+      setIsGoogleLoading(false)
     }
-  };
+  }
 
   const handleBack = () => {
-    reset2FAStates();
-  };
+    reset2FAStates()
+  }
 
   const handleSuccessfulVerification = () => {
     // Set the session as active to enable user queries
     sessionStorage.setItem("session_active", "true")
-    
+
     // Force a refresh of the current user data
     queryClient.invalidateQueries({ queryKey: ["currentUser"] })
-    
-    reset2FAStates();
-    
-    navigate({ to: "/" });
-  };
 
+    reset2FAStates()
+
+    navigate({ to: "/" })
+  }
 
   if (requires2FA) {
     if (!tempToken) {
-      showToast("Error", "Authentication token is missing. Please try logging in again.", "error")
-      reset2FAStates()
-      return (
-        null
+      showToast(
+        "Error",
+        "Authentication token is missing. Please try logging in again.",
+        "error",
       )
+      reset2FAStates()
+      return null
     }
     return (
       <Container maxW="sm" py={8}>
-        <TwoFactorVerification 
+        <TwoFactorVerification
           onCancel={handleBack}
           onSuccess={handleSuccessfulVerification}
           temp_token={tempToken}
         />
       </Container>
-    );
+    )
   }
 
   if (requires2FASetup) {
     if (!tempToken) {
-      throw new Error("No temp token found");
+      throw new Error("No temp token found")
     }
     return (
       <Container maxW="sm" py={8}>
-        <TwoFactorSetup 
-          onComplete={handleBack}
-          tempToken={tempToken}
-        />
+        <TwoFactorSetup onComplete={handleBack} tempToken={tempToken} />
       </Container>
-    );
+    )
   }
 
   return (
@@ -158,9 +156,7 @@ function Login() {
       gap={4}
       centerContent
     >
-      {blahError && (
-        <Text>Incorrect Username or Password</Text>
-      )}
+      {blahError && <Text>Incorrect Username or Password</Text>}
       <Field.Root>
         <Field.Label>Email</Field.Label>
         <Input
@@ -202,17 +198,21 @@ function Login() {
 
       <Flex align="center" my={4}>
         <Box flex="1" h="1px" bg="gray.200" />
-        <Text px={3} fontSize="sm" color="gray.500">OR</Text>
+        <Text px={3} fontSize="sm" color="gray.500">
+          OR
+        </Text>
         <Box flex="1" h="1px" bg="gray.200" />
       </Flex>
 
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onClick={handleGoogleLogin}
         disabled={isGoogleLoading}
       >
         <Flex align="center">
-          <Box mr={2}><FcGoogle size={20} /></Box>
+          <Box mr={2}>
+            <FcGoogle size={20} />
+          </Box>
           <Text>Sign in with Google</Text>
         </Flex>
       </Button>

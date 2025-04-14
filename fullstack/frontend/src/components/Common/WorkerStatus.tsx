@@ -1,48 +1,48 @@
-import { WorkerStatusService, WorkerStatusOut } from "@/client";
-import { format } from "date-fns";
+import { type WorkerStatusOut, WorkerStatusService } from "@/client"
+import useAuth from "@/hooks/useAuth"
 import {
   Badge,
-  Text,
   Box,
-  Timeline,
-  Spinner,
-  TimelineIndicator,
-  useDisclosure,
-  Dialog,
-  DialogPositioner,
-  DialogContent,
-  DialogFooter,
   Button,
-  DialogTrigger,
-  Portal,
+  CloseButton,
+  Dialog,
   DialogBackdrop,
   DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogPositioner,
+  DialogTrigger,
   Flex,
-  CloseButton,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { LuCheck, LuX } from "react-icons/lu";
-import useAuth from "@/hooks/useAuth";
+  Portal,
+  Spinner,
+  Text,
+  Timeline,
+  TimelineIndicator,
+  useDisclosure,
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { format } from "date-fns"
+import { LuCheck, LuX } from "react-icons/lu"
 
 function determineColor(workerStatus: WorkerStatusOut, isLast: boolean) {
   let color =
-    workerStatus.status == "failed" ? "red" : isLast ? "yellow" : "green";
+    workerStatus.status === "failed" ? "red" : isLast ? "yellow" : "green"
 
-  if (isLast && workerStatus.status == "completed") {
-    color = "green";
+  if (isLast && workerStatus.status === "completed") {
+    color = "green"
   }
-  return color;
+  return color
 }
 
 function determineIcon(
   workerStatus: WorkerStatusOut,
   isLast: boolean,
-  inTimeline: boolean
+  inTimeline: boolean,
 ) {
-  const Wrapper = inTimeline ? TimelineIndicator : Box;
+  const Wrapper = inTimeline ? TimelineIndicator : Box
 
   let displayStatusIcon =
-    workerStatus.status == "failed" ? (
+    workerStatus.status === "failed" ? (
       <Wrapper>
         <LuX />
       </Wrapper>
@@ -52,16 +52,16 @@ function determineIcon(
       <Wrapper>
         <LuCheck />
       </Wrapper>
-    );
-  if (isLast && workerStatus.status == "completed") {
+    )
+  if (isLast && workerStatus.status === "completed") {
     displayStatusIcon = (
       <Wrapper>
         <LuCheck />
       </Wrapper>
-    );
+    )
   }
 
-  return displayStatusIcon;
+  return displayStatusIcon
 }
 
 function TimelineEntry({
@@ -69,12 +69,12 @@ function TimelineEntry({
   isLast,
   includeDesc = true,
 }: {
-  workerStatus: WorkerStatusOut;
-  isLast: boolean;
-  includeDesc?: boolean;
+  workerStatus: WorkerStatusOut
+  isLast: boolean
+  includeDesc?: boolean
 }) {
-  const color = determineColor(workerStatus, isLast);
-  const DisplayStatusIcon = determineIcon(workerStatus, isLast, true);
+  const color = determineColor(workerStatus, isLast)
+  const DisplayStatusIcon = determineIcon(workerStatus, isLast, true)
 
   return (
     <Timeline.Item>
@@ -93,17 +93,17 @@ function TimelineEntry({
         )}
       </Timeline.Content>
     </Timeline.Item>
-  );
+  )
 }
 
 export function WorkerStatus() {
   const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
-  });
+  })
 
   if (isLoading) {
-    return null;
+    return null
   }
 
   return (
@@ -123,31 +123,31 @@ export function WorkerStatus() {
         </Timeline.Root>
       </Box>
     </Flex>
-  );
+  )
 }
 
 export function CollapsibleWorkerStatus() {
-  const { user } = useAuth();
+  const { user } = useAuth()
 
   const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
     enabled: !!user?.id,
-  });
+  })
 
-  const statusDisclosure = useDisclosure();
+  const statusDisclosure = useDisclosure()
 
   if (isLoading) {
-    return null;
+    return null
   }
 
   if (!data || data.length === 0) {
-    return null;
+    return null
   }
 
-  const latestStatus = data[data.length - 1];
-  const lastSyncDate = new Date(`${latestStatus.created_at}`);
-  const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a");
+  const latestStatus = data[data.length - 1]
+  const lastSyncDate = new Date(`${latestStatus.created_at}`)
+  const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a")
 
   return (
     <Dialog.Root
@@ -194,5 +194,5 @@ export function CollapsibleWorkerStatus() {
         </DialogPositioner>
       </Portal>
     </Dialog.Root>
-  );
+  )
 }

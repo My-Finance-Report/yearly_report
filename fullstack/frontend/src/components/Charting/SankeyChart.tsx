@@ -4,7 +4,6 @@ import {
   PopoverBody,
   PopoverContent,
   PopoverRoot,
-  PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useColorPalette } from "@/hooks/useColor"
@@ -77,12 +76,10 @@ export interface SankeyChartProps {
   data: SankeyData
   width?: number
   height?: number
-  description?: string
 }
 
 export function GenericSankeyChart({
   data,
-  description,
   width = 950,
   height = 600,
 }: SankeyChartProps) {
@@ -120,7 +117,10 @@ export function GenericSankeyChart({
   )
 }
 
-export const Desc = ({ description,mt  }: { description: string | undefined, mt?: string | undefined }) => {
+export const Desc = ({
+  description,
+  mt,
+}: { description: string | undefined; mt?: string | undefined }) => {
   if (!description) {
     return null
   }

@@ -1,7 +1,6 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
-  Text,
   Button,
   Collapsible,
   HStack,
@@ -11,18 +10,19 @@ import {
   TableColumnHeader,
   TableHeader,
   TableRow,
+  Text,
   useDisclosure,
-} from "@chakra-ui/react";
-import React, { useState } from "react";
+} from "@chakra-ui/react"
+import React, { useState } from "react"
 
-import { useColorPalette } from "@/hooks/useColor";
-import { FiEdit } from "react-icons/fi";
+import { useColorPalette } from "@/hooks/useColor"
+import { FiEdit } from "react-icons/fi"
 import type {
   AggregatedGroup,
   TransactionOut,
   TransactionsGetAggregatedTransactionsResponse,
-} from "../../client";
-import EditTransaction from "./EditTransaction";
+} from "../../client"
+import EditTransaction from "./EditTransaction"
 
 export function TransactionsTable({
   data,
@@ -30,27 +30,27 @@ export function TransactionsTable({
   showWithdrawals,
   isMobile,
 }: {
-  data: TransactionsGetAggregatedTransactionsResponse;
-  toShowNames?: (string | undefined)[] | undefined;
-  showWithdrawals: boolean;
-  isMobile: boolean;
+  data: TransactionsGetAggregatedTransactionsResponse
+  toShowNames?: (string | undefined)[] | undefined
+  showWithdrawals: boolean
+  isMobile: boolean
 }) {
   const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean;
-  }>({});
+    [key: string]: boolean
+  }>({})
 
   const toggleGroup = (sourceId: number | string, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
-    }));
-  };
-
-  if (!data.groups.length) {
-    return null;
+    }))
   }
 
-  const isBudget = data.groups[0].groupby_kind === "budget";
+  if (!data.groups.length) {
+    return null
+  }
+
+  const isBudget = data.groups[0].groupby_kind === "budget"
 
   return (
     <Table.Root variant="outline" borderRadius="md">
@@ -92,10 +92,11 @@ export function TransactionsTable({
         />
         <TableRow fontWeight="bold">
           <TableCell colSpan={2}>Totals</TableCell>
-          <TableCell></TableCell>
+          <TableCell />
           {isMobile ? (
             <TableCell textAlign="end">
-              {formatAmount(data.overall_withdrawals)} / {formatAmount(data.overall_deposits)}
+              {formatAmount(data.overall_withdrawals)} /{" "}
+              {formatAmount(data.overall_deposits)}
             </TableCell>
           ) : (
             <>
@@ -105,15 +106,15 @@ export function TransactionsTable({
               <TableCell textAlign="end">
                 {formatAmount(data.overall_deposits)}
               </TableCell>
-            <TableCell textAlign="end">
-              {formatAmount(data.overall_balance)}
-            </TableCell>
+              <TableCell textAlign="end">
+                {formatAmount(data.overall_balance)}
+              </TableCell>
             </>
           )}
         </TableRow>
       </TableBody>
     </Table.Root>
-  );
+  )
 }
 
 function RenderGroups({
@@ -127,36 +128,35 @@ function RenderGroups({
   totalDeposits,
   showWithdrawals,
 }: {
-  groups: AggregatedGroup[];
-  pathPrefix: string;
-  toggleGroup: (groupId: number | string, groupKey: string) => void;
-  expandedGroups: { [key: string]: boolean };
-  toShowNames?: (string | undefined)[] | undefined;
-  totalWidthdrawals?: number;
-  showWithdrawals: boolean;
-  isMobile: boolean;
-  totalDeposits?: number;
+  groups: AggregatedGroup[]
+  pathPrefix: string
+  toggleGroup: (groupId: number | string, groupKey: string) => void
+  expandedGroups: { [key: string]: boolean }
+  toShowNames?: (string | undefined)[] | undefined
+  totalWidthdrawals?: number
+  showWithdrawals: boolean
+  isMobile: boolean
+  totalDeposits?: number
 }) {
   return (
     <>
       {groups.map((group) => {
         const groupKey = pathPrefix
           ? `${pathPrefix}-${group.group_id}`
-          : `${group.group_id}`;
+          : `${group.group_id}`
 
         const isExpanded =
-          expandedGroups[`${group.group_id}-${groupKey}`] || false;
+          expandedGroups[`${group.group_id}-${groupKey}`] || false
 
-        const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits;
-        const budgetedTotal = group.budgeted_total;
+        const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
+        const budgetedTotal = group.budgeted_total
         const specificAmount = showWithdrawals
           ? group.total_withdrawals
-          : group.total_deposits;
+          : group.total_deposits
 
-        const {getColorForName} = useColorPalette();
+        const { getColorForName } = useColorPalette()
 
-        const isUnbudgeted = group.group_name === "Unbudgeted";
-
+        const isUnbudgeted = group.group_name === "Unbudgeted"
 
         return (
           <React.Fragment key={groupKey}>
@@ -193,24 +193,24 @@ function RenderGroups({
                   />
                 </TableCell>
               ) : (
-                <TableCell></TableCell>
+                <TableCell />
               )}
               {isMobile ? (
                 <TableCell textAlign="end">
-                  {formatAmount(group.total_withdrawals)} / {formatAmount(group.total_deposits)}
+                  {formatAmount(group.total_withdrawals)} /{" "}
+                  {formatAmount(group.total_deposits)}
                 </TableCell>
-              ):
-                (
-                  <>
-              <TableCell textAlign="end">
-                {formatAmount(group.total_withdrawals)}
-              </TableCell>
-              <TableCell textAlign="end">
-                {formatAmount(group.total_deposits)}
-              </TableCell>
-                <TableCell textAlign="end">
-                  {formatAmount(group.total_balance)}
-                </TableCell>
+              ) : (
+                <>
+                  <TableCell textAlign="end">
+                    {formatAmount(group.total_withdrawals)}
+                  </TableCell>
+                  <TableCell textAlign="end">
+                    {formatAmount(group.total_deposits)}
+                  </TableCell>
+                  <TableCell textAlign="end">
+                    {formatAmount(group.total_balance)}
+                  </TableCell>
                 </>
               )}
             </TableRow>
@@ -228,25 +228,26 @@ function RenderGroups({
                               <TableColumnHeader>
                                 {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
                               </TableColumnHeader>
-                              { group.budgeted_total ? (
-                              <TableColumnHeader>BUDGET</TableColumnHeader>
-                              ):
-                              <TableColumnHeader></TableColumnHeader>}
+                              {group.budgeted_total ? (
+                                <TableColumnHeader>BUDGET</TableColumnHeader>
+                              ) : (
+                                <TableColumnHeader />
+                              )}
                               {isMobile ? (
-                              <TableColumnHeader textAlign="end" colSpan={1}>
-                                EXPENSE / DEPOSIT
-                              </TableColumnHeader>
+                                <TableColumnHeader textAlign="end" colSpan={1}>
+                                  EXPENSE / DEPOSIT
+                                </TableColumnHeader>
                               ) : (
                                 <>
-                              <TableColumnHeader textAlign="end">
-                                EXPENSE
-                              </TableColumnHeader>
-                              <TableColumnHeader textAlign="end">
-                                DEPOSIT
-                              </TableColumnHeader>
-                                <TableColumnHeader textAlign="end">
-                                  TOTAL
-                                </TableColumnHeader>
+                                  <TableColumnHeader textAlign="end">
+                                    EXPENSE
+                                  </TableColumnHeader>
+                                  <TableColumnHeader textAlign="end">
+                                    DEPOSIT
+                                  </TableColumnHeader>
+                                  <TableColumnHeader textAlign="end">
+                                    TOTAL
+                                  </TableColumnHeader>
                                 </>
                               )}
                             </TableRow>
@@ -293,23 +294,20 @@ function RenderGroups({
               </TableRow>
             </Collapsible.Root>
           </React.Fragment>
-        );
+        )
       })}
     </>
-  );
+  )
 }
 
 function TransactionRow({
   transaction,
   isMobile,
 }: {
-  transaction: TransactionOut;
-  isMobile: boolean;
+  transaction: TransactionOut
+  isMobile: boolean
 }) {
-  const editTransactionModal = useDisclosure();
-
-
-
+  const editTransactionModal = useDisclosure()
 
   return (
     <TableRow>
@@ -338,14 +336,14 @@ function TransactionRow({
         onClose={editTransactionModal.onClose}
       />
     </TableRow>
-  );
+  )
 }
 
 function formatAmount(amount: number) {
   return amount.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
-  });
+  })
 }
 
 function PercentageBar({
@@ -355,35 +353,38 @@ function PercentageBar({
   isUnbudgeted,
   isMobile,
 }: {
-  amount: number;
-  total: number | undefined;
-  budgetedTotal?: number | undefined;
-  isUnbudgeted: boolean;
-  isMobile: boolean;
+  amount: number
+  total: number | undefined
+  budgetedTotal?: number | undefined
+  isUnbudgeted: boolean
+  isMobile: boolean
 }) {
   if (isMobile) {
-    return null;
+    return null
   }
 
-  const totalToUse = budgetedTotal ? budgetedTotal : total;
+  const totalToUse = budgetedTotal ? budgetedTotal : total
 
   if (!totalToUse) {
-    return null;
+    return null
   }
 
-
-  const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100;
+  const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100
 
   if (isUnbudgeted) {
     return <Text>n/a</Text>
   }
 
   if (budgetedTotal) {
-    return <Text color={value > 100 ? "red" : "green"}>{value.toFixed()}% (${totalToUse} was budgeted)</Text>
+    return (
+      <Text color={value > 100 ? "red" : "green"}>
+        {value.toFixed()}% (${totalToUse} was budgeted)
+      </Text>
+    )
   }
   return null
 
-/*   return (
+  /*   return (
     <Progress.Root value={value} maxW="sm">
       <HStack gap="5" minW={200}>
         <Progress.Track maxW={150} minW={150} flex="1">

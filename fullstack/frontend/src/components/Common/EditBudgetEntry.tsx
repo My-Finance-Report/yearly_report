@@ -15,10 +15,10 @@ import {
   Text,
   VStack,
   createListCollection,
-} from "@chakra-ui/react";
+} from "@chakra-ui/react"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Controller, type SubmitHandler, useForm } from "react-hook-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Controller, type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   DialogBackdrop,
@@ -29,63 +29,62 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
+import { useEffect } from "react"
 import {
   type ApiError,
   type BudgetEntryOut,
   BudgetsService,
   type CategoryOut,
   TransactionsService,
-} from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
-import { handleError } from "../../utils";
-import type { Blah } from "./SankeyConfig"; //TODO stop importing this
-import { useEffect } from "react";
+} from "../../client"
+import useCustomToast from "../../hooks/useCustomToast"
+import { handleError } from "../../utils"
+import type { Blah } from "./SankeyConfig" //TODO stop importing this
 
 interface EditBudgetEntryProps {
-  budgetEntry: BudgetEntryOut;
-  isOpen: boolean;
-  onClose: () => void;
+  budgetEntry: BudgetEntryOut
+  isOpen: boolean
+  onClose: () => void
 }
 
 function rawCategoriesToSelectItems(categories: CategoryOut[]): {
-  items: Blah[];
+  items: Blah[]
 } {
   const blahs = categories.map((category) => ({
     label: category.stylized_name,
     value: category.id,
-  }));
-  return { items: blahs };
+  }))
+  return { items: blahs }
 }
 
 type EditFormInput = {
-  amount: number;
-  name: string;
-  budget_id: number;
-  id: number;
-  category_links: Array<number>;
-};
+  amount: number
+  name: string
+  budget_id: number
+  id: number
+  category_links: Array<number>
+}
 
 type CreateFormInput = {
-  amount: number;
-  name: string;
-  budget_id: number;
-  id: number;
-  category_link_ids: Array<number>;
-};
-
+  amount: number
+  name: string
+  budget_id: number
+  id: number
+  category_link_ids: Array<number>
+}
 
 export function CreateBudgetEntry({
   budgetId,
   isOpen,
   onClose,
 }: {
-  budgetId: number;
-  isOpen: boolean;
-  onClose: () => void;
-}){
-  const queryClient = useQueryClient();
-  const showToast = useCustomToast();
+  budgetId: number
+  isOpen: boolean
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const showToast = useCustomToast()
 
   const addEntryMutation = useMutation({
     mutationFn: (data: CreateFormInput) =>
@@ -94,15 +93,15 @@ export function CreateBudgetEntry({
         requestBody: {
           ...data,
           budget_id: budgetId,
-        }
+        },
       }),
     onSuccess: () => {
-      showToast("Success!", "Budget entry created successfully.", "success");
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] });
-      onClose();
+      showToast("Success!", "Budget entry created successfully.", "success")
+      queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
+      onClose()
     },
-  });
+  })
 
   const {
     register,
@@ -114,37 +113,36 @@ export function CreateBudgetEntry({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {},
-  });
+  })
 
-    useEffect(() => {
-    if (isOpen) reset();
-    }, [isOpen, reset]);
-
+  useEffect(() => {
+    if (isOpen) reset()
+  }, [isOpen, reset])
 
   const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: () => TransactionsService.listAllCategories(),
-  });
+  })
 
-  const categories = rawCategoriesToSelectItems(data ?? []);
+  const categories = rawCategoriesToSelectItems(data ?? [])
 
   const categoryLookup: Record<CategoryOut["id"], CategoryOut> | undefined =
     data?.reduce(
       (acc, category) => {
-        acc[category.id] = category;
-        return acc;
+        acc[category.id] = category
+        return acc
       },
-      {} as Record<CategoryOut["id"], CategoryOut>
-    );
+      {} as Record<CategoryOut["id"], CategoryOut>,
+    )
 
   const onSubmit: SubmitHandler<CreateFormInput> = async (data) => {
-    addEntryMutation.mutate(data);
-  };
+    addEntryMutation.mutate(data)
+  }
 
   const onCancel = () => {
-    reset();
-    onClose();
-  };
+    reset()
+    onClose()
+  }
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -205,7 +203,9 @@ export function CreateBudgetEntry({
               )}
             />
             {errors.category_link_ids && (
-              <FieldErrorText>{errors.category_link_ids.message}</FieldErrorText>
+              <FieldErrorText>
+                {errors.category_link_ids.message}
+              </FieldErrorText>
             )}
           </FieldRoot>
         </DialogBody>
@@ -222,7 +222,7 @@ export function CreateBudgetEntry({
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  );
+  )
 }
 
 export function EditBudgetEntry({
@@ -230,8 +230,8 @@ export function EditBudgetEntry({
   isOpen,
   onClose,
 }: EditBudgetEntryProps) {
-  const queryClient = useQueryClient();
-  const showToast = useCustomToast();
+  const queryClient = useQueryClient()
+  const showToast = useCustomToast()
 
   const {
     register,
@@ -244,26 +244,26 @@ export function EditBudgetEntry({
     criteriaMode: "all",
     defaultValues: {
       category_links: budgetEntry.category_links.map(
-        (link) => link.category_id
+        (link) => link.category_id,
       ),
     },
-  });
+  })
 
   const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: () => TransactionsService.listAllCategories(),
-  });
+  })
 
-  const categories = rawCategoriesToSelectItems(data ?? []);
+  const categories = rawCategoriesToSelectItems(data ?? [])
 
   const categoryLookup: Record<CategoryOut["id"], CategoryOut> | undefined =
     data?.reduce(
       (acc, category) => {
-        acc[category.id] = category;
-        return acc;
+        acc[category.id] = category
+        return acc
       },
-      {} as Record<CategoryOut["id"], CategoryOut>
-    );
+      {} as Record<CategoryOut["id"], CategoryOut>,
+    )
 
   const mutation = useMutation({
     mutationFn: (data: EditFormInput) => {
@@ -279,29 +279,29 @@ export function EditBudgetEntry({
             entry_id: budgetEntry.id,
           })),
         },
-      });
+      })
     },
     onSuccess: () => {
-      showToast("Success!", "Budget entry updated successfully.", "success");
-      onClose();
+      showToast("Success!", "Budget entry updated successfully.", "success")
+      onClose()
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast);
+      handleError(err, showToast)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] })
+      queryClient.invalidateQueries({ queryKey: ["budgetStatus"] })
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<EditFormInput> = async (data) => {
-    mutation.mutate(data);
-  };
+    mutation.mutate(data)
+  }
 
   const onCancel = () => {
-    reset();
-    onClose();
-  };
+    reset()
+    onClose()
+  }
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
       <DialogBackdrop />
@@ -380,7 +380,7 @@ export function EditBudgetEntry({
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  );
+  )
 }
 
 function CategoryLinkSelector({
@@ -389,10 +389,10 @@ function CategoryLinkSelector({
   field,
   categoryLookup,
 }: {
-  onChange: (value: number[]) => void;
-  categories: { items: Blah[] };
-  field: { value: number[] };
-  categoryLookup: Record<CategoryOut["id"], CategoryOut>;
+  onChange: (value: number[]) => void
+  categories: { items: Blah[] }
+  field: { value: number[] }
+  categoryLookup: Record<CategoryOut["id"], CategoryOut>
 }) {
   return (
     <>
@@ -414,7 +414,7 @@ function CategoryLinkSelector({
         size="sm"
         collection={createListCollection(categories)}
         onValueChange={(val) => {
-          onChange(val.value as unknown as number[]);
+          onChange(val.value as unknown as number[])
         }}
       >
         <SelectTrigger>
@@ -429,20 +429,20 @@ function CategoryLinkSelector({
         </SelectContent>
       </SelectRoot>
     </>
-  );
+  )
 }
 
 function CategoryLink({
   category,
   onRemove,
 }: {
-  category: CategoryOut;
-  onRemove: (category: CategoryOut) => void;
+  category: CategoryOut
+  onRemove: (category: CategoryOut) => void
 }) {
   return (
     <Tag.Root size="sm">
       <Text key={category.id}>{category.stylized_name}</Text>
       <CloseButton onClick={() => onRemove(category)} />
     </Tag.Root>
-  );
+  )
 }

@@ -36,8 +36,6 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
     queryFn: () => AccountsService.getCategories({ sourceId: accountId }),
   })
 
-
-
   const updateCategoryMutation = useMutation({
     mutationFn: ({
       categoryId,

@@ -1,69 +1,81 @@
-import { UploadsService, PlaidService } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
+import { PlaidService, UploadsService } from "@/client"
+import FileDropzone from "@/components/Common/Dropzone"
+import useCustomToast from "@/hooks/useCustomToast"
 import {
   Box,
   Button,
-  Flex,
-  Heading,
-  Icon,
-  Text,
-  useDisclosure,
-  DialogRoot,
+  CloseButton,
   DialogBackdrop,
   DialogBody,
   DialogCloseTrigger,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogPositioner,
-  CloseButton,
-} from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FaFileUpload, FaUniversity } from "react-icons/fa";
-import FileDropzone from "@/components/Common/Dropzone";
-import { useCallback, useEffect, useState } from "react";
-import { usePlaidLink } from "react-plaid-link";
+  DialogRoot,
+  DialogTitle,
+  Flex,
+  Heading,
+  Icon,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useEffect, useState } from "react"
+import { FaFileUpload, FaUniversity } from "react-icons/fa"
+import { usePlaidLink } from "react-plaid-link"
 
-export function OnboardDialogs({isOnboardOpen, onOnboardClose, isDialog}: { isDialog: boolean; isOnboardOpen: boolean; onOnboardClose: () => void }) {
+export function OnboardDialogs({
+  isOnboardOpen,
+  onOnboardClose,
+  isDialog,
+}: { isDialog: boolean; isOnboardOpen: boolean; onOnboardClose: () => void }) {
   const {
     open: isUploadOpen,
     onOpen: onUploadOpen,
     onClose: onUploadClose,
-  } = useDisclosure();
+  } = useDisclosure()
   const {
     open: isPlaidOpen,
     onOpen: onPlaidOpen,
     onClose: onPlaidClose,
-  } = useDisclosure();
+  } = useDisclosure()
 
   return (
     <>
-      <PlaidOrUploadSelector isDialog={isDialog} isOnboardOpen={isOnboardOpen &&(!isPlaidOpen && !isUploadOpen)} onPlaidOpen={onPlaidOpen} onUploadOpen={onUploadOpen} onOnboardClose={onOnboardClose}/>
+      <PlaidOrUploadSelector
+        isDialog={isDialog}
+        isOnboardOpen={isOnboardOpen && !isPlaidOpen && !isUploadOpen}
+        onPlaidOpen={onPlaidOpen}
+        onUploadOpen={onUploadOpen}
+        onOnboardClose={onOnboardClose}
+      />
       <PlaidDialog isPlaidOpen={isPlaidOpen} onPlaidClose={onPlaidClose} />
       <UploadDialog isUploadOpen={isUploadOpen} onUploadClose={onUploadClose} />
     </>
-  );
+  )
 }
 
-function PlaidDialog({isPlaidOpen, onPlaidClose}: { isPlaidOpen: boolean; onPlaidClose: () => void }) {
-
-  const toast = useCustomToast();
-  const queryClient = useQueryClient();
-  const [linkToken, setLinkToken] = useState<string | null>(null);
+function PlaidDialog({
+  isPlaidOpen,
+  onPlaidClose,
+}: { isPlaidOpen: boolean; onPlaidClose: () => void }) {
+  const toast = useCustomToast()
+  const queryClient = useQueryClient()
+  const [linkToken, setLinkToken] = useState<string | null>(null)
 
   // Create link token mutation
   const createLinkTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await PlaidService.getLinkToken();
-      return response;
+      const response = await PlaidService.getLinkToken()
+      return response
     },
     onSuccess: (data) => {
-      setLinkToken(data.link_token);
+      setLinkToken(data.link_token)
     },
     onError: () => {
-      toast("Error", "Could not create link token", "error");
+      toast("Error", "Could not create link token", "error")
     },
-  });
+  })
 
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
@@ -72,62 +84,61 @@ function PlaidDialog({isPlaidOpen, onPlaidClose}: { isPlaidOpen: boolean; onPlai
         requestBody: {
           public_token,
         },
-      });
-      return response;
+      })
+      return response
     },
     onSuccess: () => {
-      toast("Success", "Account connected successfully", "success");
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      onPlaidClose();
+      toast("Success", "Account connected successfully", "success")
+      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+      onPlaidClose()
     },
     onError: () => {
-      toast("Error", "Failed to connect account", "error");
+      toast("Error", "Failed to connect account", "error")
     },
-  });
-
+  })
 
   // Initialize Plaid Link
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: (public_token) => {
-      exchangeTokenMutation.mutate(public_token);
-      setLinkToken(null);
+      exchangeTokenMutation.mutate(public_token)
+      setLinkToken(null)
     },
     onExit: (err) => {
       if (err) {
         toast(
           "Connection Error",
           err.display_message || "Error connecting to your bank",
-          "error"
-        );
+          "error",
+        )
       }
-      onPlaidClose();
+      onPlaidClose()
     },
-  });
+  })
 
   useEffect(() => {
     if (isPlaidOpen && !linkToken) {
-      createLinkTokenMutation.mutate();
+      createLinkTokenMutation.mutate()
     }
-  }, [isPlaidOpen, linkToken]);
-
-
-
+  }, [isPlaidOpen, linkToken])
 
   const isPlaidLoading =
-    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending;
-
+    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
 
   const handleConnectPlaid = useCallback(() => {
     if (ready && linkToken) {
-      open();
+      open()
     } else {
-      createLinkTokenMutation.mutate();
+      createLinkTokenMutation.mutate()
     }
-  }, [ready, linkToken, open]);
+  }, [ready, linkToken, open])
 
   return (
-    <DialogRoot open={isPlaidOpen} onOpenChange={onPlaidClose} placement={'center'}>
+    <DialogRoot
+      open={isPlaidOpen}
+      onOpenChange={onPlaidClose}
+      placement={"center"}
+    >
       <DialogBackdrop />
       <DialogPositioner>
         <DialogContent>
@@ -168,50 +179,48 @@ function PlaidDialog({isPlaidOpen, onPlaidClose}: { isPlaidOpen: boolean; onPlai
         </DialogContent>
       </DialogPositioner>
     </DialogRoot>
-  );
+  )
 }
 
-function UploadDialog({ isUploadOpen, onUploadClose }: { isUploadOpen: boolean; onUploadClose: () => void }) {
-
-  const toast = useCustomToast();
-  const queryClient = useQueryClient();
+function UploadDialog({
+  isUploadOpen,
+  onUploadClose,
+}: { isUploadOpen: boolean; onUploadClose: () => void }) {
+  const toast = useCustomToast()
+  const queryClient = useQueryClient()
 
   const uploadMutation = useMutation({
     mutationFn: (files: File[]) => {
       // The Body_uploads_upload_files type only expects files
-      const data = { formData: { files } };
-      return UploadsService.uploadFiles(data);
+      const data = { formData: { files } }
+      return UploadsService.uploadFiles(data)
     },
     onSuccess: () => {
       toast(
         "Files uploaded",
         "The files were processed successfully.",
-        "success"
-      );
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
-      onUploadClose();
+        "success",
+      )
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
+      onUploadClose()
     },
     onError: () => {
-      toast(
-        "Upload failed",
-        "There was an error uploading the files.",
-        "error"
-      );
+      toast("Upload failed", "There was an error uploading the files.", "error")
     },
-  });
-
-
-
+  })
 
   const handleUpload = (files: File[]) => {
     if (files.length > 0) {
-      uploadMutation.mutate(files);
+      uploadMutation.mutate(files)
     }
-  };
-
+  }
 
   return (
-    <DialogRoot open={isUploadOpen} onOpenChange={onUploadClose} placement={'center'}>
+    <DialogRoot
+      open={isUploadOpen}
+      onOpenChange={onUploadClose}
+      placement={"center"}
+    >
       <DialogBackdrop />
       <DialogPositioner>
         <DialogContent>
@@ -231,89 +240,118 @@ function UploadDialog({ isUploadOpen, onUploadClose }: { isUploadOpen: boolean; 
         </DialogContent>
       </DialogPositioner>
     </DialogRoot>
-  );
+  )
 }
 
-function PlaidOrUploadSelector({isDialog, isOnboardOpen, onUploadOpen, onPlaidOpen, onOnboardClose}: {isDialog: boolean; onUploadOpen: () => void; isOnboardOpen: boolean; onPlaidOpen: () => void; onOnboardClose: () => void }) {
+function PlaidOrUploadSelector({
+  isDialog,
+  isOnboardOpen,
+  onUploadOpen,
+  onPlaidOpen,
+  onOnboardClose,
+}: {
+  isDialog: boolean
+  onUploadOpen: () => void
+  isOnboardOpen: boolean
+  onPlaidOpen: () => void
+  onOnboardClose: () => void
+}) {
+  if (isDialog) {
+    return (
+      <DialogRoot
+        open={isOnboardOpen}
+        onOpenChange={onOnboardClose}
+        placement={"center"}
+      >
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a New Account</DialogTitle>
 
-if (isDialog) {
-  return (
-    <DialogRoot open={isOnboardOpen} onOpenChange={onOnboardClose} placement={'center'}>
-      <DialogBackdrop />
-      <DialogPositioner>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add a New Account</DialogTitle>
-
-            <DialogCloseTrigger asChild>
+              <DialogCloseTrigger asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
-            </DialogCloseTrigger>
-          </DialogHeader>
-          <DialogBody>
-            <AccountSelectionOptions onPlaidOpen={onPlaidOpen} onOnboardClose={onOnboardClose} onUploadOpen={onUploadOpen} />
-          </DialogBody>
-        </DialogContent>
-      </DialogPositioner>
-    </DialogRoot>
-  );
-}
-else {
-    return <AccountSelectionOptions onPlaidOpen={onPlaidOpen} onOnboardClose={onOnboardClose} onUploadOpen={onUploadOpen} />
-}
-}
+              </DialogCloseTrigger>
+            </DialogHeader>
+            <DialogBody>
+              <AccountSelectionOptions
+                onPlaidOpen={onPlaidOpen}
+                onOnboardClose={onOnboardClose}
+                onUploadOpen={onUploadOpen}
+              />
+            </DialogBody>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
+    )
+  }
 
-
-function AccountSelectionOptions({onPlaidOpen, onOnboardClose, onUploadOpen}: {onPlaidOpen: () => void; onOnboardClose: () => void; onUploadOpen: () => void }){
   return (
-    <Flex direction="column" gap={4} align='stretch'>
-    <Box
-      p={4}
-      borderWidth="1px"
-      borderRadius="md"
-      cursor="pointer"
-      onClick={() => {
-        onOnboardClose();
-        onPlaidOpen();
-      }}
-    >
-      <Flex align="center">
-        <Icon as={FaUniversity} boxSize={6} color="blue.500" />
-        <Box ml={4}>
-          <Heading size="sm">Connect Bank Account</Heading>
-          <Text fontSize="sm" mt={1}>
-            Securely connect your bank account via Plaid for automatic
-            transaction syncing. Your login credentials are never
-            stored.
-          </Text>
-        </Box>
-      </Flex>
-    </Box>
+    <AccountSelectionOptions
+      onPlaidOpen={onPlaidOpen}
+      onOnboardClose={onOnboardClose}
+      onUploadOpen={onUploadOpen}
+    />
+  )
+}
 
-    <Box borderBottomWidth="1px" my={2} />
+function AccountSelectionOptions({
+  onPlaidOpen,
+  onOnboardClose,
+  onUploadOpen,
+}: {
+  onPlaidOpen: () => void
+  onOnboardClose: () => void
+  onUploadOpen: () => void
+}) {
+  return (
+    <Flex direction="column" gap={4} align="stretch">
+      <Box
+        p={4}
+        borderWidth="1px"
+        borderRadius="md"
+        cursor="pointer"
+        onClick={() => {
+          onOnboardClose()
+          onPlaidOpen()
+        }}
+      >
+        <Flex align="center">
+          <Icon as={FaUniversity} boxSize={6} color="blue.500" />
+          <Box ml={4}>
+            <Heading size="sm">Connect Bank Account</Heading>
+            <Text fontSize="sm" mt={1}>
+              Securely connect your bank account via Plaid for automatic
+              transaction syncing. Your login credentials are never stored.
+            </Text>
+          </Box>
+        </Flex>
+      </Box>
 
-    <Box
-      p={4}
-      borderWidth="1px"
-      borderRadius="md"
-      cursor="pointer"
-      onClick={() => {
-        onOnboardClose();
-        onUploadOpen();
-      }}
-    >
-      <Flex align="center">
-        <Icon as={FaFileUpload} boxSize={6} color="green.500" />
-        <Box ml={4}>
-          <Heading size="sm">Upload Account Statements</Heading>
-          <Text fontSize="sm" mt={1}>
-            Upload CSV or PDF statements from your bank. This is a
-            good option if you prefer not to connect your account
-            directly or if your bank isn't supported.
-          </Text>
-        </Box>
-      </Flex>
-    </Box>
-  </Flex>
-)
+      <Box borderBottomWidth="1px" my={2} />
 
+      <Box
+        p={4}
+        borderWidth="1px"
+        borderRadius="md"
+        cursor="pointer"
+        onClick={() => {
+          onOnboardClose()
+          onUploadOpen()
+        }}
+      >
+        <Flex align="center">
+          <Icon as={FaFileUpload} boxSize={6} color="green.500" />
+          <Box ml={4}>
+            <Heading size="sm">Upload Account Statements</Heading>
+            <Text fontSize="sm" mt={1}>
+              Upload CSV or PDF statements from your bank. This is a good option
+              if you prefer not to connect your account directly or if your bank
+              isn't supported.
+            </Text>
+          </Box>
+        </Flex>
+      </Box>
+    </Flex>
+  )
 }
