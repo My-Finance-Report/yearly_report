@@ -1,5 +1,4 @@
 import enum
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Generic, TypeVar
@@ -15,6 +14,7 @@ class NoCodeTransaction:
     id: TransactionId | None
     amount: float
     description: str
+    date: str
 
 
 T = TypeVar("T")
@@ -64,47 +64,54 @@ class PipelineEnd:
     result: PrimitiveResult
     output_type: OutputType
 
+class WidgetType(str, enum.Enum):
+    value = "value"
+    list = "list"
+    chart = "chart"
 
-class Transformation(ABC, Generic[T, V]):
-    @property
-    @abstractmethod
-    def input_type(self) -> type[T]: ...
+Scalar = Decimal | str | int | float
+Object = dict[str, Scalar]
+ResultType = Scalar | Object | list[Scalar] | list[Object] 
 
-    @property
-    @abstractmethod
-    def output_type(self) -> type[V]: ...
-
-    @abstractmethod
-    def call(self, data: T) -> V:
-        """
-        Consumes one or more Primitives of type NumericType
-        and returns a single Primitive of the same type (or possibly a new type).
-        """
-        pass
-
-
-class Generator(ABC, Generic[T]):
-    def __init__(self, kwargs: dict[str, int]):
-        self.kwargs = kwargs
-
-    @property
-    @abstractmethod
-    def parameters(self) -> list[Parameter]: ...
-
-    @property
-    @abstractmethod
-    def output_type(self) -> type[Primitive[T]]: ...
-
-    @abstractmethod
-    def call(self, start: PipelineStart) -> Primitive[T]:
-        pass
+class ToolType(str, enum.Enum):
+    first_ten_transactions = "first_ten_transactions"
+    account_name = "account_name"
+    account_balance = "account_balance"
+    sum = "sum"
+    average = "average"
+    show_value = "show_value"
+    show_list = "show_list"
 
 
-class Output(ABC, Generic[T]):
-    @property
-    @abstractmethod
-    def input_type(self) -> type[T]: ...
+class ResultTypeEnum(enum.Enum):
+    string = "string"
+    number = "number"
+    transactions = { "id": "number", "amount": "number", "description": "string"}
 
-    @abstractmethod
-    def call(self, data: T) -> PipelineEnd:
-        pass
+
+class NoCodeToolIn(BaseModel):
+    tool: ToolType
+    parameters: list[Parameter] | None = None
+
+
+
+class NoCodeWidget(BaseModel):
+    name: str
+    description: str
+    pipeline: list[NoCodeToolIn]
+    result: ResultType
+    result_type: ResultTypeEnum
+    row: int
+    col: int
+    height: int
+    width: int
+    type: WidgetType 
+
+
+class NoCodeTool(BaseModel):
+    name: str
+    description: str
+    tool: ToolType
+    parameters: list[Parameter] | None = None
+
+

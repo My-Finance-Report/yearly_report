@@ -18,8 +18,8 @@ def get_value(value: T) -> Decimal:
 
 @step
 def average_transform(data: list[T], kwargs: Kwargs) -> Decimal:
-    return Decimal(sum([get_value(transaction) for transaction in data]))
-
+    val = Decimal(sum([get_value(transaction) for transaction in data]))
+    return val / len(data)
 
 @step
 def sum_transform(data: list[T], kwargs: Kwargs) -> Decimal:

@@ -224,7 +224,12 @@ export type NoCodeWidget = {
     name: string;
     description: string;
     pipeline: Array<NoCodeToolIn>;
-    result: PipelineEnd;
+    result: (string | number | {
+    [key: string]: (string | number);
+} | Array<(string | number)> | Array<{
+    [key: string]: (string | number);
+}>);
+    result_type: ResultTypeEnum;
     row: number;
     col: number;
     height: number;
@@ -337,6 +342,8 @@ export type ProcessFileJobOut = {
 };
 
 export type ProcessingState = 'waiting' | 'preparing' | 'fetching' | 'parsing' | 'categorizing' | 'failed' | 'completed';
+
+export type ResultTypeEnum = 'string' | 'number';
 
 export type SankeyConfigCreatePayload = {
     inputs: Array<SankeyInputCreate>;

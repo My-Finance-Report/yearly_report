@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-import enum 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 
@@ -16,8 +14,7 @@ from app.no_code.functions import (
     evaluate_pipeline,
     make_tools,
 )
-from app.schemas.no_code import Parameter, ParameterType, PipelineEnd
-from app.no_code.generators import first_n_transactions
+from app.schemas.no_code import NoCodeWidget, Parameter, ParameterType, PipelineEnd, ResultTypeEnum, WidgetType
 
 router = APIRouter(prefix="/no_code", tags=["no_code"])
 
@@ -41,24 +38,9 @@ def save_no_code_tool(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+def first_n(n: int)->NoCodeToolIn:
+    return NoCodeToolIn(tool=ToolType.first_ten_transactions, parameters=[Parameter(name="n", type=ParameterType.INT, value=n), Parameter(name="account_id", type=ParameterType.INT, value=1)])
 
-class WidgetType(str, enum.Enum):
-    value = "value"
-    list = "list"
-    chart = "chart"
-
-
-@dataclass
-class NoCodeWidget:
-    name: str
-    description: str
-    pipeline: list[NoCodeToolIn]
-    result: PipelineEnd
-    row: int
-    col: int
-    height: int
-    width: int
-    type: WidgetType
 
 
 @router.get("/get_no_code_dashboard", response_model=list[NoCodeWidget])
@@ -67,13 +49,17 @@ def get_no_code_dashboard(
     session: Session = Depends(get_db),
 ) -> list[NoCodeWidget]:
 
-    list_trans = [NoCodeToolIn(tool=ToolType.first_ten_transactions, parameters=[Parameter(name="n", type=ParameterType.INT, value=10)]), NoCodeToolIn(tool=ToolType.show_list)]
-    get_sum = [NoCodeToolIn(tool=ToolType.first_ten_transactions, parameters=[Parameter(name="n", type=ParameterType.INT, value=10)]), NoCodeToolIn(tool=ToolType.sum), NoCodeToolIn(tool=ToolType.show_value)]
-    get_avg = [NoCodeToolIn(tool=ToolType.first_ten_transactions, parameters=[Parameter(name="n", type=ParameterType.INT, value=10)]), NoCodeToolIn(tool=ToolType.average), NoCodeToolIn(tool=ToolType.show_value)]
+    list_trans = [first_n(10)]
+    account_name = [NoCodeToolIn(tool=ToolType.account_name, parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
+    account_balance = [NoCodeToolIn(tool=ToolType.account_balance, parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
+    get_sum = [first_n(10), NoCodeToolIn(tool=ToolType.sum)]
+    get_avg = [first_n(10), NoCodeToolIn(tool=ToolType.average)]
 
     widgets = [
-NoCodeWidget(result = evaluate_pipeline(convert_to_pipeline(list_trans), session, user),name="List Transactions", description="List of transactions", pipeline=list_trans, row=0, col=0, height=1, width=1, type=WidgetType.list),
-NoCodeWidget(result = evaluate_pipeline(convert_to_pipeline(get_sum), session, user),name="Total of transactions", description="Total of 10 transactions", pipeline=get_sum, row=1, col=1, height=1, width=1, type=WidgetType.value),
-NoCodeWidget(result = evaluate_pipeline(convert_to_pipeline(get_avg), session, user),name="Average of transactions", description="Average of 10 transactions", pipeline=get_avg, row=1, col=0, height=1, width=1, type=WidgetType.value)
+        NoCodeWidget(result_type=ResultTypeEnum.string,result = evaluate_pipeline(convert_to_pipeline(account_name), session, user),name="Account Name", description="Name of the account", pipeline=account_name, row=0, col=0, height=1, width=1, type=WidgetType.value),
+        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(account_balance), session, user),name="Account Balance", description="Balance of the account", pipeline=account_balance, row=0, col=1, height=1, width=1, type=WidgetType.value),
+        NoCodeWidget(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(list_trans), session, user),name="List Transactions", description="List of transactions", pipeline=list_trans, row=2, col=0, height=1, width=1, type=WidgetType.list),
+        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_sum), session, user),name="Total of transactions", description="Total of 10 transactions", pipeline=get_sum, row=1, col=1, height=1, width=1, type=WidgetType.value),
+        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_avg), session, user),name="Average of transactions", description="Average of 10 transactions", pipeline=get_avg, row=1, col=0, height=1, width=1, type=WidgetType.value)
     ]
     return widgets

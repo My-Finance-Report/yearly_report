@@ -1,43 +1,28 @@
-import enum
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
+from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
 
-from pydantic import BaseModel
 
 from app.db import Session
 from app.models import User
-from app.no_code.generators import first_n_transactions
+from app.no_code.generators import account_balance, account_name, first_n_transactions
 from app.no_code.outputs import show_list, show_value
 from app.no_code.transformations import average_transform, sum_transform
 from app.schemas.no_code import (
+    NoCodeTool,
+    NoCodeToolIn,
     Parameter,
     ParameterType,
     PipelineEnd,
     PipelineStart,
+    ResultType,
+    ToolType,
 )
 
 T = TypeVar("T")
 
-
-class ToolType(str, enum.Enum):
-    first_ten_transactions = "first_ten_transactions"
-    sum = "sum"
-    average = "average"
-    show_value = "show_value"
-    show_list = "show_list"
-
-
-class NoCodeTool(BaseModel):
-    name: str
-    description: str
-    tool: ToolType
-    parameters: list[Parameter] | None = None
-
-class NoCodeToolIn(BaseModel):
-    tool: ToolType
-    parameters: list[Parameter] | None = None
 
 
 tool_type_map: dict = {  # type: ignore
@@ -46,6 +31,8 @@ tool_type_map: dict = {  # type: ignore
     ToolType.average: average_transform,
     ToolType.show_value: show_value,
     ToolType.show_list: show_list,
+    ToolType.account_name: account_name,
+    ToolType.account_balance: account_balance,
 }
 
 
@@ -87,7 +74,7 @@ class Pipeline:
     last_step: Callable[[T], PipelineEnd]
 
 
-def convert_to_pipeline(tools: list[NoCodeToolIn]) -> Pipeline:
+def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list:
     steps = []
     for tool in tools:
         func = tool_type_map[tool.tool]
@@ -97,16 +84,32 @@ def convert_to_pipeline(tools: list[NoCodeToolIn]) -> Pipeline:
         else:
             steps.append(partial(func, kwargs={}))
 
-    return Pipeline(steps[0], steps[1:-1], steps[-1])
+    return steps
 
 
-def evaluate_pipeline(pipeline: Pipeline, session: Session, user: User) -> PipelineEnd:
+def serialize_to_result(obj) -> ResultType:
+    if isinstance(obj, (Decimal, str, int, float)):
+        return obj
+    elif is_dataclass(obj):
+        # Convert dataclass to dict and serialize each value
+        return {
+            k: serialize_to_result(v)
+            for k, v in asdict(obj).items()
+        }
+    elif isinstance(obj, dict):
+        return {k: serialize_to_result(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [serialize_to_result(item) for item in obj]
+    else:
+        # Handle other types like UUID, datetime etc.
+        return str(obj)
+
+
+def evaluate_pipeline(steps: list[partial[Any]], session: Session, user: User) -> ResultType:
     data = PipelineStart(user, session)
-    data = pipeline.first_step(data)
-    for block in pipeline.steps:
+    for block in steps:
         data = block(data)
-    val = pipeline.last_step(data)
-    return val
+    return serialize_to_result(data)
 
 
 def _same(t1: type, t2: type) -> bool:

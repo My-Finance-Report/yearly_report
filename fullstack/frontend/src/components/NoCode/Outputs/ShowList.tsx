@@ -3,11 +3,13 @@ import { NoCodeWidget } from "@/client"
 
 export function ShowList({ widget }: { widget: NoCodeWidget }) {
 
+    const result = widget.result as Array<{ [key: string]: string | number }>
+
     return (
         <TableRoot>
             <TableHeader>
                 <TableRow>
-                    {widget.result.result.value.map((data, index) => {
+                    {result.map((data, index) => {
                     if(index ===0){
                         return Object.keys(data).map((key) => (
                             <TableCell key={key}>{key}</TableCell>
@@ -17,7 +19,7 @@ export function ShowList({ widget }: { widget: NoCodeWidget }) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {widget.result.result.value.map((data,index) => (
+                {result.map((data,index) => (
                     <TableRow key={index}>
                         {Object.entries(data).map(([key, value]) => (
                             <TableCell key={key}>{value}</TableCell>
