@@ -53,7 +53,7 @@ export function PowerUserButtons({
   );
 
   const isMobile = useIsMobile();
-  const {  currentFilter } = useFilters();
+  const {  currentFilter, setCurrentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
 
@@ -62,7 +62,7 @@ export function PowerUserButtons({
       if (newLookup[option]) {
         const rest = { ...newLookup };
         delete rest[option];
-        return breakoutToCustomFilter({ ...currentFilter.filter_data, lookup: rest });
+        return breakoutToCustomFilter({ ...currentFilter.filter_data, lookup: rest }, setCurrentFilter);
       }
 
       const maxIndex = Object.values(newLookup).reduce(
@@ -81,6 +81,7 @@ export function PowerUserButtons({
           },
         },
       },
+      setCurrentFilter,
     );
   };
 
@@ -124,7 +125,7 @@ export function PowerUserButtons({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
+          onDragEnd={(event) => handleDragEnd(event, setCurrentFilter, currentFilter)}
         >
           <Flex
             direction="column"
@@ -174,8 +175,8 @@ export function PowerUserButtons({
                       >
                         <SortableItem
                           key={option}
-                          moveItemUp={moveItemUp}
-                          moveItemDown={moveItemDown}
+                          moveItemUp={(option) => moveItemUp(option, setCurrentFilter, currentFilter)}
+                          moveItemDown={(option) => moveItemDown(option, setCurrentFilter, currentFilter)}
                           isFirst={typedValue.index === 0}
                           isLast={
                             typedValue.index ===
@@ -256,23 +257,16 @@ const SortableItem = ({
   const toggleVisibility = () => {
     if (!currentFilter?.filter_data?.lookup) return;
 
-    setCurrentFilter((prev) => {
-      if (!prev?.filter_data?.lookup) return prev;
-
-      return {
-        ...prev,
-        filter_data: {
-          ...prev.filter_data,
-          lookup: {
-            ...prev.filter_data.lookup,
-            [option]: {
-              ...prev.filter_data.lookup[option],
-              visible: !isVisible,
-            },
-          },
+    breakoutToCustomFilter({
+      ...currentFilter.filter_data,
+      lookup: {
+        ...currentFilter.filter_data.lookup,
+        [option]: {
+          ...currentFilter.filter_data.lookup[option],
+          visible: !isVisible,
         },
-      };
-    });
+      },
+    }, setCurrentFilter);
   };
 
   return (
@@ -368,7 +362,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
       };
     }
 
-    setCurrentFilter(updatedFilter);
+    breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };
 
   const handleSelectAll = () => {
@@ -387,7 +381,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
       },
     };
 
-    setCurrentFilter(updatedFilter);
+    breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };
 
   const handleUnselectAll = () => {
@@ -406,7 +400,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
       },
     };
 
-    setCurrentFilter(updatedFilter);
+    breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };
 
   const currentValues =

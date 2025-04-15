@@ -1,11 +1,9 @@
-import type { FilterData_Output, FilterEntries } from "@/client"
+import type { FilterData_Output, FilterEntries, SavedFilterOut } from "@/client"
 
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { GroupByOption } from "@/components/Common/GroupingConfig"
-import { useFilters } from "@/contexts/FilterContext"
 
-export function breakoutToCustomFilter(filter_data: FilterData_Output) {
-    const { setCurrentFilter } = useFilters();
+export function breakoutToCustomFilter(filter_data: FilterData_Output, setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>) {
     setCurrentFilter({
       name: "custom",
       id: "custom",
@@ -16,9 +14,10 @@ export function breakoutToCustomFilter(filter_data: FilterData_Output) {
 
 export const handleDragEnd = (
   event: DragEndEvent,
+  setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>,
+  currentFilter: SavedFilterOut
 ) => {
   const { active, over } = event
-  const { currentFilter } = useFilters()
   if (!over || active.id === over.id || !currentFilter || !currentFilter.filter_data.lookup)
     return
 
@@ -69,14 +68,14 @@ export const handleDragEnd = (
     return { ...currentFilter.filter_data, lookup: newLookup }
   }
 
-  breakoutToCustomFilter(val())
+  breakoutToCustomFilter(val(), setCurrentFilter)
 }
 
 export const moveItemUp = (
   option: GroupByOption,
+  setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>,
+  currentFilter: SavedFilterOut
 ) => {
-
-  const { currentFilter } = useFilters()
 
   const generateMergedFilter: ()=> FilterData_Output = () => {
     if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter 
@@ -104,14 +103,16 @@ export const moveItemUp = (
 
     return { ...currentFilter.filter_data, lookup: newLookup } 
   }
-  breakoutToCustomFilter(generateMergedFilter())
+  breakoutToCustomFilter(generateMergedFilter(), setCurrentFilter)
 }
 
 export const moveItemDown = (
   option: GroupByOption,
+  setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>,
+  currentFilter: SavedFilterOut
+
 ) => {
 
-  const { currentFilter } = useFilters()
 
   const generateMergedFilter: ()=> FilterData_Output = () => {
     if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter
@@ -148,5 +149,5 @@ export const moveItemDown = (
 
     return {  ...currentFilter.filter_data, lookup: newLookup } 
   }
-  breakoutToCustomFilter(generateMergedFilter())
+  breakoutToCustomFilter(generateMergedFilter(), setCurrentFilter)
 }
