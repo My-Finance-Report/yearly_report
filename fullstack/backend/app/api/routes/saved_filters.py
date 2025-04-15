@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -54,7 +53,7 @@ def create_saved_filter(
 def make_default_filters() -> list[SavedFilterSchema]:
     return [
         SavedFilterSchema(
-            id='88dfe43b-c997-4f19-8d50-94b9e4be61c7',
+            id="88dfe43b-c997-4f19-8d50-94b9e4be61c7",
             is_default=True,
             is_deleteable=False,
             name="Year To Date",
@@ -77,7 +76,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id='020f1f3a-5230-4fea-ad2f-6008330c42ac',
+            id="020f1f3a-5230-4fea-ad2f-6008330c42ac",
             is_deleteable=False,
             name="Last Year",
             description="All categories, by month for last year",
@@ -99,7 +98,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id='4a15048e-4b0d-450b-b3b5-d7f3004b5db3',
+            id="4a15048e-4b0d-450b-b3b5-d7f3004b5db3",
             is_deleteable=False,
             name="All Time",
             description="All categories, by month for all time",
@@ -119,7 +118,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id='6d6a5cba-0be4-4eb6-ac94-37da9a971196',
+            id="6d6a5cba-0be4-4eb6-ac94-37da9a971196",
             is_deleteable=False,
             name="Monthly Budget",
             description="All categories, by month for current year",
@@ -173,17 +172,14 @@ def read_saved_filters(
         for f in filters
     ]
 
-def make_default_filters_lookup_id()->dict[str, SavedFilterSchema]:
-    return {
-        str(f.id): f
-        for f in make_default_filters()
-    }
 
-def make_default_filters_lookup_name()->dict[str, SavedFilterSchema]:
-    return {
-        f.name: f
-        for f in make_default_filters()
-    }
+def make_default_filters_lookup_id() -> dict[str, SavedFilterSchema]:
+    return {str(f.id): f for f in make_default_filters()}
+
+
+def make_default_filters_lookup_name() -> dict[str, SavedFilterSchema]:
+    return {f.name: f for f in make_default_filters()}
+
 
 @router.get("/{filter_id}", response_model=SavedFilterSchema)
 def read_saved_filter(
