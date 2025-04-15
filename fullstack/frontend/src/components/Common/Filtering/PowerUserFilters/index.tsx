@@ -1,7 +1,7 @@
 import { Route } from "@/routes/_layout/_logged_in/transactions"
-import type { FilterEntries, SavedFilterOut } from "@/client";
+import type {  FilterEntries } from "@/client";
 import { Button, Flex } from "@chakra-ui/react";
-import { handleDragEnd, moveItemDown, moveItemUp } from "./DragHelpers";
+import { handleDragEnd, moveItemDown,breakoutToCustomFilter, moveItemUp } from "./DragHelpers";
 
 import WithdrawDepositSelectorSegmented from "@/components/Common/WithdrawDepositSelector";
 import { Box, CloseButton, Menu, Portal, Tag, Text } from "@chakra-ui/react";
@@ -15,8 +15,8 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  horizontalListSortingStrategy,
   useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
 import {
@@ -27,6 +27,7 @@ import { useFilters } from "@/contexts/FilterContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { CSS } from "@dnd-kit/utilities";
 import { BsFunnel, BsFunnelFill } from "react-icons/bs";
+
 import {
   FiCheck,
   FiChevronDown,
@@ -35,6 +36,7 @@ import {
   FiEyeOff,
 } from "react-icons/fi";
 import { useNavigate } from "@tanstack/react-router";
+
 
 export function PowerUserButtons({
   groupingOptionsChoices,
@@ -51,17 +53,16 @@ export function PowerUserButtons({
   );
 
   const isMobile = useIsMobile();
-  const { setCurrentFilter, currentFilter } = useFilters();
+  const {  currentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
-    setCurrentFilter((prev: SavedFilterOut) => {
 
-      const newLookup = { ...prev.filter_data.lookup };
+      const newLookup = { ...currentFilter.filter_data.lookup };
 
       if (newLookup[option]) {
         const rest = { ...newLookup };
         delete rest[option];
-        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } };
+        return breakoutToCustomFilter({ ...currentFilter.filter_data, lookup: rest });
       }
 
       const maxIndex = Object.values(newLookup).reduce(
@@ -70,23 +71,17 @@ export function PowerUserButtons({
       ) as number;
 
 
-      return {
-        name: "unsaved",
-        id: "unsaved",
-        description: null,
-        filter_data: {
-        lookup: {
-          ...newLookup,
-          [option]: {
-            all: true,
-            visible: true,
-            specifics: [],
+    return breakoutToCustomFilter({
+      lookup: {
+        ...newLookup,
+        [option]: {
+          visible: true,
+          specifics: [],
             index: maxIndex + 1,
           },
         },
       },
-    }
-    });
+    );
   };
 
   const sensors = useSensors(
@@ -129,9 +124,7 @@ export function PowerUserButtons({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={(event) =>
-            handleDragEnd(event, currentFilter, setCurrentFilter)
-          }
+          onDragEnd={handleDragEnd}
         >
           <Flex
             direction="column"
@@ -160,7 +153,7 @@ export function PowerUserButtons({
                       ] as FilterEntries
                     ).index
                 )}
-                strategy={horizontalListSortingStrategy}
+                strategy={verticalListSortingStrategy}
               >
                 {Object.entries(currentFilter?.filter_data?.lookup || {})
                   .sort(
@@ -181,12 +174,8 @@ export function PowerUserButtons({
                       >
                         <SortableItem
                           key={option}
-                          moveItemUp={(option) =>
-                            moveItemUp(option, setCurrentFilter)
-                          }
-                          moveItemDown={(option) =>
-                            moveItemDown(option, setCurrentFilter)
-                          }
+                          moveItemUp={moveItemUp}
+                          moveItemDown={moveItemDown}
                           isFirst={typedValue.index === 0}
                           isLast={
                             typedValue.index ===

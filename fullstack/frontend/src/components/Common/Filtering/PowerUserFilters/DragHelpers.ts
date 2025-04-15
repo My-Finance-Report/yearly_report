@@ -1,16 +1,24 @@
-import type { FilterEntries, SavedFilterOut } from "@/client"
+import type { FilterData_Output, FilterEntries } from "@/client"
 
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { GroupByOption } from "@/components/Common/GroupingConfig"
+import { useFilters } from "@/contexts/FilterContext"
+
+export function breakoutToCustomFilter(filter_data: FilterData_Output) {
+    const { setCurrentFilter } = useFilters();
+    setCurrentFilter({
+      name: "custom",
+      id: "custom",
+      description: null,
+      filter_data 
+  });
+}
 
 export const handleDragEnd = (
   event: DragEndEvent,
-  currentFilter: SavedFilterOut,
-  setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut>
-  >,
 ) => {
   const { active, over } = event
+  const { currentFilter } = useFilters()
   if (!over || active.id === over.id || !currentFilter || !currentFilter.filter_data.lookup)
     return
 
@@ -22,11 +30,11 @@ export const handleDragEnd = (
 
   if (activeIndex === undefined || overIndex === undefined) return
 
-  setCurrentFilter((prev: SavedFilterOut) => {
-    if (!prev.filter_data || !prev.filter_data.lookup) return prev
+  const val:()=>FilterData_Output = ()=>{
+    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter.filter_data
 
     // Create a new lookup object with swapped indices
-    const newLookup = { ...prev.filter_data.lookup }
+    const newLookup = { ...currentFilter.filter_data.lookup }
 
     // Update all indices between activeIndex and overIndex
     Object.entries(newLookup).forEach(([option, entry]) => {
@@ -58,31 +66,33 @@ export const handleDragEnd = (
       index: overIndex,
     }
 
-    return { ...prev, filter_data: { ...prev.filter_data, lookup: newLookup } }
-  })
+    return { ...currentFilter.filter_data, lookup: newLookup }
+  }
+
+  breakoutToCustomFilter(val())
 }
 
 export const moveItemUp = (
   option: GroupByOption,
-  setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut>
-  >,
 ) => {
-  setCurrentFilter((prev) => {
-    if (!prev.filter_data || !prev.filter_data.lookup) return prev
 
-    const currentIndex = prev.filter_data.lookup[option]?.index
-    if (currentIndex === undefined || currentIndex <= 0) return prev
+  const { currentFilter } = useFilters()
+
+  const generateMergedFilter: ()=> FilterData_Output = () => {
+    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter 
+
+    const currentIndex = currentFilter.filter_data.lookup[option]?.index
+    if (currentIndex === undefined || currentIndex <= 0) return currentFilter 
 
     // Find the option with index = currentIndex - 1
-    const optionToSwap = Object.entries(prev.filter_data.lookup).find(
+    const optionToSwap = Object.entries(currentFilter.filter_data.lookup).find(
       ([, entry]) => (entry as FilterEntries).index === currentIndex - 1,
     )?.[0] as GroupByOption | undefined
 
-    if (!optionToSwap) return prev
+    if (!optionToSwap) return currentFilter 
 
     // Create a new lookup object with swapped indices
-    const newLookup = { ...prev.filter_data.lookup }
+    const newLookup = { ...currentFilter.filter_data.lookup }
     newLookup[option] = {
       ...(newLookup[option] as FilterEntries),
       index: currentIndex - 1,
@@ -92,40 +102,41 @@ export const moveItemUp = (
       index: currentIndex,
     }
 
-    return { ...prev, filter_data: { ...prev.filter_data, lookup: newLookup } }
-  })
+    return { ...currentFilter.filter_data, lookup: newLookup } 
+  }
+  breakoutToCustomFilter(generateMergedFilter())
 }
 
 export const moveItemDown = (
   option: GroupByOption,
-  setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut>
-  >,
 ) => {
-  setCurrentFilter((prev) => {
-    if (!prev.filter_data || !prev.filter_data.lookup) return prev
 
-    const currentIndex = prev.filter_data.lookup[option]?.index
-    if (currentIndex === undefined) return prev
+  const { currentFilter } = useFilters()
+
+  const generateMergedFilter: ()=> FilterData_Output = () => {
+    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter
+
+    const currentIndex = currentFilter.filter_data.lookup[option]?.index
+    if (currentIndex === undefined) return currentFilter
 
     // Find the maximum index in the lookup
     const maxIndex = Math.max(
-      ...Object.values(prev.filter_data.lookup).map(
+      ...Object.values(currentFilter.filter_data.lookup).map(
         (value) => (value as FilterEntries).index,
       ),
     )
 
-    if (currentIndex >= maxIndex) return prev
+    if (currentIndex >= maxIndex) return currentFilter
 
     // Find the option with index = currentIndex + 1
-    const optionToSwap = Object.entries(prev.filter_data.lookup).find(
+    const optionToSwap = Object.entries(currentFilter.filter_data.lookup).find(
       ([, value]) => (value as FilterEntries).index === currentIndex + 1,
     )?.[0] as GroupByOption | undefined
 
-    if (!optionToSwap) return prev
+    if (!optionToSwap) return currentFilter
 
     // Create a new lookup object with swapped indices
-    const newLookup = { ...prev.filter_data.lookup }
+    const newLookup = { ...currentFilter.filter_data.lookup }
     newLookup[option] = {
       ...(newLookup[option] as FilterEntries),
       index: currentIndex + 1,
@@ -135,6 +146,7 @@ export const moveItemDown = (
       index: currentIndex,
     }
 
-    return { ...prev, filter_data: { ...prev.filter_data, lookup: newLookup } }
-  })
+    return {  ...currentFilter.filter_data, lookup: newLookup } 
+  }
+  breakoutToCustomFilter(generateMergedFilter())
 }
