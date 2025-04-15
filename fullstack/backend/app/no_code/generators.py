@@ -2,7 +2,7 @@ from decimal import Decimal
 import random
 from typing import cast
 
-from app.models import Transaction, TransactionSource
+from app.models import Category, Transaction, TransactionSource
 from app.no_code.step import Kwargs, step
 from app.schemas.no_code import NoCodeTransaction, PipelineStart
 
@@ -15,7 +15,8 @@ def first_n_transactions(
     account_id = kwargs.get("account_id")
 
     txs = (
-        data.session.query(Transaction)
+        data.session.query(Transaction, Category)
+        .join(Category, Transaction.category_id == Category.id)
     )
 
     if account_id:
@@ -27,8 +28,8 @@ def first_n_transactions(
     txs = txs.filter(Transaction.user_id == data.user.id).order_by(Transaction.date_of_transaction.desc()).limit(n)
 
     return [
-        NoCodeTransaction(id=tx.id, amount=tx.amount, description=tx.description, date=tx.date_of_transaction.strftime("%m/%d/%Y"))
-        for tx in txs.all()
+        NoCodeTransaction(id=tx.id, category_name=cat.name, amount=tx.amount, description=tx.description, date=tx.date_of_transaction.strftime("%m/%d/%Y"))
+        for tx, cat in txs.all()
     ]
 
 

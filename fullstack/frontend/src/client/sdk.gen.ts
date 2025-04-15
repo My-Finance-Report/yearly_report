@@ -594,7 +594,7 @@ export class NoCodeService {
      * Save No Code Tool
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns PipelineEnd Successful Response
+     * @returns NoCodeWidget Successful Response
      * @throws ApiError
      */
     public static saveNoCodeTool(data: NoCodeSaveNoCodeToolData): CancelablePromise<NoCodeSaveNoCodeToolResponse> {

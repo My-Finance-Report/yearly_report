@@ -6,12 +6,12 @@ from typing import Any, TypeVar, get_args, get_origin
 
 
 from app.db import Session
-from app.models import User
+from app.models import TransactionSource, User
 from app.no_code.generators import account_balance, account_name, first_n_transactions
-from app.no_code.outputs import show_list, show_value
-from app.no_code.transformations import average_transform, sum_transform
+from app.no_code.transformations import average_transform, sum_transform, to_key_value_pair
 from app.schemas.no_code import (
     NoCodeTool,
+    SelectOption,
     NoCodeToolIn,
     Parameter,
     ParameterType,
@@ -29,20 +29,26 @@ tool_type_map: dict = {  # type: ignore
     ToolType.first_ten_transactions: first_n_transactions,
     ToolType.sum: sum_transform,
     ToolType.average: average_transform,
-    ToolType.show_value: show_value,
-    ToolType.show_list: show_list,
     ToolType.account_name: account_name,
     ToolType.account_balance: account_balance,
+    ToolType.to_key_value_pair: to_key_value_pair,
 }
 
 
-def make_tools() -> list[NoCodeTool]:
+def make_account_choices(session: Session,user: User)->list[SelectOption]:
+    accts = session.query(TransactionSource.name, TransactionSource.id).filter(TransactionSource.user_id == user.id, ~TransactionSource.archived).all()
+    return [SelectOption(key=acct.id, value=acct.name) for acct in accts]
+
+def make_tools(
+    session: Session,
+    user: User,
+) -> list[NoCodeTool]:
     return [
         NoCodeTool(
             name="First n Transactions",
             description="Get the first n transactions for the user",
             tool=ToolType.first_ten_transactions,
-            parameters=[Parameter(name="n", type=ParameterType.INT)],
+            parameters=[Parameter(name="n", type=ParameterType.INT),Parameter(name="account", type=ParameterType.SELECT, options=make_account_choices(session, user))],
         ),
         NoCodeTool(
             name="Sum",
@@ -55,14 +61,23 @@ def make_tools() -> list[NoCodeTool]:
             tool=ToolType.average,
         ),
         NoCodeTool(
-            name="Show Value",
-            description="Show the passed value",
-            tool=ToolType.show_value,
+            name="Account Name",
+            description= "simply returns the account name",
+            tool=ToolType.account_name,
+            parameters=[Parameter(name="account", type=ParameterType.SELECT, options=make_account_choices(session,user))]
         ),
         NoCodeTool(
-            name="Show List",
-            description="Show the passed list",
-            tool=ToolType.show_list,
+            name="Account Balance",
+            description= "simply returns the account balance",
+            tool=ToolType.account_balance,
+            parameters=[Parameter(name="account", type=ParameterType.SELECT, options=make_account_choices(session,user))]
+        ),
+        NoCodeTool(
+            name="to key value pairs",
+            description="todo",
+            tool = ToolType.to_key_value_pair,
+            parameters=[Parameter(name="key_from", type=ParameterType.STRING, value="category_name"), Parameter(name="value_from", type=ParameterType.STRING, value="amount")]
+            
         ),
     ]
 

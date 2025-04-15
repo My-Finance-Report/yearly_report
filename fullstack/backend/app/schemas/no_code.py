@@ -1,4 +1,5 @@
 import enum
+
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Generic, TypeVar
@@ -15,6 +16,7 @@ class NoCodeTransaction:
     amount: float
     description: str
     date: str
+    category_name: str
 
 
 T = TypeVar("T")
@@ -25,12 +27,18 @@ class ParameterType(str, enum.Enum):
     INT = "int"
     FLOAT = "float"
     STRING = "string"
+    SELECT = "select"
 
+
+class SelectOption(BaseModel):
+    key: int
+    value: str
 
 class Parameter(BaseModel):
     name: str
     type: ParameterType
     value: int | float | str | None = None
+    options: list[SelectOption] | None = None
 
 
 @dataclass
@@ -67,7 +75,7 @@ class PipelineEnd:
 class WidgetType(str, enum.Enum):
     value = "value"
     list = "list"
-    chart = "chart"
+    pie_chart = "pie_chart"
 
 Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
@@ -79,8 +87,8 @@ class ToolType(str, enum.Enum):
     account_balance = "account_balance"
     sum = "sum"
     average = "average"
-    show_value = "show_value"
-    show_list = "show_list"
+    to_key_value_pair = "to_key_value_pair"
+
 
 
 class ResultTypeEnum(enum.Enum):
@@ -98,7 +106,6 @@ class NoCodeToolIn(BaseModel):
 class NoCodeWidget(BaseModel):
     name: str
     description: str
-    pipeline: list[NoCodeToolIn]
     result: ResultType
     result_type: ResultTypeEnum
     row: int

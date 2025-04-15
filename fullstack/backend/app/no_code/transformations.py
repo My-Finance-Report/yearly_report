@@ -24,3 +24,9 @@ def average_transform(data: list[T], kwargs: Kwargs) -> Decimal:
 @step
 def sum_transform(data: list[T], kwargs: Kwargs) -> Decimal:
     return Decimal(sum([get_value(transaction) for transaction in data]))
+
+@step
+def to_key_value_pair(data: list[T], kwargs: Kwargs) -> list[dict]:
+    key_from = str(kwargs["key_from"])
+    value_from = str(kwargs["value_from"])
+    return [{"key": getattr(transaction, key_from), "value": getattr(transaction, value_from)} for transaction in data]

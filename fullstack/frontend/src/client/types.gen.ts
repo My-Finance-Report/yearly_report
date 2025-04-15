@@ -209,21 +209,9 @@ export type NoCodeTool_Output = {
     parameters?: (Array<Parameter> | null);
 };
 
-export type NoCodeToolIn = {
-    tool: ToolType;
-    parameters?: (Array<Parameter> | null);
-};
-
-export type NoCodeTransaction = {
-    id: (number | null);
-    amount: number;
-    description: string;
-};
-
 export type NoCodeWidget = {
     name: string;
     description: string;
-    pipeline: Array<NoCodeToolIn>;
     result: (string | number | {
     [key: string]: (string | number);
 } | Array<(string | number)> | Array<{
@@ -237,20 +225,14 @@ export type NoCodeWidget = {
     type: WidgetType;
 };
 
-export type OutputType = 'show_value' | 'show_list';
-
 export type Parameter = {
     name: string;
     type: ParameterType;
     value?: (number | string | null);
+    options?: (Array<SelectOption> | null);
 };
 
-export type ParameterType = 'int' | 'float' | 'string';
-
-export type PipelineEnd = {
-    result: PrimitiveResult;
-    output_type: OutputType;
-};
+export type ParameterType = 'int' | 'float' | 'string' | 'select';
 
 /**
  * Response model for a Plaid account.
@@ -315,11 +297,6 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
-};
-
-export type PrimitiveResult = {
-    name: string;
-    value: (string | NoCodeTransaction | Array<(string)> | Array<NoCodeTransaction>);
 };
 
 export type PrivateUserCreate = {
@@ -409,6 +386,11 @@ export type SavedFilterUpdate = {
     filter_data?: (FilterData_Input | null);
 };
 
+export type SelectOption = {
+    key: number;
+    value: string;
+};
+
 export type SourceKind = 'account' | 'investment' | 'card';
 
 export type SubscriptionDetails = {
@@ -438,7 +420,7 @@ export type Token = {
     temp_token?: (string | null);
 };
 
-export type ToolType = 'first_ten_transactions' | 'sum' | 'average' | 'show_value' | 'show_list';
+export type ToolType = 'first_ten_transactions' | 'account_name' | 'account_balance' | 'sum' | 'average' | 'to_key_value_pair';
 
 export type TransactionEdit = {
     description: string;
@@ -570,7 +552,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'list' | 'chart';
+export type WidgetType = 'value' | 'list' | 'pie_chart';
 
 export type WorkerStatusOut = {
     id: number;
@@ -750,7 +732,7 @@ export type NoCodeSaveNoCodeToolData = {
     requestBody: Array<NoCodeTool_Input>;
 };
 
-export type NoCodeSaveNoCodeToolResponse = (PipelineEnd);
+export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidget>);
 
 export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidget>);
 
