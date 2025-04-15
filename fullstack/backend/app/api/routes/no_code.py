@@ -1,5 +1,7 @@
+from dataclasses import is_dataclass
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
+from sqlalchemy import Result, desc
 
 from app.db import Session, get_current_user, get_db
 from app.models import (
@@ -14,7 +16,7 @@ from app.no_code.functions import (
     evaluate_pipeline,
     make_tools,
 )
-from app.schemas.no_code import NoCodeWidget, Parameter, ParameterType, PipelineEnd, ResultTypeEnum, WidgetType
+from app.schemas.no_code import  NoCodeWidgetIn, NoCodeWidgetOut, Parameter, ParameterType, PipelineEnd, ResultType, ResultTypeEnum, WidgetType
 
 router = APIRouter(prefix="/no_code", tags=["no_code"])
 
@@ -26,16 +28,41 @@ def get_no_code_tool(
 ) -> list[NoCodeTool]:
     return make_tools(session, user)
 
+def determine_result_type(result: ResultType)-> ResultTypeEnum:
+    if is_dataclass(result):
+        return ResultTypeEnum.transactions
+    try:
+        int(result)
+        return ResultTypeEnum.number 
+    except: 
+        return ResultTypeEnum.string
 
-@router.post("/save_no_code_tool", response_model=list[NoCodeWidget])
+
+def process_widget(session:Session, user: User,widget: NoCodeWidgetIn)-> NoCodeWidgetOut:
+
+    result=evaluate_pipeline(convert_to_pipeline(widget.pipeline), session, user)
+
+    return NoCodeWidgetOut(
+        name=widget.name,
+        description=widget.description,
+        result=result,
+        result_type=determine_result_type(result),
+        width=widget.width,
+        height=widget.height,
+        col=widget.col,
+        row=widget.row,
+        type=widget.type
+    )
+
+
+@router.post("/save_no_code_tool", response_model=list[NoCodeWidgetOut])
 def save_no_code_tool(
-    pipeline: list[NoCodeTool],
+    widgets: list[NoCodeWidgetIn],
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> list[NoCodeWidget]:
+) -> list[NoCodeWidgetOut]:
     try:
-        result =  evaluate_pipeline(convert_to_pipeline(pipeline), session, user)
-        return [NoCodeWidget(result_type=ResultTypeEnum.transactions,result = result ,name="Pie Chart", description="Pie chart of 10 transactions", row=3, col=0, height=1, width=1, type=WidgetType.pie_chart)]
+        return [process_widget(session,user,widget) for widget in  widgets]
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -44,11 +71,11 @@ def first_n(n: int)->NoCodeToolIn:
 
 
 
-@router.get("/get_no_code_dashboard", response_model=list[NoCodeWidget])
+@router.get("/get_no_code_dashboard", response_model=list[NoCodeWidgetOut])
 def get_no_code_dashboard(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
-) -> list[NoCodeWidget]:
+) -> list[NoCodeWidgetOut]:
 
     list_trans = [first_n(10)]
     account_name = [NoCodeToolIn(tool=ToolType.account_name, parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
@@ -58,11 +85,11 @@ def get_no_code_dashboard(
     get_pie = [first_n(10), NoCodeToolIn(tool=ToolType.to_key_value_pair, parameters=[Parameter(name="key_from", type=ParameterType.STRING, value="category_name"), Parameter(name="value_from", type=ParameterType.STRING, value="amount")])]
 
     widgets = [
-        NoCodeWidget(result_type=ResultTypeEnum.string,result = evaluate_pipeline(convert_to_pipeline(account_name), session, user),name="Account Name", description="Name of the account",  row=0, col=0, height=1, width=1, type=WidgetType.value),
-        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(account_balance), session, user),name="Account Balance", description="Balance of the account",  row=0, col=1, height=1, width=1, type=WidgetType.value),
-        NoCodeWidget(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(list_trans), session, user),name="List Transactions", description="List of transactions", row=2, col=0, height=1, width=1, type=WidgetType.list),
-        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_sum), session, user),name="Total of transactions", description="Total of 10 transactions",  row=1, col=1, height=1, width=1, type=WidgetType.value),
-        NoCodeWidget(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_avg), session, user),name="Average of transactions", description="Average of 10 transactions", row=1, col=0, height=1, width=1, type=WidgetType.value),
-        NoCodeWidget(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(get_pie), session, user),name="Pie Chart", description="Pie chart of 10 transactions",  row=3, col=0, height=1, width=1, type=WidgetType.pie_chart)
+        NoCodeWidgetOut(result_type=ResultTypeEnum.string,result = evaluate_pipeline(convert_to_pipeline(account_name), session, user),name="Account Name", description="Name of the account",  row=0, col=0, height=1, width=1, type=WidgetType.value),
+        NoCodeWidgetOut(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(account_balance), session, user),name="Account Balance", description="Balance of the account",  row=0, col=1, height=1, width=1, type=WidgetType.value),
+        NoCodeWidgetOut(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(list_trans), session, user),name="List Transactions", description="List of transactions", row=2, col=0, height=1, width=1, type=WidgetType.list),
+        NoCodeWidgetOut(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_sum), session, user),name="Total of transactions", description="Total of 10 transactions",  row=1, col=1, height=1, width=1, type=WidgetType.value),
+        NoCodeWidgetOut(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_avg), session, user),name="Average of transactions", description="Average of 10 transactions", row=1, col=0, height=1, width=1, type=WidgetType.value),
+        NoCodeWidgetOut(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(get_pie), session, user),name="Pie Chart", description="Pie chart of 10 transactions",  row=3, col=0, height=1, width=1, type=WidgetType.pie_chart)
     ]
     return widgets

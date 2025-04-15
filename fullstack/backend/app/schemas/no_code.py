@@ -103,7 +103,17 @@ class NoCodeToolIn(BaseModel):
 
 
 
-class NoCodeWidget(BaseModel):
+class NoCodeWidgetIn(BaseModel):
+    name: str
+    description: str
+    pipeline: list[NoCodeToolIn]
+    row: int
+    col: int
+    height: int
+    width: int
+    type: WidgetType 
+
+class NoCodeWidgetOut(BaseModel):
     name: str
     description: str
     result: ResultType
@@ -113,6 +123,7 @@ class NoCodeWidget(BaseModel):
     height: int
     width: int
     type: WidgetType 
+
 
 
 class NoCodeTool(BaseModel):

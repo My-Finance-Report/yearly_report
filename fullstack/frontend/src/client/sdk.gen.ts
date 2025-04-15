@@ -580,7 +580,7 @@ export class LoginService {
 export class NoCodeService {
     /**
      * Get No Code Tool
-     * @returns NoCodeTool_Output Successful Response
+     * @returns NoCodeTool Successful Response
      * @throws ApiError
      */
     public static getNoCodeTool(): CancelablePromise<NoCodeGetNoCodeToolResponse> {
@@ -594,7 +594,7 @@ export class NoCodeService {
      * Save No Code Tool
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns NoCodeWidget Successful Response
+     * @returns NoCodeWidgetOut Successful Response
      * @throws ApiError
      */
     public static saveNoCodeTool(data: NoCodeSaveNoCodeToolData): CancelablePromise<NoCodeSaveNoCodeToolResponse> {
@@ -611,7 +611,7 @@ export class NoCodeService {
     
     /**
      * Get No Code Dashboard
-     * @returns NoCodeWidget Successful Response
+     * @returns NoCodeWidgetOut Successful Response
      * @throws ApiError
      */
     public static getNoCodeDashboard(): CancelablePromise<NoCodeGetNoCodeDashboardResponse> {

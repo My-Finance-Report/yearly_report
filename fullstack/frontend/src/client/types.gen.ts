@@ -195,21 +195,30 @@ export type NewPassword = {
     new_password: string;
 };
 
-export type NoCodeTool_Input = {
+export type NoCodeTool = {
     name: string;
     description: string;
     tool: ToolType;
     parameters?: (Array<Parameter> | null);
 };
 
-export type NoCodeTool_Output = {
-    name: string;
-    description: string;
+export type NoCodeToolIn = {
     tool: ToolType;
     parameters?: (Array<Parameter> | null);
 };
 
-export type NoCodeWidget = {
+export type NoCodeWidgetIn = {
+    name: string;
+    description: string;
+    pipeline: Array<NoCodeToolIn>;
+    row: number;
+    col: number;
+    height: number;
+    width: number;
+    type: WidgetType;
+};
+
+export type NoCodeWidgetOut = {
     name: string;
     description: string;
     result: (string | number | {
@@ -726,15 +735,15 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
-export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool_Output>);
+export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool>);
 
 export type NoCodeSaveNoCodeToolData = {
-    requestBody: Array<NoCodeTool_Input>;
+    requestBody: Array<NoCodeWidgetIn>;
 };
 
-export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidget>);
+export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
 
-export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidget>);
+export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidgetOut>);
 
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 
