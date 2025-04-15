@@ -1,4 +1,5 @@
 import { Route } from "@/routes/_layout/_logged_in/transactions"
+import { Route as DemoRoute } from "@/routes/_layout/index"
 import {
   type SavedFilterOut,
   type SavedFilterCreate,
@@ -157,8 +158,8 @@ export function FilterProvider({
       filter_data: currentFilter.filter_data,
     })
   }
-
-  const { filter : filterFromUrl } = Route.useSearch()
+  const route = isDemo ? DemoRoute : Route
+  const { filter : filterFromUrl } = route.useSearch() 
 
   function getInitalFilter(): SavedFilterOut {
     if (filterFromUrl) {

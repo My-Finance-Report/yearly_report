@@ -10,11 +10,20 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import React, { useRef } from "react"
+import { useRef } from "react"
 import { Transactions } from "./_logged_in/transactions"
+import { z } from "zod"
+
+const demoSearchSchema = z.object({
+  filter: z.string().optional(),
+  showAdvanced: z.boolean().optional(),
+})
+
+
 
 export const Route = createFileRoute("/_layout/")({
   component: Landing,
+  validateSearch: (search) => demoSearchSchema.parse(search),
   beforeLoad: async () => {
     if (await isSessionValid()) {
       throw redirect({
