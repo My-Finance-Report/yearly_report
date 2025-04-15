@@ -332,17 +332,21 @@ export function FilterButton({ name, options }: FilterButtonProps) {
     return null;
   }
 
-  const handleToggle = (option: string) => {
+  const handleToggle = (option: string, checked: boolean) => {
     if (!currentFilter.filter_data.lookup) {
       return;
     }
 
     const updatedFilter = { ...currentFilter };
 
+    console.log(option, name)
+
     const currentValues =
       updatedFilter.filter_data.lookup?.[name]?.specifics || [];
 
-    if (currentValues.some((value) => value.value === option)) {
+    console.log(currentValues)
+
+    if (checked) {
       updatedFilter.filter_data.lookup = {
         ...updatedFilter.filter_data.lookup,
         [name]: {
@@ -361,6 +365,8 @@ export function FilterButton({ name, options }: FilterButtonProps) {
         },
       };
     }
+
+    console.log(updatedFilter.filter_data)
 
     breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };
@@ -441,7 +447,7 @@ export function FilterButton({ name, options }: FilterButtonProps) {
                     value={option}
                     key={option}
                     checked={checked}
-                    onCheckedChange={() => handleToggle(option)}
+                    onCheckedChange={() => handleToggle(option, checked)}
                   >
                     {option.charAt(0).toUpperCase() + option.slice(1)}
                     {checked && <FiCheck />}

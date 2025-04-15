@@ -75,13 +75,14 @@ export function FilterProvider({
   const createFilterMutation = useMutation({
     mutationFn: (data: SavedFilterCreate) =>
       SavedFiltersService.createSavedFilter({ requestBody: data }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
       toast(
         "Filter saved",
         "Your filter has been saved successfully.",
         "success",
       )
+      setCurrentFilter(data)
     },
     onError: () => {
       toast(
