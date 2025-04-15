@@ -1,7 +1,6 @@
 import enum
 from typing import Generic, TypeVar
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 from abc import ABC, abstractmethod
 from app.core.db import Session
 from app.models import User
@@ -9,8 +8,14 @@ from app.models import User
 from typing import Generic, TypeVar
 
 from dataclasses import dataclass
+from app.models import TransactionId
 
-from fullstack.backend.app.no_code.generators import NoCodeTransaction
+@dataclass
+class NoCodeTransaction:
+    id: TransactionId|None
+    amount: float
+    description: str
+
 
 
 T = TypeVar("T")
@@ -38,7 +43,7 @@ class Primitive(BaseModel, Generic[T]):
     value: T
 
 
-Blah= int | float | str | NoCodeTransaction
+Blah = int | float | str | NoCodeTransaction
 
 PrimitiveResultValue = Blah | list[Blah] 
 
