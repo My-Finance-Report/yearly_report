@@ -1,15 +1,8 @@
-from dataclasses import dataclass
 
 from app.schemas.no_code import Generator,  Parameter, ParameterType, Primitive
-from app.models import Transaction, TransactionId
-from app.schemas.no_code import PipelineStart
+from app.models import Transaction
+from app.schemas.no_code import PipelineStart, NoCodeTransaction
 
-
-@dataclass
-class NoCodeTransaction:
-    id: TransactionId|None
-    amount: float
-    description: str
 
 class FirstNTransactionGenerator(Generator[NoCodeTransaction]):
 
