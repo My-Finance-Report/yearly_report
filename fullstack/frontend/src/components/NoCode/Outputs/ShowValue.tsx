@@ -1,6 +1,11 @@
-import { PipelineEnd } from "@/client"
-import { Text } from "@chakra-ui/react"
+import { NoCodeWidget } from "@/client"
+import { Text, Flex } from "@chakra-ui/react"
 
-export function ShowValue( {pipelineEnd}: { pipelineEnd: PipelineEnd }) {
-    return <Text>{pipelineEnd.result.value}</Text>
+export function ShowValue({ widget }: { widget: NoCodeWidget }) {
+    return (
+        <Flex direction="column">
+        <Text>{widget.name}</Text>
+        <Text>{widget.result.result.value}</Text>
+</Flex>
+    )
 }

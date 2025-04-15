@@ -1,14 +1,16 @@
-import { PipelineEnd } from "@/client"
+import { NoCodeWidget } from "@/client"
 import { ShowValue } from "./ShowValue"
 import { ShowList } from "./ShowList"
+import { ShowChart } from "./ShowChart"
 
 const MAP_TO_SHOW = {
-    "show_value": ShowValue,
-    "show_list": ShowList    
+    "value": ShowValue,
+    "list": ShowList,    
+    "chart": ShowChart    
 }
 
-export function NoCodeShow({ pipelineEnd }: { pipelineEnd: PipelineEnd }) {
-    const TheDisplay = MAP_TO_SHOW[pipelineEnd.output_type]
-    return <TheDisplay pipelineEnd={pipelineEnd} />
+export function NoCodeShow({ widget }: { widget: NoCodeWidget }) {
+    const TheDisplay = MAP_TO_SHOW[widget.type]
+    return <TheDisplay widget={widget} />
 }
     

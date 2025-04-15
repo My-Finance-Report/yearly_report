@@ -209,10 +209,27 @@ export type NoCodeTool_Output = {
     parameters?: (Array<Parameter> | null);
 };
 
+export type NoCodeToolIn = {
+    tool: ToolType;
+    parameters?: (Array<Parameter> | null);
+};
+
 export type NoCodeTransaction = {
     id: (number | null);
     amount: number;
     description: string;
+};
+
+export type NoCodeWidget = {
+    name: string;
+    description: string;
+    pipeline: Array<NoCodeToolIn>;
+    result: PipelineEnd;
+    row: number;
+    col: number;
+    height: number;
+    width: number;
+    type: WidgetType;
 };
 
 export type OutputType = 'show_value' | 'show_list';
@@ -297,7 +314,7 @@ export type PriceDetails = {
 
 export type PrimitiveResult = {
     name: string;
-    value: (number | string | NoCodeTransaction | Array<(number | string | NoCodeTransaction)>);
+    value: (string | NoCodeTransaction | Array<(string)> | Array<NoCodeTransaction>);
 };
 
 export type PrivateUserCreate = {
@@ -546,6 +563,8 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
+export type WidgetType = 'value' | 'list' | 'chart';
+
 export type WorkerStatusOut = {
     id: number;
     batch_id: string;
@@ -725,6 +744,8 @@ export type NoCodeSaveNoCodeToolData = {
 };
 
 export type NoCodeSaveNoCodeToolResponse = (PipelineEnd);
+
+export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidget>);
 
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 

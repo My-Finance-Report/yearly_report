@@ -1,33 +1,34 @@
 import enum
-from typing import Generic, TypeVar
-from pydantic import BaseModel
 from abc import ABC, abstractmethod
-from app.core.db import Session
-from app.models import User
-
+from dataclasses import dataclass
+from decimal import Decimal
 from typing import Generic, TypeVar
 
-from dataclasses import dataclass
-from app.models import TransactionId
+from pydantic import BaseModel
+
+from app.core.db import Session
+from app.models import TransactionId, User
+
 
 @dataclass
 class NoCodeTransaction:
-    id: TransactionId|None
+    id: TransactionId | None
     amount: float
     description: str
 
 
-
 T = TypeVar("T")
 V = TypeVar("V")
+
 
 class ParameterType(str, enum.Enum):
     INT = "int"
     FLOAT = "float"
     STRING = "string"
 
+
 class Parameter(BaseModel):
-    name: str 
+    name: str
     type: ParameterType
     value: int | float | str | None = None
 
@@ -43,9 +44,11 @@ class Primitive(BaseModel, Generic[T]):
     value: T
 
 
-Blah = int | float | str | NoCodeTransaction
+Blah = Decimal | NoCodeTransaction
+ValidPassable = Decimal | list[NoCodeTransaction]
 
-PrimitiveResultValue = Blah | list[Blah] 
+PrimitiveResultValue = Blah | list[Decimal] | list[NoCodeTransaction]
+
 
 class PrimitiveResult(BaseModel):
     name: str
@@ -55,7 +58,7 @@ class PrimitiveResult(BaseModel):
 class OutputType(str, enum.Enum):
     show_value = "show_value"
     show_list = "show_list"
-    
+
 @dataclass
 class PipelineEnd:
     result: PrimitiveResult
@@ -63,16 +66,13 @@ class PipelineEnd:
 
 
 class Transformation(ABC, Generic[T, V]):
+    @property
+    @abstractmethod
+    def input_type(self) -> type[T]: ...
 
     @property
     @abstractmethod
-    def input_type(self) -> type[T]:
-        ...
-
-    @property
-    @abstractmethod
-    def output_type(self) -> type[V]:
-        ...
+    def output_type(self) -> type[V]: ...
 
     @abstractmethod
     def call(self, data: T) -> V:
@@ -82,20 +82,18 @@ class Transformation(ABC, Generic[T, V]):
         """
         pass
 
-class Generator(ABC, Generic[T]):
 
+class Generator(ABC, Generic[T]):
     def __init__(self, kwargs: dict[str, int]):
         self.kwargs = kwargs
 
     @property
     @abstractmethod
-    def parameters(self) -> list[Parameter]:
-        ...
+    def parameters(self) -> list[Parameter]: ...
 
     @property
     @abstractmethod
-    def output_type(self) -> type[Primitive[T]]:
-        ...
+    def output_type(self) -> type[Primitive[T]]: ...
 
     @abstractmethod
     def call(self, start: PipelineStart) -> Primitive[T]:
@@ -103,14 +101,10 @@ class Generator(ABC, Generic[T]):
 
 
 class Output(ABC, Generic[T]):
-
     @property
     @abstractmethod
-    def input_type(self) -> type[T]:
-        ...
+    def input_type(self) -> type[T]: ...
 
     @abstractmethod
     def call(self, data: T) -> PipelineEnd:
         pass
-
-

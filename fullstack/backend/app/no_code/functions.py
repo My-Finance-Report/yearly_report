@@ -1,15 +1,22 @@
-
-from abc import ABC
-from typing import  Callable, TypeVar, Any
-from app.schemas.no_code import Generator, Output, Parameter, ParameterType, PipelineEnd, PipelineStart, Primitive, Transformation
-from app.no_code.generators import FirstNTransactionGenerator
-from app.no_code.outputs import ShowValue, ShowList
-from app.no_code.transformations import SumTransformation, AverageTransformation
 import enum
+from collections.abc import Callable
+from dataclasses import dataclass
+from functools import partial
+from typing import Any, TypeVar, get_args, get_origin
+
 from pydantic import BaseModel
 
 from app.db import Session
 from app.models import User
+from app.no_code.generators import first_n_transactions
+from app.no_code.outputs import show_list, show_value
+from app.no_code.transformations import average_transform, sum_transform
+from app.schemas.no_code import (
+    Parameter,
+    ParameterType,
+    PipelineEnd,
+    PipelineStart,
+)
 
 T = TypeVar("T")
 
@@ -26,20 +33,23 @@ class NoCodeTool(BaseModel):
     name: str
     description: str
     tool: ToolType
-    parameters: list[Parameter] | None =None
+    parameters: list[Parameter] | None = None
+
+class NoCodeToolIn(BaseModel):
+    tool: ToolType
+    parameters: list[Parameter] | None = None
 
 
-tool_type_map = {
-    ToolType.first_ten_transactions: lambda params: FirstNTransactionGenerator({params.name : params.value for params in params}),
-    ToolType.sum: lambda _params: SumTransformation(),
-    ToolType.average: lambda _params: AverageTransformation(),
-    ToolType.show_value: lambda _params: ShowValue(),
-    ToolType.show_list: lambda _params: ShowList(),
+tool_type_map: dict = {  # type: ignore
+    ToolType.first_ten_transactions: first_n_transactions,
+    ToolType.sum: sum_transform,
+    ToolType.average: average_transform,
+    ToolType.show_value: show_value,
+    ToolType.show_list: show_list,
 }
 
 
-
-def make_tools()->list[NoCodeTool]:
+def make_tools() -> list[NoCodeTool]:
     return [
         NoCodeTool(
             name="First n Transactions",
@@ -70,72 +80,39 @@ def make_tools()->list[NoCodeTool]:
     ]
 
 
-
-def convert_to_pipeline(pipeline: list[NoCodeTool]) -> tuple[Generator[T], list[Transformation[T,T]], Output[T]]:
-    pipe = [tool_type_map[tool.tool](tool.parameters) for tool in pipeline]
-    lint_pipeline(pipe)
-
-
-    # we can ignore because we know the types from linting
-    return pipe[0], pipe[1:-1], pipe[-1] #type: ignore 
+@dataclass
+class Pipeline:
+    first_step: Callable[[PipelineStart], T]
+    steps: list[partial[Any]]
+    last_step: Callable[[T], PipelineEnd]
 
 
+def convert_to_pipeline(tools: list[NoCodeToolIn]) -> Pipeline:
+    steps = []
+    for tool in tools:
+        func = tool_type_map[tool.tool]
+        if tool.parameters:
+            kwargs = {p.name: p.value for p in tool.parameters}
+            steps.append(partial(func, kwargs=kwargs))
+        else:
+            steps.append(partial(func, kwargs={}))
 
-def evaluate_pipeline(first: Generator[T], steps: list[Transformation[T,T]], last: Output[T], session: Session, user: User)-> PipelineEnd:
-
-    args: PipelineStart = PipelineStart(user, session)
-    curr_args = first.call(args)
-    blah: T = curr_args
-    for step in steps:
-        blah = step.call(blah)
-
-    return last.call(blah)
-    
-        
-def lint_pipeline(steps: list[ABC]) -> None:
-    """
-    Checks that each step's input_type matches the previous step's output_type.
-    Raises a ValueError if there's a mismatch.
-    """
-    if not steps:
-        raise ValueError("No steps in the pipeline.")
-
-    first = steps[0]
-    if not hasattr(first, "output_type"):
-        raise ValueError("First step must have an 'output_type' (e.g., a Generator).")
-
-    current_type = getattr(first, "output_type", None)
-
-    for i in range(1, len(steps)):
-        step = steps[i]
-        expected_input = getattr(step, "input_type", None)
-        if expected_input is None:
-            raise ValueError(f"Step {i} ({step.__class__.__name__}) has no 'input_type' declared.")
-
-        valid, message = valid_handoff(current_type, expected_input)
-        if not valid:
-            raise ValueError(
-                f"Type mismatch at step {i} ({step.__class__.__name__}): "
-                f"{message}"
-            )
-
-        if hasattr(step, "output_type"):
-            current_type = getattr(step, "output_type", None)
-
-   
+    return Pipeline(steps[0], steps[1:-1], steps[-1])
 
 
-def valid_handoff(pass_from: Any, pass_to: Any) -> tuple[bool, str | None]:
-    if pass_from == pass_to:
-        return True, None
-    if "Primitive[list[" in str(pass_from) and "Primitive[list[" in str(pass_to):
-        return True, None
-    if "Primitive[list" in str(pass_from) and "Primitive[list" not in str(pass_to):
-        return False, "Cannot pass a list to a step that doesn't accept a list"
-    if "Primitive[list"not in str(pass_from) and "Primitive[list" in str(pass_to):
-        return False, "Cannot pass a non-list to a step that requires a list"
-    if "Primitive[" in str(pass_from) and "Primitive[" not in str(pass_to):
-        return False, "Cannot pass a non-list to a step that requires a list"
-    if "Primitive[" not in str(pass_from) and "Primitive[" in str(pass_to):
-        return False, "Cannot pass a non-list to a step that requires a list"
-    return True, None
+def evaluate_pipeline(pipeline: Pipeline, session: Session, user: User) -> PipelineEnd:
+    data = PipelineStart(user, session)
+    data = pipeline.first_step(data)
+    for block in pipeline.steps:
+        data = block(data)
+    val = pipeline.last_step(data)
+    return val
+
+
+def _same(t1: type, t2: type) -> bool:
+    if t1 == t2:
+        return True
+    o1, o2 = get_origin(t1), get_origin(t2)
+    return o1 == o2 and all(
+        _same(a, b) for a, b in zip(get_args(t1), get_args(t2), strict=False)
+    )
