@@ -34,10 +34,7 @@ def send_telegram_message(
             "disable_notification": disable_notification,
         }
 
-        response = requests.post(url, data=data)
-        response.raise_for_status()
-
-        logger.info(f"Telegram message sent successfully: {response.status_code}")
+        requests.post(url, data=data)
         return True
     except Exception as e:
         logger.error(f"Failed to send Telegram message: {str(e)}")

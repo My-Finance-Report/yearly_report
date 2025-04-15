@@ -1,8 +1,8 @@
 import logging
 from dataclasses import dataclass, replace
-from datetime import datetime
 from typing import cast
 
+from app.async_pipelines.uploaded_file_pipeline.categorizer import safe_parse_date
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
     InProcessJob,
@@ -91,9 +91,7 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
         Transaction(
             description=t.partialTransactionDescription,
             category_id=category_lookup[t.category],
-            date_of_transaction=datetime.strptime(
-                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
-            ),
+            date_of_transaction=safe_parse_date(t.partialTransactionDateOfTransaction),
             amount=t.partialTransactionAmount,
             transaction_source_id=in_process.transaction_source.id,
             kind=t.partialTransactionKind,

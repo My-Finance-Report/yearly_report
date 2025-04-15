@@ -31,5 +31,8 @@ class SavedFilterInDB(SavedFilterBase):
         orm_mode = True
 
 
-class SavedFilter(SavedFilterInDB):
+class SavedFilterOut(SavedFilterBase):
+    id: int | str  # uuid for defaults
+    is_deleteable: bool = True
+    is_default: bool = False
     pass

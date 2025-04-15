@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import uuid
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta, timezone
@@ -197,14 +198,27 @@ async def run_jobs(_user_session: Session, jobs: list[WorkerJob]) -> None:
         user = job_specific_session.get(User, specific_job.user_id)
         if not user:
             raise ValueError("User record not found!")
+
+        batch_uuid = uuid.uuid4().hex
         in_process_files[specific_job.kind].append(
             InProcessJob(
-                session=job_specific_session, user=user, file=pdf, job=specific_job
+                session=job_specific_session,
+                user=user,
+                file=pdf,
+                job=specific_job,
+                batch_id=batch_uuid,
             )
         )
 
     callable = FUNC_LOOKUP[job.kind]
     await callable(in_process_files[job.kind])
+
+
+def handle_plaid() -> None:
+    try:
+        asyncio.run(sync_all_plaid_accounts_job())
+    except Exception as e:
+        send_telegram_message(f"Failed to sync Plaid accounts: {e}")
 
 
 def worker() -> None:
@@ -216,7 +230,7 @@ def worker() -> None:
         time.sleep(POLL_INTERVAL)
         if iterations % 60 == 0:
             iterations = 0
-            asyncio.run(sync_all_plaid_accounts_job())
+            handle_plaid()
         iterations += 1
 
 

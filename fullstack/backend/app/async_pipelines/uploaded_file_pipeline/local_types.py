@@ -29,7 +29,7 @@ class PartialTransaction(BaseModel):
         ..., description="Plaid transaction identifier"
     )
     partialTransactionDateOfTransaction: str = Field(
-        ..., description="Transaction date in MM/DD/YYYY format"
+        ..., description="Transaction date in %m/%d/%Y format"
     )
     partialTransactionDescription: str = Field(
         ..., description="Description of the transaction"
@@ -130,6 +130,7 @@ class Recategorization:
 class InProcessJob:
     session: Session
     user: User
+    batch_id: str
     file: UploadedPdf | None = None
     job: WorkerJob | None = None
     config: UploadConfiguration | None = None

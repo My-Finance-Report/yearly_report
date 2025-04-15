@@ -35,12 +35,24 @@ export type Body_login_login_access_token = {
 export type Body_uploads_upload_files = {
     files: Array<((Blob | File))>;
 };
+<<<<<<< HEAD
 
 export type BudgetBase = {
     user_id: number;
     name: string;
     active?: boolean;
 };
+||||||| e77b0ff
+  files: Array<Blob | File>
+}
+
+export type BudgetBase = {
+  user_id: number
+  name: string
+  active?: boolean
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type BudgetCategoryLinkBase = {
     budget_entry_id: number;
@@ -67,14 +79,38 @@ export type BudgetCategoryLinkStatus = {
     transactions: Array<TransactionOut>;
     total: string;
 };
+<<<<<<< HEAD
 
 export type BudgetCreate = {
     name: string;
 };
+||||||| e77b0ff
+  budget_entry_id: number
+  category_id: number
+  id: number
+  stylized_name: string
+  transactions: Array<TransactionOut>
+  total: string
+}
+
+export type BudgetCreate = {
+  name: string
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type BudgetEntryCreate = {
     amount: number;
     name: string;
+<<<<<<< HEAD
+||||||| e77b0ff
+  amount: number
+  name: string
+}
+=======
+    budget_id: number;
+    category_link_ids: Array<(number)>;
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 };
 
 export type BudgetEntryEdit = {
@@ -104,6 +140,7 @@ export type BudgetEntryStatus = {
     };
     total: string;
 };
+<<<<<<< HEAD
 
 export type BudgetOut = {
     user_id: number;
@@ -112,12 +149,45 @@ export type BudgetOut = {
     id: number;
     entries: Array<BudgetEntryOut>;
 };
+||||||| e77b0ff
+  amount: string
+  id: number
+  name: string
+  budget_id: number
+  category_links_status: {
+    [key: string]: BudgetCategoryLinkStatus
+  }
+  total: string
+}
+
+export type BudgetOut = {
+  user_id: number
+  name: string
+  active?: boolean
+  id: number
+  entries: Array<BudgetEntryOut>
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type BudgetStatus = {
     user_id: number;
     name: string;
     active?: boolean;
+<<<<<<< HEAD
     entry_status: Array<BudgetEntryStatus>;
+||||||| e77b0ff
+  user_id: number
+  name: string
+  active?: boolean
+  entry_status: Array<BudgetEntryStatus>
+  months_with_entries: Array<string>
+}
+=======
+    budget_id: number;
+    entry_status: Array<BudgetEntryStatus>;
+    entries: Array<BudgetEntryOut>;
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
     months_with_entries: Array<(string)>;
 };
 
@@ -178,7 +248,16 @@ export type FilterData_Output = {
 
 export type FilterEntries = {
     specifics?: (Array<FilterEntry> | null);
+<<<<<<< HEAD
     all?: boolean;
+||||||| e77b0ff
+  specifics?: Array<FilterEntry> | null
+  all?: boolean
+  visible?: boolean | null
+  index: number
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
     visible?: (boolean | null);
     index: number;
 };
@@ -194,6 +273,13 @@ export type HTTPValidationError = {
 };
 
 export type JobStatus = 'completed' | 'pending' | 'processing' | 'failed';
+<<<<<<< HEAD
+||||||| e77b0ff
+export type JobStatus = "completed" | "pending" | "processing" | "failed"
+=======
+
+export type LandingStatus = 'has_transactions' | 'no_transactions_not_processing' | 'no_transactions_processing';
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type LoginGoogleData = {
     url: string;
@@ -207,6 +293,7 @@ export type NewPassword = {
     token: Token;
     new_password: string;
 };
+<<<<<<< HEAD
 
 export type NoCodeTool_Input = {
     name: string;
@@ -236,6 +323,12 @@ export type PipelineEnd = {
     result: PrimitiveResult;
     output_type: OutputType;
 };
+||||||| e77b0ff
+  token: Token
+  new_password: string
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 /**
  * Response model for a Plaid account.
@@ -301,6 +394,7 @@ export type PriceDetails = {
     tier: SubscriptionTier;
     max_sources: number;
 };
+<<<<<<< HEAD
 
 export type PrimitiveResult = {
     name: string;
@@ -313,6 +407,25 @@ export type PrivateUserCreate = {
     full_name: string;
     is_verified?: boolean;
 };
+||||||| e77b0ff
+  id: number
+  name: string
+  description?: string | null
+  price: number
+  currency: string
+  interval: string
+  tier: SubscriptionTier
+  max_sources: number
+}
+
+export type PrivateUserCreate = {
+  email: string
+  password: string
+  full_name: string
+  is_verified?: boolean
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type ProcessFileJobOut = {
     created_at: string;
@@ -325,6 +438,22 @@ export type ProcessFileJobOut = {
     attempt_count?: number;
     id: number;
 };
+<<<<<<< HEAD
+||||||| e77b0ff
+  created_at: string
+  last_tried_at?: string | null
+  status: JobStatus
+  user_id: number
+  config_id?: number | null
+  pdf_id: number
+  archived?: boolean
+  attempt_count?: number
+  id: number
+}
+=======
+
+export type ProcessingState = 'waiting' | 'preparing' | 'fetching' | 'parsing' | 'categorizing' | 'failed' | 'completed';
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SankeyConfigCreatePayload = {
     inputs: Array<SankeyInputCreate>;
@@ -368,6 +497,7 @@ export type SankeySibling = {
     category_name: string;
     source_id: number;
 };
+<<<<<<< HEAD
 
 export type SavedFilter = {
     name: string;
@@ -378,12 +508,46 @@ export type SavedFilter = {
     created_at: string;
     updated_at: string;
 };
+||||||| e77b0ff
+  category_id: number
+  category_name: string
+  source_id: number
+}
+
+export type SavedFilter = {
+  name: string
+  description?: string | null
+  filter_data: FilterData_Output
+  id: number
+  user_id: number
+  created_at: string
+  updated_at: string
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFilterCreate = {
     name: string;
     description?: (string | null);
     filter_data: FilterData_Input;
 };
+<<<<<<< HEAD
+||||||| e77b0ff
+  name: string
+  description?: string | null
+  filter_data: FilterData_Input
+}
+=======
+
+export type SavedFilterOut = {
+    name: string;
+    description?: (string | null);
+    filter_data: FilterData_Output;
+    id: (number | string);
+    is_deleteable?: boolean;
+    is_default?: boolean;
+};
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFilterUpdate = {
     name?: (string | null);
@@ -419,8 +583,18 @@ export type Token = {
     requires_2fa_setup?: boolean;
     temp_token?: (string | null);
 };
+<<<<<<< HEAD
 
 export type ToolType = 'first_ten_transactions' | 'sum' | 'average' | 'show_value' | 'show_list';
+||||||| e77b0ff
+  access_token?: string | null
+  token_type?: string
+  requires_2fa?: boolean
+  requires_2fa_setup?: boolean
+  temp_token?: string | null
+}
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type TransactionEdit = {
     description: string;
@@ -552,6 +726,20 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
+<<<<<<< HEAD
+||||||| e77b0ff
+export type AccountsGetTransactionSourcesResponse = Array<TransactionSourceOut>
+=======
+export type WorkerStatusOut = {
+    id: number;
+    batch_id: string;
+    status: ProcessingState;
+    created_at: string;
+    updated_at: string;
+    additional_info: string;
+};
+
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 export type AccountsGetTransactionSourcesResponse = (Array<TransactionSourceOut>);
 
 export type AccountsCreateTransactionSourceData = {
@@ -626,6 +814,7 @@ export type AccountsGetAccountSyncLogsData = {
 };
 
 export type AccountsGetAccountSyncLogsResponse = (Array<PlaidSyncLogOut>);
+<<<<<<< HEAD
 
 export type BudgetsGetBudgetResponse = ((BudgetOut | null));
 
@@ -647,6 +836,31 @@ export type BudgetsDeleteBudgetData = {
 };
 
 export type BudgetsDeleteBudgetResponse = (unknown);
+||||||| e77b0ff
+export type AccountsGetAccountSyncLogsResponse = Array<PlaidSyncLogOut>
+
+export type BudgetsGetBudgetResponse = BudgetOut | null
+
+export type BudgetsCreateBudgetData = {
+  requestBody: BudgetCreate
+}
+
+export type BudgetsCreateBudgetResponse = BudgetOut
+
+export type BudgetsUpdateBudgetData = {
+  budgetId: number
+  requestBody: BudgetBase
+}
+
+export type BudgetsUpdateBudgetResponse = BudgetOut
+
+export type BudgetsDeleteBudgetData = {
+  budgetId: number
+}
+
+export type BudgetsDeleteBudgetResponse = unknown
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type BudgetsGetBudgetEntriesData = {
     budgetId: number;
@@ -700,7 +914,13 @@ export type BudgetsDeleteBudgetCategoryData = {
 
 export type BudgetsDeleteBudgetCategoryResponse = (unknown);
 
+<<<<<<< HEAD
 export type BudgetsGetBudgetStatusResponse = ((BudgetStatus | null));
+||||||| e77b0ff
+export type BudgetsGetBudgetStatusResponse = BudgetStatus | null
+=======
+export type BudgetsGetBudgetStatusResponse = (BudgetStatus);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type DemoGetDemoAggregatedTransactionsData = {
     requestBody?: (FilterData_Input | null);
@@ -736,6 +956,7 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+<<<<<<< HEAD
 export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool_Output>);
 
 export type NoCodeSaveNoCodeToolData = {
@@ -744,6 +965,10 @@ export type NoCodeSaveNoCodeToolData = {
 
 export type NoCodeSaveNoCodeToolResponse = (PipelineEnd);
 
+||||||| e77b0ff
+export type OauthLoginGoogleResponse = LoginGoogleData
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 
 export type OauthGoogleCallbackData = {
@@ -763,6 +988,7 @@ export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
 
+<<<<<<< HEAD
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;
 };
@@ -776,6 +1002,23 @@ export type PrivateGoogleCallbackLocalData = {
 
 export type PrivateGoogleCallbackLocalResponse = (unknown);
 
+||||||| e77b0ff
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate
+}
+
+export type PrivateCreateUserResponse = UserOut
+
+export type PrivateGoogleCallbackLocalData = {
+  code: string
+  error?: string | null
+}
+
+export type PrivateGoogleCallbackLocalResponse = unknown
+
+export type SankeyGetSankeyDataResponse = SankeyData
+=======
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 export type SankeyGetSankeyDataResponse = (SankeyData);
 
 export type SankeyCreateSankeyConfigData = {
@@ -792,13 +1035,20 @@ export type SavedFiltersCreateSavedFilterData = {
     requestBody: SavedFilterCreate;
 };
 
+<<<<<<< HEAD
 export type SavedFiltersCreateSavedFilterResponse = (SavedFilter);
+||||||| e77b0ff
+export type SavedFiltersCreateSavedFilterResponse = SavedFilter
+=======
+export type SavedFiltersCreateSavedFilterResponse = (SavedFilterOut);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFiltersReadSavedFiltersData = {
     limit?: number;
     skip?: number;
 };
 
+<<<<<<< HEAD
 export type SavedFiltersReadSavedFiltersResponse = (Array<SavedFilter>);
 
 export type SavedFiltersReadPublicSavedFiltersData = {
@@ -807,31 +1057,74 @@ export type SavedFiltersReadPublicSavedFiltersData = {
 };
 
 export type SavedFiltersReadPublicSavedFiltersResponse = (Array<SavedFilter>);
+||||||| e77b0ff
+export type SavedFiltersReadSavedFiltersResponse = Array<SavedFilter>
+
+export type SavedFiltersReadPublicSavedFiltersData = {
+  limit?: number
+  skip?: number
+}
+
+export type SavedFiltersReadPublicSavedFiltersResponse = Array<SavedFilter>
+=======
+export type SavedFiltersReadSavedFiltersResponse = (Array<SavedFilterOut>);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFiltersReadSavedFilterData = {
+<<<<<<< HEAD
     filterId: number;
+||||||| e77b0ff
+  filterId: number
+}
+=======
+    filterId: (number | string);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 };
 
+<<<<<<< HEAD
 export type SavedFiltersReadSavedFilterResponse = (SavedFilter);
+||||||| e77b0ff
+export type SavedFiltersReadSavedFilterResponse = SavedFilter
+=======
+export type SavedFiltersReadSavedFilterResponse = (SavedFilterOut);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFiltersUpdateSavedFilterData = {
     filterId: number;
     requestBody: SavedFilterUpdate;
 };
 
+<<<<<<< HEAD
 export type SavedFiltersUpdateSavedFilterResponse = (SavedFilter);
+||||||| e77b0ff
+export type SavedFiltersUpdateSavedFilterResponse = SavedFilter
+=======
+export type SavedFiltersUpdateSavedFilterResponse = (SavedFilterOut);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFiltersDeleteSavedFilterData = {
     filterId: number;
 };
 
+<<<<<<< HEAD
 export type SavedFiltersDeleteSavedFilterResponse = (SavedFilter);
+||||||| e77b0ff
+export type SavedFiltersDeleteSavedFilterResponse = SavedFilter
+=======
+export type SavedFiltersDeleteSavedFilterResponse = (unknown);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SavedFiltersReadSavedFilterByNameData = {
     filterName: string;
 };
 
+<<<<<<< HEAD
 export type SavedFiltersReadSavedFilterByNameResponse = (SavedFilter);
+||||||| e77b0ff
+export type SavedFiltersReadSavedFilterByNameResponse = SavedFilter
+=======
+export type SavedFiltersReadSavedFilterByNameResponse = (SavedFilterOut);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type SitemapSitemapResponse = (unknown);
 
@@ -880,6 +1173,13 @@ export type TransactionsListCategoriesData = {
 export type TransactionsListCategoriesResponse = (Array<CategoryOut>);
 
 export type TransactionsListAllCategoriesResponse = (Array<CategoryOut>);
+<<<<<<< HEAD
+||||||| e77b0ff
+export type TransactionsListAllCategoriesResponse = Array<CategoryOut>
+=======
+
+export type TransactionsGetLandingStatusResponse = (LandingStatus);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee
 
 export type TwoFactorEnable2FaData = {
     requestBody: Enable2FARequest;
@@ -982,4 +1282,12 @@ export type UtilsTestEmailData = {
 
 export type UtilsTestEmailResponse = (Message);
 
+<<<<<<< HEAD
 export type UtilsHealthCheckResponse = (boolean);
+||||||| e77b0ff
+export type UtilsHealthCheckResponse = boolean
+=======
+export type UtilsHealthCheckResponse = (boolean);
+
+export type WorkerStatusGetStatusResponse = (Array<WorkerStatusOut>);
+>>>>>>> 7b7835f3d3486f4b96ed2d85e222e946f2e81dee

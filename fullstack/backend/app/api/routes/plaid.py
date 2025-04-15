@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from plaid.api.plaid_api import AccountsGetRequest
 from sqlalchemy.orm import Session
@@ -9,6 +11,7 @@ from app.db import get_current_user, get_db
 from app.models import (
     PlaidAccount,
     PlaidItem,
+    ProcessingState,
     SourceKind,
     TransactionSource,
     User,
@@ -20,6 +23,7 @@ from app.plaid.models import (
     PlaidLinkTokenResponse,
 )
 from app.telegram_utils import send_telegram_message
+from app.worker.status import update_worker_status
 
 router = APIRouter(prefix="/plaid", tags=["plaid"])
 
@@ -145,6 +149,14 @@ async def exchange_token(
         session.commit()
         send_telegram_message(
             message=f"Successfully added Plaid accounts for user {user.id}"
+        )
+        batch_id = str(uuid.uuid4())
+        update_worker_status(
+            session=session,
+            user=user,
+            status=ProcessingState.waiting,
+            additional_info="Waiting for process to begin fetching transactions",
+            batch_id=batch_id,
         )
         return created_accounts
     except Exception as e:

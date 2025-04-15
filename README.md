@@ -37,21 +37,16 @@ big milestones before launch:
   -> bug where i got logged off after plaid
 -> Email
 
--> new user create via oauth does not work 
-
+-> worker should be a lambda
 
 -> need to update the how does this work page 
 
 -> would be nice to have some tests around user creation
 
-
--> there is a bug in how we write the settings to the db on user table -- possibly want new users to be power users?
-
 -> add a last active at time on the user model
 
 -> uploads page on mobile is rough
 
--> budget page should probably not use edit modal for create
 
 -> shareable report
 

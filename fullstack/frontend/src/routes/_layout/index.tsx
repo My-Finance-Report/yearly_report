@@ -1,20 +1,29 @@
-import React, { useRef } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { DemoTransactions } from "./_logged_in/transactions";
+import { isSessionValid } from "@/hooks/useAuth"
+import { useIsMobile } from "@/hooks/useIsMobile"
 import {
   Box,
-  Flex,
   Button,
+  Flex,
   Heading,
-  Text,
-  Image,
   Highlight,
-} from "@chakra-ui/react";
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { isSessionValid } from "@/hooks/useAuth"
+  Image,
+  Text,
+} from "@chakra-ui/react"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import { useRef } from "react"
+import { Transactions } from "./_logged_in/transactions"
+import { z } from "zod"
+
+const demoSearchSchema = z.object({
+  filter: z.string().optional(),
+  showAdvanced: z.boolean().optional(),
+})
+
+
 
 export const Route = createFileRoute("/_layout/")({
   component: Landing,
+  validateSearch: (search) => demoSearchSchema.parse(search),
   beforeLoad: async () => {
     if (await isSessionValid()) {
       throw redirect({
@@ -22,19 +31,18 @@ export const Route = createFileRoute("/_layout/")({
       })
     }
   },
-});
+})
 
 function Landing() {
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const isMobile = useIsMobile()
+  const navigate = useNavigate()
 
-
-  const demoSectionRef = useRef<HTMLDivElement>(null);
-  const pricingSectionRef = useRef<HTMLDivElement>(null);
+  const demoSectionRef = useRef<HTMLDivElement>(null)
+  const pricingSectionRef = useRef<HTMLDivElement>(null)
 
   const scrollToDemo = () => {
-    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   return (
     <Flex
@@ -134,22 +142,22 @@ function Landing() {
         m={isMobile ? 1 : 6}
         p={isMobile ? 1 : 6}
         backgroundColor="background"
+        width={isMobile ? "330px" : "90vw"}
       >
-        <DemoTransactions />
+        <Transactions isDemo={true} />
       </Box>
       <Box ref={pricingSectionRef} mt={24} textAlign="center" mb={10}>
         <Heading as="h3" size="2xl">
           What is the price of such clarity?
         </Heading>
         <Text fontSize="lg" maxW="600px" lineHeight="tall" mt={4}>
-          We are still in open beta, and are charging literally nothing.
-
-          We intend to charge $25 per year, and will be transparent about the costs we incur.
+          We are still in open beta, and are charging literally nothing. We
+          intend to charge $25 per year, and will be transparent about the costs
+          we incur.
         </Text>
       </Box>
     </Flex>
-    
-  );
+  )
 }
 
-export default Landing;
+export default Landing

@@ -1,7 +1,6 @@
-module.exports = {
+export default {
   darkMode: ["class"],
   content: ["./src/**/*.{html,js}"],
-  plugins: [require("tailwindcss-animate")],
   theme: {
     extend: {
       borderRadius: {

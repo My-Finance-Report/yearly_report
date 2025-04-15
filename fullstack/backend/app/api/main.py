@@ -12,6 +12,7 @@ from app.api.routes import (
     saved_filters,
     no_code,
     sitemap,
+    status,
     subscription,
     transactions,
     two_factor,
@@ -38,6 +39,7 @@ api_router.include_router(utils.router)
 api_router.include_router(subscription.router)
 api_router.include_router(saved_filters.router)
 api_router.include_router(two_factor.router)
+api_router.include_router(status.router)
 
 if settings.ENVIRONMENT == "local":
     api_router.include_router(private.router)

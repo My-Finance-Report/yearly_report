@@ -13,6 +13,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessJob,
 )
 from app.func_utils import pipe
+from app.models import ProcessingState
+from app.worker.status import log_completed, status_update_monad
 
 
 async def recategorize_account_pipeline(in_process_files: list[InProcessJob]) -> None:
@@ -28,10 +30,33 @@ async def recategorize_account_async(in_process: InProcessJob) -> None:
     def blah() -> None:
         return pipe(
             in_process,
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Applying previous recategorizations",
+            ),
             apply_previous_recategorizations,
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.preparing_for_parse,
+                additional_info="Applying existing transactions",
+            ),
             apply_existing_transactions,
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Categorizing batches of transactions",
+            ),
             categorize_extracted_transactions,
-            final=insert_recategorized_transactions,
+            lambda x: status_update_monad(
+                x,
+                status=ProcessingState.categorizing_transactions,
+                additional_info="Updating file nickname",
+            ),
+            insert_recategorized_transactions,
+            final=lambda x: log_completed(
+                x, additional_info="Completed recategorization"
+            ),
         )
 
     return await asyncio.to_thread(blah)

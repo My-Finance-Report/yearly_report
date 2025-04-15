@@ -12,36 +12,67 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
 from app.models import (
     Category,
     JobStatus,
+    ProcessingState,
     Transaction,
     TransactionSource,
     UploadConfiguration,
     WorkerJob,
 )
 from app.open_ai_utils import ChatMessage, make_chat_request
+from app.worker.status import update_worker_status
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def generate_transactions_prompt(process: InProcessJob) -> str:
-    """Generate the AI prompt for parsing transactions."""
+def generate_transactions_prompt(process: InProcessJob) -> list[str]:
+    """Generate the AI prompt(s) for parsing transactions."""
 
     assert process.transaction_source, "must have"
     assert process.file, "must have"
 
-    return f"""
-    Parse the following PDF content into a JSON array of transactions.
-    Structure the dates as MM/DD/YYYY.
-    Each transaction should have the fields: 'transactionDate', 'description', 'kind', and 'amount'.
+    base_prompt = f"""
+        Parse the following PDF content into a JSON array of transactions.
+        Structure the dates as %m/%d/%Y.
+        Each transaction should have the fields: 'transactionDate', 'description', 'kind', and 'amount'.
 
-    For banks, 'withdrawal' and 'deposit' should be clear.
-    For credit and debit cards, a purchase is a withdrawal, and a payment on the card is a deposit.
+        For banks, 'withdrawal' and 'deposit' should be clear.
+        For credit and debit cards, a purchase is a withdrawal, and a payment on the card is a deposit.
 
-    This file is for {process.transaction_source.name}.
+        This file is for {process.transaction_source.name}.
 
-    {process.file.filename}
-    {process.file.raw_content}
+        {process.file.filename}
     """
+
+    max_tokens = 9000
+    reserved_for_prompt = 3000  # assume this base_prompt takes up ~3000 tokens
+    max_chunk_tokens = max_tokens - reserved_for_prompt
+    max_chunk_chars = max_chunk_tokens * 4  # rough estimate of char limit
+
+    content = process.file.raw_content
+
+    # Split into lines and batch based on char length
+    lines = content.splitlines()
+    prompts: list[str] = []
+    current_chunk: list[str] = []
+
+    current_len = 0
+    for line in lines:
+        if current_len + len(line) > max_chunk_chars:
+            chunk_text = "\n".join(current_chunk)
+            prompts.append(base_prompt + chunk_text)
+            current_chunk = [line]
+            current_len = len(line)
+        else:
+            current_chunk.append(line)
+            current_len += len(line)
+
+    # Append last chunk
+    if current_chunk:
+        chunk_text = "\n".join(current_chunk)
+        prompts.append(base_prompt + chunk_text)
+
+    return prompts
 
 
 def already_processed(process: InProcessJob) -> bool:
@@ -126,7 +157,6 @@ def archive_transactions_if_necessary(process: InProcessJob) -> InProcessJob:
     logger.info(f"Removing previous transactions: {query.count()}")
 
     query.delete()
-
     process.session.commit()
 
     return process
@@ -139,10 +169,23 @@ def request_llm_parse_of_transactions(process: InProcessJob) -> InProcessJob:
             "Upload configuration is required before parsing transactions."
         )
 
-    prompt = generate_transactions_prompt(process)
+    prompts = generate_transactions_prompt(process)
+    all_parsed_transactions = []
 
-    parsed_transactions = make_chat_request(
-        TransactionsWrapper, [ChatMessage(role="user", content=prompt)]
+    for batch, prompt in enumerate(prompts, start=1):
+        update_worker_status(
+            process.session,
+            process.user,
+            status=ProcessingState.parsing_transactions,
+            additional_info=f"Handling batch {batch} of {len(prompts)}",
+            batch_id=process.batch_id,
+        )
+        parsed_transactions = make_chat_request(
+            TransactionsWrapper, [ChatMessage(role="user", content=prompt)]
+        )
+        if parsed_transactions:
+            all_parsed_transactions.extend(parsed_transactions.transactions)
+
+    return replace(
+        process, transactions=TransactionsWrapper(transactions=all_parsed_transactions)
     )
-
-    return replace(process, transactions=parsed_transactions)

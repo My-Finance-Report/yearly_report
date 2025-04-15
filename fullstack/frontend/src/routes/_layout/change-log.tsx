@@ -1,12 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Box, Heading, Text, VStack } from "@chakra-ui/react";
+import { Box, Heading, Text, VStack } from "@chakra-ui/react"
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/change-log")({
   component: ChangeLogPage,
-});
+})
 
-const changes = [   
-    {date: "2025-04-07", changes: ["Added support for two-factor authentication", "Updated FAQ"]},
+const changes = [
+  {
+    date: "2025-04-07",
+    changes: ["Added support for two-factor authentication", "Updated FAQ"],
+  },
 ]
 
 export function ChangeLogPage() {
@@ -17,7 +20,7 @@ export function ChangeLogPage() {
       </Heading>
 
       <VStack spaceY={6} align="start">
-        {changes.map((change ,index) => (
+        {changes.map((change, index) => (
           <Box key={index}>
             <Heading as="h3" size="md">
               {change.date}
@@ -29,5 +32,5 @@ export function ChangeLogPage() {
         ))}
       </VStack>
     </Box>
-  );
+  )
 }

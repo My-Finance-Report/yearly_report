@@ -3,6 +3,8 @@ from dataclasses import replace
 from datetime import datetime
 from typing import cast
 
+from dateutil import parser
+
 from app.async_pipelines.uploaded_file_pipeline.local_types import (
     CategorizedTransaction,
     InProcessJob,
@@ -11,12 +13,25 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     create_categorized_transactions_wrapper,
 )
 from app.func_utils import make_batches
-from app.models import Transaction
+from app.models import ProcessingState, Transaction
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
+from app.worker.status import update_worker_status
 
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+
+def safe_parse_date(date_str: str) -> datetime:
+    try:
+        return datetime.strptime(date_str, "%m/%d/%Y")
+    except ValueError:
+        try:
+            if "/" in date_str:
+                return parser.parse(date_str, dayfirst=True)
+        except Exception:
+            raise ValueError(f"Unrecognized date format: {date_str}")
+    raise ValueError(f"Unrecognized date format: {date_str}")
 
 
 def generate_categorization_prompt(
@@ -87,8 +102,16 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
 
     out: list[CategorizedTransaction] = []
     batch: list[PartialTransaction]
-    for batch in make_batches(process.transactions.transactions):
+    batches = make_batches(process.transactions.transactions)
+    for index, batch in enumerate(batches):
         try:
+            update_worker_status(
+                process.session,
+                process.user,
+                status=ProcessingState.categorizing_transactions,
+                additional_info=f"Categorizing batch {index + 1} of {len(batches)}",
+                batch_id=process.batch_id,
+            )
             categorized = cast(
                 TransactionsCoerceType,
                 make_chat_request(
@@ -121,7 +144,7 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
     return replace(process, categorized_transactions=out)
 
 
-def insert_categorized_transactions(in_process: InProcessJob) -> None:
+def insert_categorized_transactions(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have transaction source"
     assert in_process.categorized_transactions, "must have categorized transactions"
     assert in_process.categories, "must have categories"
@@ -132,9 +155,7 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
         Transaction(
             description=t.partialTransactionDescription,
             category_id=category_lookup[t.category],
-            date_of_transaction=datetime.strptime(
-                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
-            ),
+            date_of_transaction=safe_parse_date(t.partialTransactionDateOfTransaction),
             amount=t.partialTransactionAmount,
             transaction_source_id=in_process.transaction_source.id,
             kind=t.partialTransactionKind,
@@ -147,3 +168,4 @@ def insert_categorized_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
+    return in_process

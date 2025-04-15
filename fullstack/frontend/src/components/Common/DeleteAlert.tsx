@@ -2,10 +2,10 @@ import {
   Button,
   Dialog,
   DialogBody,
-  DialogPositioner,
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogPositioner,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React from "react"
@@ -72,31 +72,29 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
       role="alertdialog"
       size={{ base: "sm", md: "md" }}
     >
+      <DialogPositioner>
+        <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>Delete {type}</DialogHeader>
+          <DialogBody>
+            {type === "User" && (
+              <span>
+                All items associated with this user will also be{" "}
+                <strong>permanently deleted. </strong>
+              </span>
+            )}
+            Are you sure? You will not be able to undo this action.
+          </DialogBody>
 
-        <DialogPositioner>
-      <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
-        <DialogHeader>Delete {type}</DialogHeader>
-
-        <DialogBody>
-          {type === "User" && (
-            <span>
-              All items associated with this user will also be{" "}
-              <strong>permanently deleted. </strong>
-            </span>
-          )}
-          Are you sure? You will not be able to undo this action.
-        </DialogBody>
-
-        <DialogFooter gap={3}>
-          <Button colorScheme="red" type="submit" loading={isSubmitting}>
-            Delete
-          </Button>
-          <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-</DialogPositioner>
+          <DialogFooter gap={3}>
+            <Button colorScheme="red" type="submit" loading={isSubmitting}>
+              Delete
+            </Button>
+            <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogPositioner>
     </Dialog.Root>
   )
 }

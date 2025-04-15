@@ -1,68 +1,80 @@
-"use client";
+"use client"
 
+import { OauthService } from "@/client"
 import {
+  Box,
   Button,
   Container,
   Field,
   Flex,
   Input,
   Link,
-  Box,
   Text,
-} from "@chakra-ui/react";
-import useCustomToast from "../../hooks/useCustomToast";
-import { OauthService } from "@/client";
-import { FcGoogle } from "react-icons/fc";
-import {
-  Link as RouterLink,
-  createFileRoute,
-} from "@tanstack/react-router";
-import { type SubmitHandler, useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
+} from "@chakra-ui/react"
+import { Link as RouterLink, createFileRoute } from "@tanstack/react-router"
+import {  useState } from "react"
+import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
+import { FcGoogle } from "react-icons/fc"
+import useCustomToast from "../../hooks/useCustomToast"
 
-import type { UserRegister } from "@/client";
-import useAuth  from "@/hooks/useAuth";
-import { confirmPasswordRules, emailPattern, passwordRules } from "../../utils";
+import type { UserRegister } from "@/client"
+import useAuth from "@/hooks/useAuth"
+import {  emailPattern, passwordRules } from "../../utils"
 
 export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
+})
 
-});
+const confirmPasswordRules = (
+  getValues: UseFormGetValues<UserRegisterForm>,
+  isRequired = true,
+) => {
+  const rules: RegisterOptions = {
+    validate: (value: string) => {
+      const password = getValues().password || getValues().confirm_password
+      return value === password ? true : "The passwords do not match"
+    },
+  }
 
-interface UserRegisterForm extends UserRegister {
-  confirm_password: string;
+  if (isRequired) {
+    rules.required = "Password confirmation is required"
+  }
+
+  return rules
+}
+
+
+
+
+
+export interface UserRegisterForm extends UserRegister {
+  confirm_password: string
 }
 
 function SignUp() {
-  const showToast = useCustomToast();
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const showToast = useCustomToast()
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const handleGoogleLogin = async () => {
     try {
-      setIsGoogleLoading(true);
-      const { url } = await OauthService.loginGoogle();
+      setIsGoogleLoading(true)
+      const { url } = await OauthService.loginGoogle()
 
       if (url) {
         // Redirect to Google's authorization page
-        window.location.href = url;
+        window.location.href = url
       } else {
-        showToast("Error", "Failed to initiate Google login", "error");
+        showToast("Error", "Failed to initiate Google login", "error")
       }
     } catch (error) {
-      console.error("Google login error:", error);
-      showToast(
-        "Error",
-        "Failed to connect to authentication service",
-        "error"
-      );
+      console.error("Google login error:", error)
+      showToast("Error", "Failed to connect to authentication service", "error")
     } finally {
-      setIsGoogleLoading(false);
+      setIsGoogleLoading(false)
     }
-  };
+  }
 
-  const { signUpMutation, requires2FA, requires2FASetup } = useAuth();
-  const navigate = useNavigate();
-  
+  const { signUpMutation } = useAuth()
+
   const {
     register,
     handleSubmit,
@@ -77,18 +89,18 @@ function SignUp() {
       password: "",
       confirm_password: "",
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<UserRegisterForm> = async (data) => {
-    if (isSubmitting) return;
+    if (isSubmitting) return
 
     try {
-      await signUpMutation.mutateAsync(data);
+      await signUpMutation.mutateAsync(data)
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
-  
+  }
+
   return (
     <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
       <Container
@@ -121,7 +133,6 @@ function SignUp() {
           </Text>
           <Box flex="1" h="1px" bg="gray.200" />
         </Flex>
-
 
         <Field.Root invalid={!!errors.full_name}>
           <Field.Label>Full Name</Field.Label>
@@ -187,8 +198,6 @@ function SignUp() {
           Sign Up
         </Button>
 
-
-
         <Text>
           Already have an account?{" "}
           <RouterLink to="/login" color="blue.500">
@@ -197,7 +206,7 @@ function SignUp() {
         </Text>
       </Container>
     </Flex>
-  );
+  )
 }
 
-export default SignUp;
+export default SignUp

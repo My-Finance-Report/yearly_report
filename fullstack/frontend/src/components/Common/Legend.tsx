@@ -1,24 +1,23 @@
-import { Box, Flex, HStack, Text } from "@chakra-ui/react"
+import { useIsMobile } from "@/hooks/useIsMobile"
+import { Flex, HStack, Text } from "@chakra-ui/react"
 import type React from "react"
 import { FiMaximize2 } from "react-icons/fi"
 import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
-import { useIsMobile } from "@/hooks/useIsMobile"
 
-export function Legend({
+export function CollapsedItems({
   collapsedItems,
   setCollapsedItems,
 }: {
   collapsedItems: CollapsibleName[]
   setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
 }) {
-
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
   if (isMobile) {
-    return null;
+    return null
   }
 
   return (
-    <div className="maxw-[200px]" style={{ position: "sticky", top: 80}}>
+    <div className="maxw-[200px]" style={{ position: "sticky", top: 80 }}>
       {collapsedItems.length > 0 && (
         <div style={{ paddingTop: "20px" }}>
           <BoxWithText
@@ -49,8 +48,6 @@ export function Legend({
   )
 }
 
-export default Legend
-
 function CollapsedWidget({
   name,
   onClick,
@@ -68,22 +65,6 @@ function CollapsedWidget({
       {icon}
       <Text>{name}</Text>
       <FiMaximize2 />
-    </HStack>
-  )
-}
-
-export function LegendItem({ name, color }: { name: string; color: string }) {
-  return (
-    <HStack borderRadius={"md"} borderWidth={1} p={3}>
-      <Box
-        width="16px"
-        borderWidth={1}
-        padding={3}
-        height="16px"
-        borderRadius="50%"
-        backgroundColor={color}
-      />
-      <Text>{name}</Text>
     </HStack>
   )
 }

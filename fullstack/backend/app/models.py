@@ -634,7 +634,6 @@ class FilterEntry(BaseModel):
 
 class FilterEntries(BaseModel):
     specifics: list[FilterEntry] | None = None
-    all: bool = True
     visible: bool | None = None
     index: int
 
@@ -644,14 +643,10 @@ class FilterData(BaseModel):
     lookup: dict[GroupByOption, FilterEntries] = Field(
         default_factory=lambda: {
             GroupByOption.category: FilterEntries(
-                all=True, specifics=None, visible=True, index=0
+                specifics=None, visible=True, index=0
             ),
-            GroupByOption.month: FilterEntries(
-                all=True, visible=True, specifics=None, index=1
-            ),
-            GroupByOption.account: FilterEntries(
-                all=True, visible=True, specifics=None, index=2
-            ),
+            GroupByOption.month: FilterEntries(visible=True, specifics=None, index=1),
+            GroupByOption.account: FilterEntries(visible=True, specifics=None, index=2),
         }
     )
 
@@ -679,3 +674,33 @@ class SavedFilter(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class ProcessingState(str, enum.Enum):
+    waiting = "waiting"
+    preparing_for_parse = "preparing"
+    fetching_transactions = "fetching"
+    parsing_transactions = "parsing"
+    categorizing_transactions = "categorizing"
+    failed = "failed"
+    completed = "completed"
+
+
+class WorkerStatus(Base):
+    __tablename__ = "worker_status"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    batch_id: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[ProcessingState] = mapped_column(
+        Enum(ProcessingState), nullable=False
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    additional_info: Mapped[str | None] = mapped_column(String, nullable=True)

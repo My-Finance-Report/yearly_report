@@ -6,11 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
 from app.local_types import (
-    BudgetBase,
     BudgetCategoryLinkBase,
     BudgetCategoryLinkOut,
     BudgetCategoryLinkStatus,
-    BudgetCreate,
     BudgetEntryCreate,
     BudgetEntryEdit,
     BudgetEntryOut,
@@ -35,11 +33,18 @@ from app.models import (
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 
 
-def get_budget_out(session: Session, user: User) -> BudgetOut | None:
+def create_budget(session: Session, user: User) -> Budget:
+    new_budget = Budget(name="Budget", user_id=user.id, active=True)
+    session.add(new_budget)
+    session.commit()
+    return new_budget
+
+
+def get_budget_out(session: Session, user: User) -> BudgetOut:
     budget = session.query(Budget).filter(Budget.user_id == user.id).first()
 
     if not budget:
-        return None
+        budget = create_budget(session=session, user=user)
 
     entries = (
         session.query(BudgetEntry)
@@ -84,82 +89,6 @@ def get_budget_out(session: Session, user: User) -> BudgetOut | None:
         name=budget.name,
         entries=entries_out,
     )
-
-
-@router.get("/", response_model=BudgetOut | None)
-def get_budget(
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> BudgetOut | None:
-    return get_budget_out(session=session, user=user)
-
-
-@router.post("/", response_model=BudgetOut)
-def create_budget(
-    budget: BudgetCreate,
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> BudgetOut:
-    existing_budget = (
-        session.query(Budget).filter(Budget.user_id == user.id, Budget.active).first()
-    )
-    if existing_budget:
-        raise HTTPException(
-            status_code=400, detail="Budget for this user already exists."
-        )
-
-    new_budget = Budget(**budget.model_dump(), user_id=user.id, active=True)
-    session.add(new_budget)
-    session.commit()
-    val = get_budget_out(session=session, user=user)
-    if not val:
-        raise HTTPException(status_code=400, detail="Budget somehow missing.")
-    return val
-
-
-@router.put("/{budget_id}", response_model=BudgetOut)
-def update_budget(
-    budget_id: int,
-    budget: BudgetBase,
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> BudgetOut:
-    db_budget = (
-        session.query(Budget)
-        .filter(Budget.id == budget_id, Budget.user_id == user.id, Budget.active)
-        .one_or_none()
-    )
-
-    if not db_budget:
-        raise HTTPException(status_code=404, detail="Budget not found.")
-
-    for key, value in budget.model_dump().items():
-        setattr(db_budget, key, value)
-
-    session.commit()
-    val = get_budget_out(session=session, user=user)
-    if not val:
-        raise HTTPException(status_code=400, detail="Budget somehow missing.")
-    return val
-
-
-@router.delete("/{budget_id}", response_model=None)
-def delete_budget(
-    budget_id: int,
-    session: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> None:
-    db_budget = (
-        session.query(Budget)
-        .filter(Budget.id == budget_id, Budget.user_id == user.id)
-        .one_or_none()
-    )
-
-    if not db_budget:
-        raise HTTPException(status_code=404, detail="Budget not found.")
-
-    db_budget.active = False
-    session.commit()
 
 
 @router.get("/{budget_id}/entries", response_model=list[BudgetEntryOut])
@@ -208,11 +137,47 @@ def create_budget_entry(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> BudgetEntryOut:
-    new_entry = BudgetEntry(**entry.model_dump(), budget_id=budget_id, user_id=user.id)
+    new_entry = BudgetEntry(
+        amount=Decimal(entry.amount),
+        name=entry.name,
+        budget_id=budget_id,
+        user_id=user.id,
+    )
     session.add(new_entry)
     session.commit()
+
+    category_links = []
+    for category_link_id in entry.category_link_ids:
+        category_links.append(
+            BudgetCategoryLink(
+                budget_entry_id=new_entry.id,
+                category_id=category_link_id,
+                user_id=user.id,
+            )
+        )
+    session.add_all(category_links)
+    session.commit()
     session.refresh(new_entry)
-    return BudgetEntryOut.model_validate({**new_entry.__dict__, "category_links": []})
+    stylized_name_lookup = get_stylized_name_lookup(session, user)
+
+    links_out: list[BudgetCategoryLinkOut] = [
+        BudgetCategoryLinkOut(
+            budget_entry_id=link.budget_entry_id,
+            category_id=link.category_id,
+            id=link.id,
+            stylized_name=stylized_name_lookup[link.category_id],
+        )
+        for link in category_links
+    ]
+
+    return BudgetEntryOut(
+        budget_id=new_entry.budget_id,
+        user_id=new_entry.user_id,
+        amount=new_entry.amount,
+        name=new_entry.name,
+        id=new_entry.id,
+        category_links=links_out,
+    )
 
 
 def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
@@ -411,14 +376,12 @@ def group_transactions_by_month(
     return dict(grouped_transactions)
 
 
-@router.get("/budget_status", response_model=BudgetStatus | None)
+@router.get("/budget_status", response_model=BudgetStatus)
 def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> BudgetStatus | None:
+) -> BudgetStatus:
     budget = get_budget_out(session=session, user=user)
-    if not budget:
-        return None
 
     entry_statuses = []
     months_with_entries = set()
@@ -464,9 +427,11 @@ def get_budget_status(
         )
 
     return BudgetStatus(
+        budget_id=budget.id,
         user_id=user.id,
         name=budget.name,
         active=True,
+        entries=budget.entries,
         entry_status=entry_statuses,
         months_with_entries=list(months_with_entries),
     )

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useRef, useCallback } from "react"
 import { useTheme } from "next-themes"
+import type React from "react"
+import { createContext, useCallback, useContext, useRef } from "react"
 
 interface ColorContextType {
   getColorForName: (name: string) => string
@@ -16,7 +17,9 @@ const hashStringToIndex = (str: string, length: number) => {
 
 const ColorContext = createContext<ColorContextType | undefined>(undefined)
 
-export const ChartColorProvider = ({ children }: { children: React.ReactNode }) => {
+export const ChartColorProvider = ({
+  children,
+}: { children: React.ReactNode }) => {
   const { theme } = useTheme()
 
   const lightModePalette = [
@@ -62,12 +65,16 @@ export const ChartColorProvider = ({ children }: { children: React.ReactNode }) 
   // Use a ref to store assigned colors so updating it doesn't trigger a re-render
   const assignedColorsRef = useRef<Record<string, string>>({})
 
-  const getColorForName = useCallback((name: string) => {
-    if (!assignedColorsRef.current[name]) {
-      assignedColorsRef.current[name] = colorPalette[hashStringToIndex(name, colorPalette.length)]
-    }
-    return assignedColorsRef.current[name]
-  }, [colorPalette])
+  const getColorForName = useCallback(
+    (name: string) => {
+      if (!assignedColorsRef.current[name]) {
+        assignedColorsRef.current[name] =
+          colorPalette[hashStringToIndex(name, colorPalette.length)]
+      }
+      return assignedColorsRef.current[name]
+    },
+    [colorPalette],
+  )
 
   return (
     <ColorContext.Provider value={{ getColorForName }}>

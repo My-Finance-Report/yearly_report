@@ -1,18 +1,13 @@
 import { Box, Button, Text } from "@chakra-ui/react"
 import type React from "react"
-import {
-  FiBarChart,
-  FiFilter,
-  FiMinimize2,
-  FiPieChart,
-} from "react-icons/fi"
+import { FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi"
 
 export type CollapsibleName = keyof typeof NAME_TO_ICON
 
 export const NAME_TO_ICON = {
   "Bar Chart": <FiBarChart />,
   "Pie Chart": <FiPieChart />,
-  "Filters": <FiFilter />,
+  Filters: <FiFilter />,
 }
 
 interface LabeledBoxProps {
@@ -41,11 +36,6 @@ export default function LabeledBox({
   collapsedItems,
   setCollapsedItems,
   isCollapsable = true,
-  minH,
-  maxH,
-  width,
-  maxW,
-  minW = "50%",
   containerRef,
 }: LabeledBoxProps) {
   const labelStyles = {
@@ -87,11 +77,6 @@ export default function LabeledBox({
 
   return (
     <Box
-      width={width}
-      minH={minH}
-      maxH={maxH}
-      maxW={maxW}
-      minW={minW}
       borderWidth={1}
       borderRadius="md"
       ref={containerRef}

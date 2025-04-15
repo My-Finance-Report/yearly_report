@@ -1,25 +1,25 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 
-export function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false)
+function useMediaQuery(predicate: (width: number) => boolean) {
+  const [matches, setMatches] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const mediaQueryList = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    const update = () => setMatches(predicate(window.outerWidth))
 
-    const updateIsMobile = (event: MediaQueryListEvent | MediaQueryList) => {
-      setIsMobile(event.matches)
-    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [predicate,window])
 
+  return matches
+}
 
-    updateIsMobile(mediaQueryList)
+export function useIsMobile(breakpoint = 768) {
+  return useMediaQuery((width) => width < breakpoint)
+}
 
-    mediaQueryList.addEventListener("change", updateIsMobile)
-    return () => {
-      mediaQueryList.removeEventListener("change", updateIsMobile)
-    }
-  }, [breakpoint])
-
-  return isMobile
+export function useIsDesktop(breakpoint = 1260) {
+  return useMediaQuery((width) => width >= breakpoint)
 }

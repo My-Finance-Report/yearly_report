@@ -1,148 +1,156 @@
-import React, { useState, useEffect } from "react";
+import { AccountsService, UploadsService } from "@/client"
+import useCustomToast from "@/hooks/useCustomToast"
 import {
+  Badge,
   Box,
   Button,
   Flex,
-  Heading,
-  Input,
-  Text,
   HStack,
-  VStack,
-  Badge,
+  Heading,
   Icon,
+  Input,
   Table,
-} from "@chakra-ui/react";
-import { AccountsService, UploadsService } from "@/client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CategoriesManager } from "./CategoriesManager";
-import { DeleteButton, ReprocessButton } from "./ReprocessButton";
-import { RecategorizeButton } from "./RecategorizeButton";
-import { ArchiveButton } from "./ArchiveButton";
-import useCustomToast from "@/hooks/useCustomToast";
-import {  FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import React, { useState, useEffect } from "react"
+import { FaCreditCard, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
+import { ArchiveButton } from "./ArchiveButton"
+import { CategoriesManager } from "./CategoriesManager"
+import { RecategorizeButton } from "./RecategorizeButton"
+import { DeleteButton, ReprocessButton } from "./ReprocessButton"
 
-import {  EditIcon } from "@chakra-ui/icons"
-import { useIsMobile } from "@/hooks/useIsMobile";
-import PlaidSyncStatus from "./PlaidSyncStatus";
+import { useIsMobile } from "@/hooks/useIsMobile"
+import { EditIcon } from "@chakra-ui/icons"
+import PlaidSyncStatus from "./PlaidSyncStatus"
 
 interface AccountDetailsProps {
-  accountId: number;
-  accountName: string;
-  accountType: string;
-  isPlaidLinked: boolean;
-  isArchived?: boolean;
+  accountId: number
+  accountName: string
+  accountType: string
+  isPlaidLinked: boolean
+  isArchived?: boolean
 }
 
-export function AccountDetails({ 
-  accountId, 
-  accountName, 
-  accountType, 
+export function AccountDetails({
+  accountId,
+  accountName,
+  accountType,
   isPlaidLinked,
-  isArchived = false
+  isArchived = false,
 }: AccountDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(accountName);
-  const queryClient = useQueryClient();
-  const toast = useCustomToast();
-  const [activeTab, setActiveTab] = useState(0);
+  const [isEditing, setIsEditing] = useState(false)
+  const [newName, setNewName] = useState(accountName)
+  const queryClient = useQueryClient()
+  const toast = useCustomToast()
+  const [activeTab, setActiveTab] = useState(0)
 
   useEffect(() => {
     if (!isEditing) {
-      setNewName(accountName);
+      setNewName(accountName)
     }
-  }, [accountName, isEditing]);
+  }, [accountName, isEditing])
 
   const { data: uploadedFiles, isLoading: isLoadingFiles } = useQuery({
     queryKey: ["uploadedFiles", accountId],
     queryFn: () => UploadsService.getUploads(),
-    select: (data) => data.filter(file => {
-      return file.transaction_source_id === accountId;
-    }),
-  });
+    select: (data) =>
+      data.filter((file) => {
+        return file.transaction_source_id === accountId
+      }),
+  })
 
   const updateAccountMutation = useMutation({
-    mutationFn: () => 
+    mutationFn: () =>
       AccountsService.updateTransactionSource({
         sourceId: accountId,
-        requestBody: { name: newName }
+        requestBody: { name: newName },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      setIsEditing(false);
-      toast("Account updated", "The account name was updated successfully.", "success");
+      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+      setIsEditing(false)
+      toast(
+        "Account updated",
+        "The account name was updated successfully.",
+        "success",
+      )
     },
     onError: () => {
-      toast("Update failed", "There was an error updating the account name.", "error");
-    }
-  });
+      toast(
+        "Update failed",
+        "There was an error updating the account name.",
+        "error",
+      )
+    },
+  })
 
   const handleUpdateName = () => {
     if (newName.trim() && newName !== accountName) {
-      updateAccountMutation.mutate();
+      updateAccountMutation.mutate()
     } else {
-      setIsEditing(false);
-      setNewName(accountName);
+      setIsEditing(false)
+      setNewName(accountName)
     }
-  };
+  }
 
   const handleFileUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ["uploadedFiles", accountId] });
-  };
+    queryClient.invalidateQueries({ queryKey: ["uploadedFiles", accountId] })
+  }
 
   const getAccountIcon = () => {
     switch (accountType) {
       case "credit":
-        return FaCreditCard;
+        return FaCreditCard
       case "investment":
-        return FaMoneyBillWave;
+        return FaMoneyBillWave
       default:
-        return FaUniversity;
+        return FaUniversity
     }
-  };
+  }
 
   const getAccountTypeColor = () => {
     switch (accountType) {
       case "credit":
-        return "red";
+        return "red"
       case "investment":
-        return "blue";
+        return "blue"
       default:
-        return "green";
+        return "green"
     }
-  };
+  }
 
   const getAccountTypeLabel = () => {
     switch (accountType) {
       case "credit":
-        return "Credit";
+        return "Credit"
       case "investment":
-        return "Investment";
+        return "Investment"
       default:
-        return "Bank";
+        return "Bank"
     }
-  };
+  }
 
   const isMobile = useIsMobile()
 
   return (
-    <Box 
-      p={4} 
-      borderWidth="1px" 
-      borderRadius="lg" 
+    <Box
+      p={4}
+      borderWidth="1px"
+      borderRadius="lg"
       shadow="sm"
       position="relative"
-      opacity={isArchived ? 0.7 : 1}
       bg={isArchived ? "gray.50" : undefined}
       _dark={{
         bg: isArchived ? "gray.800" : undefined,
       }}
     >
       {isArchived && (
-        <Badge 
-          position="absolute" 
-          top={2} 
-          left={2} 
-          colorScheme="red" 
+        <Badge
+          position="absolute"
+          top={2}
+          left={2}
+          colorScheme="red"
           variant="solid"
         >
           Archived
@@ -150,23 +158,33 @@ export function AccountDetails({
       )}
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Flex alignItems="center" gap={3} mt={isArchived ? 8 : 0}>
-          <Icon as={getAccountIcon()} color={isArchived ? "gray.500" : "blue.500"} boxSize={6} />
+          <Icon
+            as={getAccountIcon()}
+            color={isArchived ? "gray.500" : "blue.500"}
+            boxSize={6}
+          />
           {isEditing ? (
             <HStack>
-              <Input 
+              <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 size="md"
                 width="400px"
                 disabled={isArchived}
               />
-              <Button size="sm" onClick={handleUpdateName} disabled={isArchived}>Save</Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                onClick={handleUpdateName}
+                disabled={isArchived}
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => {
-                  setIsEditing(false);
-                  setNewName(accountName);
+                  setIsEditing(false)
+                  setNewName(accountName)
                 }}
                 disabled={isArchived}
               >
@@ -175,7 +193,13 @@ export function AccountDetails({
             </HStack>
           ) : (
             <Flex alignItems="center">
-              <Heading size="md" color={isArchived ? "gray.500" : undefined} _dark={{ color: isArchived ? "gray.400" : undefined }}>{accountName}</Heading>
+              <Heading
+                size="md"
+                color={isArchived ? "gray.500" : undefined}
+                _dark={{ color: isArchived ? "gray.400" : undefined }}
+              >
+                {accountName}
+              </Heading>
               <Button
                 aria-label="Edit account name"
                 size="xs"
@@ -184,14 +208,24 @@ export function AccountDetails({
                 onClick={() => setIsEditing(true)}
                 disabled={isArchived}
               >
-                <EditIcon mr={1} /> 
+                <EditIcon mr={1} />
               </Button>
             </Flex>
           )}
           {isPlaidLinked && (
-            <Badge variant="outline" mr={1} colorScheme={isArchived ? "gray" : "blue"}>Connected</Badge>
+            <Badge
+              variant="outline"
+              mr={1}
+              colorPalette={isArchived ? "gray" : "blue"}
+            >
+              Connected
+            </Badge>
           )}
-          <Badge variant="outline" color={isArchived ? "gray.500" : getAccountTypeColor()} _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}>
+          <Badge
+            variant="outline"
+            colorPalette={isArchived ? "gray.500" : getAccountTypeColor()}
+            _dark={{ color: isArchived ? "gray.400" : getAccountTypeColor() }}
+          >
             {getAccountTypeLabel()}
           </Badge>
         </Flex>
@@ -202,8 +236,8 @@ export function AccountDetails({
       </Flex>
 
       <Flex mb={4}>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           mr={2}
           borderColor={activeTab === 0 ? "blue.500" : undefined}
           onClick={() => setActiveTab(0)}
@@ -213,7 +247,7 @@ export function AccountDetails({
         </Button>
         {isPlaidLinked ? (
           <Button
-            variant="ghost" 
+            variant="ghost"
             borderColor={activeTab === 1 ? "blue.500" : undefined}
             onClick={() => setActiveTab(1)}
             disabled={isArchived}
@@ -221,11 +255,10 @@ export function AccountDetails({
             Data Syncs
           </Button>
         ) : (
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             color={activeTab === 1 ? "blue.500" : undefined}
             borderColor={activeTab === 1 ? "blue.500" : undefined}
-            _hover={{ bg: "gray.100" }}
             onClick={() => setActiveTab(1)}
             disabled={isArchived}
           >
@@ -254,16 +287,18 @@ export function AccountDetails({
                     {uploadedFiles.map((file) => (
                       <Table.Row key={file.id}>
                         <Table.Cell>{file.filename}</Table.Cell>
-                        <Table.Cell>{new Date(file.upload_time).toLocaleDateString()}</Table.Cell>
+                        <Table.Cell>
+                          {new Date(file.upload_time).toLocaleDateString()}
+                        </Table.Cell>
                         <Table.Cell>
                           <Flex direction={isMobile ? "column" : "row"} gap={2}>
-                              <ReprocessButton 
-                                jobId={file.id} 
-                                onReprocess={handleFileUpdate} 
-                                disabled={isArchived}
-                              />
-                            <DeleteButton 
-                              fileId={file.id} 
+                            <ReprocessButton
+                              jobId={file.id}
+                              onReprocess={handleFileUpdate}
+                              disabled={isArchived}
+                            />
+                            <DeleteButton
+                              fileId={file.id}
                               onReprocess={handleFileUpdate}
                               disabled={isArchived}
                             />
@@ -280,10 +315,10 @@ export function AccountDetails({
           </Box>
         ) : activeTab === 0 ? (
           <CategoriesManager accountId={accountId} />
-        ) : isPlaidLinked && (
-          <PlaidSyncStatus accountId={accountId} />
+        ) : (
+          isPlaidLinked && <PlaidSyncStatus accountId={accountId} />
         )}
       </Box>
     </Box>
-  );
+  )
 }
