@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
+
 import {
   NoCodeService,
   NoCodeTool,
@@ -11,6 +12,12 @@ import {
 import {
   Container,
   Button,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  createListCollection,
   Box,
   Heading,
   Text,
@@ -78,6 +85,10 @@ function NoCodeBuilder() {
     return <div>No tools found</div>;
   }
 
+    const blah = ["value", "list", "pie_chart"].map((theType)=>({label:theType, value:theType }))
+    const formattedOptions = {items:blah }
+
+
   return (
     <Container maxW="lg" my={8}>
       <Heading mb={4}>No-Code Widget Builder</Heading>
@@ -125,7 +136,26 @@ function NoCodeBuilder() {
         />
       </Box>
 
-
+    <Box>
+      <SelectRoot
+        placeholder={widget.type}
+        collection={createListCollection(formattedOptions)}
+        onValueChange={(val) => {
+          setWidget((prev)=> ({...prev, type: val.value[0]}));
+        }}
+      >
+        <SelectTrigger>
+          <SelectValueText placeholder="Select a kind" />
+        </SelectTrigger>
+        <SelectContent>
+          {formattedOptions.items.map((kind) => (
+            <SelectItem key={kind.value} item={kind}>
+              {kind.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
+    </Box>
 
 
 

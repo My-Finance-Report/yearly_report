@@ -68,7 +68,6 @@ function rawSelectOptionsToSelectItems(options: SelectOption[]) {
 }
 
 function SelectParameter({ parameter, onChange }: ParameterProps) {
-  console.log(parameter.options);
 
   if (!parameter.options) {
     throw new Error("parameter options missing");
