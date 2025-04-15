@@ -5,7 +5,7 @@ import { Box } from "@chakra-ui/react"
 export function NonPowerUserButtons() {
   return (
     <Box>
-      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+      <Flex justifyContent="space-between" alignItems="center">
         <SavedFilterControls />
       </Flex>
     </Box>

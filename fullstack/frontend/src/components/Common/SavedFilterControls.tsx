@@ -105,8 +105,8 @@ export function SavedFilterControls() {
      <Text mt={2}>Building a custom filter</Text> 
       ):
       (
-      <FieldRoot mt={12}>
-        <FieldLabel>Current Filter</FieldLabel>
+      <FieldRoot mt={3}>
+        <FieldLabel mb={2}>Current Filter</FieldLabel>
         <SelectRoot
           value={[currentFilter?.id?.toString()]}
           collection={createListCollection({
