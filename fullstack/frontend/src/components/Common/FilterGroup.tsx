@@ -1,25 +1,24 @@
-import type React from "react";
 import {
+  DrawerActionTrigger,
   DrawerBackdrop,
   DrawerBody,
   DrawerCloseTrigger,
   DrawerContent,
   DrawerFooter,
-  DrawerActionTrigger,
   DrawerHeader,
   DrawerRoot,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import type React from "react";
 
-import {PowerUserButtons} from "@/components/Common/Filtering/PowerUserFilters"
-import {NonPowerUserButtons} from "@/components/Common/Filtering/NonPowerUserFilters"
-import { Box, Text, Button } from "@chakra-ui/react";
-import { BsFunnel } from "react-icons/bs";
+import { NonPowerUserButtons } from "@/components/Common/Filtering/NonPowerUserFilters";
+import { PowerUserButtons } from "@/components/Common/Filtering/PowerUserFilters";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { Box, Button, Text } from "@chakra-ui/react";
 import { useState } from "react";
-import useAuth from "@/hooks/useAuth";
-import { GroupByOption } from "./GroupingConfig";
+import { BsFunnel } from "react-icons/bs";
+import type { GroupByOption } from "./GroupingConfig";
 
 export function FilterGroup({
   groupingOptionsChoices,
@@ -33,7 +32,6 @@ export function FilterGroup({
   const isMobile = useIsMobile();
 
   const [open, setOpen] = useState(false);
-
 
   if (isMobile) {
     return (
@@ -51,7 +49,7 @@ export function FilterGroup({
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle></DrawerTitle>
+            <DrawerTitle />
           </DrawerHeader>
           <DrawerBody>
             <InnerFilterGroup
@@ -89,7 +87,6 @@ function InnerFilterGroup({
   showDeposits: boolean;
   groupingOptionsChoices: { [Key in GroupByOption]: string[] } | undefined;
 }) {
-  const powerUser = useAuth().user?.settings?.power_user_filters ?? false;
   return (
     <div
       style={{
@@ -101,23 +98,13 @@ function InnerFilterGroup({
       }}
     >
       <div>
-        <Box
-          borderWidth={1}
-          borderRadius="md"
-          p={2}
-          mr={2}
-        >
-            <NonPowerUserButtons
-              groupingOptionsChoices={groupingOptionsChoices}
-            />
-          {powerUser && (
-            <PowerUserButtons
-              groupingOptionsChoices={groupingOptionsChoices}
-              setShowDeposits={setShowDeposits}
-              showDeposits={showDeposits}
-            />
-          )
-          }
+        <Box borderWidth={1} borderRadius="md" p={2} mr={2}>
+          <NonPowerUserButtons />
+          <PowerUserButtons
+            groupingOptionsChoices={groupingOptionsChoices}
+            setShowDeposits={setShowDeposits}
+            showDeposits={showDeposits}
+          />
         </Box>
       </div>
     </div>

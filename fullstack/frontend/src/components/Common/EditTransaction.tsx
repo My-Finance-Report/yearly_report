@@ -74,7 +74,6 @@ const EditTransaction = ({
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
 
-
   const {
     register,
     handleSubmit,
@@ -90,7 +89,7 @@ const EditTransaction = ({
     },
   })
 
-  const { data  } = useQuery({
+  const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
       TransactionsService.listCategories({ transactionId: transaction.id }),
@@ -241,9 +240,8 @@ const EditTransaction = ({
                     id="category_id"
                     placeholder="Select a category"
                     value={[
-                      categories.items.find( 
-                        (cat) => cat.value === value,
-                      )?.value as unknown as  string,
+                      categories.items.find((cat) => cat.value === value)
+                        ?.value as unknown as string,
                     ]}
                     collection={createListCollection(categories)}
                     onValueChange={(val) => {

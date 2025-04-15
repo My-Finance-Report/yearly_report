@@ -1,18 +1,13 @@
 import { Box, Button, Text } from "@chakra-ui/react"
 import type React from "react"
-import {
-  FiBarChart,
-  FiFilter,
-  FiMinimize2,
-  FiPieChart,
-} from "react-icons/fi"
+import { FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi"
 
 export type CollapsibleName = keyof typeof NAME_TO_ICON
 
 export const NAME_TO_ICON = {
   "Bar Chart": <FiBarChart />,
   "Pie Chart": <FiPieChart />,
-  "Filters": <FiFilter />,
+  Filters: <FiFilter />,
 }
 
 interface LabeledBoxProps {

@@ -3,7 +3,7 @@ import {
   type UploadsReprocessFileResponse,
   UploadsService,
 } from "@/client"
-import useCustomToast from "@/hooks/useCustomToast";
+import useCustomToast from "@/hooks/useCustomToast"
 import { Button } from "@chakra-ui/react"
 
 interface ReprocessButtonProps {
@@ -12,22 +12,30 @@ interface ReprocessButtonProps {
   disabled?: boolean
 }
 
-export function ReprocessButton({ jobId, onReprocess, disabled = false }: ReprocessButtonProps) {
-
-  const showToast = useCustomToast();
+export function ReprocessButton({
+  jobId,
+  onReprocess,
+  disabled = false,
+}: ReprocessButtonProps) {
+  const showToast = useCustomToast()
   const handleReprocess = async () => {
     try {
       const response: UploadsReprocessFileResponse =
         await UploadsService.reprocessFile({ jobId })
-      showToast("File reprocessing!","", "success")
+      showToast("File reprocessing!", "", "success")
       onReprocess(response)
     } catch {
-      showToast("File failed to reprocess!","", "error")
+      showToast("File failed to reprocess!", "", "error")
     }
   }
 
   return (
-    <Button size="sm" colorScheme="blue" onClick={handleReprocess} disabled={disabled}>
+    <Button
+      size="sm"
+      colorScheme="blue"
+      onClick={handleReprocess}
+      disabled={disabled}
+    >
       Reprocess
     </Button>
   )
@@ -53,7 +61,12 @@ export function DeleteButton({
   }
 
   return (
-    <Button size="sm" colorScheme="red" onClick={handleReprocess} disabled={disabled}>
+    <Button
+      size="sm"
+      colorScheme="red"
+      onClick={handleReprocess}
+      disabled={disabled}
+    >
       Delete
     </Button>
   )

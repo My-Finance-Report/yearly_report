@@ -2,16 +2,14 @@ import { Button, Menu, useDisclosure } from "@chakra-ui/react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiTrash } from "react-icons/fi"
 
-import type { UserOut } from "../../client"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: UserOut
   disabled?: boolean
 }
 
-const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
+const ActionsMenu = ({ type, disabled }: ActionsMenuProps) => {
   const deleteModal = useDisclosure()
 
   return (

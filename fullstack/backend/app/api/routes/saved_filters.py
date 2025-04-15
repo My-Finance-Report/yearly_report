@@ -1,16 +1,23 @@
-import datetime
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
-from app.models import FilterData, SavedFilter, User
-from app.schemas.saved_filter import (
-    SavedFilter as SavedFilterSchema,
+from app.models import (
+    FilterData,
+    FilterEntries,
+    FilterEntry,
+    GroupByOption,
+    SavedFilter,
+    User,
 )
 from app.schemas.saved_filter import (
     SavedFilterCreate,
     SavedFilterUpdate,
+)
+from app.schemas.saved_filter import (
+    SavedFilterOut as SavedFilterSchema,
 )
 
 router = APIRouter(prefix="/saved-filters", tags=["saved-filters"])
@@ -40,10 +47,101 @@ def create_saved_filter(
         name=saved_filter.name,
         description=saved_filter.description,
         filter_data=saved_filter.filter_data,
-        created_at=saved_filter.created_at,
-        updated_at=saved_filter.updated_at,
-        user_id=saved_filter.user_id,
     )
+
+
+def make_default_filters() -> list[SavedFilterSchema]:
+    return [
+        SavedFilterSchema(
+            id="88dfe43b-c997-4f19-8d50-94b9e4be61c7",
+            is_default=True,
+            is_deleteable=False,
+            name="Year To Date",
+            description="All categories, by month for last year",
+            filter_data=FilterData(
+                is_default=True,
+                lookup={
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=1,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
+                    GroupByOption.category: FilterEntries(
+                        specifics=None, visible=True, index=0
+                    ),
+                },
+            ),
+        ),
+        SavedFilterSchema(
+            id="020f1f3a-5230-4fea-ad2f-6008330c42ac",
+            is_deleteable=False,
+            name="Last Year",
+            description="All categories, by month for last year",
+            filter_data=FilterData(
+                is_default=True,
+                lookup={
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=2,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
+                    GroupByOption.category: FilterEntries(
+                        specifics=None, visible=True, index=0
+                    ),
+                },
+            ),
+        ),
+        SavedFilterSchema(
+            id="4a15048e-4b0d-450b-b3b5-d7f3004b5db3",
+            is_deleteable=False,
+            name="All Time",
+            description="All categories, by month for all time",
+            filter_data=FilterData(
+                is_default=True,
+                lookup={
+                    GroupByOption.year: FilterEntries(
+                        visible=True, specifics=None, index=2
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True, specifics=None, index=1
+                    ),
+                    GroupByOption.category: FilterEntries(
+                        specifics=None, visible=True, index=0
+                    ),
+                },
+            ),
+        ),
+        SavedFilterSchema(
+            id="6d6a5cba-0be4-4eb6-ac94-37da9a971196",
+            is_deleteable=False,
+            name="Monthly Budget",
+            description="All categories, by month for current year",
+            filter_data=FilterData(
+                is_default=True,
+                lookup={
+                    GroupByOption.budget: FilterEntries(
+                        specifics=None, visible=True, index=0
+                    ),
+                    GroupByOption.year: FilterEntries(
+                        visible=False,
+                        specifics=[FilterEntry(value=str(datetime.now().year))],
+                        index=2,
+                    ),
+                    GroupByOption.month: FilterEntries(
+                        visible=True,
+                        specifics=[FilterEntry(value=str(datetime.now().month))],
+                        index=1,
+                    ),
+                },
+            ),
+        ),
+    ]
 
 
 @router.get("/", response_model=list[SavedFilterSchema])
@@ -57,7 +155,6 @@ def read_saved_filters(
     """
     Retrieve saved filters.
     """
-    return []  # TODO
     filters = (
         db.query(SavedFilter)
         .filter(SavedFilter.user_id == current_user.id)
@@ -65,50 +162,30 @@ def read_saved_filters(
         .limit(limit)
         .all()
     )
-    return [
+    return make_default_filters() + [
         SavedFilterSchema(
             id=f.id,
             name=f.name,
             description=f.description,
             filter_data=f.filter_data,
-            created_at=f.created_at,
-            updated_at=f.updated_at,
-            user_id=f.user_id,
         )
         for f in filters
     ]
 
 
-@router.get("/public", response_model=list[SavedFilterSchema])
-def read_public_saved_filters(
-    *,
-    _db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    _skip: int = 0,
-    _limit: int = 100,
-) -> list[SavedFilterSchema]:
-    """
-    Retrieve public saved filters from all users.
-    """
-    # todo
-    return [
-        SavedFilterSchema(
-            id=1,
-            name="Default Filter",
-            description="Default filter description",
-            filter_data=FilterData(),
-            created_at=datetime.datetime.now(),
-            updated_at=datetime.datetime.now(),
-            user_id=current_user.id,
-        )
-    ]
+def make_default_filters_lookup_id() -> dict[str, SavedFilterSchema]:
+    return {str(f.id): f for f in make_default_filters()}
+
+
+def make_default_filters_lookup_name() -> dict[str, SavedFilterSchema]:
+    return {f.name: f for f in make_default_filters()}
 
 
 @router.get("/{filter_id}", response_model=SavedFilterSchema)
 def read_saved_filter(
     *,
     db: Session = Depends(get_db),
-    filter_id: int,
+    filter_id: int | str,
     current_user: User = Depends(get_current_user),
 ) -> SavedFilterSchema:
     """
@@ -119,7 +196,11 @@ def read_saved_filter(
         .filter(SavedFilter.id == filter_id, SavedFilter.user_id == current_user.id)
         .first()
     )
+
     if not saved_filter:
+        static_lookup = make_default_filters_lookup_id()
+        if str(filter_id) in static_lookup:
+            return static_lookup[str(filter_id)]
         raise HTTPException(status_code=404, detail="Saved filter not found")
 
     return SavedFilterSchema(
@@ -127,9 +208,6 @@ def read_saved_filter(
         name=saved_filter.name,
         description=saved_filter.description,
         filter_data=saved_filter.filter_data,
-        created_at=saved_filter.created_at,
-        updated_at=saved_filter.updated_at,
-        user_id=saved_filter.user_id,
     )
 
 
@@ -150,6 +228,9 @@ def read_saved_filter_by_name(
         .first()
     )
     if not saved_filter:
+        static_lookup = make_default_filters_lookup_name()
+        if filter_name in static_lookup:
+            return static_lookup[filter_name]
         raise HTTPException(status_code=404, detail="Saved filter not found")
 
     return SavedFilterSchema(
@@ -157,9 +238,6 @@ def read_saved_filter_by_name(
         name=saved_filter.name,
         description=saved_filter.description,
         filter_data=saved_filter.filter_data,
-        created_at=saved_filter.created_at,
-        updated_at=saved_filter.updated_at,
-        user_id=saved_filter.user_id,
     )
 
 
@@ -194,19 +272,16 @@ def update_saved_filter(
         name=saved_filter.name,
         description=saved_filter.description,
         filter_data=saved_filter.filter_data,
-        created_at=saved_filter.created_at,
-        updated_at=saved_filter.updated_at,
-        user_id=saved_filter.user_id,
     )
 
 
-@router.delete("/{filter_id}", response_model=SavedFilterSchema)
+@router.delete("/{filter_id}", response_model=None)
 def delete_saved_filter(
     *,
     db: Session = Depends(get_db),
     filter_id: int,
     current_user: User = Depends(get_current_user),
-) -> SavedFilterSchema:
+) -> None:
     """
     Delete a saved filter.
     """
@@ -220,12 +295,4 @@ def delete_saved_filter(
 
     db.delete(saved_filter)
     db.commit()
-    return SavedFilterSchema(
-        id=saved_filter.id,
-        name=saved_filter.name,
-        description=saved_filter.description,
-        filter_data=saved_filter.filter_data,
-        created_at=saved_filter.created_at,
-        updated_at=saved_filter.updated_at,
-        user_id=saved_filter.user_id,
-    )
+    return None

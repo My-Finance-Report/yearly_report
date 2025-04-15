@@ -10,19 +10,33 @@ import {
 } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
 
-import {
-  type ApiError,
-  LoginService,
-  type NewPassword,
-} from "@/client"
+import { type ApiError, LoginService, type NewPassword } from "@/client"
 import { isSessionActive } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { confirmPasswordRules, handleError, passwordRules } from "../../utils"
+import { handleError, passwordRules } from "../../utils"
 
 interface NewPasswordForm extends NewPassword {
   confirm_password: string
+}
+
+const confirmPasswordRules = (
+  getValues: UseFormGetValues<NewPasswordForm>,
+  isRequired = true,
+) => {
+  const rules: RegisterOptions = {
+    validate: (value: string) => {
+      const password = getValues().new_password || getValues().confirm_password
+      return value === password ? true : "The passwords do not match"
+    },
+  }
+
+  if (isRequired) {
+    rules.required = "Password confirmation is required"
+  }
+
+  return rules
 }
 
 export const Route = createFileRoute("/_layout/reset-password")({

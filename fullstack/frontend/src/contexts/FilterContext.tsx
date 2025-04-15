@@ -1,210 +1,251 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import useCustomToast from '../hooks/useCustomToast';
-import { SavedFiltersService, SavedFilterCreate, FilterData_Input, SavedFilter } from '@/client';
+import { Route } from "@/routes/_layout/_logged_in/transactions"
+import {
+  type SavedFilterOut,
+  type SavedFilterCreate,
+  SavedFiltersService,
+} from "@/client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import React, {
+  type ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
+import useCustomToast from "../hooks/useCustomToast"
+import { useNavigate } from "@tanstack/react-router"
 
 // Define the context type
 interface FilterContextType {
   // Data
-  savedFilters: SavedFilter[];
-  currentFilter: FilterData_Input | null;
-  
+  savedFilters: SavedFilterOut[]
+  currentFilter: SavedFilterOut 
+
   // Status
-  isLoading: boolean;
-  isInitialized: boolean;
-  
+  isLoading: boolean
+
   // Actions
-  setCurrentFilter: (filter: FilterData_Input | null | ((prev: FilterData_Input | null) => FilterData_Input | null)) => void;
-  initializeDefaultFilter: () => void;
-  saveCurrentFilter: (data: { name: string; description: string | null }) => void;
-  updateFilter: (id: number, data: { name: string; description: string | null }) => void;
-  deleteFilter: (id: number) => void;
-  loadFilterByName: (name: string) => Promise<FilterData_Input | null>;
+  setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>
+  initializeDefaultFilter: () => void
+  saveCurrentFilter: (data: {
+    name: string
+    description: string | null
+  }) => void
+  updateFilter: (
+    id: number,
+    data: { name: string; description: string | null },
+  ) => void
+  deleteFilter: (id: number) => void
+  loadFilterByName: (name: string) => Promise<SavedFilterOut | null>
 }
 
-const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
-export function FilterProvider({ children, isDemo }: { children: ReactNode, isDemo?: boolean }) {
-  const queryClient = useQueryClient();
-  const toast = useCustomToast();
-  
-  const [currentFilter, setCurrentFilter] = useState<FilterData_Input | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
+const FilterContext = createContext<FilterContextType | undefined>(undefined)
+
+export function FilterProvider({
+  children,
+  isDemo,
+}: { children: ReactNode; isDemo?: boolean }) {
+  const queryClient = useQueryClient()
+  const toast = useCustomToast()
 
   const { data: savedFilters = [], isLoading } = useQuery({
-    queryKey: ['savedFilters'],
+    queryKey: ["savedFilters"],
     queryFn: () => SavedFiltersService.readSavedFilters({}),
     enabled: !isDemo,
-  });
-  
+  })
+
+  const [currentFilter, setCurrentFilter] = useState<SavedFilterOut>(savedFilters[0])
+
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (currentFilter) {
+      navigate({
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          filter: currentFilter.name,
+        }),
+        replace: true,
+    });
+
+    }
+  }, [currentFilter])
+
   const createFilterMutation = useMutation({
-    mutationFn: (data: SavedFilterCreate) => SavedFiltersService.createSavedFilter({ requestBody: data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters'] });
+    mutationFn: (data: SavedFilterCreate) =>
+      SavedFiltersService.createSavedFilter({ requestBody: data }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
       toast(
-        'Filter saved',
-        'Your filter has been saved successfully.',
-        'success'
-      );
+        "Filter saved",
+        "Your filter has been saved successfully.",
+        "success",
+      )
+      setCurrentFilter(data)
     },
     onError: () => {
       toast(
-        'Failed to save filter',
-        isDemo? "you can't save filters in demo mode :(" : 'There was an error saving your filter',
-        'error'
-      );
+        "Failed to save filter",
+        isDemo
+          ? "you can't save filters in demo mode :("
+          : "There was an error saving your filter",
+        "error",
+      )
     },
-  });
-  
+  })
+
   const deleteFilterMutation = useMutation({
-    mutationFn: (id: number) => SavedFiltersService.deleteSavedFilter({ filterId: id }),
+    mutationFn: (id: number) =>
+      SavedFiltersService.deleteSavedFilter({ filterId: id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters'] });
+      queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
+      initializeDefaultFilter()
       toast(
-        'Filter deleted',
-        'Your filter has been deleted successfully.',
-        'success'
-      );
+        "Filter deleted",
+        "Your filter has been deleted successfully.",
+        "success",
+      )
     },
     onError: (error) => {
       toast(
-        'Failed to delete filter',
-        error.message || 'There was an error deleting your filter',
-        'error'
-      );
+        "Failed to delete filter",
+        error.message || "There was an error deleting your filter",
+        "error",
+      )
     },
-  });
-  
-  const loadFilterByName = async (name: string): Promise<FilterData_Input | null> => {
+  })
+
+  const loadFilterByName = async (
+    name: string,
+  ): Promise<SavedFilterOut | null> => {
+    const filter = savedFilters.find((f) => f.name === name)
+    if (filter) {
+      setCurrentFilter(filter)
+      return filter
+    }
+    if (name === "custom") {
+      return null
+    }
     try {
-      const filter = await SavedFiltersService.readSavedFilterByName({ filterName: name });
-      setCurrentFilter(filter.filter_data);
-      return filter.filter_data;
+      const filter = await SavedFiltersService.readSavedFilterByName({
+        filterName: name,
+      })
+      setCurrentFilter(filter)
+      return filter
     } catch {
-      toast(
-        'Failed to load filter',
-        `Could not find filter with name: ${name}`,
-        'error'
-      );
-      return null;
+      navigate({
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          filter: savedFilters[0]?.name,
+        }),
+        replace: true,
+      })
+
+      return null
     }
-  };
-  
-  const saveCurrentFilter = (
-    { name, description }: { name: string; description: string | null }
-  ) => {
-    if (!currentFilter) return;
-    createFilterMutation.mutate({ name, description, filter_data: currentFilter });
-  };
-  
-  const initializeDefaultFilter = () => {
-    if (isInitialized || isLoading) return;
-    
+  }
+
+  const saveCurrentFilter = ({
+    name,
+    description,
+  }: { name: string; description: string | null }) => {
+    if (!currentFilter) return
+    createFilterMutation.mutate({
+      name,
+      description,
+      filter_data: currentFilter.filter_data,
+    })
+  }
+
+  const { filter : filterFromUrl } = Route.useSearch()
+
+  function getInitalFilter(): SavedFilterOut {
+    if (filterFromUrl) {
+      loadFilterByName(filterFromUrl).then((f) => {
+        if (f){
+          return f
+        }
+      })
+    }
+
     if (currentFilter) {
-      setIsInitialized(true);
-      return;
+      return currentFilter
     }
-    
-    
-    const defaultFilter = savedFilters.find((filter) => filter.filter_data.is_default);
-    
+
+    const defaultFilter = savedFilters.find(
+      (filter) => filter.filter_data.is_default,
+    )
+
     if (defaultFilter) {
-      setCurrentFilter(defaultFilter.filter_data);
-      setIsInitialized(true);
-      return;
+      return defaultFilter
     }
-    
-    
-    setCurrentFilter({
-      is_default: true,
-      lookup: {
-        month: {
-          visible: true,
-          specifics: null,
-          index: 0
-        },
-       category: {
-          visible: true,
-          specifics: null,
-          index: 1
-        },
-      }
-    });
-    setIsInitialized(true);
-  };
-  
+
+    return savedFilters[0]
+  }
+
+
+  const initializeDefaultFilter = () => {
+    setCurrentFilter(getInitalFilter())
+  }
+
   const updateFilter = (
     id: number,
-    { name, description }: { name: string; description: string | null }
+    { name, description }: { name: string; description: string | null },
   ) => {
-    if (!currentFilter) return;
-    
+    if (!currentFilter) return
+
     const updateMutation = useMutation({
-      mutationFn: () => SavedFiltersService.updateSavedFilter({
-        filterId: id,
-        requestBody: { name, description, filter_data: currentFilter }
-      }),
+      mutationFn: () =>
+        SavedFiltersService.updateSavedFilter({
+          filterId: id,
+          requestBody: { name, description, filter_data: currentFilter.filter_data },
+        }),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['savedFilters'] });
+        queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
         toast(
-          'Filter updated',
-          'Your filter has been updated successfully.',
-          'success'
-        );
+          "Filter updated",
+          "Your filter has been updated successfully.",
+          "success",
+        )
       },
       onError: (error) => {
         toast(
-          'Failed to update filter',
-          error.message || 'There was an error updating your filter',
-          'error'
-        );
+          "Failed to update filter",
+          error.message || "There was an error updating your filter",
+          "error",
+        )
       },
-    });
-    
-    updateMutation.mutate();
-  };
-  
-  // Auto-initialize the default filter when data is loaded
-  useEffect(() => {
-    if (!isInitialized && !isLoading) {
-      initializeDefaultFilter();
-    }
-  }, [isInitialized, isLoading, isDemo]);
+    })
 
+    updateMutation.mutate()
+  }
 
-  
-  // Create the context value
   const contextValue: FilterContextType = {
     savedFilters,
-    currentFilter,
-    
-    // Status
+    currentFilter: currentFilter,
     isLoading,
-    isInitialized,
-    
-    // Actions
     setCurrentFilter,
     initializeDefaultFilter,
     saveCurrentFilter,
     updateFilter,
     deleteFilter: deleteFilterMutation.mutate,
     loadFilterByName,
-  };
-  
+  }
+
   return (
     <FilterContext.Provider value={contextValue}>
       {children}
     </FilterContext.Provider>
-  );
+  )
 }
 
 export function useFilters() {
-  const context = useContext(FilterContext);
-  
+  const context = useContext(FilterContext)
+
   if (context === undefined) {
-    throw new Error('useFilters must be used within a FilterProvider');
+    throw new Error("useFilters must be used within a FilterProvider")
   }
-  
-  return context;
-};
+
+  return context
+}
