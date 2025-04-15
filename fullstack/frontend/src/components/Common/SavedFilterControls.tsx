@@ -49,7 +49,7 @@ function formatFiltersForSelect(filters: SavedFilterOut[]): {
 }
 
 export function SavedFilterControls() {
-  const { savedFilters, setCurrentFilter, currentFilter, initializeDefaultFilter } = useFilters();
+  const { savedFilters, setCurrentFilter, currentFilter } = useFilters();
 
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -75,8 +75,7 @@ export function SavedFilterControls() {
 
   const handleDeleteButtonClick = () => {
     if (currentFilter?.name == "custom"){
-      //TODO
-      initializeDefaultFilter();
+      setCurrentFilter(savedFilters[0])
     } else {
       setIsDeleteDialogOpen(!isDeleteDialogOpen);
     }

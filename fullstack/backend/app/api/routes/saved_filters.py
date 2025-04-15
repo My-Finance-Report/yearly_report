@@ -54,7 +54,8 @@ def create_saved_filter(
 def make_default_filters() -> list[SavedFilterSchema]:
     return [
         SavedFilterSchema(
-            id=str(uuid.uuid4()),
+            id='88dfe43b-c997-4f19-8d50-94b9e4be61c7',
+            is_default=True,
             is_deleteable=False,
             name="Year To Date",
             description="All categories, by month for last year",
@@ -76,7 +77,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id=str(uuid.uuid4()),
+            id='020f1f3a-5230-4fea-ad2f-6008330c42ac',
             is_deleteable=False,
             name="Last Year",
             description="All categories, by month for last year",
@@ -98,7 +99,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id=str(uuid.uuid4()),
+            id='4a15048e-4b0d-450b-b3b5-d7f3004b5db3',
             is_deleteable=False,
             name="All Time",
             description="All categories, by month for all time",
@@ -118,7 +119,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
             ),
         ),
         SavedFilterSchema(
-            id=str(uuid.uuid4()),
+            id='6d6a5cba-0be4-4eb6-ac94-37da9a971196',
             is_deleteable=False,
             name="Monthly Budget",
             description="All categories, by month for current year",
@@ -172,12 +173,23 @@ def read_saved_filters(
         for f in filters
     ]
 
+def make_default_filters_lookup_id()->dict[str, SavedFilterSchema]:
+    return {
+        str(f.id): f
+        for f in make_default_filters()
+    }
+
+def make_default_filters_lookup_name()->dict[str, SavedFilterSchema]:
+    return {
+        f.name: f
+        for f in make_default_filters()
+    }
 
 @router.get("/{filter_id}", response_model=SavedFilterSchema)
 def read_saved_filter(
     *,
     db: Session = Depends(get_db),
-    filter_id: int,
+    filter_id: int | str,
     current_user: User = Depends(get_current_user),
 ) -> SavedFilterSchema:
     """
@@ -188,7 +200,11 @@ def read_saved_filter(
         .filter(SavedFilter.id == filter_id, SavedFilter.user_id == current_user.id)
         .first()
     )
+
     if not saved_filter:
+        static_lookup = make_default_filters_lookup_id()
+        if str(filter_id) in static_lookup:
+            return static_lookup[str(filter_id)]
         raise HTTPException(status_code=404, detail="Saved filter not found")
 
     return SavedFilterSchema(
@@ -216,6 +232,9 @@ def read_saved_filter_by_name(
         .first()
     )
     if not saved_filter:
+        static_lookup = make_default_filters_lookup_name()
+        if filter_name in static_lookup:
+            return static_lookup[filter_name]
         raise HTTPException(status_code=404, detail="Saved filter not found")
 
     return SavedFilterSchema(

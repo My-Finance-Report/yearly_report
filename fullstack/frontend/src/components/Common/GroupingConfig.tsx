@@ -33,13 +33,11 @@ export function GroupingConfig({
   const { setCurrentFilter } = useFilters()
 
   const handleToggleOption = (option: GroupByOption) => {
-    console.log("in here")
+    setCurrentFilter((prev: SavedFilterOut) => {
 
-    setCurrentFilter((prev: SavedFilterOut | null) => {
       console.log(prev)
-      if (!prev) return null
 
-      const newLookup = { ...prev.filter_data.lookup }
+      const newLookup = { ...prev.filter_data?.lookup }
 
       if (newLookup[option]) {
         const rest = { ...newLookup }
@@ -47,7 +45,6 @@ export function GroupingConfig({
         return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } }
       }
 
-      // Add the option with the next available index
       const maxIndex = Object.values(newLookup).reduce(
         (max, entry) => Math.max(max, (entry as FilterEntries).index),
         -1,

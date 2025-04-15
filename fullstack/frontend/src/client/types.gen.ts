@@ -336,6 +336,7 @@ export type SavedFilterOut = {
     filter_data: FilterData_Output;
     id: (number | string);
     is_deleteable?: boolean;
+    is_default?: boolean;
 };
 
 export type SavedFilterUpdate = {

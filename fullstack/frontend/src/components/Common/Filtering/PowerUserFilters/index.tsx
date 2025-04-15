@@ -54,15 +54,13 @@ export function PowerUserButtons({
   const { setCurrentFilter, currentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
-    setCurrentFilter((prev: SavedFilterOut | null) => {
-      if (!prev) return null;
+    setCurrentFilter((prev: SavedFilterOut) => {
 
       const newLookup = { ...prev.filter_data.lookup };
 
       if (newLookup[option]) {
         const rest = { ...newLookup };
         delete rest[option];
-        console.log("rest", rest);
         return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } };
       }
 

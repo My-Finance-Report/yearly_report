@@ -1,13 +1,13 @@
-import type {  FilterEntries, SavedFilterOut } from "@/client"
+import type { FilterEntries, SavedFilterOut } from "@/client"
 
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { GroupByOption } from "@/components/Common/GroupingConfig"
 
 export const handleDragEnd = (
   event: DragEndEvent,
-  currentFilter: SavedFilterOut | null,
+  currentFilter: SavedFilterOut,
   setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut | null>
+    React.SetStateAction<SavedFilterOut>
   >,
 ) => {
   const { active, over } = event
@@ -22,8 +22,8 @@ export const handleDragEnd = (
 
   if (activeIndex === undefined || overIndex === undefined) return
 
-  setCurrentFilter((prev: SavedFilterOut | null) => {
-    if (!prev || !prev.filter_data || !prev.filter_data.lookup) return prev
+  setCurrentFilter((prev: SavedFilterOut) => {
+    if (!prev.filter_data || !prev.filter_data.lookup) return prev
 
     // Create a new lookup object with swapped indices
     const newLookup = { ...prev.filter_data.lookup }
@@ -65,11 +65,11 @@ export const handleDragEnd = (
 export const moveItemUp = (
   option: GroupByOption,
   setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut | null>
+    React.SetStateAction<SavedFilterOut>
   >,
 ) => {
   setCurrentFilter((prev) => {
-    if (!prev || !prev.filter_data || !prev.filter_data.lookup) return prev
+    if (!prev.filter_data || !prev.filter_data.lookup) return prev
 
     const currentIndex = prev.filter_data.lookup[option]?.index
     if (currentIndex === undefined || currentIndex <= 0) return prev
@@ -99,11 +99,11 @@ export const moveItemUp = (
 export const moveItemDown = (
   option: GroupByOption,
   setCurrentFilter: React.Dispatch<
-    React.SetStateAction<SavedFilterOut | null>
+    React.SetStateAction<SavedFilterOut>
   >,
 ) => {
   setCurrentFilter((prev) => {
-    if (!prev || !prev.filter_data || !prev.filter_data.lookup) return prev
+    if (!prev.filter_data || !prev.filter_data.lookup) return prev
 
     const currentIndex = prev.filter_data.lookup[option]?.index
     if (currentIndex === undefined) return prev

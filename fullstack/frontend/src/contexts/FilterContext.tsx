@@ -5,7 +5,7 @@ import {
   SavedFiltersService,
 } from "@/client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
+import React, {
   type ReactNode,
   createContext,
   useContext,
@@ -19,19 +19,13 @@ import { useNavigate } from "@tanstack/react-router"
 interface FilterContextType {
   // Data
   savedFilters: SavedFilterOut[]
-  currentFilter: SavedFilterOut | null
+  currentFilter: SavedFilterOut 
 
   // Status
   isLoading: boolean
-  isInitialized: boolean
 
   // Actions
-  setCurrentFilter: (
-    filter:
-      | SavedFilterOut
-      | null
-      | ((prev: SavedFilterOut | null) => SavedFilterOut | null),
-  ) => void
+  setCurrentFilter: React.Dispatch<React.SetStateAction<SavedFilterOut>>
   initializeDefaultFilter: () => void
   saveCurrentFilter: (data: {
     name: string
@@ -45,6 +39,7 @@ interface FilterContextType {
   loadFilterByName: (name: string) => Promise<SavedFilterOut | null>
 }
 
+
 const FilterContext = createContext<FilterContextType | undefined>(undefined)
 
 export function FilterProvider({
@@ -54,16 +49,13 @@ export function FilterProvider({
   const queryClient = useQueryClient()
   const toast = useCustomToast()
 
-  const [currentFilter, setCurrentFilter] = useState<SavedFilterOut | null>(
-    null,
-  )
-  const [isInitialized, setIsInitialized] = useState(false)
-
   const { data: savedFilters = [], isLoading } = useQuery({
     queryKey: ["savedFilters"],
     queryFn: () => SavedFiltersService.readSavedFilters({}),
     enabled: !isDemo,
   })
+
+  const [currentFilter, setCurrentFilter] = useState<SavedFilterOut>(savedFilters[0])
 
   const navigate = useNavigate()
 
@@ -72,7 +64,7 @@ export function FilterProvider({
       navigate({
         search: (prev: Record<string, unknown>) => ({
           ...prev,
-          filter: currentFilter?.name,
+          filter: currentFilter.name,
         }),
         replace: true,
     });
@@ -107,7 +99,7 @@ export function FilterProvider({
       SavedFiltersService.deleteSavedFilter({ filterId: id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["savedFilters"] })
-      setCurrentFilter(null)
+      initializeDefaultFilter()
       toast(
         "Filter deleted",
         "Your filter has been deleted successfully.",
@@ -130,6 +122,9 @@ export function FilterProvider({
     if (filter) {
       setCurrentFilter(filter)
       return filter
+    }
+    if (name === "custom") {
+      return null
     }
     try {
       const filter = await SavedFiltersService.readSavedFilterByName({
@@ -162,19 +157,19 @@ export function FilterProvider({
     })
   }
 
-  const { filter } = Route.useSearch()
-  const initializeDefaultFilter = () => {
-    if (isInitialized || isLoading) return
+  const { filter : filterFromUrl } = Route.useSearch()
 
-    if (filter) {
-      loadFilterByName(filter)
-      setIsInitialized(true)
-      return
+  function getInitalFilter(): SavedFilterOut {
+    if (filterFromUrl) {
+      loadFilterByName(filterFromUrl).then((f) => {
+        if (f){
+          return f
+        }
+      })
     }
 
     if (currentFilter) {
-      setIsInitialized(true)
-      return
+      return currentFilter
     }
 
     const defaultFilter = savedFilters.find(
@@ -182,12 +177,15 @@ export function FilterProvider({
     )
 
     if (defaultFilter) {
-      setCurrentFilter(defaultFilter)
-      setIsInitialized(true)
-      return
+      return defaultFilter
     }
 
-    setIsInitialized(true)
+    return savedFilters[0]
+  }
+
+
+  const initializeDefaultFilter = () => {
+    setCurrentFilter(getInitalFilter())
   }
 
   const updateFilter = (
@@ -222,17 +220,10 @@ export function FilterProvider({
     updateMutation.mutate()
   }
 
-  useEffect(() => {
-    if (!isInitialized && !isLoading) {
-      initializeDefaultFilter()
-    }
-  }, [isInitialized, isLoading, isDemo])
-
   const contextValue: FilterContextType = {
     savedFilters,
-    currentFilter,
+    currentFilter: currentFilter,
     isLoading,
-    isInitialized,
     setCurrentFilter,
     initializeDefaultFilter,
     saveCurrentFilter,
