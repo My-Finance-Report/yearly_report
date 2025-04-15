@@ -16,6 +16,7 @@ import {
   Flex,
   Input,
   SelectContent,
+  SelectPositioner,
   SelectItem,
   SelectRoot,
   SelectTrigger,
@@ -118,6 +119,7 @@ export function SavedFilterControls() {
           <SelectTrigger>
             <SelectValueText placeholder="Select a filter" />
           </SelectTrigger>
+          <SelectPositioner>
           <SelectContent>
             {myFilters.items.map((item) => (
               <SelectItem key={item.value} item={item}>
@@ -132,6 +134,7 @@ export function SavedFilterControls() {
               </SelectItem>
             ))}
           </SelectContent>
+</SelectPositioner>
         </SelectRoot>
       </FieldRoot>
       )}
