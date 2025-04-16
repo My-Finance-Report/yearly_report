@@ -1,7 +1,7 @@
-import { NoCodeWidget } from "@/client";
+import { NoCodeWidgetOut } from "@/client";
 import { FormatNumber, Box, HStack, Stat, Text } from "@chakra-ui/react";
 
-export function ShowValue({ widget }: { widget: NoCodeWidget }) {
+export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as number;
   return (
     <Box borderWidth={1} borderRadius="md" p={2} m={2}>

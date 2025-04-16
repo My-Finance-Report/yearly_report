@@ -8,6 +8,7 @@ from app.no_code.functions import init_no_code
 
 init_no_code()
 
+
 def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 

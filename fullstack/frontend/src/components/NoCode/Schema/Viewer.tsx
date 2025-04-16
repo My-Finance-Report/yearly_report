@@ -80,7 +80,7 @@ export function SchemaViewer({
   );
 }
 
-// schema-utils.ts
+
 export type JSONSchema = {
   $defs?: Record<string, JSONSchema>;
   $ref?: string;
@@ -92,7 +92,8 @@ export type JSONSchema = {
   required?: string[];
   anyOf?: JSONSchema[];
   // Add more keywords if you need them: oneOf, enum, etc.
-  [key: string]: any;
+  //eslint-disable-next-line
+  [key: string]:any 
 };
 
 /**
@@ -109,6 +110,7 @@ export function resolveSchema(rootSchema: JSONSchema, node: JSONSchema): JSONSch
   // => "$defs/NoCodeTransaction"
 
   const segments = refPath.split("/");
+  //eslint-disable-next-line
   let current: any = rootSchema;
   for (const seg of segments) {
     if (seg in current) {

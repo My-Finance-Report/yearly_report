@@ -1,15 +1,15 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show"
-import { NoCodeService, NoCodeWidget } from "@/client"
+import { NoCodeService, NoCodeWidgetOut } from "@/client"
 import { Container, Flex, Heading } from "@chakra-ui/react"
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code-dashboard")({
   component: NoCodeDashboard,
 })
 
-function orderWidgets(widgets: NoCodeWidget[]): Array<Array<NoCodeWidget>> {
-  const rows: Array<Array<NoCodeWidget>> = []
+function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>> {
+  const rows: Array<Array<NoCodeWidgetOut>> = []
   for (const widget of widgets) {
     if (!rows[widget.row]) {
       rows[widget.row] = [widget]

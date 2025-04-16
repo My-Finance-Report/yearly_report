@@ -11,7 +11,7 @@ import {
 
 export interface ParameterProps {
   parameter: Parameter;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string | number) => void;
 }
 
 const MAP_TO_PARAMETER: Record<
@@ -25,8 +25,8 @@ const MAP_TO_PARAMETER: Record<
 };
 
 function IntParameter({ parameter, onChange }: ParameterProps) {
-  const wrappedChange = (e)=>
-  {onChange(e.target.value)}
+  const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    onChange(e.target.valueAsNumber);
   return (
     <Box>
       <Text key={`${parameter.name}`}>{parameter.name}</Text>
@@ -36,8 +36,8 @@ function IntParameter({ parameter, onChange }: ParameterProps) {
 }
 
 function FloatParameter({ parameter, onChange }: ParameterProps) {
-  const wrappedChange = (e)=>
-  {onChange(e.target.value)}
+  const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    onChange(e.target.valueAsNumber);
   return (
     <Box>
       <Text key={`${parameter.name}`}>{parameter.name}</Text>
@@ -47,10 +47,8 @@ function FloatParameter({ parameter, onChange }: ParameterProps) {
 }
 
 function StrParameter({ parameter, onChange }: ParameterProps) {
-
-  const wrappedChange = (e)=>
-  {onChange(e.target.value)}
-
+  const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    onChange(e.target.value);
   return (
     <Box>
       <Text key={`${parameter.name}`}>{parameter.name}</Text>

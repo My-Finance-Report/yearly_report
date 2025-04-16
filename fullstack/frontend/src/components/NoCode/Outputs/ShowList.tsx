@@ -1,4 +1,4 @@
-import { TableRoot, TableHeader, TableRow, TableCell, TableBody } from "@chakra-ui/react"
+import { Box, TableRoot, TableHeader, TableRow, TableCell, TableBody, Heading } from "@chakra-ui/react"
 import { NoCodeWidgetOut } from "@/client"
 
 export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
@@ -6,6 +6,8 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
     const result = widget.result as Array<{ [key: string]: string | number }>
 
     return (
+        <Box>
+        <Heading>{widget.name}</Heading>
         <TableRoot variant="outline" borderRadius="md" borderWidth={1}>
             <TableHeader>
                 <TableRow>
@@ -28,6 +30,7 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
                 ))}
             </TableBody>
         </TableRoot>
+</Box>
 )
 }
 

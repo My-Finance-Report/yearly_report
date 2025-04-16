@@ -1,5 +1,4 @@
 import enum
-
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Generic, TypeVar
@@ -32,6 +31,7 @@ class ParameterType(str, enum.Enum):
 class SelectOption(BaseModel):
     key: int
     value: str
+
 
 class Parameter(BaseModel):
     name: str
@@ -66,31 +66,33 @@ class OutputType(str, enum.Enum):
     show_value = "show_value"
     show_list = "show_list"
 
+
 @dataclass
 class PipelineEnd:
     result: PrimitiveResult
     output_type: OutputType
+
 
 class WidgetType(str, enum.Enum):
     value = "value"
     list = "list"
     pie_chart = "pie_chart"
 
+
 Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
-ResultType = Scalar | Object | list[Scalar] | list[Object] 
+ResultType = Scalar | Object | list[Scalar] | list[Object]
 
 
 class ResultTypeEnum(enum.Enum):
     string = "string"
     number = "number"
-    transactions = { "id": "number", "amount": "number", "description": "string"}
+    transactions = {"id": "number", "amount": "number", "description": "string"}
 
 
 class NoCodeToolIn(BaseModel):
     tool: str
     parameters: list[Parameter] | None = None
-
 
 
 class NoCodeWidgetIn(BaseModel):
@@ -101,7 +103,8 @@ class NoCodeWidgetIn(BaseModel):
     col: int
     height: int
     width: int
-    type: WidgetType 
+    type: WidgetType
+
 
 class NoCodeWidgetOut(BaseModel):
     name: str
@@ -112,8 +115,7 @@ class NoCodeWidgetOut(BaseModel):
     col: int
     height: int
     width: int
-    type: WidgetType 
-
+    type: WidgetType
 
 
 class NoCodeTool(BaseModel):
@@ -121,7 +123,5 @@ class NoCodeTool(BaseModel):
     description: str
     tool: str
     parameters: list[Parameter] | None = None
-    return_type: dict[str,Any]
-    input_type: dict[str,Any]
-
-
+    return_type: dict[str, Any]
+    input_type: dict[str, Any]

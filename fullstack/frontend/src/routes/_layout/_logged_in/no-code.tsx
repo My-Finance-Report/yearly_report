@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
-import {  CollapsibleSchemaRoot } from "@/components/NoCode/Schema/Viewer";
+import { CollapsibleSchemaRoot } from "@/components/NoCode/Schema/Viewer";
 
 import {
   NoCodeService,
@@ -31,8 +31,9 @@ import {
   Flex,
   Input,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { BsPencilSquare } from "react-icons/bs";
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
   component: NoCodeCanvasBuilder,
@@ -48,21 +49,26 @@ function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>>
       rows[widget.row].push(widget)
     }
   }
-  return rows.map(row=>row.sort((a, b) => a.col - b.col))
+  return rows.map(row => row.sort((a, b) => a.col - b.col))
 }
 
-function NoCodeCanvas({widgets}: {widgets: NoCodeWidgetOut[]}) {
+function NoCodeCanvas({ widgets, setEditWidget }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void }) {
 
   if (!widgets) {
     return <div>No widgets found</div>
   }
 
   return (
-    <Container maxW="lg" my={8}>
+    <Container>
       {orderWidgets(widgets).map((row) => (
         <Flex key={row[0].row} direction="row" gap={2}>
           {row.map((widget) => (
-            <NoCodeShow key={widget.name} widget={widget} />
+            <Box>
+              <Button onClick={() => setEditWidget(widget)}>
+                <BsPencilSquare />
+              </Button>
+              <NoCodeShow key={widget.name} widget={widget} />
+            </Box>
           ))}
         </Flex>
       ))}
@@ -70,14 +76,19 @@ function NoCodeCanvas({widgets}: {widgets: NoCodeWidgetOut[]}) {
   )
 }
 
-
-
-function NoCodeCanvasBuilder(){
+function NoCodeCanvasBuilder() {
   const [result, setResult] = useState<NoCodeWidgetOut[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [editWidget, setEditWidget] = useState<NoCodeWidgetIn | null>(null);
   const [widgets, setWidgets] = useState<NoCodeWidgetIn[]>([]);
 
+  function enrichWidgetOut(widget: NoCodeWidgetOut): NoCodeWidgetIn {
+    const widgetIn = widgets.find( (w)=>w.name ==widget.name)
+    return {
+      ...widget,
+      pipeline: widgetIn?.pipeline || []
+    }
+  }
 
   function handleSaveWidgets() {
     if (!widgets) {
@@ -85,6 +96,10 @@ function NoCodeCanvasBuilder(){
     }
     mutation.mutate(widgets);
   }
+
+  useEffect(() => {
+    handleSaveWidgets()
+  }, [widgets])
 
   const { data: fetchedTools } = useQuery({
     queryKey: ["no-code-tools"],
@@ -113,30 +128,18 @@ function NoCodeCanvasBuilder(){
       <Button onClick={() => setEditWidget({ name: "", description: "", pipeline: [], row: 1, col: 1, height: 1, width: 1, type: "value" })}>
         Add Widget
       </Button>
-      <Button onClick={handleSaveWidgets}>Preview Dashboard</Button>
-      {editWidget && 
-        <NoCodeWidgetBuilder  setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
+      {error && <Text>{error}</Text>}
+      {editWidget &&
+        <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      {widgets.map((widget) => (
-        <WidgetPreview key={widget.name} widget={widget} setEditWidget={setEditWidget} />
-      ))}
-      <Text>{error}</Text>
-      <NoCodeCanvas widgets={result}/>
+      <NoCodeCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} />
     </Container>
   );
 }
 
-function WidgetPreview({widget, setEditWidget}: {widget: NoCodeWidgetIn; setEditWidget: React.Dispatch<React.SetStateAction<NoCodeWidgetIn | null>>}) {
-  return (
-    <Box key={widget.name} borderWidth="1px" p={3} mb={2}>
-      <Text fontWeight="semibold">{widget.name}</Text>
-      <Text>{widget.description}</Text>
-      <Button onClick={() => setEditWidget(widget)}>Edit</Button>
-    </Box>
-  )
-}
 
-function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEditWidget: React.Dispatch<React.SetStateAction<NoCodeWidgetIn | null>>; setWidgets: React.Dispatch<React.SetStateAction<NoCodeWidgetIn[]>>; widgetIn: NoCodeWidgetIn | null; tools: NoCodeTool[]}) {
+
+function NoCodeWidgetBuilder({ setWidgets, setEditWidget, widgetIn, tools }: { setEditWidget: React.Dispatch<React.SetStateAction<NoCodeWidgetIn | null>>; setWidgets: React.Dispatch<React.SetStateAction<NoCodeWidgetIn[]>>; widgetIn: NoCodeWidgetIn | null; tools: NoCodeTool[] }) {
 
 
   const [pipeline, setPipeline] = useState<NoCodeTool[]>([]);
@@ -145,7 +148,7 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
     if (!widget.name) {
       return;
     }
-    setWidgets((prev) => [...prev, {...widget, pipeline}]);
+    setWidgets((prev) => [...prev, { ...widget, pipeline }]);
   }
 
   const handleRemoveWidget = () => {
@@ -159,17 +162,17 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
   const [widget, setWidget] = useState<NoCodeWidgetIn>(widgetIn || { name: "", description: "", pipeline: [], row: 1, col: 1, height: 1, width: 1, type: "value" });
 
 
-  const widgetTypes = ["value", "list", "pie_chart"].map((theType)=>({label:theType, value:theType }))
-  const formattedOptions = {items:widgetTypes }
+  const widgetTypes = ["value", "list", "pie_chart"].map((theType) => ({ label: theType, value: theType }))
+  const formattedOptions = { items: widgetTypes }
 
 
   return (
-    <Container maxW="lg" my={8}>
+    <Container  my={8}>
       <Heading mb={4}>No-Code Widget Builder</Heading>
-      <Button onClick={handleRemoveWidget}>Remove Widget</Button>
+      <Button onClick={() => { handleRemoveWidget(); setEditWidget(null) }}>Remove Widget</Button>
       <Button onClick={handleDoneEditing}>Done</Button>
 
-    <Box mb={2}>
+      <Box mb={2}>
         <Text>Widget Name</Text>
         <Input
           type="text"
@@ -181,7 +184,7 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
       </Box>
 
 
-    <Box mb={2}>
+      <Box mb={2}>
         <Text>Description</Text>
         <Input
           type="text"
@@ -191,7 +194,7 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
           }
         />
       </Box>
-    <Box mb={2}>
+      <Box mb={2}>
         <Text>Row</Text>
         <Input
           type="number"
@@ -201,7 +204,7 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
           }
         />
       </Box>
-    <Box mb={2}>
+      <Box mb={2}>
         <Text>Col</Text>
         <Input
           type="number"
@@ -212,28 +215,28 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
         />
       </Box>
 
-    <Box mb={2}>
+      <Box mb={2}>
 
-      <Text>Widget Kind</Text>
-      <SelectRoot
-        placeholder={widget.type}
-        collection={createListCollection(formattedOptions)}
-        onValueChange={(val) => {
-          setWidget((prev)=> ({...prev, type: val.value[0] as WidgetType}));
-        }}
-      >
-        <SelectTrigger>
-          <SelectValueText placeholder="Select a kind" />
-        </SelectTrigger>
-        <SelectContent>
-          {formattedOptions.items.map((kind) => (
-            <SelectItem key={kind.value} item={kind}>
-              {kind.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-    </Box>
+        <Text>Widget Kind</Text>
+        <SelectRoot
+          placeholder={widget.type}
+          collection={createListCollection(formattedOptions)}
+          onValueChange={(val) => {
+            setWidget((prev) => ({ ...prev, type: val.value[0] as WidgetType }));
+          }}
+        >
+          <SelectTrigger>
+            <SelectValueText placeholder="Select a kind" />
+          </SelectTrigger>
+          <SelectContent>
+            {formattedOptions.items.map((kind) => (
+              <SelectItem key={kind.value} item={kind}>
+                {kind.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </SelectRoot>
+      </Box>
 
 
 
@@ -266,10 +269,10 @@ function NoCodeWidgetBuilder({setWidgets,setEditWidget, widgetIn, tools}: {setEd
       <Button
         colorScheme="blue"
         mt={4}
-        onClick={handleSaveWidget}
+        onClick={() => { handleSaveWidget(); setEditWidget(null) }}
         disabled={pipeline.length === 0}
       >
-        Add Widget To Canvas
+        Add Widget
       </Button>
       <Button colorScheme="blue" mt={4} onClick={() => setPipeline([])}>
         Reset
@@ -317,10 +320,12 @@ function Node({
     setPipeline((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  //eslint-disable-next-line
   const onChange = (value: any, index: number) => {
     const updatedParams = [...(node.parameters || [])];
     updatedParams[index] = {
-      ...node.parameters[index],
+      // @ts-expect-error im not sure
+      ...node.parameters[index], 
       value,
     };
     setPipeline((prev) =>
