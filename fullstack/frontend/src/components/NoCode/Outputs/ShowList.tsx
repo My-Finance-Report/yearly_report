@@ -1,12 +1,12 @@
 import { TableRoot, TableHeader, TableRow, TableCell, TableBody } from "@chakra-ui/react"
-import { NoCodeWidget } from "@/client"
+import { NoCodeWidgetOut } from "@/client"
 
-export function ShowList({ widget }: { widget: NoCodeWidget }) {
+export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
 
     const result = widget.result as Array<{ [key: string]: string | number }>
 
     return (
-        <TableRoot>
+        <TableRoot variant="outline" borderRadius="md" borderWidth={1}>
             <TableHeader>
                 <TableRow>
                     {result.map((data, index) => {

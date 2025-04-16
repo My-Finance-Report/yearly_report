@@ -90,6 +90,6 @@ def get_no_code_dashboard(
         NoCodeWidgetOut(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(list_trans), session, user),name="List Transactions", description="List of transactions", row=2, col=0, height=1, width=1, type=WidgetType.list),
         NoCodeWidgetOut(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_sum), session, user),name="Total of transactions", description="Total of 10 transactions",  row=1, col=1, height=1, width=1, type=WidgetType.value),
         NoCodeWidgetOut(result_type=ResultTypeEnum.number,result = evaluate_pipeline(convert_to_pipeline(get_avg), session, user),name="Average of transactions", description="Average of 10 transactions", row=1, col=0, height=1, width=1, type=WidgetType.value),
-        NoCodeWidgetOut(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(get_pie), session, user),name="Pie Chart", description="Pie chart of 10 transactions",  row=3, col=0, height=1, width=1, type=WidgetType.pie_chart)
+        NoCodeWidgetOut(result_type=ResultTypeEnum.transactions,result = evaluate_pipeline(convert_to_pipeline(get_pie), session, user),name="Pie Chart", description="Pie chart of 10 transactions",  row=2, col=0, height=1, width=1, type=WidgetType.pie_chart)
     ]
     return widgets
