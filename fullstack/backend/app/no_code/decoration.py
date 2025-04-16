@@ -31,6 +31,7 @@ class PipelineStep:
 
 STEP_REGISTRY: dict[str, PipelineStep] = {}
 
+print(STEP_REGISTRY)
 
 
 def pipeline_step(

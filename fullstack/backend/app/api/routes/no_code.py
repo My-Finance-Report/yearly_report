@@ -111,8 +111,8 @@ def get_no_code_dashboard(
             parameters=[Parameter(name="id", type=ParameterType.INT, value=1)],
         )
     ]
-    get_sum = [first_n(10), NoCodeToolIn(tool="sum")]
-    get_avg = [first_n(10), NoCodeToolIn(tool="average")]
+    get_sum = [first_n(10), NoCodeToolIn(tool="sum_transform")]
+    get_avg = [first_n(10), NoCodeToolIn(tool="average_transform")]
     get_pie = [
         first_n(10),
         NoCodeToolIn(

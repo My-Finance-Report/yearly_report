@@ -27,7 +27,8 @@ def make_account_choices(session: Session, user: User) -> list[SelectOption]:
 
 
 def init_no_code() -> None:
-    pass
+    import app.no_code.generators
+    import app.no_code.transformations
 
 
 def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCallable]]:
