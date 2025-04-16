@@ -198,12 +198,18 @@ export type NewPassword = {
 export type NoCodeTool = {
     name: string;
     description: string;
-    tool: ToolType;
+    tool: string;
     parameters?: (Array<Parameter> | null);
+    return_type: {
+        [key: string]: unknown;
+    };
+    input_type: {
+        [key: string]: unknown;
+    };
 };
 
 export type NoCodeToolIn = {
-    tool: ToolType;
+    tool: string;
     parameters?: (Array<Parameter> | null);
 };
 
@@ -428,8 +434,6 @@ export type Token = {
     requires_2fa_setup?: boolean;
     temp_token?: (string | null);
 };
-
-export type ToolType = 'first_ten_transactions' | 'account_name' | 'account_balance' | 'sum' | 'average' | 'to_key_value_pair';
 
 export type TransactionEdit = {
     description: string;

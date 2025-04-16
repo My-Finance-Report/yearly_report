@@ -1,7 +1,15 @@
-from ast import Call
+from decimal import Decimal
+from typing import Any, Dict
+from pydantic import TypeAdapter
+
+
+from pydantic import BaseModel
+
+
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from pydantic_core.core_schema import JsonSchema
 from sqlalchemy.orm import Session
 
 from app.models import User
@@ -31,10 +39,8 @@ def pipeline_step(
     return_type: Any,
     passed_value: Any = None
 )-> Callable[[Callable], Callable]:
-    print("make it here")
     def decorator(func: Callable) -> Callable:
 
-        print("make it here there")
         STEP_REGISTRY[func.__name__] = PipelineStep(
             func=func,
             expected_args=expected_kwargs,
@@ -50,22 +56,29 @@ def get_tool_callable(tool:str)->Callable:
         raise ValueError(f"No such tool: {tool}")
     return STEP_REGISTRY[tool].func
 
+
+def convert_type_to_json_schema(type_: Any) -> Dict[str, Any]:
+    adapter = TypeAdapter(type_)
+    return adapter.json_schema()
+
+
+
 def make_tools(
     session: Session,
     user: User,
 ) -> list[NoCodeTool]:
 
     tools= []
-    print(STEP_REGISTRY)
     for name,tool in STEP_REGISTRY.items():
         tools.append(
             NoCodeTool(
                 name=name,
                 description=tool.func.__doc__ or "",
                 tool=name,
+                input_type=convert_type_to_json_schema(tool.passed_value),
+                return_type=convert_type_to_json_schema(tool.return_type),
                 parameters=[Parameter(name=arg.name, type=arg.type, value=arg.default_value, options=arg.options_generator(session, user) if arg.options_generator else None) for arg in tool.expected_args]
             )
         )
-    print(tools)
     return tools
 

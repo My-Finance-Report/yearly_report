@@ -2,7 +2,7 @@ import enum
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -10,8 +10,7 @@ from app.core.db import Session
 from app.models import TransactionId, User
 
 
-@dataclass
-class NoCodeTransaction:
+class NoCodeTransaction(BaseModel):
     id: TransactionId | None
     amount: float
     description: str
@@ -122,5 +121,7 @@ class NoCodeTool(BaseModel):
     description: str
     tool: str
     parameters: list[Parameter] | None = None
+    return_type: dict[str,Any]
+    input_type: dict[str,Any]
 
 

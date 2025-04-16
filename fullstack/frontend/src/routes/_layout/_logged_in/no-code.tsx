@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
+import {  SchemaViewer } from "@/components/NoCode/Schema/Viewer";
 
 import {
   NoCodeService,
@@ -256,8 +257,7 @@ function Node({
     setPipeline((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const onChange = (value, index) => {
-    console.log(value);
+  const onChange = (value: any, index: number) => {
     const updatedParams = [...(node.parameters || [])];
     updatedParams[index] = {
       ...node.parameters[index],
@@ -285,6 +285,9 @@ function Node({
             onChange={(val) => onChange(val, paramIdx)}
           />
         ))}
+      <SchemaViewer schema={node.input_type} />
+      <SchemaViewer schema={node.return_type} />
     </Box>
   );
 }
+
