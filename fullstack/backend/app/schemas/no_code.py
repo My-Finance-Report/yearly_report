@@ -81,15 +81,6 @@ Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
 ResultType = Scalar | Object | list[Scalar] | list[Object] 
 
-class ToolType(str, enum.Enum):
-    first_ten_transactions = "first_ten_transactions"
-    account_name = "account_name"
-    account_balance = "account_balance"
-    sum = "sum"
-    average = "average"
-    to_key_value_pair = "to_key_value_pair"
-
-
 
 class ResultTypeEnum(enum.Enum):
     string = "string"
@@ -98,7 +89,7 @@ class ResultTypeEnum(enum.Enum):
 
 
 class NoCodeToolIn(BaseModel):
-    tool: ToolType
+    tool: str
     parameters: list[Parameter] | None = None
 
 
@@ -129,7 +120,7 @@ class NoCodeWidgetOut(BaseModel):
 class NoCodeTool(BaseModel):
     name: str
     description: str
-    tool: ToolType
+    tool: str
     parameters: list[Parameter] | None = None
 
 

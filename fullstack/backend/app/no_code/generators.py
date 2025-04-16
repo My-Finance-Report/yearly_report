@@ -1,13 +1,15 @@
 from decimal import Decimal
 import random
-from typing import cast
+from typing import Optional,  cast
 
 from app.models import Category, Transaction, TransactionSource
-from app.no_code.step import Kwargs, step
-from app.schemas.no_code import NoCodeTransaction, PipelineStart
+from app.no_code.step import Kwargs
+from app.schemas.no_code import NoCodeTransaction, ParameterType, PipelineStart
+from app.no_code.decoration import Arg, pipeline_step
+from app.no_code.functions import make_account_choices
 
 
-@step
+@pipeline_step(expected_kwargs=[Arg(name="n", type=ParameterType.INT), Arg(name="account_id", type=ParameterType.SELECT, options_generator=make_account_choices)], return_type=list[NoCodeTransaction], passed_value=None)
 def first_n_transactions(
     data: PipelineStart, kwargs: Kwargs
 ) -> list[NoCodeTransaction]:
@@ -33,7 +35,7 @@ def first_n_transactions(
     ]
 
 
-@step
+@pipeline_step(expected_kwargs=[Arg(name="id", type=ParameterType.INT)], return_type=Optional[str], passed_value=None)
 def account_name(
     data: PipelineStart, kwargs: Kwargs
 ) -> str | None:
@@ -48,7 +50,7 @@ def account_name(
     return query.name if query else None
 
 
-@step
+@pipeline_step(expected_kwargs=[Arg(name="id", type=ParameterType.INT)], return_type=Optional[Decimal], passed_value=None)
 def account_balance(
     data: PipelineStart, kwargs: Kwargs
 ) -> Decimal | None:

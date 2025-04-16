@@ -8,6 +8,7 @@ import {
   NoCodeTool,
   NoCodeWidgetOut,
   NoCodeWidgetIn,
+  WidgetType,
 } from "@/client";
 import {
   Container,
@@ -121,7 +122,7 @@ function NoCodeBuilder() {
           type="number"
           value={widget.row || 1}
           onChange={(e) =>
-            setWidget((prev) => ({ ...prev, row: e.target.value }))
+            setWidget((prev) => ({ ...prev, row: parseInt(e.target.value) }))
           }
         />
       </Box>
@@ -131,7 +132,7 @@ function NoCodeBuilder() {
           type="number"
           value={widget.col || 1}
           onChange={(e) =>
-            setWidget((prev) => ({ ...prev, col: e.target.value }))
+            setWidget((prev) => ({ ...prev, col: parseInt(e.target.value) }))
           }
         />
       </Box>
@@ -141,7 +142,7 @@ function NoCodeBuilder() {
         placeholder={widget.type}
         collection={createListCollection(formattedOptions)}
         onValueChange={(val) => {
-          setWidget((prev)=> ({...prev, type: val.value[0]}));
+          setWidget((prev)=> ({...prev, type: val.value[0] as WidgetType}));
         }}
       >
         <SelectTrigger>

@@ -1,4 +1,5 @@
 from dataclasses import is_dataclass
+from typing import Any
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy import Result, desc
@@ -8,15 +9,11 @@ from app.models import (
     User,
 )
 from app.no_code.functions import (
-    NoCodeTool,
-    NoCodeToolIn,
-    Pipeline,
-    ToolType,
     convert_to_pipeline,
     evaluate_pipeline,
-    make_tools,
 )
-from app.schemas.no_code import  NoCodeWidgetIn, NoCodeWidgetOut, Parameter, ParameterType, PipelineEnd, ResultType, ResultTypeEnum, WidgetType
+from app.no_code.decoration import make_tools
+from app.schemas.no_code import  NoCodeWidgetIn, NoCodeWidgetOut, Parameter, ParameterType,  ResultType, ResultTypeEnum, WidgetType, NoCodeTool, NoCodeToolIn
 
 router = APIRouter(prefix="/no_code", tags=["no_code"])
 
@@ -28,14 +25,19 @@ def get_no_code_tool(
 ) -> list[NoCodeTool]:
     return make_tools(session, user)
 
+def safe_parse_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
 def determine_result_type(result: ResultType)-> ResultTypeEnum:
     if is_dataclass(result):
         return ResultTypeEnum.transactions
-    try:
-        int(result)
+
+    if safe_parse_int(result) is not None:
         return ResultTypeEnum.number 
-    except: 
-        return ResultTypeEnum.string
+    return ResultTypeEnum.string
 
 
 def process_widget(session:Session, user: User,widget: NoCodeWidgetIn)-> NoCodeWidgetOut:
@@ -67,7 +69,7 @@ def save_no_code_tool(
         raise HTTPException(status_code=400, detail=str(e))
 
 def first_n(n: int)->NoCodeToolIn:
-    return NoCodeToolIn(tool=ToolType.first_ten_transactions, parameters=[Parameter(name="n", type=ParameterType.INT, value=n), Parameter(name="account_id", type=ParameterType.INT, value=1)])
+    return NoCodeToolIn(tool="first_n_transactions", parameters=[Parameter(name="n", type=ParameterType.INT, value=n), Parameter(name="account_id", type=ParameterType.INT, value=1)])
 
 
 
@@ -78,11 +80,11 @@ def get_no_code_dashboard(
 ) -> list[NoCodeWidgetOut]:
 
     list_trans = [first_n(10)]
-    account_name = [NoCodeToolIn(tool=ToolType.account_name, parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
-    account_balance = [NoCodeToolIn(tool=ToolType.account_balance, parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
-    get_sum = [first_n(10), NoCodeToolIn(tool=ToolType.sum)]
-    get_avg = [first_n(10), NoCodeToolIn(tool=ToolType.average)]
-    get_pie = [first_n(10), NoCodeToolIn(tool=ToolType.to_key_value_pair, parameters=[Parameter(name="key_from", type=ParameterType.STRING, value="category_name"), Parameter(name="value_from", type=ParameterType.STRING, value="amount")])]
+    account_name = [NoCodeToolIn(tool="account_name", parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
+    account_balance = [NoCodeToolIn(tool="account_balance", parameters=[Parameter(name="id", type=ParameterType.INT, value=1)])]
+    get_sum = [first_n(10), NoCodeToolIn(tool="sum")]  
+    get_avg = [first_n(10), NoCodeToolIn(tool="average")]  
+    get_pie = [first_n(10), NoCodeToolIn(tool="to_key_value_pair", parameters=[Parameter(name="key_from", type=ParameterType.STRING, value="category_name"), Parameter(name="value_from", type=ParameterType.STRING, value="amount")])]
 
     widgets = [
         NoCodeWidgetOut(result_type=ResultTypeEnum.string,result = evaluate_pipeline(convert_to_pipeline(account_name), session, user),name="Account Name", description="Name of the account",  row=0, col=0, height=1, width=1, type=WidgetType.value),

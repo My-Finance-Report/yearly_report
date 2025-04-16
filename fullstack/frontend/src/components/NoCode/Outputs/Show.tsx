@@ -1,4 +1,4 @@
-import { NoCodeWidget } from "@/client"
+import { NoCodeWidgetOut } from "@/client"
 import { ShowValue } from "./ShowValue"
 import { ShowList } from "./ShowList"
 import { ShowChart } from "./ShowChart"
@@ -9,7 +9,7 @@ const MAP_TO_SHOW = {
     "pie_chart": ShowChart    
 }
 
-export function NoCodeShow({ widget }: { widget: NoCodeWidget }) {
+export function NoCodeShow({ widget }: { widget: NoCodeWidgetOut }) {
     const TheDisplay = MAP_TO_SHOW[widget.type]
     return <TheDisplay widget={widget} />
 }
