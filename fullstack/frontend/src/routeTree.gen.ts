@@ -39,6 +39,8 @@ import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
+import { Route as LayoutLoggedinNoCodeDashboardImport } from './routes/_layout/_logged_in/no-code-dashboard'
+import { Route as LayoutLoggedinNoCodeImport } from './routes/_layout/_logged_in/no-code'
 import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
 import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
 import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
@@ -193,6 +195,17 @@ const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
   getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
+const LayoutLoggedinNoCodeDashboardRoute =
+  LayoutLoggedinNoCodeDashboardImport.update({
+    path: '/no-code-dashboard',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
+
+const LayoutLoggedinNoCodeRoute = LayoutLoggedinNoCodeImport.update({
+  path: '/no-code',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
+
 const LayoutLoggedinManageAccountsRoute =
   LayoutLoggedinManageAccountsImport.update({
     path: '/manage-accounts',
@@ -301,6 +314,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinManageAccountsImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/no-code': {
+      preLoaderRoute: typeof LayoutLoggedinNoCodeImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/no-code-dashboard': {
+      preLoaderRoute: typeof LayoutLoggedinNoCodeDashboardImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/plaid': {
       preLoaderRoute: typeof LayoutLoggedinPlaidImport
       parentRoute: typeof LayoutLoggedinImport
@@ -348,6 +369,8 @@ export const routeTree = rootRoute.addChildren([
       LayoutLoggedinAdminRoute,
       LayoutLoggedinBudgetRoute,
       LayoutLoggedinManageAccountsRoute,
+      LayoutLoggedinNoCodeRoute,
+      LayoutLoggedinNoCodeDashboardRoute,
       LayoutLoggedinPlaidRoute,
       LayoutLoggedinSankeyConfigRoute,
       LayoutLoggedinSettingsRoute,

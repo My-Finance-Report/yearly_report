@@ -5,6 +5,7 @@ from app.api.routes import (
     login,
     manage_accounts,
     manage_budgets,
+    no_code,
     oauth,
     plaid,
     private,
@@ -30,6 +31,7 @@ api_router.include_router(demo.router)
 api_router.include_router(transactions.router)
 api_router.include_router(manage_accounts.router)
 api_router.include_router(manage_budgets.router)
+api_router.include_router(no_code.router)
 api_router.include_router(sankey.router)
 api_router.include_router(uploads.router)
 api_router.include_router(users.router)

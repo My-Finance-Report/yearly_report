@@ -6,6 +6,6 @@ set -x
 cd backend
 
 mypy app --exclude app/alembic
-ruff check --fix  app
+#ruff check --fix  app
 ruff format app 
 

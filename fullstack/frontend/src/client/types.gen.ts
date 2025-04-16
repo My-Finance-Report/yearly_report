@@ -195,6 +195,60 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type NoCodeTool = {
+    name: string;
+    description: string;
+    tool: string;
+    parameters?: (Array<Parameter> | null);
+    return_type: {
+        [key: string]: unknown;
+    };
+    input_type: {
+        [key: string]: unknown;
+    };
+};
+
+export type NoCodeToolIn = {
+    tool: string;
+    parameters?: (Array<Parameter> | null);
+};
+
+export type NoCodeWidgetIn = {
+    name: string;
+    description: string;
+    pipeline: Array<NoCodeToolIn>;
+    row: number;
+    col: number;
+    height: number;
+    width: number;
+    type: WidgetType;
+};
+
+export type NoCodeWidgetOut = {
+    name: string;
+    description: string;
+    result: (string | number | {
+    [key: string]: (string | number);
+} | Array<(string | number)> | Array<{
+    [key: string]: (string | number);
+}>);
+    result_type: ResultTypeEnum;
+    row: number;
+    col: number;
+    height: number;
+    width: number;
+    type: WidgetType;
+};
+
+export type Parameter = {
+    name: string;
+    type: ParameterType;
+    value?: (number | string | null);
+    options?: (Array<SelectOption> | null);
+};
+
+export type ParameterType = 'int' | 'float' | 'string' | 'select';
+
 /**
  * Response model for a Plaid account.
  */
@@ -260,6 +314,13 @@ export type PriceDetails = {
     max_sources: number;
 };
 
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
+};
+
 export type ProcessFileJobOut = {
     created_at: string;
     last_tried_at?: (string | null);
@@ -273,6 +334,8 @@ export type ProcessFileJobOut = {
 };
 
 export type ProcessingState = 'waiting' | 'preparing' | 'fetching' | 'parsing' | 'categorizing' | 'failed' | 'completed';
+
+export type ResultTypeEnum = 'string' | 'number';
 
 export type SankeyConfigCreatePayload = {
     inputs: Array<SankeyInputCreate>;
@@ -336,6 +399,11 @@ export type SavedFilterUpdate = {
     name?: (string | null);
     description?: (string | null);
     filter_data?: (FilterData_Input | null);
+};
+
+export type SelectOption = {
+    key: number;
+    value: string;
 };
 
 export type SourceKind = 'account' | 'investment' | 'card';
@@ -496,6 +564,8 @@ export type Verify2FAResponse = {
     access_token: string;
     token_type: string;
 };
+
+export type WidgetType = 'value' | 'list' | 'pie_chart';
 
 export type WorkerStatusOut = {
     id: number;
@@ -669,6 +739,16 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool>);
+
+export type NoCodeSaveNoCodeToolData = {
+    requestBody: Array<NoCodeWidgetIn>;
+};
+
+export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
+
+export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidgetOut>);
+
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 
 export type OauthGoogleCallbackData = {
@@ -687,6 +767,19 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 
