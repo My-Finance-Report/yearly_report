@@ -1,29 +1,30 @@
-import { Box, Heading, Text, List, ListItem, Badge } from "@chakra-ui/react";
+import { Box, Text, List, ListItem, Badge } from "@chakra-ui/react";
+import { useState } from "react";
 
 interface SchemaViewerProps {
   schema: JSONSchema;
+  prevWasArray?: boolean
   rootSchema?: JSONSchema;  
   depth?: number;           
+  maxDepth?:number;
 }
 
 export function SchemaViewer({
   schema,
   rootSchema,
   depth = 0,
+  maxDepth
 }: SchemaViewerProps) {
-  const indent = depth * 6;
+
+    if (maxDepth && depth >= maxDepth){
+        return
+    }
+  const indent = depth * 3;
   const actualRoot = rootSchema || schema; 
   const resolved = resolveSchema(actualRoot, schema);
 
   return (
-    <Box pl={`${indent}px`} borderLeft={depth > 0 ? "1px solid #ccc" : "none"}>
-
-      {resolved.title && (
-        <Heading as="h4" size="sm" mb={1}>
-          {resolved.title}
-        </Heading>
-      )}
-
+    <Box pl={`${indent}px`}>
 
       {resolved.type &&
         !["object", "array"].includes(resolved.type) && (
@@ -34,26 +35,18 @@ export function SchemaViewer({
 
       {resolved.type === "object" && resolved.properties && (
         <>
-          <Text fontSize="sm">
-            <Badge>Object{" "}
-            {resolved.required && resolved.required.length > 0 && (
-              <>
-                {resolved.required.join(", ")}
-              </>
-            )}
-            </Badge>
-          </Text>
           <List.Root variant="plain" ml={0} mt={2}>
             {Object.entries(resolved.properties).map(([propName, propSchema]) => {
               return (
                 <ListItem key={propName} mb={2}>
-                  <Text fontWeight="bold" minWidth={150} mr={5} textAlign={"end"}>
-                    {propName}
+                  <Text mr={2}>
+                    {propName} 
                   </Text>
                   <SchemaViewer
                     schema={propSchema}
                     rootSchema={actualRoot}
                     depth={depth + 1}
+            maxDepth={maxDepth}
                   />
                 </ListItem>
               );
@@ -64,29 +57,21 @@ export function SchemaViewer({
 
       {resolved.type === "array" && resolved.items && (
         <Box mt={2}>
-          <Text fontSize="sm">
-            <strong>Array of:</strong>
-          </Text>
           <SchemaViewer
+            prevWasArray={true}
             schema={resolved.items}
             rootSchema={actualRoot}
             depth={depth + 1}
+            maxDepth={maxDepth}
           />
         </Box>
       )}
 
       {Array.isArray(resolved.anyOf) && (
-        <Box mt={2}>
-          <Text fontSize="sm" mb={1}>
-            Union
-          </Text>
-          <List.Root variant="plain" ml={4}>
+        <Box>
             {resolved.anyOf.map((sub, idx) => (
-              <ListItem key={idx} mb={2}>
-                <SchemaViewer schema={sub} rootSchema={actualRoot} depth={depth + 1} />
-              </ListItem>
+                <SchemaViewer key={idx} schema={sub} rootSchema={actualRoot} depth={depth + 1}  maxDepth={maxDepth}/>
             ))}
-          </List.Root>
         </Box>
       )}
 
@@ -141,3 +126,68 @@ export function resolveSchema(rootSchema: JSONSchema, node: JSONSchema): JSONSch
     ...node,
   };
 }
+
+;
+
+export function CollapsibleSchemaRoot({ schema }: { schema: JSONSchema }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // If the top-level references something in $defs, resolve it:
+  const resolved = resolveSchema(schema, schema);
+
+  const secondLayer = resolveSchema(schema, resolved.items ? resolved.items : resolved)
+  const format = resolved.items ? `${secondLayer.title}[]` : secondLayer.title 
+
+  const handleToggle = () => setExpanded((prev) => !prev);
+
+
+  if (resolved.type =="null"){
+    return (
+    <Box
+        borderWidth={1}
+        borderRadius="md"
+        >
+        <Box
+            display="flex"
+            alignItems="center"
+            justifyContent={"space-between"}
+            cursor="pointer"
+            onClick={handleToggle}
+            p={3}
+            mb={2}
+        >
+            <Badge>N/A</Badge>
+        </Box>
+        </Box>
+  );
+  }
+
+  return (
+    <Box
+    borderWidth={1}
+    borderRadius="md"
+    >
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent={"space-between"}
+        cursor="pointer"
+        onClick={handleToggle}
+        p={3}
+        mb={2}
+      >
+        <Badge>{format}</Badge>
+        <Text fontSize="xs" opacity={0.7}>
+          {expanded ? "▲ collapse" : "▼ expand"}
+        </Text>
+      </Box>
+
+      {expanded && (
+        <Box ml={4}>
+          <SchemaViewer schema={resolved} rootSchema={resolved} />
+        </Box>
+      )}
+    </Box>
+  );
+}
+

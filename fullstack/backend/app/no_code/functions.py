@@ -1,9 +1,10 @@
 from dataclasses import asdict, is_dataclass
 from decimal import Decimal
 from functools import partial
+from inspect import isclass
 from typing import Any, TypeVar, get_args, get_origin
 
-from pydantic import Json
+from pydantic import BaseModel, Json
 
 
 from app.db import Session
@@ -44,6 +45,8 @@ def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[Any]]:
 def serialize_to_result(obj: Any) -> Json:
     if isinstance(obj, (Decimal, str, int, float)):
         return obj
+    elif isinstance(obj, BaseModel):
+        return obj.model_dump()
     elif is_dataclass(obj):
         if not isinstance(obj, type):
             return {

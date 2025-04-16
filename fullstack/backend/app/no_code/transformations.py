@@ -1,5 +1,7 @@
 from decimal import Decimal
-from typing import TypeVar
+from typing import Any, TypeVar
+
+from pydantic import BaseModel
 
 from app.no_code.step import Kwargs
 from app.schemas.no_code import NoCodeTransaction, ParameterType, Primitive
@@ -26,9 +28,13 @@ def average_transform(data: list[NoCodeTransaction] | list[Decimal], kwargs: Kwa
 def sum_transform(data: list[NoCodeTransaction] | list[Decimal], kwargs: Kwargs) -> Decimal:
     return Decimal(sum([get_value(transaction) for transaction in data]))
 
-@pipeline_step(expected_kwargs=[Arg(name="key_from", type=ParameterType.STRING), Arg(name="value_from", type=ParameterType.STRING)],return_type=list[dict], passed_value=list[NoCodeTransaction])
-def to_key_value_pair(data: list[NoCodeTransaction], kwargs: Kwargs) -> list[dict]:
+class KeyValuePair(BaseModel):
+    key: str | Decimal
+    value: str | Decimal
+
+@pipeline_step(expected_kwargs=[Arg(name="key_from", type=ParameterType.STRING), Arg(name="value_from", type=ParameterType.STRING)],return_type=list[KeyValuePair], passed_value=list[NoCodeTransaction])
+def to_key_value_pair(data: list[NoCodeTransaction], kwargs: Kwargs) -> list[KeyValuePair]:
     key_from = str(kwargs["key_from"])
     value_from = str(kwargs["value_from"])
-    return [{"key": getattr(transaction, key_from), "value": getattr(transaction, value_from)} for transaction in data]
+    return [KeyValuePair(key=getattr(transaction, key_from), value=getattr(transaction, value_from)) for transaction in data]
 
