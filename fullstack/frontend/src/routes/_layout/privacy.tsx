@@ -64,8 +64,8 @@ function Privacy() {
             5. Security Measures
           </Heading>
           <Text>
-            Data is encrypted in transit and at rest. We have RLS enabled on all
-            user data tables within the database.
+            We have Row Level Security (RLS) enabled on all user data tables
+            within the database.
           </Text>
         </Box>
 
