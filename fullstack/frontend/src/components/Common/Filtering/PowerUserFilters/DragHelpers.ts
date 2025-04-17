@@ -78,17 +78,17 @@ export const moveItemUp = (
 ) => {
 
   const generateMergedFilter: ()=> FilterData_Output = () => {
-    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter 
+    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter.filter_data
 
     const currentIndex = currentFilter.filter_data.lookup[option]?.index
-    if (currentIndex === undefined || currentIndex <= 0) return currentFilter 
+    if (currentIndex === undefined || currentIndex <= 0) return currentFilter.filter_data
 
     // Find the option with index = currentIndex - 1
     const optionToSwap = Object.entries(currentFilter.filter_data.lookup).find(
       ([, entry]) => (entry as FilterEntries).index === currentIndex - 1,
     )?.[0] as GroupByOption | undefined
 
-    if (!optionToSwap) return currentFilter 
+    if (!optionToSwap) return currentFilter.filter_data
 
     // Create a new lookup object with swapped indices
     const newLookup = { ...currentFilter.filter_data.lookup }
@@ -115,10 +115,10 @@ export const moveItemDown = (
 
 
   const generateMergedFilter: ()=> FilterData_Output = () => {
-    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter
+    if (!currentFilter.filter_data || !currentFilter.filter_data.lookup) return currentFilter.filter_data
 
     const currentIndex = currentFilter.filter_data.lookup[option]?.index
-    if (currentIndex === undefined) return currentFilter
+    if (currentIndex === undefined) return currentFilter.filter_data
 
     // Find the maximum index in the lookup
     const maxIndex = Math.max(
@@ -127,14 +127,14 @@ export const moveItemDown = (
       ),
     )
 
-    if (currentIndex >= maxIndex) return currentFilter
+    if (currentIndex >= maxIndex) return currentFilter.filter_data
 
     // Find the option with index = currentIndex + 1
     const optionToSwap = Object.entries(currentFilter.filter_data.lookup).find(
       ([, value]) => (value as FilterEntries).index === currentIndex + 1,
     )?.[0] as GroupByOption | undefined
 
-    if (!optionToSwap) return currentFilter
+    if (!optionToSwap) return currentFilter.filter_data
 
     // Create a new lookup object with swapped indices
     const newLookup = { ...currentFilter.filter_data.lookup }
@@ -147,7 +147,7 @@ export const moveItemDown = (
       index: currentIndex,
     }
 
-    return {  ...currentFilter.filter_data, lookup: newLookup } 
+    return { ...currentFilter.filter_data, lookup: newLookup } 
   }
   breakoutToCustomFilter(generateMergedFilter(), setCurrentFilter)
 }

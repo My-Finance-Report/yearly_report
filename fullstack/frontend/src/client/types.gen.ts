@@ -149,14 +149,12 @@ export type Enable2FAResponse = {
 };
 
 export type FilterData_Input = {
-    is_default?: boolean;
     lookup?: {
         [key: string]: FilterEntries;
     };
 };
 
 export type FilterData_Output = {
-    is_default?: boolean;
     lookup?: {
         [key: string]: FilterEntries;
     };
