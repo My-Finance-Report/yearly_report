@@ -54,12 +54,10 @@ def make_default_filters() -> list[SavedFilterSchema]:
     return [
         SavedFilterSchema(
             id="88dfe43b-c997-4f19-8d50-94b9e4be61c7",
-            is_default=True,
             is_deleteable=False,
             name="Year To Date",
             description="All categories, by month for last year",
             filter_data=FilterData(
-                is_default=True,
                 lookup={
                     GroupByOption.year: FilterEntries(
                         visible=False,
@@ -81,7 +79,6 @@ def make_default_filters() -> list[SavedFilterSchema]:
             name="Last Year",
             description="All categories, by month for last year",
             filter_data=FilterData(
-                is_default=True,
                 lookup={
                     GroupByOption.year: FilterEntries(
                         visible=False,
@@ -104,7 +101,6 @@ def make_default_filters() -> list[SavedFilterSchema]:
             name="All Time",
             description="All categories, by month for all time",
             filter_data=FilterData(
-                is_default=True,
                 lookup={
                     GroupByOption.year: FilterEntries(
                         visible=True, specifics=None, index=2
@@ -124,7 +120,6 @@ def make_default_filters() -> list[SavedFilterSchema]:
             name="Monthly Budget",
             description="All categories, by month for current year",
             filter_data=FilterData(
-                is_default=True,
                 lookup={
                     GroupByOption.budget: FilterEntries(
                         specifics=None, visible=True, index=0

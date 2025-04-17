@@ -639,7 +639,6 @@ class FilterEntries(BaseModel):
 
 
 class FilterData(BaseModel):
-    is_default: bool = True
     lookup: dict[GroupByOption, FilterEntries] = Field(
         default_factory=lambda: {
             GroupByOption.category: FilterEntries(

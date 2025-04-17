@@ -175,7 +175,7 @@ export function FilterProvider({
     }
 
     const defaultFilter = savedFilters.find(
-      (filter) => filter.filter_data.is_default,
+      (filter) => filter.is_default,
     )
 
     if (defaultFilter) {
