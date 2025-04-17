@@ -39,9 +39,6 @@ big milestones before launch:
 
 -> worker should be a lambda
 
--> useability:
- -> better polling on the status
-   
 
 -> need to update the how does this work page 
 
