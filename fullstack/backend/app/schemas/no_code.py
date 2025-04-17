@@ -1,3 +1,4 @@
+from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
@@ -6,14 +7,15 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from app.core.db import Session
-from app.models import TransactionId, User
+from app.models import TransactionId, TransactionKind, User
 
 
 class NoCodeTransaction(BaseModel):
     id: TransactionId | None
     amount: float
     description: str
-    date: str
+    date_of_transaction: datetime
+    kind: TransactionKind
     category_name: str
 
 
@@ -77,11 +79,12 @@ class WidgetType(str, enum.Enum):
     value = "value"
     list = "list"
     pie_chart = "pie_chart"
+    bar_chart = "bar_chart"
 
 
 Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
-ResultType = Scalar | Object | list[Scalar] | list[Object]
+ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object]
 
 
 class ResultTypeEnum(enum.Enum):
@@ -109,7 +112,7 @@ class NoCodeWidgetIn(BaseModel):
 class NoCodeWidgetOut(BaseModel):
     name: str
     description: str
-    result: ResultType
+    result: Any
     result_type: ResultTypeEnum
     row: int
     col: int

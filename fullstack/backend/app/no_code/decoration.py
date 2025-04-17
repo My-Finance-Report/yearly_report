@@ -87,3 +87,13 @@ def make_tools(
             )
         )
     return tools
+
+
+def get_no_code_tool(
+    session: Session,
+    user: User,
+    tool_name: str,
+)-> NoCodeTool:
+    lookup = {tool.name: tool for tool in make_tools(session,user)}
+    return lookup[tool_name]
+

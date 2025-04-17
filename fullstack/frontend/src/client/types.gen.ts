@@ -240,6 +240,8 @@ export type NoCodeWidgetOut = {
     type: WidgetType;
 };
 
+export type PageVariant = 'accounts';
+
 export type Parameter = {
     name: string;
     type: ParameterType;
@@ -565,7 +567,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'list' | 'pie_chart';
+export type WidgetType = 'value' | 'list' | 'pie_chart' | 'bar_chart';
 
 export type WorkerStatusOut = {
     id: number;
@@ -746,6 +748,10 @@ export type NoCodeSaveNoCodeToolData = {
 };
 
 export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
+
+export type NoCodeGetNoCodeDashboardData = {
+    variant: PageVariant;
+};
 
 export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidgetOut>);
 

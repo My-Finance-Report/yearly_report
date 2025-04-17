@@ -44,6 +44,7 @@ import { Route as LayoutLoggedinNoCodeImport } from './routes/_layout/_logged_in
 import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
 import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
 import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
+import { Route as LayoutLoggedinAccountsImport } from './routes/_layout/_logged_in/accounts'
 
 // Create/Update Routes
 
@@ -222,6 +223,11 @@ const LayoutLoggedinAdminRoute = LayoutLoggedinAdminImport.update({
   getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
+const LayoutLoggedinAccountsRoute = LayoutLoggedinAccountsImport.update({
+  path: '/accounts',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -302,6 +308,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/_logged_in/accounts': {
+      preLoaderRoute: typeof LayoutLoggedinAccountsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/admin': {
       preLoaderRoute: typeof LayoutLoggedinAdminImport
       parentRoute: typeof LayoutLoggedinImport
@@ -366,6 +376,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutLoggedinRoute.addChildren([
+      LayoutLoggedinAccountsRoute,
       LayoutLoggedinAdminRoute,
       LayoutLoggedinBudgetRoute,
       LayoutLoggedinManageAccountsRoute,

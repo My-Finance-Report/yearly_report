@@ -1,4 +1,5 @@
 from dataclasses import is_dataclass
+import enum
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -22,8 +23,8 @@ from app.schemas.no_code import (
     ParameterType,
     ResultType,
     ResultTypeEnum,
-    WidgetType,
 )
+from app.api.routes.no_code_pages.account_page import generate_account_page
 
 router = APIRouter(prefix="/no_code", tags=["no_code"])
 
@@ -83,117 +84,21 @@ def save_no_code_tool(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-def first_n(n: int) -> NoCodeToolIn:
-    return NoCodeToolIn(
-        tool="first_n_transactions",
-        parameters=[
-            Parameter(name="n", type=ParameterType.INT, value=n),
-            Parameter(name="account_id", type=ParameterType.INT, value=1),
-        ],
-    )
 
+class PageVariant(str, enum.Enum):
+    accounts = "accounts"
 
 @router.get("/get_no_code_dashboard", response_model=list[NoCodeWidgetOut])
 def get_no_code_dashboard(
+    variant: PageVariant,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> list[NoCodeWidgetOut]:
-    list_trans = [first_n(10)]
-    account_name = [
-        NoCodeToolIn(
-            tool="account_name",
-            parameters=[Parameter(name="id", type=ParameterType.INT, value=1)],
-        )
-    ]
-    account_balance = [
-        NoCodeToolIn(
-            tool="account_balance",
-            parameters=[Parameter(name="id", type=ParameterType.INT, value=1)],
-        )
-    ]
-    get_sum = [first_n(10), NoCodeToolIn(tool="sum_transform")]
-    get_avg = [first_n(10), NoCodeToolIn(tool="average_transform")]
-    get_pie = [
-        first_n(10),
-        NoCodeToolIn(
-            tool="to_key_value_pair",
-            parameters=[
-                Parameter(
-                    name="key_from", type=ParameterType.STRING, value="category_name"
-                ),
-                Parameter(name="value_from", type=ParameterType.STRING, value="amount"),
-            ],
-        ),
-    ]
+    callable =  PAGES_LOOKUP[variant]
+    return callable(session,user)
 
-    widgets = [
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.string,
-            result=evaluate_pipeline(convert_to_pipeline(account_name), session, user),
-            name="Account Name",
-            description="Name of the account",
-            row=0,
-            col=0,
-            height=1,
-            width=1,
-            type=WidgetType.value,
-        ),
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.number,
-            result=evaluate_pipeline(
-                convert_to_pipeline(account_balance), session, user
-            ),
-            name="Account Balance",
-            description="Balance of the account",
-            row=0,
-            col=1,
-            height=1,
-            width=1,
-            type=WidgetType.value,
-        ),
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.transactions,
-            result=evaluate_pipeline(convert_to_pipeline(list_trans), session, user),
-            name="List Transactions",
-            description="List of transactions",
-            row=2,
-            col=0,
-            height=1,
-            width=1,
-            type=WidgetType.list,
-        ),
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.number,
-            result=evaluate_pipeline(convert_to_pipeline(get_sum), session, user),
-            name="Total of transactions",
-            description="Total of 10 transactions",
-            row=1,
-            col=1,
-            height=1,
-            width=1,
-            type=WidgetType.value,
-        ),
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.number,
-            result=evaluate_pipeline(convert_to_pipeline(get_avg), session, user),
-            name="Average of transactions",
-            description="Average of 10 transactions",
-            row=1,
-            col=0,
-            height=1,
-            width=1,
-            type=WidgetType.value,
-        ),
-        NoCodeWidgetOut(
-            result_type=ResultTypeEnum.transactions,
-            result=evaluate_pipeline(convert_to_pipeline(get_pie), session, user),
-            name="Pie Chart",
-            description="Pie chart of 10 transactions",
-            row=2,
-            col=0,
-            height=1,
-            width=1,
-            type=WidgetType.pie_chart,
-        ),
-    ]
-    return widgets
+
+PAGES_LOOKUP = {
+    PageVariant.accounts : generate_account_page
+}
+

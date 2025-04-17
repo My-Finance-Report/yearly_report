@@ -47,11 +47,13 @@ def first_n_transactions(
             id=tx.id,
             category_name=cat.name,
             amount=tx.amount,
+            kind=tx.kind,
             description=tx.description,
-            date=tx.date_of_transaction.strftime("%m/%d/%Y"),
+            date_of_transaction=tx.date_of_transaction,
         )
         for tx, cat in txs.all()
     ]
+
 
 
 @pipeline_step(
