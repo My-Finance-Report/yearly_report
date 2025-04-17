@@ -39,13 +39,15 @@ big milestones before launch:
 
 -> worker should be a lambda
 
+-> useability:
+ -> better polling on the status
+   
+
 -> need to update the how does this work page 
 
 -> would be nice to have some tests around user creation
 
 -> add a last active at time on the user model
-
--> uploads page on mobile is rough
 
 
 -> shareable report

@@ -100,6 +100,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
         SavedFilterSchema(
             id="4a15048e-4b0d-450b-b3b5-d7f3004b5db3",
             is_deleteable=False,
+            is_default=True,
             name="All Time",
             description="All categories, by month for all time",
             filter_data=FilterData(
