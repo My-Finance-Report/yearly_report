@@ -1,12 +1,10 @@
 import {
   Button,
   Dialog,
-  DialogBody,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogPositioner,
+  Portal,
 } from "@chakra-ui/react"
+
+
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { useForm } from "react-hook-form"
@@ -65,17 +63,19 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
     mutation.mutate()
   }
 
+
+
   return (
     <Dialog.Root
       open={isOpen}
       onExitComplete={onClose}
-      role="alertdialog"
-      size={{ base: "sm", md: "md" }}
     >
-      <DialogPositioner>
-        <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>Delete {type}</DialogHeader>
-          <DialogBody>
+      <Portal>
+      <Dialog.Backdrop />
+      <Dialog.Positioner position="absolute">
+        <Dialog.Content as="form" onSubmit={handleSubmit(onSubmit)}>
+          <Dialog.Header>Delete {type}</Dialog.Header>
+          <Dialog.Body>
             {type === "User" && (
               <span>
                 All items associated with this user will also be{" "}
@@ -83,18 +83,19 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
               </span>
             )}
             Are you sure? You will not be able to undo this action.
-          </DialogBody>
+          </Dialog.Body>
 
-          <DialogFooter gap={3}>
+          <Dialog.Footer gap={3}>
             <Button colorScheme="red" type="submit" loading={isSubmitting}>
               Delete
             </Button>
             <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogPositioner>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
   )
 }
