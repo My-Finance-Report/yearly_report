@@ -14,9 +14,10 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import React, { useState, useEffect } from "react"
+import  { useState, useEffect } from "react"
 import { FaCreditCard, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
 import { ArchiveButton } from "./ArchiveButton"
+import { UploadButton } from "./UploadButton"
 import { CategoriesManager } from "./CategoriesManager"
 import { RecategorizeButton } from "./RecategorizeButton"
 import { DeleteButton, ReprocessButton } from "./ReprocessButton"
@@ -230,6 +231,7 @@ export function AccountDetails({
           </Badge>
         </Flex>
         <Flex gap={2}>
+          {!isPlaidLinked && <UploadButton />}
           <RecategorizeButton sourceId={accountId} disabled={isArchived} />
           <ArchiveButton sourceId={accountId} isArchived={isArchived} />
         </Flex>

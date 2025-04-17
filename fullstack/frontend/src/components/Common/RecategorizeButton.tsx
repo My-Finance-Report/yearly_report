@@ -41,7 +41,6 @@ export function RecategorizeButton({
   return (
     <Button
       size="sm"
-      colorScheme="teal"
       onClick={handleRecategorize}
       disabled={disabled}
     >
