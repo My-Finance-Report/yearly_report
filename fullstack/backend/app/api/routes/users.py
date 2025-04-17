@@ -182,7 +182,9 @@ def delete_user_me(
     # attach the user to their own session:
     to_delete_user = session.query(User).filter(User.id == current_user.id).one()
 
-    session.delete(to_delete_user, )
+    session.delete(
+        to_delete_user,
+    )
     session.commit()
     return Message(message="User deleted successfully")
 
