@@ -16,6 +16,8 @@ function UserSettings() {
   const queryClient = useQueryClient()
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"])
 
+  const deleteWorking = false
+
   return (
     <Container maxW="lg" my={8} display="flex" flexDirection="column">
       <Box mb={8}>
@@ -30,7 +32,7 @@ function UserSettings() {
         <ChangePassword />
       </Box>
 
-      {!currentUser?.is_superuser && (
+      {!currentUser?.is_superuser && deleteWorking && (
         <Box pt={4} borderTop="1px solid" borderColor="gray.200">
           <DeleteAccount />
         </Box>

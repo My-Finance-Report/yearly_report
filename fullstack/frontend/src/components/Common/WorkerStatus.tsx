@@ -21,7 +21,9 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
+import { useRouterState } from "@tanstack/react-router"
 import { format } from "date-fns"
+import { useEffect, useState } from "react"
 import { LuCheck, LuX } from "react-icons/lu"
 
 function determineColor(workerStatus: WorkerStatusOut, isLast: boolean) {
@@ -97,10 +99,20 @@ function TimelineEntry({
 }
 
 export function WorkerStatus() {
+  const [isCompleted, setIsCompleted] = useState(false)
+  const { user } = useAuth()
   const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
+    enabled: !!user?.id,
+    refetchInterval: isCompleted ? undefined : 5000,
   })
+
+  useEffect(() => {
+    if (data?.some((status) => status.status === "completed")) {
+      setIsCompleted(true)
+    }
+  }, [data])
 
   if (isLoading) {
     return null
@@ -129,11 +141,18 @@ export function WorkerStatus() {
 export function CollapsibleWorkerStatus() {
   const { user } = useAuth()
 
-  const { data, isLoading } = useQuery<WorkerStatusOut[], Error>({
+
+  const { data, isLoading, refetch } = useQuery<WorkerStatusOut[], Error>({
     queryKey: ["currentStatus"],
     queryFn: () => WorkerStatusService.getStatus(),
     enabled: !!user?.id,
+    refetchInterval: (data)=>(data?.state.data?.some((status) => status.status === "completed") ? undefined : 5000)
   })
+  const {location }= useRouterState()
+
+  useEffect(() => {
+    refetch()
+  }, [location])
 
   const statusDisclosure = useDisclosure()
 

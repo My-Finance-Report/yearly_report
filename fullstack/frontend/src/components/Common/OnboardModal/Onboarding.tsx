@@ -20,6 +20,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { FaFileUpload, FaUniversity } from "react-icons/fa"
 import { usePlaidLink } from "react-plaid-link"
@@ -182,27 +183,28 @@ function PlaidDialog({
   )
 }
 
-function UploadDialog({
+export function UploadDialog({
   isUploadOpen,
   onUploadClose,
 }: { isUploadOpen: boolean; onUploadClose: () => void }) {
   const toast = useCustomToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const uploadMutation = useMutation({
     mutationFn: (files: File[]) => {
-      // The Body_uploads_upload_files type only expects files
       const data = { formData: { files } }
       return UploadsService.uploadFiles(data)
     },
     onSuccess: () => {
       toast(
         "Files uploaded",
-        "The files were processed successfully.",
+        "The files are being processed",
         "success",
       )
       queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
       onUploadClose()
+      navigate({ to: "/transactions" })
     },
     onError: () => {
       toast("Upload failed", "There was an error uploading the files.", "error")

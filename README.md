@@ -47,8 +47,6 @@ big milestones before launch:
 
 -> add a last active at time on the user model
 
--> uploads page on mobile is rough
-
 
 -> shareable report
 
