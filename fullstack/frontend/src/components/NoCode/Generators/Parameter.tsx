@@ -1,4 +1,4 @@
-import { Box, Text, Input } from "@chakra-ui/react";
+import { Box, Text, Input, Button } from "@chakra-ui/react";
 import { Parameter, ParameterType, SelectOption } from "@/client";
 import {
   SelectContent,
@@ -8,6 +8,7 @@ import {
   SelectValueText,
   createListCollection,
 } from "@chakra-ui/react";
+import { useState } from "react";
 
 export interface ParameterProps {
   parameter: Parameter;
@@ -47,12 +48,14 @@ function FloatParameter({ parameter, onChange }: ParameterProps) {
 }
 
 function StrParameter({ parameter, onChange }: ParameterProps) {
+  const [val, setVal] = useState("")
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
+    setVal(e.target.value)
   return (
     <Box>
       <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <Input type="text" value={parameter.value || ""} onChange={wrappedChange} />
+      <Input type="text" value={val} onChange={wrappedChange} />
+    <Button onClick={() => onChange(val)}>Submit</Button>
     </Box>
   );
 }
@@ -75,12 +78,12 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
 
   return (
     <Box>
+      <Text key={`${parameter.name}`}>{parameter.name}</Text>
       <SelectRoot
         placeholder={parameter.name}
         collection={createListCollection(formattedOptions)}
         onValueChange={(val) => {
-          console.log(val)
-          onChange(val.value[0]);
+          onChange(parameter.options?.find((option) => option.key === val.value[0]));
         }}
       >
         <SelectTrigger>

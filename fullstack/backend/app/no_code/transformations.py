@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from decimal import Decimal
 from typing import Callable, TypeVar
 
@@ -24,52 +25,67 @@ def get_value(value: Decimal | NoCodeTransaction) -> Decimal:
 
 
 @pipeline_step(
-    expected_kwargs=[],
     return_type=Decimal,
     passed_value=list[NoCodeTransaction] | list[Decimal],
 )
 def average_transform(
-    data: list[NoCodeTransaction] | list[Decimal], kwargs: Kwargs
+    data: list[NoCodeTransaction] | list[Decimal]
 ) -> Decimal:
     val = Decimal(sum([get_value(transaction) for transaction in data]))
     return val / len(data)
 
 
 @pipeline_step(
-    expected_kwargs=[],
     return_type=Decimal,
     passed_value=list[NoCodeTransaction] | list[Decimal],
 )
 def sum_transform(
-    data: list[NoCodeTransaction] | list[Decimal], kwargs: Kwargs
+    data: list[NoCodeTransaction] | list[Decimal]
 ) -> Decimal:
     return Decimal(sum([get_value(transaction) for transaction in data]))
 
 
 class KeyValuePair(BaseModel):
-    key: str | Decimal
-    value: str | Decimal
+    key: str 
+    value: str | Decimal | None
+
+
+def parse_key(value: str | Decimal | datetime) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, float):
+        return Decimal(value)
+    elif isinstance(value, Decimal):
+        return str(value)
+    elif isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d")
+
+def parse_value(value: str | Decimal | datetime | None) -> str | Decimal |None:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, float):
+        return Decimal(value)
+    elif isinstance(value, Decimal):
+        return value
+    elif isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d")
+    return None
 
 
 @pipeline_step(
-    expected_kwargs=[
-        Arg(name="key_from", type=ParameterType.STRING),
-        Arg(name="value_from", type=ParameterType.STRING),
-    ],
     return_type=list[KeyValuePair],
     passed_value=list[NoCodeTransaction],
 )
 def to_key_value_pair(
-    data: list[NoCodeTransaction], kwargs: Kwargs
+    data: list[NoCodeTransaction], key_from: str, value_from: str
 ) -> list[KeyValuePair]:
-    key_from = str(kwargs["key_from"])
-    value_from = str(kwargs["value_from"])
     return [
         KeyValuePair(
-            key=getattr(transaction, key_from), value=getattr(transaction, value_from)
+            key=parse_key(getattr(transaction, key_from)), value=parse_value(getattr(transaction, value_from))
         )
         for transaction in data
     ]
+
 
 def make_group_bys(_session:Session, _user:User)->list[SelectOption]:
     return [
@@ -80,29 +96,21 @@ def make_group_bys(_session:Session, _user:User)->list[SelectOption]:
 
 
 @pipeline_step(
-    expected_kwargs=[
-        Arg(name="group_by", type=ParameterType.SELECT, options_generator=make_group_bys),
-    ],
     return_type=list[dict[str,list[NoCodeTransaction]]],
     passed_value=list[NoCodeTransaction],
 )
-def group_by(
-    data: list[NoCodeTransaction], kwargs: Kwargs
-) -> dict[str,list[NoCodeTransaction]]:
-    group_by = safe_parse_int(kwargs["group_by"])
-    assert group_by is not None
-    result = defaultdict(list)
-    key_gen: Callable[[NoCodeTransaction], str]
-    match group_by:
-        case 0:
-            key_gen = lambda x: str(x.date_of_transaction.day)
-        case 1:
-            key_gen = lambda x: str(x.date_of_transaction.month)
-        case 2:
-            key_gen = lambda x: str(x.date_of_transaction.year)
-    
-    for transaction in data:
-        key = key_gen(transaction)
-        result[key].append(transaction)
+def aggregate(
+    data: list[NoCodeTransaction], key_from: str, values_from: list[str]
+) -> list[dict[str,str | Decimal | None]]:
+    result: dict[str, dict[str,str | Decimal | None]] = {}
 
-    return dict(result)
+    for transaction in data:
+        key = parse_key(getattr(transaction, key_from))
+        if key not in result:
+            result[key] = {}
+            result[key][key_from] = key
+
+        for value in values_from:
+            result[key][getattr(transaction, 'description')] = parse_value(getattr(transaction, value))
+
+    return list(result.values())

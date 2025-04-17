@@ -10,6 +10,7 @@ from app.models import TransactionSource, User
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
+    Parameter,
     PipelineStart,
     SelectOption,
 )
@@ -30,16 +31,31 @@ def init_no_code() -> None:
     import app.no_code.generators
     import app.no_code.transformations
 
+def figure_out_parameters(parameter: Parameter) -> str | int | float | SelectOption | None:
+    if parameter.value is not None:
+        print(parameter.value)
+        return parameter.value
 
-def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCallable]]:
+    if parameter.default_value is not None:
+        return parameter.default_value
+    
+    if parameter.options:
+        return parameter.options[0]
+
+    return None
+
+def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCallable]] | None:
     steps = []
     for tool in tools:
         func = get_tool_callable(tool.tool)
         if tool.parameters:
-            kwargs = {p.name: p.value for p in tool.parameters}
-            steps.append(partial(func, kwargs=kwargs))  # type: ignore [call-arg]
+            if not all(figure_out_parameters(p) for p in tool.parameters): # has bug doesnt allow None as param type
+                return None
+            else:
+                kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
+                steps.append(partial(func, **kwargs))
         else:
-            steps.append(partial(func, kwargs={}))  # type: ignore [call-arg]
+            steps.append(partial(func, **{}))
 
     return steps
 
@@ -61,8 +77,11 @@ def serialize_to_result(obj: Any) -> Any:
 
 
 def evaluate_pipeline(
-    steps: list[partial[PipelineCallable]], session: Session, user: User
-) -> Any:
+    steps: list[partial[PipelineCallable]] | None, session: Session, user: User
+) -> Any | None:
+    if not steps:
+        return None
+
     data = PipelineStart(user, session)
     for block in steps:
         data = block(data)  # type: ignore [assignment]

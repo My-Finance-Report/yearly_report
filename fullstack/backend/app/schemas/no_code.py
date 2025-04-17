@@ -28,6 +28,7 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
+    LIST = "list"
 
 
 class SelectOption(BaseModel):
@@ -38,8 +39,10 @@ class SelectOption(BaseModel):
 class Parameter(BaseModel):
     name: str
     type: ParameterType
-    value: int | float | str | None = None
+    value: int | float | str | SelectOption | list[str] | list[Decimal] | None = None
+    default_value: int | float | str | SelectOption | list[str] | list[Decimal] | None = None
     options: list[SelectOption] | None = None
+    is_runtime: bool = False
 
 
 @dataclass
@@ -91,6 +94,7 @@ class ResultTypeEnum(enum.Enum):
     string = "string"
     number = "number"
     transactions = {"id": "number", "amount": "number", "description": "string"}
+    deferred = "deferred"
 
 
 class NoCodeToolIn(BaseModel):
@@ -109,16 +113,22 @@ class NoCodeWidgetIn(BaseModel):
     type: WidgetType
 
 
+
 class NoCodeWidgetOut(BaseModel):
     name: str
     description: str
     result: Any
-    result_type: ResultTypeEnum
+    result_type: ResultTypeEnum 
     row: int
     col: int
     height: int
     width: int
     type: WidgetType
+
+class NoCodeCanvas(BaseModel):
+    name: str
+    widgets: list[NoCodeWidgetOut]
+    runtime_parameters: list[Parameter]
 
 
 class NoCodeTool(BaseModel):

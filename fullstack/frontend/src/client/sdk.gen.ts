@@ -613,16 +613,19 @@ export class NoCodeService {
      * Get No Code Dashboard
      * @param data The data for the request.
      * @param data.variant
-     * @returns NoCodeWidgetOut Successful Response
+     * @param data.requestBody
+     * @returns NoCodeCanvas Successful Response
      * @throws ApiError
      */
     public static getNoCodeDashboard(data: NoCodeGetNoCodeDashboardData): CancelablePromise<NoCodeGetNoCodeDashboardResponse> {
         return __request(OpenAPI, {
-            method: 'GET',
+            method: 'POST',
             url: '/api/v1/no_code/get_no_code_dashboard',
             query: {
                 variant: data.variant
             },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }

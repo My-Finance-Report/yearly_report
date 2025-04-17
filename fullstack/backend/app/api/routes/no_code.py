@@ -15,12 +15,11 @@ from app.no_code.functions import (
     evaluate_pipeline,
 )
 from app.schemas.no_code import (
+    NoCodeCanvas,
     NoCodeTool,
-    NoCodeToolIn,
     NoCodeWidgetIn,
     NoCodeWidgetOut,
     Parameter,
-    ParameterType,
     ResultType,
     ResultTypeEnum,
 )
@@ -45,6 +44,8 @@ def safe_parse_int(value: Any) -> int | None:
 
 
 def determine_result_type(result: ResultType) -> ResultTypeEnum:
+    if result is None:
+        return ResultTypeEnum.deferred
     if is_dataclass(result):
         return ResultTypeEnum.transactions
 
@@ -88,14 +89,16 @@ def save_no_code_tool(
 class PageVariant(str, enum.Enum):
     accounts = "accounts"
 
-@router.get("/get_no_code_dashboard", response_model=list[NoCodeWidgetOut])
+@router.post("/get_no_code_dashboard", response_model=NoCodeCanvas)
 def get_no_code_dashboard(
     variant: PageVariant,
+    no_code_parameters: list[Parameter] | None = None,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
-) -> list[NoCodeWidgetOut]:
+) -> NoCodeCanvas:
     callable =  PAGES_LOOKUP[variant]
-    return callable(session,user)
+    print("no_code_parameters", no_code_parameters)
+    return callable(session,user, no_code_parameters)
 
 
 PAGES_LOOKUP = {

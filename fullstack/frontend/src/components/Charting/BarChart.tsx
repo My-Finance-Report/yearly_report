@@ -15,7 +15,6 @@ import { Desc } from "./SankeyChart"
 
 export interface GenericBarChartProps {
   data: GenericChartDataItem[]
-  dataKey: keyof GenericChartDataItem
   nameKey: keyof GenericChartDataItem
   config?: ChartConfig | null
   description?: string
@@ -74,12 +73,17 @@ export function GenericBarChart({
   config,
   description,
 }: GenericBarChartProps) {
+
   const isMobile = useIsMobile()
   const { getColorForName } = useColorPalette()
 
-  const uniqueKeys = Object.keys(data[0] || {}).filter(
-    (key) => key !== nameKey && key !== "date",
+
+const uniqueKeys = Array.from(
+  new Set(
+    data.flatMap(obj => Object.keys(obj))
   )
+).filter(key => key !== nameKey && key !== "date");
+
   const [hoveredKey, setHoveredKey] = React.useState<string | null>(null)
 
   const computedConfig: ChartConfig = React.useMemo(() => {
@@ -99,6 +103,7 @@ export function GenericBarChart({
     interval = undefined
   }
 
+
   return (
     <Card>
       <CardContent
@@ -115,7 +120,7 @@ export function GenericBarChart({
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="date"
+              dataKey={nameKey}
               tickLine={false}
               axisLine={false}
               interval={interval}

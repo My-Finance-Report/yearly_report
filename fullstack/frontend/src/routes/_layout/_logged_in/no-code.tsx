@@ -32,6 +32,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { NoCodeEditCanvas } from "@/components/NoCode/Canvas";
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
   component: NoCodeCanvasBuilder,
@@ -94,7 +95,7 @@ function NoCodeCanvasBuilder() {
       {editWidget &&
         <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      <NoCodeCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} />
+      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} />
     </Container>
   );
 }

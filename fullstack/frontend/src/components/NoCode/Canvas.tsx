@@ -1,6 +1,7 @@
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import {
   NoCodeWidgetOut,
+  Parameter,
 } from "@/client";
 import {
   Container,
@@ -8,8 +9,9 @@ import {
   Box,
   Flex,
 } from "@chakra-ui/react";
-import React from "react";
 import { BsPencilSquare } from "react-icons/bs";
+import { NoCodeParameter } from "./Generators/Parameter";
+import { useEffect, useState } from "react";
 
 
 function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>> {
@@ -47,15 +49,32 @@ export function NoCodeEditCanvas({ widgets, setEditWidget }: { widgets: NoCodeWi
       </Container>
     )
   }
+
+
+
+function RuntimeParameters({runtime_parameters, setParameters}: {runtime_parameters: Parameter[]; setParameters: (parameters: Parameter[]) => void}) {
+
+    const updateAParameter = (parameter: Parameter) => {
+        setParameters(runtime_parameters.map(p => p.name === parameter.name ? parameter : p))
+    }
+
+
+    return (
+      runtime_parameters.map((parameter) => (
+        <NoCodeParameter key={parameter.name} parameter={parameter} onChange={(value: string | number) => updateAParameter({ ...parameter, value })} />
+      ))
+    )
+  }
   
- export function NoCodeDisplayCanvas({ widgets }: { widgets: NoCodeWidgetOut[]}) {
-  
+export function NoCodeDisplayCanvas({ widgets, runtimeParameters, setParameters }: { widgets: NoCodeWidgetOut[]; runtimeParameters: Parameter[]; setParameters: (parameters: Parameter[]) => void}) {
+
     if (!widgets) {
       return <div>No widgets found</div>
     }
-  
+
     return (
       <Container>
+        <RuntimeParameters runtime_parameters={runtimeParameters} setParameters={setParameters} />
         {orderWidgets(widgets).map((row) => (
           <Flex key={row[0].row} direction="row" gap={2}>
             {row.map((widget) => (

@@ -3,29 +3,18 @@ from decimal import Decimal
 from typing import cast
 
 from app.models import Category, Transaction, TransactionSource
-from app.no_code.decoration import Arg, pipeline_step
-from app.no_code.functions import make_account_choices
+from app.no_code.decoration import pipeline_step
 from app.no_code.step import Kwargs
-from app.schemas.no_code import NoCodeTransaction, ParameterType, PipelineStart
+from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
 
 
 @pipeline_step(
-    expected_kwargs=[
-        Arg(name="n", type=ParameterType.INT),
-        Arg(
-            name="account_id",
-            type=ParameterType.SELECT,
-            options_generator=make_account_choices,
-        ),
-    ],
     return_type=list[NoCodeTransaction],
     passed_value=None,
 )
 def first_n_transactions(
-    data: PipelineStart, kwargs: Kwargs
+    data: PipelineStart, n: int, account_id: SelectOption 
 ) -> list[NoCodeTransaction]:
-    n = cast(int, kwargs["n"])
-    account_id = kwargs.get("account_id")
 
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
@@ -34,7 +23,7 @@ def first_n_transactions(
     if account_id:
         txs = txs.join(
             TransactionSource, Transaction.transaction_source_id == TransactionSource.id
-        ).filter(TransactionSource.id == int(account_id))
+        ).filter(TransactionSource.id == account_id.key)
 
     txs = (
         txs.filter(Transaction.user_id == data.user.id)
@@ -57,7 +46,6 @@ def first_n_transactions(
 
 
 @pipeline_step(
-    expected_kwargs=[Arg(name="id", type=ParameterType.INT)],
     return_type=str | None,
     passed_value=None,
 )
@@ -74,7 +62,6 @@ def account_name(data: PipelineStart, kwargs: Kwargs) -> str | None:
 
 
 @pipeline_step(
-    expected_kwargs=[Arg(name="id", type=ParameterType.INT)],
     return_type=Decimal | None,
     passed_value=None,
 )

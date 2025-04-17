@@ -18,29 +18,26 @@ class Arg:
     options_generator: Callable[[Session, User], list[SelectOption]] | None = None
 
 
-PipelineCallable = Callable[[Any, Kwargs], Any]
+PipelineCallable = Callable[..., Any]
 
 
 @dataclass
 class PipelineStep:
-    func: Callable[[Any, Kwargs], Any]
-    expected_args: list[Arg]
+    func: PipelineCallable
     return_type: Any
     passed_value: Any
 
 
 STEP_REGISTRY: dict[str, PipelineStep] = {}
 
-print(STEP_REGISTRY)
 
 
 def pipeline_step(
-    expected_kwargs: list[Arg], return_type: Any, passed_value: Any = None
+    return_type: Any, passed_value: Any = None
 ) -> Callable[[PipelineCallable], PipelineCallable]:
     def decorator(func: PipelineCallable) -> PipelineCallable:
         STEP_REGISTRY[func.__name__] = PipelineStep(
             func=func,
-            expected_args=expected_kwargs,
             return_type=return_type,
             passed_value=passed_value,
         )

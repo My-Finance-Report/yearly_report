@@ -193,6 +193,12 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type NoCodeCanvas = {
+    name: string;
+    widgets: Array<NoCodeWidgetOut>;
+    runtime_parameters: Array<Parameter>;
+};
+
 export type NoCodeTool = {
     name: string;
     description: string;
@@ -225,11 +231,7 @@ export type NoCodeWidgetIn = {
 export type NoCodeWidgetOut = {
     name: string;
     description: string;
-    result: (string | number | {
-    [key: string]: (string | number);
-} | Array<(string | number)> | Array<{
-    [key: string]: (string | number);
-}>);
+    result: unknown;
     result_type: ResultTypeEnum;
     row: number;
     col: number;
@@ -245,6 +247,7 @@ export type Parameter = {
     type: ParameterType;
     value?: (number | string | null);
     options?: (Array<SelectOption> | null);
+    is_runtime?: boolean;
 };
 
 export type ParameterType = 'int' | 'float' | 'string' | 'select';
@@ -335,7 +338,7 @@ export type ProcessFileJobOut = {
 
 export type ProcessingState = 'waiting' | 'preparing' | 'fetching' | 'parsing' | 'categorizing' | 'failed' | 'completed';
 
-export type ResultTypeEnum = 'string' | 'number';
+export type ResultTypeEnum = 'string' | 'number' | 'deferred';
 
 export type SankeyConfigCreatePayload = {
     inputs: Array<SankeyInputCreate>;
@@ -748,10 +751,11 @@ export type NoCodeSaveNoCodeToolData = {
 export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
 
 export type NoCodeGetNoCodeDashboardData = {
+    requestBody?: (Array<Parameter> | null);
     variant: PageVariant;
 };
 
-export type NoCodeGetNoCodeDashboardResponse = (Array<NoCodeWidgetOut>);
+export type NoCodeGetNoCodeDashboardResponse = (NoCodeCanvas);
 
 export type OauthLoginGoogleResponse = (LoginGoogleData);
 
