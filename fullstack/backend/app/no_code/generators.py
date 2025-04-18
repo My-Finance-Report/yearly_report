@@ -135,7 +135,7 @@ def account_interest(data: PipelineStart,account_id: SelectOption ) -> ResultWit
         TransactionSource.id == account_id.key
     ).filter(TransactionSource.user_id == data.user.id).one_or_none()
 
-    return ResultWithTrend(result=Decimal(1000), trend=Decimal(100))
+    return ResultWithTrend(result=Decimal(1000), trend=Decimal(-100))
 
 @pipeline_step(
     return_type=ResultWithTrend | None,

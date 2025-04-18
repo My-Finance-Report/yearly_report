@@ -1,4 +1,4 @@
-import { Box, Text, Input, Button,  Select } from "@chakra-ui/react";
+import { Box, Text, Field, Input, Button,  Select } from "@chakra-ui/react";
 import { Parameter, ParameterType, SelectOption } from "@/client";
 import {
   Portal,
@@ -26,10 +26,7 @@ function IntParameter({ parameter, onChange }: ParameterProps) {
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.valueAsNumber);
   return (
-    <Box>
-      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
-      <Input type="number" value={parameter.value || parameter.default_value} onChange={wrappedChange} />
-    </Box>
+      <Input maxW="100px" variant='subtle' size="sm" type="number" value={parameter.value || parameter.default_value} onChange={wrappedChange} />
   );
 }
 
@@ -37,11 +34,7 @@ function FloatParameter({ parameter, onChange }: ParameterProps) {
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.valueAsNumber);
   return (
-    <Box>
-
-      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
       <Input type="number" value={parameter.value || ""} onChange={wrappedChange} />
-    </Box>
   );
 }
 
@@ -77,6 +70,7 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
  return (
     <Select.Root
       collection={createListCollection(formattedOptions)}
+      variant='subtle'
       size="sm"
       width={'auto'}
       onValueChange={(val) => {
@@ -85,7 +79,6 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
       defaultValue={[parameter.default_value?.key]}
     >
       <Select.HiddenSelect />
-      <Select.Label>{parameter.label || parameter.name}</Select.Label>
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText placeholder={parameter.label || parameter.name} />
@@ -129,7 +122,6 @@ function MultiSelectParameter({ parameter, onChange }: ParameterProps) {
         }}
     >
       <Select.HiddenSelect />
-      <Select.Label>{parameter.label || parameter.name}</Select.Label>
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText placeholder={parameter.label || parameter.name} />
@@ -160,8 +152,12 @@ function MultiSelectParameter({ parameter, onChange }: ParameterProps) {
 export function NoCodeParameter({ parameter, onChange }: ParameterProps) {
   const TheInput = MAP_TO_PARAMETER[parameter.type as ParameterType];
   return (
-    <Box mt={2}>
-      <TheInput parameter={parameter} onChange={onChange} />
-    </Box>
+      <Field.Root>
+        <Field.Label>
+          {parameter.label || parameter.name}
+        </Field.Label>
+        <TheInput parameter={parameter} onChange={onChange} />
+        <Field.HelperText>{parameter.description}</Field.HelperText>
+      </Field.Root>
   );
 }

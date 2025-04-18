@@ -38,7 +38,7 @@ export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
           </Stat.ValueText>
           <Badge colorPalette={isUp ? "green" : "red"} variant="plain" p="2" m="2">
             {isUp ? <Stat.UpIndicator /> : <Stat.DownIndicator />}
-            {isUp ? "" : "-"}{trend}%
+            {trend}%
           </Badge>
         </VStack>
         <Stat.Label fontSize={"xl"}>{widget.name} </Stat.Label>

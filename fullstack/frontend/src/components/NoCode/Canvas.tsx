@@ -58,9 +58,11 @@ function RuntimeParameters({runtime_parameters, setParameters}: {runtime_paramet
 
 
     return (
-      runtime_parameters.map((parameter) => (
+      <Flex direction="row" gap={0}>
+      {runtime_parameters.map((parameter) => (
         <NoCodeParameter key={parameter.name} parameter={parameter} onChange={(value: string | number) => updateAParameter({ ...parameter, value })} />
-      ))
+      ))}
+      </Flex>
     )
   }
   
@@ -72,9 +74,7 @@ export function NoCodeDisplayCanvas({ widgets, runtimeParameters, setParameters 
 
     return (
       <Container>
-        <Flex direction="row" wrap="wrap" gap={2}>
         <RuntimeParameters runtime_parameters={runtimeParameters} setParameters={setParameters} />
-</Flex>
         {orderWidgets(widgets).map((row) => (
           <Flex key={row[0].row} direction="row" gap={2}>
             {row.map((widget) => (
