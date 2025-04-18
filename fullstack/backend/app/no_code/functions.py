@@ -31,9 +31,8 @@ def init_no_code() -> None:
     import app.no_code.generators
     import app.no_code.transformations
 
-def figure_out_parameters(parameter: Parameter) -> str | int | float | SelectOption | None:
+def figure_out_parameters(parameter: Parameter) -> str | int | float | SelectOption | list[str] |list[SelectOption] | None:
     if parameter.value is not None:
-        print(parameter.value)
         return parameter.value
 
     if parameter.default_value is not None:
@@ -58,6 +57,24 @@ def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCalla
             steps.append(partial(func, **{}))
 
     return steps
+
+def generate_runtime_parameters(tools: list[NoCodeToolIn]) -> list[Parameter]:
+    runtime_params = []
+    for tool in tools:
+        if tool.parameters:
+            runtime_params.extend([p for p in tool.parameters if p.is_runtime])
+    return runtime_params
+
+def enrich_with_runtime(tools: list[NoCodeToolIn], runtime_parameters: list[Parameter] | None = None) -> list[NoCodeToolIn]:
+    param_value_lookup = {param.name: param.value for param in runtime_parameters} if runtime_parameters else {}
+    for tool in tools:
+        if tool.parameters:
+            for param in tool.parameters:
+                if param.is_runtime:
+                    param.value = param_value_lookup.get(param.name)
+    return tools
+
+
 
 
 def serialize_to_result(obj: Any) -> Any:

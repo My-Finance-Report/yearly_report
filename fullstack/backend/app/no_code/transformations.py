@@ -100,17 +100,21 @@ def make_group_bys(_session:Session, _user:User)->list[SelectOption]:
     passed_value=list[NoCodeTransaction],
 )
 def aggregate(
-    data: list[NoCodeTransaction], key_from: str, values_from: list[str]
+    data: list[NoCodeTransaction], key_from: SelectOption, values_from: list[SelectOption]
 ) -> list[dict[str,str | Decimal | None]]:
+
+    print(key_from)
+    print("values",values_from)
+
     result: dict[str, dict[str,str | Decimal | None]] = {}
 
     for transaction in data:
-        key = parse_key(getattr(transaction, key_from))
+        key = parse_key(getattr(transaction, key_from.key))
         if key not in result:
             result[key] = {}
-            result[key][key_from] = key
+            result[key][key_from.key] = key
 
         for value in values_from:
-            result[key][getattr(transaction, 'description')] = parse_value(getattr(transaction, value))
+            result[key][getattr(transaction, 'description')] = parse_value(getattr(transaction, value.key))
 
     return list(result.values())

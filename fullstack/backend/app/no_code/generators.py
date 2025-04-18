@@ -43,8 +43,6 @@ def first_n_transactions(
         for tx, cat in txs.all()
     ]
 
-
-
 @pipeline_step(
     return_type=str | None,
     passed_value=None,

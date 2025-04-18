@@ -1,4 +1,4 @@
-import { Box, Text, Input, Button } from "@chakra-ui/react";
+import { Box, Text, Input, Button, SelectItemIndicator } from "@chakra-ui/react";
 import { Parameter, ParameterType, SelectOption } from "@/client";
 import {
   SelectContent,
@@ -23,6 +23,7 @@ const MAP_TO_PARAMETER: Record<
   string: StrParameter,
   float: FloatParameter,
   select: SelectParameter,
+  multi_select: MultiSelectParameter,
 };
 
 function IntParameter({ parameter, onChange }: ParameterProps) {
@@ -30,8 +31,8 @@ function IntParameter({ parameter, onChange }: ParameterProps) {
     onChange(e.target.valueAsNumber);
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <Input type="number" value={parameter.value || ""} onChange={wrappedChange} />
+      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
+      <Input type="number" value={parameter.value || parameter.default_value} onChange={wrappedChange} />
     </Box>
   );
 }
@@ -41,7 +42,8 @@ function FloatParameter({ parameter, onChange }: ParameterProps) {
     onChange(e.target.valueAsNumber);
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
+
+      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
       <Input type="number" value={parameter.value || ""} onChange={wrappedChange} />
     </Box>
   );
@@ -53,7 +55,7 @@ function StrParameter({ parameter, onChange }: ParameterProps) {
     setVal(e.target.value)
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
+      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
       <Input type="text" value={val} onChange={wrappedChange} />
     <Button onClick={() => onChange(val)}>Submit</Button>
     </Box>
@@ -76,18 +78,19 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
 
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
+
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
+      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
       <SelectRoot
-        placeholder={parameter.name}
         collection={createListCollection(formattedOptions)}
         onValueChange={(val) => {
-          onChange(parameter.options?.find((option) => option.key === val.value[0]));
+          onChange(parameter.options?.find((option: SelectOption) => option.key === val.value[0]));
         }}
+        defaultValue={[parameter.default_value?.key]}
       >
         <SelectTrigger>
-          <SelectValueText placeholder="Select a kind" />
+          <SelectValueText placeholder={parameter.name} />
         </SelectTrigger>
         <SelectContent>
           {formattedOptions.items.map((kind) => (
@@ -101,8 +104,46 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
   );
 }
 
+function MultiSelectParameter({ parameter, onChange }: ParameterProps) {
+
+  if (!parameter.options) {
+    throw new Error("parameter options missing");
+  }
+
+  const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
+
+  return (
+    <Box>
+      <Text key={`${parameter.name}`}>{parameter.name}</Text>
+      <SelectRoot
+        multiple
+        placeholder={parameter.name}
+        defaultValue={[parameter.default_value.map((v)=>v.key)]}
+        collection={createListCollection(formattedOptions)}
+        onValueChange={(val) => {
+          onChange(val.value.map((v) => parameter.options?.find((option: SelectOption) => option.key === v)));
+        }}
+      >
+        <SelectTrigger>
+          <SelectValueText placeholder="Select a kind" />
+        </SelectTrigger>
+        <SelectContent>
+          {formattedOptions.items.map((kind) => (
+            <SelectItem key={kind.value} item={kind}>
+              {kind.label}
+            <SelectItemIndicator />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
+    </Box>
+  );
+}
+
+
+
 export function NoCodeParameter({ parameter, onChange }: ParameterProps) {
-  const TheInput = MAP_TO_PARAMETER[parameter.type];
+  const TheInput = MAP_TO_PARAMETER[parameter.type as ParameterType];
   return (
     <Box mt={2}>
       <TheInput parameter={parameter} onChange={onChange} />

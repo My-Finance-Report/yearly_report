@@ -196,14 +196,14 @@ export type NewPassword = {
 export type NoCodeCanvas = {
     name: string;
     widgets: Array<NoCodeWidgetOut>;
-    runtime_parameters: Array<Parameter>;
+    runtime_parameters: Array<Parameter_Output>;
 };
 
 export type NoCodeTool = {
     name: string;
     description: string;
     tool: string;
-    parameters?: (Array<Parameter> | null);
+    parameters?: (Array<Parameter_Output> | null);
     return_type: {
         [key: string]: unknown;
     };
@@ -214,7 +214,7 @@ export type NoCodeTool = {
 
 export type NoCodeToolIn = {
     tool: string;
-    parameters?: (Array<Parameter> | null);
+    parameters?: (Array<Parameter_Input> | null);
 };
 
 export type NoCodeWidgetIn = {
@@ -242,15 +242,25 @@ export type NoCodeWidgetOut = {
 
 export type PageVariant = 'accounts';
 
-export type Parameter = {
+export type Parameter_Input = {
     name: string;
     type: ParameterType;
-    value?: (number | string | null);
+    value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | null);
+    default_value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | null);
     options?: (Array<SelectOption> | null);
     is_runtime?: boolean;
 };
 
-export type ParameterType = 'int' | 'float' | 'string' | 'select';
+export type Parameter_Output = {
+    name: string;
+    type: ParameterType;
+    value?: (number | string | SelectOption | Array<(string)> | null);
+    default_value?: (number | string | SelectOption | Array<(string)> | null);
+    options?: (Array<SelectOption> | null);
+    is_runtime?: boolean;
+};
+
+export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'multi_select';
 
 /**
  * Response model for a Plaid account.
@@ -405,7 +415,7 @@ export type SavedFilterUpdate = {
 };
 
 export type SelectOption = {
-    key: number;
+    key: (number | string);
     value: string;
 };
 
@@ -751,7 +761,7 @@ export type NoCodeSaveNoCodeToolData = {
 export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
 
 export type NoCodeGetNoCodeDashboardData = {
-    requestBody?: (Array<Parameter> | null);
+    requestBody?: (Array<Parameter_Input> | null);
     variant: PageVariant;
 };
 

@@ -28,19 +28,20 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
-    LIST = "list"
+    MULTI_SELECT = "multi_select"
 
 
 class SelectOption(BaseModel):
-    key: int
+    key: int | str
     value: str
 
 
 class Parameter(BaseModel):
     name: str
+    label: str | None = None
     type: ParameterType
-    value: int | float | str | SelectOption | list[str] | list[Decimal] | None = None
-    default_value: int | float | str | SelectOption | list[str] | list[Decimal] | None = None
+    value: int | float | str | SelectOption | list[str] | list[Decimal] | list[SelectOption] | None = None 
+    default_value: int | float | str | SelectOption | list[str] | list[Decimal] | list[SelectOption] | None = None
     options: list[SelectOption] | None = None
     is_runtime: bool = False
 

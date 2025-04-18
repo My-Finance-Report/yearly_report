@@ -1,7 +1,6 @@
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import {
   NoCodeWidgetOut,
-  Parameter,
 } from "@/client";
 import {
   Container,
@@ -11,7 +10,6 @@ import {
 } from "@chakra-ui/react";
 import { BsPencilSquare } from "react-icons/bs";
 import { NoCodeParameter } from "./Generators/Parameter";
-import { useEffect, useState } from "react";
 
 
 function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>> {
