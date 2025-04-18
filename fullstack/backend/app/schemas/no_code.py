@@ -81,6 +81,8 @@ class PipelineEnd:
 
 class WidgetType(str, enum.Enum):
     value = "value"
+    value_with_trend = "value_with_trend"
+    badge = "badge"
     list = "list"
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
@@ -101,6 +103,7 @@ class ResultTypeEnum(enum.Enum):
 class NoCodeToolIn(BaseModel):
     tool: str
     parameters: list[Parameter] | None = None
+    global_parameters: list[str] | None = None
 
 
 class NoCodeWidgetIn(BaseModel):

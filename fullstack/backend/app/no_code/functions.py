@@ -1,4 +1,4 @@
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass, replace
 from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
@@ -66,15 +66,18 @@ def generate_runtime_parameters(tools: list[NoCodeToolIn]) -> list[Parameter]:
     return runtime_params
 
 def enrich_with_runtime(tools: list[NoCodeToolIn], runtime_parameters: list[Parameter] | None = None) -> list[NoCodeToolIn]:
-    param_value_lookup = {param.name: param.value for param in runtime_parameters} if runtime_parameters else {}
+    param_value_lookup = {param.name: param for param in runtime_parameters} if runtime_parameters else {}
+    enriched = []
     for tool in tools:
         if tool.parameters:
             for param in tool.parameters:
                 if param.is_runtime:
-                    param.value = param_value_lookup.get(param.name)
-    return tools
+                    the_param = param_value_lookup.get(param.name)
+                    if the_param:
+                        param.value = the_param.value
 
-
+        enriched.append(tool)
+    return enriched
 
 
 def serialize_to_result(obj: Any) -> Any:
