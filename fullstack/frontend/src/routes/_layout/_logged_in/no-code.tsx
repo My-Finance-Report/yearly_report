@@ -86,6 +86,9 @@ function NoCodeCanvasBuilder() {
   if (!fetchedTools) {
     return <div>Loading...</div>;
   }
+  const [runtimeParameters, setRuntimeParameters] = useState<Parameter_Output[]>([]);
+
+  console.log(runtimeParameters)
 
   return (
     <Container>
@@ -96,7 +99,7 @@ function NoCodeCanvasBuilder() {
       {editWidget &&
         <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} />
+      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} setRuntimeParameters={setRuntimeParameters} />
     </Container>
   );
 }
@@ -353,9 +356,6 @@ function Node({
         return null;
     }
   })}
-
-
-
 
       <CollapsibleSchemaRoot schema={node.input_type} />
       <CollapsibleSchemaRoot schema={node.return_type} />

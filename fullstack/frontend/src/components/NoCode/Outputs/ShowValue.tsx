@@ -5,7 +5,7 @@ export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as number;
 
   return (
-    <Box borderWidth={1} borderRadius="md" p={2} m={2} minWidth={"300px"}>
+    <Box borderWidth={1} borderRadius="md" p={2}  minWidth={"300px"}>
       <Stat.Root border={"1px"} borderRadius={"md"} size="lg" flex={"row"} justifyContent={"space-between"} alignItems={"center"}>
         <HStack>
           <Stat.ValueText>
@@ -26,7 +26,7 @@ export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as { result: number, trend: number };
   const isUp = result.trend > 0;
   return (
-    <Box borderWidth={1} borderRadius="md" p={2} m={2} minWidth={"300px"}>
+    <Box borderWidth={1} borderRadius="md" p={2} minWidth={"300px"}>
       <Stat.Root border={"1px"} borderRadius={"md"} size="lg" flex={"row"} justifyContent={"space-between"} alignItems={"center"}>
         <VStack>
           <Stat.ValueText>

@@ -30,6 +30,6 @@ export function NoCodePage({variant}: {variant: PageVariant}){
         return (<h1>there has been an error</h1>)
     }
 
-    return <NoCodeDisplayCanvas widgets={data.widgets} runtimeParameters={data.runtime_parameters} setParameters={setParameters}/>
+    return <NoCodeDisplayCanvas widgets={data.widgets} globalParameters={data.global_parameters} setParameters={setParameters}/>
 
 }

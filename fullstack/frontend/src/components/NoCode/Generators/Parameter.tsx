@@ -134,7 +134,7 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
       collection={createListCollection(formattedOptions)}
       variant='subtle'
       size="sm"
-      width={'auto'}
+      maxW="250px"
       onValueChange={(val) => {
           onChange(parameter.options.find((option: SelectOption) => option.key === val.value[0])!);
         }}

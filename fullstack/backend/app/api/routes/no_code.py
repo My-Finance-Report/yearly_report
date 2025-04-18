@@ -1,6 +1,7 @@
 from dataclasses import is_dataclass
 import enum
 from typing import Any
+import uuid
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
@@ -14,6 +15,7 @@ from app.no_code.decoration import make_tools
 from app.no_code.functions import (
     convert_to_pipeline,
     evaluate_pipeline,
+    extract_parameters_from_pipeline,
 )
 from app.schemas.no_code import (
     NoCodeCanvas,
@@ -63,6 +65,8 @@ def process_widget(
     result = evaluate_pipeline(convert_to_pipeline(widget.pipeline), session, user)
 
     return NoCodeWidgetOut(
+        id=str(uuid.uuid4().hex),
+        parameters=extract_parameters_from_pipeline(widget.pipeline),
         name=widget.name,
         description=widget.description,
         result=result,

@@ -61,6 +61,7 @@ class Parameter(BaseModel):
         | None
     ) = None
     options: list[SelectOption] | None = None
+    widget_id: str | None = None
     is_runtime: bool = False
 
 
@@ -137,10 +138,12 @@ class NoCodeWidgetIn(BaseModel):
 
 
 class NoCodeWidgetOut(BaseModel):
+    id: str
     name: str
     description: str
     result: Any
     result_type: ResultTypeEnum
+    parameters: list[Parameter]
     row: int
     col: int
     height: int
@@ -151,7 +154,7 @@ class NoCodeWidgetOut(BaseModel):
 class NoCodeCanvas(BaseModel):
     name: str
     widgets: list[NoCodeWidgetOut]
-    runtime_parameters: list[Parameter]
+    global_parameters: list[Parameter]
 
 
 class NoCodeTool(BaseModel):
