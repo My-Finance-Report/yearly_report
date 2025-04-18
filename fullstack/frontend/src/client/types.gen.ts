@@ -215,6 +215,7 @@ export type NoCodeTool = {
 export type NoCodeToolIn = {
     tool: string;
     parameters?: (Array<Parameter_Input> | null);
+    global_parameters?: (Array<(string)> | null);
 };
 
 export type NoCodeWidgetIn = {
@@ -245,7 +246,6 @@ export type PageVariant = 'accounts';
 export type Parameter_Input = {
     name: string;
     label?: (string | null);
-    description?: (string | null);
     type: ParameterType;
     value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
     default_value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
@@ -255,8 +255,8 @@ export type Parameter_Input = {
 
 export type Parameter_Output = {
     name: string;
+    description?: string;
     label?: (string | null);
-    description?: (string | null);
     type: ParameterType;
     value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
     default_value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
@@ -352,7 +352,7 @@ export type ProcessFileJobOut = {
 
 export type ProcessingState = 'waiting' | 'preparing' | 'fetching' | 'parsing' | 'categorizing' | 'failed' | 'completed';
 
-export type ResultTypeEnum = 'string' | 'number' | 'deferred';
+export type ResultTypeEnum = 'string' | 'number' | 'object' | 'list' | 'deferred';
 
 export type SankeyConfigCreatePayload = {
     inputs: Array<SankeyInputCreate>;
@@ -419,7 +419,7 @@ export type SavedFilterUpdate = {
 };
 
 export type SelectOption = {
-    key: (number | string);
+    key: string;
     value: string;
 };
 
@@ -582,7 +582,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'list' | 'pie_chart' | 'bar_chart';
+export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart';
 
 export type WorkerStatusOut = {
     id: number;
@@ -763,6 +763,8 @@ export type NoCodeSaveNoCodeToolData = {
 };
 
 export type NoCodeSaveNoCodeToolResponse = (Array<NoCodeWidgetOut>);
+
+export type NoCodeGetParameterResponse = (Parameter_Output);
 
 export type NoCodeGetNoCodeDashboardData = {
     requestBody?: (Array<Parameter_Input> | null);

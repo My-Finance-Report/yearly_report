@@ -1,9 +1,9 @@
-from dataclasses import asdict, is_dataclass, replace
+from dataclasses import asdict, is_dataclass
 from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Json
 
 from app.db import Session
 from app.models import TransactionSource, User
@@ -31,24 +31,41 @@ def init_no_code() -> None:
     import app.no_code.generators
     import app.no_code.transformations
 
-def figure_out_parameters(parameter: Parameter) -> str | int | float | SelectOption | list[str] |list[SelectOption] | None:
+
+def figure_out_parameters(
+    parameter: Parameter,
+) -> (
+    str
+    | int
+    | float
+    | SelectOption
+    | list[str]
+    | list[SelectOption]
+    | list[Decimal]
+    | None
+):
     if parameter.value is not None:
         return parameter.value
 
     if parameter.default_value is not None:
         return parameter.default_value
-    
+
     if parameter.options:
         return parameter.options[0]
 
     return None
 
-def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCallable]] | None:
+
+def convert_to_pipeline(
+    tools: list[NoCodeToolIn],
+) -> list[partial[PipelineCallable]] | None:
     steps = []
     for tool in tools:
         func = get_tool_callable(tool.tool)
         if tool.parameters:
-            if not all(figure_out_parameters(p) for p in tool.parameters): # has bug doesnt allow None as param type
+            if not all(
+                figure_out_parameters(p) for p in tool.parameters
+            ):  # has bug doesnt allow None as param type
                 return None
             else:
                 kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
@@ -58,6 +75,7 @@ def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCalla
 
     return steps
 
+
 def generate_runtime_parameters(tools: list[NoCodeToolIn]) -> list[Parameter]:
     runtime_params = []
     for tool in tools:
@@ -65,8 +83,15 @@ def generate_runtime_parameters(tools: list[NoCodeToolIn]) -> list[Parameter]:
             runtime_params.extend([p for p in tool.parameters if p.is_runtime])
     return runtime_params
 
-def enrich_with_runtime(tools: list[NoCodeToolIn], runtime_parameters: list[Parameter] | None = None) -> list[NoCodeToolIn]:
-    param_value_lookup = {param.name: param for param in runtime_parameters} if runtime_parameters else {}
+
+def enrich_with_runtime(
+    tools: list[NoCodeToolIn], runtime_parameters: list[Parameter] | None = None
+) -> list[NoCodeToolIn]:
+    param_value_lookup = (
+        {param.name: param for param in runtime_parameters}
+        if runtime_parameters
+        else {}
+    )
     enriched = []
     for tool in tools:
         if tool.parameters:

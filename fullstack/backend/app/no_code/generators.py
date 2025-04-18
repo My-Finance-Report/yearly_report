@@ -15,9 +15,8 @@ from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
     passed_value=None,
 )
 def first_n_transactions(
-    data: PipelineStart, n: int, account_id: SelectOption 
+    data: PipelineStart, n: int, account_id: SelectOption
 ) -> list[NoCodeTransaction]:
-
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
     )
@@ -45,12 +44,12 @@ def first_n_transactions(
         for tx, cat in txs.all()
     ]
 
+
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
 )
-def account_name(data: PipelineStart,account_id: SelectOption ) -> str | None:
-
+def account_name(data: PipelineStart, account_id: SelectOption) -> str | None:
     query = (
         data.session.query(TransactionSource.name)
         .filter(TransactionSource.user_id == data.user.id)
@@ -59,12 +58,12 @@ def account_name(data: PipelineStart,account_id: SelectOption ) -> str | None:
     )
     return query.name if query else None
 
+
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
 )
-def plaid_enabled(data: PipelineStart,account_id: SelectOption ) -> str | None:
-
+def plaid_enabled(data: PipelineStart, account_id: SelectOption) -> str | None:
     query = (
         data.session.query(TransactionSource.plaid_account_id)
         .filter(TransactionSource.user_id == data.user.id)
@@ -73,22 +72,25 @@ def plaid_enabled(data: PipelineStart,account_id: SelectOption ) -> str | None:
     )
     if not query:
         return None
-    
+
     if query.plaid_account_id is not None:
         return "Plaid Enabled"
-    
-    else: 
+
+    else:
         return "Powered by Statements"
+
 
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
 )
-def last_plaid_sync(data: PipelineStart,account_id: SelectOption ) -> str | None:
-
+def last_plaid_sync(data: PipelineStart, account_id: SelectOption) -> str | None:
     db_source = (
         data.session.query(TransactionSource)
-        .filter(TransactionSource.id == account_id.key, TransactionSource.user_id == data.user.id)
+        .filter(
+            TransactionSource.id == account_id.key,
+            TransactionSource.user_id == data.user.id,
+        )
         .first()
     )
 
@@ -109,39 +111,53 @@ def last_plaid_sync(data: PipelineStart,account_id: SelectOption ) -> str | None
         .all()
     )
 
-    return sync_logs[0].created_at.strftime("%Y-%m-%d") if sync_logs else "No previous sync"
+    return (
+        sync_logs[0].created_at.strftime("%Y-%m-%d")
+        if sync_logs
+        else "No previous sync"
+    )
+
 
 class ResultWithTrend(BaseModel):
     result: Decimal
     trend: Decimal
 
+
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
 )
-def account_balance(data: PipelineStart,account_id: SelectOption ) -> ResultWithTrend | None:
+def account_balance(
+    data: PipelineStart, account_id: SelectOption
+) -> ResultWithTrend | None:
     data.session.query(TransactionSource.name).filter(
         TransactionSource.id == account_id.key
     ).filter(TransactionSource.user_id == data.user.id).one_or_none()
 
     return ResultWithTrend(result=Decimal(1000), trend=Decimal(100))
 
+
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
 )
-def account_interest(data: PipelineStart,account_id: SelectOption ) -> ResultWithTrend | None:
+def account_interest(
+    data: PipelineStart, account_id: SelectOption
+) -> ResultWithTrend | None:
     data.session.query(TransactionSource.name).filter(
         TransactionSource.id == account_id.key
     ).filter(TransactionSource.user_id == data.user.id).one_or_none()
 
     return ResultWithTrend(result=Decimal(1000), trend=Decimal(-100))
 
+
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
 )
-def account_throughput(data: PipelineStart,account_id: SelectOption ) -> ResultWithTrend | None:
+def account_throughput(
+    data: PipelineStart, account_id: SelectOption
+) -> ResultWithTrend | None:
     data.session.query(TransactionSource.name).filter(
         TransactionSource.id == account_id.key
     ).filter(TransactionSource.user_id == data.user.id).one_or_none()

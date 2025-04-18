@@ -9,6 +9,7 @@ import {
   NoCodeWidgetOut,
   NoCodeWidgetIn,
   WidgetType,
+  Parameter_Output,
 } from "@/client";
 import {
   Container,
@@ -305,14 +306,57 @@ function Node({
         Step {idx + 1}: {node.name}
       </Text>
       <Text>{node.description}</Text>
-      {node.parameters &&
-        node.parameters.map((param, paramIdx) => (
+{node.parameters &&
+  node.parameters.map((param, paramIdx) => {
+    switch (param.type) {
+      case "int":
+        return (
           <NoCodeParameter
             key={`${param.name}-${paramIdx}`}
-            parameter={param}
+            parameter={param as Extract<Parameter_Output, { type: "int" }>}
             onChange={(val) => onChange(val, paramIdx)}
           />
-        ))}
+        );
+      case "float":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "float" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "string":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "string" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "select":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "select" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "multi_select":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "multi_select" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      default:
+        return null;
+    }
+  })}
+
+
+
+
       <CollapsibleSchemaRoot schema={node.input_type} />
       <CollapsibleSchemaRoot schema={node.return_type} />
     </Box>

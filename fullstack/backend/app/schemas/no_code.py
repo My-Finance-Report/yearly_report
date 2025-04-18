@@ -32,7 +32,7 @@ class ParameterType(str, enum.Enum):
 
 
 class SelectOption(BaseModel):
-    key: int | str
+    key: str
     value: str
 
 
@@ -40,8 +40,26 @@ class Parameter(BaseModel):
     name: str
     label: str | None = None
     type: ParameterType
-    value: int | float | str | SelectOption | list[str] | list[Decimal] | list[SelectOption] | None = None 
-    default_value: int | float | str | SelectOption | list[str] | list[Decimal] | list[SelectOption] | None = None
+    value: (
+        int
+        | float
+        | str
+        | SelectOption
+        | list[str]
+        | list[Decimal]
+        | list[SelectOption]
+        | None
+    ) = None
+    default_value: (
+        int
+        | float
+        | str
+        | SelectOption
+        | list[str]
+        | list[Decimal]
+        | list[SelectOption]
+        | None
+    ) = None
     options: list[SelectOption] | None = None
     is_runtime: bool = False
 
@@ -96,7 +114,8 @@ ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object
 class ResultTypeEnum(enum.Enum):
     string = "string"
     number = "number"
-    transactions = {"id": "number", "amount": "number", "description": "string"}
+    object_ = "object"
+    list_ = "list"
     deferred = "deferred"
 
 
@@ -117,17 +136,17 @@ class NoCodeWidgetIn(BaseModel):
     type: WidgetType
 
 
-
 class NoCodeWidgetOut(BaseModel):
     name: str
     description: str
     result: Any
-    result_type: ResultTypeEnum 
+    result_type: ResultTypeEnum
     row: int
     col: int
     height: int
     width: int
     type: WidgetType
+
 
 class NoCodeCanvas(BaseModel):
     name: str

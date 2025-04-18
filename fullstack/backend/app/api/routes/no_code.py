@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
+from pydantic import Json
 
 from app.db import Session, get_current_user, get_db
 from app.models import (
@@ -20,6 +21,7 @@ from app.schemas.no_code import (
     NoCodeWidgetIn,
     NoCodeWidgetOut,
     Parameter,
+    ParameterType,
     ResultType,
     ResultTypeEnum,
 )
@@ -43,12 +45,13 @@ def safe_parse_int(value: Any) -> int | None:
         return None
 
 
-def determine_result_type(result: ResultType) -> ResultTypeEnum:
+def determine_result_type(result: Any) -> ResultTypeEnum:
     if result is None:
         return ResultTypeEnum.deferred
     if is_dataclass(result):
-        return ResultTypeEnum.transactions
-
+        return ResultTypeEnum.object_
+    if isinstance(result, list):
+        return ResultTypeEnum.list_
     if safe_parse_int(result) is not None:
         return ResultTypeEnum.number
     return ResultTypeEnum.string
@@ -85,9 +88,25 @@ def save_no_code_tool(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 class PageVariant(str, enum.Enum):
     accounts = "accounts"
+
+
+@router.get("/parameter", response_model=Parameter)
+def get_parameter(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Parameter:
+    return Parameter(
+        name="parameter",
+        label="Parameter",
+        type=ParameterType.SELECT,
+        value="",
+        default_value="",
+        options=None,
+        is_runtime=True,
+    )
+
 
 @router.post("/get_no_code_dashboard", response_model=NoCodeCanvas)
 def get_no_code_dashboard(
@@ -96,12 +115,8 @@ def get_no_code_dashboard(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> NoCodeCanvas:
-    callable =  PAGES_LOOKUP[variant]
-    print("no_code_parameters", no_code_parameters)
-    return callable(session,user, no_code_parameters)
+    callable = PAGES_LOOKUP[variant]
+    return callable(session, user, no_code_parameters)
 
 
-PAGES_LOOKUP = {
-    PageVariant.accounts : generate_account_page
-}
-
+PAGES_LOOKUP = {PageVariant.accounts: generate_account_page}

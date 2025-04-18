@@ -1,4 +1,4 @@
-import { NoCodeService, PageVariant, Parameter } from "@/client"
+import { NoCodeService, PageVariant, Parameter_Output } from "@/client"
 import { useQuery } from "@tanstack/react-query"
 import {NoCodeDisplayCanvas} from "@/components/NoCode/Canvas"
 import { Spinner } from "@chakra-ui/react"
@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 
 export function NoCodePage({variant}: {variant: PageVariant}){
 
-    const [parameters, setParameters] = useState<Parameter[]>([])
+    const [parameters, setParameters] = useState<Parameter_Output[]>([])
 
     const {
         data,

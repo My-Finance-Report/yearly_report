@@ -23,22 +23,22 @@ export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
 }
 
 export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
-  const {result, trend} = widget.result;
-  const isUp = trend > 0;
+  const result = widget.result as { result: number, trend: number };
+  const isUp = result.trend > 0;
   return (
     <Box borderWidth={1} borderRadius="md" p={2} m={2} minWidth={"300px"}>
       <Stat.Root border={"1px"} borderRadius={"md"} size="lg" flex={"row"} justifyContent={"space-between"} alignItems={"center"}>
         <VStack>
           <Stat.ValueText>
             {widget.result_type === "number" ? (
-              <FormatNumber value={result} style="currency" currency="USD" />
+              <FormatNumber value={result.result} style="currency" currency="USD" />
             ) : (
-              <Text>{result}</Text>
+              <Text>{result.result}</Text>
             )}
           </Stat.ValueText>
           <Badge colorPalette={isUp ? "green" : "red"} variant="plain" p="2" m="2">
             {isUp ? <Stat.UpIndicator /> : <Stat.DownIndicator />}
-            {trend}%
+            {result.trend}%
           </Badge>
         </VStack>
         <Stat.Label fontSize={"xl"}>{widget.name} </Stat.Label>

@@ -23,17 +23,31 @@ from app.schemas.no_code import (
 
 
 def first_n(session: Session, user: User) -> NoCodeToolIn:
-
     account_choices = make_account_choices(session, user)
 
     return NoCodeToolIn(
         tool="first_n_transactions",
         global_parameters=["account_id"],
         parameters=[
-        Parameter(name="n",label="Number of transactions", type=ParameterType.INT, value=10, default_value=10,is_runtime=True),
-        Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=account_choices, default_value=account_choices[0], is_runtime=True),
-    ],
-)
+            Parameter(
+                name="n",
+                label="Number of transactions",
+                type=ParameterType.INT,
+                value=10,
+                default_value=10,
+                is_runtime=True,
+            ),
+            Parameter(
+                name="account_id",
+                label="Account",
+                type=ParameterType.SELECT,
+                options=account_choices,
+                default_value=account_choices[0],
+                is_runtime=True,
+            ),
+        ],
+    )
+
 
 def to_kvp(key: str, value: str) -> NoCodeToolIn:
     return NoCodeToolIn(
@@ -44,12 +58,32 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
         ],
     )
 
-def _generate_balance_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
 
-    pipeline = [NoCodeToolIn(tool="account_balance", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
+def _generate_balance_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="account_balance",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
 
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -63,12 +97,32 @@ def _generate_balance_widget(session: Session, user: User, runtime_parameters: l
         type=WidgetType.value_with_trend,
     ), generate_runtime_parameters(pipeline)
 
-def _generate_throughput_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
 
-    pipeline = [NoCodeToolIn(tool="account_balance", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
+def _generate_throughput_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="account_balance",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
 
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -82,11 +136,31 @@ def _generate_throughput_widget(session: Session, user: User, runtime_parameters
         type=WidgetType.value_with_trend,
     ), generate_runtime_parameters(pipeline)
 
-def _generate_interest_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
 
-    pipeline = [NoCodeToolIn(tool="account_interest", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+def _generate_interest_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="account_interest",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -101,14 +175,31 @@ def _generate_interest_widget(session: Session, user: User, runtime_parameters: 
     ), generate_runtime_parameters(pipeline)
 
 
+def _generate_plaid_badge_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="plaid_enabled",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
 
-
-def _generate_plaid_badge_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
-
-    pipeline = [NoCodeToolIn(tool="plaid_enabled", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
-
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.transactions
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -123,12 +214,31 @@ def _generate_plaid_badge_widget(session: Session, user: User, runtime_parameter
     ), generate_runtime_parameters(pipeline)
 
 
-def _generate_sync_status_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+def _generate_sync_status_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="last_plaid_sync",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
 
-    pipeline = [NoCodeToolIn(tool="last_plaid_sync", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
-
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.transactions
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -143,16 +253,31 @@ def _generate_sync_status_widget(session: Session, user: User, runtime_parameter
     ), generate_runtime_parameters(pipeline)
 
 
+def _generate_name_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    pipeline = [
+        NoCodeToolIn(
+            tool="account_name",
+            parameters=[
+                Parameter(
+                    name="account_id",
+                    label="Account",
+                    type=ParameterType.SELECT,
+                    options=make_account_choices(session, user),
+                    default_value=make_account_choices(session, user)[0],
+                    is_runtime=True,
+                )
+            ],
+        )
+    ]
 
-
-
-
-def _generate_name_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
-
-    pipeline = [NoCodeToolIn(tool="account_name", parameters=[Parameter(name="account_id",label="Account", type=ParameterType.SELECT, options=make_account_choices(session, user), default_value=make_account_choices(session, user)[0], is_runtime=True)])]
-
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.transactions
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -167,12 +292,17 @@ def _generate_name_widget(session: Session, user: User, runtime_parameters: list
     ), generate_runtime_parameters(pipeline)
 
 
-def _generate_list_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
-
+def _generate_list_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
     pipeline = [first_n(session, user)]
 
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.transactions
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.list_
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -187,21 +317,47 @@ def _generate_list_widget(session: Session, user: User, runtime_parameters: list
     ), generate_runtime_parameters(pipeline)
 
 
-def _generate_bar_chart_widget(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+def _generate_bar_chart_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> tuple[NoCodeWidgetOut, list[Parameter]]:
+    options = [
+        SelectOption(key=field_name, value=" ".join(field_name.split("_")).capitalize())
+        for field_name in NoCodeTransaction.model_fields
+        if field_name != "id"
+    ]
 
-    options = [SelectOption(key=field_name, value=" ".join(field_name.split("_")).capitalize()) for field_name in NoCodeTransaction.model_fields if field_name != "id"]
-
-    pipeline = [first_n(session, user),
-             NoCodeToolIn(
+    pipeline = [
+        first_n(session, user),
+        NoCodeToolIn(
             tool="aggregate",
             parameters=[
-                Parameter(name="key_from",label="X Axis", type=ParameterType.SELECT, options=options, default_value=SelectOption(key="date_of_transaction", value="date_of_transaction"), is_runtime=True), 
-                Parameter(name="values_from",label="Y Axis", type=ParameterType.MULTI_SELECT, options=options, default_value=[SelectOption(key="amount", value="amount")]) 
-            ]
-    )]
+                Parameter(
+                    name="key_from",
+                    label="X Axis",
+                    type=ParameterType.SELECT,
+                    options=options,
+                    default_value=SelectOption(
+                        key="date_of_transaction", value="date_of_transaction"
+                    ),
+                    is_runtime=True,
+                ),
+                Parameter(
+                    name="values_from",
+                    label="Y Axis",
+                    type=ParameterType.MULTI_SELECT,
+                    options=options,
+                    default_value=[SelectOption(key="amount", value="amount")],
+                ),
+            ],
+        ),
+    ]
 
-    result = evaluate_pipeline(convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)), session, user)
-    result_type =  ResultTypeEnum.deferred if not result else ResultTypeEnum.transactions
+    result = evaluate_pipeline(
+        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
+        session,
+        user,
+    )
+    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.list_
 
     return NoCodeWidgetOut(
         result_type=result_type,
@@ -216,10 +372,12 @@ def _generate_bar_chart_widget(session: Session, user: User, runtime_parameters:
     ), generate_runtime_parameters(pipeline)
 
 
-def generate_account_page(session: Session, user: User, runtime_parameters: list[Parameter] | None = None) -> NoCodeCanvas:
-
+def generate_account_page(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None
+) -> NoCodeCanvas:
     widgets_and_runtime_parameters = [
-        callable(session, user, runtime_parameters) for callable in [
+        callable(session, user, runtime_parameters)
+        for callable in [
             _generate_balance_widget,
             _generate_plaid_badge_widget,
             _generate_interest_widget,
@@ -227,7 +385,7 @@ def generate_account_page(session: Session, user: User, runtime_parameters: list
             _generate_name_widget,
             _generate_list_widget,
             _generate_bar_chart_widget,
-            _generate_sync_status_widget
+            _generate_sync_status_widget,
         ]
     ]
     widgets = []
@@ -241,5 +399,5 @@ def generate_account_page(session: Session, user: User, runtime_parameters: list
     return NoCodeCanvas(
         name="Account Page",
         widgets=widgets,
-        runtime_parameters=list(param_lookup.values())
+        runtime_parameters=list(param_lookup.values()),
     )

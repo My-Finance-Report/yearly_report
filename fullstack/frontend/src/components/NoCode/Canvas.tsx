@@ -1,6 +1,7 @@
 import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import {
   NoCodeWidgetOut,
+  Parameter_Output,
 } from "@/client";
 import {
   Container,
@@ -47,26 +48,80 @@ export function NoCodeEditCanvas({ widgets, setEditWidget }: { widgets: NoCodeWi
       </Container>
     )
   }
-
-
-
-function RuntimeParameters({runtime_parameters, setParameters}: {runtime_parameters: Parameter[]; setParameters: (parameters: Parameter[]) => void}) {
-
-    const updateAParameter = (parameter: Parameter) => {
-        setParameters(runtime_parameters.map(p => p.name === parameter.name ? parameter : p))
-    }
-
-
-    return (
-      <Flex direction="row" gap={0}>
-      {runtime_parameters.map((parameter) => (
-        <NoCodeParameter key={parameter.name} parameter={parameter} onChange={(value: string | number) => updateAParameter({ ...parameter, value })} />
-      ))}
-      </Flex>
-    )
+function renderNoCodeParameter(
+  parameter: Parameter_Output,
+  updateAParameter: (parameter: Parameter_Output) => void
+) {
+  switch (parameter.type) {
+    case "int":
+      return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "int" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+      );
+    case "float":
+      return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "float" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+      );
+    case "string":
+      return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "string" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+      );
+    case "select":
+      return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "select" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+      );
+    case "multi_select":
+      return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "multi_select" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+      );
+    default:
+      return null;
   }
-  
-export function NoCodeDisplayCanvas({ widgets, runtimeParameters, setParameters }: { widgets: NoCodeWidgetOut[]; runtimeParameters: Parameter[]; setParameters: (parameters: Parameter[]) => void}) {
+}
+
+export function RuntimeParameters({
+  runtime_parameters,
+  setParameters,
+}: {
+  runtime_parameters: Parameter_Output[];
+  setParameters: (parameters: Parameter_Output[]) => void;
+}) {
+  const updateAParameter = (parameter: Parameter_Output) => {
+    setParameters(
+      runtime_parameters.map((p) => (p.name === parameter.name ? parameter : p))
+    );
+  };
+
+  return (
+    <Flex direction="row" gap={0}>
+      {runtime_parameters.map((parameter) =>
+        renderNoCodeParameter(parameter, updateAParameter)
+      )}
+    </Flex>
+  );
+}
+
+ 
+export function NoCodeDisplayCanvas({ widgets, runtimeParameters, setParameters }: { widgets: NoCodeWidgetOut[]; runtimeParameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void}) {
 
     if (!widgets) {
       return <div>No widgets found</div>

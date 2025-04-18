@@ -31,7 +31,6 @@ class PipelineStep:
 STEP_REGISTRY: dict[str, PipelineStep] = {}
 
 
-
 def pipeline_step(
     return_type: Any, passed_value: Any = None
 ) -> Callable[[PipelineCallable], PipelineCallable]:
@@ -61,7 +60,12 @@ def make_tools(
     session: Session,
     user: User,
 ) -> list[NoCodeTool]:
-    tools = []
+    tools: list[NoCodeTool] = []
+    return tools
+
+    # need to figure out some registry scheme for the parameters
+
+    """
     for name, tool in STEP_REGISTRY.items():
         tools.append(
             NoCodeTool(
@@ -84,13 +88,13 @@ def make_tools(
             )
         )
     return tools
+    """
 
 
 def get_no_code_tool(
     session: Session,
     user: User,
     tool_name: str,
-)-> NoCodeTool:
-    lookup = {tool.name: tool for tool in make_tools(session,user)}
+) -> NoCodeTool:
+    lookup = {tool.name: tool for tool in make_tools(session, user)}
     return lookup[tool_name]
-

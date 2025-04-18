@@ -163,7 +163,6 @@ function BarChart({
         <GenericBarChart
           data={squareOffData(chartData)}
           description={description}
-          dataKey="date"
           nameKey="date"
         />
       ) : (
