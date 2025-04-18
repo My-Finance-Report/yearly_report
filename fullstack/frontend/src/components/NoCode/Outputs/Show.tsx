@@ -1,6 +1,6 @@
 import { NoCodeWidgetOut, Parameter_Output} from "@/client"
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
-import { ShowValue, ShowValueWithTrend, ShowBadge } from "./ShowValue"
+import { ShowValue, ShowBadge, ShowCardWithSparkline } from "./ShowValue"
 import { ShowList } from "./ShowList"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
@@ -8,7 +8,7 @@ import { Box, Flex } from "@chakra-ui/react"
 
 const MAP_TO_SHOW = {
     "value": ShowValue,
-    "value_with_trend": ShowValueWithTrend,
+    "value_with_trend": ShowCardWithSparkline,
     "list": ShowList,    
     "pie_chart": ShowPieChart,
     "bar_chart": ShowBarChart,
@@ -101,11 +101,10 @@ export function NoCodeShow({ widget, setRuntimeParameters }: { widget: NoCodeWid
         return <div>Deferred</div>
     }
 
-    console.log(widget)
     return (
         <Box>
             <WidgetSpecificParmeters runtime_parameters={widget.parameters} setParameters={setRuntimeParameters} />
-            <TheDisplay widget={widget} />
+            <TheDisplay widget={widget}/>
         </Box>
     )
 }

@@ -20,6 +20,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, Float, DateTime
+from datetime import datetime
 
 T = TypeVar("T", bound=BaseModel)  # This represents any dataclass type
 
@@ -109,6 +111,7 @@ AuditLogId = NewType("AuditLogId", int)
 TransactionReportId = NewType("TransactionReportId", int)
 PlaidItemId = NewType("PlaidItemId", int)
 PlaidAccountId = NewType("PlaidAccountId", int)
+PlaidAccountBalanceId = NewType("PlaidAccountBalanceId", int)
 SubscriptionId = NewType("SubscriptionId", int)
 PriceId = NewType("PriceId", int)
 PlaidSyncLogId = NewType("PlaidSyncLogId", int)
@@ -500,6 +503,21 @@ class PlaidItem(Base):
     )
 
     accounts: Mapped[list["PlaidAccount"]] = relationship(back_populates="item")
+
+
+class PlaidAccountBalance(Base):
+    __tablename__ = "plaid_account_balance"
+
+    id: Mapped[PlaidAccountBalanceId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    plaid_account_id: Mapped[PlaidAccountId] = mapped_column(
+        ForeignKey("plaid_account.id"), nullable=False, index=True
+    )
+    balance: Mapped[float] = mapped_column(Float, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
 
 class PlaidAccount(Base):

@@ -36,6 +36,7 @@ from app.models import (
 from app.plaid.client import get_plaid_client
 from app.telegram_utils import send_telegram_message
 from app.worker.status import status_update_monad, update_worker_status
+from app.plaid.balance_history import record_plaid_account_balance
 
 logger = logging.getLogger(__name__)
 
@@ -391,6 +392,7 @@ async def sync_all_plaid_accounts(
             sync_plaid_account_transactions(
                 user_session, user, account, days_back, batch_id
             )
+            record_plaid_account_balance(user_session, account)
 
         if plaid_accounts:
             print(f"Synced all Plaid accounts for user {user.id}")

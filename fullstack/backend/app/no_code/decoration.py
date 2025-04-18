@@ -2,7 +2,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from app.no_code.step import Kwargs
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 

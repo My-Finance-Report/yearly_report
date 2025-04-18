@@ -83,11 +83,21 @@ def extract_parameters_from_pipeline(tools: list[NoCodeToolIn]) -> list[Paramete
             runtime_params.extend([p for p in tool.parameters])
     return runtime_params
 
-def enrich_with_runtime(
-    tools: list[NoCodeToolIn], runtime_parameters: list[Parameter] | None = None, widget_id: str | None = None
-) -> list[NoCodeToolIn]:
 
-    widget_specific_params = {param.name:param for param in runtime_parameters if param.widget_id is not None and param.widget_id == widget_id} if runtime_parameters else {}
+def enrich_with_runtime(
+    tools: list[NoCodeToolIn],
+    runtime_parameters: list[Parameter] | None = None,
+    widget_id: str | None = None,
+) -> list[NoCodeToolIn]:
+    widget_specific_params = (
+        {
+            param.name: param
+            for param in runtime_parameters
+            if param.widget_id is not None and param.widget_id == widget_id
+        }
+        if runtime_parameters
+        else {}
+    )
 
     param_value_lookup = (
         {param.name: param for param in runtime_parameters if param.widget_id is None}

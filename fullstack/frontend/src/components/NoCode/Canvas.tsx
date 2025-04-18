@@ -82,7 +82,7 @@ export function NoCodeDisplayCanvas({ widgets, globalParameters, setParameters }
         <GlobalParameters runtime_parameters={globalParameters} setParameters={setParameters} />
         <Flex direction="column" gap={2}>
         {orderWidgets(widgets).map((row) => (
-          <Flex key={row[0].row} direction="row" gap={2} alignItems={"center"}>
+          <Flex key={row[0].row} direction="row" gap={2} alignItems={"end"}>
             {row.map((widget) => (
                 <NoCodeShow key={widget.name} widget={widget} setRuntimeParameters={setParameters} />
             ))}
