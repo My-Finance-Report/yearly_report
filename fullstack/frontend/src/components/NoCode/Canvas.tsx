@@ -72,7 +72,9 @@ export function NoCodeDisplayCanvas({ widgets, runtimeParameters, setParameters 
 
     return (
       <Container>
+        <Flex direction="row" wrap="wrap" gap={2}>
         <RuntimeParameters runtime_parameters={runtimeParameters} setParameters={setParameters} />
+</Flex>
         {orderWidgets(widgets).map((row) => (
           <Flex key={row[0].row} direction="row" gap={2}>
             {row.map((widget) => (

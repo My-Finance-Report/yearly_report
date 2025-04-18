@@ -244,18 +244,22 @@ export type PageVariant = 'accounts';
 
 export type Parameter_Input = {
     name: string;
+    label?: (string | null);
+    description?: (string | null);
     type: ParameterType;
-    value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | null);
-    default_value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | null);
+    value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
+    default_value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
     options?: (Array<SelectOption> | null);
     is_runtime?: boolean;
 };
 
 export type Parameter_Output = {
     name: string;
+    label?: (string | null);
+    description?: (string | null);
     type: ParameterType;
-    value?: (number | string | SelectOption | Array<(string)> | null);
-    default_value?: (number | string | SelectOption | Array<(string)> | null);
+    value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
+    default_value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
     options?: (Array<SelectOption> | null);
     is_runtime?: boolean;
 };

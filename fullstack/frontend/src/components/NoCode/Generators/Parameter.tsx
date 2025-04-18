@@ -1,11 +1,7 @@
-import { Box, Text, Input, Button, SelectItemIndicator } from "@chakra-ui/react";
+import { Box, Text, Input, Button,  Select } from "@chakra-ui/react";
 import { Parameter, ParameterType, SelectOption } from "@/client";
 import {
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValueText,
+  Portal,
   createListCollection,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -57,7 +53,7 @@ function StrParameter({ parameter, onChange }: ParameterProps) {
     <Box>
       <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
       <Input type="text" value={val} onChange={wrappedChange} />
-    <Button onClick={() => onChange(val)}>Submit</Button>
+      <Button onClick={() => onChange(val)}>Submit</Button>
     </Box>
   );
 }
@@ -78,30 +74,40 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
 
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
-
-  return (
-    <Box>
-      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
-      <SelectRoot
-        collection={createListCollection(formattedOptions)}
-        onValueChange={(val) => {
+ return (
+    <Select.Root
+      collection={createListCollection(formattedOptions)}
+      size="sm"
+      width={'auto'}
+      onValueChange={(val) => {
           onChange(parameter.options?.find((option: SelectOption) => option.key === val.value[0]));
         }}
-        defaultValue={[parameter.default_value?.key]}
-      >
-        <SelectTrigger>
-          <SelectValueText placeholder={parameter.name} />
-        </SelectTrigger>
-        <SelectContent>
-          {formattedOptions.items.map((kind) => (
-            <SelectItem key={kind.value} item={kind}>
-              {kind.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-    </Box>
-  );
+      defaultValue={[parameter.default_value?.key]}
+    >
+      <Select.HiddenSelect />
+      <Select.Label>{parameter.label || parameter.name}</Select.Label>
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder={parameter.label || parameter.name} />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+      <Portal>
+        <Select.Positioner>
+          <Select.Content>
+            {formattedOptions.items.map((option) => (
+              <Select.Item item={option} key={option.value}>
+                <Select.ItemText>{option.label}</Select.ItemText>
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+      </Portal>
+    </Select.Root>
+  )
 }
 
 function MultiSelectParameter({ parameter, onChange }: ParameterProps) {
@@ -113,31 +119,40 @@ function MultiSelectParameter({ parameter, onChange }: ParameterProps) {
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
   return (
-    <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <SelectRoot
-        multiple
-        placeholder={parameter.name}
-        defaultValue={[parameter.default_value.map((v)=>v.key)]}
-        collection={createListCollection(formattedOptions)}
-        onValueChange={(val) => {
+    <Select.Root
+      size="sm"
+      width={'auto'}
+      defaultValue={[parameter.default_value.map((v) => v.key)]}
+      collection={createListCollection(formattedOptions)}
+      onValueChange={(val) => {
           onChange(val.value.map((v) => parameter.options?.find((option: SelectOption) => option.key === v)));
         }}
-      >
-        <SelectTrigger>
-          <SelectValueText placeholder="Select a kind" />
-        </SelectTrigger>
-        <SelectContent>
-          {formattedOptions.items.map((kind) => (
-            <SelectItem key={kind.value} item={kind}>
-              {kind.label}
-            <SelectItemIndicator />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-    </Box>
-  );
+    >
+      <Select.HiddenSelect />
+      <Select.Label>{parameter.label || parameter.name}</Select.Label>
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder={parameter.label || parameter.name} />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+      <Portal>
+        <Select.Positioner>
+          <Select.Content>
+            {formattedOptions.items.map((option) => (
+              <Select.Item item={option} key={option.value}>
+                <Select.ItemText>{option.label}</Select.ItemText>
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+      </Portal>
+    </Select.Root>
+  )
+
 }
 
 
