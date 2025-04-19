@@ -14,6 +14,7 @@ from app.schemas.no_code import (
     NoCodeWidgetOut,
     Parameter,
     ParameterType,
+    ResultTypeEnum,
     SelectOption,
     WidgetType,
 )
@@ -37,6 +38,10 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 ],
                 default_value=SelectOption(key="20", value="20"),
                 is_runtime=True,
+                row=10,
+                col=4,
+                row_span=1,
+                col_span=2,
             ),
             Parameter(
                 name="account_id",
@@ -45,6 +50,10 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 options=account_choices,
                 default_value=account_choices[0],
                 is_runtime=True,
+                row=7,
+                col=8,
+                row_span=1,
+                col_span=2,
             ),
         ],
     )
@@ -148,6 +157,25 @@ def _generate_net_worth_widget(
     )
 
 
+
+def _generate_seperator_widget(
+     session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1, col:int=1, row_span:int=3, col_span:int=3,
+)->NoCodeWidgetOut:
+
+    widget_id = "sneflnlksnfv"
+    return NoCodeWidgetOut(
+        id=widget_id,
+        parameters=[],
+        result_type=ResultTypeEnum.string,
+        result="Account Specific",
+        name="",
+        description="",
+        row=row,
+        col=col,
+        row_span=row_span,
+        col_span=col_span,
+        type=WidgetType.separator,
+    )
 
 
 def _generate_balance_widget(
@@ -455,6 +483,10 @@ def _generate_bar_chart_widget(
             ),
             is_runtime=True,
             widget_id=widget_id,
+            row=10,
+            col=1,
+            row_span=1,
+            col_span=2,
         ),
         Parameter(
             name="values_from",
@@ -500,28 +532,27 @@ def generate_account_page(
             partial(_generate_net_worth_widget, row=1,col=1, row_span=2, col_span=3),
             partial(_generate_pie_widget, row=3,col=1, row_span=3, col_span=3), 
             partial(_generate_all_transactions_widget, row=1,col=4, row_span=5, col_span=9),
-            partial(_generate_name_widget, row=6,col=0, row_span=1, col_span=3),
-            partial(_generate_plaid_badge_widget, row=6,col=4, row_span=1, col_span=1),
-            partial(_generate_sync_status_widget, row=6,col=5, row_span=1, col_span=1),
-            partial(_generate_balance_widget, row=7, col=1, row_span=2, col_span=4),
-            partial(_generate_interest_widget, row=7,col=5, row_span=2, col_span=4),
-            partial(_generate_throughput_widget, row=7, col=9, row_span=2, col_span=4),
-            partial(_generate_bar_chart_widget, row=9,col=1, row_span=3, col_span=12),
-            partial(_generate_list_widget, row=12,col=1, row_span=8, col_span=12),
+            partial(_generate_seperator_widget, row=6,col=0, row_span=1, col_span=12),
+            partial(_generate_name_widget, row=7,col=0, row_span=1, col_span=5),
+            partial(_generate_plaid_badge_widget, row=7,col=6, row_span=1, col_span=1),
+            partial(_generate_sync_status_widget, row=7,col=7, row_span=1, col_span=1),
+            partial(_generate_balance_widget, row=8, col=1, row_span=2, col_span=4),
+            partial(_generate_interest_widget, row=8,col=5, row_span=2, col_span=4),
+            partial(_generate_throughput_widget, row=8, col=9, row_span=2, col_span=4),
+            partial(_generate_bar_chart_widget, row=11,col=1, row_span=3, col_span=12),
+            partial(_generate_list_widget, row=14,col=1, row_span=8, col_span=12),
         ]
     ]
     widgets = []
-    global_param_lookup: dict[str, Parameter] = {}
+    param_lookup: dict[str, Parameter] = {}
 
     for w in widgets_and_runtime_parameters:
         widgets.append(w)
         for param in w.parameters:
-            if param.widget_id:
-                continue
-            global_param_lookup[param.name] = param
+            param_lookup[param.name] = param
 
     return NoCodeCanvas(
         name="Account Page",
         widgets=widgets,
-        global_parameters=list(global_param_lookup.values()),
+        parameters=list(param_lookup.values()),
     )

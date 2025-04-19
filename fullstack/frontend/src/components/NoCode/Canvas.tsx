@@ -73,16 +73,24 @@ export function GlobalParameters({
 }
 
  
-export function NoCodeDisplayCanvas({ widgets, globalParameters, setParameters }: { widgets: NoCodeWidgetOut[]; globalParameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void}) {
+export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { widgets: NoCodeWidgetOut[]; parameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void}) {
 
     if (!widgets) {
       return <div>No widgets found</div>
     }
 
+    const updateAParameter = (parameter: Parameter_Output) => {
+      setParameters(
+        parameters.map((p) => (p.name === parameter.name ? parameter : p))
+      );
+    };
+
+
+    const toDisplayParams = parameters.filter((parameter) =>  parameter.is_runtime)
+
 
     return (
       <Container>
-        <GlobalParameters runtime_parameters={globalParameters} setParameters={setParameters} />
       <Grid
         templateRows={`repeat(36, 1fr)`}
         templateColumns={`repeat(12, 1fr)`}
@@ -96,7 +104,20 @@ export function NoCodeDisplayCanvas({ widgets, globalParameters, setParameters }
             rowSpan={widget.row_span}
             colSpan={widget.col_span}
           >
-            <NoCodeShow widget={widget} setRuntimeParameters={setParameters} />
+            <NoCodeShow widget={widget} />
+          </GridItem>
+        ))}
+        {toDisplayParams.map(param =>(
+          <GridItem
+            key={`${param.name}${param.widget_id}`}
+            rowStart={param.row}
+            colStart={param.col}
+            rowSpan={param.row_span}
+            colSpan={param.col_span}
+          >
+            {
+          renderNoCodeParameter(param, updateAParameter)
+            }
           </GridItem>
         ))}
       </Grid>

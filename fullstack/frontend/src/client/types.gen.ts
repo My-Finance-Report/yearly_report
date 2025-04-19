@@ -196,7 +196,7 @@ export type NewPassword = {
 export type NoCodeCanvas = {
     name: string;
     widgets: Array<NoCodeWidgetOut>;
-    global_parameters: Array<Parameter_Output>;
+    parameters: Array<Parameter_Output>;
 };
 
 export type NoCodeTool = {
@@ -253,6 +253,10 @@ export type Parameter_Input = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
+    row?: (number | null);
+    col?: (number | null);
+    row_span?: (number | null);
+    col_span?: (number | null);
 };
 
 export type Parameter_Output = {
@@ -264,6 +268,10 @@ export type Parameter_Output = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
+    row?: (number | null);
+    col?: (number | null);
+    row_span?: (number | null);
+    col_span?: (number | null);
 };
 
 export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'multi_select';
@@ -585,7 +593,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart';
+export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart' | 'separator';
 
 export type WorkerStatusOut = {
     id: number;

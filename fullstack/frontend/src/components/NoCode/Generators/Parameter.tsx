@@ -133,9 +133,9 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
  return (
     <Select.Root
       collection={createListCollection(formattedOptions)}
-      variant='subtle'
+      variant='outline'
       size="sm"
-      maxW="250px"
+      minW="250px"
       onValueChange={(val) => {
           onChange(parameter.options.find((option: SelectOption) => option.key === val.value[0])!);
         }}

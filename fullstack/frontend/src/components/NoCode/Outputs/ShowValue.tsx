@@ -1,5 +1,5 @@
 import { NoCodeWidgetOut } from "@/client";
-import { FormatNumber,Card, Box, HStack, Stat, Text, Badge, VStack } from "@chakra-ui/react";
+import { FormatNumber,Card, Box, HStack, Stat, Text, Badge, VStack, Separator } from "@chakra-ui/react";
 import { Chart, useChart } from "@chakra-ui/charts"
 import { Area, AreaChart } from "recharts"
 import { LuDollarSign, LuPercent } from "react-icons/lu";
@@ -59,6 +59,15 @@ export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
         <Stat.Label fontSize={"xl"}>{widget.name} </Stat.Label>
       </Stat.Root>
     </Box>
+  );
+}
+export function ShowSeparator({ widget }: { widget: NoCodeWidgetOut }) {
+  return (
+      <HStack>
+        <Separator flex="1" />
+        <Text flexShrink="0">{widget.result}</Text>
+        <Separator flex="1" />
+      </HStack>
   );
 }
 

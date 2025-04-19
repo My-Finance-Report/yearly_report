@@ -63,6 +63,10 @@ class Parameter(BaseModel):
     options: list[SelectOption] | None = None
     widget_id: str | None = None
     is_runtime: bool = False
+    row: int | None = None
+    col: int | None = None
+    row_span: int | None = None
+    col_span: int | None = None
 
 
 @dataclass
@@ -105,6 +109,7 @@ class WidgetType(str, enum.Enum):
     list = "list"
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
+    separator= "separator"
 
 
 Scalar = Decimal | str | int | float
@@ -112,7 +117,7 @@ Object = dict[str, Scalar]
 ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object]
 
 
-class ResultTypeEnum(enum.Enum):
+class ResultTypeEnum(str, enum.Enum):
     string = "string"
     number = "number"
     object_ = "object"
@@ -153,7 +158,7 @@ class NoCodeWidgetOut(BaseModel):
 class NoCodeCanvas(BaseModel):
     name: str
     widgets: list[NoCodeWidgetOut]
-    global_parameters: list[Parameter]
+    parameters: list[Parameter]
 
 
 class NoCodeTool(BaseModel):

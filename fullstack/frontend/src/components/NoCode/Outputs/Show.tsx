@@ -1,6 +1,6 @@
 import { NoCodeWidgetOut, Parameter_Output} from "@/client"
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
-import { ShowValue, ShowBadge, ShowCardWithSparkline } from "./ShowValue"
+import { ShowValue, ShowBadge, ShowCardWithSparkline, ShowSeparator } from "./ShowValue"
 import { ShowList } from "./ShowList"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
@@ -12,7 +12,8 @@ const MAP_TO_SHOW = {
     "list": ShowList,    
     "pie_chart": ShowPieChart,
     "bar_chart": ShowBarChart,
-    "badge": ShowBadge
+    "badge": ShowBadge,
+    "separator" : ShowSeparator
 }
 
 export function renderNoCodeParameter(
@@ -67,45 +68,18 @@ export function renderNoCodeParameter(
   }
 }
 
-function WidgetSpecificParmeters({
-  runtime_parameters,
-  setParameters,
-}: {
-  runtime_parameters: Parameter_Output[];
-  setParameters: (parameters: Parameter_Output[]) => void;
-}) {
-  const updateAParameter = (parameter: Parameter_Output) => {
-    setParameters(
-      runtime_parameters.map((p) => (p.name === parameter.name ? parameter : p))
-    );
-  };
-  const filteredParams = runtime_parameters.filter((parameter) => parameter.widget_id && parameter.is_runtime)
 
 
-  return (
-    <Flex direction="row" gap={0}>
-      {filteredParams.map((parameter) =>
-        renderNoCodeParameter(parameter, updateAParameter)
-      )}
-    </Flex>
-  );
-}
-
-
-
-
-export function NoCodeShow({ widget, setRuntimeParameters }: { widget: NoCodeWidgetOut, setRuntimeParameters: (parameters: Parameter_Output[]) => void }) {
+export function NoCodeShow({ widget }: { widget: NoCodeWidgetOut}) {
     const TheDisplay = MAP_TO_SHOW[widget.type]
+
 
     if (widget.result_type === "deferred") {
         return <div>Deferred</div>
     }
 
     return (
-        <Box>
-            <WidgetSpecificParmeters runtime_parameters={widget.parameters} setParameters={setRuntimeParameters} />
             <TheDisplay widget={widget}/>
-        </Box>
     )
 }
     
