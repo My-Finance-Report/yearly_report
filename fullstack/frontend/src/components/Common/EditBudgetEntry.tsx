@@ -409,7 +409,6 @@ function CategoryLinkSelector({
       </VStack>
       <SelectRoot
         id="category_links"
-        placeholder="Select a category"
         multiple
         size="sm"
         collection={createListCollection(categories)}

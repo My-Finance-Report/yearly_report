@@ -19,7 +19,7 @@ import useCustomToast from "../../hooks/useCustomToast"
 
 import type { UserRegister } from "@/client"
 import useAuth from "@/hooks/useAuth"
-import {  emailPattern, passwordRules } from "../../utils"
+import {  emailPattern } from "../../utils"
 
 export const Route = createFileRoute("/_layout/signup")({
   component: SignUp,
@@ -29,11 +29,12 @@ const confirmPasswordRules = (
   getValues: UseFormGetValues<UserRegisterForm>,
   isRequired = true,
 ) => {
-  const rules: RegisterOptions = {
+  const rules: RegisterOptions<UserRegisterForm, "confirm_password"> = {
     validate: (value: string) => {
-      const password = getValues().password || getValues().confirm_password
+      const password = getValues("password")
       return value === password ? true : "The passwords do not match"
     },
+    deps: ["password"],
   }
 
   if (isRequired) {
@@ -100,6 +101,12 @@ function SignUp() {
       console.error(error)
     }
   }
+
+const passwordRules = (): RegisterOptions<UserRegisterForm, "password"> => ({
+  required: "Password is required",
+  minLength: { value: 8, message: "Minimum 8 characters" },
+  deps: ["confirm_password"], 
+});
 
   return (
     <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">

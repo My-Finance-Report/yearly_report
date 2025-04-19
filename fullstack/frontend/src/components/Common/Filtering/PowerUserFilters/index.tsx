@@ -91,10 +91,10 @@ export function PowerUserButtons({
   );
 
   const { showAdvanced } = Route.useSearch()
-  const navigation = useNavigate();
+  const navigation = useNavigate({from: Route.fullPath});
   const handleShowAdvanced = () => {
     navigation({
-      search: (prev: Record<string, unknown>) => ({
+      search: (prev: typeof Route.useSearch) => ({
         ...prev,
         showAdvanced: true,
       }),
