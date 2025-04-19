@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { NoCodeShow } from "@/components/NoCode/Outputs/Show";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
 import { CollapsibleSchemaRoot } from "@/components/NoCode/Schema/Viewer";
 
@@ -10,6 +9,7 @@ import {
   NoCodeWidgetOut,
   NoCodeWidgetIn,
   WidgetType,
+  Parameter_Output,
 } from "@/client";
 import {
   Container,
@@ -32,49 +32,13 @@ import {
   Input,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
-import { BsPencilSquare } from "react-icons/bs";
+import { NoCodeEditCanvas } from "@/components/NoCode/Canvas";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
   component: NoCodeCanvasBuilder,
 });
 
-
-function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>> {
-  const rows: Array<Array<NoCodeWidgetOut>> = []
-  for (const widget of widgets) {
-    if (!rows[widget.row]) {
-      rows[widget.row] = [widget]
-    } else {
-      rows[widget.row].push(widget)
-    }
-  }
-  return rows.map(row => row.sort((a, b) => a.col - b.col))
-}
-
-function NoCodeCanvas({ widgets, setEditWidget }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void }) {
-
-  if (!widgets) {
-    return <div>No widgets found</div>
-  }
-
-  return (
-    <Container>
-      {orderWidgets(widgets).map((row) => (
-        <Flex key={row[0].row} direction="row" gap={2}>
-          {row.map((widget) => (
-            <Box>
-              <Button onClick={() => setEditWidget(widget)}>
-                <BsPencilSquare />
-              </Button>
-              <NoCodeShow key={widget.name} widget={widget} />
-            </Box>
-          ))}
-        </Flex>
-      ))}
-    </Container>
-  )
-}
 
 function NoCodeCanvasBuilder() {
   const [result, setResult] = useState<NoCodeWidgetOut[]>([]);
@@ -122,6 +86,9 @@ function NoCodeCanvasBuilder() {
   if (!fetchedTools) {
     return <div>Loading...</div>;
   }
+  const [runtimeParameters, setRuntimeParameters] = useState<Parameter_Output[]>([]);
+
+  console.log(runtimeParameters)
 
   return (
     <Container>
@@ -132,7 +99,7 @@ function NoCodeCanvasBuilder() {
       {editWidget &&
         <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      <NoCodeCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} />
+      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} setRuntimeParameters={setRuntimeParameters} />
     </Container>
   );
 }
@@ -341,14 +308,54 @@ function Node({
         Step {idx + 1}: {node.name}
       </Text>
       <Text>{node.description}</Text>
-      {node.parameters &&
-        node.parameters.map((param, paramIdx) => (
+{node.parameters &&
+  node.parameters.map((param, paramIdx) => {
+    switch (param.type) {
+      case "int":
+        return (
           <NoCodeParameter
             key={`${param.name}-${paramIdx}`}
-            parameter={param}
+            parameter={param as Extract<Parameter_Output, { type: "int" }>}
             onChange={(val) => onChange(val, paramIdx)}
           />
-        ))}
+        );
+      case "float":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "float" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "string":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "string" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "select":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "select" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      case "multi_select":
+        return (
+          <NoCodeParameter
+            key={`${param.name}-${paramIdx}`}
+            parameter={param as Extract<Parameter_Output, { type: "multi_select" }>}
+            onChange={(val) => onChange(val, paramIdx)}
+          />
+        );
+      default:
+        return null;
+    }
+  })}
+
       <CollapsibleSchemaRoot schema={node.input_type} />
       <CollapsibleSchemaRoot schema={node.return_type} />
     </Box>

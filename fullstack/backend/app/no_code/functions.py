@@ -3,13 +3,14 @@ from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Json
 
 from app.db import Session
 from app.models import TransactionSource, User
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
+    Parameter,
     PipelineStart,
     SelectOption,
 )
@@ -23,7 +24,7 @@ def make_account_choices(session: Session, user: User) -> list[SelectOption]:
         .filter(TransactionSource.user_id == user.id, ~TransactionSource.archived)
         .all()
     )
-    return [SelectOption(key=acct.id, value=acct.name) for acct in accts]
+    return [SelectOption(key=str(acct.id), value=acct.name) for acct in accts]
 
 
 def init_no_code() -> None:
@@ -31,17 +32,92 @@ def init_no_code() -> None:
     import app.no_code.transformations
 
 
-def convert_to_pipeline(tools: list[NoCodeToolIn]) -> list[partial[PipelineCallable]]:
+def figure_out_parameters(
+    parameter: Parameter,
+) -> (
+    str
+    | int
+    | float
+    | SelectOption
+    | list[str]
+    | list[SelectOption]
+    | list[Decimal]
+    | None
+):
+    if parameter.value is not None:
+        return parameter.value
+
+    if parameter.default_value is not None:
+        return parameter.default_value
+
+    if parameter.options:
+        return parameter.options[0]
+
+    return None
+
+
+def convert_to_pipeline(
+    tools: list[NoCodeToolIn],
+) -> list[partial[PipelineCallable]] | None:
     steps = []
     for tool in tools:
         func = get_tool_callable(tool.tool)
         if tool.parameters:
-            kwargs = {p.name: p.value for p in tool.parameters}
-            steps.append(partial(func, kwargs=kwargs))  # type: ignore [call-arg]
+            if not all(
+                figure_out_parameters(p) for p in tool.parameters
+            ):  # has bug doesnt allow None as param type
+                return None
+            else:
+                kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
+                steps.append(partial(func, **kwargs))
         else:
-            steps.append(partial(func, kwargs={}))  # type: ignore [call-arg]
+            steps.append(partial(func, **{}))
 
     return steps
+
+
+def extract_parameters_from_pipeline(tools: list[NoCodeToolIn]) -> list[Parameter]:
+    runtime_params = []
+    for tool in tools:
+        if tool.parameters:
+            runtime_params.extend([p for p in tool.parameters])
+    return runtime_params
+
+
+def enrich_with_runtime(
+    tools: list[NoCodeToolIn],
+    runtime_parameters: list[Parameter] | None = None,
+    widget_id: str | None = None,
+) -> list[NoCodeToolIn]:
+    widget_specific_params = (
+        {
+            param.name: param
+            for param in runtime_parameters
+            if param.widget_id is not None and param.widget_id == widget_id
+        }
+        if runtime_parameters
+        else {}
+    )
+
+    param_value_lookup = (
+        {param.name: param for param in runtime_parameters if param.widget_id is None}
+        if runtime_parameters
+        else {}
+    )
+    enriched = []
+    for tool in tools:
+        if tool.parameters:
+            for param in tool.parameters:
+                if param.is_runtime:
+                    if param.name in widget_specific_params:
+                        param.value = widget_specific_params[param.name].value
+                    else:
+                        the_param = param_value_lookup.get(param.name)
+                        if the_param:
+                            param.value = the_param.value
+
+        enriched.append(tool)
+    return enriched
 
 
 def serialize_to_result(obj: Any) -> Any:
@@ -61,8 +137,11 @@ def serialize_to_result(obj: Any) -> Any:
 
 
 def evaluate_pipeline(
-    steps: list[partial[PipelineCallable]], session: Session, user: User
-) -> Any:
+    steps: list[partial[PipelineCallable]] | None, session: Session, user: User
+) -> Any | None:
+    if not steps:
+        return None
+
     data = PipelineStart(user, session)
     for block in steps:
         data = block(data)  # type: ignore [assignment]

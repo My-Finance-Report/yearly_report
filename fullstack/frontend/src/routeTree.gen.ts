@@ -39,11 +39,11 @@ import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
-import { Route as LayoutLoggedinNoCodeDashboardImport } from './routes/_layout/_logged_in/no-code-dashboard'
 import { Route as LayoutLoggedinNoCodeImport } from './routes/_layout/_logged_in/no-code'
 import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
 import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
 import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
+import { Route as LayoutLoggedinAccountsImport } from './routes/_layout/_logged_in/accounts'
 
 // Create/Update Routes
 
@@ -221,13 +221,6 @@ const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
   getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
-const LayoutLoggedinNoCodeDashboardRoute =
-  LayoutLoggedinNoCodeDashboardImport.update({
-    id: '/no-code-dashboard',
-    path: '/no-code-dashboard',
-    getParentRoute: () => LayoutLoggedinRoute,
-  } as any)
-
 const LayoutLoggedinNoCodeRoute = LayoutLoggedinNoCodeImport.update({
   id: '/no-code',
   path: '/no-code',
@@ -250,6 +243,12 @@ const LayoutLoggedinBudgetRoute = LayoutLoggedinBudgetImport.update({
 const LayoutLoggedinAdminRoute = LayoutLoggedinAdminImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
+
+const LayoutLoggedinAccountsRoute = LayoutLoggedinAccountsImport.update({
+  id: '/accounts',
+  path: '/accounts',
   getParentRoute: () => LayoutLoggedinRoute,
 } as any)
 
@@ -390,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/_logged_in/accounts': {
+      id: '/_layout/_logged_in/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof LayoutLoggedinAccountsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/admin': {
       id: '/_layout/_logged_in/admin'
       path: '/admin'
@@ -416,13 +422,6 @@ declare module '@tanstack/react-router' {
       path: '/no-code'
       fullPath: '/no-code'
       preLoaderRoute: typeof LayoutLoggedinNoCodeImport
-      parentRoute: typeof LayoutLoggedinImport
-    }
-    '/_layout/_logged_in/no-code-dashboard': {
-      id: '/_layout/_logged_in/no-code-dashboard'
-      path: '/no-code-dashboard'
-      fullPath: '/no-code-dashboard'
-      preLoaderRoute: typeof LayoutLoggedinNoCodeDashboardImport
       parentRoute: typeof LayoutLoggedinImport
     }
     '/_layout/_logged_in/plaid': {
@@ -494,11 +493,11 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface LayoutLoggedinRouteChildren {
+  LayoutLoggedinAccountsRoute: typeof LayoutLoggedinAccountsRoute
   LayoutLoggedinAdminRoute: typeof LayoutLoggedinAdminRoute
   LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute
   LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute
   LayoutLoggedinNoCodeRoute: typeof LayoutLoggedinNoCodeRoute
-  LayoutLoggedinNoCodeDashboardRoute: typeof LayoutLoggedinNoCodeDashboardRoute
   LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute
   LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute
   LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute
@@ -511,11 +510,11 @@ interface LayoutLoggedinRouteChildren {
 }
 
 const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
+  LayoutLoggedinAccountsRoute: LayoutLoggedinAccountsRoute,
   LayoutLoggedinAdminRoute: LayoutLoggedinAdminRoute,
   LayoutLoggedinBudgetRoute: LayoutLoggedinBudgetRoute,
   LayoutLoggedinManageAccountsRoute: LayoutLoggedinManageAccountsRoute,
   LayoutLoggedinNoCodeRoute: LayoutLoggedinNoCodeRoute,
-  LayoutLoggedinNoCodeDashboardRoute: LayoutLoggedinNoCodeDashboardRoute,
   LayoutLoggedinPlaidRoute: LayoutLoggedinPlaidRoute,
   LayoutLoggedinSankeyConfigRoute: LayoutLoggedinSankeyConfigRoute,
   LayoutLoggedinSettingsRoute: LayoutLoggedinSettingsRoute,
@@ -596,11 +595,11 @@ export interface FileRoutesByFullPath {
   '/signup': typeof LayoutSignupRoute
   '/terms': typeof LayoutTermsRoute
   '/': typeof LayoutIndexRoute
+  '/accounts': typeof LayoutLoggedinAccountsRoute
   '/admin': typeof LayoutLoggedinAdminRoute
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/no-code': typeof LayoutLoggedinNoCodeRoute
-  '/no-code-dashboard': typeof LayoutLoggedinNoCodeDashboardRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
@@ -631,11 +630,11 @@ export interface FileRoutesByTo {
   '/signup': typeof LayoutSignupRoute
   '/terms': typeof LayoutTermsRoute
   '/': typeof LayoutIndexRoute
+  '/accounts': typeof LayoutLoggedinAccountsRoute
   '/admin': typeof LayoutLoggedinAdminRoute
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/no-code': typeof LayoutLoggedinNoCodeRoute
-  '/no-code-dashboard': typeof LayoutLoggedinNoCodeDashboardRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
@@ -668,11 +667,11 @@ export interface FileRoutesById {
   '/_layout/signup': typeof LayoutSignupRoute
   '/_layout/terms': typeof LayoutTermsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/_logged_in/accounts': typeof LayoutLoggedinAccountsRoute
   '/_layout/_logged_in/admin': typeof LayoutLoggedinAdminRoute
   '/_layout/_logged_in/budget': typeof LayoutLoggedinBudgetRoute
   '/_layout/_logged_in/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/_layout/_logged_in/no-code': typeof LayoutLoggedinNoCodeRoute
-  '/_layout/_logged_in/no-code-dashboard': typeof LayoutLoggedinNoCodeDashboardRoute
   '/_layout/_logged_in/plaid': typeof LayoutLoggedinPlaidRoute
   '/_layout/_logged_in/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/_layout/_logged_in/settings': typeof LayoutLoggedinSettingsRoute
@@ -705,11 +704,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms'
     | '/'
+    | '/accounts'
     | '/admin'
     | '/budget'
     | '/manage-accounts'
     | '/no-code'
-    | '/no-code-dashboard'
     | '/plaid'
     | '/sankey-config'
     | '/settings'
@@ -739,11 +738,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms'
     | '/'
+    | '/accounts'
     | '/admin'
     | '/budget'
     | '/manage-accounts'
     | '/no-code'
-    | '/no-code-dashboard'
     | '/plaid'
     | '/sankey-config'
     | '/settings'
@@ -774,11 +773,11 @@ export interface FileRouteTypes {
     | '/_layout/signup'
     | '/_layout/terms'
     | '/_layout/'
+    | '/_layout/_logged_in/accounts'
     | '/_layout/_logged_in/admin'
     | '/_layout/_logged_in/budget'
     | '/_layout/_logged_in/manage-accounts'
     | '/_layout/_logged_in/no-code'
-    | '/_layout/_logged_in/no-code-dashboard'
     | '/_layout/_logged_in/plaid'
     | '/_layout/_logged_in/sankey-config'
     | '/_layout/_logged_in/settings'
@@ -839,11 +838,11 @@ export const routeTree = rootRoute
       "filePath": "_layout/_logged_in.tsx",
       "parent": "/_layout",
       "children": [
+        "/_layout/_logged_in/accounts",
         "/_layout/_logged_in/admin",
         "/_layout/_logged_in/budget",
         "/_layout/_logged_in/manage-accounts",
         "/_layout/_logged_in/no-code",
-        "/_layout/_logged_in/no-code-dashboard",
         "/_layout/_logged_in/plaid",
         "/_layout/_logged_in/sankey-config",
         "/_layout/_logged_in/settings",
@@ -923,6 +922,10 @@ export const routeTree = rootRoute
       "filePath": "_layout/index.tsx",
       "parent": "/_layout"
     },
+    "/_layout/_logged_in/accounts": {
+      "filePath": "_layout/_logged_in/accounts.tsx",
+      "parent": "/_layout/_logged_in"
+    },
     "/_layout/_logged_in/admin": {
       "filePath": "_layout/_logged_in/admin.tsx",
       "parent": "/_layout/_logged_in"
@@ -937,10 +940,6 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/no-code": {
       "filePath": "_layout/_logged_in/no-code.tsx",
-      "parent": "/_layout/_logged_in"
-    },
-    "/_layout/_logged_in/no-code-dashboard": {
-      "filePath": "_layout/_logged_in/no-code-dashboard.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/plaid": {

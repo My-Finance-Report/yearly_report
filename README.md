@@ -39,13 +39,13 @@ big milestones before launch:
 
 -> worker should be a lambda
 
+-> TODO get delete to work on app
 
 -> need to update the how does this work page 
 
 -> would be nice to have some tests around user creation
 
 -> add a last active at time on the user model
-
 
 -> shareable report
 

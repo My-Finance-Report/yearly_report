@@ -2,7 +2,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from app.no_code.step import Kwargs
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 
@@ -18,29 +17,25 @@ class Arg:
     options_generator: Callable[[Session, User], list[SelectOption]] | None = None
 
 
-PipelineCallable = Callable[[Any, Kwargs], Any]
+PipelineCallable = Callable[..., Any]
 
 
 @dataclass
 class PipelineStep:
-    func: Callable[[Any, Kwargs], Any]
-    expected_args: list[Arg]
+    func: PipelineCallable
     return_type: Any
     passed_value: Any
 
 
 STEP_REGISTRY: dict[str, PipelineStep] = {}
 
-print(STEP_REGISTRY)
-
 
 def pipeline_step(
-    expected_kwargs: list[Arg], return_type: Any, passed_value: Any = None
+    return_type: Any, passed_value: Any = None
 ) -> Callable[[PipelineCallable], PipelineCallable]:
     def decorator(func: PipelineCallable) -> PipelineCallable:
         STEP_REGISTRY[func.__name__] = PipelineStep(
             func=func,
-            expected_args=expected_kwargs,
             return_type=return_type,
             passed_value=passed_value,
         )
@@ -64,7 +59,12 @@ def make_tools(
     session: Session,
     user: User,
 ) -> list[NoCodeTool]:
-    tools = []
+    tools: list[NoCodeTool] = []
+    return tools
+
+    # need to figure out some registry scheme for the parameters
+
+    """
     for name, tool in STEP_REGISTRY.items():
         tools.append(
             NoCodeTool(
@@ -87,3 +87,13 @@ def make_tools(
             )
         )
     return tools
+    """
+
+
+def get_no_code_tool(
+    session: Session,
+    user: User,
+    tool_name: str,
+) -> NoCodeTool:
+    lookup = {tool.name: tool for tool in make_tools(session, user)}
+    return lookup[tool_name]

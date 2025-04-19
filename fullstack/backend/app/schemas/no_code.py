@@ -1,3 +1,4 @@
+from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
@@ -6,14 +7,15 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from app.core.db import Session
-from app.models import TransactionId, User
+from app.models import TransactionId, TransactionKind, User
 
 
 class NoCodeTransaction(BaseModel):
     id: TransactionId | None
     amount: float
     description: str
-    date: str
+    date_of_transaction: datetime
+    kind: TransactionKind
     category_name: str
 
 
@@ -26,18 +28,41 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
+    MULTI_SELECT = "multi_select"
 
 
 class SelectOption(BaseModel):
-    key: int
+    key: str
     value: str
 
 
 class Parameter(BaseModel):
     name: str
+    label: str | None = None
     type: ParameterType
-    value: int | float | str | None = None
+    value: (
+        int
+        | float
+        | str
+        | SelectOption
+        | list[str]
+        | list[Decimal]
+        | list[SelectOption]
+        | None
+    ) = None
+    default_value: (
+        int
+        | float
+        | str
+        | SelectOption
+        | list[str]
+        | list[Decimal]
+        | list[SelectOption]
+        | None
+    ) = None
     options: list[SelectOption] | None = None
+    widget_id: str | None = None
+    is_runtime: bool = False
 
 
 @dataclass
@@ -75,24 +100,30 @@ class PipelineEnd:
 
 class WidgetType(str, enum.Enum):
     value = "value"
+    value_with_trend = "value_with_trend"
+    badge = "badge"
     list = "list"
     pie_chart = "pie_chart"
+    bar_chart = "bar_chart"
 
 
 Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
-ResultType = Scalar | Object | list[Scalar] | list[Object]
+ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object]
 
 
 class ResultTypeEnum(enum.Enum):
     string = "string"
     number = "number"
-    transactions = {"id": "number", "amount": "number", "description": "string"}
+    object_ = "object"
+    list_ = "list"
+    deferred = "deferred"
 
 
 class NoCodeToolIn(BaseModel):
     tool: str
     parameters: list[Parameter] | None = None
+    global_parameters: list[str] | None = None
 
 
 class NoCodeWidgetIn(BaseModel):
@@ -107,15 +138,23 @@ class NoCodeWidgetIn(BaseModel):
 
 
 class NoCodeWidgetOut(BaseModel):
+    id: str
     name: str
     description: str
-    result: ResultType
+    result: Any
     result_type: ResultTypeEnum
+    parameters: list[Parameter]
     row: int
     col: int
     height: int
     width: int
     type: WidgetType
+
+
+class NoCodeCanvas(BaseModel):
+    name: str
+    widgets: list[NoCodeWidgetOut]
+    global_parameters: list[Parameter]
 
 
 class NoCodeTool(BaseModel):

@@ -1,59 +1,115 @@
-import { Box, Text, Input } from "@chakra-ui/react";
-import { Parameter, ParameterType, SelectOption } from "@/client";
+import { Box, Text, Field, Input, Button,  Select } from "@chakra-ui/react";
+import { ParameterType, SelectOption } from "@/client";
 import {
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValueText,
+  Portal,
   createListCollection,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import { JSX } from "react";
 
-export interface ParameterProps {
-  parameter: Parameter;
-  onChange: (value: string | number) => void;
+
+export interface ParameterBase {
+  name: string;
+  label?: string;
+  description?: string;
+  type: ParameterType;
+  value?: unknown;
+  default_value?: unknown;
+  options?: SelectOption[];
 }
 
-const MAP_TO_PARAMETER: Record<
-  ParameterType,
-  (props: ParameterProps) => JSX.Element
-> = {
+export interface IntParameter extends ParameterBase {
+  type: "int";
+  value?: number;
+  default_value?: number;
+}
+
+export interface FloatParameter extends ParameterBase {
+  type: "float";
+  value?: number;
+  default_value?: number;
+}
+export interface StringParameter extends ParameterBase {
+  type: "string";
+  value?: string;
+  default_value?: string;
+}
+export interface SelectParameter extends ParameterBase {
+  type: "select";
+  value?: SelectOption;
+  default_value?: SelectOption;
+  options: SelectOption[];
+}
+
+export interface MultiSelectParameter extends ParameterBase {
+  type: "multi_select";
+  value?: SelectOption[];
+  default_value?: SelectOption[];
+  options: SelectOption[];
+}
+
+export type Parameter_Output =
+  | IntParameter
+  | FloatParameter
+  | StringParameter
+  | SelectParameter
+  | MultiSelectParameter;
+
+type ParameterValueType<T extends ParameterType> =
+  T extends "int" | "float" ? number :
+  T extends "string" ? string :
+  T extends "select" ? SelectOption :
+  T extends "multi_select" ? SelectOption[] :
+  never;
+
+type ParameterProps<T extends ParameterType> = {
+    parameter: Extract<Parameter_Output, { type: T }>;
+    onChange: (value: ParameterValueType<T>) => void;
+  };
+
+const MAP_TO_PARAMETER = {
   int: IntParameter,
-  string: StrParameter,
   float: FloatParameter,
+  string: StrParameter,
   select: SelectParameter,
-};
+  multi_select: MultiSelectParameter,
+} as const;
 
-function IntParameter({ parameter, onChange }: ParameterProps) {
+type ParameterComponent<T extends ParameterType> = (
+  props: ParameterProps<T>
+) => JSX.Element;
+
+const MAP_TO_PARAMETER_TYPED: {
+  [K in ParameterType]: ParameterComponent<K>;
+} = MAP_TO_PARAMETER;
+
+
+
+function IntParameter({ parameter, onChange }: ParameterProps<"int">) {
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.valueAsNumber);
   return (
-    <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <Input type="number" value={parameter.value || ""} onChange={wrappedChange} />
-    </Box>
+      <Input maxW="100px" variant='subtle' size="sm" type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
   );
 }
 
-function FloatParameter({ parameter, onChange }: ParameterProps) {
+function FloatParameter({ parameter, onChange }: ParameterProps<"float">) {
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.valueAsNumber);
   return (
-    <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <Input type="number" value={parameter.value || ""} onChange={wrappedChange} />
-    </Box>
+      <Input type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
   );
 }
 
-function StrParameter({ parameter, onChange }: ParameterProps) {
+function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
+  const [val, setVal] = useState("")
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
+    setVal(e.target.value)
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.name}</Text>
-      <Input type="text" value={parameter.value || ""} onChange={wrappedChange} />
+      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
+      <Input type="text" value={val} onChange={wrappedChange} />
+      <Button onClick={() => onChange(val)}>Submit</Button>
     </Box>
   );
 }
@@ -66,7 +122,52 @@ function rawSelectOptionsToSelectItems(options: SelectOption[]) {
   return { items: blahs };
 }
 
-function SelectParameter({ parameter, onChange }: ParameterProps) {
+function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
+
+  if (!parameter.options) {
+    throw new Error("parameter options missing");
+  }
+
+  const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
+
+ return (
+    <Select.Root
+      collection={createListCollection(formattedOptions)}
+      variant='subtle'
+      size="sm"
+      maxW="250px"
+      onValueChange={(val) => {
+          onChange(parameter.options.find((option: SelectOption) => option.key === val.value[0])!);
+        }}
+      defaultValue={parameter.default_value ? [parameter.default_value.key] : []}
+    >
+      <Select.HiddenSelect />
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder={parameter.label || parameter.name} />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+      <Portal>
+        <Select.Positioner>
+          <Select.Content>
+            {formattedOptions.items.map((option) => (
+              <Select.Item item={option} key={option.value}>
+                <Select.ItemText>{option.label}</Select.ItemText>
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+      </Portal>
+    </Select.Root>
+  )
+}
+
+
+function MultiSelectParameter({ parameter, onChange }: ParameterProps<"multi_select">) {
 
   if (!parameter.options) {
     throw new Error("parameter options missing");
@@ -75,34 +176,54 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
   return (
-    <Box>
-      <SelectRoot
-        collection={createListCollection(formattedOptions)}
-        onValueChange={(val) => {
-          console.log(val)
-          onChange(val.value[0]);
+    <Select.Root
+      size="sm"
+      width={'auto'}
+      defaultValue={parameter.default_value?.map((v) => v.key) || []}
+      collection={createListCollection(formattedOptions)}
+      onValueChange={(val) => {
+          onChange(val.value.map((v) => parameter.options.find((option: SelectOption) => option.key === v)!));
         }}
-      >
-        <SelectTrigger>
-          <SelectValueText placeholder="Select a kind" />
-        </SelectTrigger>
-        <SelectContent>
-          {formattedOptions.items.map((kind) => (
-            <SelectItem key={kind.value} item={kind}>
-              {kind.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectRoot>
-    </Box>
-  );
+    >
+      <Select.HiddenSelect />
+      <Select.Control>
+        <Select.Trigger>
+          <Select.ValueText placeholder={parameter.label || parameter.name} />
+        </Select.Trigger>
+        <Select.IndicatorGroup>
+          <Select.Indicator />
+        </Select.IndicatorGroup>
+      </Select.Control>
+      <Portal>
+        <Select.Positioner>
+          <Select.Content>
+            {formattedOptions.items.map((option) => (
+              <Select.Item item={option} key={option.value}>
+                <Select.ItemText>{option.label}</Select.ItemText>
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Positioner>
+      </Portal>
+    </Select.Root>
+  )
+
 }
 
-export function NoCodeParameter({ parameter, onChange }: ParameterProps) {
-  const TheInput = MAP_TO_PARAMETER[parameter.type];
+
+export function NoCodeParameter<T extends ParameterType>({
+  parameter,
+  onChange,
+}: ParameterProps<T>) {
+  const TheInput = MAP_TO_PARAMETER_TYPED[parameter.type] as ParameterComponent<T>;
   return (
-    <Box mt={2}>
+    <Field.Root>
+      <Field.Label>
+        {parameter.label || parameter.name}
+      </Field.Label>
       <TheInput parameter={parameter} onChange={onChange} />
-    </Box>
+      <Field.HelperText>{parameter.description}</Field.HelperText>
+    </Field.Root>
   );
 }

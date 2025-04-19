@@ -29,6 +29,7 @@ class PlaidAccountBase(BaseModel):
     mask: str | None = None
     type: str
     subtype: str | None = None
+    current_balance: float | None = None  # Latest fetched balance
 
 
 class PlaidAccount(PlaidAccountBase):
@@ -39,6 +40,7 @@ class PlaidAccount(PlaidAccountBase):
     plaid_item_id: str
     access_token: str
     created_at: datetime
+    current_balance: float | None = None
 
     class Config:
         orm_mode = True
@@ -49,6 +51,7 @@ class PlaidAccountResponse(PlaidAccountBase):
 
     id: int
     created_at: datetime
+    current_balance: float | None = None
 
     class Config:
         orm_mode = True

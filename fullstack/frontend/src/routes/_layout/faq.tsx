@@ -49,7 +49,7 @@ export function FAQPage() {
             Can I use this without connecting my bank directly?
           </Heading>
           <Text>
-            Yes, we allow direct upload of bank statements if you just want to
+            Yes, we allow upload of bank statements if you just want to
             track your expenses month over month. Some features will not be
             supported, such as net worth tracking, but the transaction
             visualization, reports and budgeting will still work.
@@ -69,7 +69,8 @@ export function FAQPage() {
             >
               here
             </Link>
-            ). If you want to self-host, you're welcome to do that.
+            ). If you want to self-host, you're welcome to do that. It's very actively developed, but i'd be more than 
+            happy to help you stand it up.
           </Text>
         </Box>
       </VStack>
