@@ -25,7 +25,7 @@ from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
     passed_value=None,
 )
 def first_n_transactions(
-    data: PipelineStart, n: int, account_id: SelectOption
+    data: PipelineStart, n: SelectOption, account_id: SelectOption | None
 ) -> list[NoCodeTransaction]:
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
@@ -39,7 +39,7 @@ def first_n_transactions(
     txs = (
         txs.filter(Transaction.user_id == data.user.id)
         .order_by(Transaction.date_of_transaction.desc())
-        .limit(n)
+        .limit(int(n.key))
     )
 
     return [
@@ -177,6 +177,68 @@ def account_balance(
             color="orange",
         ),
     )
+
+@pipeline_step(
+    return_type=ResultWithTrend | None,
+    passed_value=None,
+)
+def all_account_balances(
+    data: PipelineStart
+) -> ResultWithTrend | None:
+    # select all plaid accounts for the user
+    plaid_accounts = (
+        data.session.query(PlaidAccount)
+        .filter(PlaidAccount.user_id == data.user.id)
+        .all()
+    )
+    if not plaid_accounts:
+        return None
+
+    # pull 10 records of balance for every account the user has
+    plaid_account_balances = defaultdict(list)
+    for account in plaid_accounts:
+        plaid_account_balances[account.id] = (
+            data.session.query(PlaidAccountBalance)
+            .filter(PlaidAccountBalance.plaid_account_id == account.id)
+            .order_by(PlaidAccountBalance.timestamp.desc())
+            .limit(10)
+            .all()
+        )
+
+    # total the most recent entry from each account
+    net_worth = Decimal(0)
+    all_transactions = []
+    for account, balance_entries in plaid_account_balances.items():
+        if not balance_entries:
+            continue
+        net_worth += Decimal(balance_entries[0].balance)
+        all_transactions.extend(balance_entries)
+    
+    # sort the transactions by timestamp
+    all_transactions.sort(key=lambda x: x.timestamp)
+
+    # some function to track net worth over time across all accounts?
+
+    latest_balances = defaultdict(lambda: Decimal())
+    net_worth_history = []
+    for update in all_transactions:
+        latest_balances[update.plaid_account_id] = Decimal(update.balance)
+        # Net worth at this timestamp is the sum of all latest balances
+        net_worth = sum(latest_balances.values())
+        net_worth_history.append((update.timestamp, net_worth))
+
+    
+   
+    return ResultWithTrend(
+        result=round(Decimal(net_worth), 2),
+        unit=Unit.DOLLAR,
+        trend_data=TrendData(
+            values=[TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history],
+            color="orange",
+        ),
+    )
+
+
 
 
 @pipeline_step(

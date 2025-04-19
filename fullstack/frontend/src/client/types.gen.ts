@@ -215,7 +215,6 @@ export type NoCodeTool = {
 export type NoCodeToolIn = {
     tool: string;
     parameters?: (Array<Parameter_Input> | null);
-    global_parameters?: (Array<(string)> | null);
 };
 
 export type NoCodeWidgetIn = {
@@ -238,8 +237,8 @@ export type NoCodeWidgetOut = {
     parameters: Array<Parameter_Output>;
     row: number;
     col: number;
-    height: number;
-    width: number;
+    row_span: number;
+    col_span: number;
     type: WidgetType;
 };
 
@@ -333,6 +332,13 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -788,6 +794,19 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 

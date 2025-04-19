@@ -123,7 +123,6 @@ class ResultTypeEnum(enum.Enum):
 class NoCodeToolIn(BaseModel):
     tool: str
     parameters: list[Parameter] | None = None
-    global_parameters: list[str] | None = None
 
 
 class NoCodeWidgetIn(BaseModel):
@@ -146,8 +145,8 @@ class NoCodeWidgetOut(BaseModel):
     parameters: list[Parameter]
     row: int
     col: int
-    height: int
-    width: int
+    row_span: int
+    col_span: int
     type: WidgetType
 
 

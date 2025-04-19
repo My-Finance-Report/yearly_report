@@ -4,8 +4,10 @@ import {
   Parameter_Output,
 } from "@/client";
 import {
-  Container,
   Button,
+  Grid,
+  GridItem,
+  Container,
   Box,
   Flex,
 } from "@chakra-ui/react";
@@ -76,19 +78,28 @@ export function NoCodeDisplayCanvas({ widgets, globalParameters, setParameters }
     if (!widgets) {
       return <div>No widgets found</div>
     }
+    console.log(widgets)
 
     return (
       <Container>
         <GlobalParameters runtime_parameters={globalParameters} setParameters={setParameters} />
-        <Flex direction="column" gap={2}>
-        {orderWidgets(widgets).map((row) => (
-          <Flex key={row[0].row} direction="row" gap={2} alignItems={"end"}>
-            {row.map((widget) => (
-                <NoCodeShow key={widget.name} widget={widget} setRuntimeParameters={setParameters} />
-            ))}
-          </Flex>
+      <Grid
+        templateRows={`repeat(36, 1fr)`}
+        templateColumns={`repeat(12, 1fr)`}
+        gap={4}
+      >
+        {widgets.map(widget => (
+          <GridItem
+            key={widget.id || widget.name}
+            rowStart={widget.row}
+            colStart={widget.col}
+            rowSpan={widget.row_span}
+            colSpan={widget.col_span}
+          >
+            <NoCodeShow widget={widget} setRuntimeParameters={setParameters} />
+          </GridItem>
         ))}
-</Flex>
+      </Grid>
       </Container>
     )
   }

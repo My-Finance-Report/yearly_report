@@ -83,13 +83,8 @@ def convert_to_callable_pipeline(
     for tool in tools:
         func = get_tool_callable(tool.tool)
         if tool.parameters:
-            if not all(
-                figure_out_parameters(p) for p in tool.parameters
-            ):  # has bug doesnt allow None as param type
-                return None
-            else:
-                kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
-                steps.append(partial(func, **kwargs))
+            kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
+            steps.append(partial(func, **kwargs))
         else:
             steps.append(partial(func, **{}))
 
@@ -119,7 +114,6 @@ def enrich_tools_with_runtime_parameters(
         else {}
     )
 
-    print("widget specific params", widget_specific_params)
 
     param_value_lookup = (
         {param.name: param for param in runtime_parameters if param.widget_id is None}
