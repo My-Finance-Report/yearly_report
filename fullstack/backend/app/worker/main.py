@@ -224,13 +224,12 @@ def handle_plaid() -> None:
 def worker() -> None:
     iterations = 0
 
-    handle_plaid()
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
             process_next_jobs(session)
         time.sleep(POLL_INTERVAL)
-        if iterations % 60 == 0:
+        if iterations % 6 == 0:
             iterations = 0
             handle_plaid()
         iterations += 1
