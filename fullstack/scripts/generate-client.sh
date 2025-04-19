@@ -8,4 +8,5 @@ python3 -c "import app.main; import json; print(json.dumps(app.main.app.openapi(
 cd ..
 mv openapi.json frontend/
 cd frontend
+tail -n +2 openapi.json > openapi.json
 npm run generate-client
