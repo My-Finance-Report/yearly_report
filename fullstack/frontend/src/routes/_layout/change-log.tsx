@@ -10,6 +10,14 @@ const changes = [
     date: "2025-04-07",
     changes: ["Added support for two-factor authentication", "Updated FAQ"],
   },
+  {
+    date: "2025-04-13",
+    changes: ["Added a background task status widget on the landing page and navbar to make it more clear when data is being processed"],
+  },
+  {
+    date: "2025-04-15",
+    changes: ["Added support for saved filters on the landing page"],
+  },
 ]
 
 export function ChangeLogPage() {
