@@ -73,7 +73,7 @@ export function ShowCardWithSparkline({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as { result: number|null, unit: string, trend_data: { values: { value: number }[], color: string } };
   if (!result.result) {
   return (
-    <Card.Root minW="250px" size="lg" overflow="hidden">
+    <Card.Root minW="250px" minH="200px" size="lg" overflow="hidden">
       <Card.Body>
         <Stat.Root>
           <Stat.Label>
@@ -88,9 +88,9 @@ export function ShowCardWithSparkline({ widget }: { widget: NoCodeWidgetOut }) {
     </Card.Root>
   )
   }
-    
+   
  return (
-    <Card.Root minW="250px" size="lg" overflow="hidden">
+    <Card.Root minW="250px" minH="200px" size="lg" overflow="hidden">
       <Card.Body>
         <Stat.Root>
           <Stat.Label>
@@ -105,7 +105,6 @@ export function ShowCardWithSparkline({ widget }: { widget: NoCodeWidgetOut }) {
     </Card.Root>
   )
 }
-
 
 
 const SparkLine = ({ data }: { data: { values: { value: number }[], color: string } }) => {
@@ -123,7 +122,7 @@ const SparkLine = ({ data }: { data: { values: { value: number }[], color: strin
         {chart.series.map((item) => (
           <Area
             key={item.name}
-            isAnimationActive={false}
+            isAnimationActive={true}
             dataKey={chart.key(item.name)}
             fill={chart.color(item.color)}
             fillOpacity={0.2}

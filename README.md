@@ -40,6 +40,7 @@ big milestones before launch:
 -> worker should be a lambda
 
 -> TODO get delete to work on app
+--> make sure we remove plaid items so we dont get charged
 
 -> need to update the how does this work page 
 

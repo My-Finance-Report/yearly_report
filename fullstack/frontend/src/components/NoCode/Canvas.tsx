@@ -78,7 +78,7 @@ export function NoCodeDisplayCanvas({ widgets, globalParameters, setParameters }
     if (!widgets) {
       return <div>No widgets found</div>
     }
-    console.log(widgets)
+
 
     return (
       <Container>

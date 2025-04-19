@@ -63,7 +63,7 @@ def most_recent_n(widget_id: str | None = None) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=SelectOption(key="7", value="7"),
+                default_value=SelectOption(key="14", value="14"),
                 widget_id=widget_id,
                 is_runtime=False,
             ),
@@ -110,7 +110,7 @@ def _generate_all_transactions_widget(
         parameters=response.parameters,
         result_type=response.result_type,
         result=response.result,
-        name="Most Recent Transactions",
+        name="",
         description="Most recent transactions across all account",
         row=row,
         col=col,
@@ -402,6 +402,36 @@ def _generate_list_widget(
         type=WidgetType.list,
     )
 
+def _generate_pie_widget(
+    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+) -> NoCodeWidgetOut:
+    widget_id = "selkgnwbkjnsdfnvgsebkbbb"
+
+    pipeline = [
+        NoCodeToolIn(
+            tool="total_amount_per_category",
+        ),
+    ]
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
+
+
+    return NoCodeWidgetOut(
+        id=widget_id,
+        result_type=response.result_type,
+        result=response.result,
+        name="Amount / Category",
+        description="Pie chart of transactions per category",
+        row=row,
+        col=col,
+        row_span=row_span,
+        col_span=col_span,
+        type=WidgetType.pie_chart,
+        parameters=response.parameters,
+    )
+
+
+
+
 
 def _generate_bar_chart_widget(
     session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
@@ -467,17 +497,17 @@ def generate_account_page(
         callable(session, user, runtime_parameters)
         for callable in [
 
-            partial(_generate_net_worth_widget, row=1,col=1, row_span=3, col_span=3),
-            partial(_generate_net_worth_widget, row=4,col=1, row_span=3, col_span=3), 
-            partial(_generate_all_transactions_widget, row=1,col=4, row_span=8, col_span=9),
-            partial(_generate_name_widget, row=7,col=0, row_span=1, col_span=3),
-            partial(_generate_plaid_badge_widget, row=7,col=4, row_span=1, col_span=1),
-            partial(_generate_sync_status_widget, row=7,col=5, row_span=1, col_span=1),
-            partial(_generate_balance_widget, row=8, col=1, row_span=3, col_span=4),
-            partial(_generate_interest_widget, row=8,col=5, row_span=3, col_span=4),
-            partial(_generate_throughput_widget, row=8, col=9, row_span=3, col_span=4),
-            partial(_generate_bar_chart_widget, row=11,col=1, row_span=5, col_span=12),
-            partial(_generate_list_widget, row=16,col=1, row_span=12, col_span=12),
+            partial(_generate_net_worth_widget, row=1,col=1, row_span=2, col_span=3),
+            partial(_generate_pie_widget, row=3,col=1, row_span=3, col_span=3), 
+            partial(_generate_all_transactions_widget, row=1,col=4, row_span=5, col_span=9),
+            partial(_generate_name_widget, row=6,col=0, row_span=1, col_span=3),
+            partial(_generate_plaid_badge_widget, row=6,col=4, row_span=1, col_span=1),
+            partial(_generate_sync_status_widget, row=6,col=5, row_span=1, col_span=1),
+            partial(_generate_balance_widget, row=7, col=1, row_span=2, col_span=4),
+            partial(_generate_interest_widget, row=7,col=5, row_span=2, col_span=4),
+            partial(_generate_throughput_widget, row=7, col=9, row_span=2, col_span=4),
+            partial(_generate_bar_chart_widget, row=9,col=1, row_span=3, col_span=12),
+            partial(_generate_list_widget, row=12,col=1, row_span=8, col_span=12),
         ]
     ]
     widgets = []

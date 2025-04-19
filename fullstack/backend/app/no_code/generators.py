@@ -3,9 +3,9 @@ from datetime import timedelta, datetime
 import random
 import enum
 from decimal import Decimal
-from typing import cast
 
 from pydantic import BaseModel
+from sqlalchemy import func
 
 from app.models import (
     Category,
@@ -18,6 +18,33 @@ from app.models import (
 )
 from app.no_code.decoration import pipeline_step
 from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
+from app.no_code.transformations import KeyValuePair
+
+@pipeline_step(
+    return_type=list[KeyValuePair],
+    passed_value=None,
+)
+def total_amount_per_category(
+    data: PipelineStart
+) -> list[KeyValuePair]:
+    txs = data.session.query(func.sum(Transaction.amount), Category.name).join(
+        Category, Transaction.category_id == Category.id
+    )
+    txs = (
+        txs.filter(Transaction.user_id == data.user.id)
+        .group_by(Category.name)
+    )
+
+    return [
+        KeyValuePair(
+            key=cat,
+            value=Decimal(amount)
+        )
+        for amount, cat in txs.all()
+    ]
+
+
+
 
 
 @pipeline_step(
