@@ -1,7 +1,6 @@
 import { defineConfig } from "@hey-api/openapi-ts"
 
 export default defineConfig({
-  client: "legacy/axios",
   input: "./openapi.json",
   output: "./src/client",
   // exportSchemas: true,
@@ -11,6 +10,7 @@ export default defineConfig({
       // NOTE: this doesn't allow tree-shaking
       asClass: true,
       operationId: true,
+      client: "@hey-api/client-axios",
       methodNameBuilder: (operation) => {
         // @ts-expect-error im not really sure
         let name: string = operation.name
