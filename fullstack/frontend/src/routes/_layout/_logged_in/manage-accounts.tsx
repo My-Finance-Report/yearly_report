@@ -84,7 +84,6 @@ function ManageAccounts() {
           <Box mb={6}>
             <SelectRoot
               id="account_selector"
-              placeholder="Select an account"
               size="lg"
               collection={createListCollection({
                 items: accounts.map((account, index) => ({

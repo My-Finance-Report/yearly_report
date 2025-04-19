@@ -120,7 +120,7 @@ class StripeService:
         customer_id = StripeService.create_customer(db, user)
 
         # Create subscription in Stripe
-        stripe_subscription = stripe.Subscription.create(
+        stripe_subscription: stripe.Subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": price.stripe_price_id}],
             expand=["latest_invoice.payment_intent"],
@@ -139,10 +139,10 @@ class StripeService:
                 price_id=cast(PriceId, price_id),
                 status=SubscriptionStatus(stripe_subscription.status),
                 current_period_start=datetime.fromtimestamp(
-                    stripe_subscription.current_period_start, tz=timezone.utc
+                    stripe_subscription["current_period_start"], tz=timezone.utc
                 ),
                 current_period_end=datetime.fromtimestamp(
-                    stripe_subscription.current_period_end, tz=timezone.utc
+                    stripe_subscription["current_period_end"], tz=timezone.utc
                 ),
                 cancel_at_period_end=stripe_subscription.cancel_at_period_end,
             )
@@ -152,10 +152,10 @@ class StripeService:
             subscription.price_id = cast(PriceId, price_id)
             subscription.status = SubscriptionStatus(stripe_subscription.status)
             subscription.current_period_start = datetime.fromtimestamp(
-                stripe_subscription.current_period_start, tz=timezone.utc
+                stripe_subscription["current_period_start"], tz=timezone.utc
             )
             subscription.current_period_end = datetime.fromtimestamp(
-                stripe_subscription.current_period_end, tz=timezone.utc
+                stripe_subscription["current_period_end"], tz=timezone.utc
             )
             subscription.cancel_at_period_end = stripe_subscription.cancel_at_period_end
 
@@ -283,10 +283,10 @@ class StripeService:
                 stripe_customer_id=session.get("customer"),
                 status=SubscriptionStatus(stripe_subscription.status),
                 current_period_start=datetime.fromtimestamp(
-                    stripe_subscription.current_period_start, tz=timezone.utc
+                    stripe_subscription["current_period_start"], tz=timezone.utc
                 ),
                 current_period_end=datetime.fromtimestamp(
-                    stripe_subscription.current_period_end, tz=timezone.utc
+                    stripe_subscription["current_period_end"], tz=timezone.utc
                 ),
                 cancel_at_period_end=stripe_subscription.cancel_at_period_end,
             )
@@ -297,10 +297,10 @@ class StripeService:
             subscription.price_id = cast(PriceId, price_id)
             subscription.status = SubscriptionStatus(stripe_subscription.status)
             subscription.current_period_start = datetime.fromtimestamp(
-                stripe_subscription.current_period_start, tz=timezone.utc
+                stripe_subscription["current_period_start"], tz=timezone.utc
             )
             subscription.current_period_end = datetime.fromtimestamp(
-                stripe_subscription.current_period_end, tz=timezone.utc
+                stripe_subscription["current_period_end"], tz=timezone.utc
             )
             subscription.cancel_at_period_end = stripe_subscription.cancel_at_period_end
 

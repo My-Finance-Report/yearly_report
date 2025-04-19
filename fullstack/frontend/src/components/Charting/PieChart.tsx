@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/chart"
 import { useColorPalette } from "@/hooks/useColor"
 import { Box } from "@chakra-ui/react"
-import { useState } from "react"
+import { JSX, useState } from "react"
 import type { TooltipProps } from "recharts"
 import { Desc } from "./SankeyChart"
 

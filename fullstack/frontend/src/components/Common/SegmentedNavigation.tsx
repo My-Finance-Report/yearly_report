@@ -214,7 +214,7 @@ export function SegmentedNavigation() {
                 ),
               }))}
               onValueChange={(newValue) => {
-                navigate({ to: newValue.value })
+                navigate({ to: newValue.value ? newValue.value : "/transactions" })
               }}
             />
             <Flex direction={"row"} justifyContent={"center"} gap={3}>

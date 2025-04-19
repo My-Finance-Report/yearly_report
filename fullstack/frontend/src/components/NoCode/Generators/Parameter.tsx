@@ -8,6 +8,7 @@ import {
   SelectValueText,
   createListCollection,
 } from "@chakra-ui/react";
+import { JSX } from "react";
 
 export interface ParameterProps {
   parameter: Parameter;
@@ -76,7 +77,6 @@ function SelectParameter({ parameter, onChange }: ParameterProps) {
   return (
     <Box>
       <SelectRoot
-        placeholder={parameter.name}
         collection={createListCollection(formattedOptions)}
         onValueChange={(val) => {
           console.log(val)

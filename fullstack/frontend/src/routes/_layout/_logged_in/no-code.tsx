@@ -219,7 +219,6 @@ function NoCodeWidgetBuilder({ setWidgets, setEditWidget, widgetIn, tools }: { s
 
         <Text>Widget Kind</Text>
         <SelectRoot
-          placeholder={widget.type}
           collection={createListCollection(formattedOptions)}
           onValueChange={(val) => {
             setWidget((prev) => ({ ...prev, type: val.value[0] as WidgetType }));
