@@ -1,5 +1,3 @@
-"use client"
-
 import { Box, Button, Container, Field, Heading, Input } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
@@ -12,7 +10,7 @@ import {
   type UsersUpdatePasswordMeData,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
-import {  handleError, passwordRules } from "../../utils"
+import {  handleError } from "../../utils"
 
 interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
   old_password: string
@@ -24,11 +22,12 @@ const confirmPasswordRules = (
   getValues: UseFormGetValues<UpdatePasswordForm>,
   isRequired = true,
 ) => {
-  const rules: RegisterOptions = {
+  const rules: RegisterOptions<UpdatePasswordForm, "confirm_password"> = {
     validate: (value: string) => {
-      const password = getValues().old_password || getValues().new_password
+      const password = getValues("old_password") || getValues("new_password")
       return value === password ? true : "The passwords do not match"
     },
+    deps: ["old_password", "new_password"],
   }
 
   if (isRequired) {
@@ -69,6 +68,12 @@ const ChangePassword = () => {
   const onSubmit: SubmitHandler<UpdatePasswordForm> = async (data) => {
     mutation.mutate(data)
   }
+
+  const passwordRules = (): RegisterOptions<UpdatePasswordForm, "new_password"> => ({
+    required: "Password is required",
+    minLength: { value: 8, message: "Minimum 8 characters" },
+    deps: ["confirm_password"],
+  });
 
   return (
     <Container maxW="full">

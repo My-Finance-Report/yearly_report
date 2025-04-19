@@ -1,4 +1,3 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -23,6 +22,7 @@ import type {
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client"
 import EditTransaction from "./EditTransaction"
+import { FaChevronDown, FaChevronRight } from "react-icons/fa"
 
 export function TransactionsTable({
   data,
@@ -165,7 +165,7 @@ function RenderGroups({
               onClick={() => toggleGroup(group.group_id, groupKey)}
             >
               <TableCell>
-                {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
               </TableCell>
               <TableCell>
                 <HStack>

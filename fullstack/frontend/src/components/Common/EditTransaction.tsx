@@ -25,6 +25,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog"
+
 import {
   type ApiError,
   type CategoryOut,
@@ -182,7 +183,6 @@ const EditTransaction = ({
                 return (
                   <SelectRoot
                     id="kind"
-                    placeholder="Withdrawal / Deposit"
                     defaultValue={[
                       kinds.items.find(
                         (kind) => kind.value === transaction.kind,
@@ -238,7 +238,6 @@ const EditTransaction = ({
                 return (
                   <SelectRoot
                     id="category_id"
-                    placeholder="Select a category"
                     value={[
                       categories.items.find((cat) => cat.value === value)
                         ?.value as unknown as string,

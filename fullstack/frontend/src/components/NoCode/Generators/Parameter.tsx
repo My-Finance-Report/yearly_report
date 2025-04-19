@@ -5,6 +5,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { JSX } from "react";
 
 
 export interface ParameterBase {

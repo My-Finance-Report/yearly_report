@@ -58,7 +58,7 @@ export function FilterProvider({
 
   const [currentFilter, setCurrentFilter] = useState<SavedFilterOut>(savedFilters[0])
 
-  const navigate = useNavigate()
+  const navigate = useNavigate({from: Route.fullPath})
 
   useEffect(() => {
     if (currentFilter) {

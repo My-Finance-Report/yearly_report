@@ -45,7 +45,7 @@ echo "✅ Branch check passed. Proceeding with deployment..."
 
 # Run deploy checks and verify no changes were made
 echo "🔍 Running pre-deploy checks..."
-# bin/regen
+bin/regen
 bin/check_for_deploy
 
 # Check if deploy checks created any changes

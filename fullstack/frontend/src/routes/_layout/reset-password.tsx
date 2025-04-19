@@ -15,7 +15,7 @@ import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "
 import { type ApiError, LoginService, type NewPassword } from "@/client"
 import { isSessionActive } from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { handleError, passwordRules } from "../../utils"
+import { handleError } from "../../utils"
 
 interface NewPasswordForm extends NewPassword {
   confirm_password: string
@@ -25,11 +25,12 @@ const confirmPasswordRules = (
   getValues: UseFormGetValues<NewPasswordForm>,
   isRequired = true,
 ) => {
-  const rules: RegisterOptions = {
+  const rules: RegisterOptions<NewPasswordForm, "confirm_password"> = {
     validate: (value: string) => {
-      const password = getValues().new_password || getValues().confirm_password
+      const password = getValues("new_password")
       return value === password ? true : "The passwords do not match"
     },
+    deps: ["new_password"],
   }
 
   if (isRequired) {
@@ -66,6 +67,12 @@ function ResetPassword() {
   })
   const showToast = useCustomToast()
   const navigate = useNavigate()
+
+  const passwordRules = (): RegisterOptions<NewPasswordForm, "new_password"> => ({
+    required: "Password is required",
+    minLength: { value: 8, message: "Minimum 8 characters" },
+    deps: ["confirm_password"], 
+  });
 
   const resetPassword = async (data: NewPassword) => {
     const token = new URLSearchParams(window.location.search).get("token")

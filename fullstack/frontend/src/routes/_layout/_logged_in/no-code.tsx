@@ -32,8 +32,8 @@ import {
   Input,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { NoCodeEditCanvas } from "@/components/NoCode/Canvas";
+import { FaPlus, FaTrash } from "react-icons/fa";
 
 export const Route = createFileRoute("/_layout/_logged_in/no-code")({
   component: NoCodeCanvasBuilder,
@@ -186,7 +186,6 @@ function NoCodeWidgetBuilder({ setWidgets, setEditWidget, widgetIn, tools }: { s
 
         <Text>Widget Kind</Text>
         <SelectRoot
-          placeholder={widget.type}
           collection={createListCollection(formattedOptions)}
           onValueChange={(val) => {
             setWidget((prev) => ({ ...prev, type: val.value[0] as WidgetType }));
@@ -268,7 +267,7 @@ function AddNodeButton({
         </HoverCardPositioner>
       </HoverCardRoot>
       <Button size="xs" onClick={() => setPipeline((prev) => [...prev, tool])}>
-        <AddIcon />
+        <FaPlus />
       </Button>
     </Badge>
   );
@@ -303,7 +302,7 @@ function Node({
   return (
     <Box key={`${node.tool}-${idx}`} borderWidth="1px" p={3} mb={2}>
       <Button size="xs" position="absolute" right={10} onClick={removeNode}>
-        <DeleteIcon />
+        <FaTrash />
       </Button>
       <Text fontWeight="semibold">
         Step {idx + 1}: {node.name}
