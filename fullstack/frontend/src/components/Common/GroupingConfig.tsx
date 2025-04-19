@@ -1,8 +1,8 @@
 import type { FilterEntries, SavedFilterOut } from "@/client"
 import { useFilters } from "@/contexts/FilterContext"
-import { AddIcon } from "@chakra-ui/icons"
 import { Button, Menu, Portal, useCheckboxGroup } from "@chakra-ui/react"
 import { Text } from "@chakra-ui/react"
+import { FaPlus } from "react-icons/fa"
 import { FiCheck } from "react-icons/fi"
 
 export enum GroupByOption {
@@ -85,7 +85,7 @@ export function GroupingConfig({
       <Menu.Trigger asChild>
         <Button variant="plain" size="sm">
           <Text textDecoration={"underline"}>Add another filter group</Text>{" "}
-          <AddIcon />
+          <FaPlus />
         </Button>
       </Menu.Trigger>
       <Portal>

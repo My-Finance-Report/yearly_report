@@ -5,7 +5,6 @@ import {
 } from "@/client"
 
 import { useIsMobile } from "@/hooks/useIsMobile"
-import { DeleteIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -27,7 +26,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useState } from "react"
-import { FaPlus } from "react-icons/fa"
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa"
 import type { BudgetStatus } from "../../client"
 import { formatCurrency } from "../Charting/PieChart"
 import BoxWithText from "./BoxWithText"
@@ -174,7 +173,7 @@ function ActionsCell({
   return (
     <HStack>
       <Button size="sm" aria-label="Edit" onClick={() => setIsOpen(true)}>
-        <EditIcon /> {!isMobile && "Edit"}
+        <FaEdit /> {!isMobile && "Edit"}
         <EditBudgetEntry
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
@@ -187,7 +186,7 @@ function ActionsCell({
         aria-label="Delete"
         onClick={() => deleteEntryMutation.mutate(entry.id)}
       >
-        <DeleteIcon />
+        <FaTrash />
         {!isMobile && "Delete"}
       </Button>
     </HStack>
