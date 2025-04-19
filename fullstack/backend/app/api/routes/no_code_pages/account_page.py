@@ -3,11 +3,8 @@ from app.models import (
     User,
 )
 from app.no_code.functions import (
-    convert_to_pipeline,
-    evaluate_pipeline,
+    main_render_loop,
     make_account_choices,
-    extract_parameters_from_pipeline,
-    enrich_with_runtime,
 )
 from app.schemas.no_code import (
     NoCodeCanvas,
@@ -16,7 +13,6 @@ from app.schemas.no_code import (
     NoCodeWidgetOut,
     Parameter,
     ParameterType,
-    ResultTypeEnum,
     SelectOption,
     WidgetType,
 )
@@ -81,17 +77,13 @@ def _generate_balance_widget(
         )
     ]
 
-    uno = enrich_with_runtime(pipeline, runtime_parameters, widget_id)
-    dos = convert_to_pipeline(uno)
-    result = evaluate_pipeline(dos, session, user)
-
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
         id=widget_id,
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="Balance",
         description="Balance of account",
         row=1,
@@ -121,18 +113,15 @@ def _generate_throughput_widget(
         )
     ]
 
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+    widget_id = 'ffbb8a09cf7344509557451d0ee95ccf'
+
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
-        id="ffbb8a09cf7344509557451d0ee95ccf",
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        id=widget_id,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="Change this week",
         description="Balance of account",
         row=1,
@@ -161,18 +150,15 @@ def _generate_interest_widget(
             ],
         )
     ]
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.number
+    widget_id = 'a6f9c23d607c4cfcb40a9dbbade7fcca'
+
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
-        id="a6f9c23d607c4cfcb40a9dbbade7fcca",
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        id=widget_id,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="Interest",
         description="Interest of account",
         row=1,
@@ -186,6 +172,7 @@ def _generate_interest_widget(
 def _generate_plaid_badge_widget(
     session: Session, user: User, runtime_parameters: list[Parameter] | None = None
 ) -> NoCodeWidgetOut:
+
     pipeline = [
         NoCodeToolIn(
             tool="plaid_enabled",
@@ -202,18 +189,15 @@ def _generate_plaid_badge_widget(
         )
     ]
 
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
+    widget_id = '5c0d5dce034b49cbb1cffb7dc34eae8e'
+
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
-        id="5c0d5dce034b49cbb1cffb7dc34eae8e",
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        id=widget_id,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="Plaid Enabled",
         description="Plaid badge of account",
         row=0,
@@ -227,6 +211,9 @@ def _generate_plaid_badge_widget(
 def _generate_sync_status_widget(
     session: Session, user: User, runtime_parameters: list[Parameter] | None = None
 ) -> NoCodeWidgetOut:
+
+    widget_id = 'adfdfde527c54093a2d80bf3b4764870'
+
     pipeline = [
         NoCodeToolIn(
             tool="last_plaid_sync",
@@ -243,18 +230,12 @@ def _generate_sync_status_widget(
         )
     ]
 
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
-    params = extract_parameters_from_pipeline(pipeline)
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
-        id="adfdfde527c54093a2d80bf3b4764870",
-        result_type=result_type,
-        result=result,
+        id=widget_id,
+        result_type=response.result_type,
+        result=response.result,
         name="Last Sync",
         description="Last sync date of account",
         row=0,
@@ -262,7 +243,7 @@ def _generate_sync_status_widget(
         height=1,
         width=1,
         type=WidgetType.badge,
-        parameters=params,
+        parameters=response.parameters,
     )
 
 
@@ -287,20 +268,13 @@ def _generate_name_widget(
         )
     ]
 
-    result = evaluate_pipeline(
-        convert_to_pipeline(
-            enrich_with_runtime(pipeline, runtime_parameters, widget_id)
-        ),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.string
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
         id=widget_id,
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="",
         description="Name of account",
         row=0,
@@ -315,19 +289,16 @@ def _generate_list_widget(
     session: Session, user: User, runtime_parameters: list[Parameter] | None = None
 ) -> NoCodeWidgetOut:
     pipeline = [first_n(session, user)]
+    widget_id = 'b1b8f19e37064d388ee7f5061eac6123'
 
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.list_
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
+
 
     return NoCodeWidgetOut(
-        id="b1b8f19e37064d388ee7f5061eac6123",
-        parameters=extract_parameters_from_pipeline(pipeline),
-        result_type=result_type,
-        result=result,
+        id=widget_id,
+        parameters=response.parameters,
+        result_type=response.result_type,
+        result=response.result,
         name="",
         description="List of transactions",
         row=3,
@@ -342,6 +313,8 @@ def _generate_bar_chart_widget(
     session: Session, user: User, runtime_parameters: list[Parameter] | None = None
 ) -> NoCodeWidgetOut:
     widget_id = "f247e60cb3514c37aacaea50a2288372"
+
+    print("in the helper",runtime_parameters)
 
     options = [
         SelectOption(key=field_name, value=" ".join(field_name.split("_")).capitalize())
@@ -378,18 +351,12 @@ def _generate_bar_chart_widget(
         ),
     ]
 
-    all_params = extract_parameters_from_pipeline(pipeline)
-    result = evaluate_pipeline(
-        convert_to_pipeline(enrich_with_runtime(pipeline, runtime_parameters)),
-        session,
-        user,
-    )
-    result_type = ResultTypeEnum.deferred if not result else ResultTypeEnum.list_
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
     return NoCodeWidgetOut(
         id=widget_id,
-        result_type=result_type,
-        result=result,
+        result_type=response.result_type,
+        result=response.result,
         name="",
         description="Bar chart of transactions per day",
         row=2,
@@ -397,7 +364,7 @@ def _generate_bar_chart_widget(
         height=300,
         width=1000,
         type=WidgetType.bar_chart,
-        parameters=all_params,
+        parameters=response.parameters,
     )
 
 

@@ -13,7 +13,8 @@ from app.models import (
 )
 from app.no_code.decoration import make_tools
 from app.no_code.functions import (
-    convert_to_pipeline,
+    convert_to_callable_pipeline,
+    determine_result_type,
     evaluate_pipeline,
     extract_parameters_from_pipeline,
 )
@@ -40,29 +41,10 @@ def get_no_code_tool(
     return make_tools(session, user)
 
 
-def safe_parse_int(value: Any) -> int | None:
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def determine_result_type(result: Any) -> ResultTypeEnum:
-    if result is None:
-        return ResultTypeEnum.deferred
-    if is_dataclass(result):
-        return ResultTypeEnum.object_
-    if isinstance(result, list):
-        return ResultTypeEnum.list_
-    if safe_parse_int(result) is not None:
-        return ResultTypeEnum.number
-    return ResultTypeEnum.string
-
-
 def process_widget(
     session: Session, user: User, widget: NoCodeWidgetIn
 ) -> NoCodeWidgetOut:
-    result = evaluate_pipeline(convert_to_pipeline(widget.pipeline), session, user)
+    result = evaluate_pipeline(convert_to_callable_pipeline(widget.pipeline), session, user)
 
     return NoCodeWidgetOut(
         id=str(uuid.uuid4().hex),

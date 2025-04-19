@@ -99,8 +99,8 @@ def aggregate(
     key_from: SelectOption,
     values_from: list[SelectOption],
 ) -> list[dict[str, str | Decimal | None]]:
-    print(key_from)
-    print("values", values_from)
+
+    print("****",key_from)
 
     result: dict[str, dict[str, str | Decimal | None]] = {}
 
