@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import  { useState, useEffect } from "react"
-import { FaCreditCard, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
+import { FaCreditCard, FaEdit, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
 import { ArchiveButton } from "./ArchiveButton"
 import { UploadButton } from "./UploadButton"
 import { CategoriesManager } from "./CategoriesManager"
@@ -23,7 +23,6 @@ import { RecategorizeButton } from "./RecategorizeButton"
 import { DeleteButton, ReprocessButton } from "./ReprocessButton"
 
 import { useIsMobile } from "@/hooks/useIsMobile"
-import { EditIcon } from "@chakra-ui/icons"
 import PlaidSyncStatus from "./PlaidSyncStatus"
 
 interface AccountDetailsProps {
@@ -209,7 +208,7 @@ export function AccountDetails({
                 onClick={() => setIsEditing(true)}
                 disabled={isArchived}
               >
-                <EditIcon mr={1} />
+                <FaEdit />
               </Button>
             </Flex>
           )}

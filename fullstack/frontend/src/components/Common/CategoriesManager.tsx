@@ -1,6 +1,5 @@
 import { AccountsService } from "@/client"
 
-import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -17,7 +16,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { FaPlus } from "react-icons/fa"
+import { FaEdit, FaPlus, FaSave, FaWindowClose } from "react-icons/fa"
 
 interface CategoriesManagerProps {
   accountId: number
@@ -110,7 +109,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           }
                         >
                           {" "}
-                          <CheckIcon />
+                          <FaSave />
                           Save
                         </Button>
                         <Button
@@ -118,7 +117,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           aria-label="Cancel"
                           onClick={() => setEditingCategory(null)}
                         >
-                          <CloseIcon />
+                          <FaWindowClose />
                         </Button>
                       </HStack>
                     ) : (
@@ -133,7 +132,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                             })
                           }
                         >
-                          <EditIcon /> Edit
+                          <FaEdit /> Edit
                         </Button>
                       </HStack>
                     )}

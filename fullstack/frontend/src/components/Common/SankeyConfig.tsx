@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select"
 
 import { isSessionActive } from "@/hooks/useAuth"
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   type PossibleSankeyInput,
@@ -29,6 +28,7 @@ import {
   SankeyService,
   type SankeySibling,
 } from "../../client"
+import { FaPlusCircle, FaTrash } from "react-icons/fa"
 
 export type Blah = { label: string; value: number }
 
@@ -334,8 +334,8 @@ function SimpleTag({
   return (
     <Tag.Root key={name} p={2} borderRadius="md">
       <TagLabel>{name}</TagLabel>
-      {showRemove && <Icon as={DeleteIcon} mr={1} onClick={onRemove} />}
-      {showAdd && <Icon as={AddIcon} mr={1} onClick={onAdd} />}
+      {showRemove && <Icon as={FaTrash} mr={1} onClick={onRemove} />}
+      {showAdd && <Icon as={FaPlusCircle} mr={1} onClick={onAdd} />}
     </Tag.Root>
   )
 }
