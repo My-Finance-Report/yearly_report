@@ -1,7 +1,7 @@
 import logging
 import uuid
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from typing import Any
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
@@ -25,6 +25,7 @@ from app.models import (
     AuditLog,
     Category,
     PlaidAccount,
+    PlaidAccountBalance,
     PlaidItem,
     PlaidSyncLog,
     ProcessingState,
@@ -52,7 +53,7 @@ def fetch_plaid_transactions(
     *,
     access_token: str,
     plaid_account: PlaidAccount,
-) -> Any:
+) -> tuple[list[Any], list[Any]]:
     """Fetch transactions from Plaid API."""
     client = get_plaid_client()
 
@@ -70,7 +71,7 @@ def fetch_plaid_transactions(
         next_cursor = response["next_cursor"]
         plaid_account.cursor = next_cursor
 
-        return response["added"]
+        return response["added"], response["accounts"]
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
         raise
@@ -96,6 +97,33 @@ def has_transaction_changed(
         return True
 
     return False
+
+
+def write_account_balances(
+    session: Session,
+    user: User,
+    plaid_accounts: list[Any],
+) -> None:
+    by_account_lookup = {
+        account["account_id"]: account for account in plaid_accounts
+    }
+    users_plaid_accounts = session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id, PlaidAccount.plaid_account_id.in_(by_account_lookup.keys())).all()
+    users_plaid_account_lookup = {a.plaid_account_id: a for a in users_plaid_accounts}
+
+    for plaid_account_id, account in by_account_lookup.items():
+        user_plaid_account = users_plaid_account_lookup.get(plaid_account_id)
+        if user_plaid_account is None:
+            continue
+            
+        record = PlaidAccountBalance(
+                plaid_account_id=user_plaid_account.id,
+                balance=account["balances"]["current"],
+                available=account["balances"].get("available"),
+                iso_currency_code=account["balances"].get("iso_currency_code","USD"),
+                timestamp=datetime.now(timezone.utc),
+            )
+        session.add(record)
+        session.commit()
 
 
 def sync_plaid_account_transactions(
@@ -136,7 +164,7 @@ def sync_plaid_account_transactions(
     try:
         # Fetch transactions from Plaid
 
-        plaid_transactions = fetch_plaid_transactions(
+        plaid_transactions, plaid_accounts = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
@@ -149,7 +177,7 @@ def sync_plaid_account_transactions(
             session.commit()
             return
 
-        # All transactions from transactions_sync are new
+        write_account_balances(session, user, plaid_accounts)
 
         added_count = add_new_transactions(
             session,
@@ -157,6 +185,7 @@ def sync_plaid_account_transactions(
             transaction_source,
             plaid_transactions,
         )
+
 
         # Update sync log with results
         sync_log.added_count = added_count
@@ -392,7 +421,8 @@ async def sync_all_plaid_accounts(
             sync_plaid_account_transactions(
                 user_session, user, account, days_back, batch_id
             )
-            record_plaid_account_balance(user_session, account)
+            # TODO enable balance product
+            # record_plaid_account_balance(user_session, account)
 
         if plaid_accounts:
             print(f"Synced all Plaid accounts for user {user.id}")

@@ -223,6 +223,8 @@ def handle_plaid() -> None:
 
 def worker() -> None:
     iterations = 0
+
+    handle_plaid()
     while True:
         with SessionLocal() as session:
             reset_stuck_jobs(session)
