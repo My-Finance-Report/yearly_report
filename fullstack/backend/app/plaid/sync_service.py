@@ -1,7 +1,7 @@
 import logging
 import uuid
 from dataclasses import replace
-from datetime import datetime, timedelta,timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
@@ -104,24 +104,29 @@ def write_account_balances(
     user: User,
     plaid_accounts: list[Any],
 ) -> None:
-    by_account_lookup = {
-        account["account_id"]: account for account in plaid_accounts
-    }
-    users_plaid_accounts = session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id, PlaidAccount.plaid_account_id.in_(by_account_lookup.keys())).all()
+    by_account_lookup = {account["account_id"]: account for account in plaid_accounts}
+    users_plaid_accounts = (
+        session.query(PlaidAccount)
+        .filter(
+            PlaidAccount.user_id == user.id,
+            PlaidAccount.plaid_account_id.in_(by_account_lookup.keys()),
+        )
+        .all()
+    )
     users_plaid_account_lookup = {a.plaid_account_id: a for a in users_plaid_accounts}
 
     for plaid_account_id, account in by_account_lookup.items():
         user_plaid_account = users_plaid_account_lookup.get(plaid_account_id)
         if user_plaid_account is None:
             continue
-            
+
         record = PlaidAccountBalance(
-                plaid_account_id=user_plaid_account.id,
-                balance=account["balances"]["current"],
-                available=account["balances"].get("available"),
-                iso_currency_code=account["balances"].get("iso_currency_code","USD"),
-                timestamp=datetime.now(timezone.utc),
-            )
+            plaid_account_id=user_plaid_account.id,
+            balance=account["balances"]["current"],
+            available=account["balances"].get("available"),
+            iso_currency_code=account["balances"].get("iso_currency_code", "USD"),
+            timestamp=datetime.now(timezone.utc),
+        )
         session.add(record)
         session.commit()
 
@@ -185,7 +190,6 @@ def sync_plaid_account_transactions(
             transaction_source,
             plaid_transactions,
         )
-
 
         # Update sync log with results
         sync_log.added_count = added_count
