@@ -47,7 +47,6 @@ big milestones before launch:
 
 -> add a last active at time on the user model
 
-
 -> shareable report
 
 -> running grant to sequence after a new table: 
