@@ -10,7 +10,7 @@ export default defineConfig({
       // NOTE: this doesn't allow tree-shaking
       asClass: true,
       operationId: true,
-      client: "@hey-api/client-axios",
+      client: "legacy/axios",
       methodNameBuilder: (operation) => {
         // @ts-expect-error im not really sure
         let name: string = operation.name

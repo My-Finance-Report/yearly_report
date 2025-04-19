@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 import sqlmodel.sql.sqltypes
 
-from fullstack.backend.app.alembic import helpers
+from app.alembic import helpers
 
 
 # revision identifiers, used by Alembic.
