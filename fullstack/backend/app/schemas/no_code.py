@@ -2,7 +2,7 @@ from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -28,6 +28,7 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
+    PAGINATION = "pagination"
     MULTI_SELECT = "multi_select"
 
 
@@ -75,6 +76,7 @@ class Parameter(BaseModel):
         | None
     ) = None
     options: list[SelectOption] | None = None
+    option_generator: str | None = None
     widget_id: str | None = None
     is_runtime: bool = False
     display_info: DisplayInfo | None = None

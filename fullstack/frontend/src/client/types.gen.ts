@@ -278,7 +278,7 @@ export type Parameter_Output = {
     display_info?: (DisplayInfo | null);
 };
 
-export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'multi_select';
+export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'pagination' | 'multi_select';
 
 /**
  * Response model for a Plaid account.

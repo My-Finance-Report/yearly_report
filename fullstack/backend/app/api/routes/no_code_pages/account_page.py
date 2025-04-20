@@ -1,6 +1,9 @@
 from functools import partial
+
+from sqlalchemy import func
 from app.db import Session
 from app.models import (
+    Transaction,
     User,
 )
 from app.no_code.functions import (
@@ -22,6 +25,7 @@ from app.schemas.no_code import (
 )
 
 
+
 def first_n(session: Session, user: User) -> NoCodeToolIn:
     account_choices = make_account_choices(session, user)
 
@@ -38,8 +42,8 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=SelectOption(key="20", value="20"),
-                is_runtime=True,
+                default_value=SelectOption(key="12", value="12"),
+                is_runtime=False,
                 display_info=DisplayInfo(
                     row=11,
                     col=3,
@@ -58,6 +62,21 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                     size=DisplaySize.LARGE,
                     row=8,
                     col=1,
+                    row_span=1,
+                    col_span=4,
+                ),
+            ),
+            Parameter(
+                name="page",
+                label="",
+                type=ParameterType.PAGINATION,
+                options=[],
+                option_generator="get_pages_per_account",
+                default_value=SelectOption(key="1", value="1"),
+                is_runtime=True,
+                display_info=DisplayInfo(
+                    row=18,
+                    col=4,
                     row_span=1,
                     col_span=4,
                 ),
@@ -607,10 +626,10 @@ def generate_account_page(
                 col=1,
                 row_span=1,
                 col_span=12,
-                statement="Overall",
+                statement="All Accounts",
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=2, col_span=3),
-            partial(_generate_pie_widget, row=2, col=1, row_span=3, col_span=3),
+            partial(_generate_pie_widget, row=4, col=1, row_span=3, col_span=3),
             partial(
                 _generate_all_transactions_widget, row=2, col=4, row_span=5, col_span=9
             ),
@@ -627,8 +646,8 @@ def generate_account_page(
             partial(_generate_balance_widget, row=9, col=1, row_span=2, col_span=4),
             partial(_generate_interest_widget, row=9, col=5, row_span=2, col_span=4),
             partial(_generate_throughput_widget, row=9, col=9, row_span=2, col_span=4),
-            partial(_generate_bar_chart_widget, row=12, col=1, row_span=3, col_span=12),
-            partial(_generate_list_widget, row=15, col=1, row_span=8, col_span=12),
+            partial(_generate_bar_chart_widget, row=12, col=1, row_span=2, col_span=12),
+            partial(_generate_list_widget, row=14, col=1, row_span=4, col_span=12),
         ]
     ]
     widgets = []

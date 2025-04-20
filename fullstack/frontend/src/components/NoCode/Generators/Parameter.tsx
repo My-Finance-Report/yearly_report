@@ -1,4 +1,4 @@
-import { Box, Text, Field, Input, Button,  Select, ConditionalValue } from "@chakra-ui/react";
+import { Box, Text, Field, Input, Button,  Select, ConditionalValue, Pagination, ButtonGroup, IconButton } from "@chakra-ui/react";
 import { DisplayInfo, ParameterType, SelectOption } from "@/client";
 import {
   Portal,
@@ -6,6 +6,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { JSX } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 
 export interface ParameterBase {
@@ -42,6 +43,13 @@ export interface SelectParameter extends ParameterBase {
   options: SelectOption[];
 }
 
+export interface PaginationParameter extends ParameterBase {
+  type: "pagination";
+  value?: SelectOption;
+  default_value?: SelectOption;
+  options: SelectOption[];
+}
+
 export interface MultiSelectParameter extends ParameterBase {
   type: "multi_select";
   value?: SelectOption[];
@@ -71,6 +79,7 @@ type ParameterProps<T extends ParameterType> = {
 const MAP_TO_PARAMETER = {
   int: IntParameter,
   float: FloatParameter,
+  pagination: PaginationParameter,
   string: StrParameter,
   select: SelectParameter,
   multi_select: MultiSelectParameter,
@@ -84,6 +93,56 @@ const MAP_TO_PARAMETER_TYPED: {
   [K in ParameterType]: ParameterComponent<K>;
 } = MAP_TO_PARAMETER;
 
+
+function PaginationParameter({parameter, onChange}: ParameterProps<"pagination">){
+
+  const passedPage = parameter.value?.value || parameter.default_value.value
+
+  const maxPage = parameter.options?.map((option) => option.value).reduce((a, b) => Math.max(Number(a),Number(b))) || 0
+
+  const [page, setPage] = useState(Number(passedPage))
+
+  const handleSet = (e) =>{
+    setPage(e.page)
+    onChange({
+      key: e.page.toString(), value: e.page.toString()});
+  }
+
+  if (maxPage === 0){
+    return null
+  }
+
+  return (
+    <Pagination.Root
+      count={maxPage}
+      pageSize={1}
+      page={page}
+      onPageChange={handleSet}
+    >
+      <ButtonGroup variant="ghost" size="sm" spaceX={4}>
+        <Pagination.PrevTrigger asChild>
+          <IconButton>
+            <FaChevronLeft />
+          </IconButton>
+        </Pagination.PrevTrigger>
+
+        <Pagination.Items
+          render={(page) => (
+            <IconButton variant={{ base: "ghost", _selected: "outline" }}>
+              {page.value}
+            </IconButton>
+          )}
+        />
+
+        <Pagination.NextTrigger asChild>
+          <IconButton>
+            <FaChevronRight />
+          </IconButton>
+        </Pagination.NextTrigger>
+      </ButtonGroup>
+    </Pagination.Root>
+  )
+}
 
 
 function IntParameter({ parameter, onChange }: ParameterProps<"int">) {

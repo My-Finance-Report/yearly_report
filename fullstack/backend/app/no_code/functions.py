@@ -4,9 +4,10 @@ from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel
+from sqlalchemy import func
 
 from app.db import Session
-from app.models import TransactionSource, User
+from app.models import Transaction, TransactionSource, User
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
@@ -90,12 +91,37 @@ def convert_to_callable_pipeline(
 
     return steps
 
+def get_pages_per_account(session: Session, user: User, **kwargs)-> list[SelectOption]:
+    account_id = kwargs["account_id"]
+    n = kwargs["n"]
 
-def extract_parameters_from_pipeline(tools: list[NoCodeToolIn]) -> list[Parameter]:
+    total = session.query(func.count(Transaction.id)).filter(Transaction.user_id == user.id, Transaction.transaction_source_id == int(account_id.key)).scalar()
+
+    number_of_pages = (total // int(n.key)) +1
+
+    return [SelectOption(key=str(page), value=str(page)) for page in range(1, number_of_pages+1)]
+
+
+
+
+
+CALLABLE_LOOKUP = {
+    "get_pages_per_account": get_pages_per_account
+}
+
+def extract_parameters_from_pipeline(tools: list[NoCodeToolIn], session, user) -> list[Parameter]:
     runtime_params = []
     for tool in tools:
         if tool.parameters:
-            runtime_params.extend([p for p in tool.parameters])
+            for p in tool.parameters:
+                runtime_params.append(p)
+    
+    lookup = {param.name : figure_out_parameters(param) for param in runtime_params}
+
+    for param in runtime_params:
+        if param.option_generator:
+            param.options = CALLABLE_LOOKUP[param.option_generator](session, user, **lookup)
+
     return runtime_params
 
 
@@ -186,7 +212,7 @@ def main_render_loop(
     return RenderLoopResult(
         result=result,
         result_type=result_type,
-        parameters=extract_parameters_from_pipeline(pipeline),
+        parameters=extract_parameters_from_pipeline(pipeline, session, user),
     )
 
 

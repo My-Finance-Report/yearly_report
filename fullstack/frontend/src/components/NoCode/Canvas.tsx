@@ -89,6 +89,7 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
     const toDisplayParams = parameters.filter((parameter) =>  parameter.is_runtime && parameter.display_info)
 
 
+
     return (
       <Container>
       <Grid
@@ -98,6 +99,7 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
       >
         {widgets.map(widget => (
           <GridItem
+
             key={widget.id || widget.name}
             rowStart={widget.row}
             colStart={widget.col}

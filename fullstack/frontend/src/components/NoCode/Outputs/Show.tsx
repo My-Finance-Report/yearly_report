@@ -62,8 +62,16 @@ export function renderNoCodeParameter(
           onChange={(value) => updateAParameter({ ...parameter, value })}
         />
       );
+    case 'pagination':
+        return (
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "pagination" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+        )
     default:
-      return null;
+        throw new Error("unknown param")
   }
 }
 
