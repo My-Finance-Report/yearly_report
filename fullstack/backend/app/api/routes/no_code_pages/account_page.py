@@ -92,7 +92,7 @@ def most_recent_n(widget_id: str | None = None) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=SelectOption(key="12", value="12"),
+                default_value=SelectOption(key="8", value="8"),
                 widget_id=widget_id,
                 is_runtime=False,
             ),

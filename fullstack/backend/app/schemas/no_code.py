@@ -7,7 +7,7 @@ from typing import Any, Callable, Generic, TypeVar
 from pydantic import BaseModel
 
 from app.core.db import Session
-from app.models import  TransactionKind, User
+from app.models import TransactionKind, User
 
 
 class NoCodeTransaction(BaseModel):
