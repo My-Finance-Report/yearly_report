@@ -37,7 +37,6 @@ from app.models import (
 from app.plaid.client import get_plaid_client
 from app.telegram_utils import send_telegram_message
 from app.worker.status import status_update_monad, update_worker_status
-from app.plaid.balance_history import record_plaid_account_balance
 
 logger = logging.getLogger(__name__)
 
