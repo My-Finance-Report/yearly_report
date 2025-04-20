@@ -20,31 +20,18 @@ from app.no_code.decoration import pipeline_step
 from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
 from app.no_code.transformations import KeyValuePair
 
+
 @pipeline_step(
     return_type=list[KeyValuePair],
     passed_value=None,
 )
-def total_amount_per_category(
-    data: PipelineStart
-) -> list[KeyValuePair]:
+def total_amount_per_category(data: PipelineStart) -> list[KeyValuePair]:
     txs = data.session.query(func.sum(Transaction.amount), Category.name).join(
         Category, Transaction.category_id == Category.id
     )
-    txs = (
-        txs.filter(Transaction.user_id == data.user.id)
-        .group_by(Category.name)
-    )
+    txs = txs.filter(Transaction.user_id == data.user.id).group_by(Category.name)
 
-    return [
-        KeyValuePair(
-            key=cat,
-            value=Decimal(amount)
-        )
-        for amount, cat in txs.all()
-    ]
-
-
-
+    return [KeyValuePair(key=cat, value=Decimal(amount)) for amount, cat in txs.all()]
 
 
 @pipeline_step(
@@ -205,13 +192,12 @@ def account_balance(
         ),
     )
 
+
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
 )
-def all_account_balances(
-    data: PipelineStart
-) -> ResultWithTrend | None:
+def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     # select all plaid accounts for the user
     plaid_accounts = (
         data.session.query(PlaidAccount)
@@ -235,37 +221,35 @@ def all_account_balances(
     # total the most recent entry from each account
     net_worth = Decimal(0)
     all_transactions = []
-    for account, balance_entries in plaid_account_balances.items():
+    for _account_id, balance_entries in plaid_account_balances.items():
         if not balance_entries:
             continue
         net_worth += Decimal(balance_entries[0].balance)
         all_transactions.extend(balance_entries)
-    
+
     # sort the transactions by timestamp
     all_transactions.sort(key=lambda x: x.timestamp)
 
     # some function to track net worth over time across all accounts?
 
-    latest_balances = defaultdict(lambda: Decimal())
+    latest_balances = defaultdict(lambda: Decimal(0))
     net_worth_history = []
     for update in all_transactions:
         latest_balances[update.plaid_account_id] = Decimal(update.balance)
         # Net worth at this timestamp is the sum of all latest balances
-        net_worth = sum(latest_balances.values())
-        net_worth_history.append((update.timestamp, net_worth))
+        net_worth_history_point = sum(latest_balances.values())
+        net_worth_history.append((update.timestamp, net_worth_history_point))
 
-    
-   
     return ResultWithTrend(
         result=round(Decimal(net_worth), 2),
         unit=Unit.DOLLAR,
         trend_data=TrendData(
-            values=[TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history],
+            values=[
+                TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history
+            ],
             color="orange",
         ),
     )
-
-
 
 
 @pipeline_step(

@@ -8,6 +8,8 @@ from app.no_code.functions import (
     make_account_choices,
 )
 from app.schemas.no_code import (
+    DisplayInfo,
+    DisplaySize,
     NoCodeCanvas,
     NoCodeToolIn,
     NoCodeTransaction,
@@ -38,25 +40,31 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 ],
                 default_value=SelectOption(key="20", value="20"),
                 is_runtime=True,
-                row=10,
-                col=4,
-                row_span=1,
-                col_span=2,
+                display_info=DisplayInfo(
+                    row=11,
+                    col=3,
+                    row_span=1,
+                    col_span=2,
+                ),
             ),
             Parameter(
                 name="account_id",
-                label="Account",
+                label=None,
                 type=ParameterType.SELECT,
                 options=account_choices,
                 default_value=account_choices[0],
                 is_runtime=True,
-                row=7,
-                col=8,
-                row_span=1,
-                col_span=2,
+                display_info=DisplayInfo(
+                    size=DisplaySize.LARGE,
+                    row=8,
+                    col=1,
+                    row_span=1,
+                    col_span=4,
+                ),
             ),
         ],
     )
+
 
 def most_recent_n(widget_id: str | None = None) -> NoCodeToolIn:
     return NoCodeToolIn(
@@ -89,8 +97,6 @@ def most_recent_n(widget_id: str | None = None) -> NoCodeToolIn:
     )
 
 
-
-
 def to_kvp(key: str, value: str) -> NoCodeToolIn:
     return NoCodeToolIn(
         tool="to_key_value_pair",
@@ -100,14 +106,20 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
         ],
     )
 
+
 def _generate_all_transactions_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1, col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "slkdjngkjrtngqvnnlsketjnbsr"
 
     pipeline = [
         most_recent_n(widget_id),
-
     ]
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
@@ -130,7 +142,13 @@ def _generate_all_transactions_widget(
 
 
 def _generate_net_worth_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None,  row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "jwerlekjsngvjtrwknlvskjfn"
 
@@ -157,17 +175,22 @@ def _generate_net_worth_widget(
     )
 
 
-
 def _generate_seperator_widget(
-     session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1, col:int=1, row_span:int=3, col_span:int=3,
-)->NoCodeWidgetOut:
-
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
+    statement: str = "",
+) -> NoCodeWidgetOut:
     widget_id = "sneflnlksnfv"
     return NoCodeWidgetOut(
         id=widget_id,
         parameters=[],
         result_type=ResultTypeEnum.string,
-        result="Account Specific",
+        result=statement,
         name="",
         description="",
         row=row,
@@ -179,7 +202,13 @@ def _generate_seperator_widget(
 
 
 def _generate_balance_widget(
-     session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1, col:int=1, row_span:int=3, col_span:int=3,
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "3041c6c50ca6496e931ca0f5ebeacb4b"
 
@@ -217,7 +246,13 @@ def _generate_balance_widget(
 
 
 def _generate_throughput_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     pipeline = [
         NoCodeToolIn(
@@ -235,7 +270,7 @@ def _generate_throughput_widget(
         )
     ]
 
-    widget_id = 'ffbb8a09cf7344509557451d0ee95ccf'
+    widget_id = "ffbb8a09cf7344509557451d0ee95ccf"
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
@@ -255,7 +290,13 @@ def _generate_throughput_widget(
 
 
 def _generate_interest_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None , row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     pipeline = [
         NoCodeToolIn(
@@ -272,7 +313,7 @@ def _generate_interest_widget(
             ],
         )
     ]
-    widget_id = 'a6f9c23d607c4cfcb40a9dbbade7fcca'
+    widget_id = "a6f9c23d607c4cfcb40a9dbbade7fcca"
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
@@ -292,9 +333,14 @@ def _generate_interest_widget(
 
 
 def _generate_plaid_badge_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None,  row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
-
     pipeline = [
         NoCodeToolIn(
             tool="plaid_enabled",
@@ -311,7 +357,7 @@ def _generate_plaid_badge_widget(
         )
     ]
 
-    widget_id = '5c0d5dce034b49cbb1cffb7dc34eae8e'
+    widget_id = "5c0d5dce034b49cbb1cffb7dc34eae8e"
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
 
@@ -331,10 +377,15 @@ def _generate_plaid_badge_widget(
 
 
 def _generate_sync_status_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
-
-    widget_id = 'adfdfde527c54093a2d80bf3b4764870'
+    widget_id = "adfdfde527c54093a2d80bf3b4764870"
 
     pipeline = [
         NoCodeToolIn(
@@ -370,7 +421,13 @@ def _generate_sync_status_widget(
 
 
 def _generate_name_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "ee2cce65b2ff461484d3ac55bbaa153c"
 
@@ -408,13 +465,18 @@ def _generate_name_widget(
 
 
 def _generate_list_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     pipeline = [first_n(session, user)]
-    widget_id = 'b1b8f19e37064d388ee7f5061eac6123'
+    widget_id = "b1b8f19e37064d388ee7f5061eac6123"
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
-
 
     return NoCodeWidgetOut(
         id=widget_id,
@@ -430,8 +492,15 @@ def _generate_list_widget(
         type=WidgetType.list,
     )
 
+
 def _generate_pie_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "selkgnwbkjnsdfnvgsebkbbb"
 
@@ -441,7 +510,6 @@ def _generate_pie_widget(
         ),
     ]
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
-
 
     return NoCodeWidgetOut(
         id=widget_id,
@@ -458,11 +526,14 @@ def _generate_pie_widget(
     )
 
 
-
-
-
 def _generate_bar_chart_widget(
-    session: Session, user: User, runtime_parameters: list[Parameter] | None = None, row:int=1,col:int=1, row_span:int=3, col_span:int=3
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
 ) -> NoCodeWidgetOut:
     widget_id = "f247e60cb3514c37aacaea50a2288372"
 
@@ -483,10 +554,12 @@ def _generate_bar_chart_widget(
             ),
             is_runtime=True,
             widget_id=widget_id,
-            row=10,
-            col=1,
-            row_span=1,
-            col_span=2,
+            display_info=DisplayInfo(
+                row=11,
+                col=1,
+                row_span=1,
+                col_span=2,
+            ),
         ),
         Parameter(
             name="values_from",
@@ -528,19 +601,34 @@ def generate_account_page(
     widgets_and_runtime_parameters = [
         callable(session, user, runtime_parameters)
         for callable in [
-
-            partial(_generate_net_worth_widget, row=1,col=1, row_span=2, col_span=3),
-            partial(_generate_pie_widget, row=3,col=1, row_span=3, col_span=3), 
-            partial(_generate_all_transactions_widget, row=1,col=4, row_span=5, col_span=9),
-            partial(_generate_seperator_widget, row=6,col=0, row_span=1, col_span=12),
-            partial(_generate_name_widget, row=7,col=0, row_span=1, col_span=5),
-            partial(_generate_plaid_badge_widget, row=7,col=6, row_span=1, col_span=1),
-            partial(_generate_sync_status_widget, row=7,col=7, row_span=1, col_span=1),
-            partial(_generate_balance_widget, row=8, col=1, row_span=2, col_span=4),
-            partial(_generate_interest_widget, row=8,col=5, row_span=2, col_span=4),
-            partial(_generate_throughput_widget, row=8, col=9, row_span=2, col_span=4),
-            partial(_generate_bar_chart_widget, row=11,col=1, row_span=3, col_span=12),
-            partial(_generate_list_widget, row=14,col=1, row_span=8, col_span=12),
+            partial(
+                _generate_seperator_widget,
+                row=1,
+                col=1,
+                row_span=1,
+                col_span=12,
+                statement="Overall",
+            ),
+            partial(_generate_net_worth_widget, row=2, col=1, row_span=2, col_span=3),
+            partial(_generate_pie_widget, row=2, col=1, row_span=3, col_span=3),
+            partial(
+                _generate_all_transactions_widget, row=2, col=4, row_span=5, col_span=9
+            ),
+            partial(
+                _generate_seperator_widget,
+                row=7,
+                col=1,
+                row_span=1,
+                col_span=12,
+                statement="Account Specific",
+            ),
+            partial(_generate_plaid_badge_widget, row=8, col=6, row_span=1, col_span=1),
+            partial(_generate_sync_status_widget, row=8, col=7, row_span=1, col_span=1),
+            partial(_generate_balance_widget, row=9, col=1, row_span=2, col_span=4),
+            partial(_generate_interest_widget, row=9, col=5, row_span=2, col_span=4),
+            partial(_generate_throughput_widget, row=9, col=9, row_span=2, col_span=4),
+            partial(_generate_bar_chart_widget, row=12, col=1, row_span=3, col_span=12),
+            partial(_generate_list_widget, row=15, col=1, row_span=8, col_span=12),
         ]
     ]
     widgets = []

@@ -100,7 +100,6 @@ def aggregate(
     key_from: SelectOption,
     values_from: list[SelectOption],
 ) -> list[dict[str, str | Decimal | None]]:
-
     result: dict[str, dict[str, str | Decimal | None]] = {}
 
     for transaction in data:
@@ -121,16 +120,19 @@ def aggregate(
     return_type=list[dict[str, str | Decimal | None]],
     passed_value=list[dict[str, str | Decimal | None]],
 )
-def sum_by_key(data:list[NoCodeTransaction], key_from:SelectOption, values_from:SelectOption) -> list[KeyValuePair] :
-
+def sum_by_key(
+    data: list[NoCodeTransaction], key_from: SelectOption, values_from: SelectOption
+) -> list[KeyValuePair]:
     result: dict[str, float] = defaultdict(lambda: float(0))
 
     for transaction in data:
         key = parse_key(getattr(transaction, key_from.key))
-        result[key] += getattr(transaction, values_from.key) if getattr(transaction, values_from.key) is not None else 0.0
+        result[key] += (
+            getattr(transaction, values_from.key)
+            if getattr(transaction, values_from.key) is not None
+            else 0.0
+        )
 
-    return [KeyValuePair(key=key, value=Decimal(value)) for key, value in result.items()]
-
-
-
-    
+    return [
+        KeyValuePair(key=key, value=Decimal(value)) for key, value in result.items()
+    ]

@@ -65,7 +65,7 @@ export function ShowSeparator({ widget }: { widget: NoCodeWidgetOut }) {
   return (
       <HStack>
         <Separator flex="1" />
-        <Text flexShrink="0">{widget.result}</Text>
+        <Text flexShrink="0">{widget.result as string}</Text>
         <Separator flex="1" />
       </HStack>
   );

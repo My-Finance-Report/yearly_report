@@ -4,7 +4,6 @@ import { ShowValue, ShowBadge, ShowCardWithSparkline, ShowSeparator } from "./Sh
 import { ShowList } from "./ShowList"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
-import { Box, Flex } from "@chakra-ui/react"
 
 const MAP_TO_SHOW = {
     "value": ShowValue,

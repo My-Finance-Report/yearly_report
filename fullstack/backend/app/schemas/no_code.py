@@ -36,6 +36,20 @@ class SelectOption(BaseModel):
     value: str
 
 
+class DisplaySize(str, enum.Enum):
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+
+
+class DisplayInfo(BaseModel):
+    size: DisplaySize | None = None
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+
+
 class Parameter(BaseModel):
     name: str
     label: str | None = None
@@ -63,10 +77,7 @@ class Parameter(BaseModel):
     options: list[SelectOption] | None = None
     widget_id: str | None = None
     is_runtime: bool = False
-    row: int | None = None
-    col: int | None = None
-    row_span: int | None = None
-    col_span: int | None = None
+    display_info: DisplayInfo | None = None
 
 
 @dataclass
@@ -109,7 +120,7 @@ class WidgetType(str, enum.Enum):
     list = "list"
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
-    separator= "separator"
+    separator = "separator"
 
 
 Scalar = Decimal | str | int | float
@@ -136,8 +147,8 @@ class NoCodeWidgetIn(BaseModel):
     pipeline: list[NoCodeToolIn]
     row: int
     col: int
-    height: int
-    width: int
+    row_span: int
+    col_span: int
     type: WidgetType
 
 

@@ -86,20 +86,18 @@ function NoCodeCanvasBuilder() {
   if (!fetchedTools) {
     return <div>Loading...</div>;
   }
-  const [runtimeParameters, setRuntimeParameters] = useState<Parameter_Output[]>([]);
 
-  console.log(runtimeParameters)
 
   return (
     <Container>
-      <Button onClick={() => setEditWidget({ name: "", description: "", pipeline: [], row: 1, col: 1, height: 1, width: 1, type: "value" })}>
+      <Button onClick={() => setEditWidget({ name: "", description: "", pipeline: [], row: 1, col: 1, row_span: 3, col_span: 3, type: "value" })}>
         Add Widget
       </Button>
       {error && <Text>{error}</Text>}
       {editWidget &&
         <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))} setRuntimeParameters={setRuntimeParameters} />
+      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))}  />
     </Container>
   );
 }
@@ -126,7 +124,7 @@ function NoCodeWidgetBuilder({ setWidgets, setEditWidget, widgetIn, tools }: { s
   }
 
 
-  const [widget, setWidget] = useState<NoCodeWidgetIn>(widgetIn || { name: "", description: "", pipeline: [], row: 1, col: 1, height: 1, width: 1, type: "value" });
+  const [widget, setWidget] = useState<NoCodeWidgetIn>(widgetIn || { name: "", description: "", pipeline: [], row: 1, col: 1, row_span: 3, col_span: 3, type: "value" });
 
 
   const widgetTypes = ["value", "list", "pie_chart"].map((theType) => ({ label: theType, value: theType }))

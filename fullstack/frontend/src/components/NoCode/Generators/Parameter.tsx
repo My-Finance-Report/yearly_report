@@ -1,5 +1,5 @@
-import { Box, Text, Field, Input, Button,  Select } from "@chakra-ui/react";
-import { ParameterType, SelectOption } from "@/client";
+import { Box, Text, Field, Input, Button,  Select, ConditionalValue } from "@chakra-ui/react";
+import { DisplayInfo, ParameterType, SelectOption } from "@/client";
 import {
   Portal,
   createListCollection,
@@ -16,6 +16,7 @@ export interface ParameterBase {
   value?: unknown;
   default_value?: unknown;
   options?: SelectOption[];
+  display_info: DisplayInfo | null;
 }
 
 export interface IntParameter extends ParameterBase {
@@ -130,12 +131,16 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
 
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
+
+  const variant = parameter.display_info?.size === "large" ? {size:"lg", minW:"420px", fontSize:24} : {size:"sm", minW:"200px", fontSize:16}
+
+
  return (
     <Select.Root
       collection={createListCollection(formattedOptions)}
       variant='outline'
-      size="sm"
-      minW="250px"
+      size={variant.size as ConditionalValue<"sm"|"md"|"lg">}
+      minW={variant.minW}
       onValueChange={(val) => {
           onChange(parameter.options.find((option: SelectOption) => option.key === val.value[0])!);
         }}
@@ -144,7 +149,7 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
       <Select.HiddenSelect />
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText placeholder={parameter.label || parameter.name} />
+          <Select.ValueText fontSize={variant.fontSize} placeholder={parameter.label } />
         </Select.Trigger>
         <Select.IndicatorGroup>
           <Select.Indicator />
@@ -219,9 +224,11 @@ export function NoCodeParameter<T extends ParameterType>({
   const TheInput = MAP_TO_PARAMETER_TYPED[parameter.type] as ParameterComponent<T>;
   return (
     <Field.Root>
-      <Field.Label>
-        {parameter.label || parameter.name}
-      </Field.Label>
+      {parameter.label && (
+        <Field.Label>
+          {parameter.label}
+        </Field.Label>
+      )}
       <TheInput parameter={parameter} onChange={onChange} />
       <Field.HelperText>{parameter.description}</Field.HelperText>
     </Field.Root>

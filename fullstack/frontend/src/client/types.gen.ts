@@ -133,6 +133,16 @@ export type Disable2FARequest = {
     temp_token: string;
 };
 
+export type DisplayInfo = {
+    size?: (DisplaySize | null);
+    row: number;
+    col: number;
+    row_span: number;
+    col_span: number;
+};
+
+export type DisplaySize = 'small' | 'medium' | 'large';
+
 /**
  * Request to start the 2FA setup process.
  */
@@ -223,8 +233,8 @@ export type NoCodeWidgetIn = {
     pipeline: Array<NoCodeToolIn>;
     row: number;
     col: number;
-    height: number;
-    width: number;
+    row_span: number;
+    col_span: number;
     type: WidgetType;
 };
 
@@ -253,10 +263,7 @@ export type Parameter_Input = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
-    row?: (number | null);
-    col?: (number | null);
-    row_span?: (number | null);
-    col_span?: (number | null);
+    display_info?: (DisplayInfo | null);
 };
 
 export type Parameter_Output = {
@@ -268,10 +275,7 @@ export type Parameter_Output = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
-    row?: (number | null);
-    col?: (number | null);
-    row_span?: (number | null);
-    col_span?: (number | null);
+    display_info?: (DisplayInfo | null);
 };
 
 export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'multi_select';

@@ -44,7 +44,9 @@ def get_no_code_tool(
 def process_widget(
     session: Session, user: User, widget: NoCodeWidgetIn
 ) -> NoCodeWidgetOut:
-    result = evaluate_pipeline(convert_to_callable_pipeline(widget.pipeline), session, user)
+    result = evaluate_pipeline(
+        convert_to_callable_pipeline(widget.pipeline), session, user
+    )
 
     return NoCodeWidgetOut(
         id=str(uuid.uuid4().hex),
@@ -53,8 +55,8 @@ def process_widget(
         description=widget.description,
         result=result,
         result_type=determine_result_type(result),
-        col_span=widget.width,
-        row_span=widget.height,
+        col_span=widget.col_span,
+        row_span=widget.row_span,
         col=widget.col,
         row=widget.row,
         type=widget.type,

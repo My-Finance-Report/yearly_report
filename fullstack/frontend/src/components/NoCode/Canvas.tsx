@@ -26,7 +26,7 @@ function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>>
     return rows.map(row => row.sort((a, b) => a.col - b.col))
   }
   
-export function NoCodeEditCanvas({ widgets, setEditWidget, setRuntimeParameters }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void, setRuntimeParameters: (parameters: Parameter_Output[]) => void }) {
+export function NoCodeEditCanvas({ widgets, setEditWidget }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void}) {
   
     if (!widgets) {
       return <div>No widgets found</div>
@@ -41,7 +41,7 @@ export function NoCodeEditCanvas({ widgets, setEditWidget, setRuntimeParameters 
                 <Button onClick={() => setEditWidget(widget)}>
                   <BsPencilSquare />
                 </Button>
-                <NoCodeShow key={widget.name} widget={widget} setRuntimeParameters={setRuntimeParameters} />
+                <NoCodeShow key={widget.name} widget={widget} />
               </Box>
             ))}
           </Flex>
@@ -86,7 +86,7 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
     };
 
 
-    const toDisplayParams = parameters.filter((parameter) =>  parameter.is_runtime)
+    const toDisplayParams = parameters.filter((parameter) =>  parameter.is_runtime && parameter.display_info)
 
 
     return (
@@ -110,16 +110,17 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
         {toDisplayParams.map(param =>(
           <GridItem
             key={`${param.name}${param.widget_id}`}
-            rowStart={param.row}
-            colStart={param.col}
-            rowSpan={param.row_span}
-            colSpan={param.col_span}
+            rowStart={param.display_info!.row} // we asserted above that its defined
+            colStart={param.display_info!.col}
+            rowSpan={param.display_info!.row_span}
+            colSpan={param.display_info!.col_span}
           >
             {
           renderNoCodeParameter(param, updateAParameter)
             }
           </GridItem>
         ))}
+
       </Grid>
       </Container>
     )
