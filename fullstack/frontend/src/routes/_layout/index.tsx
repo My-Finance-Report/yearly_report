@@ -152,8 +152,7 @@ function Landing() {
         </Heading>
         <Text fontSize="lg" maxW="600px" lineHeight="tall" mt={4}>
           We are still in open beta, and are charging literally nothing. We
-          intend to charge $25 per year, and will be transparent about the costs
-          we incur.
+          intend to charge ~$20 per month.
         </Text>
       </Box>
     </Flex>

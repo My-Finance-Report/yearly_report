@@ -91,10 +91,10 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
 
 
     return (
-      <Container>
+      <Container w="100%">
       <Grid
-        templateRows={`repeat(36, 1fr)`}
-        templateColumns={`repeat(12, 1fr)`}
+        templateRows={`repeat(12, 40px)`}
+        templateColumns={`repeat(12, 100px)`}
         gap={4}
       >
         {widgets.map(widget => (

@@ -36,10 +36,11 @@ import {
   FiSettings,
   FiUsers,
 } from "react-icons/fi"
-import { LuEllipsis } from "react-icons/lu"
+import { LuConstruction, LuEllipsis } from "react-icons/lu"
 import { CollapsibleWorkerStatus } from "./WorkerStatus"
 
 const navigationItems = [
+  { value: "/accounts", label: "Dashboard 2.0", icon: LuConstruction },
   { value: "/transactions", label: "Dashboard", icon: FiHome },
   { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
   { value: "/budget", label: "Budget", icon: FiDollarSign },

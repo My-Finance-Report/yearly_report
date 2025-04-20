@@ -1,13 +1,13 @@
 import { NoCodeWidgetOut, Parameter_Output} from "@/client"
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
-import { ShowValue, ShowBadge, ShowCardWithSparkline, ShowSeparator } from "./ShowValue"
+import { ShowValue, ShowBadge, ShowValueWithTrend, ShowSeparator } from "./ShowValue"
 import { ShowList } from "./ShowList"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
 
 const MAP_TO_SHOW = {
     "value": ShowValue,
-    "value_with_trend": ShowCardWithSparkline,
+    "value_with_trend": ShowValueWithTrend,
     "list": ShowList,    
     "pie_chart": ShowPieChart,
     "bar_chart": ShowBarChart,
