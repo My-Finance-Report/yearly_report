@@ -265,7 +265,7 @@ def _generate_throughput_widget(
     col: int = 1,
     row_span: int = 3,
     col_span: int = 3,
-    time_unit: SelectOption = SelectOption(key="week", value="week")
+    time_unit: SelectOption = SelectOption(key="week", value="week"),
 ) -> NoCodeWidgetOut:
     pipeline = [
         NoCodeToolIn(
@@ -285,7 +285,7 @@ def _generate_throughput_widget(
                     type=ParameterType.SELECT,
                     default_value=time_unit,
                     is_runtime=False,
-                )
+                ),
             ],
         )
     ]
@@ -611,12 +611,10 @@ def generate_account_page(
                 col_span=12,
                 statement="All Accounts",
             ),
-
             partial(_generate_name_widget, row=1, col=3, row_span=1, col_span=8),
-
             partial(_generate_net_worth_widget, row=5, col=1, row_span=3, col_span=3),
             partial(
-                    _generate_all_transactions_widget, row=5, col=4, row_span=5, col_span=9
+                _generate_all_transactions_widget, row=5, col=4, row_span=5, col_span=9
             ),
             partial(_generate_pie_widget, row=8, col=1, row_span=3, col_span=3),
             partial(
@@ -627,11 +625,29 @@ def generate_account_page(
                 col_span=12,
                 statement="Account Specific",
             ),
-            partial(_generate_plaid_badge_widget, row=24, col=5, row_span=1, col_span=2),
-            partial(_generate_sync_status_widget, row=24, col=7, row_span=1, col_span=2),
+            partial(
+                _generate_plaid_badge_widget, row=24, col=5, row_span=1, col_span=2
+            ),
+            partial(
+                _generate_sync_status_widget, row=24, col=7, row_span=1, col_span=2
+            ),
             partial(_generate_balance_widget, row=28, col=1, row_span=1, col_span=4),
-            partial(_generate_throughput_widget, row=28, col=5, row_span=1, col_span=4, time_unit=SelectOption(key="week", value="week")),
-            partial(_generate_throughput_widget, row=28, col=9, row_span=1, col_span=4, time_unit=SelectOption(key="month", value="month")),
+            partial(
+                _generate_throughput_widget,
+                row=28,
+                col=5,
+                row_span=1,
+                col_span=4,
+                time_unit=SelectOption(key="week", value="week"),
+            ),
+            partial(
+                _generate_throughput_widget,
+                row=28,
+                col=9,
+                row_span=1,
+                col_span=4,
+                time_unit=SelectOption(key="month", value="month"),
+            ),
             partial(_generate_bar_chart_widget, row=33, col=1, row_span=2, col_span=12),
             partial(_generate_list_widget, row=36, col=1, row_span=4, col_span=12),
         ]

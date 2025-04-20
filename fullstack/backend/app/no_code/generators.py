@@ -190,9 +190,11 @@ def account_balance(
         return None
 
     return ResultWithTrend(
-        result= round(Decimal(plaid_account[0].balance), 2),
+        result=round(Decimal(plaid_account[0].balance), 2),
         unit=Unit.DOLLAR,
-        trend=determine_percent_change(Decimal(plaid_account[1].balance), Decimal(plaid_account[0].balance)),
+        trend=determine_percent_change(
+            Decimal(plaid_account[1].balance), Decimal(plaid_account[0].balance)
+        ),
         trend_data=TrendData(
             values=[TrendValue(value=Decimal(val.balance)) for val in plaid_account],
             color="orange",
@@ -200,7 +202,7 @@ def account_balance(
     )
 
 
-def determine_percent_change(start: Decimal, end: Decimal)->Decimal:
+def determine_percent_change(start: Decimal, end: Decimal) -> Decimal:
     if start == 0:
         return Decimal(0)
     return round((end - start) / start * 100, 2)
@@ -257,7 +259,9 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     return ResultWithTrend(
         result=result,
         unit=Unit.DOLLAR,
-        trend=determine_percent_change(Decimal(net_worth_history[-2][1]), Decimal(net_worth_history[-1][1])),
+        trend=determine_percent_change(
+            Decimal(net_worth_history[-2][1]), Decimal(net_worth_history[-1][1])
+        ),
         trend_data=TrendData(
             values=[
                 TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history
@@ -307,7 +311,7 @@ def account_throughput(
         DESIRED_DATA = 365
 
     now = datetime.now()
-    current_cutoff = now-timedelta(days=DESIRED_DATA)
+    current_cutoff = now - timedelta(days=DESIRED_DATA)
     earliest_date = now - timedelta(days=DESIRED_DATA * 2)
 
     transactions = (
@@ -326,16 +330,15 @@ def account_throughput(
 
         if tx.date_of_transaction > current_cutoff:
             this_amount += Decimal(to_add)
-        else: 
+        else:
             previous_amount += Decimal(to_add)
 
-            
     return ResultWithTrend(
         result=Decimal(this_amount),
         unit=Unit.DOLLAR,
         trend=determine_percent_change(previous_amount, this_amount),
         trend_data=TrendData(
-            values=[TrendValue(value=previous_amount),TrendValue(value=this_amount)],
+            values=[TrendValue(value=previous_amount), TrendValue(value=this_amount)],
             color="blue",
         ),
     )
