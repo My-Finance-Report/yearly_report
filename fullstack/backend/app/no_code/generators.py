@@ -165,6 +165,7 @@ class ResultWithTrend(BaseModel):
     result: Decimal
     unit: Unit
     trend_data: TrendData
+    trend: Decimal
 
 
 @pipeline_step(
@@ -189,13 +190,20 @@ def account_balance(
         return None
 
     return ResultWithTrend(
-        result=round(Decimal(plaid_account[0].balance), 2),
+        result= round(Decimal(plaid_account[0].balance), 2),
         unit=Unit.DOLLAR,
+        trend=determine_percent_change(Decimal(plaid_account[1].balance), Decimal(plaid_account[0].balance)),
         trend_data=TrendData(
             values=[TrendValue(value=Decimal(val.balance)) for val in plaid_account],
             color="orange",
         ),
     )
+
+
+def determine_percent_change(start: Decimal, end: Decimal)->Decimal:
+    if start == 0:
+        return Decimal(0)
+    return round((end - start) / start * 100, 2)
 
 
 @pipeline_step(
@@ -245,9 +253,11 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
         net_worth_history_point = sum(latest_balances.values())
         net_worth_history.append((update.timestamp, net_worth_history_point))
 
+    result = round(Decimal(net_worth), 2)
     return ResultWithTrend(
-        result=round(Decimal(net_worth), 2),
+        result=result,
         unit=Unit.DOLLAR,
+        trend=determine_percent_change(Decimal(net_worth_history[-2][1]), Decimal(net_worth_history[-1][1])),
         trend_data=TrendData(
             values=[
                 TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history
@@ -271,6 +281,7 @@ def account_interest(
     return ResultWithTrend(
         result=Decimal(1000),
         unit=Unit.PERCENT,
+        trend=determine_percent_change(Decimal(1000), Decimal(1000)),
         trend_data=TrendData(
             values=[
                 TrendValue(value=Decimal(val * 100))
@@ -286,11 +297,18 @@ def account_interest(
     passed_value=None,
 )
 def account_throughput(
-    data: PipelineStart, account_id: SelectOption
+    data: PipelineStart, account_id: SelectOption, time_unit: SelectOption
 ) -> ResultWithTrend | None:
-    DESIRED_DATA = 5
+    if time_unit.key == "week":
+        DESIRED_DATA = 7
+    elif time_unit.key == "month":
+        DESIRED_DATA = 30
+    elif time_unit.key == "year":
+        DESIRED_DATA = 365
+
     now = datetime.now()
-    earliest_date = now - timedelta(days=7 * (DESIRED_DATA - 1))
+    current_cutoff = now-timedelta(days=DESIRED_DATA)
+    earliest_date = now - timedelta(days=DESIRED_DATA * 2)
 
     transactions = (
         data.session.query(Transaction)
@@ -301,26 +319,23 @@ def account_throughput(
         .all()
     )
 
-    # Bucket transactions into 7-day periods
-    buckets: dict[int, float] = defaultdict(float)
+    previous_amount = Decimal(0)
+    this_amount = Decimal(0)
     for tx in transactions:
-        # Calculate which bucket this transaction falls into
-        days_ago = (now - tx.date_of_transaction).days
-        bucket_idx = days_ago // 7
-        if bucket_idx < DESIRED_DATA:
-            if tx.kind == TransactionKind.withdrawal:
-                buckets[bucket_idx] -= tx.amount
-            elif tx.kind == TransactionKind.deposit:
-                buckets[bucket_idx] += tx.amount
+        to_add = tx.amount if tx.kind == TransactionKind.deposit else -tx.amount
 
-    # Fill in missing buckets with zero if no transactions
-    values = [buckets.get(i, 0.0) for i in range(DESIRED_DATA)]
+        if tx.date_of_transaction > current_cutoff:
+            this_amount += Decimal(to_add)
+        else: 
+            previous_amount += Decimal(to_add)
 
+            
     return ResultWithTrend(
-        result=Decimal(values[0]),
+        result=Decimal(this_amount),
         unit=Unit.DOLLAR,
+        trend=determine_percent_change(previous_amount, this_amount),
         trend_data=TrendData(
-            values=[TrendValue(value=Decimal(val)) for val in values],
+            values=[TrendValue(value=previous_amount),TrendValue(value=this_amount)],
             color="blue",
         ),
     )

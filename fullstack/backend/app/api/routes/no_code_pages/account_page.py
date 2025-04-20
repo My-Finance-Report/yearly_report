@@ -43,12 +43,6 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 ],
                 default_value=SelectOption(key="12", value="12"),
                 is_runtime=False,
-                display_info=DisplayInfo(
-                    row=11,
-                    col=3,
-                    row_span=1,
-                    col_span=2,
-                ),
             ),
             Parameter(
                 name="account_id",
@@ -59,7 +53,7 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 is_runtime=True,
                 display_info=DisplayInfo(
                     size=DisplaySize.LARGE,
-                    row=8,
+                    row=24,
                     col=1,
                     row_span=1,
                     col_span=4,
@@ -74,10 +68,10 @@ def first_n(session: Session, user: User) -> NoCodeToolIn:
                 default_value=SelectOption(key="1", value="1"),
                 is_runtime=True,
                 display_info=DisplayInfo(
-                    row=18,
-                    col=4,
+                    row=41,
+                    col=5,
                     row_span=1,
-                    col_span=4,
+                    col_span=2,
                 ),
             ),
         ],
@@ -98,7 +92,7 @@ def most_recent_n(widget_id: str | None = None) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=SelectOption(key="14", value="14"),
+                default_value=SelectOption(key="12", value="12"),
                 widget_id=widget_id,
                 is_runtime=False,
             ),
@@ -271,6 +265,7 @@ def _generate_throughput_widget(
     col: int = 1,
     row_span: int = 3,
     col_span: int = 3,
+    time_unit: SelectOption = SelectOption(key="week", value="week")
 ) -> NoCodeWidgetOut:
     pipeline = [
         NoCodeToolIn(
@@ -283,6 +278,13 @@ def _generate_throughput_widget(
                     options=make_account_choices(session, user),
                     default_value=make_account_choices(session, user)[0],
                     is_runtime=True,
+                ),
+                Parameter(
+                    name="time_unit",
+                    label="Time Unit",
+                    type=ParameterType.SELECT,
+                    default_value=time_unit,
+                    is_runtime=False,
                 )
             ],
         )
@@ -297,7 +299,7 @@ def _generate_throughput_widget(
         parameters=response.parameters,
         result_type=response.result_type,
         result=response.result,
-        name="Change this week",
+        name=f"Change this {time_unit.value}",
         description="Balance of account",
         row=row,
         col=col,
@@ -449,31 +451,13 @@ def _generate_name_widget(
 ) -> NoCodeWidgetOut:
     widget_id = "ee2cce65b2ff461484d3ac55bbaa153c"
 
-    pipeline = [
-        NoCodeToolIn(
-            tool="account_name",
-            parameters=[
-                Parameter(
-                    name="account_id",
-                    label="Account",
-                    type=ParameterType.SELECT,
-                    options=make_account_choices(session, user),
-                    default_value=make_account_choices(session, user)[0],
-                    is_runtime=True,
-                )
-            ],
-        )
-    ]
-
-    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
-
     return NoCodeWidgetOut(
         id=widget_id,
-        parameters=response.parameters,
-        result_type=response.result_type,
-        result=response.result,
+        result_type=ResultTypeEnum.string,
+        result="🚧 Heads up, this page is under construction, but I like to build in public, so feel free to poke around and make suggestions! 🚧",
         name="",
-        description="Name of account",
+        description="",
+        parameters=[],
         row=row,
         col=col,
         row_span=row_span,
@@ -564,7 +548,7 @@ def _generate_bar_chart_widget(
     agg_parameters = [
         Parameter(
             name="key_from",
-            label="X Axis",
+            label="Group By",
             type=ParameterType.SELECT,
             options=options,
             default_value=SelectOption(
@@ -573,7 +557,7 @@ def _generate_bar_chart_widget(
             is_runtime=True,
             widget_id=widget_id,
             display_info=DisplayInfo(
-                row=11,
+                row=30,
                 col=1,
                 row_span=1,
                 col_span=2,
@@ -621,32 +605,35 @@ def generate_account_page(
         for callable in [
             partial(
                 _generate_seperator_widget,
-                row=1,
+                row=4,
                 col=1,
                 row_span=1,
                 col_span=12,
                 statement="All Accounts",
             ),
-            partial(_generate_net_worth_widget, row=2, col=1, row_span=2, col_span=3),
-            partial(_generate_pie_widget, row=4, col=1, row_span=3, col_span=3),
+
+            partial(_generate_name_widget, row=1, col=3, row_span=1, col_span=8),
+
+            partial(_generate_net_worth_widget, row=5, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=2, col=4, row_span=5, col_span=9
+                    _generate_all_transactions_widget, row=5, col=4, row_span=5, col_span=9
             ),
+            partial(_generate_pie_widget, row=8, col=1, row_span=3, col_span=3),
             partial(
                 _generate_seperator_widget,
-                row=7,
+                row=22,
                 col=1,
                 row_span=1,
                 col_span=12,
                 statement="Account Specific",
             ),
-            partial(_generate_plaid_badge_widget, row=8, col=6, row_span=1, col_span=1),
-            partial(_generate_sync_status_widget, row=8, col=7, row_span=1, col_span=1),
-            partial(_generate_balance_widget, row=9, col=1, row_span=2, col_span=4),
-            partial(_generate_interest_widget, row=9, col=5, row_span=2, col_span=4),
-            partial(_generate_throughput_widget, row=9, col=9, row_span=2, col_span=4),
-            partial(_generate_bar_chart_widget, row=12, col=1, row_span=2, col_span=12),
-            partial(_generate_list_widget, row=14, col=1, row_span=4, col_span=12),
+            partial(_generate_plaid_badge_widget, row=24, col=5, row_span=1, col_span=2),
+            partial(_generate_sync_status_widget, row=24, col=7, row_span=1, col_span=2),
+            partial(_generate_balance_widget, row=28, col=1, row_span=1, col_span=4),
+            partial(_generate_throughput_widget, row=28, col=5, row_span=1, col_span=4, time_unit=SelectOption(key="week", value="week")),
+            partial(_generate_throughput_widget, row=28, col=9, row_span=1, col_span=4, time_unit=SelectOption(key="month", value="month")),
+            partial(_generate_bar_chart_widget, row=33, col=1, row_span=2, col_span=12),
+            partial(_generate_list_widget, row=36, col=1, row_span=4, col_span=12),
         ]
     ]
     widgets = []

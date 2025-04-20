@@ -39,17 +39,14 @@ export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
 
 export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as { result: number, trend: number };
-  const isUp = result.trend > 0;
+  const isUp = result.trend >= 0;
   return (
     <Box borderWidth={1} borderRadius="md" p={2} minWidth={"300px"}>
       <Stat.Root border={"1px"} borderRadius={"md"} size="lg" flex={"row"} justifyContent={"space-between"} alignItems={"center"}>
         <VStack>
           <Stat.ValueText>
-            {widget.result_type === "number" ? (
-              <FormatNumber value={result.result} style="currency" currency="USD" />
-            ) : (
-              <Text>{result.result}</Text>
-            )}
+              {result.result ? <FormatNumber value={result.result} style="currency" currency="USD" /> : 
+          'N/A'}
           </Stat.ValueText>
           <Badge colorPalette={isUp ? "green" : "red"} variant="plain" p="2" m="2">
             {isUp ? <Stat.UpIndicator /> : <Stat.DownIndicator />}
@@ -123,8 +120,37 @@ const SparkLine = ({ data }: { data: { values: { value: number }[], color: strin
   })
 
   return (
-    <Chart.Root height="10" chart={chart}>
+    <Box w="300px" h="100px" overflow="hidden">
+    <Chart.Root chart={chart}>
       <AreaChart
+        width={300}          
+        height={100}
+        data={chart.data}
+        margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+      >
+        {chart.series.map((item) => (
+          <Area
+            key={item.name}
+            isAnimationActive={false}   // smoother at this size
+            dataKey={chart.key(item.name)}
+            fill={chart.color(item.color)}
+            fillOpacity={0.2}
+            stroke={chart.color(item.color)}
+            strokeWidth={1}            // thinner line looks cleaner
+          />
+        ))}
+      </AreaChart>
+    </Chart.Root>
+  </Box>
+  )
+
+
+
+  return (
+    <Chart.Root chart={chart}>
+      <AreaChart
+        width={3}
+        height={3}
         data={chart.data}
         margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
       >
