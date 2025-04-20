@@ -91,36 +91,49 @@ def convert_to_callable_pipeline(
 
     return steps
 
-def get_pages_per_account(session: Session, user: User, **kwargs)-> list[SelectOption]:
+
+def get_pages_per_account(
+    session: Session, user: User, **kwargs: Any
+) -> list[SelectOption]:
     account_id = kwargs["account_id"]
     n = kwargs["n"]
 
-    total = session.query(func.count(Transaction.id)).filter(Transaction.user_id == user.id, Transaction.transaction_source_id == int(account_id.key)).scalar()
+    total = (
+        session.query(func.count(Transaction.id))
+        .filter(
+            Transaction.user_id == user.id,
+            Transaction.transaction_source_id == int(account_id.key),
+        )
+        .scalar()
+    )
 
-    number_of_pages = (total // int(n.key)) +1
+    number_of_pages = (total // int(n.key)) + 1
 
-    return [SelectOption(key=str(page), value=str(page)) for page in range(1, number_of_pages+1)]
+    return [
+        SelectOption(key=str(page), value=str(page))
+        for page in range(1, number_of_pages + 1)
+    ]
 
 
+CALLABLE_LOOKUP = {"get_pages_per_account": get_pages_per_account}
 
 
-
-CALLABLE_LOOKUP = {
-    "get_pages_per_account": get_pages_per_account
-}
-
-def extract_parameters_from_pipeline(tools: list[NoCodeToolIn], session, user) -> list[Parameter]:
+def extract_parameters_from_pipeline(
+    tools: list[NoCodeToolIn], session: Session, user: User
+) -> list[Parameter]:
     runtime_params = []
     for tool in tools:
         if tool.parameters:
             for p in tool.parameters:
                 runtime_params.append(p)
-    
-    lookup = {param.name : figure_out_parameters(param) for param in runtime_params}
+
+    lookup = {param.name: figure_out_parameters(param) for param in runtime_params}
 
     for param in runtime_params:
         if param.option_generator:
-            param.options = CALLABLE_LOOKUP[param.option_generator](session, user, **lookup)
+            param.options = CALLABLE_LOOKUP[param.option_generator](
+                session, user, **lookup
+            )
 
     return runtime_params
 

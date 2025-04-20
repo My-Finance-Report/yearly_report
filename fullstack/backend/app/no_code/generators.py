@@ -39,7 +39,10 @@ def total_amount_per_category(data: PipelineStart) -> list[KeyValuePair]:
     passed_value=None,
 )
 def first_n_transactions(
-    data: PipelineStart, n: SelectOption, account_id: SelectOption | None, page: SelectOption = SelectOption(key="1", value="1")
+    data: PipelineStart,
+    n: SelectOption,
+    account_id: SelectOption | None,
+    page: SelectOption = SelectOption(key="1", value="1"),
 ) -> list[NoCodeTransaction]:
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
@@ -53,11 +56,11 @@ def first_n_transactions(
     txs = (
         txs.filter(Transaction.user_id == data.user.id)
         .order_by(Transaction.date_of_transaction.desc())
-        .offset((int(page.key)-1) * int(n.key))
+        .offset((int(page.key) - 1) * int(n.key))
         .limit(int(n.key))
     )
 
-    val= [
+    val = [
         NoCodeTransaction(
             id=tx.id,
             category_name=cat.name,

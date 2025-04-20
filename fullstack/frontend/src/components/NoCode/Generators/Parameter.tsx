@@ -62,13 +62,16 @@ export type Parameter_Output =
   | FloatParameter
   | StringParameter
   | SelectParameter
+  | PaginationParameter
   | MultiSelectParameter;
+
 
 type ParameterValueType<T extends ParameterType> =
   T extends "int" | "float" ? number :
   T extends "string" ? string :
   T extends "select" ? SelectOption :
   T extends "multi_select" ? SelectOption[] :
+  T extends "pagination" ? SelectOption :
   never;
 
 type ParameterProps<T extends ParameterType> = {
@@ -87,7 +90,7 @@ const MAP_TO_PARAMETER = {
 
 type ParameterComponent<T extends ParameterType> = (
   props: ParameterProps<T>
-) => JSX.Element;
+) => JSX.Element | null;
 
 const MAP_TO_PARAMETER_TYPED: {
   [K in ParameterType]: ParameterComponent<K>;
@@ -96,13 +99,13 @@ const MAP_TO_PARAMETER_TYPED: {
 
 function PaginationParameter({parameter, onChange}: ParameterProps<"pagination">){
 
-  const passedPage = parameter.value?.value || parameter.default_value.value
+  const passedPage = parameter.value?.value || parameter.default_value?.value || "1"
 
-  const maxPage = parameter.options?.map((option) => option.value).reduce((a, b) => Math.max(Number(a),Number(b))) || 0
+  const maxPage = parameter.options?.map((option) => Number(option.value)).reduce((a, b) => Math.max(a,b)) || 0
 
   const [page, setPage] = useState(Number(passedPage))
 
-  const handleSet = (e) =>{
+  const handleSet = (e: {page: number}) =>{
     setPage(e.page)
     onChange({
       key: e.page.toString(), value: e.page.toString()});

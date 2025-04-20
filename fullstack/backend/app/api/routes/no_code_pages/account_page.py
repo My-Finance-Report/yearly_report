@@ -25,7 +25,6 @@ from app.schemas.no_code import (
 )
 
 
-
 def first_n(session: Session, user: User) -> NoCodeToolIn:
     account_choices = make_account_choices(session, user)
 

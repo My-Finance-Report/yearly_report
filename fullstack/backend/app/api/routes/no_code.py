@@ -50,7 +50,7 @@ def process_widget(
 
     return NoCodeWidgetOut(
         id=str(uuid.uuid4().hex),
-        parameters=extract_parameters_from_pipeline(widget.pipeline),
+        parameters=extract_parameters_from_pipeline(widget.pipeline, session, user),
         name=widget.name,
         description=widget.description,
         result=result,
