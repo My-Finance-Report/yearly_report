@@ -7,11 +7,10 @@ from typing import Any, Callable, Generic, TypeVar
 from pydantic import BaseModel
 
 from app.core.db import Session
-from app.models import TransactionId, TransactionKind, User
+from app.models import  TransactionKind, User
 
 
 class NoCodeTransaction(BaseModel):
-    id: TransactionId | None
     amount: float
     description: str
     date_of_transaction: datetime

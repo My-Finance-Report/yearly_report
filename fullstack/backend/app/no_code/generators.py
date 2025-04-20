@@ -62,7 +62,6 @@ def first_n_transactions(
 
     val = [
         NoCodeTransaction(
-            id=tx.id,
             category_name=cat.name,
             amount=tx.amount,
             kind=tx.kind,
