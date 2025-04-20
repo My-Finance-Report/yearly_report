@@ -1,11 +1,8 @@
-from dataclasses import is_dataclass
 import enum
-from typing import Any
 import uuid
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from pydantic import Json
 
 from app.db import Session, get_current_user, get_db
 from app.models import (
@@ -25,8 +22,6 @@ from app.schemas.no_code import (
     NoCodeWidgetOut,
     Parameter,
     ParameterType,
-    ResultType,
-    ResultTypeEnum,
 )
 from app.api.routes.no_code_pages.account_page import generate_account_page
 
