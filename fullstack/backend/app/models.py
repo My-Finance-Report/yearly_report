@@ -514,7 +514,7 @@ class PlaidAccountBalance(Base):
     plaid_account_id: Mapped[PlaidAccountId] = mapped_column(
         ForeignKey("plaid_account.id"), nullable=False, index=True
     )
-    balance: Mapped[float] = mapped_column(Float, nullable=False) # aka current
+    balance: Mapped[float] = mapped_column(Float, nullable=False)  # aka current
     available: Mapped[float | None] = mapped_column(Float, nullable=True)
     iso_currency_code: Mapped[str | None] = mapped_column(String, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(

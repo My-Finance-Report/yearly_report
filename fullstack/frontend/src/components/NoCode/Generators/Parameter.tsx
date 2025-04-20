@@ -1,11 +1,12 @@
-import { Box, Text, Field, Input, Button,  Select } from "@chakra-ui/react";
-import { ParameterType, SelectOption } from "@/client";
+import { Box, Text, Field, Input, Button,  Select, ConditionalValue, Pagination, ButtonGroup, IconButton } from "@chakra-ui/react";
+import { DisplayInfo, ParameterType, SelectOption } from "@/client";
 import {
   Portal,
   createListCollection,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { JSX } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 
 export interface ParameterBase {
@@ -16,6 +17,7 @@ export interface ParameterBase {
   value?: unknown;
   default_value?: unknown;
   options?: SelectOption[];
+  display_info: DisplayInfo | null;
 }
 
 export interface IntParameter extends ParameterBase {
@@ -41,6 +43,13 @@ export interface SelectParameter extends ParameterBase {
   options: SelectOption[];
 }
 
+export interface PaginationParameter extends ParameterBase {
+  type: "pagination";
+  value?: SelectOption;
+  default_value?: SelectOption;
+  options: SelectOption[];
+}
+
 export interface MultiSelectParameter extends ParameterBase {
   type: "multi_select";
   value?: SelectOption[];
@@ -53,13 +62,16 @@ export type Parameter_Output =
   | FloatParameter
   | StringParameter
   | SelectParameter
+  | PaginationParameter
   | MultiSelectParameter;
+
 
 type ParameterValueType<T extends ParameterType> =
   T extends "int" | "float" ? number :
   T extends "string" ? string :
   T extends "select" ? SelectOption :
   T extends "multi_select" ? SelectOption[] :
+  T extends "pagination" ? SelectOption :
   never;
 
 type ParameterProps<T extends ParameterType> = {
@@ -70,6 +82,7 @@ type ParameterProps<T extends ParameterType> = {
 const MAP_TO_PARAMETER = {
   int: IntParameter,
   float: FloatParameter,
+  pagination: PaginationParameter,
   string: StrParameter,
   select: SelectParameter,
   multi_select: MultiSelectParameter,
@@ -77,12 +90,62 @@ const MAP_TO_PARAMETER = {
 
 type ParameterComponent<T extends ParameterType> = (
   props: ParameterProps<T>
-) => JSX.Element;
+) => JSX.Element | null;
 
 const MAP_TO_PARAMETER_TYPED: {
   [K in ParameterType]: ParameterComponent<K>;
 } = MAP_TO_PARAMETER;
 
+
+function PaginationParameter({parameter, onChange}: ParameterProps<"pagination">){
+
+  const passedPage = parameter.value?.value || parameter.default_value?.value || "1"
+
+  const maxPage = parameter.options?.map((option) => Number(option.value)).reduce((a, b) => Math.max(a,b)) || 0
+
+  const [page, setPage] = useState(Number(passedPage))
+
+  const handleSet = (e: {page: number}) =>{
+    setPage(e.page)
+    onChange({
+      key: e.page.toString(), value: e.page.toString()});
+  }
+
+  if (maxPage === 0){
+    return null
+  }
+
+  return (
+    <Pagination.Root
+      count={maxPage}
+      pageSize={1}
+      page={page}
+      onPageChange={handleSet}
+    >
+      <ButtonGroup variant="ghost" size="sm" spaceX={4}>
+        <Pagination.PrevTrigger asChild>
+          <IconButton>
+            <FaChevronLeft />
+          </IconButton>
+        </Pagination.PrevTrigger>
+
+        <Pagination.Items
+          render={(page) => (
+            <IconButton variant={{ base: "ghost", _selected: "outline" }}>
+              {page.value}
+            </IconButton>
+          )}
+        />
+
+        <Pagination.NextTrigger asChild>
+          <IconButton>
+            <FaChevronRight />
+          </IconButton>
+        </Pagination.NextTrigger>
+      </ButtonGroup>
+    </Pagination.Root>
+  )
+}
 
 
 function IntParameter({ parameter, onChange }: ParameterProps<"int">) {
@@ -130,12 +193,16 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
 
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
 
+
+  const variant = parameter.display_info?.size === "large" ? {size:"lg", minW:"420px", fontSize:24} : {size:"sm", minW:"200px", fontSize:16}
+
+
  return (
     <Select.Root
       collection={createListCollection(formattedOptions)}
-      variant='subtle'
-      size="sm"
-      maxW="250px"
+      variant='outline'
+      size={variant.size as ConditionalValue<"sm"|"md"|"lg">}
+      minW={variant.minW}
       onValueChange={(val) => {
           onChange(parameter.options.find((option: SelectOption) => option.key === val.value[0])!);
         }}
@@ -144,7 +211,7 @@ function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
       <Select.HiddenSelect />
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText placeholder={parameter.label || parameter.name} />
+          <Select.ValueText fontSize={variant.fontSize} placeholder={parameter.label } />
         </Select.Trigger>
         <Select.IndicatorGroup>
           <Select.Indicator />
@@ -219,9 +286,11 @@ export function NoCodeParameter<T extends ParameterType>({
   const TheInput = MAP_TO_PARAMETER_TYPED[parameter.type] as ParameterComponent<T>;
   return (
     <Field.Root>
-      <Field.Label>
-        {parameter.label || parameter.name}
-      </Field.Label>
+      {parameter.label && (
+        <Field.Label>
+          {parameter.label}
+        </Field.Label>
+      )}
       <TheInput parameter={parameter} onChange={onChange} />
       <Field.HelperText>{parameter.description}</Field.HelperText>
     </Field.Root>

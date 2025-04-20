@@ -3,15 +3,17 @@ from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
 
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
+from sqlalchemy import func
 
 from app.db import Session
-from app.models import TransactionSource, User
+from app.models import Transaction, TransactionSource, User
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
     Parameter,
     PipelineStart,
+    ResultTypeEnum,
     SelectOption,
 )
 
@@ -30,6 +32,25 @@ def make_account_choices(session: Session, user: User) -> list[SelectOption]:
 def init_no_code() -> None:
     import app.no_code.generators
     import app.no_code.transformations
+
+
+def safe_parse_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def determine_result_type(result: Any) -> ResultTypeEnum:
+    if result is None:
+        return ResultTypeEnum.deferred
+    if is_dataclass(result):
+        return ResultTypeEnum.object_
+    if isinstance(result, list):
+        return ResultTypeEnum.list_
+    if safe_parse_int(result) is not None:
+        return ResultTypeEnum.number
+    return ResultTypeEnum.string
 
 
 def figure_out_parameters(
@@ -56,35 +77,68 @@ def figure_out_parameters(
     return None
 
 
-def convert_to_pipeline(
+def convert_to_callable_pipeline(
     tools: list[NoCodeToolIn],
 ) -> list[partial[PipelineCallable]] | None:
     steps = []
     for tool in tools:
         func = get_tool_callable(tool.tool)
         if tool.parameters:
-            if not all(
-                figure_out_parameters(p) for p in tool.parameters
-            ):  # has bug doesnt allow None as param type
-                return None
-            else:
-                kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
-                steps.append(partial(func, **kwargs))
+            kwargs = {p.name: figure_out_parameters(p) for p in tool.parameters}
+            steps.append(partial(func, **kwargs))
         else:
             steps.append(partial(func, **{}))
 
     return steps
 
 
-def extract_parameters_from_pipeline(tools: list[NoCodeToolIn]) -> list[Parameter]:
+def get_pages_per_account(
+    session: Session, user: User, **kwargs: Any
+) -> list[SelectOption]:
+    account_id = kwargs["account_id"]
+    n = kwargs["n"]
+
+    total = (
+        session.query(func.count(Transaction.id))
+        .filter(
+            Transaction.user_id == user.id,
+            Transaction.transaction_source_id == int(account_id.key),
+        )
+        .scalar()
+    )
+
+    number_of_pages = (total // int(n.key)) + 1
+
+    return [
+        SelectOption(key=str(page), value=str(page))
+        for page in range(1, number_of_pages + 1)
+    ]
+
+
+CALLABLE_LOOKUP = {"get_pages_per_account": get_pages_per_account}
+
+
+def extract_parameters_from_pipeline(
+    tools: list[NoCodeToolIn], session: Session, user: User
+) -> list[Parameter]:
     runtime_params = []
     for tool in tools:
         if tool.parameters:
-            runtime_params.extend([p for p in tool.parameters])
+            for p in tool.parameters:
+                runtime_params.append(p)
+
+    lookup = {param.name: figure_out_parameters(param) for param in runtime_params}
+
+    for param in runtime_params:
+        if param.option_generator:
+            param.options = CALLABLE_LOOKUP[param.option_generator](
+                session, user, **lookup
+            )
+
     return runtime_params
 
 
-def enrich_with_runtime(
+def enrich_tools_with_runtime_parameters(
     tools: list[NoCodeToolIn],
     runtime_parameters: list[Parameter] | None = None,
     widget_id: str | None = None,
@@ -145,7 +199,34 @@ def evaluate_pipeline(
     data = PipelineStart(user, session)
     for block in steps:
         data = block(data)  # type: ignore [assignment]
-    return serialize_to_result(data)
+    return data
+
+
+class RenderLoopResult(BaseModel):
+    result: Any
+    result_type: ResultTypeEnum
+    parameters: list[Parameter]
+
+
+def main_render_loop(
+    pipeline: list[NoCodeToolIn],
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    widget_id: str | None = None,
+) -> RenderLoopResult:
+    enriched_tools = enrich_tools_with_runtime_parameters(
+        pipeline, runtime_parameters, widget_id
+    )
+    callable_pipeline = convert_to_callable_pipeline(enriched_tools)
+    pipeline_output = evaluate_pipeline(callable_pipeline, session, user)
+    result = serialize_to_result(pipeline_output)
+    result_type = determine_result_type(result)
+    return RenderLoopResult(
+        result=result,
+        result_type=result_type,
+        parameters=extract_parameters_from_pipeline(pipeline, session, user),
+    )
 
 
 def _same(t1: type, t2: type) -> bool:

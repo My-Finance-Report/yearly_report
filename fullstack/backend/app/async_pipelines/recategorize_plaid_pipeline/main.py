@@ -18,7 +18,6 @@ from app.worker.status import log_completed, status_update_monad
 
 
 async def recategorize_account_pipeline(in_process_files: list[InProcessJob]) -> None:
-    print("trying to apply config")
     in_process_with_config = [
         apply_upload_config_no_create(in_process) for in_process in in_process_files
     ]

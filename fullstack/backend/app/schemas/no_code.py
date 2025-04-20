@@ -2,7 +2,7 @@ from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -28,12 +28,27 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
+    PAGINATION = "pagination"
     MULTI_SELECT = "multi_select"
 
 
 class SelectOption(BaseModel):
     key: str
     value: str
+
+
+class DisplaySize(str, enum.Enum):
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+
+
+class DisplayInfo(BaseModel):
+    size: DisplaySize | None = None
+    row: int
+    col: int
+    row_span: int
+    col_span: int
 
 
 class Parameter(BaseModel):
@@ -61,8 +76,10 @@ class Parameter(BaseModel):
         | None
     ) = None
     options: list[SelectOption] | None = None
+    option_generator: str | None = None
     widget_id: str | None = None
     is_runtime: bool = False
+    display_info: DisplayInfo | None = None
 
 
 @dataclass
@@ -105,6 +122,7 @@ class WidgetType(str, enum.Enum):
     list = "list"
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
+    separator = "separator"
 
 
 Scalar = Decimal | str | int | float
@@ -112,7 +130,7 @@ Object = dict[str, Scalar]
 ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object]
 
 
-class ResultTypeEnum(enum.Enum):
+class ResultTypeEnum(str, enum.Enum):
     string = "string"
     number = "number"
     object_ = "object"
@@ -123,7 +141,6 @@ class ResultTypeEnum(enum.Enum):
 class NoCodeToolIn(BaseModel):
     tool: str
     parameters: list[Parameter] | None = None
-    global_parameters: list[str] | None = None
 
 
 class NoCodeWidgetIn(BaseModel):
@@ -132,8 +149,8 @@ class NoCodeWidgetIn(BaseModel):
     pipeline: list[NoCodeToolIn]
     row: int
     col: int
-    height: int
-    width: int
+    row_span: int
+    col_span: int
     type: WidgetType
 
 
@@ -146,15 +163,15 @@ class NoCodeWidgetOut(BaseModel):
     parameters: list[Parameter]
     row: int
     col: int
-    height: int
-    width: int
+    row_span: int
+    col_span: int
     type: WidgetType
 
 
 class NoCodeCanvas(BaseModel):
     name: str
     widgets: list[NoCodeWidgetOut]
-    global_parameters: list[Parameter]
+    parameters: list[Parameter]
 
 
 class NoCodeTool(BaseModel):

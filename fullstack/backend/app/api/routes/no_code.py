@@ -1,11 +1,8 @@
-from dataclasses import is_dataclass
 import enum
-from typing import Any
 import uuid
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from pydantic import Json
 
 from app.db import Session, get_current_user, get_db
 from app.models import (
@@ -13,7 +10,8 @@ from app.models import (
 )
 from app.no_code.decoration import make_tools
 from app.no_code.functions import (
-    convert_to_pipeline,
+    convert_to_callable_pipeline,
+    determine_result_type,
     evaluate_pipeline,
     extract_parameters_from_pipeline,
 )
@@ -24,8 +22,6 @@ from app.schemas.no_code import (
     NoCodeWidgetOut,
     Parameter,
     ParameterType,
-    ResultType,
-    ResultTypeEnum,
 )
 from app.api.routes.no_code_pages.account_page import generate_account_page
 
@@ -40,39 +36,22 @@ def get_no_code_tool(
     return make_tools(session, user)
 
 
-def safe_parse_int(value: Any) -> int | None:
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def determine_result_type(result: Any) -> ResultTypeEnum:
-    if result is None:
-        return ResultTypeEnum.deferred
-    if is_dataclass(result):
-        return ResultTypeEnum.object_
-    if isinstance(result, list):
-        return ResultTypeEnum.list_
-    if safe_parse_int(result) is not None:
-        return ResultTypeEnum.number
-    return ResultTypeEnum.string
-
-
 def process_widget(
     session: Session, user: User, widget: NoCodeWidgetIn
 ) -> NoCodeWidgetOut:
-    result = evaluate_pipeline(convert_to_pipeline(widget.pipeline), session, user)
+    result = evaluate_pipeline(
+        convert_to_callable_pipeline(widget.pipeline), session, user
+    )
 
     return NoCodeWidgetOut(
         id=str(uuid.uuid4().hex),
-        parameters=extract_parameters_from_pipeline(widget.pipeline),
+        parameters=extract_parameters_from_pipeline(widget.pipeline, session, user),
         name=widget.name,
         description=widget.description,
         result=result,
         result_type=determine_result_type(result),
-        width=widget.width,
-        height=widget.height,
+        col_span=widget.col_span,
+        row_span=widget.row_span,
         col=widget.col,
         row=widget.row,
         type=widget.type,

@@ -133,6 +133,16 @@ export type Disable2FARequest = {
     temp_token: string;
 };
 
+export type DisplayInfo = {
+    size?: (DisplaySize | null);
+    row: number;
+    col: number;
+    row_span: number;
+    col_span: number;
+};
+
+export type DisplaySize = 'small' | 'medium' | 'large';
+
 /**
  * Request to start the 2FA setup process.
  */
@@ -196,7 +206,7 @@ export type NewPassword = {
 export type NoCodeCanvas = {
     name: string;
     widgets: Array<NoCodeWidgetOut>;
-    global_parameters: Array<Parameter_Output>;
+    parameters: Array<Parameter_Output>;
 };
 
 export type NoCodeTool = {
@@ -215,7 +225,6 @@ export type NoCodeTool = {
 export type NoCodeToolIn = {
     tool: string;
     parameters?: (Array<Parameter_Input> | null);
-    global_parameters?: (Array<(string)> | null);
 };
 
 export type NoCodeWidgetIn = {
@@ -224,8 +233,8 @@ export type NoCodeWidgetIn = {
     pipeline: Array<NoCodeToolIn>;
     row: number;
     col: number;
-    height: number;
-    width: number;
+    row_span: number;
+    col_span: number;
     type: WidgetType;
 };
 
@@ -238,8 +247,8 @@ export type NoCodeWidgetOut = {
     parameters: Array<Parameter_Output>;
     row: number;
     col: number;
-    height: number;
-    width: number;
+    row_span: number;
+    col_span: number;
     type: WidgetType;
 };
 
@@ -254,6 +263,7 @@ export type Parameter_Input = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
+    display_info?: (DisplayInfo | null);
 };
 
 export type Parameter_Output = {
@@ -265,9 +275,10 @@ export type Parameter_Output = {
     options?: (Array<SelectOption> | null);
     widget_id?: (string | null);
     is_runtime?: boolean;
+    display_info?: (DisplayInfo | null);
 };
 
-export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'multi_select';
+export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'pagination' | 'multi_select';
 
 /**
  * Response model for a Plaid account.
@@ -333,6 +344,13 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -579,7 +597,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart';
+export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart' | 'separator';
 
 export type WorkerStatusOut = {
     id: number;
@@ -788,6 +806,19 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 

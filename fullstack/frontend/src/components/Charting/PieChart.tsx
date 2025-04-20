@@ -97,6 +97,13 @@ export function GenericPieChart({
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
 
+
+  const optimisticallyParsedData = data.map(item => ({
+    ...item,
+    [dataKey]: Number(item[dataKey]),
+    [nameKey]: item[nameKey],
+  }))
+
   return (
     <Box minH="307px" className="flex flex-col">
       <CardContent className="flex-1 pb-0 align-center">
@@ -109,7 +116,7 @@ export function GenericPieChart({
               content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
             />
             <Pie
-              data={data}
+              data={optimisticallyParsedData}
               dataKey={dataKey}
               nameKey={nameKey}
               innerRadius={innerRadius}

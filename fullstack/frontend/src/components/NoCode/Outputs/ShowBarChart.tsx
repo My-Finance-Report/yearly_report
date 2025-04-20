@@ -13,7 +13,7 @@ export function ShowBarChart({ widget }: { widget: NoCodeWidgetOut }) {
   const nameKey = keysInAll[0]
 
   return (
-    <Box borderWidth={1} borderRadius="md" p={2} height={widget.height} width={widget.width}>
+    <Box borderWidth={1} borderRadius="md" p={2}>
         <Heading>{widget.name}</Heading>
       <GenericBarChart data={result} nameKey={nameKey} />
     </Box>

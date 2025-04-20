@@ -58,8 +58,6 @@ def apply_month_filter(
         else []
     )
 
-    print(month_numbers)
-    print([t.date_of_transaction.month for t in transactions])
     return [t for t in transactions if t.date_of_transaction.month in month_numbers]
 
 
