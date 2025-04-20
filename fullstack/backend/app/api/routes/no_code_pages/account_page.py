@@ -454,7 +454,7 @@ def _generate_name_widget(
     return NoCodeWidgetOut(
         id=widget_id,
         result_type=ResultTypeEnum.string,
-        result="🚧 Heads up, this page is under construction, but I like to build in public, so feel free to poke around and make suggestions! 🚧",
+        result="🚧 Heads up, this page is under construction and is liable to change! There may also be some weird / half complete features. 🚧",
         name="",
         description="",
         parameters=[],
