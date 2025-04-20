@@ -189,12 +189,17 @@ def account_balance(
     if not plaid_account:
         return None
 
+    if len(plaid_account) >= 2:
+        trend = determine_percent_change(
+            Decimal(plaid_account[1].balance), Decimal(plaid_account[0].balance)
+        )
+    else:
+        trend = Decimal(0)
+
     return ResultWithTrend(
         result=round(Decimal(plaid_account[0].balance), 2),
         unit=Unit.DOLLAR,
-        trend=determine_percent_change(
-            Decimal(plaid_account[1].balance), Decimal(plaid_account[0].balance)
-        ),
+        trend=trend,
         trend_data=TrendData(
             values=[TrendValue(value=Decimal(val.balance)) for val in plaid_account],
             color="orange",
@@ -256,12 +261,18 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
         net_worth_history.append((update.timestamp, net_worth_history_point))
 
     result = round(Decimal(net_worth), 2)
+
+    if len(net_worth_history) >= 2:
+        trend = determine_percent_change(
+            Decimal(net_worth_history[-2][1]), Decimal(net_worth_history[-1][1])
+        )
+    else:
+        trend = Decimal(0)
+
     return ResultWithTrend(
         result=result,
         unit=Unit.DOLLAR,
-        trend=determine_percent_change(
-            Decimal(net_worth_history[-2][1]), Decimal(net_worth_history[-1][1])
-        ),
+        trend=trend,
         trend_data=TrendData(
             values=[
                 TrendValue(value=Decimal(val)) for _timestamp, val in net_worth_history
