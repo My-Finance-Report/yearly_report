@@ -20,7 +20,6 @@ export function renderNoCodeParameter(
   updateAParameter: (parameter: Parameter_Output) => void
 ) {
 
-    console.log(parameter.type)
   switch (parameter.type) {
     case "int":
       return (

@@ -112,7 +112,7 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
         {toDisplayParams.map(param =>(
           <GridItem
             key={`${param.name}${param.widget_id}`}
-            rowStart={param.display_info!.row} // we asserted above that its defined
+            rowStart={param.display_info!.row} 
             colStart={param.display_info!.col}
             rowSpan={param.display_info!.row_span}
             colSpan={param.display_info!.col_span}

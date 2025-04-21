@@ -339,12 +339,10 @@ export function FilterButton({ name, options }: FilterButtonProps) {
 
     const updatedFilter = { ...currentFilter };
 
-    console.log(option, name)
 
     const currentValues =
       updatedFilter.filter_data.lookup?.[name]?.specifics || [];
 
-    console.log(currentValues)
 
     if (checked) {
       updatedFilter.filter_data.lookup = {
@@ -365,8 +363,6 @@ export function FilterButton({ name, options }: FilterButtonProps) {
         },
       };
     }
-
-    console.log(updatedFilter.filter_data)
 
     breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };

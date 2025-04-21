@@ -4,7 +4,6 @@ import { Card, Stat } from "@chakra-ui/react";
 
 export function ShowPieChart({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as { key: string; value: number }[];
-  console.log(result);
   return (
     <Card.Root minW="250px" size="lg" overflow="hidden">
       <Card.Body>
