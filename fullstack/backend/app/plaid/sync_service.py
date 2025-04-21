@@ -175,6 +175,7 @@ def sync_plaid_account_transactions(
 
         # If no transactions were returned, we're done
         if not plaid_transactions:
+            print(f"no transactions yet for {plaid_account.name}")
             sync_log.added_count = 0
             sync_log.modified_count = 0
             sync_log.removed_count = 0
@@ -424,8 +425,6 @@ async def sync_all_plaid_accounts(
             sync_plaid_account_transactions(
                 user_session, user, account, days_back, batch_id
             )
-            # TODO enable balance product
-            # record_plaid_account_balance(user_session, account)
 
         if plaid_accounts:
             print(f"Synced all Plaid accounts for user {user.id}")

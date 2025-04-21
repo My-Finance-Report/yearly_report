@@ -21,7 +21,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { useRouterState } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 import { LuCheck, LuX } from "react-icons/lu"
@@ -169,31 +169,31 @@ export function CollapsibleWorkerStatus() {
   const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a")
 
   return (
-    <Dialog.Root
-      onExitComplete={statusDisclosure.onClose}
-      motionPreset="slide-in-bottom"
-    >
-      <DialogTrigger>
-        <Flex alignItems="center" gap={2} cursor="pointer" p={2}>
+    <>
+    <Flex onClick={statusDisclosure.onOpen} alignItems="center" gap={2} cursor="pointer" p={2}>
           <Badge p={2} colorPalette={determineColor(latestStatus, true)}>
             {determineIcon(latestStatus, true, false)}
             {latestStatus.status}
           </Badge>
         </Flex>
-      </DialogTrigger>
+    <Dialog.Root
+      open={statusDisclosure.open}
+      onExitComplete={statusDisclosure.onClose}
+      onInteractOutside={statusDisclosure.onClose}
+      motionPreset={'slide-in-bottom'}
+    >
       <Portal>
-        <DialogBackdrop />
-        <DialogPositioner>
-          <DialogContent>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
             <Dialog.Header>
               <Dialog.Title>Transaction Upload Status</Dialog.Title>
-              <Text>{formattedLocalTime}</Text>
-              <Dialog.CloseTrigger asChild>
+              <Dialog.CloseTrigger onClick={statusDisclosure.onClose} asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
-
             <Box p={4} pl={10} flex={"column"}>
+              <Dialog.Description mb={4}>{formattedLocalTime}</Dialog.Description>
               <Timeline.Root size="sm" mt={2}>
                 {data.map((status, index) => (
                   <TimelineEntry
@@ -203,15 +203,14 @@ export function CollapsibleWorkerStatus() {
                   />
                 ))}
               </Timeline.Root>
+              <Box  onClick={statusDisclosure.onClose} asChild>
+                <Text mt={4} textDecoration="underline"><Link to="/faq" >Why is this taking so long?</Link></Text>
+              </Box>
             </Box>
-            <DialogFooter gap={3}>
-              <DialogCloseTrigger>
-                <Button>Close</Button>
-              </DialogCloseTrigger>
-            </DialogFooter>
-          </DialogContent>
-        </DialogPositioner>
+          </Dialog.Content>
+        </Dialog.Positioner>
       </Portal>
     </Dialog.Root>
+</>
   )
 }
