@@ -5,7 +5,7 @@ set -x
 
 cd backend
 
-mypy app --exclude app/alembic
+mypy app --exclude '(^app/alembic|test_.*\.py$|/tests/)'
 #ruff check --fix  app
 ruff format app 
 

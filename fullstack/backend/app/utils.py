@@ -30,7 +30,7 @@ def render_email_template(*, template_name: str, context: dict[str, Any]) -> str
     return html_content
 
 
-def send_email(
+def send_email_old(
     *,
     email_to: str,
     subject: str = "",

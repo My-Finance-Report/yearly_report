@@ -14,9 +14,9 @@ from app.telegram_utils import send_telegram_message
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
-    send_email,
     verify_password_reset_token,
 )
+from app.email.send import send_email
 
 router = APIRouter(tags=["login"])
 
@@ -88,11 +88,7 @@ def recover_password(email: str, session: Session = Depends(get_auth_db)) -> Mes
     email_data = generate_reset_password_email(
         email_to=user.email, email=email, token=password_reset_token
     )
-    send_email(
-        email_to=user.email,
-        subject=email_data.subject,
-        html_content=email_data.html_content,
-    )
+    send_email(user, lambda: email_data)
     return Message(message="Password recovery email sent")
 
 

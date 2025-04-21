@@ -24,11 +24,12 @@ from app.local_types import (
     UserUpdateMe,
 )
 from app.models import (
-    Base,
     User,
 )
 from app.telegram_utils import send_telegram_message
-from app.utils import generate_new_account_email, send_email
+from app.utils import generate_new_account_email
+from app.email.send import send_email
+from app.email_generators.welcome_email import generate_welcome_email
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -211,6 +212,7 @@ def register_user(
     )
     user = crud.create_user(session=session, user=user_create)
 
+    send_email(user, generate_welcome_email)
     send_telegram_message(
         message=f"User registered successfully {user_in.email} {user.id}",
     )

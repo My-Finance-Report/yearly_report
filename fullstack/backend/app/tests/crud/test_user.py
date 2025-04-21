@@ -72,11 +72,13 @@ def test_check_if_user_is_active_inactive(db: Session) -> None:
 def test_check_if_user_is_superuser(db: Session) -> None:
     email = random_email()
     password = random_lower_string()
+    # seem unintuative, but make sure that someone _cannot_ make themselves a superuser
+    # basically we dont want any code to be able to set is_superuser to true
     user_in = UserRegister(
         email=email, password=password, full_name="catt", is_superuser=True
     )
     user = crud.create_user(session=db, user=user_in)
-    assert user.is_superuser is True
+    assert user.is_superuser is False
 
 
 def test_check_if_user_is_superuser_normal_user(db: Session) -> None:
