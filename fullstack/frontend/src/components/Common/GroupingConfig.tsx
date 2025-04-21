@@ -35,7 +35,6 @@ export function GroupingConfig({
   const handleToggleOption = (option: GroupByOption) => {
     setCurrentFilter((prev: SavedFilterOut) => {
 
-      console.log(prev)
 
       const newLookup = { ...prev.filter_data?.lookup }
 
