@@ -130,7 +130,7 @@ def make_default_filters() -> list[SavedFilterSchema]:
                         index=2,
                     ),
                     GroupByOption.month: FilterEntries(
-                        visible=False,
+                        visible=True,
                         specifics=[FilterEntry(value=str(datetime.now().month))],
                         index=1,
                     ),
