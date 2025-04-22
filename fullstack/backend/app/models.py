@@ -756,6 +756,7 @@ class Effect(Base):
     __tablename__ = "effect"
 
     id: Mapped[EffectId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     effect_type: Mapped[EffectType] = mapped_column(Enum(EffectType), nullable=False)
     event_type: Mapped[EventType] = mapped_column(Enum(EventType), nullable=False)
