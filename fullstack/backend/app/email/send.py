@@ -48,7 +48,7 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         return
 
     TESTING = is_test()
-    TEST_USER_IDS = [1,4]
+    TEST_USER_IDS = [1, 4]
     recipient = "mcarroll1220@gmail.com" if TESTING else user.email
 
     params: resend.Emails.SendParams = {
