@@ -48,6 +48,7 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         return
 
     TESTING = is_test()
+    TEST_USER_IDS = [1,4]
     recipient = "mcarroll1220@gmail.com" if TESTING else user.email
 
     params: resend.Emails.SendParams = {
@@ -58,7 +59,7 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
     }
 
     # TODO remove once we feel good about the state of the notifications
-    if TESTING or user.id != 1:
+    if TESTING or user.id not in TEST_USER_IDS:
         print(
             f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}"
         )
