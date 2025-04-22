@@ -1,59 +1,14 @@
 import re
 from datetime import datetime, timedelta
 from typing import List, Callable, Any, cast
-import enum
-from pydantic import BaseModel
+from app.no_code.notifications.effects import EFFECT_CONDITIONALS_LOOKUP, Effect, EffectConfig
+from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
-from app.models import EffectConditionals, EffectLog, EffectType, EventType, User
+from app.models import EffectConditionals, EffectLog, EffectType, User
 from app.email.send import Email, send_email
-from app.schemas.no_code import NoCodeTransaction
 
 
-class Event(BaseModel):
-    type: EventType
-
-
-class NewTransactionsEvent(Event):
-    type: EventType = EventType.NEW_TRANSACTION
-    transactions: list[NoCodeTransaction]
-    account_name: str
-
-
-class NewAccountLinkedEvent(Event):
-    type: EventType = EventType.NEW_ACCOUNT_LINKED
-    account_name: str
-
-
-def amount_over(event: NewTransactionsEvent, **kwargs: dict[str, Any]) -> bool:
-    return event.transactions[-1].amount > cast(float, kwargs["amount"])
-
-
-def count_of_transactions(
-    event: NewTransactionsEvent, **kwargs: dict[str, Any]
-) -> bool:
-    return len(event.transactions) > cast(int, kwargs["count"])
-
-
-EFFECT_CONDITIONALS_LOOKUP: dict[EffectConditionals, Callable[[Any, Any], bool]] = {
-    EffectConditionals.AMOUNT_OVER: amount_over,  # type: ignore[dict-item]
-    EffectConditionals.COUNT_OF_TRANSACTIONS: count_of_transactions,  # type: ignore[dict-item]
-}
-
-
-class EffectConfig(BaseModel):
-    frequency_days: int
-    template: str
-    subject: str
-
-
-class Effect(BaseModel):
-    type: EffectType
-    config: EffectConfig
-    condition: EffectConditionals
-    conditional_parameters: dict[str, Any]
-
-
-def collect_user_effects(user: User) -> List[Effect]:
+def collect_user_effects(session: Session,user: User) -> List[Effect]:
     """
     Retrieve all notification effects configured by the user.
     #TODO pull these from the database for the user
@@ -168,7 +123,7 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
     """
     Main entry point: given a user and an event, trigger all matching effects.
     """
-    effects = collect_user_effects(user)
+    effects = collect_user_effects(session, user)
     effects_to_trigger = [
         effect
         for effect in effects

@@ -2,7 +2,7 @@ import enum
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Generic, NewType, TypeVar
+from typing import Any, Generic, NewType, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy import (
@@ -105,6 +105,7 @@ WorkerJobId = NewType("WorkerJobId", int)
 UploadedPdfId = NewType("UploadedPdfId", int)
 ColChartConfigId = NewType("ColChartConfigId", int)
 BudgetId = NewType("BudgetId", int)
+EffectId = NewType("EffectId", int)
 BudgetCategoryLinkId = NewType("BudgetCategoryLinkId", int)
 BudgetEntryId = NewType("BudgetEntryId", int)
 AuditLogId = NewType("AuditLogId", int)
@@ -750,3 +751,17 @@ class EffectLog(Base):
     fired_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+class Effect(Base):
+    __tablename__ = "effect"
+
+    id: Mapped[EffectId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    effect_type: Mapped[EffectType] = mapped_column(Enum(EffectType), nullable=False)
+    event_type: Mapped[EventType] = mapped_column(Enum(EventType), nullable=False)
+    frequency_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    template: Mapped[str] = mapped_column(String, nullable=False)
+    subject: Mapped[str] = mapped_column(String, nullable=False)
+    condition: Mapped[EffectConditionals] = mapped_column(Enum(EffectConditionals), nullable=False)
+    conditional_parameters: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
