@@ -167,6 +167,13 @@ def sync_plaid_account_transactions(
 
     try:
         # Fetch transactions from Plaid
+        update_worker_status(
+            session,
+            user,
+            status=ProcessingState.fetching_transactions,
+            additional_info="Fetching Plaid transactions",
+            batch_id=batch_id,
+        )
 
         plaid_transactions, plaid_accounts = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
@@ -175,6 +182,13 @@ def sync_plaid_account_transactions(
 
         # If no transactions were returned, we're done
         if not plaid_transactions:
+            update_worker_status(
+                session,
+                user,
+                status=ProcessingState.completed,
+                additional_info="No new transactions found",
+                batch_id=batch_id,
+            )
             print(f"no transactions yet for {plaid_account.name}")
             sync_log.added_count = 0
             sync_log.modified_count = 0

@@ -9,6 +9,7 @@ from app.core.security import verify_password
 from app.models import User
 from app.utils import generate_password_reset_token
 
+
 @pytest.mark.skip(reason="Skipping for now")
 def test_get_access_token(client: TestClient) -> None:
     login_data = {
@@ -21,6 +22,7 @@ def test_get_access_token(client: TestClient) -> None:
     assert "access_token" in tokens
     assert tokens["access_token"]
 
+
 @pytest.mark.skip(reason="Skipping for now")
 def test_get_access_token_incorrect_password(client: TestClient) -> None:
     login_data = {
@@ -29,6 +31,7 @@ def test_get_access_token_incorrect_password(client: TestClient) -> None:
     }
     r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
     assert r.status_code == 400
+
 
 @pytest.mark.skip(reason="Skipping for now")
 def test_use_access_token(
@@ -41,6 +44,7 @@ def test_use_access_token(
     result = r.json()
     assert r.status_code == 200
     assert "email" in result
+
 
 @pytest.mark.skip(reason="Skipping for now")
 def test_recovery_password(
@@ -58,6 +62,7 @@ def test_recovery_password(
         assert r.status_code == 200
         assert r.json() == {"message": "Password recovery email sent"}
 
+
 @pytest.mark.skip(reason="Skipping for now")
 def test_recovery_password_user_not_exits(
     client: TestClient, normal_user_token_headers: dict[str, str]
@@ -68,6 +73,7 @@ def test_recovery_password_user_not_exits(
         headers=normal_user_token_headers,
     )
     assert r.status_code == 404
+
 
 @pytest.mark.skip(reason="Skipping for now")
 def test_reset_password(
@@ -87,6 +93,7 @@ def test_reset_password(
     user = db.exec(user_query).first()
     assert user
     assert verify_password(data["new_password"], user.hashed_password)
+
 
 @pytest.mark.skip(reason="Skipping for now")
 def test_reset_password_invalid_token(

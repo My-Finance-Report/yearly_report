@@ -1,4 +1,3 @@
-
 from app.email.send import Email
 
 
@@ -13,9 +12,5 @@ HTML = """
 """
 
 
-def generate_welcome_email()->Email:
-    return Email(
-        subject="Welcome to My Financé",
-        html=HTML
-    )
-    
+def generate_welcome_email() -> Email:
+    return Email(subject="Welcome to My Financé", html=HTML)

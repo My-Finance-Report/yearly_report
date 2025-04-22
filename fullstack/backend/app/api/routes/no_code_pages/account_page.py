@@ -475,7 +475,10 @@ def _generate_list_widget(
     row_span: int = 3,
     col_span: int = 3,
 ) -> NoCodeWidgetOut:
-    pipeline = [first_n(session, user), NoCodeToolIn(tool="clean_transaction_data", parameters=[])]
+    pipeline = [
+        first_n(session, user),
+        NoCodeToolIn(tool="clean_transaction_data", parameters=[]),
+    ]
     widget_id = "b1b8f19e37064d388ee7f5061eac6123"
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)

@@ -79,17 +79,23 @@ def recover_password(email: str, session: Session = Depends(get_auth_db)) -> Mes
     """
     user = crud.get_user_by_email(session=session, email=email)
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this email does not exist in the system.",
-        )
+    send_telegram_message(
+        message=f"hit hard wall on password recovery",
+    )
+    raise HTTPException(
+        status_code=404,
+        detail="The user with this email does not exist in the system.",
+    )
+    """
     password_reset_token = generate_password_reset_token(email=email)
     email_data = generate_reset_password_email(
         email_to=user.email, email=email, token=password_reset_token
     )
     send_email(user, lambda: email_data)
+    
     return Message(message="Password recovery email sent")
+
+    """
 
 
 @router.post("/reset-password/")

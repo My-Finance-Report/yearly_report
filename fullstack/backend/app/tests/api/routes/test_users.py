@@ -13,6 +13,7 @@ from app.tests.utils.utils import random_email, random_lower_string
 
 from ....local_types import UserRegister
 
+
 @pytest.mark.skip(reason="Skipping for now")
 def test_get_users_superuser_me(
     client: TestClient, superuser_token_headers: dict[str, str]

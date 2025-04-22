@@ -27,7 +27,6 @@ from app.models import (
     User,
 )
 from app.telegram_utils import send_telegram_message
-from app.utils import generate_new_account_email
 from app.email.send import send_email
 from app.email_generators.welcome_email import generate_welcome_email
 
@@ -80,15 +79,7 @@ def create_user(*, session: Session = Depends(get_db), user_in: UserRegister) ->
         )
 
     user = crud.create_user(session=session, user=user_in)
-    if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-        send_email(
-            email_to=user_in.email,
-            subject=email_data.subject,
-            html_content=email_data.html_content,
-        )
+
     return user
 
 
