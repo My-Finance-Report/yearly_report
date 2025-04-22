@@ -139,4 +139,5 @@ class InProcessJob:
     transactions: TransactionsWrapper | None = None
     existing_transactions: list[Transaction] | None = None
     categorized_transactions: list[CategorizedTransaction] | None = None
+    inserted_transactions: list[Transaction] | None = None
     previous_recategorizations: list[Recategorization] | None = None

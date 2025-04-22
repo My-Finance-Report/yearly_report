@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 def _get_env() -> str:
     return settings.ENVIRONMENT
 
+
 def enrich(message: str) -> str:
     return f"{message}\n\n{_get_env()}"
 
@@ -22,7 +23,9 @@ def send_telegram_message(
         return False
 
     if _get_env() == "local":
-        logger.warning("Telegram notifications are disabled in local environment. Message not sent.")
+        logger.warning(
+            "Telegram notifications are disabled in local environment. Message not sent."
+        )
         return False
 
     try:

@@ -29,8 +29,10 @@ def enrich_with_unsubscribe(user: User, email: Email) -> Email:
         html=f"{email.html}<br/><br/><a href='{unsubscribe_link}'>Unsubscribe from emails</a>",
     )
 
-def is_test()->bool:
-    return os.environ.get("ENVIRONMENT") == "local" 
+
+def is_test() -> bool:
+    return os.environ.get("ENVIRONMENT") == "local"
+
 
 def send_email(user: User, email_generator: Callable[[], Email]) -> None:
     resend.api_key = os.environ["RESEND_API_KEY"]
@@ -56,9 +58,9 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
     }
 
     # TODO remove once we feel good about the state of the notifications
-    if TESTING or user.id!=1:
-        print(f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}")
+    if TESTING or user.id != 1:
+        print(
+            f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}"
+        )
     else:
         resend.Emails.send(params)
-        
-

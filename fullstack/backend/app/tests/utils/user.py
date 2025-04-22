@@ -12,7 +12,7 @@ def user_authentication_headers(
     *, client: TestClient, email: str, password: str
 ) -> dict[str, str]:
     from unittest.mock import patch
-    
+
     # Directly create a token header without going through the login flow
     # This bypasses the 2FA mechanism entirely for testing
     headers = {"Authorization": f"Bearer test_token_{email}"}
@@ -28,7 +28,7 @@ def create_random_user(db: Session) -> User:
 
 
 def authentication_token_from_email(
-    *, client: TestClient, email: str, db: Session 
+    *, client: TestClient, email: str, db: Session
 ) -> dict[str, str]:
     """
     Return a valid token for the user with given email.

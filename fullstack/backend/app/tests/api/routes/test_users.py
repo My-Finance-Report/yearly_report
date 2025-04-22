@@ -38,7 +38,6 @@ def test_get_users_normal_user_me(
     assert current_user["settings"] is not None
 
 
-
 @pytest.mark.skip(reason="Skipping for now")
 def test_create_user_new_email(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
@@ -93,9 +92,9 @@ def test_get_existing_user_current_user(client: TestClient, db: Session) -> None
 
     # Create auth headers directly without going through login flow
     headers = {"Authorization": f"Bearer test_token_{username}"}
-    
+
     # Mock the authentication dependency to bypass 2FA
-    with patch('app.db.get_current_active_user', return_value=user):
+    with patch("app.db.get_current_active_user", return_value=user):
         r = client.get(
             f"{settings.API_V1_STR}/users/{user_id}",
             headers=headers,
@@ -235,7 +234,9 @@ def test_update_password_me(
         json=old_data,
     )
     assert r.status_code == 200
-    assert verify_password(settings.FIRST_SUPERUSER_PASSWORD, user_query.hashed_password)
+    assert verify_password(
+        settings.FIRST_SUPERUSER_PASSWORD, user_query.hashed_password
+    )
 
 
 @pytest.mark.skip(reason="Skipping for now")
@@ -407,9 +408,9 @@ def test_delete_user_me(client: TestClient, db: Session) -> None:
 
     # Create auth headers directly without going through login flow
     headers = {"Authorization": f"Bearer test_token_{username}"}
-    
+
     # Mock the authentication dependency to bypass 2FA
-    with patch('app.db.get_current_active_user', return_value=user):
+    with patch("app.db.get_current_active_user", return_value=user):
         r = client.delete(
             f"{settings.API_V1_STR}/users/me",
             headers=headers,
