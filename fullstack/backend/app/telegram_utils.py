@@ -7,8 +7,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+def _get_env() -> str:
+    return settings.ENVIRONMENT
+
 def enrich(message: str) -> str:
-    return f"{message}\n\n{settings.ENVIRONMENT}"
+    return f"{message}\n\n{_get_env()}"
 
 
 def send_telegram_message(
@@ -16,6 +19,10 @@ def send_telegram_message(
 ) -> bool:
     if not settings.telegram_enabled:
         logger.warning("Telegram notifications are disabled. Message not sent.")
+        return False
+
+    if _get_env() == "local":
+        logger.warning("Telegram notifications are disabled in local environment. Message not sent.")
         return False
 
     try:

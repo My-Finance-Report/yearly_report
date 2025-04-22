@@ -6,4 +6,6 @@ cd "$(dirname "$0")/../backend"
 
 export PYTHONPATH=.
 
+export ENVIRONMENT="local"
+
 pytest "$@"

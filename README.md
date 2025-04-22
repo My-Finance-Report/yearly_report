@@ -34,21 +34,16 @@ big milestones before launch:
 -> Stripe
   --> sort of exists but needs more work
 -> Plaid
-  -> bug where i got logged off after plaid
+  -> there must be some type of "update" payload that i need to handle from plaid
 -> Email
 
 -> worker should be a lambda
 
+-> delete saved filter doesnt work
+
 -> TODO get delete to work on app
 --> make sure we remove plaid items so we dont get charged
 
--> need to update the how does this work page 
-
--> would be nice to have some tests around user creation
-
--> add a last active at time on the user model
-
--> shareable report
 
 -> running grant to sequence after a new table: 
   GRANT USAGE, UPDATE ON SEQUENCE plaid_item_id_seq TO app_user;

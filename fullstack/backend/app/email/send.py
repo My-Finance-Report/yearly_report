@@ -29,6 +29,8 @@ def enrich_with_unsubscribe(user: User, email: Email) -> Email:
         html=f"{email.html}<br/><br/><a href='{unsubscribe_link}'>Unsubscribe from emails</a>",
     )
 
+def is_test()->bool:
+    return os.environ.get("ENVIRONMENT") == "local" 
 
 def send_email(user: User, email_generator: Callable[[], Email]) -> None:
     resend.api_key = os.environ["RESEND_API_KEY"]
@@ -43,7 +45,7 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         )
         return
 
-    TESTING = True
+    TESTING = is_test()
     recipient = "mcarroll1220@gmail.com" if TESTING else user.email
 
     params: resend.Emails.SendParams = {
@@ -53,4 +55,7 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         "html": email.html,
     }
 
-    resend.Emails.send(params)
+    if TESTING:
+        print(f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}")
+    else:
+        resend.Emails.send(params)
