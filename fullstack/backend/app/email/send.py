@@ -55,7 +55,10 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         "html": email.html,
     }
 
-    if TESTING:
+    # TODO remove once we feel good about the state of the notifications
+    if TESTING or user.id!=1:
         print(f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}")
     else:
         resend.Emails.send(params)
+        
+
