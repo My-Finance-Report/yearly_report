@@ -24,7 +24,7 @@ def get_superuser_token_headers(client: TestClient) -> dict[str, str]:
     
     # Directly create a token header without going through the login flow
     # This bypasses the 2FA mechanism entirely for testing
-    with patch('app.api.deps.get_current_active_user') as mock_get_user:
+    with patch('app.db.get_current_active_user') as mock_get_user:
         # Return a fake token that will be accepted by the authentication system
         headers = {"Authorization": "Bearer test_superuser_token"}
         return headers
