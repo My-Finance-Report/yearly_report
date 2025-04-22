@@ -20,7 +20,7 @@ def apply_and_grant_rls(connection)->None:
                     USING (user_id = current_setting('app.current_user_id')::int);
                 """))
 
-                connection.execute(sa.text("""
+                connection.execute(sa.text(f"""
                     GRANT INSERT, SELECT, UPDATE ON {table_name} TO app_user;
                 """))
 

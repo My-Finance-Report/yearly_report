@@ -14,9 +14,9 @@ from app.telegram_utils import send_telegram_message
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
-    send_email,
     verify_password_reset_token,
 )
+from app.email.send import send_email
 
 router = APIRouter(tags=["login"])
 
@@ -79,21 +79,23 @@ def recover_password(email: str, session: Session = Depends(get_auth_db)) -> Mes
     """
     user = crud.get_user_by_email(session=session, email=email)
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this email does not exist in the system.",
-        )
+    send_telegram_message(
+        message=f"hit hard wall on password recovery",
+    )
+    raise HTTPException(
+        status_code=404,
+        detail="The user with this email does not exist in the system.",
+    )
+    """
     password_reset_token = generate_password_reset_token(email=email)
     email_data = generate_reset_password_email(
         email_to=user.email, email=email, token=password_reset_token
     )
-    send_email(
-        email_to=user.email,
-        subject=email_data.subject,
-        html_content=email_data.html_content,
-    )
+    send_email(user, lambda: email_data)
+    
     return Message(message="Password recovery email sent")
+
+    """
 
 
 @router.post("/reset-password/")

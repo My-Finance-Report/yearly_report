@@ -723,3 +723,30 @@ class WorkerStatus(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     additional_info: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class EffectType(str, enum.Enum):
+    EMAIL = "email"
+    IN_APP = "in_app"
+
+
+class EffectConditionals(str, enum.Enum):
+    AMOUNT_OVER = "amount_over"
+    COUNT_OF_TRANSACTIONS = "count_of_transactions"
+
+
+class EventType(str, enum.Enum):
+    NEW_TRANSACTION = "new_transaction"
+    NEW_ACCOUNT_LINKED = "new_account_linked"
+
+
+class EffectLog(Base):
+    __tablename__ = "effect_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    effect_type: Mapped[EffectType] = mapped_column(Enum(EffectType), nullable=False)
+    event_type: Mapped[EventType] = mapped_column(Enum(EventType), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    fired_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

@@ -24,6 +24,7 @@ from app.func_utils import pipe
 from app.models import (
     AuditLog,
     Category,
+    EventType,
     PlaidAccount,
     PlaidAccountBalance,
     PlaidItem,
@@ -34,7 +35,13 @@ from app.models import (
     TransactionSource,
     User,
 )
+from app.no_code.notifications.trigger import (
+    Event,
+    NewTransactionsEvent,
+    trigger_effects,
+)
 from app.plaid.client import get_plaid_client
+from app.schemas.no_code import NoCodeTransaction
 from app.telegram_utils import send_telegram_message
 from app.worker.status import status_update_monad, update_worker_status
 
@@ -167,6 +174,13 @@ def sync_plaid_account_transactions(
 
     try:
         # Fetch transactions from Plaid
+        update_worker_status(
+            session,
+            user,
+            status=ProcessingState.fetching_transactions,
+            additional_info="Fetching Plaid transactions",
+            batch_id=batch_id,
+        )
 
         plaid_transactions, plaid_accounts = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
@@ -175,7 +189,13 @@ def sync_plaid_account_transactions(
 
         # If no transactions were returned, we're done
         if not plaid_transactions:
-            print(f"no transactions yet for {plaid_account.name}")
+            update_worker_status(
+                session,
+                user,
+                status=ProcessingState.completed,
+                additional_info="No new transactions found",
+                batch_id=batch_id,
+            )
             sync_log.added_count = 0
             sync_log.modified_count = 0
             sync_log.removed_count = 0
@@ -189,6 +209,13 @@ def sync_plaid_account_transactions(
             user,
             transaction_source,
             plaid_transactions,
+        )
+        trigger_effects(
+            session,
+            user,
+            NewTransactionsEvent(
+                transactions=plaid_transactions, account_name=plaid_account.name
+            ),
         )
 
         # Update sync log with results
@@ -232,7 +259,8 @@ def plaid_categorize_pipe(in_process: InProcessJob) -> None:
             status=ProcessingState.categorizing_transactions,
             additional_info="Writing batching to database",
         ),
-        final=insert_categorized_plaid_transactions,
+        insert_categorized_plaid_transactions,
+        final=trigger_the_effects,
     )
 
 
@@ -284,7 +312,7 @@ def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProces
     )
 
 
-def insert_categorized_plaid_transactions(in_process: InProcessJob) -> None:
+def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"
@@ -310,6 +338,38 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> None:
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
+
+    return replace(
+        in_process,
+        inserted_transactions=transactions_to_insert,
+    )
+
+
+def trigger_the_effects(in_process: InProcessJob) -> None:
+    assert in_process.categorized_transactions, "must have"
+    assert in_process.transaction_source, "must have"
+    no_code_transactions = [
+        NoCodeTransaction(
+            amount=t.partialTransactionAmount,
+            description=t.partialTransactionDescription,
+            date_of_transaction=datetime.strptime(
+                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            ),
+            kind=TransactionKind.deposit
+            if t.partialTransactionKind == "deposit"
+            else TransactionKind.withdrawal,
+            category_name=t.category,
+        )
+        for t in in_process.categorized_transactions
+    ]
+    trigger_effects(
+        in_process.session,
+        in_process.user,
+        NewTransactionsEvent(
+            transactions=no_code_transactions,
+            account_name=in_process.transaction_source.name,
+        ),
+    )
 
 
 def add_new_transactions(

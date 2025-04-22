@@ -36,7 +36,7 @@ function RouteComponent() {
           </Heading>
           <Text mb={2}>
             Sometimes, Plaid has latency between linking and the trasnactions being available in the API. 
-            This is often institution specific. (For example Vanguard seems to take a long time.)
+            This is often institution specific. (For example Vanguard is very inconsistent.)
             We have a background tasks that checks for new transactions every minute, so normally as soon 
             as they become available we will show them. 
 

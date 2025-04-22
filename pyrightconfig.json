@@ -1,0 +1,5 @@
+{
+  "extraPaths": ["fullstack/backend"],
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic"
+}

@@ -1,0 +1,10 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/fullstack/backend"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/fullstack/backend"
+  ],
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true
+}
