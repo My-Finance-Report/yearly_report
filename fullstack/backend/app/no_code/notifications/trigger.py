@@ -1,14 +1,18 @@
 import re
 from datetime import datetime, timedelta
 from typing import List, Callable, Any, cast
-from app.no_code.notifications.effects import EFFECT_CONDITIONALS_LOOKUP, Effect, EffectConfig
+from app.no_code.notifications.effects import (
+    EFFECT_CONDITIONALS_LOOKUP,
+    Effect,
+    EffectConfig,
+)
 from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
 from app.models import EffectConditionals, EffectLog, EffectType, User
 from app.email.send import Email, send_email
 
 
-def collect_user_effects(session: Session,user: User) -> List[Effect]:
+def collect_user_effects(session: Session, user: User) -> List[Effect]:
     """
     Retrieve all notification effects configured by the user.
     #TODO pull these from the database for the user

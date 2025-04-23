@@ -1,5 +1,4 @@
-
-from typing import  Callable, Any, cast
+from typing import Callable, Any, cast
 
 from pydantic import BaseModel
 from app.models import EffectConditionals, EffectType
@@ -34,4 +33,3 @@ class Effect(BaseModel):
     config: EffectConfig
     condition: EffectConditionals
     conditional_parameters: dict[str, Any]
-

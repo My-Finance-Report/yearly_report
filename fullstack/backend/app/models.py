@@ -752,6 +752,7 @@ class EffectLog(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
+
 class Effect(Base):
     __tablename__ = "effect"
 
@@ -763,6 +764,7 @@ class Effect(Base):
     frequency_days: Mapped[int] = mapped_column(Integer, nullable=False)
     template: Mapped[str] = mapped_column(String, nullable=False)
     subject: Mapped[str] = mapped_column(String, nullable=False)
-    condition: Mapped[EffectConditionals] = mapped_column(Enum(EffectConditionals), nullable=False)
+    condition: Mapped[EffectConditionals] = mapped_column(
+        Enum(EffectConditionals), nullable=False
+    )
     conditional_parameters: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-

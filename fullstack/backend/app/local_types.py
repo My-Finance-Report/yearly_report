@@ -408,9 +408,8 @@ class WorkerStatusOut(BaseModel):
 
 class EffectOut(BaseModel):
     name: str
-    effect_type:EffectType 
-    event_type:EventType 
+    effect_type: EffectType
+    event_type: EventType
     config: EffectConfig
-    condition:EffectConditionals 
+    condition: EffectConditionals
     conditional_parameters: dict[str, Any]
-
