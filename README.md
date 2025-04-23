@@ -40,7 +40,6 @@ big milestones before launch:
 -> Email
   -> seems like the rate limiting is not working
   -> welcome email only configured to send to me
-  -> need to add resend key to the main server
 
 -> transaction delete button
 
