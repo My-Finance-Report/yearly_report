@@ -467,6 +467,8 @@ async def sync_all_plaid_accounts(
         user_session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id).all()
     )
 
+    print(f"Syncing {len(plaid_accounts)} Plaid accounts for user {user.id}")
+
     for account in plaid_accounts:
         batch_id = uuid.uuid4().hex
 
