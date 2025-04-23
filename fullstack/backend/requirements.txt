@@ -55,7 +55,6 @@ pillow==11.2.1
 plaid-python==29.1.0
 platformdirs==4.3.6
 pluggy==1.5.0
-pre-commit==4.2.0
 premailer==3.10.0
 psycopg==3.2.4
 psycopg-binary==3.2.4
@@ -77,6 +76,7 @@ PyYAML==6.0.2
 qrcode==8.1
 requests==2.32.3
 requests-oauthlib==2.0.0
+resend==2.7.0
 rich==14.0.0
 rich-toolkit==0.14.1
 rsa==4.9

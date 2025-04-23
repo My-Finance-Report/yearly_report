@@ -143,6 +143,27 @@ export type DisplayInfo = {
 
 export type DisplaySize = 'small' | 'medium' | 'large';
 
+export type EffectConditionals = 'amount_over' | 'count_of_transactions';
+
+export type EffectConfig = {
+    frequency_days: number;
+    template: string;
+    subject: string;
+};
+
+export type EffectOut = {
+    name: string;
+    effect_type: EffectType;
+    event_type: EventType;
+    config: EffectConfig;
+    condition: EffectConditionals;
+    conditional_parameters: {
+        [key: string]: unknown;
+    };
+};
+
+export type EffectType = 'email' | 'in_app';
+
 /**
  * Request to start the 2FA setup process.
  */
@@ -157,6 +178,8 @@ export type Enable2FAResponse = {
     secret: string;
     qr_code: string;
 };
+
+export type EventType = 'new_transaction' | 'new_account_linked';
 
 export type FilterData_Input = {
     lookup?: {
@@ -346,6 +369,13 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -766,6 +796,8 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type NoCodeGetEffectsResponse = (Array<EffectOut>);
+
 export type NoCodeGetNoCodeToolResponse = (Array<NoCodeTool>);
 
 export type NoCodeSaveNoCodeToolData = {
@@ -801,6 +833,19 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 

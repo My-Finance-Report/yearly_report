@@ -39,6 +39,7 @@ import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_log
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
+import { Route as LayoutLoggedinNotificationsImport } from './routes/_layout/_logged_in/notifications'
 import { Route as LayoutLoggedinNoCodeImport } from './routes/_layout/_logged_in/no-code'
 import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
 import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
@@ -220,6 +221,13 @@ const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
   path: '/plaid',
   getParentRoute: () => LayoutLoggedinRoute,
 } as any)
+
+const LayoutLoggedinNotificationsRoute =
+  LayoutLoggedinNotificationsImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
 
 const LayoutLoggedinNoCodeRoute = LayoutLoggedinNoCodeImport.update({
   id: '/no-code',
@@ -424,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinNoCodeImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/notifications': {
+      id: '/_layout/_logged_in/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof LayoutLoggedinNotificationsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/plaid': {
       id: '/_layout/_logged_in/plaid'
       path: '/plaid'
@@ -498,6 +513,7 @@ interface LayoutLoggedinRouteChildren {
   LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute
   LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute
   LayoutLoggedinNoCodeRoute: typeof LayoutLoggedinNoCodeRoute
+  LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute
   LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute
   LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute
   LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute
@@ -515,6 +531,7 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinBudgetRoute: LayoutLoggedinBudgetRoute,
   LayoutLoggedinManageAccountsRoute: LayoutLoggedinManageAccountsRoute,
   LayoutLoggedinNoCodeRoute: LayoutLoggedinNoCodeRoute,
+  LayoutLoggedinNotificationsRoute: LayoutLoggedinNotificationsRoute,
   LayoutLoggedinPlaidRoute: LayoutLoggedinPlaidRoute,
   LayoutLoggedinSankeyConfigRoute: LayoutLoggedinSankeyConfigRoute,
   LayoutLoggedinSettingsRoute: LayoutLoggedinSettingsRoute,
@@ -600,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/no-code': typeof LayoutLoggedinNoCodeRoute
+  '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
@@ -635,6 +653,7 @@ export interface FileRoutesByTo {
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/no-code': typeof LayoutLoggedinNoCodeRoute
+  '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
@@ -672,6 +691,7 @@ export interface FileRoutesById {
   '/_layout/_logged_in/budget': typeof LayoutLoggedinBudgetRoute
   '/_layout/_logged_in/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
   '/_layout/_logged_in/no-code': typeof LayoutLoggedinNoCodeRoute
+  '/_layout/_logged_in/notifications': typeof LayoutLoggedinNotificationsRoute
   '/_layout/_logged_in/plaid': typeof LayoutLoggedinPlaidRoute
   '/_layout/_logged_in/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/_layout/_logged_in/settings': typeof LayoutLoggedinSettingsRoute
@@ -709,6 +729,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/manage-accounts'
     | '/no-code'
+    | '/notifications'
     | '/plaid'
     | '/sankey-config'
     | '/settings'
@@ -743,6 +764,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/manage-accounts'
     | '/no-code'
+    | '/notifications'
     | '/plaid'
     | '/sankey-config'
     | '/settings'
@@ -778,6 +800,7 @@ export interface FileRouteTypes {
     | '/_layout/_logged_in/budget'
     | '/_layout/_logged_in/manage-accounts'
     | '/_layout/_logged_in/no-code'
+    | '/_layout/_logged_in/notifications'
     | '/_layout/_logged_in/plaid'
     | '/_layout/_logged_in/sankey-config'
     | '/_layout/_logged_in/settings'
@@ -843,6 +866,7 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/budget",
         "/_layout/_logged_in/manage-accounts",
         "/_layout/_logged_in/no-code",
+        "/_layout/_logged_in/notifications",
         "/_layout/_logged_in/plaid",
         "/_layout/_logged_in/sankey-config",
         "/_layout/_logged_in/settings",
@@ -940,6 +964,10 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/no-code": {
       "filePath": "_layout/_logged_in/no-code.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/notifications": {
+      "filePath": "_layout/_logged_in/notifications.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/plaid": {

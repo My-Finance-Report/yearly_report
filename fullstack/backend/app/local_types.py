@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -9,6 +10,9 @@ from app.models import (
     BudgetId,
     CategoryBase,
     CategoryId,
+    EffectConditionals,
+    EffectType,
+    EventType,
     GroupByOption,
     JobStatus,
     PlaidSyncLogId,
@@ -19,6 +23,7 @@ from app.models import (
     UserId,
     UserSettings,
 )
+from app.no_code.notifications.effects import EffectConfig
 
 
 class Token(BaseModel):
@@ -399,3 +404,12 @@ class WorkerStatusOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     additional_info: str
+
+
+class EffectOut(BaseModel):
+    name: str
+    effect_type: EffectType
+    event_type: EventType
+    config: EffectConfig
+    condition: EffectConditionals
+    conditional_parameters: dict[str, Any]

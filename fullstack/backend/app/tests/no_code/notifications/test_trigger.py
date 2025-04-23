@@ -2,12 +2,9 @@ import pytest
 from datetime import datetime, timedelta
 from app.models import EffectLog
 from unittest.mock import patch, MagicMock
-
+from app.no_code.notifications.effects import Effect, EffectConfig
+from app.no_code.notifications.events import NewTransactionsEvent
 from app.no_code.notifications.trigger import (
-    NoCodeTransaction,
-    NewTransactionsEvent,
-    Effect,
-    EffectConfig,
     EffectType,
     EffectConditionals,
     check_effects_against_frequency,
@@ -19,6 +16,7 @@ from app.no_code.notifications.trigger import (
     trigger_effects,
 )
 from app.models import TransactionKind
+from app.schemas.no_code import NoCodeTransaction
 
 
 class DummySession:

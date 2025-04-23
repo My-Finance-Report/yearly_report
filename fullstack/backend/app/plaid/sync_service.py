@@ -24,7 +24,6 @@ from app.func_utils import pipe
 from app.models import (
     AuditLog,
     Category,
-    EventType,
     PlaidAccount,
     PlaidAccountBalance,
     PlaidItem,
@@ -35,9 +34,8 @@ from app.models import (
     TransactionSource,
     User,
 )
+from app.no_code.notifications.events import NewTransactionsEvent
 from app.no_code.notifications.trigger import (
-    Event,
-    NewTransactionsEvent,
     trigger_effects,
 )
 from app.plaid.client import get_plaid_client
@@ -210,14 +208,6 @@ def sync_plaid_account_transactions(
             transaction_source,
             plaid_transactions,
         )
-        trigger_effects(
-            session,
-            user,
-            NewTransactionsEvent(
-                transactions=plaid_transactions, account_name=plaid_account.name
-            ),
-        )
-
         # Update sync log with results
         sync_log.added_count = added_count
         sync_log.modified_count = 0  # For transactions_sync, we don't track modified
@@ -473,27 +463,22 @@ async def sync_all_plaid_accounts(
     Sync all Plaid accounts for a specific user.
     """
 
-    try:
-        plaid_accounts = (
-            user_session.query(PlaidAccount)
-            .filter(PlaidAccount.user_id == user.id)
-            .all()
-        )
+    plaid_accounts = (
+        user_session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id).all()
+    )
 
-        for account in plaid_accounts:
-            batch_id = uuid.uuid4().hex
+    print(f"Syncing {len(plaid_accounts)} Plaid accounts for user {user.id}")
+
+    for account in plaid_accounts:
+        batch_id = uuid.uuid4().hex
+
+        try:
             sync_plaid_account_transactions(
                 user_session, user, account, days_back, batch_id
             )
-
-        if plaid_accounts:
-            print(f"Synced all Plaid accounts for user {user.id}")
-        else:
-            print(f"No Plaid accounts found for user {user.id}")
-
-    except Exception as e:
-        send_telegram_message(
-            f"Error syncing Plaid accounts for user {user.id}: {str(e)}"
-        )
-        logger.error(f"Error syncing Plaid accounts for user {user.id}: {str(e)}")
-        raise
+        except Exception as e:
+            logger.error(f"Error syncing Plaid account for user {user.id}: {str(e)}")
+            if user.id != 4:
+                send_telegram_message(
+                    f"Error syncing Plaid account for user {user.id}: {str(e)}"
+                )

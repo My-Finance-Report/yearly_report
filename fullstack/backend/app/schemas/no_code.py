@@ -2,11 +2,11 @@ from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from app.core.db import Session
 from app.models import TransactionKind, User
 
 
