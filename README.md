@@ -35,40 +35,28 @@ big milestones before launch:
   --> sort of exists but needs more work
 -> Plaid
   -> there must be some type of "update" payload that i need to handle from plaid
+  -> prune the logs table of sync events
+  -> webhooks setup
 -> Email
+  -> seems like the rate limiting is not working
+  -> welcome email only configured to send to me
 
--> worker should be a lambda
+-> transaction delete button
 
 -> delete saved filter doesnt work
 
--> TODO get delete to work on app
+-> get user delete to work on app
 --> make sure we remove plaid items so we dont get charged
 
-
--> running grant to sequence after a new table: 
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_item_id_seq TO app_user;
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_account_id_seq TO app_user;
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_sync_log_id_seq TO app_user;
-
 -> redirect everything to the main url
-
--> welcome email
 
 -> merge account function
 --> built backend but needs frontend
 
--> repro filter bug by getting a query that has no results
-
 -> nice to have: search
-
--> try to prevent color overlaps
-
--> dashboard config and ability to save them (query params)
---> parse the query params from the url
 
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
 
--> Expense should line up in the table
 
 
