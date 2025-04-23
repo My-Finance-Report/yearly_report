@@ -13,11 +13,22 @@ from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function")
 def db() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        init_db(session)
+    # Connect to the database and begin a transaction
+    connection = engine.connect()
+    transaction = connection.begin()
+    
+    # Create a session bound to the connection
+    session = Session(bind=connection)
+    
+    try:
         yield session
+    finally:
+        # Roll back the transaction after the test completes
+        session.close()
+        transaction.rollback()
+        connection.close()
 
 
 @pytest.fixture(scope="module")

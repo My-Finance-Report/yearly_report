@@ -137,6 +137,7 @@ class InProcessJob:
     transaction_source: TransactionSource | None = None
     categories: list[Category] | None = None
     transactions: TransactionsWrapper | None = None
+    transactions_to_delete: list[PlaidTransactionId] | None = None
     existing_transactions: list[Transaction] | None = None
     categorized_transactions: list[CategorizedTransaction] | None = None
     inserted_transactions: list[Transaction] | None = None
