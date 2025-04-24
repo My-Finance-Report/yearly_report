@@ -141,20 +141,22 @@ def update_password_me(
     return Message(message="Password updated successfully")
 
 
+def update_visited_time(current_user:User)->None:
+    session = next(get_db_for_user(current_user.id))
+    user = session.query(User).filter(User.id==current_user.id).one()
+    user.last_visited_at = datetime.now(timezone.utc)
+    session.commit()
+
+
 @router.get("/me", response_model=UserOut)
 def read_user_me(
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_db),
 ) -> User:
     """
     Get current user.
     """
-    user = session.query(User).filter(User.id == current_user.id).one()
 
-    if not user:
-        raise HTTPException(status_code=400, detail="user does not exist")
-
-    user.last_visited_at = datetime.now(timezone.utc)
+    update_visited_time(current_user)
 
     return current_user
 
@@ -166,6 +168,10 @@ def read_user_me_optional(
     """
     Get current user.
     """
+
+    if current_user:
+        update_visited_time(current_user)
+
     return current_user
 
 
