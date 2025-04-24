@@ -141,9 +141,7 @@ class User(Base):
     settings: Mapped[UserSettings] = mapped_column(
         JSONType(UserSettings), nullable=False
     )
-    last_visited_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    last_visited_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     requires_two_factor: Mapped[bool] = mapped_column(Boolean, default=True)
     totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
