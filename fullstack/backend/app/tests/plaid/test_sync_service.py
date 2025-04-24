@@ -64,7 +64,7 @@ def test_fetch_existing_plaid_transactions(db: Session):
     # Create existing transactions
     external_id1 = f"plaid_tx_{uuid.uuid4().hex}"
     external_id2 = f"plaid_tx_{uuid.uuid4().hex}"
-    
+
     tx1 = Transaction(
         description="Transaction 1",
         category_id=category1.id,
@@ -103,7 +103,9 @@ def test_fetch_existing_plaid_transactions(db: Session):
                     partialPlaidTransactionId=PlaidTransactionId(external_id1),
                     partialTransactionAmount=100.0,
                     partialTransactionDescription="Transaction 1",
-                    partialTransactionDateOfTransaction=datetime.now().strftime("%m/%d/%Y"),
+                    partialTransactionDateOfTransaction=datetime.now().strftime(
+                        "%m/%d/%Y"
+                    ),
                     partialTransactionKind=TransactionKind.withdrawal.value,
                 ),
                 PartialTransaction(
@@ -111,16 +113,22 @@ def test_fetch_existing_plaid_transactions(db: Session):
                     partialPlaidTransactionId=PlaidTransactionId(external_id2),
                     partialTransactionAmount=200.0,
                     partialTransactionDescription="Transaction 2",
-                    partialTransactionDateOfTransaction=datetime.now().strftime("%m/%d/%Y"),
+                    partialTransactionDateOfTransaction=datetime.now().strftime(
+                        "%m/%d/%Y"
+                    ),
                     partialTransactionKind=TransactionKind.deposit.value,
                 ),
                 # New transaction that doesn't exist yet
                 PartialTransaction(
                     partialTransactionId=None,
-                    partialPlaidTransactionId=PlaidTransactionId(f"plaid_tx_{uuid.uuid4().hex}"),
+                    partialPlaidTransactionId=PlaidTransactionId(
+                        f"plaid_tx_{uuid.uuid4().hex}"
+                    ),
                     partialTransactionAmount=300.0,
                     partialTransactionDescription="Transaction 3",
-                    partialTransactionDateOfTransaction=datetime.now().strftime("%m/%d/%Y"),
+                    partialTransactionDateOfTransaction=datetime.now().strftime(
+                        "%m/%d/%Y"
+                    ),
                     partialTransactionKind=TransactionKind.withdrawal.value,
                 ),
             ]
@@ -133,7 +141,7 @@ def test_fetch_existing_plaid_transactions(db: Session):
     # Verify results
     assert result.existing_transactions is not None
     assert len(result.existing_transactions) == 2
-    
+
     # Check that the existing transactions were found
     external_ids = [tx.external_id for tx in result.existing_transactions]
     assert external_id1 in external_ids
@@ -177,7 +185,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
 
     # Create an existing transaction
     external_id = f"plaid_tx_{uuid.uuid4().hex}"
-    
+
     old_date = datetime.now() - timedelta(days=5)
     tx = Transaction(
         description="Old Description",
@@ -196,7 +204,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
     new_date = datetime.now().strftime("%m/%d/%Y")
     new_amount = 150.0
     new_description = "Updated Description"
-    
+
     in_process = InProcessJob(
         session=db,
         user=user,
@@ -228,7 +236,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
     assert tx.amount == new_amount
     assert tx.category_id == category2.id  # Should be updated to category2
     assert tx.date_of_transaction.strftime("%m/%d/%Y") == new_date
-    
+
     # Verify no new transactions were inserted
     assert result.inserted_transactions is not None
     assert len(result.inserted_transactions) == 0
@@ -266,7 +274,7 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
     # Create InProcessJob with a new transaction
     external_id = f"plaid_tx_{uuid.uuid4().hex}"
     transaction_date = datetime.now().strftime("%m/%d/%Y")
-    
+
     in_process = InProcessJob(
         session=db,
         user=user,
@@ -293,9 +301,11 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
     # Verify a new transaction was inserted
     assert result.inserted_transactions is not None
     assert len(result.inserted_transactions) == 1
-    
+
     # Query the database to verify the transaction was actually saved
-    new_tx = db.query(Transaction).filter(Transaction.external_id == external_id).first()
+    new_tx = (
+        db.query(Transaction).filter(Transaction.external_id == external_id).first()
+    )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"
     assert new_tx.amount == 200.0
@@ -340,7 +350,7 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
 
     # Create an existing transaction
     existing_external_id = f"plaid_tx_{uuid.uuid4().hex}"
-    
+
     existing_tx = Transaction(
         description="Existing Transaction",
         category_id=category1.id,
@@ -357,7 +367,7 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
     # Create InProcessJob with both existing and new transactions
     new_external_id = f"plaid_tx_{uuid.uuid4().hex}"
     transaction_date = datetime.now().strftime("%m/%d/%Y")
-    
+
     in_process = InProcessJob(
         session=db,
         user=user,
@@ -399,13 +409,15 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
     assert existing_tx.description == "Updated Transaction"
     assert existing_tx.amount == 120.0
     assert existing_tx.category_id == category2.id
-    
+
     # Verify a new transaction was inserted
     assert result.inserted_transactions is not None
     assert len(result.inserted_transactions) == 1
-    
+
     # Query the database to verify the new transaction was actually saved
-    new_tx = db.query(Transaction).filter(Transaction.external_id == new_external_id).first()
+    new_tx = (
+        db.query(Transaction).filter(Transaction.external_id == new_external_id).first()
+    )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"
     assert new_tx.amount == 200.0

@@ -20,7 +20,7 @@ def get_app_user_database_url() -> str:
 
 def get_worker_database_url() -> str:
     if is_local():
-        return os.environ["WORKER_DATABASE_URL"]
+        return "postgresql://persistent_user:persistent_pass@localhost:5433/persistent_db"
 
     secret_name = "persistent_user"
     return _get_database_url(secret_name)

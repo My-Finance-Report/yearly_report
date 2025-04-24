@@ -18,10 +18,10 @@ def db() -> Generator[Session, None, None]:
     # Connect to the database and begin a transaction
     connection = engine.connect()
     transaction = connection.begin()
-    
+
     # Create a session bound to the connection
     session = Session(bind=connection)
-    
+
     try:
         yield session
     finally:
