@@ -1,9 +1,7 @@
 from functools import partial
 
-from sqlalchemy import func
 from app.db import Session
 from app.models import (
-    Transaction,
     User,
 )
 from app.no_code.functions import (
@@ -132,11 +130,10 @@ def _generate_all_transactions_widget(
 
     pipeline = [
         most_recent_n(widget_id),
+        NoCodeToolIn(tool="clean_transaction_data", parameters=[]),
     ]
 
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
-
-    print("response", response)
 
     return NoCodeWidgetOut(
         id=widget_id,
