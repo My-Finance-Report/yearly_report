@@ -1,6 +1,6 @@
 import logging
 import uuid
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -28,6 +28,7 @@ from app.models import (
     PlaidAccountBalance,
     PlaidItem,
     PlaidSyncLog,
+    PlaidTransactionId,
     ProcessingState,
     Transaction,
     TransactionKind,
@@ -53,11 +54,19 @@ def get_transaction_kind(amount: float) -> TransactionKind:
     return TransactionKind.withdrawal if amount >= 0 else TransactionKind.deposit
 
 
+@dataclass
+class PlaidFetchResponse:
+    added: list[dict[str, Any]]
+    removed: list[dict[str, Any]]
+    modified: list[dict[str, Any]]
+    accounts: list[dict[str, Any]]
+
+
 def fetch_plaid_transactions(
     *,
     access_token: str,
     plaid_account: PlaidAccount,
-) -> tuple[list[Any], list[Any]]:
+) -> PlaidFetchResponse:
     """Fetch transactions from Plaid API."""
     client = get_plaid_client()
 
@@ -75,7 +84,12 @@ def fetch_plaid_transactions(
         next_cursor = response["next_cursor"]
         plaid_account.cursor = next_cursor
 
-        return response["added"], response["accounts"]
+        return PlaidFetchResponse(
+            added=response["added"],
+            removed=response["removed"],
+            modified=response["modified"],
+            accounts=response["accounts"],
+        )
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
         raise
@@ -180,13 +194,18 @@ def sync_plaid_account_transactions(
             batch_id=batch_id,
         )
 
-        plaid_transactions, plaid_accounts = fetch_plaid_transactions(
+        plaid_response = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
 
         # If no transactions were returned, we're done
-        if not plaid_transactions:
+        if (
+            not plaid_response.added
+            or not plaid_response.accounts
+            or not plaid_response.modified
+            or not plaid_response.removed
+        ):
             update_worker_status(
                 session,
                 user,
@@ -200,13 +219,10 @@ def sync_plaid_account_transactions(
             session.commit()
             return
 
-        write_account_balances(session, user, plaid_accounts)
+        write_account_balances(session, user, plaid_response.accounts)
 
         added_count = add_new_transactions(
-            session,
-            user,
-            transaction_source,
-            plaid_transactions,
+            session, user, transaction_source, plaid_response
         )
         # Update sync log with results
         sync_log.added_count = added_count
@@ -227,31 +243,6 @@ def sync_plaid_account_transactions(
         sync_log.error_message = str(e)
         session.commit()
         raise
-
-
-def plaid_categorize_pipe(in_process: InProcessJob) -> None:
-    return pipe(
-        in_process,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Applying previous recategorizations",
-        ),
-        apply_previous_plaid_recategorizations,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Categorizing batches",
-        ),
-        categorize_extracted_transactions,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Writing batching to database",
-        ),
-        insert_categorized_plaid_transactions,
-        final=trigger_the_effects,
-    )
 
 
 def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProcessJob:
@@ -306,25 +297,44 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcess
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"
+    assert in_process.existing_transactions, "must have"
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
+    existing_transaction_lookup = {
+        t.external_id: t for t in in_process.existing_transactions
+    }
 
-    transactions_to_insert = [
-        Transaction(
-            description=t.partialTransactionDescription,
-            category_id=category_lookup[t.category],
-            date_of_transaction=datetime.strptime(
-                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
-            ),
-            amount=t.partialTransactionAmount,
-            transaction_source_id=in_process.transaction_source.id,
-            kind=t.partialTransactionKind,
-            external_id=t.partialTransactionId,
-            uploaded_pdf_id=in_process.file.id if in_process.file else None,
-            user_id=in_process.user.id,
-            archived=False,
+    transactions_to_insert = []
+
+    for transaction in in_process.categorized_transactions:
+        existing_transaction = existing_transaction_lookup.get(
+            transaction.partialPlaidTransactionId
         )
-        for t in in_process.categorized_transactions
-    ]
+        if existing_transaction:
+            existing_transaction.category_id = category_lookup[transaction.category]
+            existing_transaction.last_updated = datetime.now()
+            existing_transaction.amount = transaction.partialTransactionAmount
+            existing_transaction.date_of_transaction = datetime.strptime(
+                transaction.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            )
+            existing_transaction.description = transaction.partialTransactionDescription
+
+        else:
+            transactions_to_insert.append(
+                Transaction(
+                    description=transaction.partialTransactionDescription,
+                    category_id=category_lookup[transaction.category],
+                    date_of_transaction=datetime.strptime(
+                        transaction.partialTransactionDateOfTransaction, "%m/%d/%Y"
+                    ),
+                    amount=transaction.partialTransactionAmount,
+                    transaction_source_id=in_process.transaction_source.id,
+                    kind=transaction.partialTransactionKind,
+                    external_id=transaction.partialPlaidTransactionId,
+                    uploaded_pdf_id=in_process.file.id if in_process.file else None,
+                    user_id=in_process.user.id,
+                    archived=False,
+                )
+            )
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
@@ -366,7 +376,7 @@ def add_new_transactions(
     session: Session,
     user: User,
     transaction_source: TransactionSource,
-    plaid_transactions: list[Any],
+    plaid_response: PlaidFetchResponse,
 ) -> int:
     categories = (
         session.query(Category)
@@ -396,6 +406,7 @@ def add_new_transactions(
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
         categories=categories,
+        transactions_to_delete=[pt["transaction_id"] for pt in plaid_response.removed],
         transactions=TransactionsWrapper(
             transactions=[
                 PartialTransaction(
@@ -408,12 +419,12 @@ def add_new_transactions(
                         float(pt["amount"])
                     ).value,
                 )
-                for pt in plaid_transactions
+                for pt in plaid_response.added + plaid_response.modified
             ]
         ),
     )
 
-    plaid_categorize_pipe(in_process)
+    plaid_sync_pipe(in_process)
     assert in_process.transactions, "must have"
     return len(in_process.transactions.transactions)
 
@@ -454,6 +465,76 @@ def archive_removed_transactions(
 
     session.flush()
     return len(transactions)
+
+
+def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
+    assert in_process.transaction_source, "must have"
+    assert in_process.transactions and in_process.transactions.transactions, "must have"
+
+    transactions = (
+        in_process.session.query(Transaction)
+        .filter(
+            Transaction.transaction_source_id == in_process.transaction_source.id,
+            Transaction.user_id == in_process.user.id,
+            Transaction.external_id.in_(
+                [
+                    t.partialPlaidTransactionId
+                    for t in in_process.transactions.transactions
+                ]
+            ),
+            ~Transaction.archived,
+        )
+        .all()
+    )
+    return replace(in_process, existing_transactions=transactions)
+
+
+def remove_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
+    assert in_process.transactions_to_delete, "must have"
+
+    in_process.session.query(Transaction).filter(
+        Transaction.external_id.in_(in_process.transactions_to_delete),
+        Transaction.user_id == in_process.user.id,
+    ).delete()
+
+    return in_process
+
+
+def plaid_sync_pipe(in_process: InProcessJob) -> None:
+    return pipe(
+        in_process,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.parsing_transactions,
+            additional_info="Checking for transaction removals",
+        ),
+        remove_plaid_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.parsing_transactions,
+            additional_info="Checking for transaction updates",
+        ),
+        fetch_existing_plaid_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Applying previous recategorizations",
+        ),
+        apply_previous_plaid_recategorizations,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Categorizing batches",
+        ),
+        categorize_extracted_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Writing batching to database",
+        ),
+        insert_categorized_plaid_transactions,
+        final=trigger_the_effects,
+    )
 
 
 async def sync_all_plaid_accounts(

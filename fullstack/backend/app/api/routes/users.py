@@ -1,11 +1,11 @@
 import uuid
 from typing import Any
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 
 from app import crud
-from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.db import (
     Session,
@@ -14,6 +14,7 @@ from app.db import (
     get_current_user,
     get_current_user_optional,
     get_db,
+    get_db_for_user,
 )
 from app.local_types import (
     Message,
@@ -141,10 +142,19 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserOut)
-def read_user_me(current_user: User = Depends(get_current_user)) -> User:
+def read_user_me(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db_for_user),
+) -> User:
     """
     Get current user.
     """
+    user = session.query(User).filter(User.id == current_user.id).one()
+
+    if not user:
+        raise HTTPException(status_code=400, detail="user does not exist")
+
+    user.last_visited_at = datetime.now(timezone.utc)
 
     return current_user
 
