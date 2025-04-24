@@ -176,8 +176,7 @@ def account_balance(
 ) -> ResultWithTrend | None:
     plaid_account = (
         data.session.query(PlaidAccountBalance)
-        .join(PlaidAccount, PlaidAccountBalance.plaid_account_id == PlaidAccount.id)
-        .join(TransactionSource, PlaidAccount.id == TransactionSource.plaid_account_id)
+        .join(TransactionSource, PlaidAccountBalance.transaction_source_id == TransactionSource.id)
         .filter(PlaidAccount.user_id == data.user.id)
         .filter(TransactionSource.id == int(account_id.key))
         .order_by(PlaidAccountBalance.timestamp.desc())
@@ -217,21 +216,21 @@ def determine_percent_change(start: Decimal, end: Decimal) -> Decimal:
     passed_value=None,
 )
 def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
-    # select all plaid accounts for the user
-    plaid_accounts = (
-        data.session.query(PlaidAccount)
-        .filter(PlaidAccount.user_id == data.user.id)
+    # select all transaction sources for the user
+    accounts = (
+        data.session.query(TransactionSource)
+        .filter(TransactionSource.user_id == data.user.id)
         .all()
     )
-    if not plaid_accounts:
+    if not accounts:
         return None
 
     # pull 10 records of balance for every account the user has
     plaid_account_balances = defaultdict(list)
-    for account in plaid_accounts:
+    for account in accounts:
         plaid_account_balances[account.id] = (
             data.session.query(PlaidAccountBalance)
-            .filter(PlaidAccountBalance.plaid_account_id == account.id)
+            .filter(PlaidAccountBalance.transaction_source_id == account.id)
             .order_by(PlaidAccountBalance.timestamp.desc())
             .limit(10)
             .all()

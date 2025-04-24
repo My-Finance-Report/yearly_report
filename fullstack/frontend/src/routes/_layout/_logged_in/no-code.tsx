@@ -45,6 +45,7 @@ function NoCodeCanvasBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [editWidget, setEditWidget] = useState<NoCodeWidgetIn | null>(null);
   const [widgets, setWidgets] = useState<NoCodeWidgetIn[]>([]);
+  const [parameters, setParameters] = useState<Parameter_Output[]>([])
 
   function enrichWidgetOut(widget: NoCodeWidgetOut): NoCodeWidgetIn {
     const widgetIn = widgets.find( (w)=>w.name ==widget.name)
@@ -97,7 +98,7 @@ function NoCodeCanvasBuilder() {
       {editWidget &&
         <NoCodeWidgetBuilder setWidgets={setWidgets} widgetIn={editWidget} tools={fetchedTools} setEditWidget={setEditWidget} />
       }
-      <NoCodeEditCanvas widgets={result} setEditWidget={(widget)=> setEditWidget(enrichWidgetOut(widget))}  />
+          <NoCodeEditCanvas widgets={result} setEditWidget={(widget) => setEditWidget(enrichWidgetOut(widget))} setParameters={setParameters} parameters={parameters} />
     </Container>
   );
 }

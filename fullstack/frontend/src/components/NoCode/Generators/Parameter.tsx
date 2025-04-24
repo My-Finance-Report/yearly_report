@@ -4,7 +4,7 @@ import {
   Portal,
   createListCollection,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { JSX } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -43,7 +43,7 @@ export interface DatetimeParameter extends ParameterBase {
 }
 export interface SubmitParameter extends ParameterBase {
     type: "submit";
-    value?: string | undefined;
+    value?: string;
     default_value?: string;
 }
 
@@ -79,7 +79,7 @@ export type Parameter_Output =
     | MultiSelectParameter;
 
 
-type ParameterValueType<T extends ParameterType> =
+export type ParameterValueType<T extends ParameterType> =
     T extends "int" | "float" ? number :
     T extends "string" ? string :
     T extends "datetime" ? string :
@@ -89,7 +89,7 @@ type ParameterValueType<T extends ParameterType> =
     T extends "pagination" ? SelectOption :
   never;
 
-type ParameterProps<T extends ParameterType> = {
+export type ParameterProps<T extends ParameterType> = {
     parameter: Extract<Parameter_Output, { type: T }>;
     onChange: (value: ParameterValueType<T>) => void;
   };
@@ -174,31 +174,50 @@ function IntParameter({ parameter, onChange }: ParameterProps<"int">) {
 }
 
 function SubmitParameter({ parameter, onChange }: ParameterProps<"submit">) {
-    const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-        onChange(e.target.valueAsNumber);
     return (
-        <Input maxW="100px" variant='subtle' size="sm" type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
+        <Button onClick={()=>{onChange(true)} }>Submit</Button>
     );
 }
-
 
 
 function DatetimeParameter({ parameter, onChange }: ParameterProps<"datetime">) {
     const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-        onChange(e.target);
+        {
+        onChange(e.target.value);
+        }
     return (
-        <Input maxW="100px" variant='subtle' size="sm" type="datetime-local" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
+        <Input maxW="100px" variant='subtle' size="sm" type="datetime-local" value={parameter.value} onChange={wrappedChange} />
     );
 }
 
-
 function FloatParameter({ parameter, onChange }: ParameterProps<"float">) {
-  const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.valueAsNumber);
-  return (
-      <Input type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
-  );
+    const initial = parameter.value ?? parameter.default_value ?? ""
+    const [localValue, setLocalValue] = useState<number | string>(initial)
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (typeof localValue === "number") {
+                onChange(localValue)
+            }
+        }, 300) 
+
+        return () => clearTimeout(timeout)
+    }, [localValue])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.valueAsNumber
+        setLocalValue(Number.isNaN(val) ? "" : val)
+    }
+
+    return (
+        <Input
+            type="number"
+            value={localValue}
+            onChange={handleChange}
+        />
+    )
 }
+
 
 function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
   const [val, setVal] = useState("")

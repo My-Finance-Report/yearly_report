@@ -1,13 +1,13 @@
-import { Box,useDisclosure, Dialog, Flex ,TableRoot,Button, Text,TableHeader, TableRow, TableCell, TableBody, Heading, CloseButton, Portal } from "@chakra-ui/react"
-import { NoCodeWidgetOut } from "@/client"
-import { NoCodeParameter } from "../Generators/Parameter"
+import { useDisclosure, Dialog,Button, CloseButton, Portal } from "@chakra-ui/react"
+import { ShowProps } from "./ShowTypes"
+import { renderNoCodeParameter } from "./Show"
 
-export function ShowForm({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowForm({ widget, updateAParameter }: ShowProps) {
 
     const statusDisclosure = useDisclosure()
 
-    return (
 
+    return (
     <>
     <Button onClick={statusDisclosure.onOpen}>
         {widget.name}
@@ -18,7 +18,6 @@ export function ShowForm({ widget }: { widget: NoCodeWidgetOut }) {
       onInteractOutside={statusDisclosure.onClose}
       motionPreset={'slide-in-bottom'}
     >
-      <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
@@ -29,11 +28,10 @@ export function ShowForm({ widget }: { widget: NoCodeWidgetOut }) {
               </Dialog.CloseTrigger>
             </Dialog.Header>
             {widget.parameters.map((param)=>(
-                <NoCodeParameter parameter={param} onChange={()=>{}} />
+                renderNoCodeParameter(param,(parameter) =>updateAParameter(parameter, false), statusDisclosure.onClose)
                ))}
           </Dialog.Content>
         </Dialog.Positioner>
-      </Portal>
     </Dialog.Root>
 </>
 )

@@ -418,4 +418,3 @@ class EffectOut(BaseModel):
 class BalanceUpdate(BaseModel):
     balance: float
     timestamp: datetime
-

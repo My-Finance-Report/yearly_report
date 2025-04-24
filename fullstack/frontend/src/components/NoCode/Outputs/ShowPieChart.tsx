@@ -1,8 +1,8 @@
-import { NoCodeWidgetOut } from "@/client";
 import { GenericPieChart } from "@/components/Charting/PieChart";
 import { Card, Stat } from "@chakra-ui/react";
+import { ShowProps } from "./ShowTypes";
 
-export function ShowPieChart({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowPieChart({ widget }:ShowProps) {
   const result = widget.result as { key: string; value: number }[];
   return (
     <Card.Root minW="250px" size="lg" overflow="hidden">

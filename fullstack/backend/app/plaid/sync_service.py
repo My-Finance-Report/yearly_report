@@ -140,6 +140,7 @@ def write_account_balances(
 
         record = PlaidAccountBalance(
             plaid_account_id=user_plaid_account.id,
+            transaction_source_id=user_plaid_account.transaction_source.id,
             balance=account["balances"]["current"],
             available=account["balances"].get("available"),
             iso_currency_code=account["balances"].get("iso_currency_code", "USD"),

@@ -1,4 +1,5 @@
 from dataclasses import asdict, is_dataclass
+from datetime import datetime
 from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
@@ -64,6 +65,8 @@ def figure_out_parameters(
     | list[str]
     | list[SelectOption]
     | list[Decimal]
+    | bool
+    | datetime
     | None
 ):
     if parameter.value is not None:

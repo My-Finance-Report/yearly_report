@@ -23,11 +23,6 @@ export type AggregatedTransactions = {
     };
 };
 
-export type BalanceUpdate = {
-    balance: number;
-    timestamp: string;
-};
-
 export type Body_login_login_access_token = {
     grant_type?: (string | null);
     username: string;
@@ -286,7 +281,7 @@ export type Parameter_Input = {
     name: string;
     label?: (string | null);
     type: ParameterType;
-    value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
+    value?: (number | string | SelectOption | boolean | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
     default_value?: (number | string | SelectOption | Array<(string)> | Array<(number | string)> | Array<SelectOption> | null);
     options?: (Array<SelectOption> | null);
     option_generator?: (string | null);
@@ -299,7 +294,7 @@ export type Parameter_Output = {
     name: string;
     label?: (string | null);
     type: ParameterType;
-    value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
+    value?: (number | string | SelectOption | boolean | Array<(string)> | Array<SelectOption> | null);
     default_value?: (number | string | SelectOption | Array<(string)> | Array<SelectOption> | null);
     options?: (Array<SelectOption> | null);
     option_generator?: (string | null);
@@ -646,12 +641,12 @@ export type AccountsCreateTransactionSourceData = {
 
 export type AccountsCreateTransactionSourceResponse = (TransactionSourceOut);
 
-export type AccountsUpdateAccountBalanceData = {
-    requestBody: BalanceUpdate;
+export type AccountsUpdateTransactionSourceData = {
+    requestBody: TransactionSourceBase;
     sourceId: number;
 };
 
-export type AccountsUpdateAccountBalanceResponse = (unknown);
+export type AccountsUpdateTransactionSourceResponse = (TransactionSourceOut);
 
 export type AccountsDeleteTransactionSourceData = {
     sourceId: number;
