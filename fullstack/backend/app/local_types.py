@@ -413,3 +413,9 @@ class EffectOut(BaseModel):
     config: EffectConfig
     condition: EffectConditionals
     conditional_parameters: dict[str, Any]
+
+
+class BalanceUpdate(BaseModel):
+    balance: float
+    timestamp: datetime
+

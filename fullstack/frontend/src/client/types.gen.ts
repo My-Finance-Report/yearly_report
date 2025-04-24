@@ -23,6 +23,11 @@ export type AggregatedTransactions = {
     };
 };
 
+export type BalanceUpdate = {
+    balance: number;
+    timestamp: string;
+};
+
 export type Body_login_login_access_token = {
     grant_type?: (string | null);
     username: string;
@@ -303,7 +308,7 @@ export type Parameter_Output = {
     display_info?: (DisplayInfo | null);
 };
 
-export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'pagination' | 'multi_select';
+export type ParameterType = 'int' | 'float' | 'string' | 'select' | 'submit' | 'datetime' | 'pagination' | 'multi_select';
 
 /**
  * Response model for a Plaid account.
@@ -369,6 +374,13 @@ export type PriceDetails = {
     interval: string;
     tier: SubscriptionTier;
     max_sources: number;
+};
+
+export type PrivateUserCreate = {
+    email: string;
+    password: string;
+    full_name: string;
+    is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -615,7 +627,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart' | 'separator';
+export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart' | 'separator' | 'form';
 
 export type WorkerStatusOut = {
     id: number;
@@ -634,12 +646,12 @@ export type AccountsCreateTransactionSourceData = {
 
 export type AccountsCreateTransactionSourceResponse = (TransactionSourceOut);
 
-export type AccountsUpdateTransactionSourceData = {
-    requestBody: TransactionSourceBase;
+export type AccountsUpdateAccountBalanceData = {
+    requestBody: BalanceUpdate;
     sourceId: number;
 };
 
-export type AccountsUpdateTransactionSourceResponse = (TransactionSourceOut);
+export type AccountsUpdateAccountBalanceResponse = (unknown);
 
 export type AccountsDeleteTransactionSourceData = {
     sourceId: number;
@@ -826,6 +838,19 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PrivateCreateUserData = {
+    requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = (UserOut);
+
+export type PrivateGoogleCallbackLocalData = {
+    code: string;
+    error?: (string | null);
+};
+
+export type PrivateGoogleCallbackLocalResponse = (unknown);
 
 export type SankeyGetSankeyDataResponse = (SankeyData);
 

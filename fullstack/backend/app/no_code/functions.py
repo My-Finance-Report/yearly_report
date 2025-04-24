@@ -31,6 +31,7 @@ def make_account_choices(session: Session, user: User) -> list[SelectOption]:
 
 def init_no_code() -> None:
     import app.no_code.generators
+    import app.no_code.updaters
     import app.no_code.transformations
 
 

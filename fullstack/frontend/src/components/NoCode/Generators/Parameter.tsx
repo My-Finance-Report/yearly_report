@@ -36,42 +36,57 @@ export interface StringParameter extends ParameterBase {
   value?: string;
   default_value?: string;
 }
+export interface DatetimeParameter extends ParameterBase {
+    type: "datetime";
+    value?: string | undefined;
+    default_value?: string;
+}
+export interface SubmitParameter extends ParameterBase {
+    type: "submit";
+    value?: string | undefined;
+    default_value?: string;
+}
+
 export interface SelectParameter extends ParameterBase {
-  type: "select";
-  value?: SelectOption;
-  default_value?: SelectOption;
-  options: SelectOption[];
+    type: "select";
+    value?: SelectOption;
+    default_value?: SelectOption;
+    options: SelectOption[];
 }
 
 export interface PaginationParameter extends ParameterBase {
-  type: "pagination";
-  value?: SelectOption;
-  default_value?: SelectOption;
-  options: SelectOption[];
+    type: "pagination";
+    value?: SelectOption;
+    default_value?: SelectOption;
+    options: SelectOption[];
 }
 
 export interface MultiSelectParameter extends ParameterBase {
-  type: "multi_select";
-  value?: SelectOption[];
-  default_value?: SelectOption[];
-  options: SelectOption[];
+    type: "multi_select";
+    value?: SelectOption[];
+    default_value?: SelectOption[];
+    options: SelectOption[];
 }
 
 export type Parameter_Output =
-  | IntParameter
-  | FloatParameter
-  | StringParameter
-  | SelectParameter
-  | PaginationParameter
-  | MultiSelectParameter;
+    | IntParameter
+    | FloatParameter
+    | StringParameter
+    | SubmitParameter
+    | DatetimeParameter
+    | SelectParameter
+    | PaginationParameter
+    | MultiSelectParameter;
 
 
 type ParameterValueType<T extends ParameterType> =
-  T extends "int" | "float" ? number :
-  T extends "string" ? string :
-  T extends "select" ? SelectOption :
-  T extends "multi_select" ? SelectOption[] :
-  T extends "pagination" ? SelectOption :
+    T extends "int" | "float" ? number :
+    T extends "string" ? string :
+    T extends "datetime" ? string :
+    T extends "submit" ? boolean  :
+    T extends "select" ? SelectOption :
+    T extends "multi_select" ? SelectOption[] :
+    T extends "pagination" ? SelectOption :
   never;
 
 type ParameterProps<T extends ParameterType> = {
@@ -83,6 +98,8 @@ const MAP_TO_PARAMETER = {
   int: IntParameter,
   float: FloatParameter,
   pagination: PaginationParameter,
+  datetime: DatetimeParameter,
+  submit: SubmitParameter,
   string: StrParameter,
   select: SelectParameter,
   multi_select: MultiSelectParameter,
@@ -155,6 +172,25 @@ function IntParameter({ parameter, onChange }: ParameterProps<"int">) {
       <Input maxW="100px" variant='subtle' size="sm" type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
   );
 }
+
+function SubmitParameter({ parameter, onChange }: ParameterProps<"submit">) {
+    const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        onChange(e.target.valueAsNumber);
+    return (
+        <Input maxW="100px" variant='subtle' size="sm" type="number" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
+    );
+}
+
+
+
+function DatetimeParameter({ parameter, onChange }: ParameterProps<"datetime">) {
+    const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        onChange(e.target);
+    return (
+        <Input maxW="100px" variant='subtle' size="sm" type="datetime-local" value={parameter.value || parameter.default_value || ""} onChange={wrappedChange} />
+    );
+}
+
 
 function FloatParameter({ parameter, onChange }: ParameterProps<"float">) {
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>

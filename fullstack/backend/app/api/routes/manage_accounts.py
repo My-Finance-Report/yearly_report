@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.api.routes.manage_budgets import get_stylized_name_lookup
@@ -6,11 +7,14 @@ from app.db import get_current_user, get_db
 from app.local_types import (
     CategoryOut,
     PlaidSyncLogOut,
+    BalanceUpdate,
     TransactionSourceOut,
 )
 from app.models import (
     Category,
     CategoryBase,
+    PlaidAccount,
+    PlaidAccountBalance,
     PlaidSyncLog,
     PlaidSyncLogId,
     Transaction,
@@ -425,3 +429,46 @@ def get_account_sync_logs(
         )
         for log in sync_logs
     ]
+
+
+
+
+@router.put("/{source_id}", response_model=None)
+def update_account_balance(
+    source_id: int,
+    balance_update: BalanceUpdate,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    db_source = (
+        session.query(TransactionSource)
+        .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
+        .first()
+    )
+
+
+    plaid_account = session.query(PlaidAccount.id).filter(PlaidAccount.transaction_source_id== db_source.id).one_or_none()
+
+
+    plaid_account_id =plaid_account.id if plaid_account else None
+
+
+    if not db_source:
+        raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+
+    if user.id != db_source.user_id:
+        raise HTTPException(status_code=403, detail="You cannot edit this")
+
+
+    new_balance = PlaidAccountBalance(
+        plaid_account_id = plaid_account_id,
+        transation_source_id=source_id,
+        balance=balance_update.balance,
+        timestamp=balance_update.timestamp.astimezone(timezone.utc),
+        )
+
+    session.add(new_balance)
+    session.commit()
+    return None
+

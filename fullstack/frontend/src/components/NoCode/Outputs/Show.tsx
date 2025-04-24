@@ -2,6 +2,7 @@ import { NoCodeWidgetOut, Parameter_Output} from "@/client"
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
 import { ShowValue, ShowBadge, ShowValueWithTrend, ShowSeparator } from "./ShowValue"
 import { ShowList } from "./ShowList"
+import { ShowForm } from "./ShowForm"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
 
@@ -9,6 +10,7 @@ const MAP_TO_SHOW = {
     "value": ShowValue,
     "value_with_trend": ShowValueWithTrend,
     "list": ShowList,    
+    "form" : ShowForm,
     "pie_chart": ShowPieChart,
     "bar_chart": ShowBarChart,
     "badge": ShowBadge,
@@ -88,4 +90,3 @@ export function NoCodeShow({ widget }: { widget: NoCodeWidgetOut}) {
             <TheDisplay widget={widget}/>
     )
 }
-    
