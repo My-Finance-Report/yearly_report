@@ -141,9 +141,9 @@ def update_password_me(
     return Message(message="Password updated successfully")
 
 
-def update_visited_time(current_user:User)->None:
+def update_visited_time(current_user: User) -> None:
     session = next(get_db_for_user(current_user.id))
-    user = session.query(User).filter(User.id==current_user.id).one()
+    user = session.query(User).filter(User.id == current_user.id).one()
     user.last_visited_at = datetime.now(timezone.utc)
     session.commit()
 

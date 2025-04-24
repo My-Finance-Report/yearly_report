@@ -136,3 +136,24 @@ def sum_by_key(
     return [
         KeyValuePair(key=key, value=Decimal(value)) for key, value in result.items()
     ]
+
+
+@pipeline_step(
+    return_type=list[dict[str, str | Decimal | None]],
+    passed_value=list[dict[str, str | Decimal | None]],
+)
+def clean_transaction_data(
+    data: list[NoCodeTransaction]
+) -> list[dict]:
+    result: list = []
+
+    for transaction in data:
+        result.append({
+            "Date":transaction.date_of_transaction,
+            "Description" : transaction.description,
+            "Amount": f"${transaction.amount:.2f}",
+            "Category": transaction.category_name,
+            "Kind": transaction.kind.value.title()
+            })
+
+    return result
