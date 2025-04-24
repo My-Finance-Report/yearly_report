@@ -11,7 +11,7 @@ from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 
 
-@pytest.fixture(scope="session",autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def db() -> Generator[Session, None, None]:
     # Connect to the database and begin a transaction
     with Session(engine) as session:

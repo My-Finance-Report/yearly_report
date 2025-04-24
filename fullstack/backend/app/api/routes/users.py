@@ -144,7 +144,7 @@ def update_password_me(
 @router.get("/me", response_model=UserOut)
 def read_user_me(
     current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_db_for_user),
+    session: Session = Depends(get_db),
 ) -> User:
     """
     Get current user.

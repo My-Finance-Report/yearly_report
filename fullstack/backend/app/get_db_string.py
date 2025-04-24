@@ -12,7 +12,10 @@ def is_local() -> bool:
 
 def get_app_user_database_url() -> str:
     if is_local():
-        return os.environ.get("DATABASE_URL") or "postgresql://app_user:persistent_pass_local@localhost:5433/persistent_db"
+        return (
+            os.environ.get("DATABASE_URL")
+            or "postgresql://app_user:persistent_pass_local@localhost:5433/persistent_db"
+        )
 
     secret_name = "app_user"
     return _get_database_url(secret_name)
