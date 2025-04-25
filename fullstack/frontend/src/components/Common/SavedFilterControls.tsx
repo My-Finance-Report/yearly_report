@@ -58,7 +58,9 @@ export function SavedFilterControls() {
   const handleLoadFilter = (selectedFilterId: string) => {
     if (!selectedFilterId) return;
 
-    const filter = [...savedFilters].find((f) => f.id.toString() === selectedFilterId);
+    const filter = [...savedFilters].find(
+      (f) => f.id.toString() === selectedFilterId,
+    );
     if (!filter) return;
 
     setCurrentFilter(filter);
@@ -75,8 +77,8 @@ export function SavedFilterControls() {
   const myFilters = formatFiltersForSelect(savedFilters);
 
   const handleDeleteButtonClick = () => {
-    if (currentFilter?.name == "custom"){
-      setCurrentFilter(savedFilters[0])
+    if (currentFilter?.name == "custom") {
+      setCurrentFilter(savedFilters[0]);
     } else {
       setIsDeleteDialogOpen(!isDeleteDialogOpen);
     }
@@ -94,7 +96,9 @@ export function SavedFilterControls() {
         </Button>
         <Button
           size="sm"
-          disabled={!currentFilter?.is_deleteable && currentFilter?.name != "custom"}
+          disabled={
+            !currentFilter?.is_deleteable && currentFilter?.name != "custom"
+          }
           variant="outline"
           onClick={handleDeleteButtonClick}
         >
@@ -102,41 +106,40 @@ export function SavedFilterControls() {
         </Button>
       </Flex>
       {currentFilter?.name == "custom" ? (
-     <Text mt={2}>Building a custom filter</Text> 
-      ):
-      (
-      <FieldRoot mt={3}>
-        <FieldLabel mb={2}>Current Filter</FieldLabel>
-        <SelectRoot
-          value={[currentFilter?.id?.toString()]}
-          collection={createListCollection({
-            items: [...myFilters.items],
-          })}
-          onValueChange={(value) => {
-            handleLoadFilter(value.value[0]);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValueText placeholder="Select a filter" />
-          </SelectTrigger>
-          <SelectPositioner>
-          <SelectContent>
-            {myFilters.items.map((item) => (
-              <SelectItem key={item.value} item={item}>
-                <Box>
-                  <Box fontWeight="medium">{item.label}</Box>
-                  {item.description && (
-                    <Box fontSize="sm" color="gray.500">
-                      {item.description}
+        <Text mt={2}>Building a custom filter</Text>
+      ) : (
+        <FieldRoot mt={3}>
+          <FieldLabel mb={2}>Current Filter</FieldLabel>
+          <SelectRoot
+            value={[currentFilter?.id?.toString()]}
+            collection={createListCollection({
+              items: [...myFilters.items],
+            })}
+            onValueChange={(value) => {
+              handleLoadFilter(value.value[0]);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValueText placeholder="Select a filter" />
+            </SelectTrigger>
+            <SelectPositioner>
+              <SelectContent>
+                {myFilters.items.map((item) => (
+                  <SelectItem key={item.value} item={item}>
+                    <Box>
+                      <Box fontWeight="medium">{item.label}</Box>
+                      {item.description && (
+                        <Box fontSize="sm" color="gray.500">
+                          {item.description}
+                        </Box>
+                      )}
                     </Box>
-                  )}
-                </Box>
-              </SelectItem>
-            ))}
-          </SelectContent>
-</SelectPositioner>
-        </SelectRoot>
-      </FieldRoot>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </SelectPositioner>
+          </SelectRoot>
+        </FieldRoot>
       )}
 
       <SaveDialog

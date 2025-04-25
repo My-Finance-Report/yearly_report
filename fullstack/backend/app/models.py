@@ -23,6 +23,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, Float, DateTime
 from datetime import datetime
 
+
 T = TypeVar("T", bound=BaseModel)  # This represents any dataclass type
 
 
@@ -117,6 +118,12 @@ SubscriptionId = NewType("SubscriptionId", int)
 PriceId = NewType("PriceId", int)
 PlaidSyncLogId = NewType("PlaidSyncLogId", int)
 SavedFilterId = NewType("SavedFilterId", int)
+CanvasId = NewType("CanvasId", int)
+WidgetId = NewType("WidgetId", int)
+ToolId = NewType("ToolId", int)
+PipelineStepId = NewType("PipelineStepId", int)
+ParameterId = NewType("ParameterId", int)
+ParameterGroupId = NewType("ParameterGroupId", int)
 
 
 class UserSettings(BaseModel):
@@ -772,3 +779,179 @@ class Effect(Base):
         Enum(EffectConditionals), nullable=False
     )
     conditional_parameters: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class NoCodeCanvas(Base):
+    __tablename__ = "no_code_canvas"
+
+    id: Mapped[CanvasId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    slug: Mapped[str] = mapped_column(String, nullable=False)
+
+    __table_args__ = (UniqueConstraint("user_id", "slug", name="uq_user_slug"),)
+
+
+class WidgetType(str, enum.Enum):
+    value = "value"
+    value_with_trend = "value_with_trend"
+    badge = "badge"
+    list = "list"
+    pie_chart = "pie_chart"
+    bar_chart = "bar_chart"
+    separator = "separator"
+    form = "form"
+
+
+class NoCodeWidget(Base):
+    __tablename__ = "no_code_widget"
+
+    id: Mapped[WidgetId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    widget_type: Mapped[WidgetType] = mapped_column(Enum(WidgetType), nullable=False)
+    label: Mapped[str] = mapped_column(String, nullable=True)
+    canvas_id: Mapped[CanvasId] = mapped_column(
+        ForeignKey("no_code_canvas.id"), nullable=False
+    )
+    row: Mapped[int] = mapped_column(Integer, nullable=False)
+    column: Mapped[int] = mapped_column(Integer, nullable=False)
+    row_span: Mapped[int] = mapped_column(Integer, nullable=False)
+    col_span: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class NoCodeTool(Base):
+    __tablename__ = "no_code_tool"
+
+    id: Mapped[ToolId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    widget_id: Mapped[WidgetId] = mapped_column(
+        ForeignKey("no_code_widget.id"), nullable=False
+    )
+    tool_name: Mapped[str] = mapped_column(String, nullable=False)
+    canvas_id: Mapped[CanvasId] = mapped_column(
+        ForeignKey("no_code_canvas.id"), nullable=False
+    )
+
+
+class NoCodeToolParameter(Base):
+    __tablename__ = "no_code_tool_parameter"
+    tool_id: Mapped[ToolId] = mapped_column(
+        ForeignKey("no_code_tool.id"), primary_key=True
+    )
+    parameter_id: Mapped[ParameterId] = mapped_column(
+        ForeignKey("no_code_parameter.id"), primary_key=True
+    )
+
+
+class NoCodePipelineStep(Base):
+    __tablename__ = "no_code_pipeline_step"
+    id: Mapped[PipelineStepId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    widget_id: Mapped[WidgetId] = mapped_column(
+        ForeignKey("no_code_widget.id"), nullable=False
+    )
+    tool_id: Mapped[ToolId] = mapped_column(
+        ForeignKey("no_code_tool.id"), nullable=False
+    )
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class ParameterGroupType(str, enum.Enum):
+    GLOBAL = "global"
+    WIDGET = "widget"
+
+
+class NoCodeParameterGroup(Base):
+    __tablename__ = "no_code_parameter_group"
+
+    id: Mapped[ParameterGroupId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    group_type: Mapped[ParameterGroupType] = mapped_column(
+        Enum(ParameterGroupType), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    canvas_id: Mapped[CanvasId] = mapped_column(
+        ForeignKey("no_code_canvas.id"), nullable=False
+    )
+
+
+class ParameterType(str, enum.Enum):
+    INT = "int"
+    FLOAT = "float"
+    STRING = "string"
+    SELECT = "select"
+    SUBMIT = "submit"
+    DATETIME = "datetime"
+    PAGINATION = "pagination"
+    MULTI_SELECT = "multi_select"
+
+
+class ParameterOptionSourceType(str, enum.Enum):
+    STATIC = "static"
+    DYNAMIC = "dynamic"
+
+
+class SelectOption(BaseModel):
+    key: str
+    value: str
+
+
+class DefaultValue(BaseModel):
+    value: SelectOption | list[SelectOption] | None | float | bool
+
+
+class DisplaySize(str, enum.Enum):
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+
+
+class DisplayInfo(BaseModel):
+    views: list[str]
+    size: DisplaySize | None = None
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+
+
+class NoCodeParameter(Base):
+    __tablename__ = "no_code_parameter"
+
+    id: Mapped[ParameterId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    type: Mapped[ParameterType] = mapped_column(Enum(ParameterType), nullable=False)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    label: Mapped[str] = mapped_column(String, nullable=False)
+    group_id: Mapped[ParameterGroupId] = mapped_column(
+        ForeignKey("no_code_parameter_group.id"), nullable=False
+    )
+    trigger_refetch: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    dependent_widgets: Mapped[list[WidgetId]] = mapped_column(JSON, default=list)
+    option_source_type: Mapped[ParameterOptionSourceType] = mapped_column(
+        Enum(ParameterOptionSourceType), nullable=True
+    )
+    option_generator_key: Mapped[str] = mapped_column(String, nullable=True)
+    default_value: Mapped[DefaultValue] = mapped_column(
+        JSONType(DefaultValue), nullable=True
+    )
+    display_info: Mapped[DisplayInfo] = mapped_column(
+        JSONType(DisplayInfo), nullable=True
+    )
+
+
+class NoCodeParameterOption(Base):
+    __tablename__ = "no_code_parameter_option"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    parameter_id: Mapped[ParameterId] = mapped_column(
+        ForeignKey("no_code_parameter.id"), nullable=False
+    )
+    key: Mapped[str] = mapped_column(String, nullable=False)
+    value: Mapped[str] = mapped_column(String, nullable=False)

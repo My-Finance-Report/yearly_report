@@ -1,13 +1,13 @@
-import { SegmentedControl } from "../ui/segmented-control"
+import { SegmentedControl } from "../ui/segmented-control";
 
 export default function WithdrawDepositSelectorSegmented({
   setShowDeposits,
   showDeposits,
 }: {
-  showDeposits: boolean
-  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
+  showDeposits: boolean;
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const availableOptions = ["deposits", "expenses"]
+  const availableOptions = ["deposits", "expenses"];
 
   return (
     <SegmentedControl
@@ -18,8 +18,8 @@ export default function WithdrawDepositSelectorSegmented({
         label: option.charAt(0).toUpperCase() + option.slice(1),
       }))}
       onValueChange={(value) => {
-        setShowDeposits(value.value === "deposits")
+        setShowDeposits(value.value === "deposits");
       }}
     />
-  )
+  );
 }

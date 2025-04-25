@@ -6,18 +6,18 @@ import {
   Icon,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { FaTimesCircle } from "react-icons/fa"
+} from "@chakra-ui/react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { FaTimesCircle } from "react-icons/fa";
 
 export const Route = createFileRoute("/_layout/_logged_in/subscription-cancel")(
   {
     component: SubscriptionCancel,
   },
-)
+);
 
 export default function SubscriptionCancel() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <Container maxW="container.md" py={16}>
@@ -44,5 +44,5 @@ export default function SubscriptionCancel() {
         </Box>
       </VStack>
     </Container>
-  )
+  );
 }

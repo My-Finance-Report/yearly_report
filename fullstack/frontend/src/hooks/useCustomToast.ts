@@ -1,5 +1,5 @@
-import { toaster } from "@/components/ui/toaster"
-import { useCallback } from "react"
+import { toaster } from "@/components/ui/toaster";
+import { useCallback } from "react";
 
 const useCustomToast = () => {
   const showToast = useCallback(
@@ -9,12 +9,12 @@ const useCustomToast = () => {
         description,
         type: status,
         meta: { closable: true },
-      })
+      });
     },
     [],
-  )
+  );
 
-  return showToast
-}
+  return showToast;
+};
 
-export default useCustomToast
+export default useCustomToast;

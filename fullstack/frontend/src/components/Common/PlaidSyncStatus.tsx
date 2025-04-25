@@ -1,8 +1,8 @@
-import { AccountsService } from "@/client"
-import { Box, Flex, Icon, Spinner, Text, VStack } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { format } from "date-fns"
-import { FaExclamationTriangle, FaSync, FaUniversity } from "react-icons/fa"
+import { AccountsService } from "@/client";
+import { Box, Flex, Icon, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { FaExclamationTriangle, FaSync, FaUniversity } from "react-icons/fa";
 
 const useSyncLogs = (accountId: number) => {
   return useQuery({
@@ -11,22 +11,22 @@ const useSyncLogs = (accountId: number) => {
       const response = await AccountsService.getAccountSyncLogs({
         sourceId: accountId,
         limit: 1000,
-      })
+      });
       if (!response) {
-        throw new Error("Failed to fetch sync logs")
+        throw new Error("Failed to fetch sync logs");
       }
-      return response
+      return response;
     },
     enabled: !!accountId,
-  })
-}
+  });
+};
 
 interface PlaidSyncStatusProps {
-  accountId: number
+  accountId: number;
 }
 
 export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
-  const { data: syncLogs, isLoading, isError } = useSyncLogs(accountId)
+  const { data: syncLogs, isLoading, isError } = useSyncLogs(accountId);
 
   if (isLoading) {
     return (
@@ -36,7 +36,7 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
           <Text>Loading sync information...</Text>
         </Flex>
       </Box>
-    )
+    );
   }
 
   if (isError || !syncLogs || syncLogs.length === 0) {
@@ -59,15 +59,15 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
           </VStack>
         </Flex>
       </Box>
-    )
+    );
   }
 
-  const lastSync = syncLogs[0]
+  const lastSync = syncLogs[0];
 
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const lastSyncDate = new Date(lastSync.created_at)
-  const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a")
+  const lastSyncDate = new Date(lastSync.created_at);
+  const formattedLocalTime = format(lastSyncDate, "MMM d, yyyy h:mm a");
 
   const totalTransactions = syncLogs.reduce((total: number, log) => {
     return (
@@ -75,10 +75,10 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
       (log.added_count || 0) +
       (log.modified_count || 0) +
       (log.removed_count || 0)
-    )
-  }, 0)
+    );
+  }, 0);
 
-  const totalSyncs = syncLogs.length
+  const totalSyncs = syncLogs.length;
 
   return (
     <Box p={4} borderWidth="1px" borderRadius="md">
@@ -113,5 +113,5 @@ export default function PlaidSyncStatus({ accountId }: PlaidSyncStatusProps) {
         </VStack>
       </Flex>
     </Box>
-  )
+  );
 }

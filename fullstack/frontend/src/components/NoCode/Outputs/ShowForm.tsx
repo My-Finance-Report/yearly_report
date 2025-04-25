@@ -1,39 +1,38 @@
-import { useDisclosure, Dialog,Button, CloseButton } from "@chakra-ui/react"
-import { ShowProps } from "./ShowTypes"
-import { renderNoCodeParameter } from "./Show"
+import { useDisclosure, Dialog, Button, CloseButton } from "@chakra-ui/react";
+import { ShowProps } from "./ShowTypes";
+import { renderNoCodeParameter } from "./Show";
+import { useNoCodeContext } from "@/contexts/NoCodeContext";
 
-export function ShowForm({ widget, updateAParameter }: ShowProps) {
+export function ShowForm({ widget }: ShowProps) {
+  const { getParamsForView } = useNoCodeContext();
+  const formDisclosure = useDisclosure();
 
-    const statusDisclosure = useDisclosure()
+  const paramsToDisplay = getParamsForView(widget.name);
 
-
-    return (
+  return (
     <>
-    <Button onClick={statusDisclosure.onOpen}>
-        {widget.name}
-        </Button>
-    <Dialog.Root
-      open={statusDisclosure.open}
-      onExitComplete={statusDisclosure.onClose}
-      onInteractOutside={statusDisclosure.onClose}
-      motionPreset={'slide-in-bottom'}
-    >
+      <Button onClick={formDisclosure.onOpen}>{widget.name}</Button>
+      <Dialog.Root
+        open={formDisclosure.open}
+        onExitComplete={formDisclosure.onClose}
+        onInteractOutside={formDisclosure.onClose}
+        motionPreset={"slide-in-bottom"}
+      >
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
               <Dialog.Title>{widget.name}</Dialog.Title>
-              <Dialog.CloseTrigger onClick={statusDisclosure.onClose} asChild>
+              <Dialog.CloseTrigger onClick={formDisclosure.onClose} asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
-            {widget.parameters.map((param)=>(
-                renderNoCodeParameter(param,(parameter) =>updateAParameter(parameter, false), statusDisclosure.onClose)
-               ))}
+            {paramsToDisplay.map((param) =>
+              renderNoCodeParameter(param, formDisclosure.onClose),
+            )}
           </Dialog.Content>
         </Dialog.Positioner>
-    </Dialog.Root>
-</>
-)
+      </Dialog.Root>
+    </>
+  );
 }
-

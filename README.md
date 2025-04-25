@@ -42,6 +42,29 @@ big milestones before launch:
   -> welcome email only configured to send to me
 
 -> transaction delete button
+-> manaual balance updates
+
+-> parameters are getting confusing, how can i clean up the loop for each one?
+  -> widgets could be fully self contained and fetch itself (done)
+  --> page loads all of the widgets, and each has a fetch within it (done)
+  -> each parameter has a set of dependent widgets. when we change a parameter we need to know.
+
+  1. do i trigger a refetch?
+  2. who do i trigger a refetch for?
+
+  then when i am changed. if i dont trigger a refetch, i do nothing
+  if i do trigger a refetch, i have to call the refetch of all my dependencies
+
+  parameters:
+  +/- global, (knows its dependent widgets)
+  +/- triggers refetches
+
+  widgets:
+
+
+
+-> why are there no decimals at all on transactios..?
+-> acccount balance over time would be cool
 
 -> delete saved filter doesnt work
 

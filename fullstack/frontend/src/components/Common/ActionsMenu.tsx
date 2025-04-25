@@ -1,16 +1,16 @@
-import { Button, Menu, useDisclosure } from "@chakra-ui/react"
-import { BsThreeDotsVertical } from "react-icons/bs"
-import { FiTrash } from "react-icons/fi"
+import { Button, Menu, useDisclosure } from "@chakra-ui/react";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FiTrash } from "react-icons/fi";
 
-import Delete from "./DeleteAlert"
+import Delete from "./DeleteAlert";
 
 interface ActionsMenuProps {
-  type: string
-  disabled?: boolean
+  type: string;
+  disabled?: boolean;
 }
 
 const ActionsMenu = ({ type, disabled }: ActionsMenuProps) => {
-  const deleteModal = useDisclosure()
+  const deleteModal = useDisclosure();
 
   return (
     <>
@@ -29,7 +29,7 @@ const ActionsMenu = ({ type, disabled }: ActionsMenuProps) => {
         />
       </Menu.Root>
     </>
-  )
-}
+  );
+};
 
-export default ActionsMenu
+export default ActionsMenu;

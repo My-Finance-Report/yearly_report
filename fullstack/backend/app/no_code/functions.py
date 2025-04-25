@@ -8,14 +8,13 @@ from pydantic import BaseModel
 from sqlalchemy import func
 
 from app.db import Session
-from app.models import Transaction, TransactionSource, User
+from app.models import Transaction, TransactionSource, User, SelectOption
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
     Parameter,
     PipelineStart,
     ResultTypeEnum,
-    SelectOption,
 )
 
 T = TypeVar("T")
@@ -73,7 +72,7 @@ def figure_out_parameters(
         return parameter.value
 
     if parameter.default_value is not None:
-        return parameter.default_value
+        return parameter.default_value.value
 
     if parameter.options:
         return parameter.options[0]
@@ -145,36 +144,21 @@ def extract_parameters_from_pipeline(
 def enrich_tools_with_runtime_parameters(
     tools: list[NoCodeToolIn],
     runtime_parameters: list[Parameter] | None = None,
-    widget_id: str | None = None,
 ) -> list[NoCodeToolIn]:
-    widget_specific_params = (
-        {
-            param.name: param
-            for param in runtime_parameters
-            if param.widget_id is not None and param.widget_id == widget_id
-        }
-        if runtime_parameters
-        else {}
-    )
+    if not runtime_parameters:
+        return tools
 
-    param_value_lookup = (
-        {param.name: param for param in runtime_parameters if param.widget_id is None}
-        if runtime_parameters
-        else {}
-    )
+    param_lookup = {param.id: param for param in runtime_parameters}
+
     enriched = []
     for tool in tools:
         if tool.parameters:
             for param in tool.parameters:
-                if param.is_runtime:
-                    if param.name in widget_specific_params:
-                        param.value = widget_specific_params[param.name].value
-                    else:
-                        the_param = param_value_lookup.get(param.name)
-                        if the_param:
-                            param.value = the_param.value
-
+                matching_param = param_lookup.get(param.id)
+                if matching_param is not None:
+                    param.value = matching_param.value
         enriched.append(tool)
+
     return enriched
 
 
@@ -217,11 +201,8 @@ def main_render_loop(
     session: Session,
     user: User,
     runtime_parameters: list[Parameter] | None = None,
-    widget_id: str | None = None,
 ) -> RenderLoopResult:
-    enriched_tools = enrich_tools_with_runtime_parameters(
-        pipeline, runtime_parameters, widget_id
-    )
+    enriched_tools = enrich_tools_with_runtime_parameters(pipeline, runtime_parameters)
     callable_pipeline = convert_to_callable_pipeline(enriched_tools)
     pipeline_output = evaluate_pipeline(callable_pipeline, session, user)
     result = serialize_to_result(pipeline_output)

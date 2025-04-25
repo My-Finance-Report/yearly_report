@@ -1,12 +1,12 @@
-import { BudgetsService } from "@/client"
-import { ManageBudget } from "@/components/Common/BudgetManager"
-import { Container, Flex, Heading, Spinner } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { BudgetsService } from "@/client";
+import { ManageBudget } from "@/components/Common/BudgetManager";
+import { Container, Flex, Heading, Spinner } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/_logged_in/budget")({
   component: ManageBudgets,
-})
+});
 
 function ManageBudgets() {
   const {
@@ -16,7 +16,7 @@ function ManageBudgets() {
   } = useQuery({
     queryKey: ["budgetStatus"],
     queryFn: BudgetsService.getBudgetStatus,
-  })
+  });
 
   if (isError) {
     return (
@@ -25,7 +25,7 @@ function ManageBudgets() {
           Failed to Load Budgets
         </Heading>
       </Container>
-    )
+    );
   }
 
   if (statusLoading) {
@@ -35,12 +35,12 @@ function ManageBudgets() {
           <Spinner />
         </Heading>
       </Container>
-    )
+    );
   }
 
   return (
     <Flex alignItems="center" justifyContent="center">
       <ManageBudget budgetStatus={data!} />
     </Flex>
-  )
+  );
 }

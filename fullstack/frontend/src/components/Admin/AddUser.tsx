@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Button,
@@ -14,27 +14,27 @@ import {
   Field,
   Flex,
   Input,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
-import { type UserRegister, UsersService } from "../../client"
-import type { ApiError } from "../../client/core/ApiError"
-import useCustomToast from "../../hooks/useCustomToast"
-import { emailPattern, handleError } from "../../utils"
+import { type UserRegister, UsersService } from "../../client";
+import type { ApiError } from "../../client/core/ApiError";
+import useCustomToast from "../../hooks/useCustomToast";
+import { emailPattern, handleError } from "../../utils";
 
 interface AddUserProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface UserCreateForm extends UserRegister {
-  confirm_password: string
+  confirm_password: string;
 }
 
 const AddUser = ({ isOpen, onClose }: AddUserProps) => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
   const {
     register,
     handleSubmit,
@@ -52,27 +52,27 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
       is_superuser: false,
       is_active: false,
     },
-  })
+  });
 
   const mutation = useMutation({
     mutationFn: (data: UserRegister) =>
       UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "User created successfully.", "success")
-      reset()
-      onClose()
+      showToast("Success!", "User created successfully.", "success");
+      reset();
+      onClose();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<UserCreateForm> = (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose}>
@@ -174,7 +174,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  )
-}
+  );
+};
 
-export default AddUser
+export default AddUser;

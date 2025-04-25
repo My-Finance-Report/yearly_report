@@ -1,23 +1,23 @@
-import { Box, Heading, Switch, Text } from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { Box, Heading, Switch, Text } from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
-import { useColorMode } from "@/components/ui/color-mode"
-import { HiCheck, HiMoon, HiSun, HiX } from "react-icons/hi"
-import { type ApiError, UsersService } from "../../client"
-import useAuth from "../../hooks/useAuth"
-import useCustomToast from "../../hooks/useCustomToast"
-import { handleError } from "../../utils"
+import { useColorMode } from "@/components/ui/color-mode";
+import { HiCheck, HiMoon, HiSun, HiX } from "react-icons/hi";
+import { type ApiError, UsersService } from "../../client";
+import useAuth from "../../hooks/useAuth";
+import useCustomToast from "../../hooks/useCustomToast";
+import { handleError } from "../../utils";
 
 const AdvancedFeatures = () => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
-  const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+  const { user: currentUser } = useAuth();
   const [isPowerUser, setIsPowerUser] = useState(
     currentUser?.settings?.power_user_filters || false,
-  )
-  const { colorMode, toggleColorMode } = useColorMode()
-  const isDarkMode = colorMode === "dark"
+  );
+  const { colorMode, toggleColorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
 
   const mutation = useMutation({
     mutationFn: (isPowerUser: boolean) =>
@@ -35,21 +35,21 @@ const AdvancedFeatures = () => {
         "Success!",
         "Power user filter settings updated successfully.",
         "success",
-      )
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      );
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
       // Reset to previous state on error
-      setIsPowerUser(currentUser?.settings?.power_user_filters || false)
+      setIsPowerUser(currentUser?.settings?.power_user_filters || false);
     },
-  })
+  });
 
   const handleToggle = () => {
-    const newValue = !isPowerUser
-    setIsPowerUser(newValue)
-    mutation.mutate(newValue)
-  }
+    const newValue = !isPowerUser;
+    setIsPowerUser(newValue);
+    mutation.mutate(newValue);
+  };
 
   return (
     <Box mt={6}>
@@ -113,7 +113,7 @@ const AdvancedFeatures = () => {
         </Box>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
-export default AdvancedFeatures
+export default AdvancedFeatures;

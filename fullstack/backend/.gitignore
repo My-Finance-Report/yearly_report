@@ -4,5 +4,9 @@ app.egg-info
 .mypy_cache
 .coverage
 htmlcov
+env
+old_env
 .cache
 .venv
+env/*
+old_env/*

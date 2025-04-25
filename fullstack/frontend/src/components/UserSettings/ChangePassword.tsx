@@ -1,21 +1,33 @@
-import { Box, Button, Container, Field, Heading, Input } from "@chakra-ui/react"
-import { useMutation } from "@tanstack/react-query"
-import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
+import {
+  Box,
+  Button,
+  Container,
+  Field,
+  Heading,
+  Input,
+} from "@chakra-ui/react";
+import { useMutation } from "@tanstack/react-query";
+import {
+  RegisterOptions,
+  type SubmitHandler,
+  useForm,
+  UseFormGetValues,
+} from "react-hook-form";
 
-import { useColorModeValue } from "@/components/ui/color-mode"
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 import {
   type ApiError,
   UsersService,
   type UsersUpdatePasswordMeData,
-} from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
-import {  handleError } from "../../utils"
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { handleError } from "../../utils";
 
 interface UpdatePasswordForm extends UsersUpdatePasswordMeData {
-  old_password: string
-  new_password: string
-  confirm_password: string
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 const confirmPasswordRules = (
@@ -24,24 +36,22 @@ const confirmPasswordRules = (
 ) => {
   const rules: RegisterOptions<UpdatePasswordForm, "confirm_password"> = {
     validate: (value: string) => {
-      const password = getValues("old_password") || getValues("new_password")
-      return value === password ? true : "The passwords do not match"
+      const password = getValues("old_password") || getValues("new_password");
+      return value === password ? true : "The passwords do not match";
     },
     deps: ["old_password", "new_password"],
-  }
+  };
 
   if (isRequired) {
-    rules.required = "Password confirmation is required"
+    rules.required = "Password confirmation is required";
   }
 
-  return rules
-}
-
-
+  return rules;
+};
 
 const ChangePassword = () => {
-  const color = useColorModeValue("inherit", "ui.light")
-  const showToast = useCustomToast()
+  const color = useColorModeValue("inherit", "ui.light");
+  const showToast = useCustomToast();
   const {
     register,
     handleSubmit,
@@ -51,25 +61,28 @@ const ChangePassword = () => {
   } = useForm<UpdatePasswordForm>({
     mode: "onBlur",
     criteriaMode: "all",
-  })
+  });
 
   const mutation = useMutation({
     mutationFn: (data: UpdatePasswordForm) =>
       UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Password updated successfully.", "success")
-      reset()
+      showToast("Success!", "Password updated successfully.", "success");
+      reset();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<UpdatePasswordForm> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
-  const passwordRules = (): RegisterOptions<UpdatePasswordForm, "new_password"> => ({
+  const passwordRules = (): RegisterOptions<
+    UpdatePasswordForm,
+    "new_password"
+  > => ({
     required: "Password is required",
     minLength: { value: 8, message: "Minimum 8 characters" },
     deps: ["confirm_password"],
@@ -134,7 +147,7 @@ const ChangePassword = () => {
         </Button>
       </Box>
     </Container>
-  )
-}
+  );
+};
 
-export default ChangePassword
+export default ChangePassword;

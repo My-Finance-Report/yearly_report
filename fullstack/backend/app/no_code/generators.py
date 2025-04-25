@@ -9,15 +9,15 @@ from sqlalchemy import func
 
 from app.models import (
     Category,
-    PlaidAccount,
     PlaidAccountBalance,
     PlaidSyncLog,
     Transaction,
     TransactionKind,
     TransactionSource,
+    SelectOption,
 )
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import NoCodeTransaction, PipelineStart, SelectOption
+from app.schemas.no_code import NoCodeTransaction, PipelineStart
 from app.no_code.transformations import KeyValuePair
 
 
@@ -180,7 +180,7 @@ def account_balance(
             TransactionSource,
             PlaidAccountBalance.transaction_source_id == TransactionSource.id,
         )
-        .filter(PlaidAccount.user_id == data.user.id)
+        .filter(TransactionSource.user_id == data.user.id)
         .filter(TransactionSource.id == int(account_id.key))
         .order_by(PlaidAccountBalance.timestamp.desc())
         .limit(10)

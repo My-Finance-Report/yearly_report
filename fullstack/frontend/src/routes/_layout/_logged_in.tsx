@@ -1,5 +1,5 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
-import { isSessionValid } from "../../hooks/useAuth"
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { isSessionValid } from "../../hooks/useAuth";
 
 export const Route = createFileRoute("/_layout/_logged_in")({
   component: Layout,
@@ -7,11 +7,11 @@ export const Route = createFileRoute("/_layout/_logged_in")({
     if (!isSessionValid()) {
       throw redirect({
         to: "/",
-      })
+      });
     }
   },
-})
+});
 
 function Layout() {
-  return <Outlet />
+  return <Outlet />;
 }

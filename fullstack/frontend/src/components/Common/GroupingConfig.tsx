@@ -1,9 +1,9 @@
-import type { FilterEntries, SavedFilterOut } from "@/client"
-import { useFilters } from "@/contexts/FilterContext"
-import { Button, Menu, Portal, useCheckboxGroup } from "@chakra-ui/react"
-import { Text } from "@chakra-ui/react"
-import { FaPlus } from "react-icons/fa"
-import { FiCheck } from "react-icons/fi"
+import type { FilterEntries, SavedFilterOut } from "@/client";
+import { useFilters } from "@/contexts/FilterContext";
+import { Button, Menu, Portal, useCheckboxGroup } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
+import { FaPlus } from "react-icons/fa";
+import { FiCheck } from "react-icons/fi";
 
 export enum GroupByOption {
   category = "category",
@@ -19,35 +19,33 @@ const availableOptions: GroupByOption[] = [
   GroupByOption.month,
   GroupByOption.account,
   GroupByOption.budget,
-]
+];
 
 interface GroupingConfigProps {
-  groupingOptions: GroupByOption[]
-  showBudgets: boolean
+  groupingOptions: GroupByOption[];
+  showBudgets: boolean;
 }
 
 export function GroupingConfig({
   groupingOptions,
   showBudgets,
 }: GroupingConfigProps) {
-  const { setCurrentFilter } = useFilters()
+  const { setCurrentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
     setCurrentFilter((prev: SavedFilterOut) => {
-
-
-      const newLookup = { ...prev.filter_data?.lookup }
+      const newLookup = { ...prev.filter_data?.lookup };
 
       if (newLookup[option]) {
-        const rest = { ...newLookup }
-        delete rest[option]
-        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } }
+        const rest = { ...newLookup };
+        delete rest[option];
+        return { ...prev, filter_data: { ...prev.filter_data, lookup: rest } };
       }
 
       const maxIndex = Object.values(newLookup).reduce(
         (max, entry) => Math.max(max, (entry as FilterEntries).index),
         -1,
-      ) as number
+      ) as number;
 
       const calculatedLookup: SavedFilterOut = {
         name: "custom",
@@ -58,23 +56,23 @@ export function GroupingConfig({
           ...prev.filter_data,
           lookup: {
             ...newLookup,
-          [option]: {
-            visible: true,
-            specifics: [],
-            index: maxIndex + 1,
+            [option]: {
+              visible: true,
+              specifics: [],
+              index: maxIndex + 1,
+            },
           },
         },
-      }
-    }
-      return calculatedLookup
-    })
-  }
+      };
+      return calculatedLookup;
+    });
+  };
 
   const filteredOptions = showBudgets
     ? availableOptions
-    : availableOptions.filter((option) => option !== GroupByOption.budget)
+    : availableOptions.filter((option) => option !== GroupByOption.budget);
 
-  const group = useCheckboxGroup({ value: groupingOptions })
+  const group = useCheckboxGroup({ value: groupingOptions });
 
   return (
     <Menu.Root
@@ -108,5 +106,5 @@ export function GroupingConfig({
         </Menu.Positioner>
       </Portal>
     </Menu.Root>
-  )
+  );
 }

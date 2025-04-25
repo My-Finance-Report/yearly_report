@@ -3,7 +3,7 @@ import {
   defaultConfig,
   defineConfig,
   mergeConfigs,
-} from "@chakra-ui/react"
+} from "@chakra-ui/react";
 
 const theme = defineConfig({
   theme: {
@@ -36,9 +36,9 @@ const theme = defineConfig({
       },
     },
   },
-})
+});
 
-const config = mergeConfigs(defaultConfig, theme)
-const system = createSystem(config)
+const config = mergeConfigs(defaultConfig, theme);
+const system = createSystem(config);
 
-export default system
+export default system;

@@ -2,21 +2,21 @@ import {
   FileUploadDropzone,
   FileUploadList,
   FileUploadTrigger,
-} from "@/components/ui/file-upload.tsx"
+} from "@/components/ui/file-upload.tsx";
 import {
   FileUploadHiddenInput,
   FileUploadRootProvider,
   HStack,
   useFileUpload,
-} from "@chakra-ui/react"
-import { Button, Stack } from "@chakra-ui/react"
-import { useEffect } from "react"
-import { HiUpload } from "react-icons/hi"
+} from "@chakra-ui/react";
+import { Button, Stack } from "@chakra-ui/react";
+import { useEffect } from "react";
+import { HiUpload } from "react-icons/hi";
 
 interface FileDropzoneProps {
-  onFilesSelected?: React.Dispatch<React.SetStateAction<File[]>>
-  handleUpload: (files: File[]) => void
-  isLoading: boolean
+  onFilesSelected?: React.Dispatch<React.SetStateAction<File[]>>;
+  handleUpload: (files: File[]) => void;
+  isLoading: boolean;
 }
 
 export default function FileDropzone({
@@ -28,20 +28,20 @@ export default function FileDropzone({
     maxFiles: 50,
     maxFileSize: 5 * 1024 * 1024, // 5MB
     accept: [".pdf", ".csv"],
-  })
+  });
 
   useEffect(() => {
     if (fileUpload.acceptedFiles.length > 0 && onFilesSelected) {
-      onFilesSelected(fileUpload.acceptedFiles)
+      onFilesSelected(fileUpload.acceptedFiles);
     }
-  }, [fileUpload.acceptedFiles, onFilesSelected])
+  }, [fileUpload.acceptedFiles, onFilesSelected]);
 
   const handleUploadClick = () => {
     if (fileUpload.acceptedFiles.length > 0) {
-      handleUpload(fileUpload.acceptedFiles)
-      fileUpload.clearFiles()
+      handleUpload(fileUpload.acceptedFiles);
+      fileUpload.clearFiles();
     }
-  }
+  };
 
   return (
     <FileUploadRootProvider value={fileUpload} alignItems={"center"}>
@@ -74,5 +74,5 @@ export default function FileDropzone({
         </HStack>
       </Stack>
     </FileUploadRootProvider>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { defineConfig } from "@hey-api/openapi-ts"
+import { defineConfig } from "@hey-api/openapi-ts";
 
 export default defineConfig({
   input: "./openapi.json",
@@ -13,17 +13,17 @@ export default defineConfig({
       client: "legacy/axios",
       methodNameBuilder: (operation) => {
         // @ts-expect-error im not really sure
-        let name: string = operation.name
+        let name: string = operation.name;
 
         // @ts-expect-error im not really sure
-        const service: string = operation.service
+        const service: string = operation.service;
 
         if (service && name.toLowerCase().startsWith(service.toLowerCase())) {
-          name = name.slice(service.length)
+          name = name.slice(service.length);
         }
 
-        return name.charAt(0).toLowerCase() + name.slice(1)
+        return name.charAt(0).toLowerCase() + name.slice(1);
       },
     },
   ],
-})
+});

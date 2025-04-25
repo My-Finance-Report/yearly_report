@@ -2,8 +2,8 @@ import {
   type PriceDetails,
   type SubscriptionDetails,
   SubscriptionService,
-} from "@/client"
-import useCustomToast from "@/hooks/useCustomToast"
+} from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Badge,
   Box,
@@ -24,94 +24,95 @@ import {
   StatValueText,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
-import { format } from "date-fns"
-import { useEffect, useState } from "react"
-import { FaCheck, FaTimes } from "react-icons/fa"
+} from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
+import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 export const Route = createFileRoute("/_layout/_logged_in/subscription")({
   component: Subscription,
-})
+});
 
 export default function Subscription() {
-  const [plans, setPlans] = useState<PriceDetails[]>([])
-  const [status, setStatus] = useState<SubscriptionDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const toast = useCustomToast()
+  const [plans, setPlans] = useState<PriceDetails[]>([]);
+  const [status, setStatus] = useState<SubscriptionDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const toast = useCustomToast();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch subscription plans
-        const plansResponse = await SubscriptionService.getSubscriptionPlans()
-        setPlans(plansResponse)
+        const plansResponse = await SubscriptionService.getSubscriptionPlans();
+        setPlans(plansResponse);
 
         // Fetch user's subscription status
-        const statusResponse = await SubscriptionService.getSubscriptionStatus()
-        setStatus(statusResponse)
+        const statusResponse =
+          await SubscriptionService.getSubscriptionStatus();
+        setStatus(statusResponse);
       } catch {
-        toast("Error", "Failed to load subscription information", "error")
+        toast("Error", "Failed to load subscription information", "error");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [toast])
+    fetchData();
+  }, [toast]);
 
   const handleSubscribe = async (planId: number) => {
     try {
-      setCheckoutLoading(true)
+      setCheckoutLoading(true);
       const response = await SubscriptionService.createCheckoutSession({
         priceId: planId,
-      })
+      });
 
-      window.location.href = response.checkout_url
+      window.location.href = response.checkout_url;
     } catch {
-      toast("Error", "Failed to create checkout session", "error")
+      toast("Error", "Failed to create checkout session", "error");
     } finally {
-      setCheckoutLoading(false)
+      setCheckoutLoading(false);
     }
-  }
+  };
 
   const handleCancelSubscription = async () => {
     try {
-      await SubscriptionService.cancelSubscription()
+      await SubscriptionService.cancelSubscription();
       // Refresh subscription status
-      const statusResponse = await SubscriptionService.getSubscriptionStatus()
-      setStatus(statusResponse)
+      const statusResponse = await SubscriptionService.getSubscriptionStatus();
+      setStatus(statusResponse);
 
       toast(
         "Subscription Canceled",
         "Your subscription will be canceled at the end of the billing period",
         "success",
-      )
+      );
     } catch {
-      toast("Error", "Failed to cancel subscription", "error")
+      toast("Error", "Failed to cancel subscription", "error");
     }
-  }
+  };
 
   if (loading) {
     return (
       <Center h="100vh">
         <Spinner size="xl" />
       </Center>
-    )
+    );
   }
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A"
-    return format(new Date(dateString), "MMMM dd, yyyy")
-  }
+    if (!dateString) return "N/A";
+    return format(new Date(dateString), "MMMM dd, yyyy");
+  };
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -291,5 +292,5 @@ export default function Subscription() {
         </Box>
       </VStack>
     </Container>
-  )
+  );
 }

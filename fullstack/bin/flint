@@ -5,4 +5,5 @@ set -x
 
 cd frontend
 tsc -p tsconfig.build.json
+npm run format
 npm run lint

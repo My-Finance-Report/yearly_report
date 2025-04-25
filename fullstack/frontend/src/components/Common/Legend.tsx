@@ -1,19 +1,19 @@
-import { useIsMobile } from "@/hooks/useIsMobile"
-import { Flex, HStack, Text } from "@chakra-ui/react"
-import type React from "react"
-import { FiMaximize2 } from "react-icons/fi"
-import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText"
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { Flex, HStack, Text } from "@chakra-ui/react";
+import type React from "react";
+import { FiMaximize2 } from "react-icons/fi";
+import BoxWithText, { type CollapsibleName, NAME_TO_ICON } from "./BoxWithText";
 
 export function CollapsedItems({
   collapsedItems,
   setCollapsedItems,
 }: {
-  collapsedItems: CollapsibleName[]
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  collapsedItems: CollapsibleName[];
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
 }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
   if (isMobile) {
-    return null
+    return null;
   }
 
   return (
@@ -38,21 +38,24 @@ export function CollapsedItems({
                       )
                     }
                   />
-                )
+                );
               })}
             </Flex>
           </BoxWithText>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function CollapsedWidget({
   name,
   onClick,
-}: { name: CollapsibleName; onClick: () => void }) {
-  const icon = NAME_TO_ICON[name]
+}: {
+  name: CollapsibleName;
+  onClick: () => void;
+}) {
+  const icon = NAME_TO_ICON[name];
   return (
     <HStack
       borderRadius={"md"}
@@ -66,5 +69,5 @@ function CollapsedWidget({
       <Text>{name}</Text>
       <FiMaximize2 />
     </HStack>
-  )
+  );
 }

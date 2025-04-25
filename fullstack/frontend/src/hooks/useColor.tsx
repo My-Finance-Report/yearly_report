@@ -1,26 +1,28 @@
-import { useTheme } from "next-themes"
-import type React from "react"
-import { createContext, useCallback, useContext, useRef } from "react"
+import { useTheme } from "next-themes";
+import type React from "react";
+import { createContext, useCallback, useContext, useRef } from "react";
 
 interface ColorContextType {
-  getColorForName: (name: string) => string
+  getColorForName: (name: string) => string;
 }
 
 const hashStringToIndex = (str: string, length: number) => {
-  if (!str) return 0
-  let hash = 0
+  if (!str) return 0;
+  let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return Math.abs(hash) % length
-}
+  return Math.abs(hash) % length;
+};
 
-const ColorContext = createContext<ColorContextType | undefined>(undefined)
+const ColorContext = createContext<ColorContextType | undefined>(undefined);
 
 export const ChartColorProvider = ({
   children,
-}: { children: React.ReactNode }) => {
-  const { theme } = useTheme()
+}: {
+  children: React.ReactNode;
+}) => {
+  const { theme } = useTheme();
 
   const lightModePalette = [
     "#3182CE",
@@ -37,7 +39,7 @@ export const ChartColorProvider = ({
     "#ED64A6",
     "#718096",
     "#6B46C1",
-  ]
+  ];
 
   const darkModePalette = [
     "#63B3ED",
@@ -58,35 +60,35 @@ export const ChartColorProvider = ({
     "#ED64A6",
     "#718096",
     "#6B46C1",
-  ]
+  ];
 
-  const colorPalette = theme === "dark" ? darkModePalette : lightModePalette
+  const colorPalette = theme === "dark" ? darkModePalette : lightModePalette;
 
   // Use a ref to store assigned colors so updating it doesn't trigger a re-render
-  const assignedColorsRef = useRef<Record<string, string>>({})
+  const assignedColorsRef = useRef<Record<string, string>>({});
 
   const getColorForName = useCallback(
     (name: string) => {
       if (!assignedColorsRef.current[name]) {
         assignedColorsRef.current[name] =
-          colorPalette[hashStringToIndex(name, colorPalette.length)]
+          colorPalette[hashStringToIndex(name, colorPalette.length)];
       }
-      return assignedColorsRef.current[name]
+      return assignedColorsRef.current[name];
     },
     [colorPalette],
-  )
+  );
 
   return (
     <ColorContext.Provider value={{ getColorForName }}>
       {children}
     </ColorContext.Provider>
-  )
-}
+  );
+};
 
 export const useColorPalette = () => {
-  const context = useContext(ColorContext)
+  const context = useContext(ColorContext);
   if (!context) {
-    throw new Error("useColorPalette must be used within a ChartColorProvider")
+    throw new Error("useColorPalette must be used within a ChartColorProvider");
   }
-  return context
-}
+  return context;
+};

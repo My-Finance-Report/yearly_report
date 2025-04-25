@@ -1,14 +1,8 @@
-from collections import defaultdict
-from datetime import timedelta, datetime
-import random
+from datetime import datetime
 
-from app.models import (
-    PlaidAccount,
-    PlaidAccountBalance,
-    TransactionSource,
-)
+from app.models import PlaidAccountBalance, TransactionSource, SelectOption
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import PipelineStart, SelectOption
+from app.schemas.no_code import PipelineStart
 
 
 @pipeline_step(
@@ -39,8 +33,6 @@ def update_balance(
 
     if data.user.id != db_source.user_id:
         raise ValueError("Not possible")
-
-    print("ta", timestamp)
 
     new_balance = PlaidAccountBalance(
         plaid_account_id=db_source.plaid_account_id,

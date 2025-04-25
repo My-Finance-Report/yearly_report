@@ -1,31 +1,31 @@
-import { Box, Button, Text } from "@chakra-ui/react"
-import type React from "react"
-import { FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi"
+import { Box, Button, Text } from "@chakra-ui/react";
+import type React from "react";
+import { FiBarChart, FiFilter, FiMinimize2, FiPieChart } from "react-icons/fi";
 
-export type CollapsibleName = keyof typeof NAME_TO_ICON
+export type CollapsibleName = keyof typeof NAME_TO_ICON;
 
 export const NAME_TO_ICON = {
   "Bar Chart": <FiBarChart />,
   "Pie Chart": <FiPieChart />,
   Filters: <FiFilter />,
-}
+};
 
 interface LabeledBoxProps {
-  COMPONENT_NAME?: CollapsibleName
-  text: string
-  position?: "top" | "bottom" | "left" | "right"
-  children: React.ReactNode
-  minH?: number | string
-  maxH?: number | string
-  minW?: number | string
-  maxW?: number | string
-  isCollapsable?: boolean
-  containerRef?: React.RefObject<HTMLDivElement>
-  width?: number | string
+  COMPONENT_NAME?: CollapsibleName;
+  text: string;
+  position?: "top" | "bottom" | "left" | "right";
+  children: React.ReactNode;
+  minH?: number | string;
+  maxH?: number | string;
+  minW?: number | string;
+  maxW?: number | string;
+  isCollapsable?: boolean;
+  containerRef?: React.RefObject<HTMLDivElement>;
+  width?: number | string;
   setCollapsedItems?:
     | React.Dispatch<React.SetStateAction<CollapsibleName[]>>
-    | undefined
-  collapsedItems?: CollapsibleName[]
+    | undefined;
+  collapsedItems?: CollapsibleName[];
 }
 
 export default function LabeledBox({
@@ -44,7 +44,7 @@ export default function LabeledBox({
     px: 2,
     fontSize: "sm",
     whiteSpace: "nowrap",
-  }
+  };
 
   const positionStyles = {
     top: {
@@ -67,12 +67,13 @@ export default function LabeledBox({
       top: "50%",
       transform: "translateY(-50%) rotate(90deg)",
     },
-  }
+  };
 
-  const isCollapsed = COMPONENT_NAME && collapsedItems?.includes(COMPONENT_NAME)
+  const isCollapsed =
+    COMPONENT_NAME && collapsedItems?.includes(COMPONENT_NAME);
 
   if (isCollapsed) {
-    return null
+    return null;
   }
 
   return (
@@ -95,7 +96,7 @@ export default function LabeledBox({
           variant="outline"
           size="sm"
           onClick={() => {
-            setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!])
+            setCollapsedItems?.((prev) => [...prev, COMPONENT_NAME!]);
           }}
           alignSelf="start"
         >
@@ -104,5 +105,5 @@ export default function LabeledBox({
       )}
       <Box flex="1">{children}</Box>
     </Box>
-  )
+  );
 }

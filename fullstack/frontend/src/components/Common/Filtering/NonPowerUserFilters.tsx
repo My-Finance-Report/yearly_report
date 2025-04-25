@@ -1,6 +1,6 @@
-import { Flex } from "@chakra-ui/react"
-import { SavedFilterControls } from "@/components/Common/SavedFilterControls"
-import { Box } from "@chakra-ui/react"
+import { Flex } from "@chakra-ui/react";
+import { SavedFilterControls } from "@/components/Common/SavedFilterControls";
+import { Box } from "@chakra-ui/react";
 
 export function NonPowerUserButtons() {
   return (
@@ -9,5 +9,5 @@ export function NonPowerUserButtons() {
         <SavedFilterControls />
       </Flex>
     </Box>
-  )
+  );
 }
