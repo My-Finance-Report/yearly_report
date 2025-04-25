@@ -34,7 +34,7 @@ function NotificationComponent() {
                         Add New
                     </Button>
                 </Flex>
-                <Text color="gray.600">
+                <Text >
                     Configure how and when you want to be notified about your financial activities.
                 </Text>
             </Box>
@@ -102,7 +102,7 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
                             direction="column"
                             gap={2}
                         >
-                            <Text fontWeight="medium" fontSize="sm" color="gray.600">
+                            <Text fontWeight="medium" fontSize="sm" >
                                 Trigger Condition:
                             </Text>
                             <NotificationCondition effect={effect} />
@@ -113,7 +113,7 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
                                 <Badge colorScheme="blue" variant="subtle" px={2} py={1}>
                                     {effect.effect_type === 'email' ? 'Email Notification' : 'In-app Notification'}
                                 </Badge>
-                                <Text fontSize="sm" color="gray.600">
+                                <Text fontSize="sm" >
                                     Frequency: At most once per {effect.config.frequency_days} day(s)
                                 </Text>
                             </HStack>
@@ -121,7 +121,7 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
                     </Box>
                     
                     <Box mt={2}>
-                        <Text fontWeight="medium" mb={2} color="gray.600">
+                        <Text fontWeight="medium" mb={2} >
                             Preview:
                         </Text>
                         <NotificationPreview subject={effect.config.subject} template={effect.config.template} />
@@ -174,10 +174,10 @@ function getStatement(effect: EffectOut) {
                     wrap="wrap"
                     fontWeight="medium"
                 >
-                    <Text color="gray.600">If a transaction with an amount</Text>
+                    <Text >If a transaction with an amount</Text>
                     <Text mx={1} fontWeight="bold" color="blue.500">{comparator}</Text>
                     <NumberInput value={amount} />
-                    <Text color="gray.600">was uploaded</Text>
+                    <Text >was uploaded</Text>
                 </Flex>
             )
         }
@@ -191,10 +191,10 @@ function getStatement(effect: EffectOut) {
                     wrap="wrap"
                     fontWeight="medium"
                 >
-                    <Text color="gray.600">If</Text>
+                    <Text >If</Text>
                     <Text mx={1} fontWeight="bold" color="blue.500">{comparator}</Text>
                     <NumberInput value={count} />
-                    <Text color="gray.600">transactions are uploaded</Text>
+                    <Text >transactions are uploaded</Text>
                 </Flex>
             )
         }

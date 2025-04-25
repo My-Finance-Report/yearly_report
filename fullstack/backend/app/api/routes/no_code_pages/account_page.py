@@ -702,7 +702,7 @@ def generate_account_page(
                 _generate_plaid_badge_widget, row=24, col=5, row_span=1, col_span=2
             ),
             partial(
-                _generate_balance_update_widget, row=24, col=8, row_span=1, col_span=2
+                _generate_balance_update_widget, row=24, col=10, row_span=1, col_span=2
             ),
             partial(
                 _generate_sync_status_widget, row=24, col=7, row_span=1, col_span=2
