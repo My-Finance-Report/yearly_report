@@ -80,14 +80,13 @@ export function renderNoCodeParameter(
           onChange={(value) => updateAParameter({ ...parameter, value })}
         />
              )
-      case 'submit':
-         const closer = closeModal ? closeModal : ()=>{} 
 
+      case 'submit':
           return (
               <NoCodeParameter
                   key={parameter.name}
                   parameter={parameter as Extract<Parameter_Output, { type: "submit" }>}
-                  onChange={(value) => {updateAParameter({ ...parameter, value }); closer()}}
+                  onChange={(value) => { updateAParameter({ ...parameter, value }); closeModal?.()}}
               />
              )
     default:

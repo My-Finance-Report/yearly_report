@@ -176,7 +176,10 @@ def account_balance(
 ) -> ResultWithTrend | None:
     plaid_account = (
         data.session.query(PlaidAccountBalance)
-        .join(TransactionSource, PlaidAccountBalance.transaction_source_id == TransactionSource.id)
+        .join(
+            TransactionSource,
+            PlaidAccountBalance.transaction_source_id == TransactionSource.id,
+        )
         .filter(PlaidAccount.user_id == data.user.id)
         .filter(TransactionSource.id == int(account_id.key))
         .order_by(PlaidAccountBalance.timestamp.desc())

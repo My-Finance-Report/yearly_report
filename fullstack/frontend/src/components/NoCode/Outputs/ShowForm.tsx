@@ -1,4 +1,4 @@
-import { useDisclosure, Dialog,Button, CloseButton, Portal } from "@chakra-ui/react"
+import { useDisclosure, Dialog,Button, CloseButton } from "@chakra-ui/react"
 import { ShowProps } from "./ShowTypes"
 import { renderNoCodeParameter } from "./Show"
 

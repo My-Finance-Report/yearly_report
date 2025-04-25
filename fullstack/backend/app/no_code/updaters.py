@@ -40,13 +40,13 @@ def update_balance(
     if data.user.id != db_source.user_id:
         raise ValueError("Not possible")
 
-    print("ta",timestamp)
+    print("ta", timestamp)
 
     new_balance = PlaidAccountBalance(
         plaid_account_id=db_source.plaid_account_id,
         transaction_source_id=account_id.key,
         balance=balance,
-        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M")
+        timestamp=datetime.strptime(timestamp, "%Y-%m-%dT%H:%M"),
     )
 
     data.session.add(new_balance)

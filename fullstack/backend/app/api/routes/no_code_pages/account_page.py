@@ -196,7 +196,7 @@ def _generate_seperator_widget(
     col_span: int = 3,
     statement: str = "",
 ) -> NoCodeWidgetOut:
-    widget_id="wertliuwert"
+    widget_id = "wertliuwert"
     return NoCodeWidgetOut(
         id=widget_id,
         parameters=[],
@@ -509,41 +509,41 @@ def _generate_balance_update_widget(
     widget_id = "srlgwrterblsglvdlfkjjsadgf"
 
     parameters = [
-                Parameter(
-                    name="account_id",
-                    label="Account",
-                    type=ParameterType.SELECT,
-                    options=make_account_choices(session, user),
-                    default_value=make_account_choices(session, user)[0],
-                    is_runtime=True,
-                    widget_id=widget_id,
-                ),
-                Parameter(
-                    name="balance",
-                    label="Balance",
-                    type=ParameterType.FLOAT,
-                    default_value=0.0,
-                    is_runtime=True,
-                    widget_id=widget_id,
-                ),
-                Parameter(
-                    name="timestamp",
-                    label="Timestamp",
-                    type=ParameterType.DATETIME,
-                    default_value=datetime.now(timezone.utc).timestamp(),
-                    is_runtime=True,
-                    widget_id=widget_id,
-                ),
-                Parameter(
-                    name="submit",
-                    label="Submit",
-                    type=ParameterType.SUBMIT,
-                    value=False,
-                    default_value=False,
-                    is_runtime=True,
-                    widget_id=widget_id,
-                ),
-            ]
+        Parameter(
+            name="account_id",
+            label="Account",
+            type=ParameterType.SELECT,
+            options=make_account_choices(session, user),
+            default_value=make_account_choices(session, user)[0],
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="balance",
+            label="Balance",
+            type=ParameterType.FLOAT,
+            default_value=0.0,
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="timestamp",
+            label="Timestamp",
+            type=ParameterType.DATETIME,
+            default_value=datetime.now(timezone.utc).timestamp(),
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="submit",
+            label="Submit",
+            type=ParameterType.SUBMIT,
+            value=False,
+            default_value=False,
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+    ]
 
     pipeline = [
         NoCodeToolIn(
@@ -552,7 +552,6 @@ def _generate_balance_update_widget(
         ),
     ]
     response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
-
 
     return NoCodeWidgetOut(
         id=widget_id,
@@ -565,7 +564,7 @@ def _generate_balance_update_widget(
         row_span=row_span,
         col_span=col_span,
         type=WidgetType.form,
-        parameters=response.parameters, #on a form we intentionally "flush the params" after a submit
+        parameters=response.parameters,  # on a form we intentionally "flush the params" after a submit
     )
 
 

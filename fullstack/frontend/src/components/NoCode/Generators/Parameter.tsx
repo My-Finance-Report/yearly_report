@@ -175,7 +175,7 @@ function IntParameter({ parameter, onChange }: ParameterProps<"int">) {
 
 function SubmitParameter({ parameter, onChange }: ParameterProps<"submit">) {
     return (
-        <Button onClick={()=>{onChange(true)} }>Submit</Button>
+        <Button onClick={()=>{onChange(true)} }>{parameter.name}</Button>
     );
 }
 
