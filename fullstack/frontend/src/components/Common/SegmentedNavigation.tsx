@@ -66,16 +66,16 @@ function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
         <Portal>
           <Menu.Positioner>
             <Menu.Content>
+            <Menu.Item
+                onClick={() => navigate({ to: "/settings" })}
+                value="settings"
+            >
+                User Settings
+            </Menu.Item>
               <Menu.Item onClick={() => logout()} value="logout">
                 Log out
               </Menu.Item>
-              <Menu.Item
-                onClick={() => navigate({ to: "/settings" })}
-                value="settings"
-              >
-                User Settings
-              </Menu.Item>
-            </Menu.Content>
+        </Menu.Content>
           </Menu.Positioner>
         </Portal>
       </Menu.Root>
