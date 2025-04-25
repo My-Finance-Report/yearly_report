@@ -1,8 +1,8 @@
-import { NoCodeWidgetOut } from "@/client";
 import { FormatNumber,Card, Box, HStack, Stat, Text, Badge, VStack, Separator } from "@chakra-ui/react";
 import { Chart, useChart } from "@chakra-ui/charts"
 import { Area, AreaChart } from "recharts"
 import { LuDollarSign, LuPercent } from "react-icons/lu";
+import { ShowProps } from "./ShowTypes";
 
 
 function mapUnitToSymbol(unit: string): React.ReactNode {
@@ -16,7 +16,7 @@ function mapUnitToSymbol(unit: string): React.ReactNode {
   }
 }
 
-export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowValue({ widget }: ShowProps) {
   const result = widget.result as number;
 
   return (
@@ -37,7 +37,7 @@ export function ShowValue({ widget }: { widget: NoCodeWidgetOut }) {
   );
 }
 
-export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowValueWithTrend({ widget }:ShowProps) {
   const result = widget.result as { result: number, trend: number };
   const isUp = result.trend >= 0;
   return (
@@ -58,7 +58,7 @@ export function ShowValueWithTrend({ widget }: { widget: NoCodeWidgetOut }) {
     </Box>
   );
 }
-export function ShowSeparator({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowSeparator({ widget }: ShowProps) {
   return (
       <HStack>
         <Separator flex="1" />
@@ -68,14 +68,14 @@ export function ShowSeparator({ widget }: { widget: NoCodeWidgetOut }) {
   );
 }
 
-export function ShowBadge({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowBadge({ widget }: ShowProps) {
   return (
     <Badge  p={2} m={2} variant="outline" colorPalette="orange">{widget.result as string}</Badge>
   );
 }
 
 
-export function ShowCardWithSparkline({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowCardWithSparkline({ widget }: ShowProps) {
   const result = widget.result as { result: number|null, unit: string, trend_data: { values: { value: number }[], color: string } };
   if (!result.result) {
   return (

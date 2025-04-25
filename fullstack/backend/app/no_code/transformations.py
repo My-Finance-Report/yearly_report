@@ -142,18 +142,18 @@ def sum_by_key(
     return_type=list[dict[str, str | Decimal | None]],
     passed_value=list[dict[str, str | Decimal | None]],
 )
-def clean_transaction_data(
-    data: list[NoCodeTransaction]
-) -> list[dict[str,str]]:
+def clean_transaction_data(data: list[NoCodeTransaction]) -> list[dict[str, str]]:
     result: list[dict[str, str]] = []
 
     for transaction in data:
-        result.append({
-            "Date":transaction.date_of_transaction.strftime("%m/%d/%Y"),
-            "Description" : transaction.description,
-            "Amount": f"${transaction.amount:.2f}",
-            "Category": transaction.category_name,
-            "Kind": transaction.kind.value.title()
-            })
+        result.append(
+            {
+                "Date": transaction.date_of_transaction.strftime("%m/%d/%Y"),
+                "Description": transaction.description,
+                "Amount": f"${transaction.amount:.2f}",
+                "Category": transaction.category_name,
+                "Kind": transaction.kind.value.title(),
+            }
+        )
 
     return result

@@ -4,6 +4,8 @@ import {NoCodeDisplayCanvas} from "@/components/NoCode/Canvas"
 import { Spinner } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 
+
+
 export function NoCodePage({variant}: {variant: PageVariant}){
 
     const [parameters, setParameters] = useState<Parameter_Output[]>([])
@@ -18,9 +20,13 @@ export function NoCodePage({variant}: {variant: PageVariant}){
         queryFn: () => NoCodeService.getNoCodeDashboard({variant, requestBody: parameters}),
     })
 
-    useEffect(() => {
-        refetch()
-    }, [parameters])
+
+    useEffect(()=>{
+       if(data?.parameters){
+        setParameters(data.parameters)
+       }
+    }, [data])
+
 
     if (isLoading || !data){
         return (<Spinner/>)
@@ -30,6 +36,6 @@ export function NoCodePage({variant}: {variant: PageVariant}){
         return (<h1>there has been an error</h1>)
     }
 
-    return <NoCodeDisplayCanvas widgets={data.widgets} parameters={data.parameters} setParameters={setParameters}/>
+    return <NoCodeDisplayCanvas widgets={data.widgets} refetch={refetch} parameters={parameters} setParameters={setParameters}/>
 
 }

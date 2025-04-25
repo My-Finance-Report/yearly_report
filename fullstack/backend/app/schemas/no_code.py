@@ -27,6 +27,8 @@ class ParameterType(str, enum.Enum):
     FLOAT = "float"
     STRING = "string"
     SELECT = "select"
+    SUBMIT = "submit"
+    DATETIME = "datetime"
     PAGINATION = "pagination"
     MULTI_SELECT = "multi_select"
 
@@ -59,6 +61,8 @@ class Parameter(BaseModel):
         | float
         | str
         | SelectOption
+        | datetime
+        | bool
         | list[str]
         | list[Decimal]
         | list[SelectOption]
@@ -122,6 +126,7 @@ class WidgetType(str, enum.Enum):
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
     separator = "separator"
+    form = "form"
 
 
 Scalar = Decimal | str | int | float

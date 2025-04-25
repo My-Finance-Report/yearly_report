@@ -1,8 +1,8 @@
-import { NoCodeWidgetOut } from "@/client";
 import { Box, Heading } from "@chakra-ui/react";
 import { GenericBarChart } from "@/components/Charting/BarChart"
+import { ShowProps } from "./ShowTypes";
 
-export function ShowBarChart({ widget }: { widget: NoCodeWidgetOut }) {
+export function ShowBarChart({ widget }:ShowProps) {
   const result = widget.result as { key: string; value: number }[];
 
   const keysInAll = result.length === 0

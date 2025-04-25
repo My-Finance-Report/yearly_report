@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+from copy import deepcopy
 from functools import partial
 
 from app.db import Session
@@ -194,7 +196,7 @@ def _generate_seperator_widget(
     col_span: int = 3,
     statement: str = "",
 ) -> NoCodeWidgetOut:
-    widget_id = "sneflnlksnfv"
+    widget_id = "wertliuwert"
     return NoCodeWidgetOut(
         id=widget_id,
         parameters=[],
@@ -495,6 +497,77 @@ def _generate_list_widget(
     )
 
 
+def _generate_balance_update_widget(
+    session: Session,
+    user: User,
+    runtime_parameters: list[Parameter] | None = None,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 3,
+    col_span: int = 3,
+) -> NoCodeWidgetOut:
+    widget_id = "srlgwrterblsglvdlfkjjsadgf"
+
+    parameters = [
+        Parameter(
+            name="account_id",
+            label="Account",
+            type=ParameterType.SELECT,
+            options=make_account_choices(session, user),
+            default_value=make_account_choices(session, user)[0],
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="balance",
+            label="Balance",
+            type=ParameterType.FLOAT,
+            default_value=0.0,
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="timestamp",
+            label="Timestamp",
+            type=ParameterType.DATETIME,
+            default_value=datetime.now(timezone.utc).timestamp(),
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+        Parameter(
+            name="submit",
+            label="Submit",
+            type=ParameterType.SUBMIT,
+            value=False,
+            default_value=False,
+            is_runtime=True,
+            widget_id=widget_id,
+        ),
+    ]
+
+    pipeline = [
+        NoCodeToolIn(
+            tool="update_balance",
+            parameters=parameters,
+        ),
+    ]
+    response = main_render_loop(pipeline, session, user, runtime_parameters, widget_id)
+
+    return NoCodeWidgetOut(
+        id=widget_id,
+        result_type=response.result_type,
+        result=response.result,
+        name="Manually Update Balance",
+        description="Manually Update Balance",
+        row=row,
+        col=col,
+        row_span=row_span,
+        col_span=col_span,
+        type=WidgetType.form,
+        parameters=response.parameters,  # on a form we intentionally "flush the params" after a submit
+    )
+
+
 def _generate_pie_widget(
     session: Session,
     user: User,
@@ -627,6 +700,9 @@ def generate_account_page(
             ),
             partial(
                 _generate_plaid_badge_widget, row=24, col=5, row_span=1, col_span=2
+            ),
+            partial(
+                _generate_balance_update_widget, row=24, col=8, row_span=1, col_span=2
             ),
             partial(
                 _generate_sync_status_widget, row=24, col=7, row_span=1, col_span=2

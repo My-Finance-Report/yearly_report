@@ -25,13 +25,21 @@ function orderWidgets(widgets: NoCodeWidgetOut[]): Array<Array<NoCodeWidgetOut>>
     }
     return rows.map(row => row.sort((a, b) => a.col - b.col))
   }
-  
-export function NoCodeEditCanvas({ widgets, setEditWidget }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void}) {
-  
+
+export function NoCodeEditCanvas({ widgets, parameters, setParameters, setEditWidget }: { widgets: NoCodeWidgetOut[]; setEditWidget: (widget: NoCodeWidgetOut) => void ; parameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void }) {
+
+    const updateAParameter = (parameter: Parameter_Output) => {
+        setParameters(
+            parameters.map((p) => (p.name === parameter.name ? parameter : p))
+        );
+    };
+
+
+
+
     if (!widgets) {
       return <div>No widgets found</div>
     }
-  
     return (
       <Container>
         {orderWidgets(widgets).map((row) => (
@@ -41,7 +49,7 @@ export function NoCodeEditCanvas({ widgets, setEditWidget }: { widgets: NoCodeWi
                 <Button onClick={() => setEditWidget(widget)}>
                   <BsPencilSquare />
                 </Button>
-                <NoCodeShow key={widget.name} widget={widget} />
+                    <NoCodeShow key={widget.name} widget={widget} updateAParameter={updateAParameter} />
               </Box>
             ))}
           </Flex>
@@ -73,16 +81,23 @@ export function GlobalParameters({
 }
 
  
-export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { widgets: NoCodeWidgetOut[]; parameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void}) {
+export function NoCodeDisplayCanvas({ widgets, parameters, setParameters, refetch }: { widgets: NoCodeWidgetOut[]; parameters: Parameter_Output[]; setParameters: (parameters: Parameter_Output[]) => void, refetch: ()=>void}) {
+
+    console.log(parameters)
 
     if (!widgets) {
       return <div>No widgets found</div>
     }
 
-    const updateAParameter = (parameter: Parameter_Output) => {
+    const updateAParameter = (parameter: Parameter_Output, shouldRefetch:boolean=true) => {
       setParameters(
         parameters.map((p) => (p.name === parameter.name ? parameter : p))
       );
+      console.log('set the param to', parameter)
+      if (shouldRefetch){
+          console.log("refetching")
+          refetch()
+      }
     };
 
 
@@ -106,7 +121,7 @@ export function NoCodeDisplayCanvas({ widgets, parameters, setParameters }: { wi
             rowSpan={widget.row_span}
             colSpan={widget.col_span}
           >
-            <NoCodeShow widget={widget} />
+            <NoCodeShow widget={widget} updateAParameter={updateAParameter} />
           </GridItem>
         ))}
         {toDisplayParams.map(param =>(

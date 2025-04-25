@@ -514,7 +514,10 @@ class PlaidAccountBalance(Base):
         Integer, primary_key=True, autoincrement=True
     )
     plaid_account_id: Mapped[PlaidAccountId] = mapped_column(
-        ForeignKey("plaid_account.id"), nullable=False, index=True
+        ForeignKey("plaid_account.id"), nullable=True, index=True
+    )
+    transaction_source_id: Mapped[TransactionSourceId] = mapped_column(
+        ForeignKey("transaction_source.id"), nullable=True, index=True
     )
     balance: Mapped[float] = mapped_column(Float, nullable=False)  # aka current
     available: Mapped[float | None] = mapped_column(Float, nullable=True)

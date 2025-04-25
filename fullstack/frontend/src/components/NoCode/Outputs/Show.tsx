@@ -2,13 +2,15 @@ import { NoCodeWidgetOut, Parameter_Output} from "@/client"
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
 import { ShowValue, ShowBadge, ShowValueWithTrend, ShowSeparator } from "./ShowValue"
 import { ShowList } from "./ShowList"
+import { ShowForm } from "./ShowForm"
 import { ShowPieChart } from "./ShowPieChart"
 import { ShowBarChart } from "./ShowBarChart"
 
 const MAP_TO_SHOW = {
     "value": ShowValue,
     "value_with_trend": ShowValueWithTrend,
-    "list": ShowList,    
+    "list": ShowList,
+    "form" : ShowForm,
     "pie_chart": ShowPieChart,
     "bar_chart": ShowBarChart,
     "badge": ShowBadge,
@@ -17,7 +19,8 @@ const MAP_TO_SHOW = {
 
 export function renderNoCodeParameter(
   parameter: Parameter_Output,
-  updateAParameter: (parameter: Parameter_Output) => void
+  updateAParameter: (parameter: Parameter_Output) => void,
+  closeModal?: ()=>void
 ) {
 
   switch (parameter.type) {
@@ -69,6 +72,23 @@ export function renderNoCodeParameter(
           onChange={(value) => updateAParameter({ ...parameter, value })}
         />
         )
+    case 'datetime':
+          return(
+        <NoCodeParameter
+          key={parameter.name}
+          parameter={parameter as Extract<Parameter_Output, { type: "submit" }>}
+          onChange={(value) => updateAParameter({ ...parameter, value })}
+        />
+             )
+
+      case 'submit':
+          return (
+              <NoCodeParameter
+                  key={parameter.name}
+                  parameter={parameter as Extract<Parameter_Output, { type: "submit" }>}
+                  onChange={(value) => { updateAParameter({ ...parameter, value }); closeModal?.()}}
+              />
+             )
     default:
         throw new Error("unknown param")
   }
@@ -76,7 +96,7 @@ export function renderNoCodeParameter(
 
 
 
-export function NoCodeShow({ widget }: { widget: NoCodeWidgetOut}) {
+export function NoCodeShow({ widget, updateAParameter }: { widget: NoCodeWidgetOut, updateAParameter: (parameter: Parameter_Output) => void}) {
     const TheDisplay = MAP_TO_SHOW[widget.type]
 
 
@@ -85,7 +105,6 @@ export function NoCodeShow({ widget }: { widget: NoCodeWidgetOut}) {
     }
 
     return (
-            <TheDisplay widget={widget}/>
+            <TheDisplay widget={widget} updateAParameter={updateAParameter} />
     )
 }
-    
