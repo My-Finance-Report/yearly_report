@@ -12,12 +12,9 @@ jobs:
         PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
         HOST: ${{ secrets.EC2_HOST }}
         USER: ${{ secrets.EC2_USER }}
+        REMOTE_DIR: "/home/ec2-user/code/finance_app"
       run: |
-        # echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
-        # ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
-        echo "Current directory: $(pwd)"
-        echo "Listing home directory:"
-        if [ -v "$PRIVATE_KEY" ]; then echo "private key is set"; else echo "private key is not set"; fi
-        echo "$HOST"
-        echo "$USER"
-        ls -la ~
+        echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
+        ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
+        rsync -avz docker-compose.prod.yml ${REMOTE_SERVER}:${REMOTE_DIR}/
+        rsync -avz bin/backup_db ${REMOTE_SERVER}:${REMOTE_DIR}/
