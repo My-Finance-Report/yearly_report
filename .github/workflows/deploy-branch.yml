@@ -10,7 +10,7 @@ jobs:
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
-        HOST: ${{ secrets.EC2_HOST }}
+        HOST: ${{ secrets.EC2_TEST_HOST }}
         USER: ${{ secrets.EC2_USER }}
         REMOTE_DIR: "/home/ec2-user/code/finance_app"
       run: |
