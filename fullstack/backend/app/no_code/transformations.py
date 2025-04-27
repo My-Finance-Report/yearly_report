@@ -7,8 +7,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import NoCodeTransaction, Primitive, SelectOption
-from app.models import User
+from app.schemas.no_code import NoCodeTransaction, Primitive
+from app.models import User, SelectOption
 
 T = TypeVar("T", bound=Primitive[Decimal | NoCodeTransaction])
 

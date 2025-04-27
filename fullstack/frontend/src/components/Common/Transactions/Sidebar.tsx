@@ -1,9 +1,9 @@
-import type { AggregatedTransactions } from "@/client"
-import type { CollapsibleName } from "@/components/Common/BoxWithText"
-import { FilterGroup } from "@/components/Common/FilterGroup"
-import type { GroupByOption } from "@/components/Common/GroupingConfig"
-import { CollapsedItems } from "@/components/Common/Legend"
-import { Box } from "@chakra-ui/react"
+import type { AggregatedTransactions } from "@/client";
+import type { CollapsibleName } from "@/components/Common/BoxWithText";
+import { FilterGroup } from "@/components/Common/FilterGroup";
+import type { GroupByOption } from "@/components/Common/GroupingConfig";
+import { CollapsedItems } from "@/components/Common/Legend";
+import { Box } from "@chakra-ui/react";
 
 export function MainLayoutSidebar({
   setShowDeposits,
@@ -12,11 +12,11 @@ export function MainLayoutSidebar({
   collapsedItems,
   setCollapsedItems,
 }: {
-  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>
-  data: AggregatedTransactions | undefined
-  showDeposits: boolean
-  collapsedItems: CollapsibleName[]
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
+  setShowDeposits: React.Dispatch<React.SetStateAction<boolean>>;
+  data: AggregatedTransactions | undefined;
+  showDeposits: boolean;
+  collapsedItems: CollapsibleName[];
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
 }) {
   return (
     <Box as={"aside"} position={"absolute"} top={"80px"} left={"10px"}>
@@ -32,5 +32,5 @@ export function MainLayoutSidebar({
         setCollapsedItems={setCollapsedItems}
       />
     </Box>
-  )
+  );
 }

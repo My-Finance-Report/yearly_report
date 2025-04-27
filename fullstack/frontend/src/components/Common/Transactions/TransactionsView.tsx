@@ -2,36 +2,35 @@ import {
   type AggregatedGroup,
   DemoService,
   TransactionsService,
-} from "@/client"
-import type { CollapsibleName } from "@/components/Common/BoxWithText"
-import { PageSpinner } from "@/components/Common/PageSpinner"
-import { MainLayoutSidebar } from "@/components/Common/Transactions/Sidebar"
-import { TransactionsTable } from "@/components/Common/TransactionsTable"
-import { VisualizationPanel } from "@/components/Common/VisualizationPanel"
-import { Box, Flex, Text } from "@chakra-ui/react"
+} from "@/client";
+import type { CollapsibleName } from "@/components/Common/BoxWithText";
+import { PageSpinner } from "@/components/Common/PageSpinner";
+import { MainLayoutSidebar } from "@/components/Common/Transactions/Sidebar";
+import { TransactionsTable } from "@/components/Common/TransactionsTable";
+import { VisualizationPanel } from "@/components/Common/VisualizationPanel";
+import { Box, Flex, Text } from "@chakra-ui/react";
 
-import type { TransactionsGetAggregatedTransactionsResponse } from "@/client"
-import { useFilters } from "@/contexts/FilterContext"
-import { useIsMobile } from "@/hooks/useIsMobile"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import type { TransactionsGetAggregatedTransactionsResponse } from "@/client";
+import { useFilters } from "@/contexts/FilterContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export function TransactionsView({ isDemo }: { isDemo: boolean }) {
   const getFunction = isDemo
     ? DemoService.getDemoAggregatedTransactions
-    : TransactionsService.getAggregatedTransactions
+    : TransactionsService.getAggregatedTransactions;
 
+  const [showDeposits, setShowDeposits] = useState<boolean>(false);
+  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([]);
 
-  const [showDeposits, setShowDeposits] = useState<boolean>(false)
-  const [collapsedItems, setCollapsedItems] = useState<CollapsibleName[]>([])
-
-  const { currentFilter, initializeDefaultFilter } = useFilters()
+  const { currentFilter, initializeDefaultFilter } = useFilters();
 
   useEffect(() => {
     if (!currentFilter) {
-      initializeDefaultFilter()
+      initializeDefaultFilter();
     }
-  }, [initializeDefaultFilter, currentFilter])
+  }, [initializeDefaultFilter, currentFilter]);
 
   const { data, isLoading, refetch } = useQuery<
     TransactionsGetAggregatedTransactionsResponse,
@@ -39,34 +38,34 @@ export function TransactionsView({ isDemo }: { isDemo: boolean }) {
   >({
     queryKey: ["aggregatedTransactions", getFunction.name, currentFilter],
     queryFn: () => {
-      return getFunction({ requestBody: currentFilter?.filter_data || {} })
+      return getFunction({ requestBody: currentFilter?.filter_data || {} });
     },
-  })
+  });
 
   useEffect(() => {
-    refetch()
-  }, [currentFilter])
+    refetch();
+  }, [currentFilter]);
 
   const [activeGrouping, setActiveGrouping] = useState<
     AggregatedGroup[] | null
-  >(null)
+  >(null);
 
   useEffect(() => {
     if (data?.groups.length) {
-      setActiveGrouping(data.groups)
+      setActiveGrouping(data.groups);
     }
-  }, [data?.groups])
+  }, [data?.groups]);
 
   const namesForLegends = data?.groups.flatMap((group) =>
     group?.subgroups?.map((subgroup) => subgroup.group_name),
-  )
+  );
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
-  const hasData = data?.groups && data.groups.length > 0
+  const hasData = data?.groups && data.groups.length > 0;
 
   if (isLoading) {
-    return <PageSpinner />
+    return <PageSpinner />;
   }
 
   return (
@@ -115,5 +114,5 @@ export function TransactionsView({ isDemo }: { isDemo: boolean }) {
         </Box>
       </Box>
     </Box>
-  )
+  );
 }

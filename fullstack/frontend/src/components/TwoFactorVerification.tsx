@@ -1,4 +1,4 @@
-import { TwoFactorService } from "@/client"
+import { TwoFactorService } from "@/client";
 import {
   Box,
   Button,
@@ -7,15 +7,15 @@ import {
   Input,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import type React from "react"
-import { useState } from "react"
-import useCustomToast from "../hooks/useCustomToast"
+} from "@chakra-ui/react";
+import type React from "react";
+import { useState } from "react";
+import useCustomToast from "../hooks/useCustomToast";
 
 interface TwoFactorVerificationProps {
-  onSuccess: (token: string) => void
-  onCancel: () => void
-  temp_token: string
+  onSuccess: (token: string) => void;
+  onCancel: () => void;
+  temp_token: string;
 }
 
 export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
@@ -23,15 +23,15 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
   temp_token,
   onCancel,
 }) => {
-  const [loading, setLoading] = useState<boolean>(false)
-  const [code, setCode] = useState<string>("")
-  const [error, setError] = useState<string>("")
-  const showToast = useCustomToast()
+  const [loading, setLoading] = useState<boolean>(false);
+  const [code, setCode] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const showToast = useCustomToast();
 
   const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       const response = await TwoFactorService.verify2FaLogin({
@@ -39,26 +39,26 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
           code,
           temp_token,
         },
-      })
+      });
 
       if (response.access_token) {
-        showToast("Success", "Authentication successful", "success")
-        onSuccess(response.access_token)
+        showToast("Success", "Authentication successful", "success");
+        onSuccess(response.access_token);
       } else {
-        throw new Error("No access token received")
+        throw new Error("No access token received");
       }
     } catch (error) {
-      console.error("Failed to verify 2FA code:", error)
-      setError("Invalid verification code. Please try again.")
+      console.error("Failed to verify 2FA code:", error);
+      setError("Invalid verification code. Please try again.");
       showToast(
         "Error",
         "Invalid verification code. Please try again.",
         "error",
-      )
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg" shadow="md">
@@ -108,7 +108,7 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
         </Box>
       </VStack>
     </Box>
-  )
-}
+  );
+};
 
-export default TwoFactorVerification
+export default TwoFactorVerification;

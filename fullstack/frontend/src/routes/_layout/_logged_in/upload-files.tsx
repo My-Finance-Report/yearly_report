@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { UploadsService } from "@/client"
-import type { UploadedPdfOut } from "@/client"
-import FileDropzone from "@/components/Common/Dropzone"
+import { UploadsService } from "@/client";
+import type { UploadedPdfOut } from "@/client";
+import FileDropzone from "@/components/Common/Dropzone";
 import {
   DeleteButton,
   ReprocessButton,
-} from "@/components/Common/ReprocessButton"
-import { isSessionActive } from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
+} from "@/components/Common/ReprocessButton";
+import { isSessionActive } from "@/hooks/useAuth";
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Container,
   Flex,
@@ -21,39 +21,43 @@ import {
   TableHeader,
   TableRow,
   Text,
-} from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 interface SortConfig {
-  keyExtractor: (obj: UploadedPdfOut) => string
-  direction: "asc" | "desc"
-  columnName: string
+  keyExtractor: (obj: UploadedPdfOut) => string;
+  direction: "asc" | "desc";
+  columnName: string;
 }
 
 export const Route = createFileRoute("/_layout/_logged_in/upload-files")({
   component: UploadFiles,
-})
+});
 
 function UploadFiles() {
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
 
   const uploadMutation = useMutation<UploadedPdfOut[], Error, File[]>({
     mutationFn: (files: File[]) => {
-      const data = { formData: { files } }
-      return UploadsService.uploadFiles(data)
+      const data = { formData: { files } };
+      return UploadsService.uploadFiles(data);
     },
     onSuccess: () => {
-      toast("Files uploaded", "The files are being processed.", "success")
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
-      queryClient.invalidateQueries({ queryKey: ["currentStatus"] })
+      toast("Files uploaded", "The files are being processed.", "success");
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
+      queryClient.invalidateQueries({ queryKey: ["currentStatus"] });
     },
     onError: () => {
-      toast("Upload failed", "There was an error uploading the files.", "error")
+      toast(
+        "Upload failed",
+        "There was an error uploading the files.",
+        "error",
+      );
     },
-  })
+  });
 
   const { data, isLoading, error, refetch } = useQuery<UploadedPdfOut[], Error>(
     {
@@ -61,32 +65,32 @@ function UploadFiles() {
       queryFn: () => UploadsService.getUploads(),
       enabled: isSessionActive(),
     },
-  )
+  );
 
   const handleUpload = (files: File[]) => {
     if (files.length > 0) {
-      uploadMutation.mutate(files)
+      uploadMutation.mutate(files);
     }
-  }
+  };
 
   const handleUpdate = () => {
-    refetch()
-  }
+    refetch();
+  };
 
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     keyExtractor: (obj: UploadedPdfOut) => obj.nickname || "",
     direction: "asc",
     columnName: "nickname",
-  })
+  });
 
   const sortedData = [...(data || [])].sort((a, b) => {
-    const valueA = sortConfig.keyExtractor(a)
-    const valueB = sortConfig.keyExtractor(b)
+    const valueA = sortConfig.keyExtractor(a);
+    const valueB = sortConfig.keyExtractor(b);
 
-    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1
-    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1
-    return 0
-  })
+    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
+    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
 
   const handleSort = (
     getKey: (obj: UploadedPdfOut) => string,
@@ -101,8 +105,8 @@ function UploadFiles() {
             : "asc"
           : "asc",
       columnName,
-    }))
-  }
+    }));
+  };
 
   return (
     <Container maxW="large" py={8}>
@@ -183,7 +187,7 @@ function UploadFiles() {
         </Flex>
       )}
     </Container>
-  )
+  );
 }
 
-export default UploadFiles
+export default UploadFiles;

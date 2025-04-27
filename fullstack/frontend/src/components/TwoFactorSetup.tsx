@@ -1,5 +1,5 @@
-import { TwoFactorService } from "@/client"
-import { activateSession } from "@/hooks/useAuth"
+import { TwoFactorService } from "@/client";
+import { activateSession } from "@/hooks/useAuth";
 import {
   Box,
   Button,
@@ -10,29 +10,29 @@ import {
   Input,
   Stack,
   Text,
-} from "@chakra-ui/react"
-import { useNavigate } from "@tanstack/react-router"
-import type React from "react"
-import { useState } from "react"
-import useCustomToast from "../hooks/useCustomToast"
+} from "@chakra-ui/react";
+import { useNavigate } from "@tanstack/react-router";
+import type React from "react";
+import { useState } from "react";
+import useCustomToast from "../hooks/useCustomToast";
 
 interface TwoFactorSetupProps {
-  onComplete?: () => void
-  tempToken: string
+  onComplete?: () => void;
+  tempToken: string;
 }
 
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
   onComplete,
   tempToken,
 }) => {
-  const [step, setStep] = useState<"init" | "verify">("init")
-  const [qrCode, setQrCode] = useState<string>("")
-  const [secret, setSecret] = useState<string>("")
-  const [loading, setLoading] = useState<boolean>(false)
-  const [code, setCode] = useState<string>("")
-  const [error, setError] = useState<string>("")
-  const showToast = useCustomToast()
-  const navigate = useNavigate()
+  const [step, setStep] = useState<"init" | "verify">("init");
+  const [qrCode, setQrCode] = useState<string>("");
+  const [secret, setSecret] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [code, setCode] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const showToast = useCustomToast();
+  const navigate = useNavigate();
 
   const handleNoTwoFA = async () => {
     try {
@@ -40,50 +40,50 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         requestBody: {
           temp_token: tempToken,
         },
-      })
-      showToast("Success", "2FA rejected successfully!", "success")
+      });
+      showToast("Success", "2FA rejected successfully!", "success");
 
-      activateSession()
-      navigate({ to: "/transactions" })
+      activateSession();
+      navigate({ to: "/transactions" });
     } catch (error) {
-      console.error("Failed to reject 2FA:", error)
-      setError("Failed to reject 2FA")
-      showToast("Error", "Failed to reject 2FA.", "error")
+      console.error("Failed to reject 2FA:", error);
+      setError("Failed to reject 2FA");
+      showToast("Error", "Failed to reject 2FA.", "error");
     }
-  }
+  };
 
   const handleEnable = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       const response = await TwoFactorService.enable2Fa({
         requestBody: {
           temp_token: tempToken,
         },
-      })
+      });
 
-      setQrCode(response.qr_code)
-      setSecret(response.secret)
-      setStep("verify")
+      setQrCode(response.qr_code);
+      setSecret(response.secret);
+      setStep("verify");
       showToast(
         "Success",
         "Scan the QR code with your authenticator app",
         "success",
-      )
+      );
     } catch {
-      setError("Failed to enable 2FA")
-      showToast("Error", "Failed to enable 2FA.", "error")
+      setError("Failed to enable 2FA");
+      showToast("Error", "Failed to enable 2FA.", "error");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       await TwoFactorService.verify2Fa({
@@ -91,30 +91,30 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
           code,
           temp_token: tempToken,
         },
-      })
+      });
 
       showToast(
         "Success",
         "Two-factor authentication enabled successfully!",
         "success",
-      )
+      );
       if (onComplete) {
-        onComplete()
+        onComplete();
       }
     } catch {
-      console.error("Failed to verify 2FA code:")
-      setError("Invalid verification code")
+      console.error("Failed to verify 2FA code:");
+      setError("Invalid verification code");
       showToast(
         "Error",
         "Invalid verification code. Please try again.",
         "error",
-      )
+      );
     } finally {
-      setLoading(false)
-      sessionStorage.setItem("session_active", "true")
-      navigate({ to: "/transactions" })
+      setLoading(false);
+      sessionStorage.setItem("session_active", "true");
+      navigate({ to: "/transactions" });
     }
-  }
+  };
 
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg" shadow="md">
@@ -215,7 +215,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         )}
       </Box>
     </Box>
-  )
-}
+  );
+};
 
-export default TwoFactorSetup
+export default TwoFactorSetup;

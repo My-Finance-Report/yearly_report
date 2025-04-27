@@ -4,10 +4,21 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.models import TransactionKind, User
+from app.models import (
+    DefaultValue,
+    ParameterGroupId,
+    ParameterGroupType,
+    ParameterType,
+    SelectOption,
+    TransactionKind,
+    User,
+    WidgetId,
+    WidgetType,
+    DisplayInfo,
+)
 
 
 class NoCodeTransaction(BaseModel):
@@ -22,37 +33,16 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-class ParameterType(str, enum.Enum):
-    INT = "int"
-    FLOAT = "float"
-    STRING = "string"
-    SELECT = "select"
-    SUBMIT = "submit"
-    DATETIME = "datetime"
-    PAGINATION = "pagination"
-    MULTI_SELECT = "multi_select"
-
-
-class SelectOption(BaseModel):
-    key: str
-    value: str
-
-
-class DisplaySize(str, enum.Enum):
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE = "large"
-
-
-class DisplayInfo(BaseModel):
-    size: DisplaySize | None = None
-    row: int
-    col: int
-    row_span: int
-    col_span: int
+class ParameterGroupOut(BaseModel):
+    id: ParameterGroupId
+    type: ParameterGroupType
+    name: str
+    widget_id: None | str = None
 
 
 class Parameter(BaseModel):
+    id: int
+    group_id: ParameterGroupId
     name: str
     label: str | None = None
     type: ParameterType
@@ -68,20 +58,11 @@ class Parameter(BaseModel):
         | list[SelectOption]
         | None
     ) = None
-    default_value: (
-        int
-        | float
-        | str
-        | SelectOption
-        | list[str]
-        | list[Decimal]
-        | list[SelectOption]
-        | None
-    ) = None
+    default_value: DefaultValue | None = None
     options: list[SelectOption] | None = None
     option_generator: str | None = None
-    widget_id: str | None = None
-    is_runtime: bool = False
+    trigger_refetch: bool = True
+    dependent_widgets: list[WidgetId] = Field(default_factory=list)
     display_info: DisplayInfo | None = None
 
 
@@ -118,17 +99,6 @@ class PipelineEnd:
     output_type: OutputType
 
 
-class WidgetType(str, enum.Enum):
-    value = "value"
-    value_with_trend = "value_with_trend"
-    badge = "badge"
-    list = "list"
-    pie_chart = "pie_chart"
-    bar_chart = "bar_chart"
-    separator = "separator"
-    form = "form"
-
-
 Scalar = Decimal | str | int | float
 Object = dict[str, Scalar]
 ResultType = Scalar | Object | list[Scalar] | list[Object] | dict[Scalar, Object]
@@ -148,6 +118,7 @@ class NoCodeToolIn(BaseModel):
 
 
 class NoCodeWidgetIn(BaseModel):
+    id: WidgetId
     name: str
     description: str
     pipeline: list[NoCodeToolIn]
@@ -158,8 +129,24 @@ class NoCodeWidgetIn(BaseModel):
     type: WidgetType
 
 
+class NoCodeWidgetUpdate(BaseModel):
+    name: str
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+
+
+class NoCodeParameterUpdate(BaseModel):
+    label: str
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+
+
 class NoCodeWidgetOut(BaseModel):
-    id: str
+    id: WidgetId
     name: str
     description: str
     result: Any
@@ -172,13 +159,14 @@ class NoCodeWidgetOut(BaseModel):
     type: WidgetType
 
 
-class NoCodeCanvas(BaseModel):
+class NoCodeCanvasOut(BaseModel):
     name: str
-    widgets: list[NoCodeWidgetOut]
+    widgets: list[NoCodeWidgetIn]
     parameters: list[Parameter]
+    parameter_groups: list[ParameterGroupOut]
 
 
-class NoCodeTool(BaseModel):
+class NoCodeToolOut(BaseModel):
     name: str
     description: str
     tool: str

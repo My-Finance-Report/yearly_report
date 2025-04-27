@@ -5,8 +5,8 @@ from typing import Any
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 
-from app.models import User
-from app.schemas.no_code import NoCodeTool, Parameter, ParameterType, SelectOption
+from app.models import User, ParameterType, SelectOption
+from app.schemas.no_code import NoCodeToolOut
 
 
 @dataclass
@@ -58,8 +58,8 @@ def convert_type_to_json_schema(type_: Any) -> dict[str, Any]:
 def make_tools(
     session: Session,
     user: User,
-) -> list[NoCodeTool]:
-    tools: list[NoCodeTool] = []
+) -> list[NoCodeToolOut]:
+    tools: list[NoCodeToolOut] = []
     return tools
 
     # need to figure out some registry scheme for the parameters
@@ -94,6 +94,6 @@ def get_no_code_tool(
     session: Session,
     user: User,
     tool_name: str,
-) -> NoCodeTool:
+) -> NoCodeToolOut:
     lookup = {tool.name: tool for tool in make_tools(session, user)}
     return lookup[tool_name]

@@ -1,28 +1,28 @@
 import BoxWithText, {
   type CollapsibleName,
-} from "@/components/Common/BoxWithText"
-import { useIsDesktop, useIsMobile } from "@/hooks/useIsMobile"
-import { Box, Flex, Spinner, Text } from "@chakra-ui/react"
-import type { AggregatedGroup } from "../../client"
-import { GenericBarChart } from "../Charting/BarChart"
+} from "@/components/Common/BoxWithText";
+import { useIsDesktop, useIsMobile } from "@/hooks/useIsMobile";
+import { Box, Flex, Spinner, Text } from "@chakra-ui/react";
+import type { AggregatedGroup } from "../../client";
+import { GenericBarChart } from "../Charting/BarChart";
 import {
   type GenericChartDataItem,
   GenericPieChart,
-} from "../Charting/PieChart"
+} from "../Charting/PieChart";
 
 interface VisualizationProps {
-  sourceGroups: AggregatedGroup[] | null
-  isLoading: boolean
-  showDeposits: boolean
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
-  collapsedItems: CollapsibleName[]
+  sourceGroups: AggregatedGroup[] | null;
+  isLoading: boolean;
+  showDeposits: boolean;
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
+  collapsedItems: CollapsibleName[];
 }
 
 interface ValidatedVisualizationProps {
-  sourceGroups: AggregatedGroup[]
-  showDeposits: boolean
-  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>
-  collapsedItems: CollapsibleName[]
+  sourceGroups: AggregatedGroup[];
+  showDeposits: boolean;
+  setCollapsedItems: React.Dispatch<React.SetStateAction<CollapsibleName[]>>;
+  collapsedItems: CollapsibleName[];
 }
 
 export function VisualizationPanel({
@@ -32,13 +32,11 @@ export function VisualizationPanel({
   setCollapsedItems,
   collapsedItems,
 }: VisualizationProps) {
-
-  const isDesktop = useIsDesktop()
+  const isDesktop = useIsDesktop();
 
   if (!sourceGroups) {
-    return null
+    return null;
   }
-
 
   return (
     <Flex
@@ -79,29 +77,29 @@ export function VisualizationPanel({
         </Flex>
       )}
     </Flex>
-  )
+  );
 }
 
 function squareOffData(data: GenericChartDataItem[]) {
-  const allKeys: Set<string> = new Set()
+  const allKeys: Set<string> = new Set();
   data.forEach((row: GenericChartDataItem) => {
     Object.keys(row).forEach((key) => {
       if (key !== "date") {
-        allKeys.add(key)
+        allKeys.add(key);
       }
-    })
-  })
+    });
+  });
 
-  const allKeysArray: string[] = Array.from(allKeys)
+  const allKeysArray: string[] = Array.from(allKeys);
   return data.map((row) => {
-    const newRow: GenericChartDataItem = { ...row }
+    const newRow: GenericChartDataItem = { ...row };
     allKeysArray.forEach((key) => {
       if (!(key in newRow)) {
-        newRow[key] = 0
+        newRow[key] = 0;
       }
-    })
-    return newRow
-  })
+    });
+    return newRow;
+  });
 }
 
 function BarChart({
@@ -110,36 +108,36 @@ function BarChart({
   collapsedItems,
   setCollapsedItems,
 }: ValidatedVisualizationProps) {
-  const categoryKeys = new Set<string>()
+  const categoryKeys = new Set<string>();
   for (const group of sourceGroups) {
     if (group.subgroups && group.subgroups.length > 0) {
       for (const subgroup of group.subgroups) {
-        categoryKeys.add(subgroup.group_name)
+        categoryKeys.add(subgroup.group_name);
       }
     } else {
-      categoryKeys.add(group.group_name)
+      categoryKeys.add(group.group_name);
     }
   }
 
   const chartData: GenericChartDataItem[] = sourceGroups.map((group) => {
     const base: Record<string, number | string> = {
       date: group.group_id.toString(),
-    }
+    };
 
     if (group.subgroups && group.subgroups.length > 0) {
       for (const subgroup of group.subgroups) {
         base[subgroup.group_name] = showDeposits
           ? subgroup.total_deposits
-          : subgroup.total_withdrawals
+          : subgroup.total_withdrawals;
       }
     } else {
       base[group.group_name] = showDeposits
         ? group.total_deposits
-        : group.total_withdrawals
+        : group.total_withdrawals;
     }
 
-    return base
-  })
+    return base;
+  });
 
   const description = `${showDeposits ? "Deposits" : "Expenses"} by ${
     sourceGroups[0].groupby_kind
@@ -147,9 +145,9 @@ function BarChart({
     sourceGroups[0].subgroups?.length
       ? `then ${sourceGroups[0].subgroups[0].groupby_kind}`
       : ""
-  }`
+  }`;
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   return (
     <BoxWithText
@@ -174,7 +172,7 @@ function BarChart({
         </Box>
       )}
     </BoxWithText>
-  )
+  );
 }
 
 function PieBox({
@@ -183,30 +181,30 @@ function PieBox({
   setCollapsedItems,
   collapsedItems,
 }: ValidatedVisualizationProps) {
-  const chartData: Record<string, number> = {}
+  const chartData: Record<string, number> = {};
 
   sourceGroups.forEach((group) => {
     if (group.subgroups && group.subgroups.length > 0) {
       group.subgroups.forEach((subgroup) => {
         const amount = showDeposits
           ? subgroup.total_deposits
-          : subgroup.total_withdrawals
+          : subgroup.total_withdrawals;
         chartData[subgroup.group_name] =
-          (chartData[subgroup.group_name] || 0) + amount
-      })
+          (chartData[subgroup.group_name] || 0) + amount;
+      });
     } else {
       const amount = showDeposits
         ? group.total_deposits
-        : group.total_withdrawals
-      chartData[group.group_name] = (chartData[group.group_name] || 0) + amount
+        : group.total_withdrawals;
+      chartData[group.group_name] = (chartData[group.group_name] || 0) + amount;
     }
-  })
+  });
 
   const description = `${showDeposits ? "Deposits" : "Expenses"} by ${
     sourceGroups[0]?.groupby_kind || "Group"
-  }`
+  }`;
 
-  if (Object.keys(chartData).length === 0) return null
+  if (Object.keys(chartData).length === 0) return null;
 
   return (
     <BoxWithText
@@ -226,5 +224,5 @@ function PieBox({
         config={null}
       />
     </BoxWithText>
-  )
+  );
 }

@@ -2,14 +2,14 @@ import {
   type UploadsDeleteFileResponse,
   type UploadsReprocessFileResponse,
   UploadsService,
-} from "@/client"
-import useCustomToast from "@/hooks/useCustomToast"
-import { Button } from "@chakra-ui/react"
+} from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
+import { Button } from "@chakra-ui/react";
 
 interface ReprocessButtonProps {
-  jobId: number
-  onReprocess: (response: UploadsReprocessFileResponse) => void
-  disabled?: boolean
+  jobId: number;
+  onReprocess: (response: UploadsReprocessFileResponse) => void;
+  disabled?: boolean;
 }
 
 export function ReprocessButton({
@@ -17,17 +17,17 @@ export function ReprocessButton({
   onReprocess,
   disabled = false,
 }: ReprocessButtonProps) {
-  const showToast = useCustomToast()
+  const showToast = useCustomToast();
   const handleReprocess = async () => {
     try {
       const response: UploadsReprocessFileResponse =
-        await UploadsService.reprocessFile({ jobId })
-      showToast("File reprocessing!", "", "success")
-      onReprocess(response)
+        await UploadsService.reprocessFile({ jobId });
+      showToast("File reprocessing!", "", "success");
+      onReprocess(response);
     } catch {
-      showToast("File failed to reprocess!", "", "error")
+      showToast("File failed to reprocess!", "", "error");
     }
-  }
+  };
 
   return (
     <Button
@@ -38,7 +38,7 @@ export function ReprocessButton({
     >
       Reprocess
     </Button>
-  )
+  );
 }
 
 export function DeleteButton({
@@ -46,19 +46,19 @@ export function DeleteButton({
   onReprocess,
   disabled = false,
 }: {
-  fileId: number
-  onReprocess: (response: UploadsDeleteFileResponse) => void
-  disabled?: boolean
+  fileId: number;
+  onReprocess: (response: UploadsDeleteFileResponse) => void;
+  disabled?: boolean;
 }) {
   const handleReprocess = async () => {
     try {
       const response: UploadsDeleteFileResponse =
-        await UploadsService.deleteFile({ fileId })
-      onReprocess(response)
+        await UploadsService.deleteFile({ fileId });
+      onReprocess(response);
     } catch (error) {
-      console.error("Failed to delete file:", error)
+      console.error("Failed to delete file:", error);
     }
-  }
+  };
 
   return (
     <Button
@@ -69,5 +69,5 @@ export function DeleteButton({
     >
       Delete
     </Button>
-  )
+  );
 }

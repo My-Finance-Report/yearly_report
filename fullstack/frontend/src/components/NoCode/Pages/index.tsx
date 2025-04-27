@@ -1,41 +1,26 @@
-import { NoCodeService, PageVariant, Parameter_Output } from "@/client"
-import { useQuery } from "@tanstack/react-query"
-import {NoCodeDisplayCanvas} from "@/components/NoCode/Canvas"
-import { Spinner } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
+import { NoCodeService, PageVariant } from "@/client";
+import { useQuery } from "@tanstack/react-query";
+import { NoCodeDisplayCanvas } from "@/components/NoCode/Canvas";
+import { Spinner } from "@chakra-ui/react";
+import { NoCodeProvider } from "@/contexts/NoCodeContext";
 
+export function NoCodePage({ variant }: { variant: PageVariant }) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["accounts-no-code"],
+    queryFn: () => NoCodeService.getNoCodeDashboard({ variant }),
+  });
 
+  if (isLoading || !data) {
+    return <Spinner />;
+  }
 
-export function NoCodePage({variant}: {variant: PageVariant}){
+  if (isError) {
+    return <h1>there has been an error</h1>;
+  }
 
-    const [parameters, setParameters] = useState<Parameter_Output[]>([])
-
-    const {
-        data,
-        isLoading,
-        isError,
-        refetch
-    } = useQuery({
-        queryKey: ["accounts-no-code"],
-        queryFn: () => NoCodeService.getNoCodeDashboard({variant, requestBody: parameters}),
-    })
-
-
-    useEffect(()=>{
-       if(data?.parameters){
-        setParameters(data.parameters)
-       }
-    }, [data])
-
-
-    if (isLoading || !data){
-        return (<Spinner/>)
-    }
-
-    if (isError){
-        return (<h1>there has been an error</h1>)
-    }
-
-    return <NoCodeDisplayCanvas widgets={data.widgets} refetch={refetch} parameters={parameters} setParameters={setParameters}/>
-
+  return (
+    <NoCodeProvider parameters={data.parameters}>
+      <NoCodeDisplayCanvas widgets={data.widgets} />
+    </NoCodeProvider>
+  );
 }

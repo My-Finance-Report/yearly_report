@@ -1,4 +1,4 @@
-import { type PlaidGetPlaidAccountsResponse, PlaidService } from "@/client"
+import { type PlaidGetPlaidAccountsResponse, PlaidService } from "@/client";
 import {
   Box,
   Button,
@@ -11,46 +11,46 @@ import {
   Spinner,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import React, { useState, useCallback, useEffect } from "react"
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   FaCreditCard,
   FaMoneyBillWave,
   FaPlus,
   FaUniversity,
-} from "react-icons/fa"
-import { usePlaidLink } from "react-plaid-link"
-import useCustomToast from "../../../hooks/useCustomToast"
+} from "react-icons/fa";
+import { usePlaidLink } from "react-plaid-link";
+import useCustomToast from "../../../hooks/useCustomToast";
 
 export const Route = createFileRoute("/_layout/_logged_in/plaid")({
   component: PlaidIntegration,
-})
+});
 
 function PlaidIntegration() {
-  const [linkToken, setLinkToken] = useState<string | null>(null)
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
 
   const { data: accounts, isLoading: isLoadingAccounts } =
     useQuery<PlaidGetPlaidAccountsResponse>({
       queryKey: ["plaidAccounts"],
       queryFn: () => PlaidService.getPlaidAccounts(),
-    })
+    });
 
   const createLinkTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await PlaidService.getLinkToken()
-      return response
+      const response = await PlaidService.getLinkToken();
+      return response;
     },
     onSuccess: (data) => {
-      setLinkToken(data.link_token)
+      setLinkToken(data.link_token);
     },
     onError: () => {
-      toast("Error", "Could not create link token", "error")
+      toast("Error", "Could not create link token", "error");
     },
-  })
+  });
 
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
@@ -59,24 +59,24 @@ function PlaidIntegration() {
         requestBody: {
           public_token,
         },
-      })
-      return response
+      });
+      return response;
     },
     onSuccess: () => {
-      toast("Success", "Account connected successfully", "success")
-      queryClient.invalidateQueries({ queryKey: ["plaidAccounts"] })
+      toast("Success", "Account connected successfully", "success");
+      queryClient.invalidateQueries({ queryKey: ["plaidAccounts"] });
     },
     onError: () => {
-      toast("Error", "Failed to connect account", "error")
+      toast("Error", "Failed to connect account", "error");
     },
-  })
+  });
 
   // Initialize Plaid Link
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: (public_token) => {
-      exchangeTokenMutation.mutate(public_token)
-      setLinkToken(null)
+      exchangeTokenMutation.mutate(public_token);
+      setLinkToken(null);
     },
     onExit: (err) => {
       if (err) {
@@ -84,44 +84,44 @@ function PlaidIntegration() {
           "Connection Error",
           err.display_message || "Error connecting to your bank",
           "error",
-        )
+        );
       }
     },
-  })
+  });
 
   useEffect(() => {
     if (!linkToken) {
-      createLinkTokenMutation.mutate()
+      createLinkTokenMutation.mutate();
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (!linkToken) {
-      createLinkTokenMutation.mutate()
+      createLinkTokenMutation.mutate();
     }
-  }, [])
+  }, []);
 
   const handleConnectAccount = useCallback(() => {
     if (ready && linkToken) {
-      open()
+      open();
     } else {
-      createLinkTokenMutation.mutate()
+      createLinkTokenMutation.mutate();
     }
-  }, [ready, linkToken, open])
+  }, [ready, linkToken, open]);
 
   const getAccountIcon = (type: string) => {
     switch (type) {
       case "credit":
-        return FaCreditCard
+        return FaCreditCard;
       case "investment":
-        return FaMoneyBillWave
+        return FaMoneyBillWave;
       default:
-        return FaUniversity
+        return FaUniversity;
     }
-  }
+  };
 
   const isLoading =
-    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
+    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending;
 
   return (
     <Box p={5}>
@@ -191,5 +191,5 @@ function PlaidIntegration() {
         )}
       </VStack>
     </Box>
-  )
+  );
 }

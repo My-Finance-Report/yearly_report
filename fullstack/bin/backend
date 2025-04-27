@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Load environment variables
-export $(grep -v '^#' .env | xargs)
+# export $(grep -v '^#' .env | xargs)
 
 export IS_LOCAL=true
+source .env
 
 # Navigate to backend directory
 cd backend

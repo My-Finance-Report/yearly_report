@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Button,
@@ -7,18 +7,23 @@ import {
   Heading,
   Input,
   Text,
-} from "@chakra-ui/react"
-import { useMutation } from "@tanstack/react-query"
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import { RegisterOptions, type SubmitHandler, useForm, UseFormGetValues } from "react-hook-form"
+} from "@chakra-ui/react";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import {
+  RegisterOptions,
+  type SubmitHandler,
+  useForm,
+  UseFormGetValues,
+} from "react-hook-form";
 
-import { type ApiError, LoginService, type NewPassword } from "@/client"
-import { isSessionActive } from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { handleError } from "../../utils"
+import { type ApiError, LoginService, type NewPassword } from "@/client";
+import { isSessionActive } from "@/hooks/useAuth";
+import useCustomToast from "@/hooks/useCustomToast";
+import { handleError } from "../../utils";
 
 interface NewPasswordForm extends NewPassword {
-  confirm_password: string
+  confirm_password: string;
 }
 
 const confirmPasswordRules = (
@@ -27,18 +32,18 @@ const confirmPasswordRules = (
 ) => {
   const rules: RegisterOptions<NewPasswordForm, "confirm_password"> = {
     validate: (value: string) => {
-      const password = getValues("new_password")
-      return value === password ? true : "The passwords do not match"
+      const password = getValues("new_password");
+      return value === password ? true : "The passwords do not match";
     },
     deps: ["new_password"],
-  }
+  };
 
   if (isRequired) {
-    rules.required = "Password confirmation is required"
+    rules.required = "Password confirmation is required";
   }
 
-  return rules
-}
+  return rules;
+};
 
 export const Route = createFileRoute("/_layout/reset-password")({
   component: ResetPassword,
@@ -46,10 +51,10 @@ export const Route = createFileRoute("/_layout/reset-password")({
     if (await isSessionActive()) {
       throw redirect({
         to: "/",
-      })
+      });
     }
   },
-})
+});
 
 function ResetPassword() {
   const {
@@ -64,42 +69,45 @@ function ResetPassword() {
     defaultValues: {
       new_password: "",
     },
-  })
-  const showToast = useCustomToast()
-  const navigate = useNavigate()
+  });
+  const showToast = useCustomToast();
+  const navigate = useNavigate();
 
-  const passwordRules = (): RegisterOptions<NewPasswordForm, "new_password"> => ({
+  const passwordRules = (): RegisterOptions<
+    NewPasswordForm,
+    "new_password"
+  > => ({
     required: "Password is required",
     minLength: { value: 8, message: "Minimum 8 characters" },
-    deps: ["confirm_password"], 
+    deps: ["confirm_password"],
   });
 
   const resetPassword = async (data: NewPassword) => {
-    const token = new URLSearchParams(window.location.search).get("token")
-    if (!token) return
+    const token = new URLSearchParams(window.location.search).get("token");
+    if (!token) return;
     await LoginService.resetPassword({
       requestBody: {
         new_password: data.new_password,
         token: { access_token: token },
       },
-    })
-  }
+    });
+  };
 
   const mutation = useMutation({
     mutationFn: resetPassword,
     onSuccess: () => {
-      showToast("Success!", "Password updated successfully.", "success")
-      reset()
-      navigate({ to: "/login" })
+      showToast("Success!", "Password updated successfully.", "success");
+      reset();
+      navigate({ to: "/login" });
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<NewPasswordForm> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   return (
     <Container
@@ -149,7 +157,7 @@ function ResetPassword() {
         Reset Password
       </Button>
     </Container>
-  )
+  );
 }
 
-export default ResetPassword
+export default ResetPassword;
