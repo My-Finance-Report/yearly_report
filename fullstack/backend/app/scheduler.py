@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from app.db import get_auth_db, get_db_for_user
-from app.models import User
+from app.models.user import User
 from app.plaid.sync_service import sync_all_plaid_accounts
 
 logger = logging.getLogger(__name__)

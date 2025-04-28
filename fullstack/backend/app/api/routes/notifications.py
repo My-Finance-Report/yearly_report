@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.db import Session, get_current_user, get_db
 from app.local_types import EffectOut
-from app.models import EffectConditionals, EffectType, User, EventType
+from app.models.effect import EffectConditionals, EffectType, EventType
+from app.models.user import User
 from app.no_code.notifications.effects import EffectConfig
 
 router = APIRouter(prefix="/notification", tags=["no_code"])

@@ -1,19 +1,15 @@
-# demo_data.py
 import random
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from faker import Faker
+from app.models.category import Category
+from app.models.transaction import Transaction, TransactionKind
 
-# Import your models/enums
-from app.models import (
-    Category,
-    SourceKind,
-    Transaction,
-    TransactionKind,
-    TransactionSource,
-)
+from app.models.transaction_source import SourceKind, TransactionSource
+
+
 
 
 @dataclass

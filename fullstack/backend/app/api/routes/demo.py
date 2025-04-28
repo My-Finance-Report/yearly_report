@@ -5,16 +5,11 @@ from app.api.routes.transactions import BudgetLookup, recursive_grouping
 from app.local_types import (
     AggregatedTransactions,
 )
-from app.models import (
-    Category,
-    CategoryId,
-    FilterData,
-    FilterEntries,
-    GroupByOption,
-    Transaction,
-    TransactionSource,
-    TransactionSourceId,
-)
+from app.models.category import Category, CategoryId
+from app.models.filter import FilterData, FilterEntries, GroupByOption
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource, TransactionSourceId
+
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 

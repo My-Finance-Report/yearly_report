@@ -2,6 +2,7 @@ from typing import  NewType
 import enum
 
 from datetime import datetime, timezone
+from app.models.category import CategoryId
 from app.models.models import Base
 from sqlalchemy import (
     Boolean,
@@ -13,11 +14,13 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+from app.models.transaction_source import TransactionSourceId
 
 from app.models.user import UserId
 
 
 TransactionId = NewType("TransactionId", int)
+PlaidTransactionId = NewType("PlaidTransactionId", int)
 
 class TransactionKind(str, enum.Enum):
     withdrawal = "withdrawal"

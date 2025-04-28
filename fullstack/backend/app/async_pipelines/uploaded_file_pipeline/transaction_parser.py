@@ -9,15 +9,13 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessJob,
     TransactionsWrapper,
 )
-from app.models import (
-    Category,
-    JobStatus,
-    ProcessingState,
-    Transaction,
-    TransactionSource,
-    UploadConfiguration,
-    WorkerJob,
-)
+from app.models.category import Category
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource
+from app.models.upload_configuration import UploadConfiguration
+from app.models.worker_job import JobStatus, WorkerJob
+from app.models.worker_status import ProcessingState
+
 from app.open_ai_utils import ChatMessage, make_chat_request
 from app.worker.status import update_worker_status
 

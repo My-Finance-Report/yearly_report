@@ -4,16 +4,11 @@ from typing import Any, cast
 
 import stripe
 from sqlalchemy.orm import Session
+from app.models.stripe import Price, PriceId, Subscription, SubscriptionStatus, SubscriptionTier
+from app.models.transaction_source import TransactionSource
+from app.models.user import User
 
-from app.models import (
-    Price,
-    PriceId,
-    Subscription,
-    SubscriptionStatus,
-    SubscriptionTier,
-    TransactionSource,
-    User,
-)
+
 from app.schemas.subscription import (
     CheckoutSession,
     PriceDetails,

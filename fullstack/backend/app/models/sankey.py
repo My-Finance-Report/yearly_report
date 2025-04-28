@@ -12,7 +12,6 @@ from app.models.user import UserId
 
 
 
-
 class SankeyConfig(Base):
     __tablename__ = "sankey_config"
 

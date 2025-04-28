@@ -21,19 +21,14 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     TransactionsWrapper,
 )
 from app.func_utils import pipe
-from app.models import (
-    AuditLog,
-    Category,
-    PlaidAccount,
-    PlaidAccountBalance,
-    PlaidItem,
-    PlaidSyncLog,
-    ProcessingState,
-    Transaction,
-    TransactionKind,
-    TransactionSource,
-    User,
-)
+from app.models.audit_log import AuditLog
+from app.models.category import Category
+from app.models.plaid import PlaidAccount, PlaidAccountBalance, PlaidItem, PlaidSyncLog
+from app.models.transaction import Transaction, TransactionKind
+from app.models.transaction_source import TransactionSource
+from app.models.user import User
+from app.models.worker_status import ProcessingState
+
 from app.no_code.notifications.events import NewTransactionsEvent
 from app.no_code.notifications.trigger import (
     trigger_effects,
@@ -124,23 +119,22 @@ def write_account_balances(
 ) -> None:
     by_account_lookup = {account["account_id"]: account for account in plaid_accounts}
     users_plaid_accounts = (
-        session.query(PlaidAccount)
+        session.query(TransactionSource, PlaidAccount)
+        .join(PlaidAccount, PlaidAccount.id == TransactionSource.plaid_account_id)
         .filter(
             PlaidAccount.user_id == user.id,
             PlaidAccount.plaid_account_id.in_(by_account_lookup.keys()),
         )
         .all()
     )
-    users_plaid_account_lookup = {a.plaid_account_id: a for a in users_plaid_accounts}
+    users_plaid_account_lookup = {a.plaid_account_id: (ts, a) for (ts,a) in users_plaid_accounts}
 
     for plaid_account_id, account in by_account_lookup.items():
-        user_plaid_account = users_plaid_account_lookup.get(plaid_account_id)
-        if user_plaid_account is None:
-            continue
+        user_transaction_source,user_plaid_account = users_plaid_account_lookup[plaid_account_id]
 
         record = PlaidAccountBalance(
             plaid_account_id=user_plaid_account.id,
-            transaction_source_id=user_plaid_account.transaction_source.id,
+            transaction_source_id=user_transaction_source.id,
             balance=account["balances"]["current"],
             available=account["balances"].get("available"),
             iso_currency_code=account["balances"].get("iso_currency_code", "USD"),

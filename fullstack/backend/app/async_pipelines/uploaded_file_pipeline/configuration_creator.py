@@ -7,13 +7,10 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     PartialAccountCategoryConfig,
     PartialUploadConfig,
 )
-from app.models import (
-    Category,
-    SourceKind,
-    TransactionSource,
-    UploadConfiguration,
-    User,
-)
+from app.models.category import Category
+from app.models.transaction_source import SourceKind, TransactionSource
+from app.models.upload_configuration import UploadConfiguration
+from app.models.user import User
 from app.open_ai_utils import ChatMessage, make_chat_request
 
 # Logging setup

@@ -2,7 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models import SubscriptionStatus, SubscriptionTier
+from app.models.stripe import SubscriptionStatus, SubscriptionTier
+
 
 
 class SubscriptionDetails(BaseModel):

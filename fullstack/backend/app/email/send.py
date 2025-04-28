@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import resend
 import os
 
-from app.models import User
+from app.models.user import User
 from app.telegram_utils import send_telegram_message
 
 

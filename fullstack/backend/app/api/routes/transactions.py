@@ -22,24 +22,15 @@ from app.local_types import (
     TransactionEdit,
     TransactionOut,
 )
-from app.models import (
-    AuditChange,
-    AuditLog,
-    AuditLogAction,
-    BudgetCategoryLink,
-    BudgetEntry,
-    BudgetEntryId,
-    Category,
-    CategoryId,
-    FilterData,
-    FilterEntries,
-    GroupByOption,
-    Transaction,
-    TransactionSource,
-    TransactionSourceId,
-    User,
-    WorkerStatus,
-)
+from app.models.audit_log import AuditChange, AuditLog, AuditLogAction
+from app.models.budget import BudgetCategoryLink, BudgetEntry, BudgetEntryId
+from app.models.category import Category, CategoryId
+from app.models.filter import FilterData, FilterEntries, GroupByOption
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource, TransactionSourceId
+from app.models.user import User
+from app.models.worker_status import WorkerStatus
+
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 

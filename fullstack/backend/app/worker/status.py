@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
-from app.models import ProcessingState, User, WorkerStatus
-
+from app.models.worker_status import ProcessingState, WorkerStatus
+from app.models.user import User
 
 def get_latest_batch(session: Session, user: User) -> list[WorkerStatus]:
     latest_status = (

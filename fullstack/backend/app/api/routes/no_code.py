@@ -2,26 +2,15 @@ import enum
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from sqlalchemy import JSON
 
 from app.db import Session, get_current_user, get_db
-from app.models import (
-    DefaultValue,
-    NoCodeToolParameter,
-    NoCodeWidget,
-    NoCodeCanvas,
-    NoCodeParameter,
-    NoCodeParameterGroup,
-    NoCodeParameterOption,
-    NoCodePipelineStep,
-    SelectOption,
-    ParameterId,
-    ParameterType,
-    DisplayInfo,
-    NoCodeTool,
-    ToolId,
-    User,
-)
+from app.models.no_code.canvas import NoCodeCanvas
+from app.models.no_code.parameter import DefaultValue, DisplayInfo, NoCodeParameter, NoCodeParameterGroup, NoCodeParameterOption, ParameterId, ParameterType, SelectOption
+from app.models.no_code.pipeline_step import NoCodePipelineStep
+from app.models.no_code.tool import NoCodeTool, NoCodeToolParameter, ToolId
+from app.models.no_code.widget import NoCodeWidget
+from app.models.user import User
+
 from app.no_code.decoration import make_tools
 from app.no_code.functions import (
     main_render_loop,

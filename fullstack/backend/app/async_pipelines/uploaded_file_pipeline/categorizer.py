@@ -13,7 +13,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     create_categorized_transactions_wrapper,
 )
 from app.func_utils import make_batches
-from app.models import ProcessingState, Transaction
+from app.models.transaction import Transaction
+from app.models.worker_status import ProcessingState
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 from app.worker.status import update_worker_status
 
