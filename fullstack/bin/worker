@@ -1,10 +1,17 @@
 #!/bin/bash
 
 # Load environment variables
-export $(grep -v '^#' .env | xargs)
+export IS_LOCAL=true
+export REQUESTS_CA_BUNDLE=/Users/matt/Projects/year_report_finances/fullstack/backend/env/lib/python3.12/site-packages/certifi/cacert.pem
+
+set -o allexport
+source .env
+set +o allexport
+
 
 # Navigate to backend directory
 cd backend
 
+source env/bin/activate
 # Start worker with watch mode and forward signals
 python -m app.worker.main

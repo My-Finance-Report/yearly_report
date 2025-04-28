@@ -23,6 +23,10 @@ from app.scheduler import sync_all_plaid_accounts_job
 from app.telegram_utils import send_telegram_message
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
+import os
+import certifi
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
