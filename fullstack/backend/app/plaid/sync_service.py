@@ -28,7 +28,6 @@ from app.models import (
     PlaidAccountBalance,
     PlaidItem,
     PlaidSyncLog,
-    PlaidTransactionId,
     ProcessingState,
     Transaction,
     TransactionKind,
@@ -83,6 +82,7 @@ def fetch_plaid_transactions(
         response: TransactionsSyncResponse = client.transactions_sync(request)
         next_cursor = response["next_cursor"]
         plaid_account.cursor = next_cursor
+
 
         return PlaidFetchResponse(
             added=response["added"],
@@ -227,8 +227,8 @@ def sync_plaid_account_transactions(
         )
         # Update sync log with results
         sync_log.added_count = added_count
-        sync_log.modified_count = 0  # For transactions_sync, we don't track modified
-        sync_log.removed_count = 0  # For transactions_sync, we don't track removed
+        sync_log.modified_count = 0 
+        sync_log.removed_count = 0 
 
         session.commit()
         update_worker_status(
@@ -336,6 +336,8 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcess
                     archived=False,
                 )
             )
+
+    print(transactions_to_insert)
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()

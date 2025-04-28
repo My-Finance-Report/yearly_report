@@ -26,7 +26,7 @@ from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipel
 import os
 import certifi
 
-os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

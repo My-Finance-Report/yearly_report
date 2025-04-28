@@ -17,9 +17,9 @@ def get_plaid_client() -> plaid_api.PlaidApi:
     secret = os.environ["PLAID_SECRET"]
     environment = os.environ["PLAID_ENV"]
 
-    assert client_id, 'must have'
-    assert secret, 'must have'
-    assert environment, 'must have'
+    assert client_id, "must have"
+    assert secret, "must have"
+    assert environment, "must have"
 
     configuration = plaid.Configuration(
         host=plaid.Environment.Sandbox
