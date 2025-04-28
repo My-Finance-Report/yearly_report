@@ -11,7 +11,6 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import Mapped, mapped_column
-from app.models.plaid import PlaidAccountId
 
 from app.models.user import UserId
 
@@ -37,7 +36,7 @@ class TransactionSource(Base):
     source_kind: Mapped[SourceKind] = mapped_column(
         Enum(SourceKind), default=SourceKind.account
     )
-    plaid_account_id: Mapped[PlaidAccountId | None] = mapped_column(
+    plaid_account_id: Mapped[int | None] = mapped_column(
         ForeignKey("plaid_account.id"), nullable=True
     )
 
