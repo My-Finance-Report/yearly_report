@@ -39,6 +39,7 @@ def get_shared_param(
 
     if param_name not in global_parameters:
         account_choices = make_account_choices(session, user)
+        default_value = DefaultValue(value=account_choices[0]) if len(account_choices) > 0 else None
         new_param = Parameter(
             id=2,
             group_id=ParameterGroupId(55),
@@ -46,7 +47,7 @@ def get_shared_param(
             label="",
             type=ParameterType.SELECT,
             options=account_choices,
-            default_value=DefaultValue(value=account_choices[0]),
+            default_value=default_value,
             trigger_refetch=True,
             dependent_widgets=[widget_id],
             display_info=DisplayInfo(
@@ -429,6 +430,8 @@ def _generate_balance_update_widget(
     widget_name = "Update Account Balance"
 
     account_choices = make_account_choices(session, user)
+
+    default_value = DefaultValue(value=account_choices[0]) if len(account_choices) > 0 else None
     parameters = [
         Parameter(
             id=24,
@@ -437,7 +440,7 @@ def _generate_balance_update_widget(
             label=None,
             type=ParameterType.SELECT,
             options=account_choices,
-            default_value=DefaultValue(value=account_choices[0]),
+            default_value=default_value,
             trigger_refetch=True,
             dependent_widgets=[widget_id],
             display_info=DisplayInfo(

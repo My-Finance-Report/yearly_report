@@ -104,6 +104,9 @@ def get_pages_per_account(
     account_id = kwargs["account_id"]
     n = kwargs["n"]
 
+    if not account_id or not n:
+        return []
+
     total = (
         session.query(func.count(Transaction.id))
         .filter(
