@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 import enum
 
 from datetime import datetime, timezone
@@ -21,6 +21,7 @@ from app.models.user import UserId
 
 TransactionId = NewType("TransactionId", int)
 PlaidTransactionId = NewType("PlaidTransactionId", int)
+
 
 class TransactionKind(str, enum.Enum):
     withdrawal = "withdrawal"
@@ -54,5 +55,3 @@ class Transaction(Base):
     last_updated: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, default=lambda: datetime.now(timezone.utc)
     )
-
-

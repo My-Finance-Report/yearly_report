@@ -47,9 +47,3 @@ class JSONType(TypeDecorator[T], Generic[T]):
 
 class Base(DeclarativeBase):
     __rls_enabled__ = True
-
-
-
-
-
-

@@ -24,7 +24,7 @@ from app.local_types import (
     UsersPublic,
     UserUpdateMe,
 )
-from app.models import (
+from app.models.user import (
     User,
 )
 from app.telegram_utils import send_telegram_message

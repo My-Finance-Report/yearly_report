@@ -10,8 +10,6 @@ from app.models.transaction import Transaction, TransactionKind
 from app.models.transaction_source import SourceKind, TransactionSource
 
 
-
-
 @dataclass
 class DemoData:
     sources: list[TransactionSource]

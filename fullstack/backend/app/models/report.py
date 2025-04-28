@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import  NewType
+from typing import NewType
 
 from pydantic import BaseModel
 from app.models.models import Base, JSONType
@@ -25,7 +25,7 @@ class TransactionBase(BaseModel):
     date_of_transaction: datetime
     amount: float
     transaction_source_id: int
-    kind:TransactionKind 
+    kind: TransactionKind
     uploaded_pdf_id: None | int = None
     archived: bool = False
 
@@ -52,18 +52,14 @@ class TransactionSourceBase(BaseModel):
         orm_mode = True
 
 
-
-
-
-
 class ReportData(BaseModel):
     transactions: list[TransactionBase]
     transaction_sources: list[TransactionSourceBase]
     categories: list[CategoryBase]
 
 
-
 TransactionReportId = NewType("TransactionReportId", int)
+
 
 class Report(Base):
     __tablename__ = "report"
@@ -82,4 +78,3 @@ class Report(Base):
         JSONType(ReportData), nullable=False
     )
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
-

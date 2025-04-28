@@ -28,4 +28,3 @@ class ColChartConfig(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "active", name="uq_col_chart_config"),
     )
-

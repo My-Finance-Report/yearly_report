@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base, JSONType
 from pydantic import BaseModel
 from sqlalchemy import (
@@ -11,7 +11,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import DateTime
 from datetime import datetime
-
 
 
 UserId = NewType("UserId", int)
@@ -50,5 +49,3 @@ class User(Base):
     oauth_token_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
-
-

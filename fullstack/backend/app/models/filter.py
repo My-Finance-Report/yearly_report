@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, timezone
-from typing import  NewType
+from typing import NewType
 
 from pydantic import BaseModel, Field
 from app.models.models import Base, JSONType
@@ -17,8 +17,8 @@ from datetime import datetime
 from app.models.user import UserId
 
 
-
 SavedFilterId = NewType("SavedFilterId", int)
+
 
 class GroupByOption(str, enum.Enum):
     account = "account"
@@ -26,7 +26,6 @@ class GroupByOption(str, enum.Enum):
     month = "month"
     year = "year"
     budget = "budget"
-
 
 
 class FilterEntry(BaseModel):
@@ -73,4 +72,3 @@ class SavedFilter(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-

@@ -1,12 +1,15 @@
 from app.api.routes.no_code_pages.account_page import generate_account_page
 from app.db import get_db_for_user
 from app.models.no_code.canvas import NoCodeCanvas
-from app.models.no_code.parameter import NoCodeParameter, NoCodeParameterGroup, NoCodeParameterOption
+from app.models.no_code.parameter import (
+    NoCodeParameter,
+    NoCodeParameterGroup,
+    NoCodeParameterOption,
+)
 from app.models.no_code.pipeline_step import NoCodePipelineStep
 from app.models.no_code.tool import NoCodeTool, NoCodeToolParameter
 from app.models.no_code.widget import NoCodeWidget
 from app.models.user import User
-
 
 
 def seed_account_page(user_id: int) -> None:

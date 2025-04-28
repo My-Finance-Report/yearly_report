@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     Boolean,
@@ -11,7 +11,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.transaction_source import TransactionSourceId
 
 from app.models.user import UserId
-
 
 
 CategoryId = NewType("CategoryId", int)
@@ -31,4 +30,3 @@ class Category(Base):
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
     __table_args__ = (UniqueConstraint("name", "source_id", name="uq_category"),)
-

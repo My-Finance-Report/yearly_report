@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import  NewType
+from typing import NewType
 import enum
 
 from pydantic import BaseModel, Field
@@ -19,7 +19,6 @@ from datetime import datetime
 from app.models.transaction import TransactionId, TransactionKind
 
 from app.models.user import UserId
-
 
 
 AuditLogId = NewType("AuditLogId", int)
@@ -43,7 +42,6 @@ class AuditChange(BaseModel):
     new_kind: TransactionKind | None = Field(default=None)
 
 
-
 class AuditLog(Base):
     __tablename__ = "audit_log"
 
@@ -61,5 +59,3 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-
-

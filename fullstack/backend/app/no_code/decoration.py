@@ -4,8 +4,9 @@ from typing import Any
 
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
+from app.models.no_code.parameter import ParameterType, SelectOption
 
-from app.models import User, ParameterType, SelectOption
+from app.models.user import User
 from app.schemas.no_code import NoCodeToolOut
 
 

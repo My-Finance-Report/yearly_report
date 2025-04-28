@@ -6,19 +6,18 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-
-from app.models import (
+from app.models.no_code.parameter import (
     DefaultValue,
+    DisplayInfo,
     ParameterGroupId,
     ParameterGroupType,
     ParameterType,
     SelectOption,
-    TransactionKind,
-    User,
-    WidgetId,
-    WidgetType,
-    DisplayInfo,
 )
+from app.models.no_code.widget import WidgetId, WidgetType
+from app.models.transaction import TransactionKind
+
+from app.models.user import User
 
 
 class NoCodeTransaction(BaseModel):

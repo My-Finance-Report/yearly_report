@@ -16,7 +16,6 @@ from app.models.transaction_source import TransactionSource, TransactionSourceId
 from app.models.user import User
 
 
-
 from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])

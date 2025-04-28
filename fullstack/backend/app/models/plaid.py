@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     String,
@@ -21,6 +21,7 @@ PlaidAccountId = NewType("PlaidAccountId", int)
 PlaidAccountBalanceId = NewType("PlaidAccountBalanceId", int)
 PlaidSyncLogId = NewType("PlaidSyncLogId", int)
 
+
 class PlaidItem(Base):
     __tablename__ = "plaid_item"
 
@@ -33,7 +34,6 @@ class PlaidItem(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
-
 
 
 class PlaidAccountBalance(Base):

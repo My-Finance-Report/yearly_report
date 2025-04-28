@@ -11,7 +11,6 @@ from app.models.transaction_source import TransactionSourceId
 from app.models.user import UserId
 
 
-
 class SankeyConfig(Base):
     __tablename__ = "sankey_config"
 
@@ -45,4 +44,3 @@ class SankeyLinkage(Base):
     target_source_id: Mapped[TransactionSourceId] = mapped_column(
         ForeignKey("transaction_source.id"), nullable=False
     )
-

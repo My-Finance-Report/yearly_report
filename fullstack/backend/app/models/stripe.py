@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import enum
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     Boolean,
@@ -16,7 +16,6 @@ from sqlalchemy import DateTime
 from datetime import datetime
 
 from app.models.user import UserId
-
 
 
 class SubscriptionStatus(str, enum.Enum):
@@ -37,7 +36,6 @@ class SubscriptionTier(str, enum.Enum):
 
 SubscriptionId = NewType("SubscriptionId", int)
 PriceId = NewType("PriceId", int)
-
 
 
 class Price(Base):
@@ -96,5 +94,3 @@ class Subscription(Base):
     )
 
     # Relationships
-
-

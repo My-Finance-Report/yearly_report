@@ -1,6 +1,5 @@
-from datetime import datetime
 import enum
-from typing import  NewType
+from typing import NewType
 
 from pydantic import BaseModel
 from app.models.models import Base, JSONType
@@ -13,6 +12,8 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+from app.models.no_code.canvas import CanvasId
+from app.models.no_code.widget import WidgetId
 
 from app.models.user import UserId
 
@@ -57,9 +58,9 @@ class DisplayInfo(BaseModel):
     col_span: int
 
 
-
 ParameterId = NewType("ParameterId", int)
 ParameterGroupId = NewType("ParameterGroupId", int)
+
 
 class NoCodeParameter(Base):
     __tablename__ = "no_code_parameter"
@@ -99,7 +100,6 @@ class NoCodeParameterOption(Base):
     value: Mapped[str] = mapped_column(String, nullable=False)
 
 
-
 class ParameterGroupType(str, enum.Enum):
     GLOBAL = "global"
     WIDGET = "widget"
@@ -119,4 +119,3 @@ class NoCodeParameterGroup(Base):
     canvas_id: Mapped[CanvasId] = mapped_column(
         ForeignKey("no_code_canvas.id"), nullable=False
     )
-

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     Boolean,
@@ -18,6 +18,7 @@ from app.models.user import UserId
 
 UploadedPdfId = NewType("UploadedPdfId", int)
 
+
 class UploadedPdf(Base):
     __tablename__ = "uploaded_pdf"
 
@@ -35,5 +36,3 @@ class UploadedPdf(Base):
     __table_args__ = (
         UniqueConstraint("raw_content_hash", "user_id", name="uq_uploaded_pdf"),
     )
-
-

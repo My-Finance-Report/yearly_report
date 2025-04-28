@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import enum
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     DateTime,
@@ -31,7 +31,9 @@ class ProcessingState(str, enum.Enum):
 class WorkerStatus(Base):
     __tablename__ = "worker_status"
 
-    id: Mapped[WorkerStatusId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[WorkerStatusId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     batch_id: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[ProcessingState] = mapped_column(
         Enum(ProcessingState), nullable=False
@@ -46,4 +48,3 @@ class WorkerStatus(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     additional_info: Mapped[str | None] = mapped_column(String, nullable=True)
-

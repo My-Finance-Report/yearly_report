@@ -13,7 +13,7 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     InProcessJob,
 )
 from app.func_utils import pipe
-from app.models import ProcessingState
+from app.models.worker_status import ProcessingState
 from app.worker.status import log_completed, status_update_monad
 
 

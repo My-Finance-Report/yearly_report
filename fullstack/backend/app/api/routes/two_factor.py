@@ -16,7 +16,7 @@ from app.core import security
 from app.core.config import settings
 from app.db import get_auth_db, get_current_user, get_current_user_from_temp_token
 from app.local_types import Token, TokenPayload
-from app.models import User
+from app.models.user import User
 from app.schemas.two_factor import (
     Disable2FARequest,
     Enable2FARequest,

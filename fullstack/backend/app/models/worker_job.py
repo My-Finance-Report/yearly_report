@@ -1,6 +1,6 @@
 from datetime import datetime
 import enum
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     Boolean,
@@ -19,18 +19,18 @@ from app.models.uploaded_pdf import UploadedPdfId
 
 from app.models.user import UserId
 
+
 class JobStatus(str, enum.Enum):
     completed = "completed"
     pending = "pending"
     processing = "processing"
     failed = "failed"
 
+
 class JobKind(str, enum.Enum):
     full_upload = "full_upload"
     recategorize = "recategorize"
     plaid_recategorize = "plaid_recategorize"
-
-
 
 
 WorkerJobId = NewType("WorkerJobId", int)
@@ -60,4 +60,3 @@ class WorkerJob(Base):
     kind: Mapped[JobKind] = mapped_column(Enum(JobKind), nullable=False)
 
     __table_args__ = (UniqueConstraint("pdf_id", name="uq_process_file_job"),)
-

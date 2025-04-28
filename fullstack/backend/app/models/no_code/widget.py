@@ -1,5 +1,5 @@
 import enum
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     ForeignKey,
@@ -13,8 +13,8 @@ from app.models.no_code.canvas import CanvasId
 from app.models.user import UserId
 
 
-
 WidgetId = NewType("WidgetId", int)
+
 
 class WidgetType(str, enum.Enum):
     value = "value"
@@ -42,4 +42,3 @@ class NoCodeWidget(Base):
     column: Mapped[int] = mapped_column(Integer, nullable=False)
     row_span: Mapped[int] = mapped_column(Integer, nullable=False)
     col_span: Mapped[int] = mapped_column(Integer, nullable=False)
-

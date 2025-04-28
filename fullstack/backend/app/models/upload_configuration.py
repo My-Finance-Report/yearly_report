@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     ForeignKey,
@@ -10,7 +10,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.transaction_source import TransactionSourceId
 
 from app.models.user import UserId
-
 
 
 UploadConfigurationId = NewType("UploadConfigurationId", int)
@@ -33,4 +32,3 @@ class UploadConfiguration(Base):
     __table_args__ = (
         UniqueConstraint("transaction_source_id", name="uq_upload_configuration"),
     )
-

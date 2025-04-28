@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from app.models.upload_configuration import UploadConfiguration
 
-from app.models import JobKind, JobStatus, UploadConfiguration, WorkerJob
+from app.models.worker_job import JobKind, JobStatus, WorkerJob
 
 
 def enqueue_recategorization(

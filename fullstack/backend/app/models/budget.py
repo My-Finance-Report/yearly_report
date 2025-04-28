@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from decimal import Decimal
 from app.models.category import CategoryId
 from app.models.models import Base
@@ -15,12 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.user import UserId
 
 
-
-
 BudgetId = NewType("BudgetId", int)
 BudgetEntryId = NewType("BudgetEntryId", int)
 BudgetCategoryLinkId = NewType("BudgetCategoryLinkId", int)
-
 
 
 class Budget(Base):
@@ -59,4 +56,3 @@ class BudgetCategoryLink(Base):
     category_id: Mapped[CategoryId] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
-

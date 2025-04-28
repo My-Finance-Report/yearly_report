@@ -78,7 +78,6 @@ def fetch_plaid_transactions(
         next_cursor = response["next_cursor"]
         plaid_account.cursor = next_cursor
 
-
         return PlaidFetchResponse(
             added=response["added"],
             removed=response["removed"],
@@ -127,10 +126,14 @@ def write_account_balances(
         )
         .all()
     )
-    users_plaid_account_lookup = {a.plaid_account_id: (ts, a) for (ts,a) in users_plaid_accounts}
+    users_plaid_account_lookup = {
+        a.plaid_account_id: (ts, a) for (ts, a) in users_plaid_accounts
+    }
 
     for plaid_account_id, account in by_account_lookup.items():
-        user_transaction_source,user_plaid_account = users_plaid_account_lookup[plaid_account_id]
+        user_transaction_source, user_plaid_account = users_plaid_account_lookup[
+            plaid_account_id
+        ]
 
         record = PlaidAccountBalance(
             plaid_account_id=user_plaid_account.id,
@@ -221,8 +224,8 @@ def sync_plaid_account_transactions(
         )
         # Update sync log with results
         sync_log.added_count = added_count
-        sync_log.modified_count = 0 
-        sync_log.removed_count = 0 
+        sync_log.modified_count = 0
+        sync_log.removed_count = 0
 
         session.commit()
         update_worker_status(

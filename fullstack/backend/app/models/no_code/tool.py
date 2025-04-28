@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     ForeignKey,
@@ -14,7 +14,6 @@ from app.models.user import UserId
 
 
 ToolId = NewType("ToolId", int)
-
 
 
 class NoCodeTool(Base):
@@ -39,4 +38,3 @@ class NoCodeToolParameter(Base):
     parameter_id: Mapped[ParameterId] = mapped_column(
         ForeignKey("no_code_parameter.id"), primary_key=True
     )
-

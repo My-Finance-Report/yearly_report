@@ -5,10 +5,11 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from app.models.no_code.parameter import SelectOption
 
 from app.no_code.decoration import pipeline_step
 from app.schemas.no_code import NoCodeTransaction, Primitive
-from app.models import User, SelectOption
+from app.models.user import User
 
 T = TypeVar("T", bound=Primitive[Decimal | NoCodeTransaction])
 
@@ -48,7 +49,7 @@ def parse_key(value: str | Decimal | datetime) -> str:
     if isinstance(value, str):
         return value
     if isinstance(value, float):
-        return Decimal(value)
+        return str(value)
     elif isinstance(value, Decimal):
         return str(value)
     elif isinstance(value, datetime):

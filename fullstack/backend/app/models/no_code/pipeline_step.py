@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     ForeignKey,
@@ -7,7 +7,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.no_code.tool import ToolId
 from app.models.no_code.widget import WidgetId
-
 
 
 PipelineStepId = NewType("PipelineStepId", int)
@@ -25,4 +24,3 @@ class NoCodePipelineStep(Base):
         ForeignKey("no_code_tool.id"), nullable=False
     )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
-

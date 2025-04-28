@@ -1,7 +1,7 @@
 from abc import ABC
 from pydantic import BaseModel
 from app.schemas.no_code import NoCodeTransaction
-from app.models import EventType
+from app.models.effect import EventType
 
 
 class Event(ABC, BaseModel):

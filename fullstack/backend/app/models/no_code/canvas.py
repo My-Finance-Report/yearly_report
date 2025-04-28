@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     ForeignKey,
@@ -9,7 +9,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.user import UserId
-
 
 
 CanvasId = NewType("CanvasId", int)
@@ -24,6 +23,3 @@ class NoCodeCanvas(Base):
     slug: Mapped[str] = mapped_column(String, nullable=False)
 
     __table_args__ = (UniqueConstraint("user_id", "slug", name="uq_user_slug"),)
-
-
-

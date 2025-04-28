@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from app.models.stripe import SubscriptionStatus, SubscriptionTier
 
 
-
 class SubscriptionDetails(BaseModel):
     tier: SubscriptionTier
     status: SubscriptionStatus

@@ -1,6 +1,8 @@
 from datetime import datetime
+from app.models.no_code.parameter import SelectOption
 
-from app.models import PlaidAccountBalance, TransactionSource, SelectOption
+from app.models.plaid import PlaidAccountBalance
+from app.models.transaction_source import TransactionSource
 from app.no_code.decoration import pipeline_step
 from app.schemas.no_code import PipelineStart
 

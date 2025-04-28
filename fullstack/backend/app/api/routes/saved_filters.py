@@ -4,7 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
-from app.models.filter import FilterData, FilterEntries, FilterEntry, GroupByOption, SavedFilter
+from app.models.filter import (
+    FilterData,
+    FilterEntries,
+    FilterEntry,
+    GroupByOption,
+    SavedFilter,
+)
 from app.models.user import User
 
 from app.schemas.saved_filter import (

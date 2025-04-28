@@ -27,7 +27,6 @@ from app.tests.utils.utils import random_lower_string
 
 
 def test_fetch_existing_plaid_transactions():
-
     db = next(get_auth_db())
     # Create test user
     user = User(

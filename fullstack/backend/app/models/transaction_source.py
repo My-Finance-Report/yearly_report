@@ -1,4 +1,4 @@
-from typing import  NewType
+from typing import NewType
 import enum
 
 from app.models.models import Base
@@ -11,17 +11,18 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+from app.models.plaid import PlaidAccountId
 
 from app.models.user import UserId
 
 
 TransactionSourceId = NewType("TransactionSourceId", int)
 
+
 class SourceKind(str, enum.Enum):
     account = "account"
     investment = "investment"
     card = "card"
-
 
 
 class TransactionSource(Base):
@@ -43,4 +44,3 @@ class TransactionSource(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
     )
-

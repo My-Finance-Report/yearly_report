@@ -2,7 +2,15 @@ from datetime import datetime, timezone
 from functools import partial
 
 from app.db import Session
-from app.models.no_code.parameter import DefaultValue, DisplayInfo, DisplaySize, ParameterGroupId, ParameterGroupType, ParameterType, SelectOption
+from app.models.no_code.parameter import (
+    DefaultValue,
+    DisplayInfo,
+    DisplaySize,
+    ParameterGroupId,
+    ParameterGroupType,
+    ParameterType,
+    SelectOption,
+)
 from app.models.no_code.widget import WidgetId, WidgetType
 from app.models.user import User
 

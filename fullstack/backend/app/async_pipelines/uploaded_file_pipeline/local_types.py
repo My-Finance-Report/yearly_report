@@ -21,7 +21,7 @@ class PartialTransaction(BaseModel):
     partialTransactionId: TransactionId | None = Field(
         ..., description="Unique identifier for the transaction"
     )
-    partialPlaidTransactionId: PlaidTransactionId| None = Field(
+    partialPlaidTransactionId: PlaidTransactionId | None = Field(
         ..., description="Plaid transaction identifier"
     )
     partialTransactionDateOfTransaction: str = Field(

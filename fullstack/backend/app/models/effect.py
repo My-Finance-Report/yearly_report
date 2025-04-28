@@ -1,15 +1,8 @@
 from datetime import datetime, timezone
 import enum
-from typing import  Any, NewType
+from typing import Any, NewType
 from app.models.models import Base
-from sqlalchemy import (
-    JSON,
-    DateTime,
-    ForeignKey,
-    Integer,
-    Enum,
-    String
-)
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import DateTime
 from datetime import datetime
@@ -61,5 +54,6 @@ class Effect(Base):
     condition: Mapped[EffectConditionals] = mapped_column(
         Enum(EffectConditionals), nullable=False
     )
-    conditional_parameters: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False) #TODO: type this with a dataclass and use JSONType
-
+    conditional_parameters: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False
+    )  # TODO: type this with a dataclass and use JSONType
