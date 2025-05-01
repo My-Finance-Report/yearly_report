@@ -12,7 +12,7 @@ from app.models.no_code.widget import NoCodeWidget
 from app.models.user import User
 
 
-def seed_account_page(user_id: int, session:Session | None=None) -> NoCodeCanvas:
+def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCanvas:
     if not session:
         session = next(get_db_for_user(user_id))
 

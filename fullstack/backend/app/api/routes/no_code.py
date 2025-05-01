@@ -195,14 +195,16 @@ def get_no_code_dashboard(
     return generate_canvas_for_slug(session, user, slug=variant.value)
 
 
-def create_seed_page(session: Session,user: User)-> NoCodeCanvas:
+def create_seed_page(session: Session, user: User) -> NoCodeCanvas:
     return seed_account_page(user.id, session)
 
 
 def generate_canvas_for_slug(
     session: Session, user: User, slug: str
 ) -> NoCodeCanvasOut:
-    db_canvas = session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
+    db_canvas = (
+        session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
+    )
     if not db_canvas:
         db_canvas = create_seed_page(session, user)
 
