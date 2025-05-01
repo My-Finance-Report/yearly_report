@@ -7,6 +7,7 @@ from typing import Any
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 from sqlalchemy.orm import Session
+from sqlmodel import modifier
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
@@ -197,12 +198,17 @@ def sync_plaid_account_transactions(
             plaid_account=plaid_account,
         )
 
-        if not (
-            plaid_response.added
-            and plaid_response.accounts
-            and plaid_response.modified
-            and plaid_response.removed
-        ):
+        if not any([
+                plaid_response.added,
+                plaid_response.accounts,
+                plaid_response.modified,
+                plaid_response.removed,
+        ]):
+            print("nothing found")
+            print(plaid_response.accounts),
+            print(plaid_response.added),
+            print(plaid_response.removed),
+            print(plaid_response.modified),
             update_worker_status(
                 session,
                 user,

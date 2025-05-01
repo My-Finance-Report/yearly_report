@@ -1,6 +1,6 @@
 
 import sqlalchemy as sa
-from app.models import Base
+from app.models.models import Base
 
 def apply_and_grant_rls(connection)->None:
     for table in Base.metadata.tables.values():

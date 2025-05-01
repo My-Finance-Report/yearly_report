@@ -20,7 +20,7 @@ from app.models.user import UserId
 
 
 TransactionId = NewType("TransactionId", int)
-PlaidTransactionId = NewType("PlaidTransactionId", int)
+PlaidTransactionId = NewType("PlaidTransactionId", str)
 
 
 class TransactionKind(str, enum.Enum):
