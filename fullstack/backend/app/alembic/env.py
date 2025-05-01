@@ -20,7 +20,7 @@ fileConfig(config.config_file_name)
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
 
-from app.models import Base  # noqa
+from app.models.models import Base
 from app.core.config import settings # noqa
 
 target_metadata = Base.metadata
