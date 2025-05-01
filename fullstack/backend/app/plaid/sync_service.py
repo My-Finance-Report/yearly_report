@@ -197,13 +197,7 @@ def sync_plaid_account_transactions(
             plaid_account=plaid_account,
         )
 
-        # If no transactions were returned, we're done
-        if (
-            not plaid_response.added
-            or not plaid_response.accounts
-            or not plaid_response.modified
-            or not plaid_response.removed
-        ):
+        if not (plaid_response.added and plaid_response.accounts and plaid_response.modified and plaid_response.removed):
             update_worker_status(
                 session,
                 user,
