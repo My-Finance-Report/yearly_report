@@ -197,7 +197,12 @@ def sync_plaid_account_transactions(
             plaid_account=plaid_account,
         )
 
-        if not (plaid_response.added and plaid_response.accounts and plaid_response.modified and plaid_response.removed):
+        if not (
+            plaid_response.added
+            and plaid_response.accounts
+            and plaid_response.modified
+            and plaid_response.removed
+        ):
             update_worker_status(
                 session,
                 user,
