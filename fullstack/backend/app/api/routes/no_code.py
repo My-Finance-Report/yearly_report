@@ -2,26 +2,24 @@ import enum
 
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from sqlalchemy import JSON
 
 from app.db import Session, get_current_user, get_db
-from app.models import (
+from app.models.no_code.canvas import NoCodeCanvas
+from app.models.no_code.parameter import (
     DefaultValue,
-    NoCodeToolParameter,
-    NoCodeWidget,
-    NoCodeCanvas,
+    DisplayInfo,
     NoCodeParameter,
     NoCodeParameterGroup,
     NoCodeParameterOption,
-    NoCodePipelineStep,
-    SelectOption,
     ParameterId,
     ParameterType,
-    DisplayInfo,
-    NoCodeTool,
-    ToolId,
-    User,
+    SelectOption,
 )
+from app.models.no_code.pipeline_step import NoCodePipelineStep
+from app.models.no_code.tool import NoCodeTool, NoCodeToolParameter, ToolId
+from app.models.no_code.widget import NoCodeWidget
+from app.models.user import User
+
 from app.no_code.decoration import make_tools
 from app.no_code.functions import (
     main_render_loop,
@@ -37,6 +35,7 @@ from app.schemas.no_code import (
     Parameter,
     ParameterGroupOut,
 )
+from app.seed.accounts_page import seed_account_page
 
 router = APIRouter(prefix="/no_code", tags=["no_code"])
 
@@ -158,7 +157,6 @@ def update_widget(
 def normalize_widget_locations(
     session: Session, user: User, widget: NoCodeWidget
 ) -> None:
-    # 1. Load all widgets on the same canvas
     widgets = (
         session.query(NoCodeWidget)
         .filter(
@@ -197,10 +195,16 @@ def get_no_code_dashboard(
     return generate_canvas_for_slug(session, user, slug=variant.value)
 
 
+def create_seed_page(session: Session,user: User)-> NoCodeCanvas:
+    return seed_account_page(user.id, session)
+
+
 def generate_canvas_for_slug(
     session: Session, user: User, slug: str
 ) -> NoCodeCanvasOut:
-    db_canvas = session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one()
+    db_canvas = session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
+    if not db_canvas:
+        db_canvas = create_seed_page(session, user)
 
     db_widgets = session.query(NoCodeWidget).filter_by(canvas_id=db_canvas.id).all()
 
@@ -314,7 +318,6 @@ def generate_canvas_for_slug(
             )
         )
 
-    # 9. Build ParameterGroups
     parameter_groups_out = [
         ParameterGroupOut(
             id=group.id,
@@ -324,7 +327,6 @@ def generate_canvas_for_slug(
         for group in db_param_groups
     ]
 
-    # 10. Build Parameters
     parameters_out = []
     for param in db_parameters:
         default_value = param.default_value
@@ -350,7 +352,6 @@ def generate_canvas_for_slug(
             )
         )
 
-    # 11. Build final canvas object
     return NoCodeCanvasOut(
         name=db_canvas.name,
         widgets=widgets_out,
@@ -366,7 +367,6 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
     if not db_widget:
         raise HTTPException(status_code=404, detail="Widget not found")
 
-    # 2. Fetch the pipeline steps
     db_pipeline_steps = (
         session.query(NoCodePipelineStep)
         .filter_by(widget_id=widget_id)
@@ -374,12 +374,10 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
         .all()
     )
 
-    # 3. Fetch all tools
     tool_ids = [step.tool_id for step in db_pipeline_steps]
     db_tools = session.query(NoCodeTool).filter(NoCodeTool.id.in_(tool_ids)).all()
     tool_id_to_tool = {tool.id: tool for tool in db_tools}
 
-    # 4. Fetch parameters + options
     db_parameters = session.query(NoCodeParameter).all()
     db_parameter_options = session.query(NoCodeParameterOption).all()
 
@@ -390,7 +388,6 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
             SelectOption(key=option.key, value=option.value)
         )
 
-    # 5. Fetch tool -> parameter links
     db_tool_parameters = (
         session.query(NoCodeToolParameter)
         .filter(NoCodeToolParameter.tool_id.in_(tool_ids))
@@ -401,7 +398,6 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
     for link in db_tool_parameters:
         tool_id_to_param_ids.setdefault(link.tool_id, []).append(link.parameter_id)
 
-    # 6. Build pipeline
     pipeline = []
     for step in db_pipeline_steps:
         tool = tool_id_to_tool[step.tool_id]
@@ -434,7 +430,6 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
             )
         )
 
-    # 7. Return
     return NoCodeWidgetIn(
         id=db_widget.id,
         name=db_widget.name,

@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -11,6 +10,7 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     PartialTransaction,
     TransactionsWrapper,
 )
+from app.db import get_auth_db, get_db_for_user
 from app.models import (
     Category,
     PlaidTransactionId,
@@ -26,7 +26,8 @@ from app.plaid.sync_service import (
 from app.tests.utils.utils import random_lower_string
 
 
-def test_fetch_existing_plaid_transactions(db: Session):
+def test_fetch_existing_plaid_transactions():
+    db = next(get_auth_db())
     # Create test user
     user = User(
         email=f"{random_lower_string()}@example.com",
@@ -36,6 +37,8 @@ def test_fetch_existing_plaid_transactions(db: Session):
     )
     db.add(user)
     db.flush()
+
+    session = next(get_db_for_user(user.id))
 
     # Create transaction source
     transaction_source = TransactionSource(
@@ -85,13 +88,13 @@ def test_fetch_existing_plaid_transactions(db: Session):
         external_id=external_id2,
         user_id=user.id,
     )
-    db.add(tx1)
-    db.add(tx2)
-    db.commit()
+    session.add(tx1)
+    session.add(tx2)
+    session.commit()
 
     # Create InProcessJob with transactions that match the existing ones
     in_process = InProcessJob(
-        session=db,
+        session=session,
         user=user,
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,

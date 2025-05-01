@@ -9,7 +9,7 @@ from app.db import (
     get_db,
 )
 
-from ...local_types import (
+from app.local_types import (
     PossibleSankeyInput,
     PossibleSankeyLinkage,
     SankeyConfigCreatePayload,
@@ -19,17 +19,11 @@ from ...local_types import (
     SankeyNode,
     SankeySibling,
 )
-from ...models import (
-    Category,
-    CategoryId,
-    SankeyConfig,
-    SankeyInput,
-    SankeyLinkage,
-    Transaction,
-    TransactionSource,
-    TransactionSourceId,
-    User,
-)
+from app.models.category import Category, CategoryId
+from app.models.sankey import SankeyConfig, SankeyInput, SankeyLinkage
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource, TransactionSourceId
+from app.models.user import User
 
 router = APIRouter(prefix="/sankey", tags=["sankey"])
 

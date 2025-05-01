@@ -4,17 +4,13 @@ from typing import Literal
 from pydantic import BaseModel, Field, create_model
 
 from app.db import Session
-from app.models import (
-    Category,
-    PlaidTransactionId,
-    Transaction,
-    TransactionId,
-    TransactionSource,
-    UploadConfiguration,
-    UploadedPdf,
-    User,
-    WorkerJob,
-)
+from app.models.category import Category
+from app.models.transaction import PlaidTransactionId, Transaction, TransactionId
+from app.models.transaction_source import TransactionSource
+from app.models.upload_configuration import UploadConfiguration
+from app.models.uploaded_pdf import UploadedPdf
+from app.models.user import User
+from app.models.worker_job import WorkerJob
 
 
 class PdfParseException(Exception):

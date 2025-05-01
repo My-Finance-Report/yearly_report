@@ -9,7 +9,7 @@ from app import crud
 from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_current_active_superuser, get_current_user
 from app.local_types import Message, NewPassword, Token, UserOut
-from app.models import User
+from app.models.user import User
 from app.telegram_utils import send_telegram_message
 from app.utils import (
     generate_password_reset_token,

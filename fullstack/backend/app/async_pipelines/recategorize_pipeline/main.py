@@ -13,17 +13,13 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     TransactionsWrapper,
 )
 from app.func_utils import pipe
-from app.models import (
-    AuditLog,
-    Category,
-    CategoryId,
-    PlaidTransactionId,
-    ProcessingState,
-    Transaction,
-    TransactionId,
-    TransactionSource,
-    UploadConfiguration,
-)
+from app.models.audit_log import AuditLog
+from app.models.category import Category, CategoryId
+from app.models.transaction import PlaidTransactionId, Transaction, TransactionId
+from app.models.transaction_source import TransactionSource
+from app.models.upload_configuration import UploadConfiguration
+from app.models.worker_status import ProcessingState
+
 from app.worker.status import log_completed, status_update_monad
 
 

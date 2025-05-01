@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from app import crud
 from app.core.config import settings
 from app.get_db_string import get_app_user_database_url
-from app.models import User
+from app.models.user import User
 
 from ..local_types import UserRegister
 

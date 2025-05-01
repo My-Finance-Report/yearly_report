@@ -1,7 +1,7 @@
 from typing import Callable, Any, cast
 
 from pydantic import BaseModel
-from app.models import EffectConditionals, EffectType
+from app.models.effect import EffectConditionals, EffectType
 
 from app.no_code.notifications.events import NewTransactionsEvent
 

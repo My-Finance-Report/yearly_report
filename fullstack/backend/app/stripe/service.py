@@ -4,16 +4,17 @@ from typing import Any, cast
 
 import stripe
 from sqlalchemy.orm import Session
-
-from app.models import (
+from app.models.stripe import (
     Price,
     PriceId,
     Subscription,
     SubscriptionStatus,
     SubscriptionTier,
-    TransactionSource,
-    User,
 )
+from app.models.transaction_source import TransactionSource
+from app.models.user import User
+
+
 from app.schemas.subscription import (
     CheckoutSession,
     PriceDetails,
@@ -44,7 +45,10 @@ class StripeService:
         """
         # Get user's subscription
         subscription = (
-            db.query(Subscription).filter(Subscription.user_id == user_id).first()
+            db.query(Subscription, Price)
+            .filter(Subscription.user_id == user_id)
+            .join(Price, Subscription.price_id == Price.id)
+            .first()
         )
 
         # Count active transaction sources
@@ -370,7 +374,10 @@ class StripeService:
     def get_subscription_details(db: Session, user_id: int) -> SubscriptionDetails:
         """Get subscription details for a user."""
         subscription = (
-            db.query(Subscription).filter(Subscription.user_id == user_id).first()
+            db.query(Subscription, Price)
+            .join(Price, Price.id == Subscription.price_id)
+            .filter(Subscription.user_id == user_id)
+            .first()
         )
 
         if not subscription:

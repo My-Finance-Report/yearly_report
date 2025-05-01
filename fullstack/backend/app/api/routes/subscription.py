@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db import get_current_user, get_db
 from app.local_types import Message
-from app.models import Price, SubscriptionTier, User
+from app.models.stripe import Price, SubscriptionTier
+from app.models.user import User
 from app.schemas.subscription import (
     CheckoutSession,
     PriceDetails,

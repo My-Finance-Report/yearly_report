@@ -14,7 +14,7 @@ from app.core.oauth import (
     get_google_user_info,
 )
 from app.db import get_auth_db
-from app.models import User, UserSettings
+from app.models.user import User, UserSettings
 from app.telegram_utils import send_telegram_message
 
 router = APIRouter(tags=["oauth"])

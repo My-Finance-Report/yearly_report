@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models import FilterData
+from app.models.filter import FilterData
 
 
 class SavedFilterBase(BaseModel):

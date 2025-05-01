@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timedelta
-from typing import List, Callable, Any, cast
+from typing import List, Callable
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
@@ -8,7 +8,8 @@ from app.no_code.notifications.effects import (
 )
 from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
-from app.models import EffectConditionals, EffectLog, EffectType, User
+from app.models.effect import EffectConditionals, EffectLog, EffectType
+from app.models.user import User
 from app.email.send import Email, send_email
 
 

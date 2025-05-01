@@ -18,11 +18,17 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
 from app.get_db_string import get_worker_database_url
-from app.models import JobKind, JobStatus, UploadedPdf, User, WorkerJob
+from app.models.uploaded_pdf import UploadedPdf
+from app.models.worker_job import JobKind, JobStatus, WorkerJob
+from app.models.user import User
 from app.scheduler import sync_all_plaid_accounts_job
 from app.telegram_utils import send_telegram_message
 
 from ..async_pipelines.recategorize_pipeline.main import recategorize_file_pipeline
+import os
+import certifi
+
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

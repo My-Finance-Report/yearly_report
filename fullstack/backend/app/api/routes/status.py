@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_user, get_db
 from app.local_types import WorkerStatusOut
-from app.models import User
+from app.models.user import User
 from app.worker.status import get_latest_batch
 
 router = APIRouter(prefix="/worker-status", tags=["worker-status"])

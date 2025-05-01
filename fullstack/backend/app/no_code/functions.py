@@ -8,7 +8,10 @@ from pydantic import BaseModel
 from sqlalchemy import func
 
 from app.db import Session
-from app.models import Transaction, TransactionSource, User, SelectOption
+from app.models.no_code.parameter import SelectOption
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource
+from app.models.user import User
 from app.no_code.decoration import PipelineCallable, get_tool_callable
 from app.schemas.no_code import (
     NoCodeToolIn,
@@ -100,6 +103,9 @@ def get_pages_per_account(
 ) -> list[SelectOption]:
     account_id = kwargs["account_id"]
     n = kwargs["n"]
+
+    if not account_id or not n:
+        return []
 
     total = (
         session.query(func.count(Transaction.id))
