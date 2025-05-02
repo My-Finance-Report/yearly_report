@@ -10,10 +10,8 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     PartialTransaction,
     TransactionsWrapper,
 )
-from app.db import get_auth_db, get_db_for_user
-from app.models.user import User
 from app.models.transaction import Transaction, TransactionKind, PlaidTransactionId
-from app.models.transaction_source import  TransactionSource
+from app.models.transaction_source import TransactionSource
 from app.models.category import (
     Category,
 )
@@ -21,32 +19,16 @@ from app.plaid.sync_service import (
     fetch_existing_plaid_transactions,
     insert_categorized_plaid_transactions,
 )
-from app.tests.utils.utils import random_lower_string
-
-def add_user_get_user_sepecific_session(db:Session)-> tuple[Session, User]:
-    # Create test user
-    user = User(
-        email=f"{random_lower_string()}@example.com",
-        hashed_password="test_password",
-        full_name="Test User",
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    session = next(get_db_for_user(user.id))
-    return session, user
+from app.tests.utils.utils import TestKit, random_lower_string
 
 
 
-
-def test_fetch_existing_plaid_transactions(db:Session):
-
-    session, user = add_user_get_user_sepecific_session(db)
-    
-
+def test_fetch_existing_plaid_transactions(test_kit: TestKit):
+    session = test_kit.session
+    user = test_kit.user
     # Create transaction source
     transaction_source = TransactionSource(
-        name="Test Source",
+        name=random_lower_string(),
         user_id=user.id,
         source_kind="account",
     )
@@ -157,13 +139,13 @@ def test_fetch_existing_plaid_transactions(db:Session):
     assert external_id2 in external_ids
 
 
-def test_insert_categorized_plaid_transactions_update_existing(db: Session):
-
-    session, user = add_user_get_user_sepecific_session(db)
+def test_insert_categorized_plaid_transactions_update_existing(test_kit: TestKit):
+    session = test_kit.session
+    user = test_kit.user
 
     # Create transaction source
     transaction_source = TransactionSource(
-        name="Test Source",
+        name=random_lower_string(),
         user_id=user.id,
         source_kind="account",
     )
@@ -244,12 +226,13 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
     assert len(result.inserted_transactions) == 0
 
 
-def test_insert_categorized_plaid_transactions_insert_new(db: Session):
-    session, user = add_user_get_user_sepecific_session(db)
+def test_insert_categorized_plaid_transactions_insert_new(test_kit: TestKit):
+    session = test_kit.session
+    user = test_kit.user
 
     # Create transaction source
     transaction_source = TransactionSource(
-        name="Test Source",
+        name=random_lower_string(),
         user_id=user.id,
         source_kind="account",
     )
@@ -298,7 +281,9 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
 
     # Query the database to verify the transaction was actually saved
     new_tx = (
-        session.query(Transaction).filter(Transaction.external_id == external_id).first()
+        session.query(Transaction)
+        .filter(Transaction.external_id == external_id)
+        .first()
     )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"
@@ -307,12 +292,13 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
     assert new_tx.date_of_transaction.strftime("%m/%d/%Y") == transaction_date
 
 
-def test_insert_categorized_plaid_transactions_mixed(db: Session):
-    session, user = add_user_get_user_sepecific_session(db)
+def test_insert_categorized_plaid_transactions_mixed(test_kit: TestKit):
+    session = test_kit.session
+    user = test_kit.user
 
     # Create transaction source
     transaction_source = TransactionSource(
-        name="Test Source",
+        name=random_lower_string(),
         user_id=user.id,
         source_kind="account",
     )
@@ -402,7 +388,9 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
 
     # Query the database to verify the new transaction was actually saved
     new_tx = (
-        session.query(Transaction).filter(Transaction.external_id == new_external_id).first()
+        session.query(Transaction)
+        .filter(Transaction.external_id == new_external_id)
+        .first()
     )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"
