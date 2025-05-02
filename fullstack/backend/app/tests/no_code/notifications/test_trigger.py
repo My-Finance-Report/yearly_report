@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from app.models import EffectLog
+from app.models.effect import EffectLog
 from unittest.mock import patch, MagicMock
 from app.no_code.notifications.effects import Effect, EffectConfig
 from app.no_code.notifications.events import NewTransactionsEvent
@@ -15,7 +15,7 @@ from app.no_code.notifications.trigger import (
     propagate_effects,
     trigger_effects,
 )
-from app.models import TransactionKind
+from app.models.transaction import TransactionKind
 from app.schemas.no_code import NoCodeTransaction
 
 
@@ -54,19 +54,15 @@ def transactions():
     return [
         NoCodeTransaction(
             amount=100,
-            id="1",
-            date="2024-01-01",
+            date_of_transaction = datetime(year=2024, month=1, day=1),
             description="Test transaction 1",
-            date_of_transaction="2024-01-01",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
         ),
         NoCodeTransaction(
             amount=200,
-            id="2",
-            date="2024-01-02",
+            date_of_transaction = datetime(year=2024, month=1, day=2),
             description="Test transaction 2",
-            date_of_transaction="2024-01-02",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
         ),
@@ -218,7 +214,6 @@ def test_check_effects_against_frequency_old_log(effect, user):
     session = DummySession([log])
     result = check_effects_against_frequency(session, user, [effect])
     assert effect in result
-
 
 def test_check_effects_against_frequency_empty_effects(user):
     session = DummySession([])

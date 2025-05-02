@@ -19,13 +19,14 @@ def collect_user_effects(session: Session, user: User) -> List[Effect]:
     #TODO pull these from the database for the user
     """
 
+
     return [
         Effect(
             type=EffectType.EMAIL,
             config=EffectConfig(
                 frequency_days=1,
-                template="Hey there! You have {count} new transaction(s) in My Financé!",
-                subject="New Transactions in My Financé from {account_name}",
+                template="Hey there! You have {{ count }} new transaction(s) in My Financé!",
+                subject="New Transactions in My Financé from {{ account_name }}",
             ),
             condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
             conditional_parameters={"count": 0},
@@ -81,7 +82,6 @@ def aggregate_effects(effects: List[Effect]) -> List[Effect]:
     Group or deduplicate effects if needed.
     For example, combine multiple similar email notifications into one.
     """
-    # TODO apply this
     aggregated = []
     seen = set()
     for effect in effects:
@@ -93,16 +93,21 @@ def aggregate_effects(effects: List[Effect]) -> List[Effect]:
 
 
 def perform_template_replacement(event: Event, effect: Effect) -> Email:
-    template = effect.config.template
 
     # find vars in double brackets {{account_name}}
-    vars = re.findall(r"{{\s*(\w+)\s*}}", template)
-    for var in vars:
-        if hasattr(event, var):
-            value = str(getattr(event, var))
-            # Replace all occurrences of {{var}} (with or without spaces)
-            template = re.sub(r"{{\s*" + re.escape(var) + r"\s*}}", value, template)
-    return Email(subject=effect.config.subject, html=template)
+
+    def make_subs(temp: str)-> str:
+        vars = re.findall(r"{{\s*(\w+)\s*}}", temp)
+        for var in vars:
+            if hasattr(event, var):
+                value = str(getattr(event, var))
+                # Replace all occurrences of {{var}} (with or without spaces)
+                temp = re.sub(r"{{\s*" + re.escape(var) + r"\s*}}", value, temp)
+        return temp
+
+    subject = make_subs(effect.config.subject)
+    body = make_subs(effect.config.template)
+    return Email(subject=subject, html=body)
 
 
 def generate_callable_for_effect(event: Event, effect: Effect) -> Callable[[], Email]:
@@ -134,7 +139,8 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
         for effect in effects
         if check_event_against_possible_effects(event, effect)
     ]
+    aggregated_effects = aggregate_effects(effects_to_trigger)
     effects_to_trigger = check_effects_against_frequency(
-        session, user, effects_to_trigger
+        session, user, aggregated_effects
     )
     propagate_effects(user, effects_to_trigger, event)
