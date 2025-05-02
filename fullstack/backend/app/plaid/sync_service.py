@@ -77,6 +77,7 @@ def fetch_plaid_transactions(
     try:
         response: TransactionsSyncResponse = client.transactions_sync(request)
         next_cursor = response["next_cursor"]
+        # this is a bug, we shouldnt reset the cursor unless we properly process
         plaid_account.cursor = next_cursor
 
         return PlaidFetchResponse(
@@ -197,18 +198,19 @@ def sync_plaid_account_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
+        print(plaid_response.accounts)
+        print(plaid_response.added)
+        print(plaid_response.removed)
+        print(plaid_response.modified)
 
-        if not any([
+        if not any(
+            [
                 plaid_response.added,
                 plaid_response.accounts,
                 plaid_response.modified,
                 plaid_response.removed,
-        ]):
-            print("nothing found")
-            print(plaid_response.accounts),
-            print(plaid_response.added),
-            print(plaid_response.removed),
-            print(plaid_response.modified),
+            ]
+        ):
             update_worker_status(
                 session,
                 user,
@@ -300,10 +302,9 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcess
     assert in_process.transaction_source, "must have"
     assert in_process.categorized_transactions, "must have"
     assert in_process.categories, "must have"
-    assert in_process.existing_transactions, "must have"
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
     existing_transaction_lookup = {
-        t.external_id: t for t in in_process.existing_transactions
+        t.external_id: t for t in in_process.existing_transactions or []
     }
 
     transactions_to_insert = []
@@ -495,7 +496,8 @@ def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
 
 
 def remove_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
-    assert in_process.transactions_to_delete, "must have"
+    if not in_process.transactions_to_delete:
+        return in_process
 
     in_process.session.query(Transaction).filter(
         Transaction.external_id.in_(in_process.transactions_to_delete),
