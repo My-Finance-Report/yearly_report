@@ -44,7 +44,7 @@ def get_shared_param(
         )
         new_param = Parameter(
             id=2,
-            group_id=ParameterGroupId(55),
+            group_id=ParameterGroupId(0),
             name=param_name,
             label="",
             type=ParameterType.SELECT,
@@ -81,7 +81,7 @@ def first_n(
             Parameter(
                 id=1,
                 name="n",
-                group_id=ParameterGroupId(56),
+                group_id=ParameterGroupId(0),
                 label="Transactions to display",
                 type=ParameterType.SELECT,
                 options=[
@@ -95,7 +95,7 @@ def first_n(
             get_shared_param(session, user, widget_id, global_parameters),
             Parameter(
                 id=3,
-                group_id=ParameterGroupId(56),
+                group_id=ParameterGroupId(0),
                 name="page",
                 label="",
                 trigger_refetch=True,
@@ -123,7 +123,7 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
             Parameter(
                 id=4,
                 name="n",
-                group_id=ParameterGroupId(1),
+                group_id=ParameterGroupId(0),
                 label="Transactions to display",
                 type=ParameterType.SELECT,
                 options=[
@@ -139,7 +139,7 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
                 id=5,
                 name="account_id",
                 label="Account",
-                group_id=ParameterGroupId(1),
+                group_id=ParameterGroupId(0),
                 type=ParameterType.SELECT,
                 value=None,
                 default_value=None,
@@ -155,7 +155,7 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
         parameters=[
             Parameter(
                 id=6,
-                group_id=ParameterGroupId(2),
+                group_id=ParameterGroupId(0),
                 name="key_from",
                 type=ParameterType.STRING,
                 value=key,
@@ -163,7 +163,7 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
             ),
             Parameter(
                 id=7,
-                group_id=ParameterGroupId(2),
+                group_id=ParameterGroupId(0),
                 name="value_from",
                 type=ParameterType.STRING,
                 value=value,
@@ -301,7 +301,7 @@ def _generate_throughput_widget(
                 get_shared_param(session, user, widget_id, global_parameters),
                 Parameter(
                     id=8,
-                    group_id=ParameterGroupId(2),
+                    group_id=ParameterGroupId(0),
                     name="time_unit",
                     label="Time Unit",
                     type=ParameterType.SELECT,
@@ -440,7 +440,7 @@ def _generate_balance_update_widget(
         Parameter(
             id=24,
             name="account_id",
-            group_id=ParameterGroupId(6),
+            group_id=ParameterGroupId(0),
             label=None,
             type=ParameterType.SELECT,
             options=account_choices,
@@ -460,7 +460,7 @@ def _generate_balance_update_widget(
             id=22,
             name="balance",
             label="Balance",
-            group_id=ParameterGroupId(6),
+            group_id=ParameterGroupId(0),
             type=ParameterType.FLOAT,
             default_value=DefaultValue(value=0.0),
             dependent_widgets=[widget_id],
@@ -474,7 +474,7 @@ def _generate_balance_update_widget(
         ),
         Parameter(
             id=16,
-            group_id=ParameterGroupId(6),
+            group_id=ParameterGroupId(0),
             name="timestamp",
             label="Timestamp",
             type=ParameterType.DATETIME,
@@ -492,7 +492,7 @@ def _generate_balance_update_widget(
             id=9,
             name="submit",
             label="Submit",
-            group_id=ParameterGroupId(6),
+            group_id=ParameterGroupId(0),
             type=ParameterType.SUBMIT,
             value=False,
             default_value=DefaultValue(value=False),
@@ -576,7 +576,7 @@ def _generate_bar_chart_widget(
     agg_parameters = [
         Parameter(
             id=10,
-            group_id=ParameterGroupId(11),
+            group_id=ParameterGroupId(0),
             name="key_from",
             label="Group By",
             type=ParameterType.SELECT,
@@ -597,7 +597,7 @@ def _generate_bar_chart_widget(
         ),
         Parameter(
             id=11,
-            group_id=ParameterGroupId(12),
+            group_id=ParameterGroupId(0),
             name="values_from",
             label="Y Axis",
             type=ParameterType.MULTI_SELECT,

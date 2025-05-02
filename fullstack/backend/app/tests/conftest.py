@@ -10,7 +10,11 @@ from app.db import get_db_for_user
 from app.main import app
 from app.models.user import User
 from app.tests.utils.user import authentication_token_from_email
-from app.tests.utils.utils import get_superuser_token_headers, TestKit, random_lower_string
+from app.tests.utils.utils import (
+    get_superuser_token_headers,
+    TestKit,
+    random_lower_string,
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -20,8 +24,7 @@ def db() -> Generator[Session, None, None]:
         yield session
 
 
-
-def _db()-> Generator[Session,None,None]:
+def _db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         init_db(session)
         yield session
