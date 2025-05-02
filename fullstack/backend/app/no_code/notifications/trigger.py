@@ -19,7 +19,6 @@ def collect_user_effects(session: Session, user: User) -> List[Effect]:
     #TODO pull these from the database for the user
     """
 
-
     return [
         Effect(
             type=EffectType.EMAIL,
@@ -93,10 +92,9 @@ def aggregate_effects(effects: List[Effect]) -> List[Effect]:
 
 
 def perform_template_replacement(event: Event, effect: Effect) -> Email:
-
     # find vars in double brackets {{account_name}}
 
-    def make_subs(temp: str)-> str:
+    def make_subs(temp: str) -> str:
         vars = re.findall(r"{{\s*(\w+)\s*}}", temp)
         for var in vars:
             if hasattr(event, var):

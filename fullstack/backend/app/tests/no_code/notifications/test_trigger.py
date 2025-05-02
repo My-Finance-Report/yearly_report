@@ -54,14 +54,14 @@ def transactions():
     return [
         NoCodeTransaction(
             amount=100,
-            date_of_transaction = datetime(year=2024, month=1, day=1),
+            date_of_transaction=datetime(year=2024, month=1, day=1),
             description="Test transaction 1",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
         ),
         NoCodeTransaction(
             amount=200,
-            date_of_transaction = datetime(year=2024, month=1, day=2),
+            date_of_transaction=datetime(year=2024, month=1, day=2),
             description="Test transaction 2",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
@@ -214,6 +214,7 @@ def test_check_effects_against_frequency_old_log(effect, user):
     session = DummySession([log])
     result = check_effects_against_frequency(session, user, [effect])
     assert effect in result
+
 
 def test_check_effects_against_frequency_empty_effects(user):
     session = DummySession([])
