@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db import Session
 from app.models.user import User
 
+
 @dataclass
 class TestKit:
     session: Session

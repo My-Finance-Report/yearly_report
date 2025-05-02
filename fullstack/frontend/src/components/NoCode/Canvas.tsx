@@ -103,14 +103,16 @@ export function NoCodeDisplayCanvas({
         >
           {isDragging && DummyGridBacking()}
 
-          {widgets.map((widget) => (
+          {widgets.map((widget,index) => (
             <NoCodeDraggableAndEditableWidget
+              key={index}
               widget={widget}
               editMode={isEditMode}
             />
           ))}
-          {paramsToDisplay.map((param) => (
+          {paramsToDisplay.map((param, index) => (
             <NoCodeDraggableAndEditableParam
+              key={index}
               param={param}
               editMode={isEditMode}
             />

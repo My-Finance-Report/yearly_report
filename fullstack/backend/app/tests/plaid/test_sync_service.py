@@ -22,7 +22,6 @@ from app.plaid.sync_service import (
 from app.tests.utils.utils import TestKit, random_lower_string
 
 
-
 def test_fetch_existing_plaid_transactions(test_kit: TestKit):
     session = test_kit.session
     user = test_kit.user
