@@ -11,13 +11,11 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     TransactionsWrapper,
 )
 from app.db import get_auth_db, get_db_for_user
-from app.models import (
+from app.models.user import User
+from app.models.transaction import Transaction, TransactionKind, PlaidTransactionId
+from app.models.transaction_source import  TransactionSource
+from app.models.category import (
     Category,
-    PlaidTransactionId,
-    Transaction,
-    TransactionKind,
-    TransactionSource,
-    User,
 )
 from app.plaid.sync_service import (
     fetch_existing_plaid_transactions,
@@ -25,9 +23,7 @@ from app.plaid.sync_service import (
 )
 from app.tests.utils.utils import random_lower_string
 
-
-def test_fetch_existing_plaid_transactions():
-    db = next(get_auth_db())
+def add_user_get_user_sepecific_session(db:Session)-> tuple[Session, User]:
     # Create test user
     user = User(
         email=f"{random_lower_string()}@example.com",
@@ -36,9 +32,17 @@ def test_fetch_existing_plaid_transactions():
         is_active=True,
     )
     db.add(user)
-    db.flush()
-
+    db.commit()
     session = next(get_db_for_user(user.id))
+    return session, user
+
+
+
+
+def test_fetch_existing_plaid_transactions(db:Session):
+
+    session, user = add_user_get_user_sepecific_session(db)
+    
 
     # Create transaction source
     transaction_source = TransactionSource(
@@ -46,8 +50,10 @@ def test_fetch_existing_plaid_transactions():
         user_id=user.id,
         source_kind="account",
     )
-    db.add(transaction_source)
-    db.flush()
+
+    session.add(transaction_source)
+
+    session.flush()
 
     # Create categories
     category1 = Category(
@@ -60,9 +66,9 @@ def test_fetch_existing_plaid_transactions():
         source_id=transaction_source.id,
         user_id=user.id,
     )
-    db.add(category1)
-    db.add(category2)
-    db.flush()
+    session.add(category1)
+    session.add(category2)
+    session.flush()
 
     # Create existing transactions
     external_id1 = f"plaid_tx_{uuid.uuid4().hex}"
@@ -152,15 +158,8 @@ def test_fetch_existing_plaid_transactions():
 
 
 def test_insert_categorized_plaid_transactions_update_existing(db: Session):
-    # Create test user
-    user = User(
-        email=f"{random_lower_string()}@example.com",
-        hashed_password="test_password",
-        full_name="Test User",
-        is_active=True,
-    )
-    db.add(user)
-    db.flush()
+
+    session, user = add_user_get_user_sepecific_session(db)
 
     # Create transaction source
     transaction_source = TransactionSource(
@@ -168,8 +167,8 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
         user_id=user.id,
         source_kind="account",
     )
-    db.add(transaction_source)
-    db.flush()
+    session.add(transaction_source)
+    session.flush()
 
     # Create categories
     category1 = Category(
@@ -182,9 +181,9 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
         source_id=transaction_source.id,
         user_id=user.id,
     )
-    db.add(category1)
-    db.add(category2)
-    db.flush()
+    session.add(category1)
+    session.add(category2)
+    session.flush()
 
     # Create an existing transaction
     external_id = f"plaid_tx_{uuid.uuid4().hex}"
@@ -200,8 +199,8 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
         external_id=external_id,
         user_id=user.id,
     )
-    db.add(tx)
-    db.commit()
+    session.add(tx)
+    session.commit()
 
     # Create InProcessJob with updated transaction data
     new_date = datetime.now().strftime("%m/%d/%Y")
@@ -209,7 +208,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
     new_description = "Updated Description"
 
     in_process = InProcessJob(
-        session=db,
+        session=session,
         user=user,
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
@@ -232,7 +231,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
     result = insert_categorized_plaid_transactions(in_process)
 
     # Refresh the transaction from the database
-    db.refresh(tx)
+    session.refresh(tx)
 
     # Verify the transaction was updated
     assert tx.description == new_description
@@ -246,15 +245,7 @@ def test_insert_categorized_plaid_transactions_update_existing(db: Session):
 
 
 def test_insert_categorized_plaid_transactions_insert_new(db: Session):
-    # Create test user
-    user = User(
-        email=f"{random_lower_string()}@example.com",
-        hashed_password="test_password",
-        full_name="Test User",
-        is_active=True,
-    )
-    db.add(user)
-    db.flush()
+    session, user = add_user_get_user_sepecific_session(db)
 
     # Create transaction source
     transaction_source = TransactionSource(
@@ -262,8 +253,8 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
         user_id=user.id,
         source_kind="account",
     )
-    db.add(transaction_source)
-    db.flush()
+    session.add(transaction_source)
+    session.flush()
 
     # Create categories
     category1 = Category(
@@ -271,15 +262,15 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
         source_id=transaction_source.id,
         user_id=user.id,
     )
-    db.add(category1)
-    db.flush()
+    session.add(category1)
+    session.flush()
 
     # Create InProcessJob with a new transaction
     external_id = f"plaid_tx_{uuid.uuid4().hex}"
     transaction_date = datetime.now().strftime("%m/%d/%Y")
 
     in_process = InProcessJob(
-        session=db,
+        session=session,
         user=user,
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
@@ -307,7 +298,7 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
 
     # Query the database to verify the transaction was actually saved
     new_tx = (
-        db.query(Transaction).filter(Transaction.external_id == external_id).first()
+        session.query(Transaction).filter(Transaction.external_id == external_id).first()
     )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"
@@ -317,15 +308,7 @@ def test_insert_categorized_plaid_transactions_insert_new(db: Session):
 
 
 def test_insert_categorized_plaid_transactions_mixed(db: Session):
-    # Create test user
-    user = User(
-        email=f"{random_lower_string()}@example.com",
-        hashed_password="test_password",
-        full_name="Test User",
-        is_active=True,
-    )
-    db.add(user)
-    db.flush()
+    session, user = add_user_get_user_sepecific_session(db)
 
     # Create transaction source
     transaction_source = TransactionSource(
@@ -333,8 +316,8 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
         user_id=user.id,
         source_kind="account",
     )
-    db.add(transaction_source)
-    db.flush()
+    session.add(transaction_source)
+    session.flush()
 
     # Create categories
     category1 = Category(
@@ -347,9 +330,9 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
         source_id=transaction_source.id,
         user_id=user.id,
     )
-    db.add(category1)
-    db.add(category2)
-    db.flush()
+    session.add(category1)
+    session.add(category2)
+    session.flush()
 
     # Create an existing transaction
     existing_external_id = f"plaid_tx_{uuid.uuid4().hex}"
@@ -364,15 +347,15 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
         external_id=existing_external_id,
         user_id=user.id,
     )
-    db.add(existing_tx)
-    db.commit()
+    session.add(existing_tx)
+    session.commit()
 
     # Create InProcessJob with both existing and new transactions
     new_external_id = f"plaid_tx_{uuid.uuid4().hex}"
     transaction_date = datetime.now().strftime("%m/%d/%Y")
 
     in_process = InProcessJob(
-        session=db,
+        session=session,
         user=user,
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
@@ -406,7 +389,7 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
     result = insert_categorized_plaid_transactions(in_process)
 
     # Refresh the existing transaction from the database
-    db.refresh(existing_tx)
+    session.refresh(existing_tx)
 
     # Verify the existing transaction was updated
     assert existing_tx.description == "Updated Transaction"
@@ -419,7 +402,7 @@ def test_insert_categorized_plaid_transactions_mixed(db: Session):
 
     # Query the database to verify the new transaction was actually saved
     new_tx = (
-        db.query(Transaction).filter(Transaction.external_id == new_external_id).first()
+        session.query(Transaction).filter(Transaction.external_id == new_external_id).first()
     )
     assert new_tx is not None
     assert new_tx.description == "New Transaction"

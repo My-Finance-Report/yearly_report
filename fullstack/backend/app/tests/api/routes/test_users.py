@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.core.config import settings
 from app.core.security import verify_password
-from app.models import User
+from app.models.user import User
 from app.tests.utils.utils import random_email, random_lower_string
 
 from ....local_types import UserRegister
