@@ -103,7 +103,7 @@ export function NoCodeDisplayCanvas({
         >
           {isDragging && DummyGridBacking()}
 
-          {widgets.map((widget,index) => (
+          {widgets.map((widget, index) => (
             <NoCodeDraggableAndEditableWidget
               key={index}
               widget={widget}

@@ -23,6 +23,7 @@ from app.models.user import User
 class NoCodeTransaction(BaseModel):
     amount: float
     description: str
+    account_name: str
     date_of_transaction: datetime
     kind: TransactionKind
     category_name: str

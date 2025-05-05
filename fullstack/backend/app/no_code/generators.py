@@ -55,11 +55,18 @@ def first_n_transactions(
         .offset((int(page.key) - 1) * int(n.key))
         .limit(int(n.key))
     )
+    accounts = data.session.query(TransactionSource).filter(
+        TransactionSource.user_id == data.user.id,
+        TransactionSource.id.in_([tx.transaction_source_id for tx, _ in txs]),
+    ).all()
+
+    account_name_map = {account.id: account.name for account in accounts}
 
     val = [
         NoCodeTransaction(
             category_name=cat.name,
             amount=tx.amount,
+            account_name=account_name_map[tx.transaction_source_id],
             kind=tx.kind,
             description=tx.description,
             date_of_transaction=tx.date_of_transaction,

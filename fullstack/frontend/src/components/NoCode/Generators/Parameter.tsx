@@ -276,7 +276,7 @@ function rawSelectOptionsToSelectItems(options: SelectOption[]) {
 
 function SelectParameter({ parameter, onChange }: ParameterProps<"select">) {
   if (!parameter.options) {
-      return null
+    return null;
   }
 
   const formattedOptions = rawSelectOptionsToSelectItems(parameter.options);
