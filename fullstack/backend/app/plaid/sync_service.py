@@ -56,7 +56,6 @@ class PlaidFetchResponse:
     accounts: list[dict[str, Any]]
     set_next_cursor: Callable[[], None]
 
-
 def fetch_plaid_transactions(
     *,
     access_token: str,
@@ -80,7 +79,6 @@ def fetch_plaid_transactions(
 
         def set_next_cursor():
             plaid_account.cursor = next_cursor
-
         return PlaidFetchResponse(
             added=response["added"],
             removed=response["removed"],
@@ -88,6 +86,7 @@ def fetch_plaid_transactions(
             accounts=response["accounts"],
             set_next_cursor=set_next_cursor,
         )
+
 
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
