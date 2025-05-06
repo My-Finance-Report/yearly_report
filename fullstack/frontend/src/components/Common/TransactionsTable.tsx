@@ -22,8 +22,7 @@ import type {
   TransactionOut,
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client";
-import  EditTransaction  from "./EditTransaction";
-import { DeleteTransaction } from "./DeleteTransaction";
+import EditTransaction from "./EditTransaction";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import Delete from "./DeleteAlert";
 
@@ -326,23 +325,22 @@ function TransactionRow({
         {"withdrawal" === transaction.kind ? "Expense" : "Deposit"}
       </TableCell>
       <TableCell>
-
-      <Flex direction="row" gap={2}>
-        <Button
-          onClick={editTransactionModal.onOpen}
-          size="sm"
-          variant="outline"
-        >
-          <FiEdit size="8px" />
-        </Button>
-        <Button
-          onClick={deleteTransactionModal.onOpen}
-          size="sm"
-          variant="outline"
-        >
-          <FiTrash size="8px" />
-        </Button>
-</Flex>
+        <Flex direction="row" gap={2}>
+          <Button
+            onClick={editTransactionModal.onOpen}
+            size="sm"
+            variant="outline"
+          >
+            <FiEdit size="8px" />
+          </Button>
+          <Button
+            onClick={deleteTransactionModal.onOpen}
+            size="sm"
+            variant="outline"
+          >
+            <FiTrash size="8px" />
+          </Button>
+        </Flex>
       </TableCell>
       <EditTransaction
         transaction={transaction}

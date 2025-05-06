@@ -768,6 +768,7 @@ def update_transaction(
     session.commit()
     return transaction_db
 
+
 @router.post(
     "/delete/{transaction_id}",
     response_model=dict[str, str],
@@ -788,7 +789,6 @@ def delete_transaction(
     session.delete(transaction_db)
     session.commit()
     return {"message": "ok"}
-
 
 
 @router.get(

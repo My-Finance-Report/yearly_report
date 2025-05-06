@@ -5,7 +5,7 @@ import { FiTrash } from "react-icons/fi";
 import Delete from "./DeleteAlert";
 
 interface ActionsMenuProps {
-  type: string;
+  type: "user" | "transaction";
   disabled?: boolean;
 }
 
