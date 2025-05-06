@@ -191,6 +191,8 @@ def sync_plaid_account_transactions(
     )
     session.add(sync_log)
 
+    has_plaid_transactions=False
+
     try:
         _update_worker_status(
             ProcessingState.fetching_transactions,
@@ -201,19 +203,20 @@ def sync_plaid_account_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
-        print(plaid_response.accounts)
-        print(plaid_response.added)
-        print(plaid_response.removed)
-        print(plaid_response.modified)
-
-        if not any(
+        has_plaid_transactions = any(
             [
                 plaid_response.added,
                 plaid_response.accounts,
                 plaid_response.modified,
                 plaid_response.removed,
             ]
-        ):
+        )
+        print(plaid_response.accounts)
+        print(plaid_response.added)
+        print(plaid_response.removed)
+        print(plaid_response.modified)
+
+        if not has_plaid_transactions:
             _update_worker_status(
                 ProcessingState.completed,
                 "No new transactions found",
@@ -241,8 +244,9 @@ def sync_plaid_account_transactions(
         )
 
     except Exception as e:
-        logger.error(f"Error syncing Plaid account {plaid_account.id}: {str(e)}")
         sync_log.error_message = str(e)
+        if has_plaid_transactions:
+            send_telegram_message(f"failing and had plaid transactions, {e}")
         session.commit()
         raise
 
