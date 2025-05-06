@@ -35,14 +35,13 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
     handleSubmit,
     formState: { isSubmitting },
   } = useForm();
-  
+
   React.useEffect(() => {
     if (skipConfirmation(type) && isOpen) {
       onClose();
       handleDelete();
     }
   }, [isOpen, type]);
-  
 
   const deleteEntity = async () => {
     switch (type) {
@@ -101,7 +100,7 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
       const storageKey = `${STORAGE_KEY_PREFIX}${type}`;
       localStorage.setItem(storageKey, "true");
     }
-    
+
     handleDelete();
   };
 
@@ -109,7 +108,7 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
   if (skipConfirmation(type) && isOpen) {
     return null;
   }
-  
+
   return (
     <Dialog.Root role="alertdialog" open={isOpen} onExitComplete={onClose}>
       <Portal>
@@ -125,15 +124,16 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
                 </span>
               )}
               Are you sure? You will not be able to undo this action.
-              
               <Box mt={4} display="flex" alignItems="center">
-                <Checkbox.Root 
-                checked={dontShowAgain}
-                onCheckedChange={() => setDontShowAgain((prev) => !prev)}
+                <Checkbox.Root
+                  checked={dontShowAgain}
+                  onCheckedChange={() => setDontShowAgain((prev) => !prev)}
                 >
                   <Checkbox.HiddenInput />
                   <Checkbox.Control />
-                  <Checkbox.Label>Don't show this confirmation again</Checkbox.Label>
+                  <Checkbox.Label>
+                    Don't show this confirmation again
+                  </Checkbox.Label>
                 </Checkbox.Root>
               </Box>
             </Dialog.Body>

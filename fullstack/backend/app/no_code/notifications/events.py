@@ -12,6 +12,7 @@ class NewTransactionsEvent(Event):
     type: EventType = EventType.NEW_TRANSACTION
     transactions: list[NoCodeTransaction]
     account_name: str
+    count: int
 
 
 class NewAccountLinkedEvent(Event):

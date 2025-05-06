@@ -17,6 +17,7 @@ from app.no_code.notifications.trigger import (
 )
 from app.models.transaction import TransactionKind
 from app.schemas.no_code import NoCodeTransaction
+from app.tests.utils.utils import TestKit
 
 
 class DummySession:
@@ -83,7 +84,9 @@ def effect():
 
 @pytest.fixture
 def event(transactions: list[NoCodeTransaction]):
-    return NewTransactionsEvent(transactions=transactions, account_name="TestAccount")
+    return NewTransactionsEvent(
+        transactions=transactions, account_name="TestAccount", count=2
+    )
 
 
 def test_amount_over(event):
@@ -222,6 +225,29 @@ def test_check_effects_against_frequency_empty_effects(user):
     session = DummySession([])
     result = check_effects_against_frequency(session, user, [])
     assert result == []
+
+
+def test_substitutions():
+    email = perform_template_replacement(
+        NewTransactionsEvent(
+            transactions=[],
+            account_name="TestAccount",
+            count=1,
+        ),
+        Effect(
+            type=EffectType.EMAIL,
+            config=EffectConfig(
+                frequency_days=1,
+                template="Hey there! You have {{ count }} new transaction(s) in My Financé!",
+                subject="New Transactions in My Financé from {{ account_name }}",
+            ),
+            condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
+            conditional_parameters={"count": 0},
+        ),
+    )
+
+    assert "New Transactions in My Financé from TestAccount" in email.subject
+    assert "Hey there! You have 1 new transaction(s) in My Financé!" in email.html
 
 
 def test_trigger_effects_only_triggers_by_frequency(user, event, effect):

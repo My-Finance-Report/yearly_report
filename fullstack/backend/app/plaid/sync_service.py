@@ -378,6 +378,7 @@ def trigger_the_effects(in_process: InProcessJob) -> None:
         NewTransactionsEvent(
             transactions=no_code_transactions,
             account_name=in_process.transaction_source.name,
+            count=len(no_code_transactions),
         ),
     )
 
