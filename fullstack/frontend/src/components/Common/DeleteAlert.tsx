@@ -4,16 +4,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
 
-import { UsersService } from "../../client";
+import { TransactionOut, TransactionsService, UsersService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface DeleteProps {
-  type: string;
+  type: 'user' | 'transaction';
   isOpen: boolean;
   onClose: () => void;
+  entity? : TransactionOut
 }
 
-const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
+const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const cancelRef = React.useRef<HTMLButtonElement | null>(null);
@@ -23,10 +24,20 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
   } = useForm();
 
   const deleteEntity = async () => {
-    if (type === "User") {
-      await UsersService.deleteUserMe();
-    } else {
-      throw new Error(`Unexpected type: ${type}`);
+    switch (type) {
+      case "user":
+        await UsersService.deleteUserMe();
+        break;
+      case "transaction":
+        if (!entity) {
+          throw new Error("Entity is required for transaction deletion");
+        }
+        await TransactionsService.deleteTransaction({
+          transactionId: entity.id,
+        });
+        break;
+      default:
+        throw new Error(`Unexpected type: ${type}`);
     }
   };
 
@@ -49,7 +60,12 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [type === "Item" ? "items" : "users"],
+        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
+      });
+    },
+    onMutate: () => {
+      queryClient.cancelQueries({
+        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
       });
     },
   });
@@ -59,14 +75,14 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
   };
 
   return (
-    <Dialog.Root open={isOpen} onExitComplete={onClose}>
+    <Dialog.Root role="alertdialog" open={isOpen} onExitComplete={onClose}>
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner position="absolute">
           <Dialog.Content as="form" onSubmit={handleSubmit(onSubmit)}>
             <Dialog.Header>Delete {type}</Dialog.Header>
             <Dialog.Body>
-              {type === "User" && (
+              {type === "user" && (
                 <span>
                   All items associated with this user will also be{" "}
                   <strong>permanently deleted. </strong>
@@ -76,12 +92,13 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
             </Dialog.Body>
 
             <Dialog.Footer gap={3}>
-              <Button colorScheme="red" type="submit" loading={isSubmitting}>
-                Delete
-              </Button>
-              <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
+<Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
                 Cancel
               </Button>
+              <Button colorPalette="red" type="submit" loading={isSubmitting}>
+                Delete
+              </Button>
+              
             </Dialog.Footer>
           </Dialog.Content>
         </Dialog.Positioner>

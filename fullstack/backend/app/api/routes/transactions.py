@@ -5,7 +5,7 @@ from enum import Enum
 from itertools import groupby
 from typing import cast
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import ColumnExpressionArgument, false, func, or_, true
 from sqlalchemy.orm import Query as SqlQuery
 
@@ -767,6 +767,28 @@ def update_transaction(
     session.add_all(audit_logs)
     session.commit()
     return transaction_db
+
+@router.post(
+    "/delete/{transaction_id}",
+    response_model=dict[str, str],
+)
+def delete_transaction(
+    transaction_id: int,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> dict[str, str]:
+    transaction_db = (
+        session.query(Transaction)
+        .filter(Transaction.id == transaction_id, Transaction.user_id == user.id)
+        .one_or_none()
+    )
+    if not transaction_db:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    session.delete(transaction_db)
+    session.commit()
+    return {"message": "ok"}
+
 
 
 @router.get(
