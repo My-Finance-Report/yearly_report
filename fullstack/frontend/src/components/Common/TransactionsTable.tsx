@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Collapsible,
+  Flex,
   HStack,
   Table,
   TableBody,
@@ -15,14 +16,16 @@ import {
 import React, { useState } from "react";
 
 import { useColorPalette } from "@/hooks/useColor";
-import { FiEdit } from "react-icons/fi";
+import { FiEdit, FiTrash } from "react-icons/fi";
 import type {
   AggregatedGroup,
   TransactionOut,
   TransactionsGetAggregatedTransactionsResponse,
 } from "../../client";
-import EditTransaction from "./EditTransaction";
+import  EditTransaction  from "./EditTransaction";
+import { DeleteTransaction } from "./DeleteTransaction";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import Delete from "./DeleteAlert";
 
 export function TransactionsTable({
   data,
@@ -308,6 +311,7 @@ function TransactionRow({
   isMobile: boolean;
 }) {
   const editTransactionModal = useDisclosure();
+  const deleteTransactionModal = useDisclosure();
 
   return (
     <TableRow>
@@ -322,6 +326,8 @@ function TransactionRow({
         {"withdrawal" === transaction.kind ? "Expense" : "Deposit"}
       </TableCell>
       <TableCell>
+
+      <Flex direction="row" gap={2}>
         <Button
           onClick={editTransactionModal.onOpen}
           size="sm"
@@ -329,11 +335,25 @@ function TransactionRow({
         >
           <FiEdit size="8px" />
         </Button>
+        <Button
+          onClick={deleteTransactionModal.onOpen}
+          size="sm"
+          variant="outline"
+        >
+          <FiTrash size="8px" />
+        </Button>
+</Flex>
       </TableCell>
       <EditTransaction
         transaction={transaction}
         isOpen={editTransactionModal.open}
         onClose={editTransactionModal.onClose}
+      />
+      <Delete
+        type="transaction"
+        isOpen={deleteTransactionModal.open}
+        onClose={deleteTransactionModal.onClose}
+        entity={transaction}
       />
     </TableRow>
   );

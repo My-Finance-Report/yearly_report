@@ -48,7 +48,7 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
         widget_id_lookup[widget_data.id] = widget.id
 
     # Create Parameter Groups
-    group_id_lookup:dict[int,int] = {}
+    group_id_lookup: dict[int, int] = {}
     for group_data in canvas_data.parameter_groups:
         group = NoCodeParameterGroup(
             group_type=group_data.type,
@@ -70,7 +70,7 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
             user_id=user_id,
             name=param_data.name,
             label=param_data.label or "",
-            group_id=group_id_lookup[param_data.group_id], 
+            group_id=group_id_lookup[param_data.group_id],
             trigger_refetch=param_data.trigger_refetch,
             dependent_widgets=[
                 widget_id_lookup[w] for w in param_data.dependent_widgets
@@ -202,7 +202,10 @@ def delete_account_page(user_id: int) -> None:
                 NoCodeParameterOption.parameter_id.in_(parameter_ids)
             ).delete(synchronize_session=False)
             session.query(NoCodeToolParameter).filter(
-                NoCodeToolParameter.parameter_id.id_(parameter_ids).delete(synchronize_session=False))
+                NoCodeToolParameter.parameter_id.id_(parameter_ids).delete(
+                    synchronize_session=False
+                )
+            )
 
         # 7. Delete parameters
         if parameter_ids:
@@ -232,4 +235,4 @@ def delete_account_page(user_id: int) -> None:
 
 if __name__ == "__main__":
     delete_account_page(1)
-    #seed_account_page(1)
+    # seed_account_page(1)
