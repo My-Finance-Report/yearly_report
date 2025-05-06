@@ -56,6 +56,7 @@ class PlaidFetchResponse:
     accounts: list[dict[str, Any]]
     set_next_cursor: Callable[[], None]
 
+
 def fetch_plaid_transactions(
     *,
     access_token: str,
@@ -77,8 +78,9 @@ def fetch_plaid_transactions(
         response: TransactionsSyncResponse = client.transactions_sync(request)
         next_cursor = response["next_cursor"]
 
-        def set_next_cursor():
+        def set_next_cursor() -> None:
             plaid_account.cursor = next_cursor
+
         return PlaidFetchResponse(
             added=response["added"],
             removed=response["removed"],
@@ -86,7 +88,6 @@ def fetch_plaid_transactions(
             accounts=response["accounts"],
             set_next_cursor=set_next_cursor,
         )
-
 
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
@@ -158,13 +159,14 @@ def sync_plaid_account_transactions(
     days_back: int,
     batch_id: str,
 ) -> None:
-    _update_worker_status = lambda x, y: update_worker_status(
-        session,
-        user,
-        status=x,
-        additional_info=y,
-        batch_id=batch_id,
-    )
+    def _update_worker_status(x: ProcessingState, y: str) -> None:
+        update_worker_status(
+            session,
+            user,
+            status=x,
+            additional_info=y,
+            batch_id=batch_id,
+        )
 
     plaid_item = (
         session.query(PlaidItem)
@@ -191,7 +193,7 @@ def sync_plaid_account_transactions(
     )
     session.add(sync_log)
 
-    has_plaid_transactions=False
+    has_plaid_transactions = False
 
     try:
         _update_worker_status(
