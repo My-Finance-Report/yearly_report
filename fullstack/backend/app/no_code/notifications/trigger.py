@@ -16,7 +16,6 @@ from app.email.send import Email, send_email
 def collect_user_effects(session: Session, user: User) -> List[Effect]:
     """
     Retrieve all notification effects configured by the user.
-    #TODO pull these from the database for the user
     """
 
     return [
@@ -109,10 +108,7 @@ def perform_template_replacement(event: Event, effect: Effect) -> Email:
 
 
 def generate_callable_for_effect(event: Event, effect: Effect) -> Callable[[], Email]:
-    return lambda: Email(
-        subject=effect.config.subject,
-        html=perform_template_replacement(event, effect).html,
-    )
+    return lambda: perform_template_replacement(event, effect)
 
 
 def propagate_effects(user: User, effects: List[Effect], event: Event) -> None:
