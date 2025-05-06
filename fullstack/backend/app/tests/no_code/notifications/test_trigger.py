@@ -58,6 +58,7 @@ def transactions():
             description="Test transaction 1",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
+            account_name="Test Account",
         ),
         NoCodeTransaction(
             amount=200,
@@ -65,6 +66,7 @@ def transactions():
             description="Test transaction 2",
             kind=TransactionKind.withdrawal,
             category_name="Test Category",
+            account_name="Test Account",
         ),
     ]
 
