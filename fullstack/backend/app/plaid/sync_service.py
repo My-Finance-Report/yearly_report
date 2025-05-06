@@ -2,12 +2,11 @@ import logging
 import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
 from sqlalchemy.orm import Session
-from sqlmodel import modifier
 
 from app.async_pipelines.uploaded_file_pipeline.categorizer import (
     categorize_extracted_transactions,
@@ -55,6 +54,7 @@ class PlaidFetchResponse:
     removed: list[dict[str, Any]]
     modified: list[dict[str, Any]]
     accounts: list[dict[str, Any]]
+    set_next_cursor: Callable[[], None]
 
 
 def fetch_plaid_transactions(
@@ -77,15 +77,18 @@ def fetch_plaid_transactions(
     try:
         response: TransactionsSyncResponse = client.transactions_sync(request)
         next_cursor = response["next_cursor"]
-        # this is a bug, we shouldnt reset the cursor unless we properly process
-        plaid_account.cursor = next_cursor
+
+        def set_next_cursor():
+            plaid_account.cursor = next_cursor
 
         return PlaidFetchResponse(
             added=response["added"],
             removed=response["removed"],
             modified=response["modified"],
             accounts=response["accounts"],
+            set_next_cursor=set_next_cursor,
         )
+
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
         raise
@@ -156,24 +159,29 @@ def sync_plaid_account_transactions(
     days_back: int,
     batch_id: str,
 ) -> None:
+    _update_worker_status = lambda x, y: update_worker_status(
+        session,
+        user,
+        status=x,
+        additional_info=y,
+        batch_id=batch_id,
+    )
+
     plaid_item = (
         session.query(PlaidItem)
         .filter(PlaidItem.id == plaid_account.plaid_item_id)
         .one()
     )
 
-    # Get the transaction source for this account
     transaction_source = (
         session.query(TransactionSource)
         .filter(TransactionSource.plaid_account_id == plaid_account.id)
         .one()
     )
 
-    # Set date range for transaction fetch (not directly used by transactions_sync but kept for logging)
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days_back)
 
-    # Create a sync log entry
     sync_log = PlaidSyncLog(
         user_id=user.id,
         plaid_item_id=plaid_item.id,
@@ -185,13 +193,9 @@ def sync_plaid_account_transactions(
     session.add(sync_log)
 
     try:
-        # Fetch transactions from Plaid
-        update_worker_status(
-            session,
-            user,
-            status=ProcessingState.fetching_transactions,
-            additional_info="Fetching Plaid transactions",
-            batch_id=batch_id,
+        _update_worker_status(
+            ProcessingState.fetching_transactions,
+            "Fetching Plaid transactions",
         )
 
         plaid_response = fetch_plaid_transactions(
@@ -211,12 +215,9 @@ def sync_plaid_account_transactions(
                 plaid_response.removed,
             ]
         ):
-            update_worker_status(
-                session,
-                user,
-                status=ProcessingState.completed,
-                additional_info="No new transactions found",
-                batch_id=batch_id,
+            _update_worker_status(
+                ProcessingState.completed,
+                "No new transactions found",
             )
             sync_log.added_count = 0
             sync_log.modified_count = 0
@@ -229,18 +230,15 @@ def sync_plaid_account_transactions(
         added_count = add_new_transactions(
             session, user, transaction_source, plaid_response
         )
-        # Update sync log with results
         sync_log.added_count = added_count
         sync_log.modified_count = 0
         sync_log.removed_count = 0
 
+        plaid_response.set_next_cursor()
         session.commit()
-        update_worker_status(
-            session,
-            user,
-            status=ProcessingState.completed,
-            additional_info="Completed Plaid sync",
-            batch_id=batch_id,
+        _update_worker_status(
+            ProcessingState.completed,
+            "Completed Plaid sync",
         )
 
     except Exception as e:
@@ -356,6 +354,7 @@ def trigger_the_effects(in_process: InProcessJob) -> None:
     assert in_process.transaction_source, "must have"
     no_code_transactions = [
         NoCodeTransaction(
+            account_name=in_process.transaction_source.name,
             amount=t.partialTransactionAmount,
             description=t.partialTransactionDescription,
             date_of_transaction=datetime.strptime(

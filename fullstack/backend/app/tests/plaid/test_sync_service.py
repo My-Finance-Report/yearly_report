@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -15,12 +16,51 @@ from app.models.transaction_source import TransactionSource
 from app.models.category import (
     Category,
 )
+from app.models.plaid import PlaidAccount, PlaidItem, PlaidSyncLog
+from app.models.user import User
+from app.models.worker_status import ProcessingState
 from app.plaid.sync_service import (
+    PlaidFetchResponse,
     fetch_existing_plaid_transactions,
+    fetch_plaid_transactions,
     insert_categorized_plaid_transactions,
 )
 from app.tests.utils.utils import TestKit, random_lower_string
 
+
+@patch('app.plaid.sync_service.get_plaid_client')
+def test_fetch_plaid_transactions_set_next_cursor(mock_get_plaid_client):
+    mock_client = MagicMock()
+    mock_get_plaid_client.return_value = mock_client
+    
+    mock_response = {
+        "added": [{"id": "tx1", "amount": 100}],
+        "modified": [],
+        "removed": [],
+        "accounts": [{"id": "acc1", "name": "Checking"}],
+        "next_cursor": "next_cursor_value"
+    }
+    mock_client.transactions_sync.return_value = mock_response
+    
+    plaid_account = PlaidAccount()
+    plaid_account.cursor = "initial_cursor"
+    plaid_account.plaid_account_id = "acc1"
+    
+    result = fetch_plaid_transactions(
+        access_token="test_token",
+        plaid_account=plaid_account
+    )
+    
+    assert isinstance(result, PlaidFetchResponse)
+    assert result.added == mock_response["added"]
+    assert result.removed == mock_response["removed"]
+    assert result.modified == mock_response["modified"]
+    assert result.accounts == mock_response["accounts"]
+    
+    assert plaid_account.cursor == "initial_cursor"
+    
+    result.set_next_cursor()
+    assert plaid_account.cursor == "next_cursor_value"
 
 def test_fetch_existing_plaid_transactions(test_kit: TestKit):
     session = test_kit.session
