@@ -2,7 +2,9 @@ import {
   NoCodeShow,
   renderNoCodeParameter,
 } from "@/components/NoCode/Outputs/Show";
+import { Route } from "@/routes/_layout/_logged_in/accounts";
 import { EditModal } from "@/components/NoCode/Outputs/EditWidget";
+import { EditParameterModal } from "@/components/NoCode/Outputs/EditParameter";
 import { EditSwitch } from "@/components/NoCode/Editors/EditSwitch";
 import {
   DraggableWidget,
@@ -12,7 +14,8 @@ import {
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
 import { NoCodeWidgetIn_Output, Parameter_Output } from "@/client";
 import { Grid, GridItem, Container } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 function DummyGridBacking() {
   return Array.from({ length: 100 }, (_, i) => i + 1).map((row) =>
@@ -42,14 +45,17 @@ function NoCodeDraggableAndEditableParam({
   return (
     <GridItem
       key={`${param.name}${param.group_id.toString()}`}
+      border={editMode ? "1px solid red" : "none"}
       rowStart={param.display_info!.row}
       colStart={param.display_info!.col}
       rowSpan={param.display_info!.row_span}
       colSpan={param.display_info!.col_span}
     >
-      <DraggableParameter param={param} editMode={editMode}>
-        {renderNoCodeParameter(param)}
-      </DraggableParameter>
+      <EditParameterModal param={param} editMode={editMode}>
+        <DraggableParameter param={param} editMode={editMode}>
+          {renderNoCodeParameter(param)}
+        </DraggableParameter>
+      </EditParameterModal>
     </GridItem>
   );
 }
@@ -63,6 +69,7 @@ function NoCodeDraggableAndEditableWidget({
 }) {
   return (
     <GridItem
+      border={editMode ? "1px solid red" : "none"}
       key={widget.id || widget.name}
       rowStart={widget.row}
       colStart={widget.col}
@@ -83,10 +90,31 @@ export function NoCodeDisplayCanvas({
 }: {
   widgets: NoCodeWidgetIn_Output[];
 }) {
-  const [isEditMode, setIsEditMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const { getParamsForView } = useNoCodeContext();
-  const paramsToDisplay = getParamsForView("page");
+  const { getParamsForView, parameters } = useNoCodeContext();
+  const [paramsToDisplay, setParamsToDisplay] = useState(
+    getParamsForView("page"),
+  );
+
+  useEffect(() => {
+    setParamsToDisplay(getParamsForView("page"));
+  }, [getParamsForView, parameters]);
+
+  const { edit } = Route.useSearch();
+
+  const [isEditMode, setIsEditMode] = useState(edit);
+  const navigation = useNavigate({ from: Route.fullPath });
+  const handleEditModeChange = () => {
+    const newEdit = !edit;
+
+    navigation({
+      search: () => {
+        return newEdit ? { edit: true } : {};
+      },
+      replace: true,
+    });
+    setIsEditMode((prev: boolean) => !prev);
+  };
 
   if (!widgets) {
     return <div>No widgets found</div>;
@@ -94,7 +122,7 @@ export function NoCodeDisplayCanvas({
 
   return (
     <Container w="100%">
-      <EditSwitch editMode={isEditMode} setEditMode={setIsEditMode} />
+      <EditSwitch editMode={isEditMode} setEditMode={handleEditModeChange} />
       <NoCodeDragContext setIsDragging={setIsDragging}>
         <Grid
           templateRows={`repeat(60, 40px)`}

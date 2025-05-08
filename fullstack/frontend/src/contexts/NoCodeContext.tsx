@@ -2,6 +2,7 @@ import React, {
   type ReactNode,
   createContext,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { Parameter_Output } from "@/client";
@@ -36,6 +37,10 @@ export function NoCodeProvider({
   const [widgetParameters, setWidgetParameters] = useState<
     Record<string, React.Dispatch<React.SetStateAction<Parameter_Output[]>>>
   >({});
+
+  useEffect(() => {
+    setParameters(initParameters);
+  }, [initParameters]);
 
   const getParamsForView = (view: string) =>
     parameters.filter(

@@ -61,7 +61,7 @@ export function DraggableParameter({
         row: newRow,
         col: newCol,
         row_span: param.display_info?.row_span || 1,
-        col_span: param.display_info?.row_span || 1,
+        col_span: param.display_info?.col_span || 1,
       },
     });
   }

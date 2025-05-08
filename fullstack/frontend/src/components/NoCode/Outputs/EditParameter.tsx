@@ -1,8 +1,8 @@
 import {
   type ApiError,
   NoCodeService,
-  NoCodeWidgetIn_Output,
-  NoCodeWidgetUpdate,
+  Parameter_Output,
+  NoCodeParameterUpdate,
 } from "@/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,12 +19,12 @@ import useCustomToast from "@/hooks/useCustomToast";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FaEllipsisH } from "react-icons/fa";
 
-export function EditModal({
-  widget,
+export function EditParameterModal({
+  param,
   editMode,
   children,
 }: {
-  widget: NoCodeWidgetIn_Output;
+  param: Parameter_Output;
   editMode: boolean;
   children: React.ReactNode;
 }) {
@@ -32,25 +32,34 @@ export function EditModal({
   const editDisclosure = useDisclosure();
   const queryClient = useQueryClient();
 
+  // Extract display info values for the form
+  const defaultValues: NoCodeParameterUpdate = {
+    label: param.label || "",
+    row: param.display_info?.row || 1,
+    col: param.display_info?.col || 1,
+    row_span: param.display_info?.row_span || 1,
+    col_span: param.display_info?.col_span || 1,
+  };
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<NoCodeWidgetUpdate>({
+  } = useForm<NoCodeParameterUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: widget,
+    defaultValues,
   });
 
   const mutation = useMutation({
-    mutationFn: (widgetUpdate: NoCodeWidgetUpdate) =>
-      NoCodeService.updateWidget({
-        widgetId: widget.id,
-        requestBody: widgetUpdate,
+    mutationFn: (paramUpdate: NoCodeParameterUpdate) =>
+      NoCodeService.updateParameter({
+        parameterId: param.id,
+        requestBody: paramUpdate,
       }),
     onSuccess: () => {
-      showToast("Updated Widget", "Changes have been saved", "success");
+      showToast("Updated Parameter", "Changes have been saved", "success");
     },
     onError: (err: ApiError) => {
       console.log("err", err.message);
@@ -62,7 +71,7 @@ export function EditModal({
     },
   });
 
-  const onSubmit: SubmitHandler<NoCodeWidgetUpdate> = async (data) => {
+  const onSubmit: SubmitHandler<NoCodeParameterUpdate> = async (data) => {
     mutation.mutate(data);
     editDisclosure.onClose();
   };
@@ -71,6 +80,7 @@ export function EditModal({
     reset();
     editDisclosure.onClose();
   };
+
   if (!editMode) {
     return children;
   }
@@ -81,7 +91,7 @@ export function EditModal({
         <Button
           position="absolute"
           right={4}
-          colorPalette={"green"}
+          colorPalette={"blue"}
           top={4}
           borderWidth={1}
           cursor={"pointer"}
@@ -109,37 +119,35 @@ export function EditModal({
         <Dialog.Positioner>
           <Dialog.Content onSubmit={handleSubmit(onSubmit)} as="form">
             <Dialog.Header>
-              <Dialog.Title>Edit {widget.name}</Dialog.Title>
+              <Dialog.Title>Edit Parameter: {param.name}</Dialog.Title>
               <Dialog.CloseTrigger onClick={editDisclosure.onClose} asChild>
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
             <Dialog.Body>
-              <Field.Root invalid={!!errors.name} required>
-                <Field.Label htmlFor="name">Name</Field.Label>
-                <Field.Label htmlFor="name" fontSize={"xs"}>
-                  Blank for no name
+              <Field.Root invalid={!!errors.label}>
+                <Field.Label htmlFor="label">Label</Field.Label>
+                <Field.Label htmlFor="label" fontSize={"xs"}>
+                  Display label for the parameter
                 </Field.Label>
                 <Input
-                  id="name"
-                  {...register("name", {
-                    required: false,
-                  })}
-                  placeholder="Name"
-                  required={false}
+                  id="label"
+                  {...register("label")}
+                  placeholder="Label"
                   type="text"
                 />
-                {errors.name && (
-                  <Field.ErrorText>{errors.name.message}</Field.ErrorText>
+                {errors.label && (
+                  <Field.ErrorText>{errors.label.message}</Field.ErrorText>
                 )}
               </Field.Root>
 
               <Field.Root invalid={!!errors.row} required>
                 <Field.Label htmlFor="row">Row</Field.Label>
                 <Input
-                  id="name"
+                  id="row"
                   {...register("row", {
                     required: "Row is required",
+                    valueAsNumber: true,
                   })}
                   placeholder="Row"
                   type="number"
@@ -152,9 +160,10 @@ export function EditModal({
               <Field.Root invalid={!!errors.row_span} required>
                 <Field.Label htmlFor="row_span">Row Span</Field.Label>
                 <Input
-                  id="name"
+                  id="row_span"
                   {...register("row_span", {
                     required: "Row Span is required",
+                    valueAsNumber: true,
                   })}
                   placeholder="Row Span"
                   type="number"
@@ -170,6 +179,7 @@ export function EditModal({
                   id="col"
                   {...register("col", {
                     required: "Col is required",
+                    valueAsNumber: true,
                   })}
                   placeholder="Col"
                   type="number"
@@ -185,6 +195,7 @@ export function EditModal({
                   id="col_span"
                   {...register("col_span", {
                     required: "Col Span is required",
+                    valueAsNumber: true,
                   })}
                   placeholder="Col Span"
                   type="number"
