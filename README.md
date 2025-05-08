@@ -34,19 +34,14 @@ big milestones before launch:
 -> Stripe
   --> sort of exists but needs more work
 -> Plaid
-  -> there must be some type of "update" payload that i need to handle from plaid
   -> prune the logs table of sync events
   -> webhooks setup
-  -> no cursor update until we write rows
   -> when accounts fail n times we should offboard them
   -> consider a way to remove duplicates
 -> Email
-  -> seems like the rate limiting is not working
-  -> still an issue with the string templating as well
+  -> allow user to update preferences
   -> welcome email only configured to send to me
 
--> transaction delete button
--> manaual balance updates
 -> remove dups
 
 -> parameters are getting confusing, how can i clean up the loop for each one?

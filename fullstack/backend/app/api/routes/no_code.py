@@ -112,6 +112,7 @@ def update_parameter(
     if not parameter:
         raise HTTPException(status_code=400, detail="param does not exist")
 
+    parameter.label = parameter_update.label
     parameter.display_info = DisplayInfo(
         views=parameter.display_info.views,
         size=parameter.display_info.size,
