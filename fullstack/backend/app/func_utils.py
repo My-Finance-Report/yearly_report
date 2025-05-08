@@ -1,9 +1,16 @@
 import logging
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, TypeGuard
 
 T = TypeVar("T")
 J = TypeVar("J")
+
+
+def not_none(arg: T | None) -> TypeGuard[T]:
+    if arg is None:
+        msg = f"{arg} is None"
+        raise AssertionError(msg)
+    return True
 
 
 def make_batches(data: list[T], batch_size: int = 30) -> list[list[T]]:
