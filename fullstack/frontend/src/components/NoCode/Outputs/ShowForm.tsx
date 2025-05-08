@@ -27,9 +27,11 @@ export function ShowForm({ widget }: ShowProps) {
                 <CloseButton position="absolute" right={4} top={4} size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
-            {paramsToDisplay.map((param) =>
-              renderNoCodeParameter(param, formDisclosure.onClose),
-            )}
+            <Dialog.Body>
+              {paramsToDisplay.map((param) =>
+                renderNoCodeParameter(param, formDisclosure.onClose),
+              )}
+            </Dialog.Body>
           </Dialog.Content>
         </Dialog.Positioner>
       </Dialog.Root>
