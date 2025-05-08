@@ -434,7 +434,6 @@ def add_new_transactions(
             ]
         ),
     )
-
     plaid_sync_pipe(in_process)
     assert not_none(in_process.transactions)
     return len(in_process.transactions.transactions)
