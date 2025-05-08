@@ -20,7 +20,7 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     Recategorization,
     TransactionsWrapper,
 )
-from app.func_utils import pipe
+from app.func_utils import not_none, pipe
 from app.models.audit_log import AuditLog
 from app.models.category import Category
 from app.models.plaid import PlaidAccount, PlaidAccountBalance, PlaidItem, PlaidSyncLog
@@ -254,9 +254,9 @@ def sync_plaid_account_transactions(
 
 
 def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProcessJob:
-    assert in_process.transaction_source, "must have"
-    assert in_process.transactions, "must have"
-    assert in_process.categories, "must have"
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.transactions)
+    assert not_none(in_process.categories)
     query = (
         in_process.session.query(AuditLog, Transaction)
         .join(Transaction, Transaction.id == AuditLog.transaction_id)
@@ -302,9 +302,9 @@ def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProces
 
 
 def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
-    assert in_process.transaction_source, "must have"
-    assert in_process.categorized_transactions, "must have"
-    assert in_process.categories, "must have"
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.categorized_transactions)
+    assert not_none(in_process.categories)
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
     existing_transaction_lookup = {
         t.external_id: t for t in in_process.existing_transactions or []
@@ -355,8 +355,8 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcess
 
 
 def trigger_the_effects(in_process: InProcessJob) -> None:
-    assert in_process.categorized_transactions, "must have"
-    assert in_process.transaction_source, "must have"
+    assert not_none(in_process.categorized_transactions)
+    assert not_none(in_process.transaction_source)
     no_code_transactions = [
         NoCodeTransaction(
             account_name=in_process.transaction_source.name,
@@ -436,7 +436,7 @@ def add_new_transactions(
     )
 
     plaid_sync_pipe(in_process)
-    assert in_process.transactions, "must have"
+    assert not_none(in_process.transactions)
     return len(in_process.transactions.transactions)
 
 
@@ -479,8 +479,9 @@ def archive_removed_transactions(
 
 
 def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
-    assert in_process.transaction_source, "must have"
-    assert in_process.transactions and in_process.transactions.transactions, "must have"
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.transactions)
+    assert not_none(in_process.transactions.transactions)
 
     transactions = (
         in_process.session.query(Transaction)
