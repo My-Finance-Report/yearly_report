@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginLogoutResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, NoCodeGetEffectsResponse, NoCodePreviewNotificationData, NoCodePreviewNotificationResponse, NoCodeGetNoCodeToolResponse, NoCodeSaveNoCodeToolData, NoCodeSaveNoCodeToolResponse, NoCodeRefetchWidgetData, NoCodeRefetchWidgetResponse, NoCodeUpdateParameterData, NoCodeUpdateParameterResponse, NoCodeUpdateWidgetData, NoCodeUpdateWidgetResponse, NoCodeGetNoCodeDashboardData, NoCodeGetNoCodeDashboardResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, PrivateGoogleCallbackLocalData, PrivateGoogleCallbackLocalResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsDeleteTransactionData, TransactionsDeleteTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, TransactionsGetLandingStatusResponse, TwoFactorEnable2FaData, TwoFactorEnable2FaResponse, TwoFactorVerify2FaData, TwoFactorVerify2FaResponse, TwoFactorVerify2FaLoginData, TwoFactorVerify2FaLoginResponse, TwoFactorReject2FaData, TwoFactorReject2FaResponse, TwoFactorDisable2FaData, TwoFactorDisable2FaResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMeOptionalResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, WorkerStatusGetStatusResponse } from './types.gen';
+import type { AccountsGetTransactionSourcesResponse, AccountsCreateTransactionSourceData, AccountsCreateTransactionSourceResponse, AccountsUpdateTransactionSourceData, AccountsUpdateTransactionSourceResponse, AccountsDeleteTransactionSourceData, AccountsDeleteTransactionSourceResponse, AccountsGetCategoriesData, AccountsGetCategoriesResponse, AccountsCreateCategoryData, AccountsCreateCategoryResponse, AccountsUpdateCategoryData, AccountsUpdateCategoryResponse, AccountsDeleteCategoryData, AccountsDeleteCategoryResponse, AccountsMergeAccountsData, AccountsMergeAccountsResponse, AccountsTriggerRecategorizationData, AccountsTriggerRecategorizationResponse, AccountsToggleArchiveTransactionSourceData, AccountsToggleArchiveTransactionSourceResponse, AccountsGetAccountSyncLogsData, AccountsGetAccountSyncLogsResponse, BudgetsGetBudgetEntriesData, BudgetsGetBudgetEntriesResponse, BudgetsCreateBudgetEntryData, BudgetsCreateBudgetEntryResponse, BudgetsUpdateBudgetEntryData, BudgetsUpdateBudgetEntryResponse, BudgetsDeleteBudgetEntryData, BudgetsDeleteBudgetEntryResponse, BudgetsGetBudgetCategoriesData, BudgetsGetBudgetCategoriesResponse, BudgetsCreateBudgetCategoryData, BudgetsCreateBudgetCategoryResponse, BudgetsUpdateBudgetCategoryData, BudgetsUpdateBudgetCategoryResponse, BudgetsDeleteBudgetCategoryData, BudgetsDeleteBudgetCategoryResponse, BudgetsGetBudgetStatusResponse, DemoGetDemoAggregatedTransactionsData, DemoGetDemoAggregatedTransactionsResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginLogoutResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, NoCodeGetEffectsResponse, NoCodeCreateEffectData, NoCodeCreateEffectResponse, NoCodePreviewNotificationData, NoCodePreviewNotificationResponse, NoCodeUpdateEffectData, NoCodeUpdateEffectResponse, NoCodeDeleteEffectData, NoCodeDeleteEffectResponse, NoCodeGetNoCodeToolResponse, NoCodeSaveNoCodeToolData, NoCodeSaveNoCodeToolResponse, NoCodeRefetchWidgetData, NoCodeRefetchWidgetResponse, NoCodeUpdateParameterData, NoCodeUpdateParameterResponse, NoCodeUpdateWidgetData, NoCodeUpdateWidgetResponse, NoCodeGetNoCodeDashboardData, NoCodeGetNoCodeDashboardResponse, OauthLoginGoogleResponse, OauthGoogleCallbackData, OauthGoogleCallbackResponse, PlaidGetLinkTokenResponse, PlaidExchangeTokenData, PlaidExchangeTokenResponse, PlaidGetPlaidAccountsResponse, PrivateCreateUserData, PrivateCreateUserResponse, PrivateGoogleCallbackLocalData, PrivateGoogleCallbackLocalResponse, SankeyGetSankeyDataResponse, SankeyCreateSankeyConfigData, SankeyCreateSankeyConfigResponse, SankeyGetSankeyConfigInfoResponse, SavedFiltersCreateSavedFilterData, SavedFiltersCreateSavedFilterResponse, SavedFiltersReadSavedFiltersData, SavedFiltersReadSavedFiltersResponse, SavedFiltersReadSavedFilterData, SavedFiltersReadSavedFilterResponse, SavedFiltersUpdateSavedFilterData, SavedFiltersUpdateSavedFilterResponse, SavedFiltersDeleteSavedFilterData, SavedFiltersDeleteSavedFilterResponse, SavedFiltersReadSavedFilterByNameData, SavedFiltersReadSavedFilterByNameResponse, SitemapSitemapResponse, SubscriptionGetSubscriptionStatusResponse, SubscriptionCheckSubscriptionLimitsResponse, SubscriptionGetSubscriptionPlansResponse, SubscriptionCreateCheckoutSessionData, SubscriptionCreateCheckoutSessionResponse, SubscriptionCancelSubscriptionResponse, SubscriptionStripeWebhookData, SubscriptionStripeWebhookResponse, SubscriptionSyncPricesResponse, TransactionsGetTransactionsResponse, TransactionsGetAggregatedTransactionsData, TransactionsGetAggregatedTransactionsResponse, TransactionsUpdateTransactionData, TransactionsUpdateTransactionResponse, TransactionsDeleteTransactionData, TransactionsDeleteTransactionResponse, TransactionsListCategoriesData, TransactionsListCategoriesResponse, TransactionsListAllCategoriesResponse, TransactionsGetLandingStatusResponse, TwoFactorEnable2FaData, TwoFactorEnable2FaResponse, TwoFactorVerify2FaData, TwoFactorVerify2FaResponse, TwoFactorVerify2FaLoginData, TwoFactorVerify2FaLoginResponse, TwoFactorReject2FaData, TwoFactorReject2FaResponse, TwoFactorDisable2FaData, TwoFactorDisable2FaResponse, UploadsReprocessFileData, UploadsReprocessFileResponse, UploadsGetUploadsResponse, UploadsUploadFilesData, UploadsUploadFilesResponse, UploadsIsUploadingResponse, UploadsDeleteFileData, UploadsDeleteFileResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMeOptionalResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, WorkerStatusGetStatusResponse } from './types.gen';
 
 export class AccountsService {
     /**
@@ -580,13 +580,34 @@ export class LoginService {
 export class NoCodeService {
     /**
      * Get Effects
+     * Get all notification effects for the current user
      * @returns EffectOut Successful Response
      * @throws ApiError
      */
     public static getEffects(): CancelablePromise<NoCodeGetEffectsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/notification/get_effects'
+            url: '/api/v1/notification/effects'
+        });
+    }
+    
+    /**
+     * Create Effect
+     * Create a new notification effect
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns EffectOut Successful Response
+     * @throws ApiError
+     */
+    public static createEffect(data: NoCodeCreateEffectData): CancelablePromise<NoCodeCreateEffectResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/notification/effects',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     
@@ -614,6 +635,51 @@ export class NoCodeService {
                 subject: data.subject,
                 num_transactions: data.numTransactions,
                 account_name: data.accountName
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Effect
+     * Update an existing notification effect
+     * @param data The data for the request.
+     * @param data.effectId
+     * @param data.requestBody
+     * @returns EffectOut Successful Response
+     * @throws ApiError
+     */
+    public static updateEffect(data: NoCodeUpdateEffectData): CancelablePromise<NoCodeUpdateEffectResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/notification/effects/{effect_id}',
+            path: {
+                effect_id: data.effectId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Effect
+     * Delete a notification effect
+     * @param data The data for the request.
+     * @param data.effectId
+     * @returns void Successful Response
+     * @throws ApiError
+     */
+    public static deleteEffect(data: NoCodeDeleteEffectData): CancelablePromise<NoCodeDeleteEffectResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/notification/effects/{effect_id}',
+            path: {
+                effect_id: data.effectId
             },
             errors: {
                 422: 'Validation Error'

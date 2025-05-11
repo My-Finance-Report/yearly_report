@@ -156,7 +156,24 @@ export type EffectConfig = {
     subject: string;
 };
 
+/**
+ * Schema for creating a new notification effect
+ */
+export type EffectCreate = {
+    name: string;
+    effect_type: EffectType;
+    event_type: EventType;
+    frequency_days: number;
+    template: string;
+    subject: string;
+    condition: EffectConditionals;
+    conditional_parameters: {
+        [key: string]: unknown;
+    };
+};
+
 export type EffectOut = {
+    id?: (number | null);
     name: string;
     effect_type: EffectType;
     event_type: EventType;
@@ -168,6 +185,22 @@ export type EffectOut = {
 };
 
 export type EffectType = 'email' | 'in_app';
+
+/**
+ * Schema for updating an existing notification effect
+ */
+export type EffectUpdate = {
+    name?: (string | null);
+    effect_type?: (EffectType | null);
+    event_type?: (EventType | null);
+    frequency_days?: (number | null);
+    template?: (string | null);
+    subject?: (string | null);
+    condition?: (EffectConditionals | null);
+    conditional_parameters?: ({
+    [key: string]: unknown;
+} | null);
+};
 
 export type Email = {
     subject: string;
@@ -856,6 +889,12 @@ export type LoginRecoverPasswordHtmlContentResponse = (string);
 
 export type NoCodeGetEffectsResponse = (Array<EffectOut>);
 
+export type NoCodeCreateEffectData = {
+    requestBody: EffectCreate;
+};
+
+export type NoCodeCreateEffectResponse = (EffectOut);
+
 export type NoCodePreviewNotificationData = {
     accountName?: string;
     effectType?: EffectType;
@@ -866,6 +905,19 @@ export type NoCodePreviewNotificationData = {
 };
 
 export type NoCodePreviewNotificationResponse = (Email);
+
+export type NoCodeUpdateEffectData = {
+    effectId: number;
+    requestBody: EffectUpdate;
+};
+
+export type NoCodeUpdateEffectResponse = (EffectOut);
+
+export type NoCodeDeleteEffectData = {
+    effectId: number;
+};
+
+export type NoCodeDeleteEffectResponse = (void);
 
 export type NoCodeGetNoCodeToolResponse = (Array<NoCodeToolOut>);
 

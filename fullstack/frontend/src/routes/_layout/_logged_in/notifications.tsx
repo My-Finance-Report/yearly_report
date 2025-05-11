@@ -1,4 +1,3 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { EffectOut, NoCodeService } from "@/client";
 import {
@@ -7,90 +6,76 @@ import {
   Input,
   Box,
   Heading,
-  Stack,
+  VStack,
   HStack,
-  Badge,
-  Icon,
-  Spacer,
-  Button,
-  Tooltip,
-  Separator,
   Tabs,
+  Card,
+  Button,
+  Spinner,
   FieldRoot,
   FieldLabel,
   Textarea,
-  Spinner,
+  Icon,
+  Badge,
+  Tooltip,
+  Separator,
 } from "@chakra-ui/react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useRef, useEffect } from "react";
-import { FaBell, FaEnvelope, FaEdit, FaToggleOn, FaPlay } from "react-icons/fa";
-import { useState } from "react";
+import { useRef, useEffect, useState } from "react";
+import { FaBell, FaEnvelope, FaEdit, FaToggleOn, FaPlay, FaSave } from "react-icons/fa";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
-  component: NotificationComponent,
+  component: NotificationsPage,
 });
 
-function NotificationComponent() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["effects"],
-    queryFn: () => NoCodeService.getEffects(),
-  });
-
+function NotificationsPage() {
   return (
-    <Box maxW="container.lg" py={8}>
-      <Box mb={8} p={6} borderRadius="lg" shadow="md">
-        <Flex align="center" mb={4}>
-          <Icon as={FaBell} fontSize="2xl" color="blue.500" mr={3} />
-          <Heading size="lg">Notification Settings</Heading>
-          <Spacer />
-          <Button colorScheme="blue" size="sm">
-            <Icon as={FaEdit} mr={2} />
-            Add New
-          </Button>
-        </Flex>
-        <Text>
-          Configure how and when you want to be notified about your financial
-          activities.
-        </Text>
-      </Box>
-
-      <Tabs.Root defaultValue="notifications">
+    <Box p={4}>
+      <Heading mb={4}>Notifications</Heading>
+      <Tabs.Root>
         <Tabs.List>
-          <Tabs.Trigger value="notifications">
-            <Icon as={FaBell} mr={2} />
-            My Notifications
-          </Tabs.Trigger>
-          <Tabs.Trigger value="preview">
-            <Icon as={FaPlay} mr={2} />
-            Test & Preview
-          </Tabs.Trigger>
+          <Tabs.Trigger value="settings">Notification Settings</Tabs.Trigger>
+          <Tabs.Trigger value="tester">Test Notifications</Tabs.Trigger>
+          <Tabs.Trigger value="manager">Manage Notifications</Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="notifications" pt={4}>
-          {isLoading ? (
-            <Flex justify="center" p={8}>
-              <Spinner />
-              <Text ml={3}>Loading your notification settings...</Text>
-            </Flex>
-          ) : (
-            <Stack gap={6} align="stretch">
-              {data?.map((effect, index) => (
-                <ShowEffect key={index} effect={effect} />
-              ))}
-            </Stack>
-          )}
+        <Tabs.Content value="settings">
+          <NotificationSettings />
         </Tabs.Content>
-        <Tabs.Content value="preview" pt={4}>
+        <Tabs.Content value="tester">
           <NotificationTester />
+        </Tabs.Content>
+        <Tabs.Content value="manager">
+          <NotificationManager />
         </Tabs.Content>
       </Tabs.Root>
     </Box>
   );
 }
 
-function ShowEffect({ effect }: { effect: EffectOut }) {
+function NotificationSettings() {
+  const { data: effects, isLoading } = useQuery({
+    queryKey: ["effects"],
+    queryFn: () => NoCodeService.getEffects(),
+  });
+
+  if (isLoading) {
+    return <Spinner />;
+  }
+
   return (
-    <Card className="overflow-hidden shadow-md">
+    <VStack spaceX={4} align="stretch">
+      <Text>Configure your notification settings below:</Text>
+      {effects?.map((effect) => (
+        <NotificationEffect key={effect.id || effect.name} effect={effect} />
+      ))}
+    </VStack>
+  );
+}
+
+function NotificationEffect({ effect }: { effect: EffectOut }) {
+  return (
+    <Card.Root className="overflow-hidden shadow-md">
       <Flex p={4} borderBottomWidth="1px" align="center">
         <Icon
           as={effect.effect_type === "email" ? FaEnvelope : FaBell}
@@ -99,7 +84,6 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
           fontSize="xl"
         />
         <Heading size="md">{effect.name}</Heading>
-        <Spacer />
         <Badge
           colorScheme="green"
           variant="subtle"
@@ -119,8 +103,8 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
         </Tooltip.Root>
       </Flex>
 
-      <CardContent>
-        <Stack gap={4} align="stretch">
+      <Card.Body>
+        <VStack gap={4} align="stretch">
           <Box>
             <Flex p={3} borderRadius="md" direction="column" gap={2}>
               <Text fontWeight="medium" fontSize="sm">
@@ -153,10 +137,10 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
               template={effect.config.template}
             />
           </Box>
-        </Stack>
-      </CardContent>
+        </VStack>
+      </Card.Body>
 
-      <CardFooter className="justify-end border-t">
+      <Card.Footer className="justify-end border-t">
         <Button
           size="sm"
           colorScheme="red"
@@ -165,23 +149,13 @@ function ShowEffect({ effect }: { effect: EffectOut }) {
           <Icon as={FaEdit} mr={2} />
           Delete
         </Button>
-      </CardFooter>
-    </Card>
+      </Card.Footer>
+    </Card.Root>
   );
 }
 
-function NumberInput({ value }: { value: number }) {
-  return (
-    <Input
-      type="number"
-      defaultValue={value}
-      width="70px"
-      mx={2}
-      textAlign="center"
-      fontWeight="medium"
-      _hover={{ borderColor: "blue.400" }}
-    />
-  );
+function NotificationCondition({ effect }: { effect: EffectOut }) {
+  return getStatement(effect);
 }
 
 function getStatement(effect: EffectOut) {
@@ -220,8 +194,18 @@ function getStatement(effect: EffectOut) {
   }
 }
 
-function NotificationCondition({ effect }: { effect: EffectOut }) {
-  return getStatement(effect);
+function NumberInput({ value }: { value: number }) {
+  return (
+    <Input
+      type="number"
+      defaultValue={value}
+      width="70px"
+      mx={2}
+      textAlign="center"
+      fontWeight="medium"
+      _hover={{ borderColor: "blue.400" }}
+    />
+  );
 }
 
 function NotificationPreview({
@@ -285,23 +269,236 @@ function NotificationPreview({
   }, [html]);
 
   return (
-    <Card className="border">
-      <Box p={3} borderBottomWidth="1px" fontWeight="medium" bg="gray.50">
+    <Card.Root className="border">
+      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium" bg="gray.50">
         {subject}
-      </Box>
+      </Card.Header>
       {html ? (
-        <CardContent className="p-0 overflow-hidden">
+        <Card.Body className="p-0 overflow-hidden">
           <iframe 
             ref={iframeRef} 
             title="Email Preview" 
             className="w-full border-0 min-h-[300px]" 
             sandbox="allow-same-origin"
           />
-        </CardContent>
+        </Card.Body>
       ) : (
-        <CardContent>{template}</CardContent>
+        <Card.Body>{template}</Card.Body>
       )}
-    </Card>
+    </Card.Root>
+  );
+}
+
+function NotificationManager() {
+  const showToast = useCustomToast();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentEffect, setCurrentEffect] = useState<any>(null);
+  
+  const { data: effects, isLoading } = useQuery({
+    queryKey: ["effects"],
+    queryFn: () => NoCodeService.getEffects(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => NoCodeService.deleteEffect(id),
+    onSuccess: () => {
+      showToast(
+        "Notification deleted",
+        "Notification deleted successfully.",
+        "success"
+      );
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast(
+        "Error deleting notification",
+        error.message,
+        "error"
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: number; effect: any }) => {
+      return NoCodeService.updateEffect(data.id, data.effect);
+    },
+    onSuccess: () => {
+      showToast(
+        "Notification updated",
+        "Notification updated successfully.",
+        "success"
+      );
+      setIsEditing(false);
+      setCurrentEffect(null);
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast(
+        "Error updating notification",
+        error.message,
+        "error"
+      );
+    },
+  });
+
+  const handleEdit = (effect: any) => {
+    setCurrentEffect({
+      id: effect.id,
+      name: effect.name,
+      effectType: effect.effect_type,
+      eventType: effect.event_type,
+      frequencyDays: effect.config.frequency_days,
+      template: effect.config.template,
+      subject: effect.config.subject,
+      condition: effect.condition,
+      conditionalParameters: effect.conditional_parameters,
+    });
+    setIsEditing(true);
+  };
+
+  const handleUpdate = () => {
+    if (!currentEffect) return;
+    
+    updateMutation.mutate({
+      id: currentEffect.id,
+      effect: {
+        name: currentEffect.name,
+        effectType: currentEffect.effectType,
+        eventType: currentEffect.eventType,
+        frequencyDays: currentEffect.frequencyDays,
+        template: currentEffect.template,
+        subject: currentEffect.subject,
+        condition: currentEffect.condition,
+        conditionalParameters: currentEffect.conditionalParameters,
+      },
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this notification?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  if (isLoading) {
+    return <Spinner />;
+  }
+
+  if (isEditing && currentEffect) {
+    return (
+      <VStack spaceY={4} align="stretch">
+        <HStack justifyContent="space-between">
+          <Heading size="md">Edit Notification</Heading>
+          <Button onClick={() => setIsEditing(false)}>Cancel</Button>
+        </HStack>
+        
+        <Card.Root>
+          <Card.Body>
+            <VStack spaceY={4} align="stretch">
+              <FieldRoot>
+                <FieldLabel>Name</FieldLabel>
+                <Input
+                  value={currentEffect.name}
+                  onChange={(e) => setCurrentEffect({ ...currentEffect, name: e.target.value })}
+                />
+              </FieldRoot>
+              
+              <FieldRoot>
+                <FieldLabel>Template</FieldLabel>
+                <Textarea
+                  value={currentEffect.template}
+                  onChange={(e) => setCurrentEffect({ ...currentEffect, template: e.target.value })}
+                  rows={6}
+                />
+              </FieldRoot>
+
+              <FieldRoot>
+                <FieldLabel>Subject</FieldLabel>
+                <Input
+                  value={currentEffect.subject}
+                  onChange={(e) => setCurrentEffect({ ...currentEffect, subject: e.target.value })}
+                />
+              </FieldRoot>
+
+              <FieldRoot>
+                <FieldLabel>Frequency (days)</FieldLabel>
+                <Input
+                  type="number"
+                  value={currentEffect.frequencyDays}
+                  onChange={(e) => setCurrentEffect({ ...currentEffect, frequencyDays: Number(e.target.value) })}
+                  min={1}
+                  max={30}
+                />
+              </FieldRoot>
+
+              <Button
+                colorScheme="blue"
+                loading={updateMutation.isPending}
+                onClick={handleUpdate}
+              >
+                Save Changes
+              </Button>
+            </VStack>
+          </Card.Body>
+        </Card.Root>
+      </VStack>
+    );
+  }
+
+  return (
+    <VStack spaceY={4} align="stretch">
+      <Text>Manage your notification templates:</Text>
+      
+      {effects?.map((effect) => (
+        <Card.Root key={effect.id || effect.name} className="border">
+          <Card.Header>
+            <HStack justifyContent="space-between">
+              <Heading size="md">{effect.name}</Heading>
+              <HStack>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleEdit(effect)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={() => handleDelete(effect.id!)}
+                >
+                  Delete
+                </Button>
+              </HStack>
+            </HStack>
+          </Card.Header>
+          <Card.Body>
+            <VStack align="start" spaceY={2}>
+              <Text fontWeight="bold">Subject:</Text>
+              <Text>{effect.config.subject}</Text>
+              <Text fontWeight="bold">Template:</Text>
+              <Text whiteSpace="pre-wrap">{effect.config.template}</Text>
+              <Text fontWeight="bold">Frequency:</Text>
+              <Text>Every {effect.config.frequency_days} day(s)</Text>
+              <Text fontWeight="bold">Condition:</Text>
+              <Text>{effect.condition}</Text>
+            </VStack>
+          </Card.Body>
+        </Card.Root>
+      ))}
+
+      {effects?.length === 0 && (
+        <Card.Root className="border">
+          <Card.Body>
+            <Text textAlign="center" py={4}>
+              No notifications found. Create one using the Test Notifications tab.
+            </Text>
+          </Card.Body>
+        </Card.Root>
+      )}
+    </VStack>
   );
 }
 
@@ -330,10 +527,50 @@ function NotificationTester() {
         html: data.html,
         subject: data.subject
       });
-      showToast("Success!", "Preview generated successfully", "success");
+      showToast(
+        "Preview generated",
+        "Preview generated successfully.",
+        "success",
+      );
     },
     onError: (error) => {
-      showToast("Error", error.toString(), "error");
+      showToast(
+        "Error generating preview",
+        error.message,
+        "error",
+      );
+    },
+  });
+
+  const queryClient = useQueryClient();
+
+  const saveAsMutation = useMutation({
+    mutationFn: async () => {
+      return NoCodeService.createEffect({
+        name: formData.name,
+        effectType: "email",
+        eventType: "new_transaction",
+        frequencyDays: 1,
+        template: formData.template,
+        subject: formData.subject,
+        condition: "count_of_transactions",
+        conditionalParameters: { count: 1 }
+      });
+    },
+    onSuccess: () => {
+      showToast(
+        "Notification saved",
+        "Notification saved successfully.",
+        "success",
+      );
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast(
+        "Error saving notification",
+        error.message,
+        "error",
+      );
     },
   });
 
@@ -351,107 +588,98 @@ function NotificationTester() {
   };
 
   return (
-    <Box>
-      <Card className="mb-6">
-        <CardHeader>
-          <Heading size="md">Test Notification Templates</Heading>
-        </CardHeader>
-        <CardContent>
-          <Text mb={4}>
-            Use this tool to preview how your notifications will look with sample data.
-            You can customize the template and see the rendered result.
-          </Text>
+    <VStack spaceY={4} align="stretch">
+      <Text>Test your notification templates here:</Text>
 
-          <Stack gap={4} align="stretch">
+      <Card.Root>
+        <Card.Body>
+          <VStack spaceY={4} align="stretch">
             <FieldRoot>
-              <FieldLabel htmlFor="subject">Email Subject</FieldLabel>
-              <Input
-                id="subject"
-                name="subject"
-                value={formData.subject}
-                onChange={handleChange}
-                placeholder="Enter email subject with template variables"
-              />
-            </FieldRoot>
-
-            <FieldRoot>
-              <FieldLabel htmlFor="template">Email Template</FieldLabel>
+              <FieldLabel>Template</FieldLabel>
               <Textarea
-                id="template"
-                name="template"
                 value={formData.template}
-                onChange={handleChange}
-                placeholder="Enter email template with variables"
-                minHeight="150px"
+                onChange={(e) =>
+                  setFormData({ ...formData, template: e.target.value })
+                }
+                rows={6}
               />
             </FieldRoot>
 
-            <HStack gap={6}>
+            <FieldRoot>
+              <FieldLabel>Subject</FieldLabel>
+              <Input
+                value={formData.subject}
+                onChange={(e) =>
+                  setFormData({ ...formData, subject: e.target.value })
+                }
+              />
+            </FieldRoot>
+
+            <HStack spaceX={4}>
               <FieldRoot>
-                <FieldLabel htmlFor="numTransactions">Number of Sample Transactions</FieldLabel>
+                <FieldLabel>Number of Transactions</FieldLabel>
                 <Input
-                  id="numTransactions"
-                  name="numTransactions"
+                  value={formData.numTransactions}
                   type="number"
+                  onChange={(e) =>
+                    setFormData({ ...formData, numTransactions: Number(e.target.value) })
+                  }
                   min={1}
                   max={10}
-                  value={formData.numTransactions}
-                  onChange={(e) => handleNumberChange("numTransactions", parseInt(e.target.value))}
                 />
               </FieldRoot>
 
               <FieldRoot>
-                <FieldLabel htmlFor="accountName">Account Name</FieldLabel>
+                <FieldLabel>Account Name</FieldLabel>
                 <Input
-                  id="accountName"
-                  name="accountName"
                   value={formData.accountName}
-                  onChange={handleChange}
-                  placeholder="Enter account name"
+                  onChange={(e) =>
+                    setFormData({ ...formData, accountName: e.target.value })
+                  }
                 />
               </FieldRoot>
             </HStack>
 
-            <Box>
-              <Text fontSize="sm" color="gray.600" mb={2}>
-                Available template variables: 
-              </Text>
-              <HStack gap={2}>
-                <Badge>{'{{ count }}'}</Badge>
-                <Badge>{'{{ account_name }}'}</Badge>
-                <Badge>{'{{ transactions_table }}'}</Badge>
-                <Badge>{'{{ alter_settings }}'}</Badge>
-              </HStack>
-            </Box>
-
-            <Button
-              colorScheme="blue"
-              onClick={handlePreview}
-              data-loading={previewMutation.isPending}
-              alignSelf="flex-start"
-              mt={4}
-            >
-              <Icon as={FaPlay} mr={2} />
-              Generate Preview
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+            <HStack>
+              <Button
+                colorScheme="blue"
+                loading={previewMutation.isPending}
+                onClick={() => previewMutation.mutate()}
+                flex="1"
+              >
+                Generate Preview
+              </Button>
+              
+              {previewData && (
+                <Button
+                  colorScheme="green"
+                  loading={saveAsMutation.isPending}
+                  onClick={() => {
+                    const name = prompt("Enter a name for this notification:");
+                    if (name) {
+                      saveAsMutation.mutate(name);
+                    }
+                  }}
+                >
+                  Save as Notification
+                </Button>
+              )}
+            </HStack>
+          </VStack>
+        </Card.Body>
+      </Card.Root>
 
       {previewData && (
-        <Card>
-          <CardHeader>
-            <Heading size="md">Preview Result</Heading>
-          </CardHeader>
-          <Separator className="mx-6" />
-          <CardContent>
-            <NotificationPreview 
-              subject={previewData.subject} 
-              html={previewData.html} 
-            />
-          </CardContent>
-        </Card>
+        <Box>
+          <Heading size="md" mb={2}>
+            Preview:
+          </Heading>
+          <NotificationPreview
+            subject={previewData.subject}
+            html={previewData.html}
+          />
+        </Box>
       )}
-    </Box>
+    </VStack>
   );
 }
