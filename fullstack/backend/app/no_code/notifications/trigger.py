@@ -1,15 +1,15 @@
 import re
-from functools import reduce
 from datetime import datetime, timedelta
-from typing import Any, List, Callable
+from typing import List, Callable
+from app.no_code.notifications.effect_generators.seed_effects import new_transaction_effect
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
-    EffectConfig,
 )
+
 from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
-from app.models.effect import EffectConditionals, EffectLog, EffectType
+from app.models.effect import EffectLog, EffectType
 from app.models.user import User, UserId
 from app.email.send import Email, send_email
 
@@ -20,16 +20,7 @@ def collect_user_effects(session: Session, user: User) -> List[Effect]:
     """
 
     return [
-        Effect(
-            type=EffectType.EMAIL,
-            config=EffectConfig(
-                frequency_days=1,
-                template="Hey there! You have {{ count }} new transaction(s) in My Financé!",
-                subject="New Transactions in My Financé from {{ account_name }}",
-            ),
-            condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
-            conditional_parameters={"count": 0},
-        ),
+        new_transaction_effect(session,user),
     ]
 
 
