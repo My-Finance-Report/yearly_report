@@ -32,7 +32,7 @@ class Event(ABC, BaseModel):
     type: EventType
     @property
     def alter_settings(self)->str:
-        return "Click <a href='https://myfinancereport.com/notifications'>here</a> to change your notification settings"
+        return "Click <a style='text-decoration: underline;' href='https://myfinancereport.com/notifications'>here</a> to change your notification settings"
 
     @property
     def transactions_table(self) -> str:
@@ -54,7 +54,7 @@ class Event(ABC, BaseModel):
         # Build the complete table with styling
         table = f"""<table style="width:100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px;">
     <thead>
-        <tr style="background-color: #f2f2f2;">
+        <tr>
             <th style="padding: 8px; text-align: left;">Date</th>
             <th style="padding: 8px; text-align: left;">Description</th>
             <th style="padding: 8px; text-align: left;">Category</th>
