@@ -1,6 +1,7 @@
 import re
+from functools import reduce
 from datetime import datetime, timedelta
-from typing import List, Callable
+from typing import Any, List, Callable
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
@@ -9,7 +10,7 @@ from app.no_code.notifications.effects import (
 from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
 from app.models.effect import EffectConditionals, EffectLog, EffectType
-from app.models.user import User
+from app.models.user import User, UserId
 from app.email.send import Email, send_email
 
 
@@ -29,6 +30,14 @@ def collect_user_effects(session: Session, user: User) -> List[Effect]:
             condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
             conditional_parameters={"count": 0},
         ),
+    ]
+
+
+def check_all_effects(event: Event, effects: List[Effect]) -> List[Effect]:
+    return [
+        effect
+        for effect in effects
+        if check_event_against_possible_effects(event, effect)
     ]
 
 
@@ -111,6 +120,20 @@ def generate_callable_for_effect(event: Event, effect: Effect) -> Callable[[], E
     return lambda: perform_template_replacement(event, effect)
 
 
+def record_effects_log(
+    session: Session, user_id: UserId, event: Event, effects: list[Effect]
+) -> list[Effect]:
+    for effect in effects:
+        log = EffectLog(
+            effect_type=effect.type,
+            event_type=event.type,
+            user_id=user_id,
+        )
+        session.add(log)
+    session.commit()
+    return effects
+
+
 def propagate_effects(user: User, effects: List[Effect], event: Event) -> None:
     """
     Actually perform the effects (send emails, push notifications, etc).
@@ -127,14 +150,32 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
     """
     Main entry point: given a user and an event, trigger all matching effects.
     """
-    effects = collect_user_effects(session, user)
-    effects_to_trigger = [
-        effect
-        for effect in effects
-        if check_event_against_possible_effects(event, effect)
+
+    def collect(_: list[Effect]) -> list[Effect]:
+        return collect_user_effects(session, user)
+
+    def filter_effects(effects: list[Effect]) -> list[Effect]:
+        return check_all_effects(event, effects)
+
+    def should_fire_check(effects: list[Effect]) -> list[Effect]:
+        return check_effects_against_frequency(session, user, effects)
+
+    def log(effects: list[Effect]) -> list[Effect]:
+        return record_effects_log(session, user.id, event, effects)
+
+    def propagate(effects: list[Effect]) -> list[Effect]:
+        propagate_effects(user, effects, event)
+        return effects
+
+    pipeline: list[Callable[[list[Effect]], list[Effect]]] = [
+        collect,
+        filter_effects,
+        aggregate_effects,
+        should_fire_check,
+        log,
+        propagate,
     ]
-    aggregated_effects = aggregate_effects(effects_to_trigger)
-    effects_to_trigger = check_effects_against_frequency(
-        session, user, aggregated_effects
-    )
-    propagate_effects(user, effects_to_trigger, event)
+
+    arg: list[Effect] = []
+    for callable in pipeline:
+        arg = callable(arg)

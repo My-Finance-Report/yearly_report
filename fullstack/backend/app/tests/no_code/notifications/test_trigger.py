@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from app.models.effect import EffectLog
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 from app.no_code.notifications.effects import Effect, EffectConfig
 from app.no_code.notifications.events import NewTransactionsEvent
 from app.no_code.notifications.trigger import (
@@ -23,6 +23,7 @@ from app.tests.utils.utils import TestKit
 class DummySession:
     def __init__(self, logs):
         self._logs = logs
+        self.added_items = []
 
     def query(self, model):
         class Query:
@@ -36,6 +37,14 @@ class DummySession:
                 return self._logs
 
         return Query(self._logs)
+    
+    def add(self, item):
+        self.added_items.append(item)
+        return self
+    
+    def commit(self):
+        # Just a dummy method that does nothing
+        pass
 
 
 class DummyUser:
@@ -273,3 +282,108 @@ def test_trigger_effects_only_triggers_by_frequency(user, event, effect):
         session = MagicMock()
         trigger_effects(session, user, event)
         assert not mock_send.called
+
+
+def test_functional_pipeline(user, event):
+    """Test the functional pipeline implementation in trigger_effects."""
+    # Create a test effect
+    effect = Effect(
+        type=EffectType.EMAIL,
+        config=EffectConfig(
+            frequency_days=1, template="Account: {{account_name}}", subject="Subject"
+        ),
+        condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
+        conditional_parameters={"count": 0},
+    )
+    
+    # Create a mock manager to track call order
+    mock_manager = MagicMock()
+    
+    # Create mock functions with side effects to track the pipeline flow
+    def collect_side_effect(session, user):
+        mock_manager.collect_called()
+        return [effect]
+    
+    def filter_side_effect(event, effects):
+        mock_manager.filter_called()
+        assert effects == [effect], "Filter received wrong effects"
+        return [effect]
+    
+    def aggregate_side_effect(effects):
+        mock_manager.aggregate_called()
+        assert effects == [effect], "Aggregate received wrong effects"
+        return [effect]
+    
+    def frequency_side_effect(session, user, effects):
+        mock_manager.frequency_called()
+        assert effects == [effect], "Frequency check received wrong effects"
+        return [effect]
+    
+    def log_side_effect(session, user_id, event_obj, effects):
+        mock_manager.log_called()
+        assert effects == [effect], "Log received wrong effects"
+        assert user_id == user.id, "Log received wrong user ID"
+        assert event_obj == event, "Log received wrong event"
+        return [effect]
+    
+    def propagate_side_effect(user_obj, effects, event_obj):
+        mock_manager.propagate_called()
+        assert effects == [effect], "Propagate received wrong effects"
+        assert user_obj == user, "Propagate received wrong user"
+        assert event_obj == event, "Propagate received wrong event"
+    
+    # Patch all the pipeline functions with side effects
+    with (
+        patch(
+            "app.no_code.notifications.trigger.collect_user_effects",
+            side_effect=collect_side_effect,
+        ),
+        patch(
+            "app.no_code.notifications.trigger.check_all_effects",
+            side_effect=filter_side_effect,
+        ),
+        patch(
+            "app.no_code.notifications.trigger.aggregate_effects",
+            side_effect=aggregate_side_effect,
+        ),
+        patch(
+            "app.no_code.notifications.trigger.check_effects_against_frequency",
+            side_effect=frequency_side_effect,
+        ),
+        patch(
+            "app.no_code.notifications.trigger.record_effects_log",
+            side_effect=log_side_effect,
+        ),
+        patch(
+            "app.no_code.notifications.trigger.propagate_effects",
+            side_effect=propagate_side_effect,
+        ),
+    ):
+        session = MagicMock()
+        
+        # Call the function under test
+        trigger_effects(session, user, event)
+        
+        # Verify that each function was called exactly once
+        assert mock_manager.collect_called.call_count == 1, "collect_user_effects not called exactly once"
+        assert mock_manager.filter_called.call_count == 1, "check_all_effects not called exactly once"
+        assert mock_manager.aggregate_called.call_count == 1, "aggregate_effects not called exactly once"
+        assert mock_manager.frequency_called.call_count == 1, "check_effects_against_frequency not called exactly once"
+        assert mock_manager.log_called.call_count == 1, "record_effects_log not called exactly once"
+        assert mock_manager.propagate_called.call_count == 1, "propagate_effects not called exactly once"
+        
+        # Get the actual call order from the mock manager's mock_calls
+        actual_calls = [str(call) for call in mock_manager.mock_calls[:6]]
+        
+        # Define the expected call order
+        expected_calls = [
+            "call.collect_called()",
+            "call.filter_called()",
+            "call.aggregate_called()",
+            "call.frequency_called()",
+            "call.log_called()",
+            "call.propagate_called()"
+        ]
+        
+        # Verify the call order is correct
+        assert actual_calls == expected_calls, f"Incorrect call order. Expected: {expected_calls}, Actual: {actual_calls}"
