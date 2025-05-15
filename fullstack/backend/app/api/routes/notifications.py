@@ -36,7 +36,7 @@ class EffectCreate(BaseModel):
     template: str
     subject: str
     condition: EffectConditionals
-    conditional_parameters: dict[str, Any]
+    conditional_parameters: dict[str, int]
 
 
 class EffectUpdate(BaseModel):
@@ -49,7 +49,7 @@ class EffectUpdate(BaseModel):
     template: Optional[str] = None
     subject: Optional[str] = None
     condition: Optional[EffectConditionals] = None
-    conditional_parameters: Optional[dict[str, Any]] = None
+    conditional_parameters: Optional[dict[str, int]] = None
 
 
 @router.get("/effects", response_model=list[EffectOut])

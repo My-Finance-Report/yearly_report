@@ -404,7 +404,7 @@ class EffectOut(BaseModel):
     event_type: EventType
     config: EffectConfig
     condition: EffectConditionals
-    conditional_parameters: dict[str, Any]
+    conditional_parameters: dict[str, int]
 
 
 class BalanceUpdate(BaseModel):

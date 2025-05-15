@@ -32,4 +32,4 @@ class Effect(BaseModel):
     type: EffectType
     config: EffectConfig
     condition: EffectConditionals
-    conditional_parameters: dict[str, Any]
+    conditional_parameters: dict[str, int]

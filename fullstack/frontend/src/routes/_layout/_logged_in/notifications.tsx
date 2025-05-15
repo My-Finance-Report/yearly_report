@@ -23,7 +23,7 @@ import {
   FieldErrorText,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { EffectOut, Email, EventType, EffectType } from "@/client/types.gen";
+import { EffectOut, Email, EventType, EffectType, EffectConditionals, EffectCreate, EffectUpdate } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import Delete from "@/components/Common/DeleteAlert";
 import { Controller, useForm, UseFormReturn } from "react-hook-form";
@@ -45,11 +45,11 @@ interface NotificationFormValues {
   name: string;
   template: string;
   subject: string;
-  effect_type?: string;
-  event_type?: string;
-  frequency_days?: number;
-  condition?: string;
-  conditional_parameters?: Record<string, any>;
+  effect_type: EffectType;
+  event_type: EventType;
+  frequency_days: number;
+  condition: EffectConditionals;
+  conditional_parameters: Record<string, number>;
 }
 
 function UnifiedNotificationInterface() {
@@ -62,14 +62,14 @@ function UnifiedNotificationInterface() {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      name: "",
-      template: "Hi there! You have {{ count }} new transactions in {{ account_name }}. Here's a summary:\n\n{{ transactions_table }}\n\nYou can {{ alter_settings }} your notification preferences at any time.",
-      subject: "[YearlyReport] {{ count }} New Transactions in {{ account_name }}",
-      frequency_days: 1,
-      effect_type: "email",
-      event_type: "new_transaction",
-      condition: "count_of_transactions",
-      conditional_parameters: { count: 1 },
+      name: selectedEffect?.name || "",
+      template: selectedEffect?.config.template || "",
+      subject: selectedEffect?.config.subject || "",
+      effect_type: selectedEffect?.effect_type || "email",
+      event_type: selectedEffect?.event_type || "new_transaction",
+      frequency_days: selectedEffect?.config.frequency_days || 1,
+      condition: selectedEffect?.condition || "count_of_transactions",
+      conditional_parameters: selectedEffect?.conditional_parameters,
     },
   });
 
@@ -134,8 +134,9 @@ function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  const onChange = (effect: EffectOut) => {
-    setSelectedEffect(effect);
+  const onChange = (effectName: string) => {
+    const effect = effects?.find((effect) => effect.name === effectName);
+    setSelectedEffect(effect || null);
   };
 
 
@@ -147,9 +148,10 @@ function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
   return (
     <SelectRoot
       id="effect"
-      collection={createListCollection({ items: effects?.map((effect) => effect.name) })}
+      collection={createListCollection({ items: effects?.map((effect) => effect.name) || [] })}
+      value={[effects?.[0]?.name || ""]}
       onValueChange={(val) => {
-        onChange(val.value);
+        onChange(val.value[0]);
       }}
     >
       <SelectTrigger>
@@ -181,56 +183,31 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
     "new_transaction",
     "new_account_linked",
   ]
+
+  const conditionTypes: EffectConditionals[] = [
+    "amount_over",
+    "count_of_transactions",
+  ]
+
   const effectTypes: EffectType[] = [
     "email",
     "in_app",
   ]
 
-  const createMutation = useMutation({
-    mutationFn: (data: NotificationFormValues) => {
-      return NoCodeService.createEffect(
-        {
-          requestBody: {
-            name: data.name,
-            effectType: data.effect_type || "email",
-            eventType: data.event_type || "new_transaction",
-            frequencyDays: data.frequency_days || 1,
-            template: data.template,
-            subject: data.subject,
-            condition: data.condition || "count_of_transactions",
-            conditionalParameters: data.conditional_parameters || { count: 1 },
-          }
-        });
-    },
-    onSuccess: () => {
-      showToast("Notification saved", "Notification saved successfully.", "success");
-      queryClient.invalidateQueries({ queryKey: ["effects"] });
-      reset();
-    },
-    onError: (error) => {
-      showToast("Error saving notification", error.message, "error");
-    },
-  });
-
   const updateMutation = useMutation({
-    mutationFn: (data: NotificationFormValues) => {
-      const update = !!data.id
-
-      const func = update ? NoCodeService.updateEffect : NoCodeService.createEffect
-      const body = {
+    mutationFn: ({data, id}: {data: NotificationFormValues, id: number}) => {
+      const body: EffectUpdate = {
         name: data.name,
-        effectType: data.effect_type,
-        eventType: data.event_type,
-        frequencyDays: data.frequency_days,
+        effect_type: data.effect_type,
+        event_type: data.event_type,
+        frequency_days: data.frequency_days,
         template: data.template,
         subject: data.subject,
         condition: data.condition,
-        conditionalParameters: data.conditional_parameters,
+        conditional_parameters: data.conditional_parameters,
       }
 
-      const props = update ? { effectId: data.id, requestBody: body } : { requestBody: body }
-
-      return func(props);
+      return NoCodeService.updateEffect({ effectId: id, requestBody: body });
     },
     onSuccess: () => {
       showToast("Notification updated", "Notification updated successfully.", "success");
@@ -241,12 +218,38 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
       showToast("Error updating notification", error.message, "error");
     },
   });
+  const createMutation = useMutation({
+    mutationFn: (data: NotificationFormValues) => {
+      const body:EffectCreate = {
+        name: data.name,
+        effect_type: data.effect_type,
+        event_type: data.event_type,
+        frequency_days: data.frequency_days,
+        template: data.template,
+        subject: data.subject,
+        condition: data.condition,
+        conditional_parameters: data.condition === "amount_over" ? { amount_over: data.conditional_parameters.amount_over } : { count: data.conditional_parameters.count },
+      }
+
+      return NoCodeService.createEffect({ requestBody: body });
+    },
+    onSuccess: () => {
+      showToast("Notification created", "Notification created successfully.", "success");
+      reset();
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast("Error creating notification", error.message, "error");
+    },
+  });
+
+
 
 
   const onSubmit = handleSubmit((data) => {
     if (selectedEffect?.id) {
       updateMutation.mutate({
-        ...data,
+        data,
         id: selectedEffect.id,
       });
     } else {
@@ -258,7 +261,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
 
 
   return (
-    <Card.Root>
+    <Card.Root minW="400px">
       <Card.Header>
         <HStack justifyContent="space-between">
           <Heading size="md">Create Notification</Heading>
@@ -307,7 +310,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                   const { onChange } = field;
                   return (
                     <SelectRoot
-                      id="event_kind"
+                      id="event_type"
                       defaultValue={[
                         eventTypes.find(
                           (eventType) => eventType === selectedEffect?.event_type,
@@ -336,6 +339,88 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                 <FieldErrorText>{errors.event_type.message}</FieldErrorText>
               )}
             </FieldRoot>
+
+
+            <FieldRoot invalid={!!errors.condition} required mt={4}>
+              <FieldLabel htmlFor="condition">Condition</FieldLabel>
+              <Controller
+                control={control}
+                name="condition"
+                render={({ field }) => {
+                  const { onChange } = field;
+                  return (
+                    <SelectRoot
+                      id="condition"
+                      defaultValue={[
+                        conditionTypes.find(
+                          (condition) => condition === selectedEffect?.condition,
+                        )!,
+                      ]}
+                      collection={createListCollection({ items: conditionTypes })}
+                      onValueChange={(val) => {
+                        onChange(val.value[0]);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValueText placeholder="Select a condition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {conditionTypes.map((conditionType) => (
+                          <SelectItem key={conditionType} item={conditionType}>
+                            {conditionType}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </SelectRoot>
+                  );
+                }}
+              />
+              {errors.condition && (
+                <FieldErrorText>{errors.condition.message}</FieldErrorText>
+              )}
+            </FieldRoot>
+
+            <FieldRoot invalid={!!errors.conditional_parameters} required>
+              <FieldLabel htmlFor="conditional_parameters">Conditional Parameters</FieldLabel>
+              <Controller
+                control={control}
+                name="conditional_parameters"
+                render={({ field }) => {
+                  const { onChange } = field;
+                  return (
+                    <Textarea
+                      id="conditional_parameters"
+                      onChange={(e) => {
+                        try {
+                          const parsedValue = JSON.parse(e.target.value);
+                          onChange(parsedValue);
+                        } catch {
+                          e.target.dataset.jsonError = 'true';
+                        }
+                      }}
+                      placeholder='{"count": 1}'
+                      rows={4}
+                    />
+                  );
+                }}
+                rules={{
+                  required: "Conditional parameters are required",
+                  validate: (value) => {
+                    return (
+                      (typeof value === 'object' && value !== null) ||
+                      "Must be a valid JSON object"
+                    );
+                  }
+                }}
+              />
+              {errors.conditional_parameters && (
+                <FieldErrorText>{errors.conditional_parameters.message}</FieldErrorText>
+              )}
+            </FieldRoot>
+
+
+
+
 
             <FieldRoot invalid={!!errors.effect_type} required mt={4}>
               <FieldLabel htmlFor="effect_type">Effect Type</FieldLabel>

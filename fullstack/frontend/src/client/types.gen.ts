@@ -168,7 +168,7 @@ export type EffectCreate = {
     subject: string;
     condition: EffectConditionals;
     conditional_parameters: {
-        [key: string]: unknown;
+        [key: string]: (number);
     };
 };
 
@@ -180,7 +180,7 @@ export type EffectOut = {
     config: EffectConfig;
     condition: EffectConditionals;
     conditional_parameters: {
-        [key: string]: unknown;
+        [key: string]: (number);
     };
 };
 
@@ -198,7 +198,7 @@ export type EffectUpdate = {
     subject?: (string | null);
     condition?: (EffectConditionals | null);
     conditional_parameters?: ({
-    [key: string]: unknown;
+    [key: string]: (number);
 } | null);
 };
 

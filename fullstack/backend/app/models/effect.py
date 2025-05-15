@@ -54,6 +54,6 @@ class Effect(Base):
     condition: Mapped[EffectConditionals] = mapped_column(
         Enum(EffectConditionals), nullable=False
     )
-    conditional_parameters: Mapped[dict[str, Any]] = mapped_column(
+    conditional_parameters: Mapped[dict[str, int]] = mapped_column(
         JSON, nullable=False
     )  # TODO: type this with a dataclass and use JSONType
