@@ -5,6 +5,8 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
+  EffectOut,
+  NoCodeService,
   TransactionOut,
   TransactionsService,
   UsersService,
@@ -12,10 +14,10 @@ import {
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface DeleteProps {
-  type: "user" | "transaction";
+  type: "user" | "transaction" | "notification";
   isOpen: boolean;
   onClose: () => void;
-  entity?: TransactionOut;
+  entity?: TransactionOut | EffectOut;
 }
 
 const STORAGE_KEY_PREFIX = "skip_confirmation_";
@@ -49,11 +51,19 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
         await UsersService.deleteUserMe();
         break;
       case "transaction":
-        if (!entity) {
+        if (!entity || !entity.id) {
           throw new Error("Entity is required for transaction deletion");
         }
         await TransactionsService.deleteTransaction({
           transactionId: entity.id,
+        });
+        break;
+      case "notification":
+        if (!entity || !entity.id) {
+          throw new Error("Entity is required for notification deletion");
+        }
+        await NoCodeService.deleteEffect({
+          effectId: entity.id,
         });
         break;
       default:

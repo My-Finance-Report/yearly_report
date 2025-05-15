@@ -398,12 +398,13 @@ class WorkerStatusOut(BaseModel):
 
 
 class EffectOut(BaseModel):
+    id: int | None = None  # Make it optional to support both existing and new effects
     name: str
     effect_type: EffectType
     event_type: EventType
     config: EffectConfig
     condition: EffectConditionals
-    conditional_parameters: dict[str, Any]
+    conditional_parameters: dict[str, int]
 
 
 class BalanceUpdate(BaseModel):

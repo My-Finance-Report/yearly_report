@@ -57,6 +57,14 @@ import type {
   LoginRecoverPasswordHtmlContentData,
   LoginRecoverPasswordHtmlContentResponse,
   NoCodeGetEffectsResponse,
+  NoCodeCreateEffectData,
+  NoCodeCreateEffectResponse,
+  NoCodePreviewNotificationData,
+  NoCodePreviewNotificationResponse,
+  NoCodeUpdateEffectData,
+  NoCodeUpdateEffectResponse,
+  NoCodeDeleteEffectData,
+  NoCodeDeleteEffectResponse,
   NoCodeGetNoCodeToolResponse,
   NoCodeSaveNoCodeToolData,
   NoCodeSaveNoCodeToolResponse,
@@ -75,6 +83,10 @@ import type {
   PlaidExchangeTokenData,
   PlaidExchangeTokenResponse,
   PlaidGetPlaidAccountsResponse,
+  PrivateCreateUserData,
+  PrivateCreateUserResponse,
+  PrivateGoogleCallbackLocalData,
+  PrivateGoogleCallbackLocalResponse,
   SankeyGetSankeyDataResponse,
   SankeyCreateSankeyConfigData,
   SankeyCreateSankeyConfigResponse,
@@ -770,13 +782,118 @@ export class LoginService {
 export class NoCodeService {
   /**
    * Get Effects
+   * Get all notification effects for the current user
    * @returns EffectOut Successful Response
    * @throws ApiError
    */
   public static getEffects(): CancelablePromise<NoCodeGetEffectsResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/v1/notification/get_effects",
+      url: "/api/v1/notification/effects",
+    });
+  }
+
+  /**
+   * Create Effect
+   * Create a new notification effect
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns EffectOut Successful Response
+   * @throws ApiError
+   */
+  public static createEffect(
+    data: NoCodeCreateEffectData,
+  ): CancelablePromise<NoCodeCreateEffectResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/notification/effects",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Preview Notification
+   * Preview a notification with sample data
+   * @param data The data for the request.
+   * @param data.effectType
+   * @param data.eventType
+   * @param data.template
+   * @param data.subject
+   * @param data.numTransactions
+   * @param data.accountName
+   * @returns Email Successful Response
+   * @throws ApiError
+   */
+  public static previewNotification(
+    data: NoCodePreviewNotificationData = {},
+  ): CancelablePromise<NoCodePreviewNotificationResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/notification/preview",
+      query: {
+        effect_type: data.effectType,
+        event_type: data.eventType,
+        template: data.template,
+        subject: data.subject,
+        num_transactions: data.numTransactions,
+        account_name: data.accountName,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Update Effect
+   * Update an existing notification effect
+   * @param data The data for the request.
+   * @param data.effectId
+   * @param data.requestBody
+   * @returns EffectOut Successful Response
+   * @throws ApiError
+   */
+  public static updateEffect(
+    data: NoCodeUpdateEffectData,
+  ): CancelablePromise<NoCodeUpdateEffectResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/notification/effects/{effect_id}",
+      path: {
+        effect_id: data.effectId,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Delete Effect
+   * Delete a notification effect
+   * @param data The data for the request.
+   * @param data.effectId
+   * @returns void Successful Response
+   * @throws ApiError
+   */
+  public static deleteEffect(
+    data: NoCodeDeleteEffectData,
+  ): CancelablePromise<NoCodeDeleteEffectResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/notification/effects/{effect_id}",
+      path: {
+        effect_id: data.effectId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
     });
   }
 
@@ -998,6 +1115,56 @@ export class PlaidService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/plaid/accounts",
+    });
+  }
+}
+
+export class PrivateService {
+  /**
+   * Create User
+   * Create a new user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns UserOut Successful Response
+   * @throws ApiError
+   */
+  public static createUser(
+    data: PrivateCreateUserData,
+  ): CancelablePromise<PrivateCreateUserResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/private/users/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Google Callback Local
+   * Handle the callback from Google OAuth.
+   * This endpoint is called by the frontend after receiving the code from Google.
+   * @param data The data for the request.
+   * @param data.code
+   * @param data.error
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static googleCallbackLocal(
+    data: PrivateGoogleCallbackLocalData,
+  ): CancelablePromise<PrivateGoogleCallbackLocalResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/private/oauth/google/callback-local",
+      query: {
+        code: data.code,
+        error: data.error,
+      },
+      errors: {
+        422: "Validation Error",
+      },
     });
   }
 }
