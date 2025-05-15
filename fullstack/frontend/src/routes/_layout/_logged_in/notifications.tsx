@@ -234,7 +234,6 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
     },
     onSuccess: () => {
       showToast("Notification updated", "Notification updated successfully.", "success");
-      setSelectedEffect(null);
       reset();
       queryClient.invalidateQueries({ queryKey: ["effects"] });
     },

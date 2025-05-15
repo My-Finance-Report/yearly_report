@@ -1,14 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional
+from typing import Any, Optional
 from datetime import datetime, timedelta
 
 from app.db import Session, get_current_user, get_db
 from app.email.send import Email
 from app.local_types import EffectOut
-from app.models.effect import Effect as EffectModel, EffectConditionals, EffectType, EventType, EffectId
+from app.models.effect import (
+    Effect as EffectModel,
+    EffectConditionals,
+    EffectType,
+    EventType,
+    EffectId,
+)
 from app.models.user import User
 from app.models.transaction import TransactionKind
-from app.no_code.notifications.effect_generators.seed_effects import new_transaction_effect
+from app.no_code.notifications.effect_generators.seed_effects import (
+    new_transaction_effect,
+)
 from app.no_code.notifications.effects import EffectConfig, Effect
 from app.no_code.notifications.events import NewTransactionsEvent
 from app.no_code.notifications.trigger import perform_template_replacement
@@ -20,6 +28,7 @@ router = APIRouter(prefix="/notification", tags=["no_code"])
 
 class EffectCreate(BaseModel):
     """Schema for creating a new notification effect"""
+
     name: str
     effect_type: EffectType
     event_type: EventType
@@ -27,11 +36,12 @@ class EffectCreate(BaseModel):
     template: str
     subject: str
     condition: EffectConditionals
-    conditional_parameters: dict
+    conditional_parameters: dict[str, Any]
 
 
 class EffectUpdate(BaseModel):
     """Schema for updating an existing notification effect"""
+
     name: Optional[str] = None
     effect_type: Optional[EffectType] = None
     event_type: Optional[EventType] = None
@@ -39,7 +49,7 @@ class EffectUpdate(BaseModel):
     template: Optional[str] = None
     subject: Optional[str] = None
     condition: Optional[EffectConditionals] = None
-    conditional_parameters: Optional[dict] = None
+    conditional_parameters: Optional[dict[str, Any]] = None
 
 
 @router.get("/effects", response_model=list[EffectOut])
@@ -50,7 +60,7 @@ def get_effects(
     """Get all notification effects for the current user"""
     # Query the database for user's effects
     db_effects = session.query(EffectModel).filter(EffectModel.user_id == user.id).all()
-    
+
     # If no effects exist yet, create a default one
     if not db_effects:
         transaction_effect = new_transaction_effect(session, user)
@@ -70,7 +80,7 @@ def get_effects(
         session.commit()
         session.refresh(db_effect)
         db_effects = [db_effect]
-    
+
     # Convert DB models to EffectOut schema
     return [
         EffectOut(
@@ -92,6 +102,7 @@ def get_effects(
 
 class NotificationPreviewResponse(BaseModel):
     """Response model for notification preview"""
+
     html: str
     subject: str
 
@@ -117,32 +128,33 @@ def preview_notification(
         kind = TransactionKind.withdrawal if i % 2 == 0 else TransactionKind.deposit
         # Create transactions on different days
         date = datetime.now() - timedelta(days=i)
-        
+
         sample_transactions.append(
             NoCodeTransaction(
                 amount=amount,
                 date_of_transaction=date,
-                description=f"Sample Transaction {i+1}",
+                description=f"Sample Transaction {i + 1}",
                 kind=kind,
                 category_name=f"Category {(i % 3) + 1}",
                 account_name=account_name,
             )
         )
-    
+
     # Create the event
     event = NewTransactionsEvent(
         transactions=sample_transactions,
         account_name=account_name,
-        count=len(sample_transactions)
+        count=len(sample_transactions),
     )
-    
+
     # Use provided template and subject or defaults
     config = EffectConfig(
         frequency_days=1,
-        template=template or "Hey there! You have {{ count }} new transaction(s) in My Financé!\n{{ transactions_table }}\n{{ alter_settings }}",
+        template=template
+        or "Hey there! You have {{ count }} new transaction(s) in My Financé!\n{{ transactions_table }}\n{{ alter_settings }}",
         subject=subject or "New Transactions in My Financé from {{ account_name }}",
     )
-    
+
     # Create the effect
     effect = Effect(
         type=effect_type,
@@ -150,7 +162,7 @@ def preview_notification(
         condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
         conditional_parameters={"count": 0},
     )
-    
+
     # Generate the email preview
     return perform_template_replacement(event, effect)
 
@@ -177,7 +189,7 @@ def create_effect(
     session.add(db_effect)
     session.commit()
     session.refresh(db_effect)
-    
+
     # Return the created effect
     return EffectOut(
         name=db_effect.name,
@@ -202,25 +214,26 @@ def update_effect(
 ) -> EffectOut:
     """Update an existing notification effect"""
     # Find the effect
-    db_effect = session.query(EffectModel).filter(
-        EffectModel.id == effect_id,
-        EffectModel.user_id == user.id
-    ).first()
-    
+    db_effect = (
+        session.query(EffectModel)
+        .filter(EffectModel.id == effect_id, EffectModel.user_id == user.id)
+        .first()
+    )
+
     if not db_effect:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Notification effect not found"
+            detail="Notification effect not found",
         )
-    
+
     # Update the effect with the provided data
     update_data = effect_data.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_effect, key, value)
-    
+
     session.commit()
     session.refresh(db_effect)
-    
+
     # Return the updated effect
     return EffectOut(
         id=db_effect.id,
@@ -245,19 +258,20 @@ def delete_effect(
 ) -> None:
     """Delete a notification effect"""
     # Find the effect
-    db_effect = session.query(EffectModel).filter(
-        EffectModel.id == effect_id,
-        EffectModel.user_id == user.id
-    ).first()
-    
+    db_effect = (
+        session.query(EffectModel)
+        .filter(EffectModel.id == effect_id, EffectModel.user_id == user.id)
+        .first()
+    )
+
     if not db_effect:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Notification effect not found"
+            detail="Notification effect not found",
         )
-    
+
     # Delete the effect
     session.delete(db_effect)
     session.commit()
-    
+
     return None

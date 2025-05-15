@@ -1,7 +1,9 @@
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Callable
-from app.no_code.notifications.effect_generators.seed_effects import new_transaction_effect
+from app.no_code.notifications.effect_generators.seed_effects import (
+    new_transaction_effect,
+)
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
@@ -20,7 +22,7 @@ def collect_user_effects(session: Session, user: User) -> List[Effect]:
     """
 
     return [
-        new_transaction_effect(session,user),
+        new_transaction_effect(session, user),
     ]
 
 
@@ -52,7 +54,7 @@ def check_effects_against_frequency(
         return []
 
     max_days = max(e.config.frequency_days for e in effects)
-    window_start = datetime.now() - timedelta(days=max_days)
+    window_start = datetime.now(timezone.utc) - timedelta(days=max_days)
 
     effect_logs = (
         session.query(EffectLog)
@@ -169,4 +171,5 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
 
     arg: list[Effect] = []
     for callable in pipeline:
+        print(f"Applying {callable.__name__} to {arg}")
         arg = callable(arg)

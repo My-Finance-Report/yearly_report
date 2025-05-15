@@ -15,42 +15,49 @@ def generate_row(transaction: NoCodeTransaction) -> str:
     else:
         amount_class = "positive"
         amount_str = f"+{amount_str}"
-    
+
     # Format the date in a readable format
     date_str = transaction.date_of_transaction.strftime("%b %d, %Y")
-    
+
     # Create the HTML row with styling
     return f"""<tr>
         <td>{date_str}</td>
         <td>{transaction.description}</td>
-        <td>{transaction.category_name or 'Uncategorized'}</td>
+        <td>{transaction.category_name or "Uncategorized"}</td>
         <td class='{amount_class}'>{amount_str}</td>
     </tr>"""
 
 
 class Event(ABC, BaseModel):
     type: EventType
+
     @property
-    def alter_settings(self)->str:
+    def alter_settings(self) -> str:
         return "Click <a style='text-decoration: underline;' href='https://myfinancereport.com/notifications'>here</a> to change your notification settings"
 
     @property
     def transactions_table(self) -> str:
         """Generate an HTML table of transactions."""
         if not hasattr(self, "transactions"):
-            raise NotImplementedError("must have transactions to build a transaction table")
-        
+            raise NotImplementedError(
+                "must have transactions to build a transaction table"
+            )
+
         # Only show up to 5 transactions to keep emails concise
-        transactions = getattr(self, 'transactions')
+        transactions = getattr(self, "transactions")
         transactions_to_show = transactions[:5]
         has_more = len(transactions) > 5
-        
+
         # Create rows for each transaction
         rows = "\n".join(generate_row(tx) for tx in transactions_to_show)
-        
+
         # Add a note if there are more transactions than shown
-        more_text = f"<tr><td colspan='4'><em>...and {len(transactions) - 5} more transaction(s)</em></td></tr>" if has_more else ""
-        
+        more_text = (
+            f"<tr><td colspan='4'><em>...and {len(transactions) - 5} more transaction(s)</em></td></tr>"
+            if has_more
+            else ""
+        )
+
         # Build the complete table with styling
         table = f"""<table style="width:100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px;">
     <thead>
