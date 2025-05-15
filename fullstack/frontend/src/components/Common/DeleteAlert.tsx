@@ -14,10 +14,10 @@ import {
 import useCustomToast from "../../hooks/useCustomToast";
 
 interface DeleteProps {
-  type: "user" | "transaction" | 'notification';
+  type: "user" | "transaction" | "notification";
   isOpen: boolean;
   onClose: () => void;
-  entity?: TransactionOut  | EffectOut;
+  entity?: TransactionOut | EffectOut;
 }
 
 const STORAGE_KEY_PREFIX = "skip_confirmation_";

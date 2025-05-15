@@ -23,7 +23,15 @@ import {
   FieldErrorText,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { EffectOut, Email, EventType, EffectType, EffectConditionals, EffectCreate, EffectUpdate } from "@/client/types.gen";
+import {
+  EffectOut,
+  Email,
+  EventType,
+  EffectType,
+  EffectConditionals,
+  EffectCreate,
+  EffectUpdate,
+} from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import Delete from "@/components/Common/DeleteAlert";
 import { Controller, useForm, UseFormReturn } from "react-hook-form";
@@ -73,9 +81,7 @@ function UnifiedNotificationInterface() {
     },
   });
 
-
-  const formValues = form.watch()
-
+  const formValues = form.watch();
 
   // Fetch all notification effects
   // Preview query
@@ -92,13 +98,11 @@ function UnifiedNotificationInterface() {
     enabled: !!formValues.template && !!formValues.subject,
   });
 
-
   useEffect(() => {
     refetch();
     if (!data) return;
     setPreviewData(data);
   }, [formValues]);
-
 
   return (
     <>
@@ -110,14 +114,14 @@ function UnifiedNotificationInterface() {
           html={previewData?.html}
         />
 
-        {selectedEffect &&
+        {selectedEffect && (
           <Delete
             type="notification"
             isOpen={deleteModal.open}
             onClose={deleteModal.onClose}
             entity={selectedEffect}
           />
-        }
+        )}
       </HStack>
     </>
   );
@@ -128,7 +132,6 @@ interface EffectSelectorProps {
 }
 
 function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
-
   const { data: effects, isLoading } = useQuery({
     queryKey: ["effects"],
     queryFn: () => NoCodeService.getEffects(),
@@ -139,16 +142,16 @@ function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
     setSelectedEffect(effect || null);
   };
 
-
   if (isLoading) {
     return <Spinner />;
   }
 
-
   return (
     <SelectRoot
       id="effect"
-      collection={createListCollection({ items: effects?.map((effect) => effect.name) || [] })}
+      collection={createListCollection({
+        items: effects?.map((effect) => effect.name) || [],
+      })}
       value={[effects?.[0]?.name || ""]}
       onValueChange={(val) => {
         onChange(val.value[0]);
@@ -165,37 +168,42 @@ function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
         ))}
       </SelectContent>
     </SelectRoot>
-
-  )
+  );
 }
 
 interface CreateFormProps {
-  form: UseFormReturn<NotificationFormValues, null, NotificationFormValues>
+  form: UseFormReturn<NotificationFormValues, null, NotificationFormValues>;
   selectedEffect: EffectOut | null;
 }
 
 function CreateForm({ form, selectedEffect }: CreateFormProps) {
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors, isSubmitting },
+  } = form;
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
 
-  const eventTypes: EventType[] = [
-    "new_transaction",
-    "new_account_linked",
-  ]
+  const eventTypes: EventType[] = ["new_transaction", "new_account_linked"];
 
   const conditionTypes: EffectConditionals[] = [
     "amount_over",
     "count_of_transactions",
-  ]
+  ];
 
-  const effectTypes: EffectType[] = [
-    "email",
-    "in_app",
-  ]
+  const effectTypes: EffectType[] = ["email", "in_app"];
 
   const updateMutation = useMutation({
-    mutationFn: ({data, id}: {data: NotificationFormValues, id: number}) => {
+    mutationFn: ({
+      data,
+      id,
+    }: {
+      data: NotificationFormValues;
+      id: number;
+    }) => {
       const body: EffectUpdate = {
         name: data.name,
         effect_type: data.effect_type,
@@ -205,12 +213,16 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
         subject: data.subject,
         condition: data.condition,
         conditional_parameters: data.conditional_parameters,
-      }
+      };
 
       return NoCodeService.updateEffect({ effectId: id, requestBody: body });
     },
     onSuccess: () => {
-      showToast("Notification updated", "Notification updated successfully.", "success");
+      showToast(
+        "Notification updated",
+        "Notification updated successfully.",
+        "success",
+      );
       reset();
       queryClient.invalidateQueries({ queryKey: ["effects"] });
     },
@@ -220,7 +232,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
   });
   const createMutation = useMutation({
     mutationFn: (data: NotificationFormValues) => {
-      const body:EffectCreate = {
+      const body: EffectCreate = {
         name: data.name,
         effect_type: data.effect_type,
         event_type: data.event_type,
@@ -228,13 +240,20 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
         template: data.template,
         subject: data.subject,
         condition: data.condition,
-        conditional_parameters: data.condition === "amount_over" ? { amount_over: data.conditional_parameters.amount_over } : { count: data.conditional_parameters.count },
-      }
+        conditional_parameters:
+          data.condition === "amount_over"
+            ? { amount_over: data.conditional_parameters.amount_over }
+            : { count: data.conditional_parameters.count },
+      };
 
       return NoCodeService.createEffect({ requestBody: body });
     },
     onSuccess: () => {
-      showToast("Notification created", "Notification created successfully.", "success");
+      showToast(
+        "Notification created",
+        "Notification created successfully.",
+        "success",
+      );
       reset();
       queryClient.invalidateQueries({ queryKey: ["effects"] });
     },
@@ -242,9 +261,6 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
       showToast("Error creating notification", error.message, "error");
     },
   });
-
-
-
 
   const onSubmit = handleSubmit((data) => {
     if (selectedEffect?.id) {
@@ -257,9 +273,6 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
     }
   });
 
-
-
-
   return (
     <Card.Root minW="400px">
       <Card.Header>
@@ -268,8 +281,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
         </HStack>
       </Card.Header>
       <Card.Body>
-        <Box onSubmit={onSubmit}
-          as="form">
+        <Box onSubmit={onSubmit} as="form">
           <VStack spaceY={4} align="stretch">
             <FieldRoot invalid={!!errors.name} required>
               <FieldLabel htmlFor="description">Name</FieldLabel>
@@ -287,7 +299,9 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
             </FieldRoot>
 
             <FieldRoot invalid={!!errors.frequency_days} required>
-              <FieldLabel htmlFor="frequency_days">Send most once every X days</FieldLabel>
+              <FieldLabel htmlFor="frequency_days">
+                Send most once every X days
+              </FieldLabel>
               <Input
                 id="frequency_days"
                 {...register("frequency_days", {
@@ -313,7 +327,8 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                       id="event_type"
                       defaultValue={[
                         eventTypes.find(
-                          (eventType) => eventType === selectedEffect?.event_type,
+                          (eventType) =>
+                            eventType === selectedEffect?.event_type,
                         )!,
                       ]}
                       collection={createListCollection({ items: eventTypes })}
@@ -340,7 +355,6 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
               )}
             </FieldRoot>
 
-
             <FieldRoot invalid={!!errors.condition} required mt={4}>
               <FieldLabel htmlFor="condition">Condition</FieldLabel>
               <Controller
@@ -353,10 +367,13 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                       id="condition"
                       defaultValue={[
                         conditionTypes.find(
-                          (condition) => condition === selectedEffect?.condition,
+                          (condition) =>
+                            condition === selectedEffect?.condition,
                         )!,
                       ]}
-                      collection={createListCollection({ items: conditionTypes })}
+                      collection={createListCollection({
+                        items: conditionTypes,
+                      })}
                       onValueChange={(val) => {
                         onChange(val.value[0]);
                       }}
@@ -381,7 +398,9 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
             </FieldRoot>
 
             <FieldRoot invalid={!!errors.conditional_parameters} required>
-              <FieldLabel htmlFor="conditional_parameters">Conditional Parameters</FieldLabel>
+              <FieldLabel htmlFor="conditional_parameters">
+                Conditional Parameters
+              </FieldLabel>
               <Controller
                 control={control}
                 name="conditional_parameters"
@@ -395,7 +414,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                           const parsedValue = JSON.parse(e.target.value);
                           onChange(parsedValue);
                         } catch {
-                          e.target.dataset.jsonError = 'true';
+                          e.target.dataset.jsonError = "true";
                         }
                       }}
                       placeholder='{"count": 1}'
@@ -407,20 +426,18 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                   required: "Conditional parameters are required",
                   validate: (value) => {
                     return (
-                      (typeof value === 'object' && value !== null) ||
+                      (typeof value === "object" && value !== null) ||
                       "Must be a valid JSON object"
                     );
-                  }
+                  },
                 }}
               />
-              {errors.conditional_parameters && (
-                <FieldErrorText>{errors.conditional_parameters.message}</FieldErrorText>
+              {errors.conditional_parameters?.message && (
+                <FieldErrorText>
+                  {errors.conditional_parameters?.message.message}
+                </FieldErrorText>
               )}
             </FieldRoot>
-
-
-
-
 
             <FieldRoot invalid={!!errors.effect_type} required mt={4}>
               <FieldLabel htmlFor="effect_type">Effect Type</FieldLabel>
@@ -434,7 +451,8 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
                       id="effect_type"
                       defaultValue={[
                         effectTypes.find(
-                          (effectType) => effectType === selectedEffect?.effect_type,
+                          (effectType) =>
+                            effectType === selectedEffect?.effect_type,
                         )!,
                       ]}
                       collection={createListCollection({ items: effectTypes })}
@@ -490,12 +508,14 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
               )}
             </FieldRoot>
 
-
-
             <HStack>
               <Button
                 type="submit"
-                loading={isSubmitting || createMutation.isPending || updateMutation.isPending}
+                loading={
+                  isSubmitting ||
+                  createMutation.isPending ||
+                  updateMutation.isPending
+                }
                 mr={3}
               >
                 {selectedEffect ? "Update Notification" : "Save Notification"}
@@ -505,10 +525,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
         </Box>
       </Card.Body>
     </Card.Root>
-
-
-
-  )
+  );
 }
 
 interface NotificationPreviewProps {
@@ -517,20 +534,18 @@ interface NotificationPreviewProps {
 }
 
 function NotificationPreview({ html, subject }: NotificationPreviewProps) {
-
   if (!html || !subject) {
-    return null
+    return null;
   }
 
   return (
     <Card.Root className="border">
-      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium" >
+      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
         {subject}
       </Card.Header>
-      <Card.Body className="p-0 overflow-hidden" >
+      <Card.Body className="p-0 overflow-hidden">
         <div dangerouslySetInnerHTML={{ __html: html }} />
       </Card.Body>
     </Card.Root>
   );
 }
-
