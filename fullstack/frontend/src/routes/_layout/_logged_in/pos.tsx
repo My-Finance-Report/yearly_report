@@ -23,6 +23,10 @@ const actions: Action[] = [
     {
         name: "Sales Reports", 
         link: "/sales-reports"
+    },
+    {
+        name: "Manage Menu", 
+        link: "/manage-menu"
     }
     
 ]

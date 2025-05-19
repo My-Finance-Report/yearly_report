@@ -43,6 +43,7 @@ import { Route as LayoutLoggedinPosImport } from './routes/_layout/_logged_in/po
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
 import { Route as LayoutLoggedinOrderImport } from './routes/_layout/_logged_in/order'
 import { Route as LayoutLoggedinNotificationsImport } from './routes/_layout/_logged_in/notifications'
+import { Route as LayoutLoggedinManageMenuImport } from './routes/_layout/_logged_in/manage-menu'
 import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
 import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
 import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
@@ -251,6 +252,12 @@ const LayoutLoggedinNotificationsRoute =
     getParentRoute: () => LayoutLoggedinRoute,
   } as any)
 
+const LayoutLoggedinManageMenuRoute = LayoutLoggedinManageMenuImport.update({
+  id: '/manage-menu',
+  path: '/manage-menu',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
+
 const LayoutLoggedinManageAccountsRoute =
   LayoutLoggedinManageAccountsImport.update({
     id: '/manage-accounts',
@@ -441,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinManageAccountsImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/manage-menu': {
+      id: '/_layout/_logged_in/manage-menu'
+      path: '/manage-menu'
+      fullPath: '/manage-menu'
+      preLoaderRoute: typeof LayoutLoggedinManageMenuImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/notifications': {
       id: '/_layout/_logged_in/notifications'
       path: '/notifications'
@@ -542,6 +556,7 @@ interface LayoutLoggedinRouteChildren {
   LayoutLoggedinAdminRoute: typeof LayoutLoggedinAdminRoute
   LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute
   LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute
+  LayoutLoggedinManageMenuRoute: typeof LayoutLoggedinManageMenuRoute
   LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute
   LayoutLoggedinOrderRoute: typeof LayoutLoggedinOrderRoute
   LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute
@@ -562,6 +577,7 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinAdminRoute: LayoutLoggedinAdminRoute,
   LayoutLoggedinBudgetRoute: LayoutLoggedinBudgetRoute,
   LayoutLoggedinManageAccountsRoute: LayoutLoggedinManageAccountsRoute,
+  LayoutLoggedinManageMenuRoute: LayoutLoggedinManageMenuRoute,
   LayoutLoggedinNotificationsRoute: LayoutLoggedinNotificationsRoute,
   LayoutLoggedinOrderRoute: LayoutLoggedinOrderRoute,
   LayoutLoggedinPlaidRoute: LayoutLoggedinPlaidRoute,
@@ -650,6 +666,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutLoggedinAdminRoute
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/manage-menu': typeof LayoutLoggedinManageMenuRoute
   '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/order': typeof LayoutLoggedinOrderRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
@@ -688,6 +705,7 @@ export interface FileRoutesByTo {
   '/admin': typeof LayoutLoggedinAdminRoute
   '/budget': typeof LayoutLoggedinBudgetRoute
   '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/manage-menu': typeof LayoutLoggedinManageMenuRoute
   '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/order': typeof LayoutLoggedinOrderRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
@@ -728,6 +746,7 @@ export interface FileRoutesById {
   '/_layout/_logged_in/admin': typeof LayoutLoggedinAdminRoute
   '/_layout/_logged_in/budget': typeof LayoutLoggedinBudgetRoute
   '/_layout/_logged_in/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/_layout/_logged_in/manage-menu': typeof LayoutLoggedinManageMenuRoute
   '/_layout/_logged_in/notifications': typeof LayoutLoggedinNotificationsRoute
   '/_layout/_logged_in/order': typeof LayoutLoggedinOrderRoute
   '/_layout/_logged_in/plaid': typeof LayoutLoggedinPlaidRoute
@@ -768,6 +787,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/budget'
     | '/manage-accounts'
+    | '/manage-menu'
     | '/notifications'
     | '/order'
     | '/plaid'
@@ -805,6 +825,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/budget'
     | '/manage-accounts'
+    | '/manage-menu'
     | '/notifications'
     | '/order'
     | '/plaid'
@@ -843,6 +864,7 @@ export interface FileRouteTypes {
     | '/_layout/_logged_in/admin'
     | '/_layout/_logged_in/budget'
     | '/_layout/_logged_in/manage-accounts'
+    | '/_layout/_logged_in/manage-menu'
     | '/_layout/_logged_in/notifications'
     | '/_layout/_logged_in/order'
     | '/_layout/_logged_in/plaid'
@@ -911,6 +933,7 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/admin",
         "/_layout/_logged_in/budget",
         "/_layout/_logged_in/manage-accounts",
+        "/_layout/_logged_in/manage-menu",
         "/_layout/_logged_in/notifications",
         "/_layout/_logged_in/order",
         "/_layout/_logged_in/plaid",
@@ -1008,6 +1031,10 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/manage-accounts": {
       "filePath": "_layout/_logged_in/manage-accounts.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/manage-menu": {
+      "filePath": "_layout/_logged_in/manage-menu.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/notifications": {
