@@ -202,10 +202,9 @@ def delete_account_page(user_id: int) -> None:
                 NoCodeParameterOption.parameter_id.in_(parameter_ids)
             ).delete(synchronize_session=False)
             session.query(NoCodeToolParameter).filter(
-                NoCodeToolParameter.parameter_id.id_(parameter_ids).delete(
+                NoCodeToolParameter.parameter_id.in_(parameter_ids)).delete(
                     synchronize_session=False
                 )
-            )
 
         # 7. Delete parameters
         if parameter_ids:
@@ -234,5 +233,5 @@ def delete_account_page(user_id: int) -> None:
 
 
 if __name__ == "__main__":
-    delete_account_page(1)
-    # seed_account_page(1)
+    #delete_account_page(1)
+    seed_account_page(1)
