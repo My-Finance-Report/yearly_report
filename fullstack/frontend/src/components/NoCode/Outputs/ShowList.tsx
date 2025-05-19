@@ -28,6 +28,13 @@ interface NoCodeTransactionOut {
   category_name: string;
 }
 
+function formatAmount(amount: number) {
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
+
 export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as Array<NoCodeTransactionOut>;
 
@@ -40,24 +47,25 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
       <TableRoot variant="outline" borderRadius="md" borderWidth={1}>
         <TableHeader>
           <TableRow>
-            {result.map((data, index) => {
-              if (index === 0) {
-                return Object.keys(data).map((key) => (
-                  <TableCell key={key}>{key}</TableCell>
-                ));
-              }
-            })}
+            <TableCell>Category</TableCell>
+            <TableCell>Description</TableCell>
+            <TableCell>Amount</TableCell>
+            <TableCell>Date of Transaction</TableCell>
+            <TableCell>Kind</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
           {result.map((data, index) => (
             <TableRow key={index}>
-              {Object.entries(data).map(([key, value]) => (
-                <TableCell key={key}>{value}</TableCell>
-              ))}
-<TableCell>
-        <Flex direction="row" gap={2}>
-          <Button
+              <TableCell>{data.category_name}</TableCell>
+              <TableCell>{data.description}</TableCell>
+              <TableCell>{formatAmount(data.amount)}</TableCell>
+              <TableCell>{data.date_of_transaction}</TableCell>
+              <TableCell>{data.kind}</TableCell>
+              <TableCell>
+                <Flex direction="row" gap={2}>
+                  <Button
             onClick={editTransactionModal.onOpen}
             size="sm"
             variant="outline"
@@ -84,9 +92,7 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
         onClose={deleteTransactionModal.onClose}
         entity={data}
       />
-
             </TableRow>
-
 
           ))}
         </TableBody>
