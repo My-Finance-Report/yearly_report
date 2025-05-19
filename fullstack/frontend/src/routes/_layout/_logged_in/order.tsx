@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Box, Flex, Text, Button, Heading, Input, NumberInput } from '@chakra-ui/react'
+import { Box, Flex, Text, Button, Heading, NumberInput, Breadcrumb } from '@chakra-ui/react'
 import { useState } from 'react';
 
 interface Variant {
@@ -8,11 +8,35 @@ interface Variant {
     priceDelta: number;
 }
 
+interface VariantGroup {
+    id: string;
+    order: number;
+    name: string;
+    required: boolean;
+    variants: Variant[];
+}
+
 interface Orderable {
     id: string;
     name: string;
-    variants: Variant[];
+    variantGroups: VariantGroup[];
     price: number;
+}
+
+interface SelectedVariant extends Variant {
+    groupId: string;
+}
+
+interface OrderItem {
+    orderable: Orderable;
+    variants: SelectedVariant[];
+    quantity: number;
+}
+
+interface CompleteOrder {
+    id: string;
+    timestamp: string;
+    orderItems: OrderItem[];
 }
 
 
@@ -24,23 +48,38 @@ export const Route = createFileRoute('/_layout/_logged_in/order')({
 const orderables: Orderable[] = [
     {
         id: "1",
-        name: "T-shirt",
-        variants: [
-            { id: "1", name: "Small", priceDelta: 0 },
-            { id: "2", name: "Medium", priceDelta: 1 },
-            { id: "3", name: "Large", priceDelta: 2 },
+        name: "coffee",
+        variantGroups: [
+            { id: "0", order: 0, name: "temp", required: true, variants: [
+                { id: "1", name: "Hot", priceDelta: 0 },
+                { id: "2", name: "Cold", priceDelta: 1 },
+            ] },
+            { id: "1", order: 1, name: "size", required: true, variants: [
+                { id: "1", name: "Small", priceDelta: 0 },
+                { id: "2", name: "Medium", priceDelta: 1 },
+                { id: "3", name: "Large", priceDelta: 2 },
+            ] },
+            { id: "2", order: 2, name: "misc", required: false, variants: [
+                { id: "1", name: "Extra Shot", priceDelta: 1 },
+                { id: "2", name: "Decaf", priceDelta: 1 },
+                { id: "3", name: "Add Milk", priceDelta: 1 },
+            ] },
+            { id: "3", order: 3, name: "flavors", required: false, variants: [
+                { id: "1", name: "Vanilla", priceDelta: 1 },
+                { id: "2", name: "Hazelnut", priceDelta: 1 },
+                { id: "3", name: "Caramel", priceDelta: 1 },
+                { id: "4", name: "Pumpkin", priceDelta: 1 },
+                { id: "5", name: "Cookie", priceDelta: 1 },
+                { id: "6", name: "Mocha", priceDelta: 1 },
+                { id: "7", name: "Caramel Macchiato", priceDelta: 1 },
+                { id: "8", name: "Hazelnut Macchiato", priceDelta: 1 },
+                { id: "9", name: "Vanilla Macchiato", priceDelta: 1 },
+                { id: "10", name: "Pumpkin Macchiato", priceDelta: 1 },
+                { id: "11", name: "Cookie Macchiato", priceDelta: 1 },
+                { id: "12", name: "Mocha Macchiato", priceDelta: 1 },
+            ] },
         ],
-        price: 10,
-    },
-    {
-        id: "2",
-        name: "Jeans",
-        variants: [
-            { id: "1", name: "Small", priceDelta: 0 },
-            { id: "2", name: "Medium", priceDelta: 1 },
-            { id: "3", name: "Large", priceDelta: 2 },
-        ],
-        price: 20,
+        price: 2,
     },
 ]
 
@@ -56,50 +95,329 @@ onValueChange={(e) => setQuantity(Number(e.value))}
     )
 }
 
-function OrderableCard({ setOrder, orderable }: { setOrder: React.Dispatch<React.SetStateAction<Orderable[]>>, orderable: Orderable }) {
-    const [showVariants, setShowVariants] = useState(false)
-    const [quantity, setQuantity] = useState(1)
-    return (<Box onClick={() => setShowVariants(!showVariants)} flex={"row"} p={2} minW={200} border="1px solid #ccc" borderRadius={4}>
-        <Text>{orderable.name}</Text>
-        {showVariants && (
-            <Flex direction={"column"} gap={2}>
-                {orderable.variants.map((variant) => (
-                    <Box key={variant.id} p={2} border="1px solid #ccc" borderRadius={4}>
-                        <Text>{variant.name}</Text>
-                        <Text>${orderable.price + variant.priceDelta}</Text>
-                        <Flex direction={"row"} gap={2}>
-                        <QuantitySelector quantity={quantity} setQuantity={setQuantity} />
-                        <Button onClick={() => setOrder((prev) => [...prev, { ...orderable, variant }])}>Add to Order</Button>
-</Flex>
-                    </Box>
+function OrderableCard({ setInProgressOrder, orderable }: { setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>, orderable: Orderable }) {
+    return (<Box cursor="pointer" minH={100} onClick={() => setInProgressOrder(orderable)} display={"flex"} flexDirection={"column"} justifyContent="center" alignItems="center" p={2} minW={200} border="1px solid #ccc" borderRadius={4}>
+        <Text cursor="pointer">{orderable.name}</Text>
+    </Box>)
+}
+
+function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>>, orderItem: OrderItem }) {
+    const totalPrice = orderItem.orderable.price + 
+        orderItem.variants.reduce((sum, variant) => sum + variant.priceDelta, 0)
+    
+    const handleRemove = () => {
+        setOrder(prev => ({
+            ...prev,
+            orderItems: prev.orderItems.filter(item => 
+                !(item.orderable.id === orderItem.orderable.id && 
+                  JSON.stringify(item.variants) === JSON.stringify(orderItem.variants))
+            )
+        }))
+    }
+
+    // Group variants by their variant group
+    const variantsByGroup = orderItem.orderable.variantGroups.map(group => {
+        // Only include variants that were selected in this group
+        const variantsInGroup = orderItem.variants.filter(selectedVariant => 
+            'groupId' in selectedVariant && selectedVariant.groupId === group.id
+        )
+        return {
+            groupName: group.name,
+            variants: variantsInGroup
+        }
+    }).filter(group => group.variants.length > 0)
+
+    // Count occurrences of each variant within its group
+    const variantCounts = new Map<string, number>()
+    variantsByGroup.forEach(group => {
+        // Reset counts for each group
+        group.variants.forEach(v => {
+            const key = `${group.groupName}-${v.id}`
+            variantCounts.set(key, (variantCounts.get(key) || 0) + 1)
+        })
+    })
+
+    return (
+        <Box 
+            flex="row" 
+            p={4} 
+            minW={200} 
+            border="1px solid #ccc" 
+            borderRadius={4}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+        >
+            <Flex direction="column" flex={1} gap={1}>
+                <Text fontWeight="bold">{orderItem.orderable.name}</Text>
+                {variantsByGroup.map(group => (
+                    <Text key={group.groupName} fontSize="sm">
+                        {group.groupName}: {group.variants.map(v => {
+                            const count = variantCounts.get(`${group.groupName}-${v.id}`) || 0
+                            return count > 1 ? `${v.name} ×${count}` : v.name
+                        }).join(', ')}
+                    </Text>
                 ))}
             </Flex>
-        )}
-    </Box>)
+            <Flex align="center" gap={4}>
+                <Text>${totalPrice.toFixed(2)} × {orderItem.quantity}</Text>
+                <Button size="sm" onClick={handleRemove}>Remove</Button>
+            </Flex>
+        </Box>
+    )
 }
 
-function InOrderCard({ setOrder, orderable }: { setOrder: React.Dispatch<React.SetStateAction<Orderable[]>>, orderable: Orderable }) {
-    return (<Box flex={"row"} p={2} minW={200} border="1px solid #ccc" borderRadius={4}>
-        <Text>{orderable.name}</Text>
-        <Text>{orderable.variants.find((variant) => variant.id === orderable.variants?.id)?.name}</Text>
-        <Text>{orderable.variants.find((variant) => variant.id === orderable.variants?.id)?.priceDelta}</Text>
-        <Button onClick={() => setOrder((prev) => prev.filter((item) => item.id !== orderable.id))}>Remove from Order</Button>
-    </Box>)
+function VariantGroupSelector({ 
+    variantGroup, 
+    onSelect, 
+    onBack, 
+    onNext,
+    currentSelections
+}: { 
+    variantGroup: VariantGroup, 
+    onSelect: (variant: Variant) => void,
+    onBack: () => void,
+    onNext: () => void,
+    currentSelections: Variant[]
+}) {
+    // Only count variants that actually belong to this group
+    const selectedVariantsInGroup = currentSelections.filter(selectedVariant => 
+        'groupId' in selectedVariant && selectedVariant.groupId === variantGroup.id
+    )
+
+    return (
+        <Box p={4}>
+            <Flex justify="space-between" mb={4}>
+                <Box>
+                    <Heading size="md">{variantGroup.name}</Heading>
+                    {selectedVariantsInGroup.length > 0 && (
+                        <Text color="gray.600" fontSize="sm">
+                            Selected: {selectedVariantsInGroup.map(v => v.name).join(', ')}
+                        </Text>
+                    )}
+                </Box>
+                <Flex gap={2}>
+                    <Button size="sm" onClick={onBack}>Back</Button>
+                    <Button size="sm" onClick={onNext}>Next</Button>
+                </Flex>
+            </Flex>
+            <Flex direction="column" gap={4}>
+                {variantGroup.variants.map((variant) => {
+                    const count = selectedVariantsInGroup.filter(v => v.id === variant.id).length
+                    return (
+                        <Box 
+                            key={variant.id}
+                            p={4} 
+                            border="1px solid #ccc" 
+                            borderRadius={4}
+                            cursor="pointer"
+                            onClick={() => onSelect(variant)}
+                            _hover={{ bg: 'gray.50' }}
+                            bg={count > 0 ? 'blue.50' : undefined}
+                        >
+                            <Flex justify="space-between" mb={2}>
+                                <Flex gap={2} align="center">
+                                    <Text fontWeight="bold">{variant.name}</Text>
+                                    {count > 0 && (
+                                        <Text color="blue.500" fontSize="sm">×{count}</Text>
+                                    )}
+                                </Flex>
+                                <Text>${variant.priceDelta > 0 ? `+${variant.priceDelta.toFixed(2)}` : '0.00'}</Text>
+                            </Flex>
+                        </Box>
+                    )
+                })}
+            </Flex>
+        </Box>
+    )
 }
-function Order() {
-    const [order, setOrder] = useState<Orderable[]>([])
-    return (<Box p={2}>
-    <Flex direction={"column"} gap={2}>
+
+function VariantSelector({ orderable, setOrder, setInProgressOrder }: { 
+    orderable: Orderable, 
+    setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>, 
+    setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>> 
+}) {
+    const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
+    const [variantsByGroup, setVariantsByGroup] = useState<Map<string, Variant[]>>(
+        new Map(orderable.variantGroups.map(g => [g.id, []]))
+    )
+    const [quantity, setQuantity] = useState(1)
+
+    const currentGroup = orderable.variantGroups[currentGroupIndex]
+
+    const handleVariantSelect = (variant: Variant) => {
+        const selectedVariant: SelectedVariant = {
+            ...variant,
+            groupId: currentGroup.id
+        }
+        setVariantsByGroup(prev => {
+            const newMap = new Map(prev)
+            const currentVariants = [...(prev.get(currentGroup.id) || [])]
+            newMap.set(currentGroup.id, [...currentVariants, selectedVariant])
+            return newMap
+        })
+    }
+
+    const handleBack = () => {
+        if (currentGroupIndex > 0) {
+            setCurrentGroupIndex(currentGroupIndex - 1)
+        } else {
+            setInProgressOrder(null)
+        }
+    }
+
+    const handleNext = () => {
+        const currentVariants = variantsByGroup.get(currentGroup.id) || []
+        if (currentGroup.required && currentVariants.length === 0) {
+            // Don't allow proceeding if this is a required group and no selection was made
+            return
+        }
+
+        if (currentGroupIndex < orderable.variantGroups.length - 1) {
+            setCurrentGroupIndex(currentGroupIndex + 1)
+        } else {
+            // We've gone through all groups, add to order
+            const allVariants = Array.from(variantsByGroup.values()).flat() as SelectedVariant[]
+            setOrder(prev => ({
+                ...prev,
+                orderItems: [
+                    ...prev.orderItems,
+                    {
+                        orderable,
+                        variants: allVariants,
+                        quantity
+                    }
+                ]
+            }))
+            setInProgressOrder(null)
+        }
+    }
+
+    return (
+        <Box>
+            <Box mb={4}>
+                <Heading size="lg">{orderable.name}</Heading>
+                <Text color="gray.600">Step {currentGroupIndex + 1} of {orderable.variantGroups.length}</Text>
+            </Box>
+            <VariantGroupSelector 
+                variantGroup={currentGroup}
+                onSelect={handleVariantSelect}
+                onBack={handleBack}
+                onNext={handleNext}
+                currentSelections={variantsByGroup.get(currentGroup.id) || []}
+            />
+            {currentGroupIndex === orderable.variantGroups.length - 1 && (
+                <Box mt={4}>
+                    <Flex gap={4} align="center" justify="center">
+                        <QuantitySelector 
+                            setQuantity={setQuantity} 
+                            quantity={quantity} 
+                        />
+                    </Flex>
+                </Box>
+            )}
+        </Box>
+    )
+}
+
+function AllOrderables({setInProgressOrder}: {setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>}){
+    return (
+        <Flex direction={"column"} gap={2}>
         {orderables.map((orderable) => (
-            <OrderableCard setOrder={setOrder} key={orderable.id} orderable={orderable} />
+            <OrderableCard setInProgressOrder={setInProgressOrder} key={orderable.id} orderable={orderable} />
         ))}
     </Flex>
-    <Heading size="md">Order</Heading>
-    <Flex direction={"column"} gap={2}>
-        {order.map((orderable) => (
-            <InOrderCard setOrder={setOrder} key={orderable.id} orderable={orderable} />
-        ))}
-    </Flex>
-  </Box>)
+    )
+
 }
 
+function Order() {
+    const [order, setOrder] = useState<CompleteOrder>({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        orderItems: []
+    })
+    const [inProgressOrder, setInProgressOrder] = useState<Orderable | null>(null)
+
+    const orderTotal = order.orderItems.reduce((sum, item) => {
+        const itemPrice = item.orderable.price + 
+            item.variants.reduce((variantSum, variant) => variantSum + variant.priceDelta, 0)
+        return sum + (itemPrice * item.quantity)
+    }, 0)
+
+    const handleSubmitOrder = () => {
+        console.log('Submitting order:', order)
+        setOrder({
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            orderItems: []
+        })
+    }
+
+    return (
+        <Box p={4}>
+            <BreadcrumbComponent />
+            {inProgressOrder ? (
+                <VariantSelector 
+                    orderable={inProgressOrder} 
+                    setOrder={setOrder} 
+                    setInProgressOrder={setInProgressOrder} 
+                />
+            ) : (
+                <Box>
+                    <AllOrderables setInProgressOrder={setInProgressOrder} />
+                </Box>
+            )}
+
+            {order.orderItems.length > 0 && (
+                <Box mt={8}>
+                    <Heading size="md" mb={4}>Current Order</Heading>
+                    <Flex direction="column" gap={3}>
+                        {order.orderItems.map((orderItem, index) => (
+                            <InOrderCard 
+                                key={`${orderItem.orderable.id}-${orderItem.variants.map(v => v.id).join('-')}-${index}`}
+                                setOrder={setOrder} 
+                                orderItem={orderItem} 
+                            />
+                        ))}
+                        <Box 
+                            p={4} 
+                            borderRadius={4}
+                            display="flex"
+                            justifyContent="space-between"
+                        >
+                            <Text fontWeight="bold">Total</Text>
+                            <Text fontWeight="bold">${orderTotal.toFixed(2)}</Text>
+                        </Box>
+                        <Button
+                            mt={4}
+                            colorScheme="green"
+                            width="100%"
+                            size="lg"
+                            onClick={handleSubmitOrder}
+                        >
+                            Submit Order (${orderTotal.toFixed(2)})
+                        </Button>
+                    </Flex>
+                </Box>
+            )}
+        </Box>
+    )
+}
+
+
+function BreadcrumbComponent() {
+    return (
+        <Breadcrumb.Root size="lg">
+            <Breadcrumb.List>
+                <Breadcrumb.Item>
+                    <Breadcrumb.Link href="/pos">Home</Breadcrumb.Link>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                    <Breadcrumb.CurrentLink>Order</Breadcrumb.CurrentLink>
+                </Breadcrumb.Item>
+            </Breadcrumb.List>
+        </Breadcrumb.Root>
+    )
+}

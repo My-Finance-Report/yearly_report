@@ -38,6 +38,8 @@ import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layou
 import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
 import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
 import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
+import { Route as LayoutLoggedinSalesReportsImport } from './routes/_layout/_logged_in/sales-reports'
+import { Route as LayoutLoggedinPosImport } from './routes/_layout/_logged_in/pos'
 import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
 import { Route as LayoutLoggedinOrderImport } from './routes/_layout/_logged_in/order'
 import { Route as LayoutLoggedinNotificationsImport } from './routes/_layout/_logged_in/notifications'
@@ -215,6 +217,20 @@ const LayoutLoggedinSankeyConfigRoute = LayoutLoggedinSankeyConfigImport.update(
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
 )
+
+const LayoutLoggedinSalesReportsRoute = LayoutLoggedinSalesReportsImport.update(
+  {
+    id: '/sales-reports',
+    path: '/sales-reports',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any,
+)
+
+const LayoutLoggedinPosRoute = LayoutLoggedinPosImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any)
 
 const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
   id: '/plaid',
@@ -446,6 +462,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLoggedinPlaidImport
       parentRoute: typeof LayoutLoggedinImport
     }
+    '/_layout/_logged_in/pos': {
+      id: '/_layout/_logged_in/pos'
+      path: '/pos'
+      fullPath: '/pos'
+      preLoaderRoute: typeof LayoutLoggedinPosImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/sales-reports': {
+      id: '/_layout/_logged_in/sales-reports'
+      path: '/sales-reports'
+      fullPath: '/sales-reports'
+      preLoaderRoute: typeof LayoutLoggedinSalesReportsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
     '/_layout/_logged_in/sankey-config': {
       id: '/_layout/_logged_in/sankey-config'
       path: '/sankey-config'
@@ -515,6 +545,8 @@ interface LayoutLoggedinRouteChildren {
   LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute
   LayoutLoggedinOrderRoute: typeof LayoutLoggedinOrderRoute
   LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute
+  LayoutLoggedinPosRoute: typeof LayoutLoggedinPosRoute
+  LayoutLoggedinSalesReportsRoute: typeof LayoutLoggedinSalesReportsRoute
   LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute
   LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute
   LayoutLoggedinSubscriptionRoute: typeof LayoutLoggedinSubscriptionRoute
@@ -533,6 +565,8 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinNotificationsRoute: LayoutLoggedinNotificationsRoute,
   LayoutLoggedinOrderRoute: LayoutLoggedinOrderRoute,
   LayoutLoggedinPlaidRoute: LayoutLoggedinPlaidRoute,
+  LayoutLoggedinPosRoute: LayoutLoggedinPosRoute,
+  LayoutLoggedinSalesReportsRoute: LayoutLoggedinSalesReportsRoute,
   LayoutLoggedinSankeyConfigRoute: LayoutLoggedinSankeyConfigRoute,
   LayoutLoggedinSettingsRoute: LayoutLoggedinSettingsRoute,
   LayoutLoggedinSubscriptionRoute: LayoutLoggedinSubscriptionRoute,
@@ -619,6 +653,8 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/order': typeof LayoutLoggedinOrderRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
+  '/pos': typeof LayoutLoggedinPosRoute
+  '/sales-reports': typeof LayoutLoggedinSalesReportsRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
   '/subscription': typeof LayoutLoggedinSubscriptionRoute
@@ -655,6 +691,8 @@ export interface FileRoutesByTo {
   '/notifications': typeof LayoutLoggedinNotificationsRoute
   '/order': typeof LayoutLoggedinOrderRoute
   '/plaid': typeof LayoutLoggedinPlaidRoute
+  '/pos': typeof LayoutLoggedinPosRoute
+  '/sales-reports': typeof LayoutLoggedinSalesReportsRoute
   '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/settings': typeof LayoutLoggedinSettingsRoute
   '/subscription': typeof LayoutLoggedinSubscriptionRoute
@@ -693,6 +731,8 @@ export interface FileRoutesById {
   '/_layout/_logged_in/notifications': typeof LayoutLoggedinNotificationsRoute
   '/_layout/_logged_in/order': typeof LayoutLoggedinOrderRoute
   '/_layout/_logged_in/plaid': typeof LayoutLoggedinPlaidRoute
+  '/_layout/_logged_in/pos': typeof LayoutLoggedinPosRoute
+  '/_layout/_logged_in/sales-reports': typeof LayoutLoggedinSalesReportsRoute
   '/_layout/_logged_in/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
   '/_layout/_logged_in/settings': typeof LayoutLoggedinSettingsRoute
   '/_layout/_logged_in/subscription': typeof LayoutLoggedinSubscriptionRoute
@@ -731,6 +771,8 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/order'
     | '/plaid'
+    | '/pos'
+    | '/sales-reports'
     | '/sankey-config'
     | '/settings'
     | '/subscription'
@@ -766,6 +808,8 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/order'
     | '/plaid'
+    | '/pos'
+    | '/sales-reports'
     | '/sankey-config'
     | '/settings'
     | '/subscription'
@@ -802,6 +846,8 @@ export interface FileRouteTypes {
     | '/_layout/_logged_in/notifications'
     | '/_layout/_logged_in/order'
     | '/_layout/_logged_in/plaid'
+    | '/_layout/_logged_in/pos'
+    | '/_layout/_logged_in/sales-reports'
     | '/_layout/_logged_in/sankey-config'
     | '/_layout/_logged_in/settings'
     | '/_layout/_logged_in/subscription'
@@ -868,6 +914,8 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/notifications",
         "/_layout/_logged_in/order",
         "/_layout/_logged_in/plaid",
+        "/_layout/_logged_in/pos",
+        "/_layout/_logged_in/sales-reports",
         "/_layout/_logged_in/sankey-config",
         "/_layout/_logged_in/settings",
         "/_layout/_logged_in/subscription",
@@ -972,6 +1020,14 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/plaid": {
       "filePath": "_layout/_logged_in/plaid.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos": {
+      "filePath": "_layout/_logged_in/pos.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/sales-reports": {
+      "filePath": "_layout/_logged_in/sales-reports.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/sankey-config": {
