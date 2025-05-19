@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    admin,
     demo,
     login,
     notifications,
@@ -25,6 +26,7 @@ from app.core.config import settings
 
 api_router = APIRouter()
 api_router.include_router(login.router)
+api_router.include_router(admin.router)
 api_router.include_router(notifications.router)
 api_router.include_router(oauth.router)
 api_router.include_router(plaid.router)

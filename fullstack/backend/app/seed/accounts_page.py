@@ -27,7 +27,7 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
         user_id=user_id,
     )
     session.add(canvas)
-    session.flush()  # So canvas.id is populated
+    session.flush()
 
     widget_id_lookup = {}
 

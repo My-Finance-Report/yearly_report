@@ -83,6 +83,5 @@ big milestones before launch:
 
 
 
--> remove total column
 -> would be nice to set a default on the dropdown
 -> edit button the tables

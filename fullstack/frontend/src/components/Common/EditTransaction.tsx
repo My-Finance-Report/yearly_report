@@ -72,6 +72,7 @@ const EditTransaction = ({
   isOpen,
   onClose,
 }: EditTransactionProps) => {
+
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 

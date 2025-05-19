@@ -55,7 +55,7 @@ export function TransactionsTable({
   const isBudget = data.groups[0].groupby_kind === "budget";
 
   return (
-    <Table.Root variant="outline" borderRadius="md">
+    <Table.Root variant="outline" borderRadius="md" size="md">
       <TableHeader>
         <TableRow>
           <TableColumnHeader />
@@ -66,17 +66,14 @@ export function TransactionsTable({
             {isMobile ? null : isBudget ? "BUDGET" : ""}
           </TableColumnHeader>
           {isMobile ? (
-            <TableColumnHeader textAlign="end" colSpan={1}>
+            <TableColumnHeader colSpan={1}>
               EXPENSE / DEPOSIT
             </TableColumnHeader>
           ) : (
             <>
-              <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
-              <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
+              <TableColumnHeader>EXPENSE</TableColumnHeader>
+              <TableColumnHeader>DEPOSIT</TableColumnHeader>
             </>
-          )}
-          {!isMobile && (
-            <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
           )}
         </TableRow>
       </TableHeader>
@@ -96,20 +93,17 @@ export function TransactionsTable({
           <TableCell colSpan={2}>Totals</TableCell>
           <TableCell />
           {isMobile ? (
-            <TableCell textAlign="end">
+            <TableCell>
               {formatAmount(data.overall_withdrawals)} /{" "}
               {formatAmount(data.overall_deposits)}
             </TableCell>
           ) : (
             <>
-              <TableCell textAlign="end">
+              <TableCell>
                 {formatAmount(data.overall_withdrawals)}
               </TableCell>
-              <TableCell textAlign="end">
+              <TableCell>
                 {formatAmount(data.overall_deposits)}
-              </TableCell>
-              <TableCell textAlign="end">
-                {formatAmount(data.overall_balance)}
               </TableCell>
             </>
           )}
@@ -186,7 +180,7 @@ function RenderGroups({
               </TableCell>
               {totalAmount || budgetedTotal ? (
                 <TableCell>
-                  <PercentageBar
+                  <BudgetBar
                     amount={specificAmount}
                     total={totalAmount}
                     budgetedTotal={budgetedTotal}
@@ -198,34 +192,30 @@ function RenderGroups({
                 <TableCell />
               )}
               {isMobile ? (
-                <TableCell textAlign="end">
+                <TableCell>
                   {formatAmount(group.total_withdrawals)} /{" "}
                   {formatAmount(group.total_deposits)}
                 </TableCell>
               ) : (
                 <>
-                  <TableCell textAlign="end">
+                  <TableCell>
                     {formatAmount(group.total_withdrawals)}
                   </TableCell>
-                  <TableCell textAlign="end">
+                  <TableCell>
                     {formatAmount(group.total_deposits)}
-                  </TableCell>
-                  <TableCell textAlign="end">
-                    {formatAmount(group.total_balance)}
                   </TableCell>
                 </>
               )}
             </TableRow>
-
             <Collapsible.Root open={isExpanded} lazyMount asChild>
               <TableRow>
-                <TableCell colSpan={6} p={0}>
+                <TableCell colSpan={5} p={0}>
                   <Collapsible.Content>
                     <Box pl={isMobile ? 2 : 4}>
                       {group.subgroups && group.subgroups.length > 0 ? (
                         <Table.Root variant="outline" size="sm">
-                          <TableHeader>
-                            <TableRow>
+                          <TableHeader justifyContent={'space-between'}>
+                            <TableRow >
                               <TableColumnHeader />
                               <TableColumnHeader>
                                 {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
@@ -236,19 +226,16 @@ function RenderGroups({
                                 <TableColumnHeader />
                               )}
                               {isMobile ? (
-                                <TableColumnHeader textAlign="end" colSpan={1}>
+                                <TableColumnHeader colSpan={1}>
                                   EXPENSE / DEPOSIT
                                 </TableColumnHeader>
                               ) : (
                                 <>
-                                  <TableColumnHeader textAlign="end">
+                                  <TableColumnHeader>
                                     EXPENSE
                                   </TableColumnHeader>
-                                  <TableColumnHeader textAlign="end">
+                                  <TableColumnHeader>
                                     DEPOSIT
-                                  </TableColumnHeader>
-                                  <TableColumnHeader textAlign="end">
-                                    TOTAL
                                   </TableColumnHeader>
                                 </>
                               )}
@@ -364,7 +351,7 @@ function formatAmount(amount: number) {
   });
 }
 
-function PercentageBar({
+function BudgetBar({
   amount,
   total,
   budgetedTotal,
@@ -401,15 +388,4 @@ function PercentageBar({
     );
   }
   return null;
-
-  /*   return (
-    <Progress.Root value={value} maxW="sm">
-      <HStack gap="5" minW={200}>
-        <Progress.Track maxW={150} minW={150} flex="1">
-          <Progress.Range />
-        </Progress.Track>
-      </HStack>
-    </Progress.Root>
-  );
- */
 }
