@@ -68,6 +68,8 @@ def first_n_transactions(
 
     val = [
         NoCodeTransaction(
+            id=tx.id,
+            category_id=cat.id,
             category_name=cat.name,
             amount=tx.amount,
             account_name=account_name_map[tx.transaction_source_id],

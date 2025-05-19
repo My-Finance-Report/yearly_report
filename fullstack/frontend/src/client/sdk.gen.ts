@@ -1583,7 +1583,6 @@ export class UploadsService {
 export class UsersService {
     /**
      * Read Users
-     * Retrieve users. NOTE: this doesnt work due to RLS policy
      * @param data The data for the request.
      * @param data.skip
      * @param data.limit

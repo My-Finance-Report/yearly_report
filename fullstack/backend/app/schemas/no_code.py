@@ -21,6 +21,8 @@ from app.models.user import User
 
 
 class NoCodeTransaction(BaseModel):
+    id: int
+    category_id: int
     amount: float
     description: str
     account_name: str

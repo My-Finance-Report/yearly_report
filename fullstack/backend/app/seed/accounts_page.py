@@ -233,5 +233,5 @@ def delete_account_page(user_id: int) -> None:
 
 
 if __name__ == "__main__":
-    #delete_account_page(1)
+    delete_account_page(1)
     seed_account_page(1)

@@ -15,13 +15,16 @@ import { NoCodeWidgetOut } from "@/client";
 import EditTransaction from "../../Common/EditTransaction";
 import Delete from "../../Common/DeleteAlert";
 import { FiEdit, FiTrash } from "react-icons/fi";
+import { TransactionKind } from "@/client";
 
 interface NoCodeTransactionOut {
+  id: number
+  category_id: number;
   amount: number;
   description: string;
   account_name: string;
   date_of_transaction: string;
-  kind: string;
+  kind: TransactionKind;
   category_name: string;
 }
 

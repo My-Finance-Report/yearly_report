@@ -82,7 +82,7 @@ const ActionsMenu = ({ type,  entity }: ActionsMenuProps) => {
         </Menu.Content>
       </Menu.Root>
       <Delete
-        open={deleteModal.open}
+        isOpen={deleteModal.open}
         onClose={deleteModal.onClose}
         entity={entity}
         type={type}

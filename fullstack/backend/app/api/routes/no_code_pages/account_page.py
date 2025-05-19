@@ -219,8 +219,8 @@ def _generate_net_worth_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        name="Net Worth",
-        description="Net worth of all accounts",
+        name="Total Balance",
+        description="Total balance of all accounts",
         row=row,
         col=col,
         row_span=row_span,
