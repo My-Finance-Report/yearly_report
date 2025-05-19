@@ -33,7 +33,7 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
 
     for widget_data in canvas_data.widgets:
         widget = NoCodeWidget(
-            name=widget_data.name or "Unnamed Widget",
+            name=widget_data.name or "",
             widget_type=widget_data.type,
             label=widget_data.name,
             canvas_id=canvas.id,

@@ -1,7 +1,7 @@
 # Big picture
 
 this started as a project to generate my yearly financial report using haskell
-and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
+and has evolved a bit to be a [webapp](https://myfinancereport.com/).
 I actually rewrote it in react + fastapi, so that is currently what you see on the site.
 
 # Features
@@ -83,3 +83,6 @@ big milestones before launch:
 
 
 
+-> remove total column
+-> would be nice to set a default on the dropdown
+-> edit button the tables
