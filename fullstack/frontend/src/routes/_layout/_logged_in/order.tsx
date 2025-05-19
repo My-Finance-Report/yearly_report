@@ -115,22 +115,20 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
         }))
     }
 
-    // Group variants by their variant group
     const variantsByGroup = orderItem.orderable.variantGroups.map(group => {
-        // Only include variants that were selected in this group
         const variantsInGroup = orderItem.variants.filter(selectedVariant => 
             'groupId' in selectedVariant && selectedVariant.groupId === group.id
         )
+        const groupPriceDelta = variantsInGroup.reduce((sum, v) => sum + v.priceDelta, 0)
         return {
             groupName: group.name,
-            variants: variantsInGroup
+            variants: variantsInGroup,
+            priceDelta: groupPriceDelta
         }
     }).filter(group => group.variants.length > 0)
 
-    // Count occurrences of each variant within its group
     const variantCounts = new Map<string, number>()
     variantsByGroup.forEach(group => {
-        // Reset counts for each group
         group.variants.forEach(v => {
             const key = `${group.groupName}-${v.id}`
             variantCounts.set(key, (variantCounts.get(key) || 0) + 1)
@@ -150,17 +148,35 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
         >
             <Flex direction="column" flex={1} gap={1}>
                 <Text fontWeight="bold">{orderItem.orderable.name}</Text>
-                {variantsByGroup.map(group => (
-                    <Text key={group.groupName} fontSize="sm">
-                        {group.groupName}: {group.variants.map(v => {
-                            const count = variantCounts.get(`${group.groupName}-${v.id}`) || 0
-                            return count > 1 ? `${v.name} ×${count}` : v.name
-                        }).join(', ')}
-                    </Text>
-                ))}
+                {variantsByGroup.map(group => {
+                    const consolidatedVariants = new Map<string, { name: string; count: number }>()
+                    group.variants.forEach(v => {
+                        const existing = consolidatedVariants.get(v.id)
+                        if (existing) {
+                            existing.count++
+                        } else {
+                            consolidatedVariants.set(v.id, { name: v.name, count: 1 })
+                        }
+                    })
+
+                    return (
+                        <Text key={group.groupName} color="gray.600" fontSize="sm">
+                            {group.groupName}: {Array.from(consolidatedVariants.values())
+                                .map(v => v.count > 1 ? `${v.name} ×${v.count}` : v.name)
+                                .join(', ')}
+                            {group.priceDelta > 0 && (
+                                <Text as="span" color="gray.400" ml={2}>
+                                    (+${group.priceDelta.toFixed(2)})
+                                </Text>
+                            )}
+                        </Text>
+                    )
+                })}
             </Flex>
             <Flex align="center" gap={4}>
-                <Text>${totalPrice.toFixed(2)} × {orderItem.quantity}</Text>
+                <Flex direction="column" align="flex-end">
+                    <Text>${totalPrice.toFixed(2)} × {orderItem.quantity}</Text>
+                </Flex>
                 <Button size="sm" onClick={handleRemove}>Remove</Button>
             </Flex>
         </Box>
@@ -212,14 +228,12 @@ function VariantGroupSelector({
                             borderRadius={4}
                             cursor="pointer"
                             onClick={() => onSelect(variant)}
-                            _hover={{ bg: 'gray.50' }}
-                            bg={count > 0 ? 'blue.50' : undefined}
                         >
                             <Flex justify="space-between" mb={2}>
                                 <Flex gap={2} align="center">
                                     <Text fontWeight="bold">{variant.name}</Text>
                                     {count > 0 && (
-                                        <Text color="blue.500" fontSize="sm">×{count}</Text>
+                                        <Text fontSize="sm">×{count}</Text>
                                     )}
                                 </Flex>
                                 <Text>${variant.priceDelta > 0 ? `+${variant.priceDelta.toFixed(2)}` : '0.00'}</Text>
@@ -269,14 +283,12 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
     const handleNext = () => {
         const currentVariants = variantsByGroup.get(currentGroup.id) || []
         if (currentGroup.required && currentVariants.length === 0) {
-            // Don't allow proceeding if this is a required group and no selection was made
             return
         }
 
         if (currentGroupIndex < orderable.variantGroups.length - 1) {
             setCurrentGroupIndex(currentGroupIndex + 1)
         } else {
-            // We've gone through all groups, add to order
             const allVariants = Array.from(variantsByGroup.values()).flat() as SelectedVariant[]
             setOrder(prev => ({
                 ...prev,
