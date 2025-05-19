@@ -236,7 +236,7 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     )
     if not accounts:
         return None
-    
+
     account_lookup = {account.id: account for account in accounts}
 
     plaid_account_balances = defaultdict(list)

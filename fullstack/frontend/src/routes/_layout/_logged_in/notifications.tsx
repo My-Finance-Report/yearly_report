@@ -114,7 +114,7 @@ function UnifiedNotificationInterface() {
           html={previewData?.html}
         />
 
-        {selectedEffect && (
+        {selectedEffect?.id && selectedEffect.id !== undefined && (
           <Delete
             type="notification"
             isOpen={deleteModal.open}

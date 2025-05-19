@@ -359,6 +359,8 @@ def trigger_the_effects(in_process: InProcessJob) -> None:
     assert not_none(in_process.transaction_source)
     no_code_transactions = [
         NoCodeTransaction(
+            id=-1,
+            category_id=-1,
             account_name=in_process.transaction_source.name,
             amount=t.partialTransactionAmount,
             description=t.partialTransactionDescription,

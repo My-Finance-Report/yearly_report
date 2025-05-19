@@ -43,7 +43,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 def read_users(
     session: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> UsersPublic:
-
     count = session.query(func.count()).select_from(User).scalar()
 
     users = session.query(User).order_by(User.id).offset(skip).limit(limit).all()
@@ -55,7 +54,12 @@ def read_users(
                 email=user.email,
                 id=user.id,
                 is_superuser=user.is_superuser,
-                settings= UserSettings() if user.settings is None else UserSettings(has_budget=user.settings.has_budget, power_user_filters=user.settings.power_user_filters),
+                settings=UserSettings()
+                if user.settings is None
+                else UserSettings(
+                    has_budget=user.settings.has_budget,
+                    power_user_filters=user.settings.power_user_filters,
+                ),
             )
             for user in users
         ],
