@@ -17,6 +17,7 @@ import {
   PosService,
   VariantBase_Output,
 } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
 
 type OrderItem = OrderItemBase_Input;
 
@@ -32,6 +33,8 @@ function QuantitySelector({
   quantity: number;
 }) {
   return (
+    <Flex gap={2} alignItems="center">
+      <Text fontSize="md" fontWeight="medium">Quantity</Text>
     <NumberInput.Root
       width="200px"
       value={String(quantity)}
@@ -40,6 +43,7 @@ function QuantitySelector({
       <NumberInput.Control />
       <NumberInput.Input />
     </NumberInput.Root>
+    </Flex>
   );
 }
 
@@ -228,7 +232,7 @@ function VariantGroupSelector({
           <Button
             size="sm"
             onClick={onNext}
-            colorScheme={isLastGroup ? "green" : "gray"}
+            colorPalette={isLastGroup ? "green" : "gray"}
           >
             {isLastGroup ? "Add to Order" : "Next"}
           </Button>
@@ -341,12 +345,7 @@ function VariantSelector({
         orderItems: [
           ...prev.orderItems,
           {
-            orderable: {
-              id: orderable.id,
-              name: orderable.name,
-              price: orderable.price,
-              variantGroups: [], // I requires this but we don't need to send actual groups
-            },
+            orderable: orderable,
             variants: allVariants,
             quantity,
           },
@@ -422,6 +421,7 @@ function Order() {
     timestamp: new Date().toISOString(),
     orderItems: [],
   });
+  const toast = useCustomToast();
   const [inProgressOrder, setInProgressOrder] =
     useState<OrderableBase_Output | null>(null);
 
@@ -444,6 +444,7 @@ function Order() {
       timestamp: new Date().toISOString(),
       orderItems: [],
     });
+    toast("Order created", "Your order has been successfully created.", "success");
   };
 
   return (
