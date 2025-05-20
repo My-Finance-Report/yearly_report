@@ -53,8 +53,6 @@ function ActionCard({ action, setTimeframe }: { action: Action, setTimeframe: (t
 }
 
 
-
-
 function determinePrice(item: OrderBase_Output['orderItems'][0]) {
     const variantPriceDelta = item.variants.reduce((sum, variant) => sum + Number(variant.priceDelta), 0)
     return (Number(item.orderable.price) + variantPriceDelta) * item.quantity
