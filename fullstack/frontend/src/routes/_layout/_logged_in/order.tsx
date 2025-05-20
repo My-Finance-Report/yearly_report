@@ -34,15 +34,17 @@ function QuantitySelector({
 }) {
   return (
     <Flex gap={2} alignItems="center">
-      <Text fontSize="md" fontWeight="medium">Quantity</Text>
-    <NumberInput.Root
-      width="200px"
-      value={String(quantity)}
-      onValueChange={(e) => setQuantity(Number(e.value))}
-    >
-      <NumberInput.Control />
-      <NumberInput.Input />
-    </NumberInput.Root>
+      <Text fontSize="md" fontWeight="medium">
+        Quantity
+      </Text>
+      <NumberInput.Root
+        width="200px"
+        value={String(quantity)}
+        onValueChange={(e) => setQuantity(Number(e.value))}
+      >
+        <NumberInput.Control />
+        <NumberInput.Input />
+      </NumberInput.Root>
     </Flex>
   );
 }
@@ -444,7 +446,11 @@ function Order() {
       timestamp: new Date().toISOString(),
       orderItems: [],
     });
-    toast("Order created", "Your order has been successfully created.", "success");
+    toast(
+      "Order created",
+      "Your order has been successfully created.",
+      "success",
+    );
   };
 
   return (
