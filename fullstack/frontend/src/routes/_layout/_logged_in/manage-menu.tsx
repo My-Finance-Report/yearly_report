@@ -12,34 +12,20 @@ import {
   Switch,
   Table,
   Text,
+  Breadcrumb,
 } from '@chakra-ui/react'
 import { useState } from 'react'
 import { HiCheck, HiPencil, HiPlus, HiX } from 'react-icons/hi'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { OrderableBase_Output, PosService, VariantBase_Output, VariantGroupBase_Output } from '@/client'
 
 export const Route = createFileRoute('/_layout/_logged_in/manage-menu')({
   component: ManageMenu,
 })
 
-interface Variant {
-  id: string
-  name: string
-  priceDelta: number
-}
-
-interface VariantGroup {
-  id: string
-  order: number
-  name: string
-  required: boolean
-  variants: Variant[]
-}
-
-interface Orderable {
-  id: string
-  name: string
-  price: number
-  variantGroups: VariantGroup[]
-}
+type Orderable = OrderableBase_Output
+type VariantGroup = VariantGroupBase_Output
+type Variant = VariantBase_Output
 
 function EditVariantGroup({ group, onChange, onDelete }: {
   group: VariantGroup
@@ -51,7 +37,7 @@ function EditVariantGroup({ group, onChange, onDelete }: {
       ...group,
       variants: [
         ...group.variants,
-        { id: Math.random().toString(), name: '', priceDelta: 0 }
+        { id: 0, name: '', priceDelta: '0' }
       ]
     })
   }
@@ -88,7 +74,7 @@ function EditVariantGroup({ group, onChange, onDelete }: {
           <FieldLabel mb={0}>Required</FieldLabel>
           <Switch.Root 
             checked={group.required}
-            onCheckedChange={(details: any) => onChange({ ...group, required: details.checked })}
+            onCheckedChange={(details) => onChange({ ...group, required: details.checked })}
           >
             <Switch.HiddenInput />
             <Switch.Control>
@@ -124,8 +110,8 @@ function EditVariantGroup({ group, onChange, onDelete }: {
                     <Flex alignItems="center" gap={2}>
                     <NumberInput.Label>$</NumberInput.Label>
                     <NumberInput.Input
-                      value={variant.priceDelta}
-                      onChange={(e: any) => updateVariant(index, { ...variant, priceDelta: Number(e.target.value) })}
+                      value={Number(variant.priceDelta)}
+                      onChange={(e) => updateVariant(index, { ...variant, priceDelta: String(Number(e.target.value)) })}
                     />
                     </Flex>
                   </NumberInput.Root>
@@ -144,30 +130,28 @@ function EditVariantGroup({ group, onChange, onDelete }: {
 }
 
 function EditOrderable({ orderable, onSave, onCancel }: {
-  orderable?: Orderable
+  orderable: Orderable | null
   onSave: (orderable: Orderable) => void
   onCancel: () => void
 }) {
-  const [item, setItem] = useState<Orderable>(orderable || {
-    id: Math.random().toString(),
+  const [item, setItem] = useState<Orderable>(orderable ?? {
+    id: 0,
     name: '',
-    price: 0,
+    price: '0',
     variantGroups: []
   })
 
   const addVariantGroup = () => {
+    const newGroup: VariantGroup = {
+      id: 0,
+      name: '',
+      required: false,
+      variants: [],
+      order_of_appearance: item.variantGroups.length
+    }
     setItem({
       ...item,
-      variantGroups: [
-        ...item.variantGroups,
-        {
-          id: Math.random().toString(),
-          order: item.variantGroups.length,
-          name: '',
-          required: false,
-          variants: []
-        }
-      ]
+      variantGroups: [...item.variantGroups, newGroup]
     })
   }
 
@@ -186,7 +170,7 @@ function EditOrderable({ orderable, onSave, onCancel }: {
 
   return (
     <Stack p={4}>
-      <Heading size="md">{orderable ? 'Edit Item' : 'New Item'}</Heading>
+      <Heading size="md">{item.id ? 'Edit Item' : 'New Item'}</Heading>
         <FieldRoot>
         <FieldLabel>Name</FieldLabel>
         <Input 
@@ -198,8 +182,8 @@ function EditOrderable({ orderable, onSave, onCancel }: {
         <FieldLabel>Base Price ($)</FieldLabel>
         <NumberInput.Root>
           <NumberInput.Input
-            value={item.price}
-            onChange={(e: any) => setItem({ ...item, price: Number(e.target.value) })}
+            value={Number(item.price)}
+            onChange={(e) => setItem({ ...item, price: String(Number(e.target.value)) })}
           />
         </NumberInput.Root>
       </FieldRoot>
@@ -215,105 +199,135 @@ function EditOrderable({ orderable, onSave, onCancel }: {
         ))}
         <Button variant="outline" onClick={addVariantGroup}><HiPlus /> Modifier Group</Button>
       </Box>
-      <Flex gap={4} mt={8} justifyContent="center">
-        <Button  onClick={() => onSave(item)}>Save</Button>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+      <Flex gap={2} mt={4}>
+        <Button onClick={() => onSave(item)}><HiCheck /> Save</Button>
+        <Button variant="surface" onClick={() => {
+          setItem(orderable ?? {
+            id: 0,
+            name: '',
+            price: '0',
+            variantGroups: []
+          })
+          onCancel()
+        }}><HiX /> Cancel</Button>
       </Flex>
     </Stack>
   )
 }
 
 function ManageMenu() {
-  const [orderables, setOrderables] = useState<Orderable[]>([
-    {
-      id: "1",
-      name: "coffee",
-      price: 2,
-      variantGroups: [
-        {
-          id: "0",
-          order: 0,
-          name: "Temperature",
-          required: true,
-          variants: [
-            { id: "1", name: "Hot", priceDelta: 0 },
-          ]
-        },
-        {
-          id: "1",
-          order: 1,
-          name: "Size",
-          required: true,
-          variants: [
-            { id: "1", name: "Small", priceDelta: 0 },
-            { id: "2", name: "Medium", priceDelta: 1 },
-            { id: "3", name: "Large", priceDelta: 2 },
-          ]
-        }
-      ]
-    }
-  ])
+  const queryClient = useQueryClient()
+  const { data: orderables } = useQuery({
+    queryKey: ['orderables'],
+    queryFn: () => PosService.getMenu(),
+  })
+  const [editingItem, setEditingItem] = useState<Orderable | null>(null)
 
-  const [editingItem, setEditingItem] = useState<Orderable | undefined>()
-
-  const handleSave = (item: Orderable) => {
-    if (editingItem) {
-      setOrderables(prev => prev.map(o => o.id === item.id ? item : o))
-    } else {
-      setOrderables(prev => [...prev, item])
+  const handleSave = async (item: Orderable) => {
+    try {
+      if (editingItem) {
+        await PosService.updateMenuItem({
+          orderableId: item.id || 0,
+          requestBody: item
+        })
+      } else {
+        await PosService.createMenuItem({
+          requestBody: item
+        })
+      }
+      queryClient.invalidateQueries({ queryKey: ['orderables'] })
+      setEditingItem(null)
+    } catch (error) {
+      console.error('Failed to save item:', error)
     }
-    setEditingItem(undefined)
   }
 
-  const handleDelete = (id: string) => {
-    setOrderables(prev => prev.filter(o => o.id !== id))
-  }
-
-  if (editingItem || editingItem === null) {
-    return (
-      <EditOrderable
-        orderable={editingItem}
-        onSave={handleSave}
-        onCancel={() => setEditingItem(undefined)}
-      />
-    )
+  const handleDelete = async (id: number) => {
+    try {
+      await PosService.deleteMenuItem({
+        orderableId: id
+      })
+      queryClient.invalidateQueries({ queryKey: ['orderables'] })
+    } catch (error) {
+      console.error('Failed to delete item:', error)
+    }
   }
 
   return (
     <Box p={4}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading>Menu</Heading>
-        <Button variant="surface" onClick={() => setEditingItem(undefined)}><HiPlus /> New Item</Button>
-      </Flex>
-      <Table.Root variant="outline">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeader>Name</Table.ColumnHeader>
-            <Table.ColumnHeader>Price</Table.ColumnHeader>
-            <Table.ColumnHeader>Modifiers</Table.ColumnHeader>
-            <Table.ColumnHeader></Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {orderables.map(item => (
-            <Table.Row key={item.id}>
-              <Table.Cell>{item.name}</Table.Cell>
-              <Table.Cell>${item.price.toFixed(2)}</Table.Cell>
-              <Table.Cell>
-                <Text fontSize="sm">
-                  {item.variantGroups.map(g => g.name).join(', ')}
-                </Text>
-              </Table.Cell>
-              <Table.Cell>
-                <Flex gap={2}>
-                  <Button size="sm" variant="surface" onClick={() => setEditingItem(item)}><HiPencil /></Button>
-                  <Button size="sm" colorPalette="red" variant="surface" onClick={() => handleDelete(item.id)}><HiX /></Button>
-                </Flex>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+      <BreadcrumbComponent />
+      {editingItem ? (
+        <EditOrderable
+          orderable={editingItem}
+          onSave={handleSave}
+          onCancel={() => {
+            setEditingItem(null)
+            queryClient.invalidateQueries({ queryKey: ['orderables'] })
+          }}
+        />
+      ) : (
+        <>
+          <Flex justify="space-between" align="center" mb={4}>
+            <Heading>Menu</Heading>
+            <Button variant="surface" onClick={() => setEditingItem({
+              id: 0,
+              name: '',
+              price: '0',
+              variantGroups: []
+            })}><HiPlus /> New Item</Button>
+          </Flex>
+          {orderables ? (
+            <Table.Root variant="outline">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader>Name</Table.ColumnHeader>
+                  <Table.ColumnHeader>Price</Table.ColumnHeader>
+                  <Table.ColumnHeader>Modifiers</Table.ColumnHeader>
+                  <Table.ColumnHeader>Actions</Table.ColumnHeader>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {orderables.map(item => (
+                  <Table.Row key={item.id}>
+                    <Table.Cell>{item.name}</Table.Cell>
+                    <Table.Cell>${Number(item.price).toFixed(2)}</Table.Cell>
+                    <Table.Cell>
+                      <Text fontSize="sm">
+                        {item.variantGroups.map(g => g.name).join(', ')}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Flex gap={2}>
+                        <Button size="sm" variant="surface" onClick={() => setEditingItem(item)}><HiPencil /></Button>
+                        <Button size="sm" colorPalette="red" variant="surface" onClick={() => item.id && handleDelete(item.id)}><HiX /></Button>
+                      </Flex>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          ) : (
+            <Text>Loading...</Text>
+          )}
+        </>
+      )}
     </Box>
   )
 }
+
+function BreadcrumbComponent() {
+    return (
+        <Breadcrumb.Root size="lg">
+            <Breadcrumb.List>
+                <Breadcrumb.Item>
+                    <Breadcrumb.Link href="/pos">Home</Breadcrumb.Link>
+                </Breadcrumb.Item>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                    <Breadcrumb.CurrentLink>Manage Menu</Breadcrumb.CurrentLink>
+                </Breadcrumb.Item>
+            </Breadcrumb.List>
+        </Breadcrumb.Root>
+    )
+}
+

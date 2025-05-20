@@ -42,9 +42,30 @@ onValueChange={(e) => setQuantity(Number(e.value))}
 }
 
 function OrderableCard({ setInProgressOrder, orderable }: { setInProgressOrder: React.Dispatch<React.SetStateAction<OrderableBase_Output | null>>, orderable: OrderableBase_Output }) {
-    return (<Box cursor="pointer" minH={100} onClick={() => setInProgressOrder(orderable)} display={"flex"} flexDirection={"column"} justifyContent="center" alignItems="center" p={2} minW={200} border="1px solid #ccc" borderRadius={4}>
-        <Text cursor="pointer">{orderable.name}</Text>
-    </Box>)
+    return (
+        <Box 
+            cursor="pointer" 
+            minH={100} 
+            onClick={() => setInProgressOrder(orderable)}
+            display="flex" 
+            flexDirection="column" 
+            justifyContent="center" 
+            alignItems="center" 
+            p={4}
+            minW={200} 
+            border="1px solid #ccc" 
+            borderRadius={4}
+            _hover={{ backgroundColor: 'gray.50' }}
+        >
+            <Text fontSize="lg" fontWeight="medium">{orderable.name}</Text>
+            <Text color="gray.600" fontSize="sm">${Number(orderable.price).toFixed(2)}</Text>
+            {orderable.variantGroups.length > 0 && (
+                <Text color="gray.500" fontSize="xs" mt={1}>
+                    {orderable.variantGroups.map(g => g.name).join(', ')}
+                </Text>
+            )}
+        </Box>
+    )
 }
 
 function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>>, orderItem: OrderItem }) {
@@ -142,10 +163,8 @@ function VariantGroupSelector({
     onNext: () => void,
     currentSelections: VariantBase_Output[]
 }) {
-    // Only count variants that actually belong to this group
-    const selectedVariantsInGroup = currentSelections.filter((selectedVariant): selectedVariant is SelectedVariant => 
-        'groupId' in selectedVariant && selectedVariant.groupId === String(variantGroup.id)
-    )
+    // Count all selected variants for this group
+    const selectedVariantsInGroup = currentSelections
 
     return (
         <Box p={4}>
@@ -198,24 +217,31 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
     setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>> 
 }) {
     const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
-    const [variantsByGroup, setVariantsByGroup] = useState<Map<number, SelectedVariant[]>>(
-        new Map(orderable.variantGroups.map(g => [g.id, []]))
-    )
     const [quantity, setQuantity] = useState(1)
+    const [variantsByGroup, setVariantsByGroup] = useState<Map<number, VariantBase_Output[]>>(
+        new Map()
+    )
+
+    if (orderable.variantGroups.length === 0) {
+        return null
+    }
 
     const currentGroup = orderable.variantGroups[currentGroupIndex]
 
     const handleVariantSelect = (variant: VariantBase_Output) => {
-        const selectedVariant: SelectedVariant = {
-            ...variant,
-            groupId: currentGroup.id
+        const currentVariants = variantsByGroup.get(currentGroup.id) || []
+        const variantIndex = currentVariants.findIndex(v => v.id === variant.id)
+        
+        const newMap = new Map(variantsByGroup)
+        if (variantIndex === -1) {
+            newMap.set(currentGroup.id, [...currentVariants, variant])
+        } else {
+            newMap.set(
+                currentGroup.id,
+                currentVariants.filter(v => v.id !== variant.id)
+            )
         }
-        setVariantsByGroup(prev => {
-            const newMap = new Map(prev)
-            const currentVariants = [...(prev.get(currentGroup.id) || [])]
-            newMap.set(currentGroup.id, [...currentVariants, selectedVariant])
-            return newMap
-        })
+        setVariantsByGroup(newMap)
     }
 
     const handleBack = () => {
@@ -229,13 +255,17 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
     const handleNext = () => {
         const currentVariants = variantsByGroup.get(currentGroup.id) || []
         if (currentGroup.required && currentVariants.length === 0) {
-            return
+            return // Can't proceed if required group has no selection
         }
 
-        if (currentGroupIndex < orderable.variantGroups.length - 1) {
-            setCurrentGroupIndex(currentGroupIndex + 1)
-        } else {
-            const allVariants = Array.from(variantsByGroup.values()).flat() as SelectedVariant[]
+        const isLastGroup = currentGroupIndex === orderable.variantGroups.length - 1
+        if (isLastGroup) {
+            // Collect all variants from all groups
+            const allVariants = Array.from(variantsByGroup.entries()).flatMap(([groupId, variants]) => 
+                variants.map(variant => ({ ...variant, groupId: Number(groupId) }))
+            )
+
+            // Add to order
             setOrder(prev => ({
                 ...prev,
                 orderItems: [
@@ -247,7 +277,15 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
                     }
                 ]
             }))
+
+            // Reset state
             setInProgressOrder(null)
+            setVariantsByGroup(new Map())
+            setCurrentGroupIndex(0)
+            setQuantity(1)
+        } else {
+            // Move to next group
+            setCurrentGroupIndex(i => i + 1)
         }
     }
 

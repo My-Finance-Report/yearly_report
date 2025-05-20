@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db, get_current_user
 from app.models.pos.orders import Order, OrderItem, Orderable
-from app.models.pos.variants import Variant, VariantGroup, SelectedVariant
+from app.models.pos.variants import Variant, VariantGroup, SelectedVariant, VariantGroupId
 from app.models.user import User
 
 router = APIRouter(prefix="/pos", tags=["pos"])
@@ -84,10 +84,13 @@ def get_menu(
         ).all()
 
         variant_groups_data = []
-        for group in variant_groups:
+        for group,orderable in variant_groups:
+            if not group.active:
+                continue
             variants = db.query(Variant).filter(
                 Variant.variant_group_id == group.id,
                 Variant.user_id == current_user.id,
+                Variant.active,
             ).all()
 
             variant_groups_data.append(VariantGroupBase(
@@ -128,10 +131,11 @@ def create_menu_item(
     db.flush()  # Get the ID
 
     # Create variant groups and variants
-    for group in item.variantGroups:
+    for index,group in enumerate(item.variantGroups):
         variant_group = VariantGroup(
             name=group.name,
             required=group.required,
+            order_of_appearance=index,
             orderable_id=orderable.id,
             user_id=current_user.id,
             active=True
@@ -159,7 +163,6 @@ def update_menu_item(
     current_user: User = Depends(get_current_user)
 ):
     """Update a menu item with its variant groups and variants"""
-    # Update orderable
     orderable = db.query(Orderable).filter(Orderable.id == orderable_id).first()
     if not orderable:
         raise HTTPException(status_code=404, detail="Menu item not found")
@@ -167,31 +170,43 @@ def update_menu_item(
     orderable.name = item.name
     orderable.price = item.price
 
-    # Deactivate all existing variant groups and variants
+    # Get existing groups and create a map by name for easy lookup
     existing_groups = db.query(VariantGroup).filter(
-            VariantGroup.orderable_id == orderable_id,
-            VariantGroup.user_id == current_user.id
-        ).all()
+        VariantGroup.orderable_id == orderable_id,
+        VariantGroup.user_id == current_user.id,
+        VariantGroup.active == True
+    ).all()
+    existing_groups_by_id: dict[int, VariantGroup] = {g.id: g for g in existing_groups}
 
-    for existing_group in existing_groups:
-        existing_group.active = False
-        db.query(Variant).filter(
-            Variant.variant_group_id == existing_group.id,
-            Variant.user_id == current_user.id
-        ).all()
+    updated_group_ids = set()
 
-    # Create new variant groups and variants
     for group in item.variantGroups:
-        variant_group = VariantGroup(
-            name=group.name,
-            required=group.required,
-            orderable_id=orderable.id,
-            user_id=current_user.id,
-            active=True
-        )
-        db.add(variant_group)
-        db.flush()
+        if group.id in existing_groups_by_id:
+            # Update existing group
+            variant_group = existing_groups_by_id[group.id]
+            variant_group.required = group.required
+            variant_group.order_of_appearance = group.order_of_appearance
+            updated_group_ids.add(variant_group.id)
 
+            # Deactivate old variants
+            db.query(Variant).filter(
+                Variant.variant_group_id == variant_group.id,
+                Variant.user_id == current_user.id
+            ).update({Variant.active: False})
+        else:
+            # Create new group
+            variant_group = VariantGroup(
+                name=group.name,
+                required=group.required,
+                order_of_appearance=group.order_of_appearance,
+                orderable_id=orderable.id,
+                user_id=current_user.id,
+                active=True
+            )
+            db.add(variant_group)
+            db.flush()
+
+        # Add new variants
         for variant in group.variants:
             db.add(Variant(
                 name=variant.name,
@@ -200,6 +215,10 @@ def update_menu_item(
                 user_id=current_user.id,
                 active=True
             ))
+    
+    for existing_group in existing_groups:
+        if existing_group.id not in updated_group_ids:
+            existing_group.active = False
 
     db.commit()
     return item
@@ -219,7 +238,6 @@ def delete_menu_item(
     if not orderable:
         raise HTTPException(status_code=404, detail="Menu item not found")
 
-    # Delete associated variant groups and variants
     variant_groups = db.query(VariantGroup).filter(
         VariantGroup.orderable_id == orderable_id,
         VariantGroup.user_id == current_user.id
