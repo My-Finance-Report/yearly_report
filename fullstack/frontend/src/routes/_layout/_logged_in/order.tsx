@@ -2,25 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Box, Flex, Text, Button, Heading, NumberInput, Breadcrumb } from '@chakra-ui/react'
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { OrderableBase_Output, PosService, VariantBase_Output } from '@/client';
+import { OrderableBase_Output, OrderBase_Input, OrderItemBase_Input, PosService, VariantBase_Output } from '@/client';
 
-type SelectedVariant = VariantBase_Output & {
-    groupId: number;
-}
-
-interface OrderItem {
-    orderable: OrderableBase_Output;
-    variants: SelectedVariant[];
-    quantity: number;
-}
-
-
-
-interface CompleteOrder {
-    id: string;
-    timestamp: string;
-    orderItems: OrderItem[];
-}
+type OrderItem = OrderItemBase_Input
 
 
 export const Route = createFileRoute('/_layout/_logged_in/order')({
@@ -68,7 +52,7 @@ function OrderableCard({ setInProgressOrder, orderable }: { setInProgressOrder: 
     )
 }
 
-function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>>, orderItem: OrderItem }) {
+function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>>, orderItem: OrderItem }) {
     const totalPrice = Number(orderItem.orderable.price) + 
         orderItem.variants.reduce((sum, variant) => sum + Number(variant.priceDelta), 0)
     
@@ -84,7 +68,7 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
 
     const variantsByGroup = orderItem.orderable.variantGroups.map(group => {
         const variantsInGroup = orderItem.variants.filter(selectedVariant => 
-            selectedVariant.groupId === group.id
+            selectedVariant.groupId === String(group.id)
         )
         const groupPriceDelta = variantsInGroup.reduce((sum, v) => sum + Number(v.priceDelta), 0)
         return {
@@ -155,15 +139,16 @@ function VariantGroupSelector({
     onSelect, 
     onBack, 
     onNext,
-    currentSelections
+    currentSelections,
+    isLastGroup
 }: { 
     variantGroup: OrderableBase_Output['variantGroups'][0], 
     onSelect: (variant: VariantBase_Output) => void,
     onBack: () => void,
     onNext: () => void,
-    currentSelections: VariantBase_Output[]
+    currentSelections: VariantBase_Output[],
+    isLastGroup: boolean
 }) {
-    // Count all selected variants for this group
     const selectedVariantsInGroup = currentSelections
 
     return (
@@ -179,7 +164,13 @@ function VariantGroupSelector({
                 </Box>
                 <Flex gap={2}>
                     <Button size="sm" onClick={onBack}>Back</Button>
-                    <Button size="sm" onClick={onNext}>Next</Button>
+                    <Button 
+                        size="sm" 
+                        onClick={onNext}
+                        colorScheme={isLastGroup ? "green" : "gray"}
+                    >
+                        {isLastGroup ? "Add to Order" : "Next"}
+                    </Button>
                 </Flex>
             </Flex>
             <Flex direction="column" gap={4}>
@@ -214,7 +205,7 @@ function VariantGroupSelector({
 function VariantSelector({ orderable, setOrder, setInProgressOrder }: { 
     orderable: OrderableBase_Output, 
     setInProgressOrder: React.Dispatch<React.SetStateAction<OrderableBase_Output | null>>, 
-    setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>> 
+    setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>> 
 }) {
     const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
     const [quantity, setQuantity] = useState(1)
@@ -260,18 +251,28 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
 
         const isLastGroup = currentGroupIndex === orderable.variantGroups.length - 1
         if (isLastGroup) {
-            // Collect all variants from all groups
+            // Collect all variants from all groups and convert to input format
             const allVariants = Array.from(variantsByGroup.entries()).flatMap(([groupId, variants]) => 
-                variants.map(variant => ({ ...variant, groupId: Number(groupId) }))
+                variants.map(variant => ({
+                    id: String(variant.id),
+                    name: variant.name,
+                    priceDelta: variant.priceDelta,
+                    groupId: String(groupId) 
+                }))
             )
 
-            // Add to order
+            // Add to order with proper types
             setOrder(prev => ({
                 ...prev,
                 orderItems: [
                     ...prev.orderItems,
                     {
-                        orderable,
+                        orderable: {
+                            id: orderable.id,
+                            name: orderable.name,
+                            price: orderable.price,
+                            variantGroups: [] // I requires this but we don't need to send actual groups
+                        },
                         variants: allVariants,
                         quantity
                     }
@@ -301,6 +302,7 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
                 onBack={handleBack}
                 onNext={handleNext}
                 currentSelections={variantsByGroup.get(currentGroup.id) || []}
+                isLastGroup={currentGroupIndex === orderable.variantGroups.length - 1}
             />
             {currentGroupIndex === orderable.variantGroups.length - 1 && (
                 <Box mt={4}>
@@ -335,7 +337,7 @@ function AllOrderables({setInProgressOrder}: {setInProgressOrder: React.Dispatch
 
 function Order() {
     
-    const [order, setOrder] = useState<CompleteOrder>({
+    const [order, setOrder] = useState<OrderBase_Input>({
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         orderItems: []
@@ -349,6 +351,9 @@ function Order() {
     }, 0)
 
     const handleSubmitOrder = () => {
+        PosService.createOrder({
+            requestBody: order
+        })
         setOrder({
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
