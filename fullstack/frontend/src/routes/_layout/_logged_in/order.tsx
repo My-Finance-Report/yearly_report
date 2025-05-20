@@ -1,37 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Box, Flex, Text, Button, Heading, NumberInput, Breadcrumb } from '@chakra-ui/react'
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { OrderableBase_Output, PosService, VariantBase_Output } from '@/client';
 
-interface Variant {
-    id: string;
-    name: string;
-    priceDelta: number;
-}
-
-interface VariantGroup {
-    id: string;
-    order: number;
-    name: string;
-    required: boolean;
-    variants: Variant[];
-}
-
-interface Orderable {
-    id: string;
-    name: string;
-    variantGroups: VariantGroup[];
-    price: number;
-}
-
-interface SelectedVariant extends Variant {
-    groupId: string;
+type SelectedVariant = VariantBase_Output & {
+    groupId: number;
 }
 
 interface OrderItem {
-    orderable: Orderable;
+    orderable: OrderableBase_Output;
     variants: SelectedVariant[];
     quantity: number;
 }
+
+
 
 interface CompleteOrder {
     id: string;
@@ -45,43 +28,6 @@ export const Route = createFileRoute('/_layout/_logged_in/order')({
 })
 
 
-const orderables: Orderable[] = [
-    {
-        id: "1",
-        name: "coffee",
-        variantGroups: [
-            { id: "0", order: 0, name: "temp", required: true, variants: [
-                { id: "1", name: "Hot", priceDelta: 0 },
-                { id: "2", name: "Cold", priceDelta: 1 },
-            ] },
-            { id: "1", order: 1, name: "size", required: true, variants: [
-                { id: "1", name: "Small", priceDelta: 0 },
-                { id: "2", name: "Medium", priceDelta: 1 },
-                { id: "3", name: "Large", priceDelta: 2 },
-            ] },
-            { id: "2", order: 2, name: "misc", required: false, variants: [
-                { id: "1", name: "Extra Shot", priceDelta: 1 },
-                { id: "2", name: "Decaf", priceDelta: 1 },
-                { id: "3", name: "Add Milk", priceDelta: 1 },
-            ] },
-            { id: "3", order: 3, name: "flavors", required: false, variants: [
-                { id: "1", name: "Vanilla", priceDelta: 1 },
-                { id: "2", name: "Hazelnut", priceDelta: 1 },
-                { id: "3", name: "Caramel", priceDelta: 1 },
-                { id: "4", name: "Pumpkin", priceDelta: 1 },
-                { id: "5", name: "Cookie", priceDelta: 1 },
-                { id: "6", name: "Mocha", priceDelta: 1 },
-                { id: "7", name: "Caramel Macchiato", priceDelta: 1 },
-                { id: "8", name: "Hazelnut Macchiato", priceDelta: 1 },
-                { id: "9", name: "Vanilla Macchiato", priceDelta: 1 },
-                { id: "10", name: "Pumpkin Macchiato", priceDelta: 1 },
-                { id: "11", name: "Cookie Macchiato", priceDelta: 1 },
-                { id: "12", name: "Mocha Macchiato", priceDelta: 1 },
-            ] },
-        ],
-        price: 2,
-    },
-]
 
 function QuantitySelector({ setQuantity, quantity }: { setQuantity: React.Dispatch<React.SetStateAction<number>> , quantity: number}) {
     return (
@@ -95,15 +41,15 @@ onValueChange={(e) => setQuantity(Number(e.value))}
     )
 }
 
-function OrderableCard({ setInProgressOrder, orderable }: { setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>, orderable: Orderable }) {
+function OrderableCard({ setInProgressOrder, orderable }: { setInProgressOrder: React.Dispatch<React.SetStateAction<OrderableBase_Output | null>>, orderable: OrderableBase_Output }) {
     return (<Box cursor="pointer" minH={100} onClick={() => setInProgressOrder(orderable)} display={"flex"} flexDirection={"column"} justifyContent="center" alignItems="center" p={2} minW={200} border="1px solid #ccc" borderRadius={4}>
         <Text cursor="pointer">{orderable.name}</Text>
     </Box>)
 }
 
 function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>>, orderItem: OrderItem }) {
-    const totalPrice = orderItem.orderable.price + 
-        orderItem.variants.reduce((sum, variant) => sum + variant.priceDelta, 0)
+    const totalPrice = Number(orderItem.orderable.price) + 
+        orderItem.variants.reduce((sum, variant) => sum + Number(variant.priceDelta), 0)
     
     const handleRemove = () => {
         setOrder(prev => ({
@@ -117,9 +63,9 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
 
     const variantsByGroup = orderItem.orderable.variantGroups.map(group => {
         const variantsInGroup = orderItem.variants.filter(selectedVariant => 
-            'groupId' in selectedVariant && selectedVariant.groupId === group.id
+            selectedVariant.groupId === group.id
         )
-        const groupPriceDelta = variantsInGroup.reduce((sum, v) => sum + v.priceDelta, 0)
+        const groupPriceDelta = variantsInGroup.reduce((sum, v) => sum + Number(v.priceDelta), 0)
         return {
             groupName: group.name,
             variants: variantsInGroup,
@@ -130,7 +76,7 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
     const variantCounts = new Map<string, number>()
     variantsByGroup.forEach(group => {
         group.variants.forEach(v => {
-            const key = `${group.groupName}-${v.id}`
+            const key = `${group.groupName}-${String(v.id)}`
             variantCounts.set(key, (variantCounts.get(key) || 0) + 1)
         })
     })
@@ -151,11 +97,11 @@ function InOrderCard({ setOrder, orderItem }: { setOrder: React.Dispatch<React.S
                 {variantsByGroup.map(group => {
                     const consolidatedVariants = new Map<string, { name: string; count: number }>()
                     group.variants.forEach(v => {
-                        const existing = consolidatedVariants.get(v.id)
+                        const existing = consolidatedVariants.get(String(v.id))
                         if (existing) {
                             existing.count++
                         } else {
-                            consolidatedVariants.set(v.id, { name: v.name, count: 1 })
+                            consolidatedVariants.set(String(v.id), { name: v.name, count: 1 })
                         }
                     })
 
@@ -190,15 +136,15 @@ function VariantGroupSelector({
     onNext,
     currentSelections
 }: { 
-    variantGroup: VariantGroup, 
-    onSelect: (variant: Variant) => void,
+    variantGroup: OrderableBase_Output['variantGroups'][0], 
+    onSelect: (variant: VariantBase_Output) => void,
     onBack: () => void,
     onNext: () => void,
-    currentSelections: Variant[]
+    currentSelections: VariantBase_Output[]
 }) {
     // Only count variants that actually belong to this group
-    const selectedVariantsInGroup = currentSelections.filter(selectedVariant => 
-        'groupId' in selectedVariant && selectedVariant.groupId === variantGroup.id
+    const selectedVariantsInGroup = currentSelections.filter((selectedVariant): selectedVariant is SelectedVariant => 
+        'groupId' in selectedVariant && selectedVariant.groupId === String(variantGroup.id)
     )
 
     return (
@@ -236,7 +182,7 @@ function VariantGroupSelector({
                                         <Text fontSize="sm">×{count}</Text>
                                     )}
                                 </Flex>
-                                <Text>${variant.priceDelta > 0 ? `+${variant.priceDelta.toFixed(2)}` : '0.00'}</Text>
+                                <Text>${Number(variant.priceDelta) > 0 ? `+${Number(variant.priceDelta).toFixed(2)}` : '0.00'}</Text>
                             </Flex>
                         </Box>
                     )
@@ -247,19 +193,19 @@ function VariantGroupSelector({
 }
 
 function VariantSelector({ orderable, setOrder, setInProgressOrder }: { 
-    orderable: Orderable, 
-    setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>, 
+    orderable: OrderableBase_Output, 
+    setInProgressOrder: React.Dispatch<React.SetStateAction<OrderableBase_Output | null>>, 
     setOrder: React.Dispatch<React.SetStateAction<CompleteOrder>> 
 }) {
     const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
-    const [variantsByGroup, setVariantsByGroup] = useState<Map<string, Variant[]>>(
+    const [variantsByGroup, setVariantsByGroup] = useState<Map<number, SelectedVariant[]>>(
         new Map(orderable.variantGroups.map(g => [g.id, []]))
     )
     const [quantity, setQuantity] = useState(1)
 
     const currentGroup = orderable.variantGroups[currentGroupIndex]
 
-    const handleVariantSelect = (variant: Variant) => {
+    const handleVariantSelect = (variant: VariantBase_Output) => {
         const selectedVariant: SelectedVariant = {
             ...variant,
             groupId: currentGroup.id
@@ -332,7 +278,13 @@ function VariantSelector({ orderable, setOrder, setInProgressOrder }: {
     )
 }
 
-function AllOrderables({setInProgressOrder}: {setInProgressOrder: React.Dispatch<React.SetStateAction<Orderable | null>>}){
+function AllOrderables({setInProgressOrder}: {setInProgressOrder: React.Dispatch<React.SetStateAction<OrderableBase_Output | null>>}){
+
+    const { data: orderables } = useQuery({
+        queryKey: ['orderables'],
+        queryFn: () => PosService.getMenu(),
+    })
+    if (!orderables) return null
     return (
         <Flex direction={"column"} gap={2}>
         {orderables.map((orderable) => (
@@ -344,21 +296,21 @@ function AllOrderables({setInProgressOrder}: {setInProgressOrder: React.Dispatch
 }
 
 function Order() {
+    
     const [order, setOrder] = useState<CompleteOrder>({
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         orderItems: []
     })
-    const [inProgressOrder, setInProgressOrder] = useState<Orderable | null>(null)
+    const [inProgressOrder, setInProgressOrder] = useState<OrderableBase_Output | null>(null)
 
     const orderTotal = order.orderItems.reduce((sum, item) => {
-        const itemPrice = item.orderable.price + 
-            item.variants.reduce((variantSum, variant) => variantSum + variant.priceDelta, 0)
+        const itemPrice = Number(item.orderable.price) + 
+            item.variants.reduce((variantSum, variant) => variantSum + Number(variant.priceDelta), 0)
         return sum + (itemPrice * item.quantity)
     }, 0)
 
     const handleSubmitOrder = () => {
-        console.log('Submitting order:', order)
         setOrder({
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),

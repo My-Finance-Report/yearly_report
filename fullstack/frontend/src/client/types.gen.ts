@@ -353,6 +353,44 @@ export type NoCodeWidgetUpdate = {
     col_span: number;
 };
 
+export type OrderableBase_Input = {
+    id?: (number | null);
+    name: string;
+    price: (number | string);
+    variantGroups: Array<VariantGroupBase_Input>;
+};
+
+export type OrderableBase_Output = {
+    id?: (number | null);
+    name: string;
+    price: string;
+    variantGroups: Array<VariantGroupBase_Output>;
+};
+
+export type OrderBase_Input = {
+    id: string;
+    timestamp: string;
+    orderItems: Array<OrderItemBase_Input>;
+};
+
+export type OrderBase_Output = {
+    id: string;
+    timestamp: string;
+    orderItems: Array<OrderItemBase_Output>;
+};
+
+export type OrderItemBase_Input = {
+    orderable: OrderableBase_Input;
+    variants: Array<SelectedVariantBase_Input>;
+    quantity: number;
+};
+
+export type OrderItemBase_Output = {
+    orderable: OrderableBase_Output;
+    variants: Array<SelectedVariantBase_Output>;
+    quantity: number;
+};
+
 export type PageVariant = 'account-page';
 
 export type Parameter_Input = {
@@ -549,6 +587,20 @@ export type SavedFilterUpdate = {
     filter_data?: (FilterData_Input | null);
 };
 
+export type SelectedVariantBase_Input = {
+    groupId: string;
+    id: string;
+    name: string;
+    priceDelta: (number | string);
+};
+
+export type SelectedVariantBase_Output = {
+    groupId: string;
+    id: string;
+    name: string;
+    priceDelta: string;
+};
+
 export type SelectOption = {
     key: string;
     value: string;
@@ -696,6 +748,34 @@ export type ValidationError = {
     type: string;
 };
 
+export type VariantBase_Input = {
+    id: number;
+    name: string;
+    priceDelta: (number | string);
+};
+
+export type VariantBase_Output = {
+    id: number;
+    name: string;
+    priceDelta: string;
+};
+
+export type VariantGroupBase_Input = {
+    id: number;
+    name: string;
+    required: boolean;
+    order_of_appearance: number;
+    variants: Array<VariantBase_Input>;
+};
+
+export type VariantGroupBase_Output = {
+    id: number;
+    name: string;
+    required: boolean;
+    order_of_appearance: number;
+    variants: Array<VariantBase_Output>;
+};
+
 /**
  * Request to verify a 2FA code.
  */
@@ -803,7 +883,9 @@ export type AdminReseedAccountPageData = {
     userId: number;
 };
 
-export type AdminReseedAccountPageResponse = (unknown);
+export type AdminReseedAccountPageResponse = ({
+    [key: string]: (string);
+});
 
 export type BudgetsGetBudgetEntriesData = {
     budgetId: number;
@@ -982,6 +1064,35 @@ export type PlaidExchangeTokenData = {
 export type PlaidExchangeTokenResponse = (Array<PlaidAccountResponse>);
 
 export type PlaidGetPlaidAccountsResponse = (Array<PlaidAccountResponse>);
+
+export type PosGetMenuResponse = (Array<OrderableBase_Output>);
+
+export type PosCreateMenuItemData = {
+    requestBody: OrderableBase_Input;
+};
+
+export type PosCreateMenuItemResponse = (OrderableBase_Output);
+
+export type PosUpdateMenuItemData = {
+    orderableId: number;
+    requestBody: OrderableBase_Input;
+};
+
+export type PosUpdateMenuItemResponse = (OrderableBase_Output);
+
+export type PosDeleteMenuItemData = {
+    orderableId: number;
+};
+
+export type PosDeleteMenuItemResponse = (unknown);
+
+export type PosGetOrdersResponse = (Array<OrderBase_Output>);
+
+export type PosCreateOrderData = {
+    requestBody: OrderBase_Input;
+};
+
+export type PosCreateOrderResponse = (OrderBase_Output);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

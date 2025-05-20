@@ -14,7 +14,7 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { useState } from 'react'
-import { HiCheck, HiPlus, HiX } from 'react-icons/hi'
+import { HiCheck, HiPencil, HiPlus, HiX } from 'react-icons/hi'
 
 export const Route = createFileRoute('/_layout/_logged_in/manage-menu')({
   component: ManageMenu,
@@ -233,17 +233,16 @@ function ManageMenu() {
         {
           id: "0",
           order: 0,
-          name: "temp",
+          name: "Temperature",
           required: true,
           variants: [
             { id: "1", name: "Hot", priceDelta: 0 },
-            { id: "2", name: "Cold", priceDelta: 1 },
           ]
         },
         {
           id: "1",
           order: 1,
-          name: "size",
+          name: "Size",
           required: true,
           variants: [
             { id: "1", name: "Small", priceDelta: 0 },
@@ -286,11 +285,11 @@ function ManageMenu() {
         <Heading>Menu</Heading>
         <Button variant="surface" onClick={() => setEditingItem(undefined)}><HiPlus /> New Item</Button>
       </Flex>
-      <Table.Root>
+      <Table.Root variant="outline">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader>Name</Table.ColumnHeader>
-            <Table.ColumnHeader>Base Price</Table.ColumnHeader>
+            <Table.ColumnHeader>Price</Table.ColumnHeader>
             <Table.ColumnHeader>Modifiers</Table.ColumnHeader>
             <Table.ColumnHeader></Table.ColumnHeader>
           </Table.Row>
@@ -307,8 +306,8 @@ function ManageMenu() {
               </Table.Cell>
               <Table.Cell>
                 <Flex gap={2}>
-                  <Button size="sm" onClick={() => setEditingItem(item)}>Edit</Button>
-                  <Button size="sm" colorPalette="red" variant="surface" onClick={() => handleDelete(item.id)}>Delete</Button>
+                  <Button size="sm" variant="surface" onClick={() => setEditingItem(item)}><HiPencil /></Button>
+                  <Button size="sm" colorPalette="red" variant="surface" onClick={() => handleDelete(item.id)}><HiX /></Button>
                 </Flex>
               </Table.Cell>
             </Table.Row>
