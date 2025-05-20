@@ -34,13 +34,12 @@ import {
   FiMenu,
   FiSettings,
   FiUsers,
-  FiBriefcase
+  FiBriefcase,
 } from "react-icons/fi";
 import { LuEllipsis } from "react-icons/lu";
 import { CollapsibleWorkerStatus } from "./WorkerStatus";
 
 const navigationItems = [
-  
   { value: "/transactions", label: "Transaction Explorer", icon: FiList },
   { value: "/accounts", label: "Account Explorer", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },

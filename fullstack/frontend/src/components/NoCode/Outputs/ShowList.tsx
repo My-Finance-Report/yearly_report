@@ -18,7 +18,7 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 import { TransactionKind } from "@/client";
 
 interface NoCodeTransactionOut {
-  id: number
+  id: number;
   category_id: number;
   amount: number;
   description: string;
@@ -66,38 +66,36 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
               <TableCell>
                 <Flex direction="row" gap={2}>
                   <Button
-            onClick={editTransactionModal.onOpen}
-            size="sm"
-            variant="outline"
-          >
-            <FiEdit size="8px" />
-          </Button>
-          <Button
-            onClick={deleteTransactionModal.onOpen}
-            size="sm"
-            variant="outline"
-          >
-            <FiTrash size="8px" />
-          </Button>
-        </Flex>
-      </TableCell>
-      <EditTransaction
-        transaction={data}
-        isOpen={editTransactionModal.open}
-        onClose={editTransactionModal.onClose}
-      />
-      <Delete
-        type="transaction"
-        isOpen={deleteTransactionModal.open}
-        onClose={deleteTransactionModal.onClose}
-        entity={data}
-      />
+                    onClick={editTransactionModal.onOpen}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <FiEdit size="8px" />
+                  </Button>
+                  <Button
+                    onClick={deleteTransactionModal.onOpen}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <FiTrash size="8px" />
+                  </Button>
+                </Flex>
+              </TableCell>
+              <EditTransaction
+                transaction={data}
+                isOpen={editTransactionModal.open}
+                onClose={editTransactionModal.onClose}
+              />
+              <Delete
+                type="transaction"
+                isOpen={deleteTransactionModal.open}
+                onClose={deleteTransactionModal.onClose}
+                entity={data}
+              />
             </TableRow>
-
           ))}
         </TableBody>
       </TableRoot>
-      
     </Box>
   );
 }

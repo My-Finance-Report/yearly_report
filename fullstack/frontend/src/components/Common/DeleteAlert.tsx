@@ -4,15 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import {
-  NoCodeService,
-  TransactionsService,
-  UsersService,
-} from "../../client";
+import { NoCodeService, TransactionsService, UsersService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 
-interface DeleteableEntity {
-    id: number;
+export interface DeleteableEntity {
+  id: number;
 }
 
 interface DeleteProps {

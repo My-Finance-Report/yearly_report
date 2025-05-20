@@ -22,7 +22,7 @@ interface MenuItemType {
   color?: string;
 }
 
-const ActionsMenu = ({ type,  entity }: ActionsMenuProps) => {
+const ActionsMenu = ({ type, entity }: ActionsMenuProps) => {
   const deleteModal = useDisclosure();
   const toast = useCustomToast();
 
@@ -59,8 +59,6 @@ const ActionsMenu = ({ type,  entity }: ActionsMenuProps) => {
       },
     ],
   };
-
-
 
   return (
     <>

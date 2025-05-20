@@ -24,7 +24,9 @@ class Variant(Base):
     id: Mapped[VariantId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     price_delta: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
-    variant_group_id: Mapped[VariantGroupId] = mapped_column(ForeignKey("variant_group.id"), nullable=False)
+    variant_group_id: Mapped[VariantGroupId] = mapped_column(
+        ForeignKey("variant_group.id"), nullable=False
+    )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
@@ -47,6 +49,10 @@ class SelectedVariant(Base):
     __tablename__ = "selected_variant"
 
     id: Mapped[VariantId] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    variant_id: Mapped[VariantId] = mapped_column(ForeignKey("variant.id"), nullable=False)
-    order_item_id: Mapped[OrderItemId] = mapped_column(ForeignKey("order_item.id"), nullable=False)
+    variant_id: Mapped[VariantId] = mapped_column(
+        ForeignKey("variant.id"), nullable=False
+    )
+    order_item_id: Mapped[OrderItemId] = mapped_column(
+        ForeignKey("order_item.id"), nullable=False
+    )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)

@@ -66,9 +66,7 @@ export function TransactionsTable({
             {isMobile ? null : isBudget ? "BUDGET" : ""}
           </TableColumnHeader>
           {isMobile ? (
-            <TableColumnHeader colSpan={1}>
-              EXPENSE / DEPOSIT
-            </TableColumnHeader>
+            <TableColumnHeader colSpan={1}>EXPENSE / DEPOSIT</TableColumnHeader>
           ) : (
             <>
               <TableColumnHeader>EXPENSE</TableColumnHeader>
@@ -99,12 +97,8 @@ export function TransactionsTable({
             </TableCell>
           ) : (
             <>
-              <TableCell>
-                {formatAmount(data.overall_withdrawals)}
-              </TableCell>
-              <TableCell>
-                {formatAmount(data.overall_deposits)}
-              </TableCell>
+              <TableCell>{formatAmount(data.overall_withdrawals)}</TableCell>
+              <TableCell>{formatAmount(data.overall_deposits)}</TableCell>
             </>
           )}
         </TableRow>
@@ -198,12 +192,8 @@ function RenderGroups({
                 </TableCell>
               ) : (
                 <>
-                  <TableCell>
-                    {formatAmount(group.total_withdrawals)}
-                  </TableCell>
-                  <TableCell>
-                    {formatAmount(group.total_deposits)}
-                  </TableCell>
+                  <TableCell>{formatAmount(group.total_withdrawals)}</TableCell>
+                  <TableCell>{formatAmount(group.total_deposits)}</TableCell>
                 </>
               )}
             </TableRow>
@@ -214,8 +204,8 @@ function RenderGroups({
                     <Box pl={isMobile ? 2 : 4}>
                       {group.subgroups && group.subgroups.length > 0 ? (
                         <Table.Root variant="outline" size="sm">
-                          <TableHeader justifyContent={'space-between'}>
-                            <TableRow >
+                          <TableHeader justifyContent={"space-between"}>
+                            <TableRow>
                               <TableColumnHeader />
                               <TableColumnHeader>
                                 {group.subgroups[0].groupby_kind?.toLocaleUpperCase()}
@@ -231,12 +221,8 @@ function RenderGroups({
                                 </TableColumnHeader>
                               ) : (
                                 <>
-                                  <TableColumnHeader>
-                                    EXPENSE
-                                  </TableColumnHeader>
-                                  <TableColumnHeader>
-                                    DEPOSIT
-                                  </TableColumnHeader>
+                                  <TableColumnHeader>EXPENSE</TableColumnHeader>
+                                  <TableColumnHeader>DEPOSIT</TableColumnHeader>
                                 </>
                               )}
                             </TableRow>

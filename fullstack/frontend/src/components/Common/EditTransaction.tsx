@@ -37,14 +37,13 @@ import useCustomToast from "../../hooks/useCustomToast";
 import { handleError } from "../../utils";
 import type { Blah } from "./SankeyConfig"; //TODO stop importing this
 
-
 interface EditableTransaction {
-    id: number;
-    amount: number;
-    description: string;
-    category_id: number;
-    date_of_transaction: string;
-    kind: TransactionKind;
+  id: number;
+  amount: number;
+  description: string;
+  category_id: number;
+  date_of_transaction: string;
+  kind: TransactionKind;
 }
 
 interface EditTransactionProps {
@@ -81,7 +80,6 @@ const EditTransaction = ({
   isOpen,
   onClose,
 }: EditTransactionProps) => {
-
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
 
@@ -100,7 +98,7 @@ const EditTransaction = ({
     },
   });
 
-  const { data : categoriesData } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
       TransactionsService.listCategories({ transactionId: transaction.id }),
@@ -108,7 +106,7 @@ const EditTransaction = ({
 
   const categories = rawCategoiesToSelectItems(categoriesData ?? []);
 
-  console.log(categories)
+  console.log(categories);
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {

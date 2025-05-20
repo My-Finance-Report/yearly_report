@@ -32,7 +32,9 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = "order_item"
 
-    id: Mapped[OrderItemId] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[OrderItemId] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     order_id: Mapped[OrderId] = mapped_column(ForeignKey("order.id"), nullable=False)
     orderable_id: Mapped[OrderableId] = mapped_column(Integer, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -45,4 +47,4 @@ class Orderable(Base):
     id: Mapped[OrderableId] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
-    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False) 
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
