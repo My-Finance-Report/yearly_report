@@ -131,6 +131,8 @@ def preview_notification(
 
         sample_transactions.append(
             NoCodeTransaction(
+                id=i,
+                category_id=i,
                 amount=amount,
                 date_of_transaction=date,
                 description=f"Sample Transaction {i + 1}",

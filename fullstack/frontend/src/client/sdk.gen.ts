@@ -27,6 +27,8 @@ import type {
   AccountsToggleArchiveTransactionSourceResponse,
   AccountsGetAccountSyncLogsData,
   AccountsGetAccountSyncLogsResponse,
+  AdminReseedAccountPageData,
+  AdminReseedAccountPageResponse,
   BudgetsGetBudgetEntriesData,
   BudgetsGetBudgetEntriesResponse,
   BudgetsCreateBudgetEntryData,
@@ -83,6 +85,16 @@ import type {
   PlaidExchangeTokenData,
   PlaidExchangeTokenResponse,
   PlaidGetPlaidAccountsResponse,
+  PosGetMenuResponse,
+  PosCreateMenuItemData,
+  PosCreateMenuItemResponse,
+  PosUpdateMenuItemData,
+  PosUpdateMenuItemResponse,
+  PosDeleteMenuItemData,
+  PosDeleteMenuItemResponse,
+  PosGetOrdersResponse,
+  PosCreateOrderData,
+  PosCreateOrderResponse,
   PrivateCreateUserData,
   PrivateCreateUserResponse,
   PrivateGoogleCallbackLocalData,
@@ -428,6 +440,30 @@ export class AccountsService {
       },
       query: {
         limit: data.limit,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+}
+
+export class AdminService {
+  /**
+   * Reseed Account Page
+   * @param data The data for the request.
+   * @param data.userId
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static reseedAccountPage(
+    data: AdminReseedAccountPageData,
+  ): CancelablePromise<AdminReseedAccountPageResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/admin/reseed-account-page/{user_id}",
+      path: {
+        user_id: data.userId,
       },
       errors: {
         422: "Validation Error",
@@ -1115,6 +1151,127 @@ export class PlaidService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/plaid/accounts",
+    });
+  }
+}
+
+export class PosService {
+  /**
+   * Get Menu
+   * Get all menu items (orderables) with their variant groups and variants
+   * @returns OrderableBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static getMenu(): CancelablePromise<PosGetMenuResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pos/menu",
+    });
+  }
+
+  /**
+   * Create Menu Item
+   * Create a new menu item with its variant groups and variants
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns OrderableBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static createMenuItem(
+    data: PosCreateMenuItemData,
+  ): CancelablePromise<PosCreateMenuItemResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/pos/menu",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Update Menu Item
+   * Update a menu item with its variant groups and variants
+   * @param data The data for the request.
+   * @param data.orderableId
+   * @param data.requestBody
+   * @returns OrderableBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static updateMenuItem(
+    data: PosUpdateMenuItemData,
+  ): CancelablePromise<PosUpdateMenuItemResponse> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/pos/menu/{orderable_id}",
+      path: {
+        orderable_id: data.orderableId,
+      },
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Delete Menu Item
+   * Delete a menu item
+   * @param data The data for the request.
+   * @param data.orderableId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static deleteMenuItem(
+    data: PosDeleteMenuItemData,
+  ): CancelablePromise<PosDeleteMenuItemResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/pos/menu/{orderable_id}",
+      path: {
+        orderable_id: data.orderableId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Get Orders
+   * Get all orders for the current user
+   * @returns OrderBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static getOrders(): CancelablePromise<PosGetOrdersResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pos/orders",
+    });
+  }
+
+  /**
+   * Create Order
+   * Create a new order with order items and selected variants
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns OrderBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static createOrder(
+    data: PosCreateOrderData,
+  ): CancelablePromise<PosCreateOrderResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/pos/orders",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
     });
   }
 }
@@ -1819,7 +1976,6 @@ export class UploadsService {
 export class UsersService {
   /**
    * Read Users
-   * Retrieve users. NOTE: this doesnt work due to RLS policy
    * @param data The data for the request.
    * @param data.skip
    * @param data.limit

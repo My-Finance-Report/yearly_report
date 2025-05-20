@@ -27,13 +27,13 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
         user_id=user_id,
     )
     session.add(canvas)
-    session.flush()  # So canvas.id is populated
+    session.flush()
 
     widget_id_lookup = {}
 
     for widget_data in canvas_data.widgets:
         widget = NoCodeWidget(
-            name=widget_data.name or "Unnamed Widget",
+            name=widget_data.name or "",
             widget_type=widget_data.type,
             label=widget_data.name,
             canvas_id=canvas.id,
@@ -202,10 +202,8 @@ def delete_account_page(user_id: int) -> None:
                 NoCodeParameterOption.parameter_id.in_(parameter_ids)
             ).delete(synchronize_session=False)
             session.query(NoCodeToolParameter).filter(
-                NoCodeToolParameter.parameter_id.id_(parameter_ids).delete(
-                    synchronize_session=False
-                )
-            )
+                NoCodeToolParameter.parameter_id.in_(parameter_ids)
+            ).delete(synchronize_session=False)
 
         # 7. Delete parameters
         if parameter_ids:
@@ -235,4 +233,4 @@ def delete_account_page(user_id: int) -> None:
 
 if __name__ == "__main__":
     delete_account_page(1)
-    # seed_account_page(1)
+    seed_account_page(1)

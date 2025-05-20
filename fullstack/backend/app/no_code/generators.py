@@ -10,7 +10,7 @@ from app.models.category import Category
 from app.models.no_code.parameter import SelectOption
 from app.models.plaid import PlaidAccountBalance, PlaidSyncLog
 from app.models.transaction import Transaction, TransactionKind
-from app.models.transaction_source import TransactionSource
+from app.models.transaction_source import SourceKind, TransactionSource
 
 from app.no_code.decoration import pipeline_step
 from app.schemas.no_code import NoCodeTransaction, PipelineStart
@@ -68,6 +68,8 @@ def first_n_transactions(
 
     val = [
         NoCodeTransaction(
+            id=tx.id,
+            category_id=cat.id,
             category_name=cat.name,
             amount=tx.amount,
             account_name=account_name_map[tx.transaction_source_id],
@@ -235,8 +237,10 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     if not accounts:
         return None
 
-    # pull 10 records of balance for every account the user has
+    account_lookup = {account.id: account for account in accounts}
+
     plaid_account_balances = defaultdict(list)
+    # ruthless n+1
     for account in accounts:
         plaid_account_balances[account.id] = (
             data.session.query(PlaidAccountBalance)
@@ -249,10 +253,14 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     # total the most recent entry from each account
     net_worth = Decimal(0)
     all_transactions = []
-    for _account_id, balance_entries in plaid_account_balances.items():
+    for account_id, balance_entries in plaid_account_balances.items():
         if not balance_entries:
             continue
-        net_worth += Decimal(balance_entries[0].balance)
+        account = account_lookup[account_id]
+        if account.source_kind == SourceKind.card:
+            net_worth -= Decimal(balance_entries[0].balance)
+        else:
+            net_worth += Decimal(balance_entries[0].balance)
         all_transactions.extend(balance_entries)
 
     # sort the transactions by timestamp

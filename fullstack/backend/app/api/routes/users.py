@@ -26,6 +26,7 @@ from app.local_types import (
 )
 from app.models.user import (
     User,
+    UserSettings,
 )
 from app.telegram_utils import send_telegram_message
 from app.email.send import send_email
@@ -42,13 +43,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 def read_users(
     session: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> UsersPublic:
-    """
-    Retrieve users. NOTE: this doesnt work due to RLS policy
-    """
-
     count = session.query(func.count()).select_from(User).scalar()
 
-    users = session.query(User).offset(skip).limit(limit).all()
+    users = session.query(User).order_by(User.id).offset(skip).limit(limit).all()
 
     return UsersPublic(
         data=[
@@ -57,7 +54,12 @@ def read_users(
                 email=user.email,
                 id=user.id,
                 is_superuser=user.is_superuser,
-                settings=user.settings,
+                settings=UserSettings()
+                if user.settings is None
+                else UserSettings(
+                    has_budget=user.settings.has_budget,
+                    power_user_filters=user.settings.power_user_filters,
+                ),
             )
             for user in users
         ],

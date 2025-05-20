@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
-
+from typing import Annotated, Any, Callable, Generic, Literal, Optional, TypeVar
 from pydantic import BaseModel, Field, create_model
 
 from app.db import Session
@@ -68,15 +67,19 @@ class TransactionsWrapper(BaseModel):
     transactions: list[PartialTransaction]
 
 
-def create_categorized_transaction_model(categories: list[str]) -> type[BaseModel]:
+def create_categorized_transaction_model(
+    categories: list[str],
+    plaidTransactionIds: list[PlaidTransactionId],
+    transactionIds: list[TransactionId],
+) -> type[BaseModel]:
     return create_model(
         "CategorizedTransaction",
         partialTransactionId=(
-            TransactionId | None,
+            Literal[tuple(transactionIds)] if transactionIds else None,
             Field(..., description="Unique identifier for the transaction"),
         ),
         partialPlaidTransactionId=(
-            PlaidTransactionId | None,
+            Literal[tuple(plaidTransactionIds)] if plaidTransactionIds else None,
             Field(..., description="Plaid transaction identifier"),
         ),
         partialTransactionDateOfTransaction=(
@@ -102,9 +105,15 @@ def create_categorized_transaction_model(categories: list[str]) -> type[BaseMode
     )
 
 
-def create_categorized_transactions_wrapper(categories: list[str]) -> type[BaseModel]:
+def create_categorized_transactions_wrapper(
+    categories: list[str],
+    plaidTransactionIds: list[PlaidTransactionId],
+    transactionIds: list[TransactionId],
+) -> type[BaseModel]:
     # this type has a runtime generated enum for the allowed categories
-    StrictCategorizedTransaction = create_categorized_transaction_model(categories)
+    StrictCategorizedTransaction = create_categorized_transaction_model(
+        categories, plaidTransactionIds, transactionIds
+    )
 
     return create_model(
         "CategorizedTransactionsWrapper",

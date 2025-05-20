@@ -185,7 +185,6 @@ def _generate_all_transactions_widget(
 
     pipeline = [
         most_recent_n(widget_id),
-        NoCodeToolIn(tool="clean_transaction_data", parameters=[]),
     ]
 
     return NoCodeWidgetIn(
@@ -220,8 +219,8 @@ def _generate_net_worth_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        name="Net Worth",
-        description="Net worth of all accounts",
+        name="Total Balance",
+        description="Total balance of all accounts",
         row=row,
         col=col,
         row_span=row_span,
@@ -404,7 +403,6 @@ def _generate_list_widget(
     widget_id = WidgetId(7)
     pipeline = [
         first_n(session, user, widget_id, global_parameters),
-        NoCodeToolIn(tool="clean_transaction_data", parameters=[]),
     ]
 
     return NoCodeWidgetIn(

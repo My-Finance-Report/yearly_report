@@ -30,18 +30,18 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   FiDollarSign,
-  FiHome,
   FiList,
   FiMenu,
   FiSettings,
   FiUsers,
+  FiBriefcase,
 } from "react-icons/fi";
 import { LuEllipsis } from "react-icons/lu";
 import { CollapsibleWorkerStatus } from "./WorkerStatus";
 
 const navigationItems = [
-  { value: "/transactions", label: "Dashboard", icon: FiHome },
-  { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
+  { value: "/transactions", label: "Transaction Explorer", icon: FiList },
+  { value: "/accounts", label: "Account Explorer", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
@@ -121,7 +121,6 @@ export function SegmentedNavigation() {
 
     window.addEventListener("storage", handleStorageChange);
 
-    // Initial check
     if (isSessionActive() && !currentUser) {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     }

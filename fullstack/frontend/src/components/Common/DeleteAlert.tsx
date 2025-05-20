@@ -4,20 +4,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import {
-  EffectOut,
-  NoCodeService,
-  TransactionOut,
-  TransactionsService,
-  UsersService,
-} from "../../client";
+import { NoCodeService, TransactionsService, UsersService } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
+
+export interface DeleteableEntity {
+  id: number;
+}
 
 interface DeleteProps {
   type: "user" | "transaction" | "notification";
   isOpen: boolean;
   onClose: () => void;
-  entity?: TransactionOut | EffectOut;
+  entity?: DeleteableEntity;
 }
 
 const STORAGE_KEY_PREFIX = "skip_confirmation_";

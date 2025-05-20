@@ -69,7 +69,7 @@ export function TransactionsView({ isDemo }: { isDemo: boolean }) {
   }
 
   return (
-    <Box mx={isMobile ? 1 : 3}>
+    <Box mx={isMobile ? 1 : 200}>
       {!isDemo && (
         <MainLayoutSidebar
           setShowDeposits={setShowDeposits}

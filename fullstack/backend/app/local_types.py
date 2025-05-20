@@ -10,6 +10,7 @@ from app.models.filter import GroupByOption
 from app.models.plaid import PlaidSyncLogId
 from app.models.report import CategoryBase, TransactionBase, TransactionSourceBase
 from app.models.transaction_source import TransactionSourceId
+from app.models.transaction import TransactionKind
 from app.models.user import UserId, UserSettings
 from app.models.worker_job import JobStatus
 from app.models.worker_status import ProcessingState
@@ -104,6 +105,11 @@ class TransactionOut(TransactionBase):
 
 class TransactionEdit(TransactionBase):
     id: CategoryId
+    description: str
+    category_id: int
+    date_of_transaction: datetime
+    amount: float
+    kind: TransactionKind
 
 
 class UploadedPdfBase(BaseModel):

@@ -122,6 +122,7 @@ function UsersTable() {
                     <ActionsMenu
                       type="user"
                       disabled={currentUser?.id === user.id}
+                      entity={user}
                     />
                   </Table.Cell>
                 </Table.Row>

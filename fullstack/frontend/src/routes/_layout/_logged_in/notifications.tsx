@@ -33,7 +33,7 @@ import {
   EffectUpdate,
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
-import Delete from "@/components/Common/DeleteAlert";
+import Delete, { DeleteableEntity } from "@/components/Common/DeleteAlert";
 import { Controller, useForm, UseFormReturn } from "react-hook-form";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
@@ -114,12 +114,12 @@ function UnifiedNotificationInterface() {
           html={previewData?.html}
         />
 
-        {selectedEffect && (
+        {selectedEffect?.id && selectedEffect.id !== undefined && (
           <Delete
             type="notification"
             isOpen={deleteModal.open}
             onClose={deleteModal.onClose}
-            entity={selectedEffect}
+            entity={selectedEffect as DeleteableEntity}
           />
         )}
       </HStack>

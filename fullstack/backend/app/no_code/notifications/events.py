@@ -6,9 +6,7 @@ from app.models.effect import EventType
 
 def generate_row(transaction: NoCodeTransaction) -> str:
     """Generate an HTML table row for a transaction."""
-    # Format the amount with 2 decimal places and add currency symbol
     amount_str = f"${abs(transaction.amount):.2f}"
-    # Add negative/positive indicator
     if transaction.kind == "withdrawal":
         amount_class = "negative"
         amount_str = f"-{amount_str}"
@@ -16,13 +14,15 @@ def generate_row(transaction: NoCodeTransaction) -> str:
         amount_class = "positive"
         amount_str = f"+{amount_str}"
 
-    # Format the date in a readable format
     date_str = transaction.date_of_transaction.strftime("%b %d, %Y")
 
-    # Create the HTML row with styling
+    formatted_desc = transaction.description
+    if len(formatted_desc) > 20:
+        formatted_desc = formatted_desc[:20] + "..."
+
     return f"""<tr>
         <td>{date_str}</td>
-        <td>{transaction.description}</td>
+        <td>{formatted_desc}</td>
         <td>{transaction.category_name or "Uncategorized"}</td>
         <td class='{amount_class}'>{amount_str}</td>
     </tr>"""
@@ -43,22 +43,18 @@ class Event(ABC, BaseModel):
                 "must have transactions to build a transaction table"
             )
 
-        # Only show up to 5 transactions to keep emails concise
         transactions = getattr(self, "transactions")
         transactions_to_show = transactions[:5]
         has_more = len(transactions) > 5
 
-        # Create rows for each transaction
         rows = "\n".join(generate_row(tx) for tx in transactions_to_show)
 
-        # Add a note if there are more transactions than shown
         more_text = (
             f"<tr><td colspan='4'><em>...and {len(transactions) - 5} more transaction(s)</em></td></tr>"
             if has_more
             else ""
         )
 
-        # Build the complete table with styling
         table = f"""<table style="width:100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px;">
     <thead>
         <tr>
