@@ -162,11 +162,10 @@ def create_menu_item(
     db.add(orderable)
     db.flush()
 
-    for index, group in enumerate(item.variantGroups):
+    for group in item.variantGroups:
         new = VariantGroupOrderable(
             orderable_id=orderable.id,
             variant_group_id=group.id,
-            order_of_appearance=index,
         )
 
         db.add(new)
