@@ -1,7 +1,7 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_layout/_logged_in/pos")({
+export const Route = createFileRoute("/_layout/_logged_in/pos/pos")({
   component: RouteComponent,
 });
 
@@ -17,15 +17,15 @@ interface Action {
 const actions: Action[] = [
   {
     name: "New Order",
-    link: "/order",
+    link: "/pos/order",
   },
   {
     name: "Sales Reports",
-    link: "/sales-reports",
+    link: "/pos/sales-reports",
   },
   {
     name: "Manage Menu",
-    link: "/manage-menu",
+    link: "/pos/manage-menu",
   },
 ];
 

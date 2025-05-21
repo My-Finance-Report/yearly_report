@@ -11,8 +11,8 @@ import {
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  OrderableBase_Output,
   OrderBase_Input,
+  OrderableOutput_Output,
   OrderItemBase_Input,
   PosService,
   VariantBase_Output,
@@ -21,7 +21,7 @@ import useCustomToast from "@/hooks/useCustomToast";
 
 type OrderItem = OrderItemBase_Input;
 
-export const Route = createFileRoute("/_layout/_logged_in/order")({
+export const Route = createFileRoute("/_layout/_logged_in/pos/order")({
   component: Order,
 });
 
@@ -54,9 +54,9 @@ function OrderableCard({
   orderable,
 }: {
   setInProgressOrder: React.Dispatch<
-    React.SetStateAction<OrderableBase_Output | null>
+    React.SetStateAction<OrderableOutput_Output | null>
   >;
-  orderable: OrderableBase_Output;
+  orderable: OrderableOutput_Output;
 }) {
   return (
     <Box
@@ -207,7 +207,7 @@ function VariantGroupSelector({
   currentSelections,
   isLastGroup,
 }: {
-  variantGroup: OrderableBase_Output["variantGroups"][0];
+  variantGroup: OrderableOutput_Output["variantGroups"][0];
   onSelect: (variant: VariantBase_Output) => void;
   onBack: () => void;
   onNext: () => void;
@@ -279,9 +279,9 @@ function VariantSelector({
   setOrder,
   setInProgressOrder,
 }: {
-  orderable: OrderableBase_Output;
+  orderable: OrderableOutput_Output;
   setInProgressOrder: React.Dispatch<
-    React.SetStateAction<OrderableBase_Output | null>
+    React.SetStateAction<OrderableOutput_Output | null>
   >;
   setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>>;
 }) {
@@ -396,7 +396,7 @@ function AllOrderables({
   setInProgressOrder,
 }: {
   setInProgressOrder: React.Dispatch<
-    React.SetStateAction<OrderableBase_Output | null>
+    React.SetStateAction<OrderableOutput_Output | null>
   >;
 }) {
   const { data: orderables } = useQuery({
@@ -425,7 +425,7 @@ function Order() {
   });
   const toast = useCustomToast();
   const [inProgressOrder, setInProgressOrder] =
-    useState<OrderableBase_Output | null>(null);
+    useState<OrderableOutput_Output | null>(null);
 
   const orderTotal = order.orderItems.reduce((sum, item) => {
     const itemPrice =
@@ -511,7 +511,7 @@ function BreadcrumbComponent() {
     <Breadcrumb.Root size="lg">
       <Breadcrumb.List>
         <Breadcrumb.Item>
-          <Breadcrumb.Link href="/pos">Home</Breadcrumb.Link>
+          <Breadcrumb.Link href="/pos/pos">Home</Breadcrumb.Link>
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Item>
