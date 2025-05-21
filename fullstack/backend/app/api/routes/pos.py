@@ -165,6 +165,7 @@ def create_menu_item(
     for group in item.variantGroups:
         new = VariantGroupOrderable(
             orderable_id=orderable.id,
+            user_id=current_user.id,
             variant_group_id=group.id,
         )
 

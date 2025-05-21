@@ -35,6 +35,8 @@ import {
   FiSettings,
   FiUsers,
   FiBriefcase,
+  FiShoppingCart,
+  FiBarChart,
 } from "react-icons/fi";
 import { LuEllipsis } from "react-icons/lu";
 import { CollapsibleWorkerStatus } from "./WorkerStatus";
@@ -44,6 +46,12 @@ const navigationItems = [
   { value: "/accounts", label: "Account Explorer", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
+];
+
+const posNavigationItems = [
+  { value: "/pos/orders", label: "Orders", icon: FiShoppingCart },
+  { value: "/pos/manage-menu", label: "Manage Menu", icon: FiMenu },
+  { value: "/pos/sales-reports", label: "Sales Reports", icon: FiBarChart },
 ];
 
 function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
@@ -133,7 +141,7 @@ export function SegmentedNavigation() {
   const isMobile = useIsMobile();
 
   // Example: final nav items + "Admin" if user is superuser
-  const finalItems = currentUser?.is_superuser
+  let finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : currentUser
       ? navigationItems
@@ -141,6 +149,10 @@ export function SegmentedNavigation() {
 
   // Check if we're running on localhost (development environment)
   const isDevelopment = window.location.hostname === "localhost";
+
+  if (currentUser && currentUser.settings.point_of_sales_user) {
+    finalItems = [...posNavigationItems];
+  }
 
   return (
     <Flex
@@ -241,16 +253,7 @@ function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
 
-  // Group navigation items by category
-  const mainNavItems = finalItems.filter((item) =>
-    ["/transactions", "/manage-accounts", "/budget"].includes(item.value),
-  );
-  const settingsItems = finalItems.filter((item) =>
-    ["/settings"].includes(item.value),
-  );
-  const adminItems = finalItems.filter((item) =>
-    ["/admin"].includes(item.value),
-  );
+  
 
   return (
     <DrawerRoot
@@ -294,13 +297,9 @@ function MobileMenu({
           )}
         </DrawerHeader>
         <DrawerBody>
-          {/* Main Navigation */}
           <Box mb={4}>
-            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-              Main Navigation
-            </Text>
             <Flex direction="column" gap={2}>
-              {mainNavItems.map(({ value, label, icon }) => (
+              {finalItems.map(({ value, label, icon }) => (
                 <Button
                   key={value}
                   variant="ghost"
@@ -318,57 +317,6 @@ function MobileMenu({
               ))}
             </Flex>
           </Box>
-
-          <Box mb={4}>
-            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-              Settings
-            </Text>
-            <Flex direction="column" gap={2}>
-              {settingsItems.map(({ value, label, icon }) => (
-                <Button
-                  key={value}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate({ to: value });
-                    setOpen(false);
-                  }}
-                >
-                  <Flex align="center" gap={2}>
-                    <Box as={icon} />
-                    <Text>{label}</Text>
-                  </Flex>
-                </Button>
-              ))}
-            </Flex>
-          </Box>
-
-          {/* Admin (if applicable) */}
-          {adminItems.length > 0 && (
-            <Box mb={4}>
-              <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-                Administration
-              </Text>
-              <Flex direction="column" gap={2}>
-                {adminItems.map(({ value, label, icon }) => (
-                  <Button
-                    key={value}
-                    variant="ghost"
-                    justifyContent="flex-start"
-                    onClick={() => {
-                      navigate({ to: value });
-                      setOpen(false);
-                    }}
-                  >
-                    <Flex align="center" gap={2}>
-                      <Box as={icon} />
-                      <Text>{label}</Text>
-                    </Flex>
-                  </Button>
-                ))}
-              </Flex>
-            </Box>
-          )}
         </DrawerBody>
         <DrawerFooter>
           <DrawerActionTrigger asChild>

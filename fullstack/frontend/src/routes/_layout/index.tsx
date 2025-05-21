@@ -1,4 +1,4 @@
-import { isSessionValid } from "@/hooks/useAuth";
+import { getCurrentUser } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Box,
@@ -23,9 +23,11 @@ export const Route = createFileRoute("/_layout/")({
   component: Landing,
   validateSearch: (search) => demoSearchSchema.parse(search),
   beforeLoad: async () => {
-    if (await isSessionValid()) {
+    const currentUser = await getCurrentUser();
+
+    if (currentUser) {
       throw redirect({
-        to: "/transactions",
+        to: currentUser.settings.point_of_sales_user ? "/pos/pos" : "/transactions",
       });
     }
   },
