@@ -21,6 +21,7 @@ class UserSettings(BaseModel):
     power_user_filters: bool = False
     point_of_sales_user: bool = False
 
+
 class User(Base):
     __tablename__ = "user"
 

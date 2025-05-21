@@ -49,7 +49,7 @@ const navigationItems = [
 ];
 
 const posNavigationItems = [
-  { value: "/pos/orders", label: "Orders", icon: FiShoppingCart },
+  { value: "/pos/order", label: "Orders", icon: FiShoppingCart },
   { value: "/pos/manage-menu", label: "Manage Menu", icon: FiMenu },
   { value: "/pos/sales-reports", label: "Sales Reports", icon: FiBarChart },
 ];
@@ -252,8 +252,6 @@ function MobileMenu({
   finalItems: typeof navigationItems;
 }) {
   const [open, setOpen] = useState(false);
-
-  
 
   return (
     <DrawerRoot

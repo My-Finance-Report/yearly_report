@@ -27,7 +27,9 @@ export const Route = createFileRoute("/_layout/")({
 
     if (currentUser) {
       throw redirect({
-        to: currentUser.settings.point_of_sales_user ? "/pos/pos" : "/transactions",
+        to: currentUser.settings.point_of_sales_user
+          ? "/pos/pos"
+          : "/transactions",
       });
     }
   },

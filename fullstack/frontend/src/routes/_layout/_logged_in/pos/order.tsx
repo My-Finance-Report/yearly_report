@@ -38,7 +38,7 @@ function QuantitySelector({
         Quantity
       </Text>
       <NumberInput.Root
-        width="200px"
+        width="90%"
         value={String(quantity)}
         onValueChange={(e) => setQuantity(Number(e.value))}
       >
@@ -68,7 +68,7 @@ function OrderableCard({
       justifyContent="center"
       alignItems="center"
       p={4}
-      minW={200}
+      minW="90%"
       border="1px solid #ccc"
       borderRadius={4}
       _hover={{ backgroundColor: "gray.50" }}
@@ -144,7 +144,7 @@ function InOrderCard({
     <Box
       flex="row"
       p={4}
-      minW={200}
+      minW="90%"
       border="1px solid #ccc"
       borderRadius={4}
       display="flex"
@@ -405,7 +405,7 @@ function AllOrderables({
   });
   if (!orderables) return null;
   return (
-    <Flex direction={"column"} gap={2}>
+    <Flex direction={"column"} gap={10} p={10}>
       {orderables.map((orderable) => (
         <OrderableCard
           setInProgressOrder={setInProgressOrder}
