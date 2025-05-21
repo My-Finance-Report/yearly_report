@@ -4,7 +4,7 @@ import { useState } from "react";
 import { OrderBase_Output, PosService } from "@/client";
 import { useQuery } from "@tanstack/react-query";
 
-export const Route = createFileRoute("/_layout/_logged_in/sales-reports")({
+export const Route = createFileRoute("/_layout/_logged_in/pos/sales-reports")({
   component: RouteComponent,
 });
 
@@ -134,7 +134,7 @@ function BreadcrumbComponent() {
     <Breadcrumb.Root size="lg">
       <Breadcrumb.List>
         <Breadcrumb.Item>
-          <Breadcrumb.Link href="/pos">Home</Breadcrumb.Link>
+          <Breadcrumb.Link href="/pos/pos/">Home</Breadcrumb.Link>
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Item>

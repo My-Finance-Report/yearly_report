@@ -42,7 +42,19 @@ class VariantGroup(Base):
     required: Mapped[bool] = mapped_column(Boolean, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     order_of_appearance: Mapped[int] = mapped_column(Integer, nullable=False)
-    orderable_id: Mapped[OrderableId] = mapped_column(Integer, nullable=False)
+
+
+class VariantGroupOrderable(Base):
+    __tablename__ = "variant_group_orderable"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
+    variant_group_id: Mapped[VariantGroupId] = mapped_column(
+        ForeignKey("variant_group.id"), nullable=False
+    )
+    orderable_id: Mapped[OrderableId] = mapped_column(
+        ForeignKey("orderable.id"), nullable=False
+    )
 
 
 class SelectedVariant(Base):

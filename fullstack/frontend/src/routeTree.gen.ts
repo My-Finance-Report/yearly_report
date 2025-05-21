@@ -32,22 +32,22 @@ import { Route as LayoutChangeLogImport } from "./routes/_layout/change-log";
 import { Route as LayoutLoggedinImport } from "./routes/_layout/_logged_in";
 import { Route as LayoutLoggedinUploadFilesImport } from "./routes/_layout/_logged_in/upload-files";
 import { Route as LayoutLoggedinTransactionsImport } from "./routes/_layout/_logged_in/transactions";
-import { Route as LayoutLoggedinTestImport } from "./routes/_layout/_logged_in/test";
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from "./routes/_layout/_logged_in/subscription-success";
 import { Route as LayoutLoggedinSubscriptionCancelImport } from "./routes/_layout/_logged_in/subscription-cancel";
 import { Route as LayoutLoggedinSubscriptionImport } from "./routes/_layout/_logged_in/subscription";
 import { Route as LayoutLoggedinSettingsImport } from "./routes/_layout/_logged_in/settings";
 import { Route as LayoutLoggedinSankeyConfigImport } from "./routes/_layout/_logged_in/sankey-config";
-import { Route as LayoutLoggedinSalesReportsImport } from "./routes/_layout/_logged_in/sales-reports";
-import { Route as LayoutLoggedinPosImport } from "./routes/_layout/_logged_in/pos";
 import { Route as LayoutLoggedinPlaidImport } from "./routes/_layout/_logged_in/plaid";
-import { Route as LayoutLoggedinOrderImport } from "./routes/_layout/_logged_in/order";
 import { Route as LayoutLoggedinNotificationsImport } from "./routes/_layout/_logged_in/notifications";
-import { Route as LayoutLoggedinManageMenuImport } from "./routes/_layout/_logged_in/manage-menu";
 import { Route as LayoutLoggedinManageAccountsImport } from "./routes/_layout/_logged_in/manage-accounts";
 import { Route as LayoutLoggedinBudgetImport } from "./routes/_layout/_logged_in/budget";
 import { Route as LayoutLoggedinAdminImport } from "./routes/_layout/_logged_in/admin";
 import { Route as LayoutLoggedinAccountsImport } from "./routes/_layout/_logged_in/accounts";
+import { Route as LayoutLoggedinPosSalesReportsImport } from "./routes/_layout/_logged_in/pos/sales-reports";
+import { Route as LayoutLoggedinPosPosImport } from "./routes/_layout/_logged_in/pos/pos";
+import { Route as LayoutLoggedinPosOrderImport } from "./routes/_layout/_logged_in/pos/order";
+import { Route as LayoutLoggedinPosManageVariantsImport } from "./routes/_layout/_logged_in/pos/manage-variants";
+import { Route as LayoutLoggedinPosManageMenuImport } from "./routes/_layout/_logged_in/pos/manage-menu";
 
 // Create/Update Routes
 
@@ -177,12 +177,6 @@ const LayoutLoggedinTransactionsRoute = LayoutLoggedinTransactionsImport.update(
   } as any,
 );
 
-const LayoutLoggedinTestRoute = LayoutLoggedinTestImport.update({
-  id: "/test",
-  path: "/test",
-  getParentRoute: () => LayoutLoggedinRoute,
-} as any);
-
 const LayoutLoggedinSubscriptionSuccessRoute =
   LayoutLoggedinSubscriptionSuccessImport.update({
     id: "/subscription-success",
@@ -219,29 +213,9 @@ const LayoutLoggedinSankeyConfigRoute = LayoutLoggedinSankeyConfigImport.update(
   } as any,
 );
 
-const LayoutLoggedinSalesReportsRoute = LayoutLoggedinSalesReportsImport.update(
-  {
-    id: "/sales-reports",
-    path: "/sales-reports",
-    getParentRoute: () => LayoutLoggedinRoute,
-  } as any,
-);
-
-const LayoutLoggedinPosRoute = LayoutLoggedinPosImport.update({
-  id: "/pos",
-  path: "/pos",
-  getParentRoute: () => LayoutLoggedinRoute,
-} as any);
-
 const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
   id: "/plaid",
   path: "/plaid",
-  getParentRoute: () => LayoutLoggedinRoute,
-} as any);
-
-const LayoutLoggedinOrderRoute = LayoutLoggedinOrderImport.update({
-  id: "/order",
-  path: "/order",
   getParentRoute: () => LayoutLoggedinRoute,
 } as any);
 
@@ -251,12 +225,6 @@ const LayoutLoggedinNotificationsRoute =
     path: "/notifications",
     getParentRoute: () => LayoutLoggedinRoute,
   } as any);
-
-const LayoutLoggedinManageMenuRoute = LayoutLoggedinManageMenuImport.update({
-  id: "/manage-menu",
-  path: "/manage-menu",
-  getParentRoute: () => LayoutLoggedinRoute,
-} as any);
 
 const LayoutLoggedinManageAccountsRoute =
   LayoutLoggedinManageAccountsImport.update({
@@ -282,6 +250,39 @@ const LayoutLoggedinAccountsRoute = LayoutLoggedinAccountsImport.update({
   path: "/accounts",
   getParentRoute: () => LayoutLoggedinRoute,
 } as any);
+
+const LayoutLoggedinPosSalesReportsRoute =
+  LayoutLoggedinPosSalesReportsImport.update({
+    id: "/pos/sales-reports",
+    path: "/pos/sales-reports",
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any);
+
+const LayoutLoggedinPosPosRoute = LayoutLoggedinPosPosImport.update({
+  id: "/pos/pos",
+  path: "/pos/pos",
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any);
+
+const LayoutLoggedinPosOrderRoute = LayoutLoggedinPosOrderImport.update({
+  id: "/pos/order",
+  path: "/pos/order",
+  getParentRoute: () => LayoutLoggedinRoute,
+} as any);
+
+const LayoutLoggedinPosManageVariantsRoute =
+  LayoutLoggedinPosManageVariantsImport.update({
+    id: "/pos/manage-variants",
+    path: "/pos/manage-variants",
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any);
+
+const LayoutLoggedinPosManageMenuRoute =
+  LayoutLoggedinPosManageMenuImport.update({
+    id: "/pos/manage-menu",
+    path: "/pos/manage-menu",
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any);
 
 // Populate the FileRoutesByPath interface
 
@@ -448,13 +449,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinManageAccountsImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
-    "/_layout/_logged_in/manage-menu": {
-      id: "/_layout/_logged_in/manage-menu";
-      path: "/manage-menu";
-      fullPath: "/manage-menu";
-      preLoaderRoute: typeof LayoutLoggedinManageMenuImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
     "/_layout/_logged_in/notifications": {
       id: "/_layout/_logged_in/notifications";
       path: "/notifications";
@@ -462,32 +456,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinNotificationsImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
-    "/_layout/_logged_in/order": {
-      id: "/_layout/_logged_in/order";
-      path: "/order";
-      fullPath: "/order";
-      preLoaderRoute: typeof LayoutLoggedinOrderImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
     "/_layout/_logged_in/plaid": {
       id: "/_layout/_logged_in/plaid";
       path: "/plaid";
       fullPath: "/plaid";
       preLoaderRoute: typeof LayoutLoggedinPlaidImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos": {
-      id: "/_layout/_logged_in/pos";
-      path: "/pos";
-      fullPath: "/pos";
-      preLoaderRoute: typeof LayoutLoggedinPosImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/sales-reports": {
-      id: "/_layout/_logged_in/sales-reports";
-      path: "/sales-reports";
-      fullPath: "/sales-reports";
-      preLoaderRoute: typeof LayoutLoggedinSalesReportsImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
     "/_layout/_logged_in/sankey-config": {
@@ -525,13 +498,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinSubscriptionSuccessImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
-    "/_layout/_logged_in/test": {
-      id: "/_layout/_logged_in/test";
-      path: "/test";
-      fullPath: "/test";
-      preLoaderRoute: typeof LayoutLoggedinTestImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
     "/_layout/_logged_in/transactions": {
       id: "/_layout/_logged_in/transactions";
       path: "/transactions";
@@ -546,6 +512,41 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinUploadFilesImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
+    "/_layout/_logged_in/pos/manage-menu": {
+      id: "/_layout/_logged_in/pos/manage-menu";
+      path: "/pos/manage-menu";
+      fullPath: "/pos/manage-menu";
+      preLoaderRoute: typeof LayoutLoggedinPosManageMenuImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
+    "/_layout/_logged_in/pos/manage-variants": {
+      id: "/_layout/_logged_in/pos/manage-variants";
+      path: "/pos/manage-variants";
+      fullPath: "/pos/manage-variants";
+      preLoaderRoute: typeof LayoutLoggedinPosManageVariantsImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
+    "/_layout/_logged_in/pos/order": {
+      id: "/_layout/_logged_in/pos/order";
+      path: "/pos/order";
+      fullPath: "/pos/order";
+      preLoaderRoute: typeof LayoutLoggedinPosOrderImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
+    "/_layout/_logged_in/pos/pos": {
+      id: "/_layout/_logged_in/pos/pos";
+      path: "/pos/pos";
+      fullPath: "/pos/pos";
+      preLoaderRoute: typeof LayoutLoggedinPosPosImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
+    "/_layout/_logged_in/pos/sales-reports": {
+      id: "/_layout/_logged_in/pos/sales-reports";
+      path: "/pos/sales-reports";
+      fullPath: "/pos/sales-reports";
+      preLoaderRoute: typeof LayoutLoggedinPosSalesReportsImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
   }
 }
 
@@ -556,20 +557,20 @@ interface LayoutLoggedinRouteChildren {
   LayoutLoggedinAdminRoute: typeof LayoutLoggedinAdminRoute;
   LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute;
   LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute;
-  LayoutLoggedinManageMenuRoute: typeof LayoutLoggedinManageMenuRoute;
   LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute;
-  LayoutLoggedinOrderRoute: typeof LayoutLoggedinOrderRoute;
   LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute;
-  LayoutLoggedinPosRoute: typeof LayoutLoggedinPosRoute;
-  LayoutLoggedinSalesReportsRoute: typeof LayoutLoggedinSalesReportsRoute;
   LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute;
   LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute;
   LayoutLoggedinSubscriptionRoute: typeof LayoutLoggedinSubscriptionRoute;
   LayoutLoggedinSubscriptionCancelRoute: typeof LayoutLoggedinSubscriptionCancelRoute;
   LayoutLoggedinSubscriptionSuccessRoute: typeof LayoutLoggedinSubscriptionSuccessRoute;
-  LayoutLoggedinTestRoute: typeof LayoutLoggedinTestRoute;
   LayoutLoggedinTransactionsRoute: typeof LayoutLoggedinTransactionsRoute;
   LayoutLoggedinUploadFilesRoute: typeof LayoutLoggedinUploadFilesRoute;
+  LayoutLoggedinPosManageMenuRoute: typeof LayoutLoggedinPosManageMenuRoute;
+  LayoutLoggedinPosManageVariantsRoute: typeof LayoutLoggedinPosManageVariantsRoute;
+  LayoutLoggedinPosOrderRoute: typeof LayoutLoggedinPosOrderRoute;
+  LayoutLoggedinPosPosRoute: typeof LayoutLoggedinPosPosRoute;
+  LayoutLoggedinPosSalesReportsRoute: typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
 const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
@@ -577,21 +578,21 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinAdminRoute: LayoutLoggedinAdminRoute,
   LayoutLoggedinBudgetRoute: LayoutLoggedinBudgetRoute,
   LayoutLoggedinManageAccountsRoute: LayoutLoggedinManageAccountsRoute,
-  LayoutLoggedinManageMenuRoute: LayoutLoggedinManageMenuRoute,
   LayoutLoggedinNotificationsRoute: LayoutLoggedinNotificationsRoute,
-  LayoutLoggedinOrderRoute: LayoutLoggedinOrderRoute,
   LayoutLoggedinPlaidRoute: LayoutLoggedinPlaidRoute,
-  LayoutLoggedinPosRoute: LayoutLoggedinPosRoute,
-  LayoutLoggedinSalesReportsRoute: LayoutLoggedinSalesReportsRoute,
   LayoutLoggedinSankeyConfigRoute: LayoutLoggedinSankeyConfigRoute,
   LayoutLoggedinSettingsRoute: LayoutLoggedinSettingsRoute,
   LayoutLoggedinSubscriptionRoute: LayoutLoggedinSubscriptionRoute,
   LayoutLoggedinSubscriptionCancelRoute: LayoutLoggedinSubscriptionCancelRoute,
   LayoutLoggedinSubscriptionSuccessRoute:
     LayoutLoggedinSubscriptionSuccessRoute,
-  LayoutLoggedinTestRoute: LayoutLoggedinTestRoute,
   LayoutLoggedinTransactionsRoute: LayoutLoggedinTransactionsRoute,
   LayoutLoggedinUploadFilesRoute: LayoutLoggedinUploadFilesRoute,
+  LayoutLoggedinPosManageMenuRoute: LayoutLoggedinPosManageMenuRoute,
+  LayoutLoggedinPosManageVariantsRoute: LayoutLoggedinPosManageVariantsRoute,
+  LayoutLoggedinPosOrderRoute: LayoutLoggedinPosOrderRoute,
+  LayoutLoggedinPosPosRoute: LayoutLoggedinPosPosRoute,
+  LayoutLoggedinPosSalesReportsRoute: LayoutLoggedinPosSalesReportsRoute,
 };
 
 const LayoutLoggedinRouteWithChildren = LayoutLoggedinRoute._addFileChildren(
@@ -666,20 +667,20 @@ export interface FileRoutesByFullPath {
   "/admin": typeof LayoutLoggedinAdminRoute;
   "/budget": typeof LayoutLoggedinBudgetRoute;
   "/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/manage-menu": typeof LayoutLoggedinManageMenuRoute;
   "/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/order": typeof LayoutLoggedinOrderRoute;
   "/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/pos": typeof LayoutLoggedinPosRoute;
-  "/sales-reports": typeof LayoutLoggedinSalesReportsRoute;
   "/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
   "/settings": typeof LayoutLoggedinSettingsRoute;
   "/subscription": typeof LayoutLoggedinSubscriptionRoute;
   "/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
   "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/test": typeof LayoutLoggedinTestRoute;
   "/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
+  "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
+  "/pos/order": typeof LayoutLoggedinPosOrderRoute;
+  "/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
 export interface FileRoutesByTo {
@@ -705,20 +706,20 @@ export interface FileRoutesByTo {
   "/admin": typeof LayoutLoggedinAdminRoute;
   "/budget": typeof LayoutLoggedinBudgetRoute;
   "/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/manage-menu": typeof LayoutLoggedinManageMenuRoute;
   "/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/order": typeof LayoutLoggedinOrderRoute;
   "/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/pos": typeof LayoutLoggedinPosRoute;
-  "/sales-reports": typeof LayoutLoggedinSalesReportsRoute;
   "/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
   "/settings": typeof LayoutLoggedinSettingsRoute;
   "/subscription": typeof LayoutLoggedinSubscriptionRoute;
   "/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
   "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/test": typeof LayoutLoggedinTestRoute;
   "/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
+  "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
+  "/pos/order": typeof LayoutLoggedinPosOrderRoute;
+  "/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
 export interface FileRoutesById {
@@ -746,20 +747,20 @@ export interface FileRoutesById {
   "/_layout/_logged_in/admin": typeof LayoutLoggedinAdminRoute;
   "/_layout/_logged_in/budget": typeof LayoutLoggedinBudgetRoute;
   "/_layout/_logged_in/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/_layout/_logged_in/manage-menu": typeof LayoutLoggedinManageMenuRoute;
   "/_layout/_logged_in/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/_layout/_logged_in/order": typeof LayoutLoggedinOrderRoute;
   "/_layout/_logged_in/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/_layout/_logged_in/pos": typeof LayoutLoggedinPosRoute;
-  "/_layout/_logged_in/sales-reports": typeof LayoutLoggedinSalesReportsRoute;
   "/_layout/_logged_in/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
   "/_layout/_logged_in/settings": typeof LayoutLoggedinSettingsRoute;
   "/_layout/_logged_in/subscription": typeof LayoutLoggedinSubscriptionRoute;
   "/_layout/_logged_in/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
   "/_layout/_logged_in/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/_layout/_logged_in/test": typeof LayoutLoggedinTestRoute;
   "/_layout/_logged_in/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/_layout/_logged_in/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/_layout/_logged_in/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
+  "/_layout/_logged_in/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
+  "/_layout/_logged_in/pos/order": typeof LayoutLoggedinPosOrderRoute;
+  "/_layout/_logged_in/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/_layout/_logged_in/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
 export interface FileRouteTypes {
@@ -787,20 +788,20 @@ export interface FileRouteTypes {
     | "/admin"
     | "/budget"
     | "/manage-accounts"
-    | "/manage-menu"
     | "/notifications"
-    | "/order"
     | "/plaid"
-    | "/pos"
-    | "/sales-reports"
     | "/sankey-config"
     | "/settings"
     | "/subscription"
     | "/subscription-cancel"
     | "/subscription-success"
-    | "/test"
     | "/transactions"
-    | "/upload-files";
+    | "/upload-files"
+    | "/pos/manage-menu"
+    | "/pos/manage-variants"
+    | "/pos/order"
+    | "/pos/pos"
+    | "/pos/sales-reports";
   fileRoutesByTo: FileRoutesByTo;
   to:
     | ""
@@ -825,20 +826,20 @@ export interface FileRouteTypes {
     | "/admin"
     | "/budget"
     | "/manage-accounts"
-    | "/manage-menu"
     | "/notifications"
-    | "/order"
     | "/plaid"
-    | "/pos"
-    | "/sales-reports"
     | "/sankey-config"
     | "/settings"
     | "/subscription"
     | "/subscription-cancel"
     | "/subscription-success"
-    | "/test"
     | "/transactions"
-    | "/upload-files";
+    | "/upload-files"
+    | "/pos/manage-menu"
+    | "/pos/manage-variants"
+    | "/pos/order"
+    | "/pos/pos"
+    | "/pos/sales-reports";
   id:
     | "__root__"
     | "/_layout"
@@ -864,20 +865,20 @@ export interface FileRouteTypes {
     | "/_layout/_logged_in/admin"
     | "/_layout/_logged_in/budget"
     | "/_layout/_logged_in/manage-accounts"
-    | "/_layout/_logged_in/manage-menu"
     | "/_layout/_logged_in/notifications"
-    | "/_layout/_logged_in/order"
     | "/_layout/_logged_in/plaid"
-    | "/_layout/_logged_in/pos"
-    | "/_layout/_logged_in/sales-reports"
     | "/_layout/_logged_in/sankey-config"
     | "/_layout/_logged_in/settings"
     | "/_layout/_logged_in/subscription"
     | "/_layout/_logged_in/subscription-cancel"
     | "/_layout/_logged_in/subscription-success"
-    | "/_layout/_logged_in/test"
     | "/_layout/_logged_in/transactions"
-    | "/_layout/_logged_in/upload-files";
+    | "/_layout/_logged_in/upload-files"
+    | "/_layout/_logged_in/pos/manage-menu"
+    | "/_layout/_logged_in/pos/manage-variants"
+    | "/_layout/_logged_in/pos/order"
+    | "/_layout/_logged_in/pos/pos"
+    | "/_layout/_logged_in/pos/sales-reports";
   fileRoutesById: FileRoutesById;
 }
 
@@ -933,20 +934,20 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/admin",
         "/_layout/_logged_in/budget",
         "/_layout/_logged_in/manage-accounts",
-        "/_layout/_logged_in/manage-menu",
         "/_layout/_logged_in/notifications",
-        "/_layout/_logged_in/order",
         "/_layout/_logged_in/plaid",
-        "/_layout/_logged_in/pos",
-        "/_layout/_logged_in/sales-reports",
         "/_layout/_logged_in/sankey-config",
         "/_layout/_logged_in/settings",
         "/_layout/_logged_in/subscription",
         "/_layout/_logged_in/subscription-cancel",
         "/_layout/_logged_in/subscription-success",
-        "/_layout/_logged_in/test",
         "/_layout/_logged_in/transactions",
-        "/_layout/_logged_in/upload-files"
+        "/_layout/_logged_in/upload-files",
+        "/_layout/_logged_in/pos/manage-menu",
+        "/_layout/_logged_in/pos/manage-variants",
+        "/_layout/_logged_in/pos/order",
+        "/_layout/_logged_in/pos/pos",
+        "/_layout/_logged_in/pos/sales-reports"
       ]
     },
     "/_layout/change-log": {
@@ -1033,28 +1034,12 @@ export const routeTree = rootRoute
       "filePath": "_layout/_logged_in/manage-accounts.tsx",
       "parent": "/_layout/_logged_in"
     },
-    "/_layout/_logged_in/manage-menu": {
-      "filePath": "_layout/_logged_in/manage-menu.tsx",
-      "parent": "/_layout/_logged_in"
-    },
     "/_layout/_logged_in/notifications": {
       "filePath": "_layout/_logged_in/notifications.tsx",
       "parent": "/_layout/_logged_in"
     },
-    "/_layout/_logged_in/order": {
-      "filePath": "_layout/_logged_in/order.tsx",
-      "parent": "/_layout/_logged_in"
-    },
     "/_layout/_logged_in/plaid": {
       "filePath": "_layout/_logged_in/plaid.tsx",
-      "parent": "/_layout/_logged_in"
-    },
-    "/_layout/_logged_in/pos": {
-      "filePath": "_layout/_logged_in/pos.tsx",
-      "parent": "/_layout/_logged_in"
-    },
-    "/_layout/_logged_in/sales-reports": {
-      "filePath": "_layout/_logged_in/sales-reports.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/sankey-config": {
@@ -1077,16 +1062,32 @@ export const routeTree = rootRoute
       "filePath": "_layout/_logged_in/subscription-success.tsx",
       "parent": "/_layout/_logged_in"
     },
-    "/_layout/_logged_in/test": {
-      "filePath": "_layout/_logged_in/test.tsx",
-      "parent": "/_layout/_logged_in"
-    },
     "/_layout/_logged_in/transactions": {
       "filePath": "_layout/_logged_in/transactions.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/upload-files": {
       "filePath": "_layout/_logged_in/upload-files.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/manage-menu": {
+      "filePath": "_layout/_logged_in/pos/manage-menu.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/manage-variants": {
+      "filePath": "_layout/_logged_in/pos/manage-variants.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/order": {
+      "filePath": "_layout/_logged_in/pos/order.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/pos": {
+      "filePath": "_layout/_logged_in/pos/pos.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/sales-reports": {
+      "filePath": "_layout/_logged_in/pos/sales-reports.tsx",
       "parent": "/_layout/_logged_in"
     }
   }

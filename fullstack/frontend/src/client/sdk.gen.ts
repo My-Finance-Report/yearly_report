@@ -86,15 +86,22 @@ import type {
   PlaidExchangeTokenResponse,
   PlaidGetPlaidAccountsResponse,
   PosGetMenuResponse,
-  PosCreateMenuItemData,
-  PosCreateMenuItemResponse,
-  PosUpdateMenuItemData,
-  PosUpdateMenuItemResponse,
+  PosCreateOrUpdateMenuItemData,
+  PosCreateOrUpdateMenuItemResponse,
   PosDeleteMenuItemData,
   PosDeleteMenuItemResponse,
+  PosGetVariantGroupsResponse,
+  PosCreateOrUpdateVariantGroupData,
+  PosCreateOrUpdateVariantGroupResponse,
+  PosDeleteVariantGroupData,
+  PosDeleteVariantGroupResponse,
   PosGetOrdersResponse,
   PosCreateOrderData,
   PosCreateOrderResponse,
+  PrivateCreateUserData,
+  PrivateCreateUserResponse,
+  PrivateGoogleCallbackLocalData,
+  PrivateGoogleCallbackLocalResponse,
   SankeyGetSankeyDataResponse,
   SankeyCreateSankeyConfigData,
   SankeyCreateSankeyConfigResponse,
@@ -1155,7 +1162,7 @@ export class PosService {
   /**
    * Get Menu
    * Get all menu items (orderables) with their variant groups and variants
-   * @returns OrderableBase_Output Successful Response
+   * @returns OrderableOutput_Output Successful Response
    * @throws ApiError
    */
   public static getMenu(): CancelablePromise<PosGetMenuResponse> {
@@ -1166,45 +1173,19 @@ export class PosService {
   }
 
   /**
-   * Create Menu Item
+   * Create Or Update Menu Item
    * Create a new menu item with its variant groups and variants
    * @param data The data for the request.
    * @param data.requestBody
-   * @returns OrderableBase_Output Successful Response
+   * @returns OrderableOutput_Output Successful Response
    * @throws ApiError
    */
-  public static createMenuItem(
-    data: PosCreateMenuItemData,
-  ): CancelablePromise<PosCreateMenuItemResponse> {
+  public static createOrUpdateMenuItem(
+    data: PosCreateOrUpdateMenuItemData,
+  ): CancelablePromise<PosCreateOrUpdateMenuItemResponse> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/v1/pos/menu",
-      body: data.requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: "Validation Error",
-      },
-    });
-  }
-
-  /**
-   * Update Menu Item
-   * Update a menu item with its variant groups and variants
-   * @param data The data for the request.
-   * @param data.orderableId
-   * @param data.requestBody
-   * @returns OrderableBase_Output Successful Response
-   * @throws ApiError
-   */
-  public static updateMenuItem(
-    data: PosUpdateMenuItemData,
-  ): CancelablePromise<PosUpdateMenuItemResponse> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/api/v1/pos/menu/{orderable_id}",
-      path: {
-        orderable_id: data.orderableId,
-      },
       body: data.requestBody,
       mediaType: "application/json",
       errors: {
@@ -1229,6 +1210,64 @@ export class PosService {
       url: "/api/v1/pos/menu/{orderable_id}",
       path: {
         orderable_id: data.orderableId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Get Variant Groups
+   * Get all variant groups for reuse
+   * @returns VariantGroupOutput_Output Successful Response
+   * @throws ApiError
+   */
+  public static getVariantGroups(): CancelablePromise<PosGetVariantGroupsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pos/variant-groups",
+    });
+  }
+
+  /**
+   * Create Or Update Variant Group
+   * Create a new variant group.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns VariantGroupOutput_Output Successful Response
+   * @throws ApiError
+   */
+  public static createOrUpdateVariantGroup(
+    data: PosCreateOrUpdateVariantGroupData,
+  ): CancelablePromise<PosCreateOrUpdateVariantGroupResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/pos/variant-groups",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Delete Variant Group
+   * Delete a variant group.
+   * @param data The data for the request.
+   * @param data.groupId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static deleteVariantGroup(
+    data: PosDeleteVariantGroupData,
+  ): CancelablePromise<PosDeleteVariantGroupResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/pos/variant-groups/{group_id}",
+      path: {
+        group_id: data.groupId,
       },
       errors: {
         422: "Validation Error",
@@ -1265,6 +1304,56 @@ export class PosService {
       url: "/api/v1/pos/orders",
       body: data.requestBody,
       mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+}
+
+export class PrivateService {
+  /**
+   * Create User
+   * Create a new user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns UserOut Successful Response
+   * @throws ApiError
+   */
+  public static createUser(
+    data: PrivateCreateUserData,
+  ): CancelablePromise<PrivateCreateUserResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/private/users/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Google Callback Local
+   * Handle the callback from Google OAuth.
+   * This endpoint is called by the frontend after receiving the code from Google.
+   * @param data The data for the request.
+   * @param data.code
+   * @param data.error
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static googleCallbackLocal(
+    data: PrivateGoogleCallbackLocalData,
+  ): CancelablePromise<PrivateGoogleCallbackLocalResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/private/oauth/google/callback-local",
+      query: {
+        code: data.code,
+        error: data.error,
+      },
       errors: {
         422: "Validation Error",
       },

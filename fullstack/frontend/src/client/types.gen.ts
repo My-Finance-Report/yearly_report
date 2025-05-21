@@ -361,18 +361,25 @@ export type NoCodeWidgetUpdate = {
   col_span: number;
 };
 
-export type OrderableBase_Input = {
-  id?: number | null;
+export type OrderableInput = {
   name: string;
   price: number | string;
-  variantGroups: Array<VariantGroupBase_Input>;
+  variantGroups: Array<VariantGroupOutput_Input>;
+  id?: number | null;
 };
 
-export type OrderableBase_Output = {
-  id?: number | null;
+export type OrderableOutput_Input = {
+  name: string;
+  price: number | string;
+  variantGroups: Array<VariantGroupOutput_Input>;
+  id: number;
+};
+
+export type OrderableOutput_Output = {
   name: string;
   price: string;
-  variantGroups: Array<VariantGroupBase_Output>;
+  variantGroups: Array<VariantGroupOutput_Output>;
+  id: number;
 };
 
 export type OrderBase_Input = {
@@ -388,13 +395,13 @@ export type OrderBase_Output = {
 };
 
 export type OrderItemBase_Input = {
-  orderable: OrderableBase_Input;
+  orderable: OrderableOutput_Input;
   variants: Array<SelectedVariantBase_Input>;
   quantity: number;
 };
 
 export type OrderItemBase_Output = {
-  orderable: OrderableBase_Output;
+  orderable: OrderableOutput_Output;
   variants: Array<SelectedVariantBase_Output>;
   quantity: number;
 };
@@ -529,6 +536,13 @@ export type PriceDetails = {
   interval: string;
   tier: SubscriptionTier;
   max_sources: number;
+};
+
+export type PrivateUserCreate = {
+  email: string;
+  password: string;
+  full_name: string;
+  is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -792,31 +806,39 @@ export type ValidationError = {
 };
 
 export type VariantBase_Input = {
-  id: number;
+  id: number | null;
   name: string;
   priceDelta: number | string;
 };
 
 export type VariantBase_Output = {
-  id: number;
+  id: number | null;
   name: string;
   priceDelta: string;
 };
 
-export type VariantGroupBase_Input = {
-  id: number;
+export type VariantGroupInput = {
   name: string;
   required: boolean;
   order_of_appearance: number;
   variants: Array<VariantBase_Input>;
+  id?: number | null;
 };
 
-export type VariantGroupBase_Output = {
+export type VariantGroupOutput_Input = {
+  name: string;
+  required: boolean;
+  order_of_appearance: number;
+  variants: Array<VariantBase_Input>;
   id: number;
+};
+
+export type VariantGroupOutput_Output = {
   name: string;
   required: boolean;
   order_of_appearance: number;
   variants: Array<VariantBase_Output>;
+  id: number;
 };
 
 /**
@@ -1117,20 +1139,13 @@ export type PlaidExchangeTokenResponse = Array<PlaidAccountResponse>;
 
 export type PlaidGetPlaidAccountsResponse = Array<PlaidAccountResponse>;
 
-export type PosGetMenuResponse = Array<OrderableBase_Output>;
+export type PosGetMenuResponse = Array<OrderableOutput_Output>;
 
-export type PosCreateMenuItemData = {
-  requestBody: OrderableBase_Input;
+export type PosCreateOrUpdateMenuItemData = {
+  requestBody: OrderableInput;
 };
 
-export type PosCreateMenuItemResponse = OrderableBase_Output;
-
-export type PosUpdateMenuItemData = {
-  orderableId: number;
-  requestBody: OrderableBase_Input;
-};
-
-export type PosUpdateMenuItemResponse = OrderableBase_Output;
+export type PosCreateOrUpdateMenuItemResponse = OrderableOutput_Output;
 
 export type PosDeleteMenuItemData = {
   orderableId: number;
@@ -1140,6 +1155,22 @@ export type PosDeleteMenuItemResponse = {
   [key: string]: string;
 };
 
+export type PosGetVariantGroupsResponse = Array<VariantGroupOutput_Output>;
+
+export type PosCreateOrUpdateVariantGroupData = {
+  requestBody: VariantGroupInput;
+};
+
+export type PosCreateOrUpdateVariantGroupResponse = VariantGroupOutput_Output;
+
+export type PosDeleteVariantGroupData = {
+  groupId: number;
+};
+
+export type PosDeleteVariantGroupResponse = {
+  [key: string]: unknown;
+};
+
 export type PosGetOrdersResponse = Array<OrderBase_Output>;
 
 export type PosCreateOrderData = {
@@ -1147,6 +1178,19 @@ export type PosCreateOrderData = {
 };
 
 export type PosCreateOrderResponse = OrderBase_Output;
+
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = UserOut;
+
+export type PrivateGoogleCallbackLocalData = {
+  code: string;
+  error?: string | null;
+};
+
+export type PrivateGoogleCallbackLocalResponse = unknown;
 
 export type SankeyGetSankeyDataResponse = SankeyData;
 
