@@ -154,6 +154,10 @@ export function SegmentedNavigation() {
     finalItems = [...posNavigationItems];
   }
 
+  const routeTo = currentUser?.settings.point_of_sales_user
+    ? "/pos/pos"
+    : "/transactions";
+
   return (
     <Flex
       direction="column"
@@ -192,7 +196,7 @@ export function SegmentedNavigation() {
       >
         <Text
           cursor="click"
-          onClick={() => navigate({ to: "/transactions" })}
+          onClick={() => navigate({ to: routeTo })}
           fontSize="20px"
           fontWeight="bold"
           color="colors.ui.main"
