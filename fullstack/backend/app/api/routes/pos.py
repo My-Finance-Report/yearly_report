@@ -1,4 +1,5 @@
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +12,7 @@ from app.models.pos.variants import (
     Variant,
     VariantGroup,
     SelectedVariant,
+    VariantGroupId,
     VariantGroupOrderable,
 )
 from app.models.user import User
@@ -21,7 +23,7 @@ router = APIRouter(prefix="/pos", tags=["pos"])
 class VariantBase(BaseModel):
     id: int | None
     name: str
-    priceDelta: Decimal
+    price_delta: Decimal
 
     class Config:
         from_attributes = True
@@ -48,7 +50,7 @@ class VariantGroupInput(VariantGroupBase):
 class OrderableBase(BaseModel):
     name: str
     price: Decimal
-    variantGroups: List[VariantGroupOutput]
+    variant_groups: List[VariantGroupOutput]
 
     class Config:
         from_attributes = True
@@ -63,10 +65,10 @@ class OrderableInput(OrderableBase):
 
 
 class SelectedVariantBase(BaseModel):
-    groupId: str
-    id: str
+    group_id: int
+    id: int
     name: str
-    priceDelta: Decimal
+    price_delta: Decimal
 
     class Config:
         from_attributes = True
@@ -135,7 +137,7 @@ def get_menu(
                     required=group.required,
                     order_of_appearance=int(group.order_of_appearance),
                     variants=[
-                        VariantBase(id=v.id, name=v.name, priceDelta=v.price_delta)
+                        VariantBase(id=v.id, name=v.name, price_delta=v.price_delta)
                         for v in variants
                     ],
                 )
@@ -146,7 +148,7 @@ def get_menu(
                 id=orderable.id,
                 name=orderable.name,
                 price=orderable.price,
-                variantGroups=sorted(
+                variant_groups=sorted(
                     variant_groups_data, key=lambda x: x.order_of_appearance
                 ),
             )
@@ -162,7 +164,7 @@ def create_menu_item(
     db.add(orderable)
     db.flush()
 
-    for group in item.variantGroups:
+    for group in item.variant_groups:
         new = VariantGroupOrderable(
             orderable_id=orderable.id,
             user_id=current_user.id,
@@ -176,7 +178,7 @@ def create_menu_item(
         id=orderable.id,
         name=orderable.name,
         price=orderable.price,
-        variantGroups=item.variantGroups,
+        variant_groups=item.variant_groups,
     )
 
 
@@ -204,7 +206,7 @@ def update_menu_item(
 
     updated_group_ids = set()
 
-    for group in item.variantGroups:
+    for group in item.variant_groups:
         if group.id is None:
             raise HTTPException(status_code=400, detail="Variant group ID is required")
         if group.id in existing_groups_by_id:
@@ -227,7 +229,7 @@ def update_menu_item(
         id=orderable.id,
         name=orderable.name,
         price=orderable.price,
-        variantGroups=item.variantGroups,
+        variant_groups=item.variant_groups,
     )
 
 
@@ -297,7 +299,7 @@ def create_variant_group(
         db.add(
             Variant(
                 name=variant.name,
-                price_delta=variant.priceDelta,
+                price_delta=variant.price_delta,
                 variant_group_id=variant_group.id,
                 user_id=current_user.id,
                 active=True,
@@ -342,7 +344,7 @@ def update_variant_group(
         db.add(
             Variant(
                 name=variant.name,
-                price_delta=variant.priceDelta,
+                price_delta=variant.price_delta,
                 variant_group_id=group.id,
                 user_id=current_user.id,
                 active=True,
@@ -360,7 +362,7 @@ def update_variant_group(
             VariantBase(
                 id=variant.id,
                 name=variant.name,
-                priceDelta=variant.priceDelta,
+                price_delta=variant.price_delta,
             )
             for variant in group.variants
         ],
@@ -446,7 +448,7 @@ def get_variant_groups(
                 required=group.required,
                 order_of_appearance=int(group.order_of_appearance),
                 variants=[
-                    VariantBase(id=v.id, name=v.name, priceDelta=v.price_delta)
+                    VariantBase(id=v.id, name=v.name, price_delta=v.price_delta)
                     for v in variants
                 ],
             )
@@ -463,7 +465,7 @@ def create_order(
 ) -> OrderBase:
     """Create a new order with order items and selected variants"""
     # Create order
-    db_order = Order(placed_at=order.timestamp, user_id=current_user.id, active=True)
+    db_order = Order(placed_at=datetime.now(timezone.utc), user_id=current_user.id, active=True)
     db.add(db_order)
     db.flush()
 
@@ -491,6 +493,43 @@ def create_order(
     return order
 
 
+
+def get_variant_group_map(db: Session, current_user: User)->dict[VariantGroupId, VariantGroupOutput]:
+    variant_groups = (
+        db.query(VariantGroup)
+        .filter(VariantGroup.user_id == current_user.id)
+        .all()
+    )
+
+    variants = (
+        db.query(Variant)
+        .filter(Variant.user_id == current_user.id)
+        .all()
+    )
+
+    variants_lookup = defaultdict(list)
+    for variant in variants:
+        variants_lookup[variant.variant_group_id].append(
+            VariantBase(
+                id=variant.id,
+                name=variant.name,
+                price_delta=variant.price_delta,
+            )
+        )
+    variant_group_map: dict[VariantGroupId, VariantGroupOutput] = {}
+    for group in variant_groups:
+        variant_group_map[group.id] = VariantGroupOutput(
+            id=group.id,
+            name=group.name,
+            required=group.required,
+            order_of_appearance=int(group.order_of_appearance),
+            variants=variants_lookup[group.id],
+        )
+    return variant_group_map
+
+
+
+
 @router.get("/orders", response_model=List[OrderBase])
 def get_orders(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -502,6 +541,8 @@ def get_orders(
         .all()
     )
 
+    variant_group_map = get_variant_group_map(db, current_user)
+
     result = []
     for order in orders:
         order_items = (
@@ -511,14 +552,14 @@ def get_orders(
             )
             .all()
         )
-
         order_items_data = []
         for item in order_items:
             orderable = (
                 db.query(Orderable).filter(Orderable.id == item.orderable_id).one()
             )
             selected_variants = (
-                db.query(SelectedVariant)
+                db.query(SelectedVariant, Variant)
+                .join(Variant, SelectedVariant.variant_id == Variant.id)
                 .filter(
                     SelectedVariant.order_item_id == item.id,
                     SelectedVariant.user_id == current_user.id,
@@ -527,21 +568,14 @@ def get_orders(
             )
 
             variants_data = []
-            for selected in selected_variants:
-                variant = (
-                    db.query(Variant).filter(Variant.id == selected.variant_id).one()
-                )
-                variant_group = (
-                    db.query(VariantGroup)
-                    .filter(VariantGroup.id == variant.variant_group_id)
-                    .one()
-                )
+            for selected, variant in selected_variants:
+
                 variants_data.append(
                     SelectedVariantBase(
-                        groupId=str(variant_group.id),
-                        id=str(variant.id),
+                        group_id=variant.variant_group_id,
+                        id=selected.variant_id,
                         name=variant.name,
-                        priceDelta=variant.price_delta,
+                        price_delta=variant.price_delta,
                     )
                 )
 
@@ -551,7 +585,7 @@ def get_orders(
                         id=orderable.id,
                         name=orderable.name,
                         price=orderable.price,
-                        variantGroups=[],
+                        variant_groups=[variant_group_map[selected_variant.group_id] for selected_variant in variants_data],
                     ),
                     variants=variants_data,
                     quantity=item.quantity,
@@ -564,4 +598,4 @@ def get_orders(
             )
         )
 
-    return result
+    return sorted(result, key=lambda x: x.timestamp, reverse=True)

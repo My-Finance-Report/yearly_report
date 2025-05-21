@@ -1,15 +1,5 @@
-import {
-  Box,
-  Flex,
-  Button,
-  Text,
-} from "@chakra-ui/react";
-import {
-  OrderBase_Input,
-  OrderItemBase_Input,
-} from "@/client";
-
-
+import { Box, Flex, Button, Text } from "@chakra-ui/react";
+import { OrderBase_Input, OrderItemBase_Input } from "@/client";
 
 type OrderItem = OrderItemBase_Input;
 
@@ -18,7 +8,7 @@ function calcTotal(order: OrderBase_Input) {
     const itemPrice =
       Number(item.orderable.price) +
       item.variants.reduce(
-        (variantSum, variant) => variantSum + Number(variant.priceDelta),
+        (variantSum, variant) => variantSum + Number(variant.price_delta),
         0,
       );
     return sum + itemPrice * item.quantity;
@@ -36,33 +26,23 @@ export function OrderCard({
   setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>>;
   allowEdits?: boolean;
 }) {
-
-
-
-    return(
-<Flex direction="column" gap={3}>
-{order.orderItems.map((orderItem, index) => (
-  <InOrderCard
-    key={`${orderItem.orderable.id}-${orderItem.variants.map((v) => v.id).join("-")}-${index}`}
-    setOrder={setOrder}
-    orderItem={orderItem}
-    allowEdits={allowEdits}
-  />
-))}
-<Box
-  p={4}
-  borderRadius={4}
-  display="flex"
-  justifyContent="space-between"
->
-  <Text fontWeight="bold">Total</Text>
-  <Text fontWeight="bold">${calcTotal(order).toFixed(2)}</Text>
-</Box>
-
-</Flex>
-    )
+  return (
+    <Flex direction="column" gap={3} borderRadius={4}>
+      {order.orderItems.map((orderItem, index) => (
+        <InOrderCard
+          key={`${orderItem.orderable.id}-${orderItem.variants.map((v) => v.id).join("-")}-${index}`}
+          setOrder={setOrder}
+          orderItem={orderItem}
+          allowEdits={allowEdits}
+        />
+      ))}
+      <Box p={4} borderRadius={4} display="flex" justifyContent="space-between">
+        <Text fontWeight="bold">Total</Text>
+        <Text fontWeight="bold">${calcTotal(order).toFixed(2)}</Text>
+      </Box>
+    </Flex>
+  );
 }
-
 
 function InOrderCard({
   setOrder,
@@ -76,7 +56,7 @@ function InOrderCard({
   const totalPrice =
     Number(orderItem.orderable.price) +
     orderItem.variants.reduce(
-      (sum, variant) => sum + Number(variant.priceDelta),
+      (sum, variant) => sum + Number(variant.price_delta),
       0,
     );
 
@@ -93,14 +73,13 @@ function InOrderCard({
     }));
   };
 
-
-  const variantsByGroup = orderItem.orderable.variantGroups
+  const variantsByGroup = orderItem.orderable.variant_groups
     .map((group) => {
       const variantsInGroup = orderItem.variants.filter(
-        (selectedVariant) => selectedVariant.groupId === String(group.id),
+        (selectedVariant) => selectedVariant.group_id === group.id,
       );
       const groupPriceDelta = variantsInGroup.reduce(
-        (sum, v) => sum + Number(v.priceDelta),
+        (sum, v) => sum + Number(v.price_delta),
         0,
       );
       return {
@@ -114,7 +93,7 @@ function InOrderCard({
   const variantCounts = new Map<string, number>();
   variantsByGroup.forEach((group) => {
     group.variants.forEach((v) => {
-      const key = `${group.groupName}-${String(v.id)}`;
+      const key = `${group.groupName}-${v.id}`;
       variantCounts.set(key, (variantCounts.get(key) || 0) + 1);
     });
   });
@@ -132,7 +111,7 @@ function InOrderCard({
     >
       <Flex direction="column" flex={1} gap={1}>
         <Text fontWeight="bold">{orderItem.orderable.name}</Text>
-        {variantsByGroup.map((group) => {
+        {variantsByGroup.map((group, index) => {
           const consolidatedVariants = new Map<
             string,
             { name: string; count: number }
@@ -150,7 +129,7 @@ function InOrderCard({
           });
 
           return (
-            <Text key={group.groupName} color="gray.600" fontSize="sm">
+            <Text key={`${index}-${group.groupName}`} color="gray.600" fontSize="sm">
               {group.groupName}:{" "}
               {Array.from(consolidatedVariants.values())
                 .map((v) => (v.count > 1 ? `${v.name} ×${v.count}` : v.name))

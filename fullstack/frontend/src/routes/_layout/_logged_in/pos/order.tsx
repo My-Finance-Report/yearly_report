@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Box,
   Flex,
@@ -16,9 +16,8 @@ import {
   PosService,
   VariantBase_Output,
 } from "@/client";
-import {OrderCard} from "@/components/Pos/Order"
+import { OrderCard } from "@/components/Pos/Order";
 import useCustomToast from "@/hooks/useCustomToast";
-
 
 export const Route = createFileRoute("/_layout/_logged_in/pos/order")({
   component: Order,
@@ -78,15 +77,14 @@ function OrderableCard({
       <Text color="gray.600" fontSize="sm">
         ${Number(orderable.price).toFixed(2)}
       </Text>
-      {orderable.variantGroups.length > 0 && (
+      {orderable.variant_groups.length > 0 && (
         <Text color="gray.500" fontSize="xs" mt={1}>
-          {orderable.variantGroups.map((g) => g.name).join(", ")}
+          {orderable.variant_groups.map((g) => g.name).join(", ")}
         </Text>
       )}
     </Box>
   );
 }
-
 
 function VariantGroupSelector({
   variantGroup,
@@ -96,7 +94,7 @@ function VariantGroupSelector({
   currentSelections,
   isLastGroup,
 }: {
-  variantGroup: OrderableOutput_Output["variantGroups"][0];
+  variantGroup: OrderableOutput_Output["variant_groups"][0];
   onSelect: (variant: VariantBase_Output) => void;
   onBack: () => void;
   onNext: () => void;
@@ -150,8 +148,8 @@ function VariantGroupSelector({
                 </Flex>
                 <Text>
                   $
-                  {Number(variant.priceDelta) > 0
-                    ? `+${Number(variant.priceDelta).toFixed(2)}`
+                  {Number(variant.price_delta) > 0
+                    ? `+${Number(variant.price_delta).toFixed(2)}`
                     : "0.00"}
                 </Text>
               </Flex>
@@ -180,11 +178,11 @@ function VariantSelector({
     Map<number, VariantBase_Output[]>
   >(new Map());
 
-  if (orderable.variantGroups.length === 0) {
+  if (orderable.variant_groups.length === 0) {
     return null;
   }
 
-  const currentGroup = orderable.variantGroups[currentGroupIndex];
+  const currentGroup = orderable.variant_groups[currentGroupIndex];
 
   const handleVariantSelect = (variant: VariantBase_Output) => {
     const currentVariants = variantsByGroup.get(currentGroup.id) || [];
@@ -213,24 +211,22 @@ function VariantSelector({
   const handleNext = () => {
     const currentVariants = variantsByGroup.get(currentGroup.id) || [];
     if (currentGroup.required && currentVariants.length === 0) {
-      return; // Can't proceed if required group has no selection
+      return;
     }
 
     const isLastGroup =
-      currentGroupIndex === orderable.variantGroups.length - 1;
+      currentGroupIndex === orderable.variant_groups.length - 1;
     if (isLastGroup) {
-      // Collect all variants from all groups and convert to input format
       const allVariants = Array.from(variantsByGroup.entries()).flatMap(
         ([groupId, variants]) =>
           variants.map((variant) => ({
-            id: String(variant.id),
+            id: variant.id!,
             name: variant.name,
-            priceDelta: variant.priceDelta,
-            groupId: String(groupId),
+            price_delta: variant.price_delta,
+            group_id: groupId,
           })),
       );
 
-      // Add to order with proper types
       setOrder((prev) => ({
         ...prev,
         orderItems: [
@@ -259,7 +255,7 @@ function VariantSelector({
       <Box mb={4}>
         <Heading size="lg">{orderable.name}</Heading>
         <Text color="gray.600">
-          Step {currentGroupIndex + 1} of {orderable.variantGroups.length}
+          Step {currentGroupIndex + 1} of {orderable.variant_groups.length}
         </Text>
       </Box>
       <VariantGroupSelector
@@ -268,9 +264,9 @@ function VariantSelector({
         onBack={handleBack}
         onNext={handleNext}
         currentSelections={variantsByGroup.get(currentGroup.id) || []}
-        isLastGroup={currentGroupIndex === orderable.variantGroups.length - 1}
+        isLastGroup={currentGroupIndex === orderable.variant_groups.length - 1}
       />
-      {currentGroupIndex === orderable.variantGroups.length - 1 && (
+      {currentGroupIndex === orderable.variant_groups.length - 1 && (
         <Box mt={4}>
           <Flex gap={4} align="center" justify="center">
             <QuantitySelector setQuantity={setQuantity} quantity={quantity} />
@@ -313,10 +309,9 @@ function Order() {
     orderItems: [],
   });
   const toast = useCustomToast();
+  const navigate = useNavigate();
   const [inProgressOrder, setInProgressOrder] =
     useState<OrderableOutput_Output | null>(null);
-
-
 
   const handleSubmitOrder = () => {
     PosService.createOrder({
@@ -332,6 +327,7 @@ function Order() {
       "Your order has been successfully created.",
       "success",
     );
+    navigate({to: "/pos/recent-orders/"});
   };
 
   return (
@@ -355,15 +351,15 @@ function Order() {
             Current Order
           </Heading>
           <OrderCard order={order} setOrder={setOrder} allowEdits />
-<Button
-  mt={4}
-  colorScheme="green"
-  width="100%"
-  size="lg"
-  onClick={handleSubmitOrder}
->
-  Submit Order
-</Button>
+          <Button
+            mt={4}
+            colorScheme="green"
+            width="100%"
+            size="lg"
+            onClick={handleSubmitOrder}
+          >
+            Submit Order
+          </Button>
         </Box>
       )}
     </Box>

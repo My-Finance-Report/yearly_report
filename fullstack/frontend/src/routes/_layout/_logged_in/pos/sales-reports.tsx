@@ -65,7 +65,7 @@ function ActionCard({
 
 function determinePrice(item: OrderBase_Output["orderItems"][0]) {
   const variantPriceDelta = item.variants.reduce(
-    (sum, variant) => sum + Number(variant.priceDelta),
+    (sum, variant) => sum + Number(variant.price_delta),
     0,
   );
   return (Number(item.orderable.price) + variantPriceDelta) * item.quantity;

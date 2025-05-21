@@ -53,7 +53,9 @@ export function EditOrderable({
   const handleRemoveVariantGroup = (groupId: number) => {
     setEditedOrderable((prev) => ({
       ...prev,
-      variantGroups: prev.variantGroups.filter((group) => group.id !== groupId),
+      variant_groups: prev.variant_groups.filter(
+        (group) => group.id !== groupId,
+      ),
     }));
   };
 
@@ -112,7 +114,7 @@ export function EditOrderable({
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {editedOrderable.variantGroups.map((group) => (
+            {editedOrderable.variant_groups.map((group) => (
               <Table.Row key={group.id}>
                 <Table.Cell>{group.name}</Table.Cell>
                 <Table.Cell>{group.required ? "Yes" : "No"}</Table.Cell>
@@ -158,7 +160,7 @@ function AddVariantGroupForm({
   setEditedOrderable: React.Dispatch<React.SetStateAction<OrderableInput>>;
 }) {
   const addableGroups = variantGroups.filter(
-    (group) => !editedOrderable.variantGroups.some((g) => g.id === group.id),
+    (group) => !editedOrderable.variant_groups.some((g) => g.id === group.id),
   );
   if (addableGroups.length === 0) {
     return null;
@@ -175,7 +177,7 @@ function AddVariantGroupForm({
             onClick={() =>
               setEditedOrderable((prev) => ({
                 ...prev,
-                variantGroups: [...prev.variantGroups, group],
+                variant_groups: [...prev.variant_groups, group],
               }))
             }
           >
