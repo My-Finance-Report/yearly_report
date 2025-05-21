@@ -10,567 +10,583 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as LayoutImport } from "./routes/_layout";
-import { Route as LayoutIndexImport } from "./routes/_layout/index";
-import { Route as LayoutTermsImport } from "./routes/_layout/terms";
-import { Route as LayoutSignupImport } from "./routes/_layout/signup";
-import { Route as LayoutSetuptwofaImport } from "./routes/_layout/setup_two_fa";
-import { Route as LayoutResetPasswordImport } from "./routes/_layout/reset-password";
-import { Route as LayoutRecoverPasswordImport } from "./routes/_layout/recover-password";
-import { Route as LayoutPrivacyImport } from "./routes/_layout/privacy";
-import { Route as LayoutOauthCallbackLocalImport } from "./routes/_layout/oauth-callback-local";
-import { Route as LayoutOauthCallbackImport } from "./routes/_layout/oauth-callback";
-import { Route as LayoutLoginImport } from "./routes/_layout/login";
-import { Route as LayoutLandingImport } from "./routes/_layout/landing";
-import { Route as LayoutInputtwofaImport } from "./routes/_layout/input_two_fa";
-import { Route as LayoutHowImport } from "./routes/_layout/how";
-import { Route as LayoutFaqImport } from "./routes/_layout/faq";
-import { Route as LayoutDemoImport } from "./routes/_layout/demo";
-import { Route as LayoutContactMeImport } from "./routes/_layout/contact-me";
-import { Route as LayoutChangeLogImport } from "./routes/_layout/change-log";
-import { Route as LayoutLoggedinImport } from "./routes/_layout/_logged_in";
-import { Route as LayoutLoggedinUploadFilesImport } from "./routes/_layout/_logged_in/upload-files";
-import { Route as LayoutLoggedinTransactionsImport } from "./routes/_layout/_logged_in/transactions";
-import { Route as LayoutLoggedinSubscriptionSuccessImport } from "./routes/_layout/_logged_in/subscription-success";
-import { Route as LayoutLoggedinSubscriptionCancelImport } from "./routes/_layout/_logged_in/subscription-cancel";
-import { Route as LayoutLoggedinSubscriptionImport } from "./routes/_layout/_logged_in/subscription";
-import { Route as LayoutLoggedinSettingsImport } from "./routes/_layout/_logged_in/settings";
-import { Route as LayoutLoggedinSankeyConfigImport } from "./routes/_layout/_logged_in/sankey-config";
-import { Route as LayoutLoggedinPlaidImport } from "./routes/_layout/_logged_in/plaid";
-import { Route as LayoutLoggedinNotificationsImport } from "./routes/_layout/_logged_in/notifications";
-import { Route as LayoutLoggedinManageAccountsImport } from "./routes/_layout/_logged_in/manage-accounts";
-import { Route as LayoutLoggedinBudgetImport } from "./routes/_layout/_logged_in/budget";
-import { Route as LayoutLoggedinAdminImport } from "./routes/_layout/_logged_in/admin";
-import { Route as LayoutLoggedinAccountsImport } from "./routes/_layout/_logged_in/accounts";
-import { Route as LayoutLoggedinPosSalesReportsImport } from "./routes/_layout/_logged_in/pos/sales-reports";
-import { Route as LayoutLoggedinPosPosImport } from "./routes/_layout/_logged_in/pos/pos";
-import { Route as LayoutLoggedinPosOrderImport } from "./routes/_layout/_logged_in/pos/order";
-import { Route as LayoutLoggedinPosManageVariantsImport } from "./routes/_layout/_logged_in/pos/manage-variants";
-import { Route as LayoutLoggedinPosManageMenuImport } from "./routes/_layout/_logged_in/pos/manage-menu";
+import { Route as rootRoute } from './routes/__root'
+import { Route as LayoutImport } from './routes/_layout'
+import { Route as LayoutIndexImport } from './routes/_layout/index'
+import { Route as LayoutTermsImport } from './routes/_layout/terms'
+import { Route as LayoutSignupImport } from './routes/_layout/signup'
+import { Route as LayoutSetuptwofaImport } from './routes/_layout/setup_two_fa'
+import { Route as LayoutResetPasswordImport } from './routes/_layout/reset-password'
+import { Route as LayoutRecoverPasswordImport } from './routes/_layout/recover-password'
+import { Route as LayoutPrivacyImport } from './routes/_layout/privacy'
+import { Route as LayoutOauthCallbackLocalImport } from './routes/_layout/oauth-callback-local'
+import { Route as LayoutOauthCallbackImport } from './routes/_layout/oauth-callback'
+import { Route as LayoutLoginImport } from './routes/_layout/login'
+import { Route as LayoutLandingImport } from './routes/_layout/landing'
+import { Route as LayoutInputtwofaImport } from './routes/_layout/input_two_fa'
+import { Route as LayoutHowImport } from './routes/_layout/how'
+import { Route as LayoutFaqImport } from './routes/_layout/faq'
+import { Route as LayoutDemoImport } from './routes/_layout/demo'
+import { Route as LayoutContactMeImport } from './routes/_layout/contact-me'
+import { Route as LayoutChangeLogImport } from './routes/_layout/change-log'
+import { Route as LayoutLoggedinImport } from './routes/_layout/_logged_in'
+import { Route as LayoutLoggedinUploadFilesImport } from './routes/_layout/_logged_in/upload-files'
+import { Route as LayoutLoggedinTransactionsImport } from './routes/_layout/_logged_in/transactions'
+import { Route as LayoutLoggedinSubscriptionSuccessImport } from './routes/_layout/_logged_in/subscription-success'
+import { Route as LayoutLoggedinSubscriptionCancelImport } from './routes/_layout/_logged_in/subscription-cancel'
+import { Route as LayoutLoggedinSubscriptionImport } from './routes/_layout/_logged_in/subscription'
+import { Route as LayoutLoggedinSettingsImport } from './routes/_layout/_logged_in/settings'
+import { Route as LayoutLoggedinSankeyConfigImport } from './routes/_layout/_logged_in/sankey-config'
+import { Route as LayoutLoggedinPlaidImport } from './routes/_layout/_logged_in/plaid'
+import { Route as LayoutLoggedinNotificationsImport } from './routes/_layout/_logged_in/notifications'
+import { Route as LayoutLoggedinManageAccountsImport } from './routes/_layout/_logged_in/manage-accounts'
+import { Route as LayoutLoggedinBudgetImport } from './routes/_layout/_logged_in/budget'
+import { Route as LayoutLoggedinAdminImport } from './routes/_layout/_logged_in/admin'
+import { Route as LayoutLoggedinAccountsImport } from './routes/_layout/_logged_in/accounts'
+import { Route as LayoutLoggedinPosSalesReportsImport } from './routes/_layout/_logged_in/pos/sales-reports'
+import { Route as LayoutLoggedinPosRecentOrdersImport } from './routes/_layout/_logged_in/pos/recent-orders'
+import { Route as LayoutLoggedinPosPosImport } from './routes/_layout/_logged_in/pos/pos'
+import { Route as LayoutLoggedinPosOrderImport } from './routes/_layout/_logged_in/pos/order'
+import { Route as LayoutLoggedinPosManageVariantsImport } from './routes/_layout/_logged_in/pos/manage-variants'
+import { Route as LayoutLoggedinPosManageMenuImport } from './routes/_layout/_logged_in/pos/manage-menu'
 
 // Create/Update Routes
 
 const LayoutRoute = LayoutImport.update({
-  id: "/_layout",
+  id: '/_layout',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const LayoutIndexRoute = LayoutIndexImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutTermsRoute = LayoutTermsImport.update({
-  id: "/terms",
-  path: "/terms",
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutSignupRoute = LayoutSignupImport.update({
-  id: "/signup",
-  path: "/signup",
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutSetuptwofaRoute = LayoutSetuptwofaImport.update({
-  id: "/setup_two_fa",
-  path: "/setup_two_fa",
+  id: '/setup_two_fa',
+  path: '/setup_two_fa',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutResetPasswordRoute = LayoutResetPasswordImport.update({
-  id: "/reset-password",
-  path: "/reset-password",
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutRecoverPasswordRoute = LayoutRecoverPasswordImport.update({
-  id: "/recover-password",
-  path: "/recover-password",
+  id: '/recover-password',
+  path: '/recover-password',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutPrivacyRoute = LayoutPrivacyImport.update({
-  id: "/privacy",
-  path: "/privacy",
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutOauthCallbackLocalRoute = LayoutOauthCallbackLocalImport.update({
-  id: "/oauth-callback-local",
-  path: "/oauth-callback-local",
+  id: '/oauth-callback-local',
+  path: '/oauth-callback-local',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutOauthCallbackRoute = LayoutOauthCallbackImport.update({
-  id: "/oauth-callback",
-  path: "/oauth-callback",
+  id: '/oauth-callback',
+  path: '/oauth-callback',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutLoginRoute = LayoutLoginImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutLandingRoute = LayoutLandingImport.update({
-  id: "/landing",
-  path: "/landing",
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutInputtwofaRoute = LayoutInputtwofaImport.update({
-  id: "/input_two_fa",
-  path: "/input_two_fa",
+  id: '/input_two_fa',
+  path: '/input_two_fa',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutHowRoute = LayoutHowImport.update({
-  id: "/how",
-  path: "/how",
+  id: '/how',
+  path: '/how',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutFaqRoute = LayoutFaqImport.update({
-  id: "/faq",
-  path: "/faq",
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutDemoRoute = LayoutDemoImport.update({
-  id: "/demo",
-  path: "/demo",
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutContactMeRoute = LayoutContactMeImport.update({
-  id: "/contact-me",
-  path: "/contact-me",
+  id: '/contact-me',
+  path: '/contact-me',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutChangeLogRoute = LayoutChangeLogImport.update({
-  id: "/change-log",
-  path: "/change-log",
+  id: '/change-log',
+  path: '/change-log',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinRoute = LayoutLoggedinImport.update({
-  id: "/_logged_in",
+  id: '/_logged_in',
   getParentRoute: () => LayoutRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinUploadFilesRoute = LayoutLoggedinUploadFilesImport.update({
-  id: "/upload-files",
-  path: "/upload-files",
+  id: '/upload-files',
+  path: '/upload-files',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinTransactionsRoute = LayoutLoggedinTransactionsImport.update(
   {
-    id: "/transactions",
-    path: "/transactions",
+    id: '/transactions',
+    path: '/transactions',
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
-);
+)
 
 const LayoutLoggedinSubscriptionSuccessRoute =
   LayoutLoggedinSubscriptionSuccessImport.update({
-    id: "/subscription-success",
-    path: "/subscription-success",
+    id: '/subscription-success',
+    path: '/subscription-success',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 const LayoutLoggedinSubscriptionCancelRoute =
   LayoutLoggedinSubscriptionCancelImport.update({
-    id: "/subscription-cancel",
-    path: "/subscription-cancel",
+    id: '/subscription-cancel',
+    path: '/subscription-cancel',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 const LayoutLoggedinSubscriptionRoute = LayoutLoggedinSubscriptionImport.update(
   {
-    id: "/subscription",
-    path: "/subscription",
+    id: '/subscription',
+    path: '/subscription',
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
-);
+)
 
 const LayoutLoggedinSettingsRoute = LayoutLoggedinSettingsImport.update({
-  id: "/settings",
-  path: "/settings",
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinSankeyConfigRoute = LayoutLoggedinSankeyConfigImport.update(
   {
-    id: "/sankey-config",
-    path: "/sankey-config",
+    id: '/sankey-config',
+    path: '/sankey-config',
     getParentRoute: () => LayoutLoggedinRoute,
   } as any,
-);
+)
 
 const LayoutLoggedinPlaidRoute = LayoutLoggedinPlaidImport.update({
-  id: "/plaid",
-  path: "/plaid",
+  id: '/plaid',
+  path: '/plaid',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinNotificationsRoute =
   LayoutLoggedinNotificationsImport.update({
-    id: "/notifications",
-    path: "/notifications",
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 const LayoutLoggedinManageAccountsRoute =
   LayoutLoggedinManageAccountsImport.update({
-    id: "/manage-accounts",
-    path: "/manage-accounts",
+    id: '/manage-accounts',
+    path: '/manage-accounts',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 const LayoutLoggedinBudgetRoute = LayoutLoggedinBudgetImport.update({
-  id: "/budget",
-  path: "/budget",
+  id: '/budget',
+  path: '/budget',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinAdminRoute = LayoutLoggedinAdminImport.update({
-  id: "/admin",
-  path: "/admin",
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinAccountsRoute = LayoutLoggedinAccountsImport.update({
-  id: "/accounts",
-  path: "/accounts",
+  id: '/accounts',
+  path: '/accounts',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinPosSalesReportsRoute =
   LayoutLoggedinPosSalesReportsImport.update({
-    id: "/pos/sales-reports",
-    path: "/pos/sales-reports",
+    id: '/pos/sales-reports',
+    path: '/pos/sales-reports',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
+
+const LayoutLoggedinPosRecentOrdersRoute =
+  LayoutLoggedinPosRecentOrdersImport.update({
+    id: '/pos/recent-orders',
+    path: '/pos/recent-orders',
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any)
 
 const LayoutLoggedinPosPosRoute = LayoutLoggedinPosPosImport.update({
-  id: "/pos/pos",
-  path: "/pos/pos",
+  id: '/pos/pos',
+  path: '/pos/pos',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinPosOrderRoute = LayoutLoggedinPosOrderImport.update({
-  id: "/pos/order",
-  path: "/pos/order",
+  id: '/pos/order',
+  path: '/pos/order',
   getParentRoute: () => LayoutLoggedinRoute,
-} as any);
+} as any)
 
 const LayoutLoggedinPosManageVariantsRoute =
   LayoutLoggedinPosManageVariantsImport.update({
-    id: "/pos/manage-variants",
-    path: "/pos/manage-variants",
+    id: '/pos/manage-variants',
+    path: '/pos/manage-variants',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 const LayoutLoggedinPosManageMenuRoute =
   LayoutLoggedinPosManageMenuImport.update({
-    id: "/pos/manage-menu",
-    path: "/pos/manage-menu",
+    id: '/pos/manage-menu',
+    path: '/pos/manage-menu',
     getParentRoute: () => LayoutLoggedinRoute,
-  } as any);
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_layout": {
-      id: "/_layout";
-      path: "";
-      fullPath: "";
-      preLoaderRoute: typeof LayoutImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/_layout/_logged_in": {
-      id: "/_layout/_logged_in";
-      path: "";
-      fullPath: "";
-      preLoaderRoute: typeof LayoutLoggedinImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/change-log": {
-      id: "/_layout/change-log";
-      path: "/change-log";
-      fullPath: "/change-log";
-      preLoaderRoute: typeof LayoutChangeLogImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/contact-me": {
-      id: "/_layout/contact-me";
-      path: "/contact-me";
-      fullPath: "/contact-me";
-      preLoaderRoute: typeof LayoutContactMeImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/demo": {
-      id: "/_layout/demo";
-      path: "/demo";
-      fullPath: "/demo";
-      preLoaderRoute: typeof LayoutDemoImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/faq": {
-      id: "/_layout/faq";
-      path: "/faq";
-      fullPath: "/faq";
-      preLoaderRoute: typeof LayoutFaqImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/how": {
-      id: "/_layout/how";
-      path: "/how";
-      fullPath: "/how";
-      preLoaderRoute: typeof LayoutHowImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/input_two_fa": {
-      id: "/_layout/input_two_fa";
-      path: "/input_two_fa";
-      fullPath: "/input_two_fa";
-      preLoaderRoute: typeof LayoutInputtwofaImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/landing": {
-      id: "/_layout/landing";
-      path: "/landing";
-      fullPath: "/landing";
-      preLoaderRoute: typeof LayoutLandingImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/login": {
-      id: "/_layout/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LayoutLoginImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/oauth-callback": {
-      id: "/_layout/oauth-callback";
-      path: "/oauth-callback";
-      fullPath: "/oauth-callback";
-      preLoaderRoute: typeof LayoutOauthCallbackImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/oauth-callback-local": {
-      id: "/_layout/oauth-callback-local";
-      path: "/oauth-callback-local";
-      fullPath: "/oauth-callback-local";
-      preLoaderRoute: typeof LayoutOauthCallbackLocalImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/privacy": {
-      id: "/_layout/privacy";
-      path: "/privacy";
-      fullPath: "/privacy";
-      preLoaderRoute: typeof LayoutPrivacyImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/recover-password": {
-      id: "/_layout/recover-password";
-      path: "/recover-password";
-      fullPath: "/recover-password";
-      preLoaderRoute: typeof LayoutRecoverPasswordImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/reset-password": {
-      id: "/_layout/reset-password";
-      path: "/reset-password";
-      fullPath: "/reset-password";
-      preLoaderRoute: typeof LayoutResetPasswordImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/setup_two_fa": {
-      id: "/_layout/setup_two_fa";
-      path: "/setup_two_fa";
-      fullPath: "/setup_two_fa";
-      preLoaderRoute: typeof LayoutSetuptwofaImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/signup": {
-      id: "/_layout/signup";
-      path: "/signup";
-      fullPath: "/signup";
-      preLoaderRoute: typeof LayoutSignupImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/terms": {
-      id: "/_layout/terms";
-      path: "/terms";
-      fullPath: "/terms";
-      preLoaderRoute: typeof LayoutTermsImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/": {
-      id: "/_layout/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof LayoutIndexImport;
-      parentRoute: typeof LayoutImport;
-    };
-    "/_layout/_logged_in/accounts": {
-      id: "/_layout/_logged_in/accounts";
-      path: "/accounts";
-      fullPath: "/accounts";
-      preLoaderRoute: typeof LayoutLoggedinAccountsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/admin": {
-      id: "/_layout/_logged_in/admin";
-      path: "/admin";
-      fullPath: "/admin";
-      preLoaderRoute: typeof LayoutLoggedinAdminImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/budget": {
-      id: "/_layout/_logged_in/budget";
-      path: "/budget";
-      fullPath: "/budget";
-      preLoaderRoute: typeof LayoutLoggedinBudgetImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/manage-accounts": {
-      id: "/_layout/_logged_in/manage-accounts";
-      path: "/manage-accounts";
-      fullPath: "/manage-accounts";
-      preLoaderRoute: typeof LayoutLoggedinManageAccountsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/notifications": {
-      id: "/_layout/_logged_in/notifications";
-      path: "/notifications";
-      fullPath: "/notifications";
-      preLoaderRoute: typeof LayoutLoggedinNotificationsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/plaid": {
-      id: "/_layout/_logged_in/plaid";
-      path: "/plaid";
-      fullPath: "/plaid";
-      preLoaderRoute: typeof LayoutLoggedinPlaidImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/sankey-config": {
-      id: "/_layout/_logged_in/sankey-config";
-      path: "/sankey-config";
-      fullPath: "/sankey-config";
-      preLoaderRoute: typeof LayoutLoggedinSankeyConfigImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/settings": {
-      id: "/_layout/_logged_in/settings";
-      path: "/settings";
-      fullPath: "/settings";
-      preLoaderRoute: typeof LayoutLoggedinSettingsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/subscription": {
-      id: "/_layout/_logged_in/subscription";
-      path: "/subscription";
-      fullPath: "/subscription";
-      preLoaderRoute: typeof LayoutLoggedinSubscriptionImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/subscription-cancel": {
-      id: "/_layout/_logged_in/subscription-cancel";
-      path: "/subscription-cancel";
-      fullPath: "/subscription-cancel";
-      preLoaderRoute: typeof LayoutLoggedinSubscriptionCancelImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/subscription-success": {
-      id: "/_layout/_logged_in/subscription-success";
-      path: "/subscription-success";
-      fullPath: "/subscription-success";
-      preLoaderRoute: typeof LayoutLoggedinSubscriptionSuccessImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/transactions": {
-      id: "/_layout/_logged_in/transactions";
-      path: "/transactions";
-      fullPath: "/transactions";
-      preLoaderRoute: typeof LayoutLoggedinTransactionsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/upload-files": {
-      id: "/_layout/_logged_in/upload-files";
-      path: "/upload-files";
-      fullPath: "/upload-files";
-      preLoaderRoute: typeof LayoutLoggedinUploadFilesImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos/manage-menu": {
-      id: "/_layout/_logged_in/pos/manage-menu";
-      path: "/pos/manage-menu";
-      fullPath: "/pos/manage-menu";
-      preLoaderRoute: typeof LayoutLoggedinPosManageMenuImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos/manage-variants": {
-      id: "/_layout/_logged_in/pos/manage-variants";
-      path: "/pos/manage-variants";
-      fullPath: "/pos/manage-variants";
-      preLoaderRoute: typeof LayoutLoggedinPosManageVariantsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos/order": {
-      id: "/_layout/_logged_in/pos/order";
-      path: "/pos/order";
-      fullPath: "/pos/order";
-      preLoaderRoute: typeof LayoutLoggedinPosOrderImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos/pos": {
-      id: "/_layout/_logged_in/pos/pos";
-      path: "/pos/pos";
-      fullPath: "/pos/pos";
-      preLoaderRoute: typeof LayoutLoggedinPosPosImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
-    "/_layout/_logged_in/pos/sales-reports": {
-      id: "/_layout/_logged_in/pos/sales-reports";
-      path: "/pos/sales-reports";
-      fullPath: "/pos/sales-reports";
-      preLoaderRoute: typeof LayoutLoggedinPosSalesReportsImport;
-      parentRoute: typeof LayoutLoggedinImport;
-    };
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutImport
+      parentRoute: typeof rootRoute
+    }
+    '/_layout/_logged_in': {
+      id: '/_layout/_logged_in'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutLoggedinImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/change-log': {
+      id: '/_layout/change-log'
+      path: '/change-log'
+      fullPath: '/change-log'
+      preLoaderRoute: typeof LayoutChangeLogImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/contact-me': {
+      id: '/_layout/contact-me'
+      path: '/contact-me'
+      fullPath: '/contact-me'
+      preLoaderRoute: typeof LayoutContactMeImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/demo': {
+      id: '/_layout/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof LayoutDemoImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/faq': {
+      id: '/_layout/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof LayoutFaqImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/how': {
+      id: '/_layout/how'
+      path: '/how'
+      fullPath: '/how'
+      preLoaderRoute: typeof LayoutHowImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/input_two_fa': {
+      id: '/_layout/input_two_fa'
+      path: '/input_two_fa'
+      fullPath: '/input_two_fa'
+      preLoaderRoute: typeof LayoutInputtwofaImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/landing': {
+      id: '/_layout/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LayoutLandingImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/login': {
+      id: '/_layout/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LayoutLoginImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/oauth-callback': {
+      id: '/_layout/oauth-callback'
+      path: '/oauth-callback'
+      fullPath: '/oauth-callback'
+      preLoaderRoute: typeof LayoutOauthCallbackImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/oauth-callback-local': {
+      id: '/_layout/oauth-callback-local'
+      path: '/oauth-callback-local'
+      fullPath: '/oauth-callback-local'
+      preLoaderRoute: typeof LayoutOauthCallbackLocalImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/privacy': {
+      id: '/_layout/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof LayoutPrivacyImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/recover-password': {
+      id: '/_layout/recover-password'
+      path: '/recover-password'
+      fullPath: '/recover-password'
+      preLoaderRoute: typeof LayoutRecoverPasswordImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/reset-password': {
+      id: '/_layout/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof LayoutResetPasswordImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/setup_two_fa': {
+      id: '/_layout/setup_two_fa'
+      path: '/setup_two_fa'
+      fullPath: '/setup_two_fa'
+      preLoaderRoute: typeof LayoutSetuptwofaImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/signup': {
+      id: '/_layout/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof LayoutSignupImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/terms': {
+      id: '/_layout/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof LayoutTermsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/': {
+      id: '/_layout/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof LayoutIndexImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/_logged_in/accounts': {
+      id: '/_layout/_logged_in/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof LayoutLoggedinAccountsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/admin': {
+      id: '/_layout/_logged_in/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof LayoutLoggedinAdminImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/budget': {
+      id: '/_layout/_logged_in/budget'
+      path: '/budget'
+      fullPath: '/budget'
+      preLoaderRoute: typeof LayoutLoggedinBudgetImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/manage-accounts': {
+      id: '/_layout/_logged_in/manage-accounts'
+      path: '/manage-accounts'
+      fullPath: '/manage-accounts'
+      preLoaderRoute: typeof LayoutLoggedinManageAccountsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/notifications': {
+      id: '/_layout/_logged_in/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof LayoutLoggedinNotificationsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/plaid': {
+      id: '/_layout/_logged_in/plaid'
+      path: '/plaid'
+      fullPath: '/plaid'
+      preLoaderRoute: typeof LayoutLoggedinPlaidImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/sankey-config': {
+      id: '/_layout/_logged_in/sankey-config'
+      path: '/sankey-config'
+      fullPath: '/sankey-config'
+      preLoaderRoute: typeof LayoutLoggedinSankeyConfigImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/settings': {
+      id: '/_layout/_logged_in/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof LayoutLoggedinSettingsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/subscription': {
+      id: '/_layout/_logged_in/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/subscription-cancel': {
+      id: '/_layout/_logged_in/subscription-cancel'
+      path: '/subscription-cancel'
+      fullPath: '/subscription-cancel'
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionCancelImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/subscription-success': {
+      id: '/_layout/_logged_in/subscription-success'
+      path: '/subscription-success'
+      fullPath: '/subscription-success'
+      preLoaderRoute: typeof LayoutLoggedinSubscriptionSuccessImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/transactions': {
+      id: '/_layout/_logged_in/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof LayoutLoggedinTransactionsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/upload-files': {
+      id: '/_layout/_logged_in/upload-files'
+      path: '/upload-files'
+      fullPath: '/upload-files'
+      preLoaderRoute: typeof LayoutLoggedinUploadFilesImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/manage-menu': {
+      id: '/_layout/_logged_in/pos/manage-menu'
+      path: '/pos/manage-menu'
+      fullPath: '/pos/manage-menu'
+      preLoaderRoute: typeof LayoutLoggedinPosManageMenuImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/manage-variants': {
+      id: '/_layout/_logged_in/pos/manage-variants'
+      path: '/pos/manage-variants'
+      fullPath: '/pos/manage-variants'
+      preLoaderRoute: typeof LayoutLoggedinPosManageVariantsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/order': {
+      id: '/_layout/_logged_in/pos/order'
+      path: '/pos/order'
+      fullPath: '/pos/order'
+      preLoaderRoute: typeof LayoutLoggedinPosOrderImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/pos': {
+      id: '/_layout/_logged_in/pos/pos'
+      path: '/pos/pos'
+      fullPath: '/pos/pos'
+      preLoaderRoute: typeof LayoutLoggedinPosPosImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/recent-orders': {
+      id: '/_layout/_logged_in/pos/recent-orders'
+      path: '/pos/recent-orders'
+      fullPath: '/pos/recent-orders'
+      preLoaderRoute: typeof LayoutLoggedinPosRecentOrdersImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
+    '/_layout/_logged_in/pos/sales-reports': {
+      id: '/_layout/_logged_in/pos/sales-reports'
+      path: '/pos/sales-reports'
+      fullPath: '/pos/sales-reports'
+      preLoaderRoute: typeof LayoutLoggedinPosSalesReportsImport
+      parentRoute: typeof LayoutLoggedinImport
+    }
   }
 }
 
 // Create and export the route tree
 
 interface LayoutLoggedinRouteChildren {
-  LayoutLoggedinAccountsRoute: typeof LayoutLoggedinAccountsRoute;
-  LayoutLoggedinAdminRoute: typeof LayoutLoggedinAdminRoute;
-  LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute;
-  LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute;
-  LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute;
-  LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute;
-  LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute;
-  LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute;
-  LayoutLoggedinSubscriptionRoute: typeof LayoutLoggedinSubscriptionRoute;
-  LayoutLoggedinSubscriptionCancelRoute: typeof LayoutLoggedinSubscriptionCancelRoute;
-  LayoutLoggedinSubscriptionSuccessRoute: typeof LayoutLoggedinSubscriptionSuccessRoute;
-  LayoutLoggedinTransactionsRoute: typeof LayoutLoggedinTransactionsRoute;
-  LayoutLoggedinUploadFilesRoute: typeof LayoutLoggedinUploadFilesRoute;
-  LayoutLoggedinPosManageMenuRoute: typeof LayoutLoggedinPosManageMenuRoute;
-  LayoutLoggedinPosManageVariantsRoute: typeof LayoutLoggedinPosManageVariantsRoute;
-  LayoutLoggedinPosOrderRoute: typeof LayoutLoggedinPosOrderRoute;
-  LayoutLoggedinPosPosRoute: typeof LayoutLoggedinPosPosRoute;
-  LayoutLoggedinPosSalesReportsRoute: typeof LayoutLoggedinPosSalesReportsRoute;
+  LayoutLoggedinAccountsRoute: typeof LayoutLoggedinAccountsRoute
+  LayoutLoggedinAdminRoute: typeof LayoutLoggedinAdminRoute
+  LayoutLoggedinBudgetRoute: typeof LayoutLoggedinBudgetRoute
+  LayoutLoggedinManageAccountsRoute: typeof LayoutLoggedinManageAccountsRoute
+  LayoutLoggedinNotificationsRoute: typeof LayoutLoggedinNotificationsRoute
+  LayoutLoggedinPlaidRoute: typeof LayoutLoggedinPlaidRoute
+  LayoutLoggedinSankeyConfigRoute: typeof LayoutLoggedinSankeyConfigRoute
+  LayoutLoggedinSettingsRoute: typeof LayoutLoggedinSettingsRoute
+  LayoutLoggedinSubscriptionRoute: typeof LayoutLoggedinSubscriptionRoute
+  LayoutLoggedinSubscriptionCancelRoute: typeof LayoutLoggedinSubscriptionCancelRoute
+  LayoutLoggedinSubscriptionSuccessRoute: typeof LayoutLoggedinSubscriptionSuccessRoute
+  LayoutLoggedinTransactionsRoute: typeof LayoutLoggedinTransactionsRoute
+  LayoutLoggedinUploadFilesRoute: typeof LayoutLoggedinUploadFilesRoute
+  LayoutLoggedinPosManageMenuRoute: typeof LayoutLoggedinPosManageMenuRoute
+  LayoutLoggedinPosManageVariantsRoute: typeof LayoutLoggedinPosManageVariantsRoute
+  LayoutLoggedinPosOrderRoute: typeof LayoutLoggedinPosOrderRoute
+  LayoutLoggedinPosPosRoute: typeof LayoutLoggedinPosPosRoute
+  LayoutLoggedinPosRecentOrdersRoute: typeof LayoutLoggedinPosRecentOrdersRoute
+  LayoutLoggedinPosSalesReportsRoute: typeof LayoutLoggedinPosSalesReportsRoute
 }
 
 const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
@@ -592,32 +608,33 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinPosManageVariantsRoute: LayoutLoggedinPosManageVariantsRoute,
   LayoutLoggedinPosOrderRoute: LayoutLoggedinPosOrderRoute,
   LayoutLoggedinPosPosRoute: LayoutLoggedinPosPosRoute,
+  LayoutLoggedinPosRecentOrdersRoute: LayoutLoggedinPosRecentOrdersRoute,
   LayoutLoggedinPosSalesReportsRoute: LayoutLoggedinPosSalesReportsRoute,
-};
+}
 
 const LayoutLoggedinRouteWithChildren = LayoutLoggedinRoute._addFileChildren(
   LayoutLoggedinRouteChildren,
-);
+)
 
 interface LayoutRouteChildren {
-  LayoutLoggedinRoute: typeof LayoutLoggedinRouteWithChildren;
-  LayoutChangeLogRoute: typeof LayoutChangeLogRoute;
-  LayoutContactMeRoute: typeof LayoutContactMeRoute;
-  LayoutDemoRoute: typeof LayoutDemoRoute;
-  LayoutFaqRoute: typeof LayoutFaqRoute;
-  LayoutHowRoute: typeof LayoutHowRoute;
-  LayoutInputtwofaRoute: typeof LayoutInputtwofaRoute;
-  LayoutLandingRoute: typeof LayoutLandingRoute;
-  LayoutLoginRoute: typeof LayoutLoginRoute;
-  LayoutOauthCallbackRoute: typeof LayoutOauthCallbackRoute;
-  LayoutOauthCallbackLocalRoute: typeof LayoutOauthCallbackLocalRoute;
-  LayoutPrivacyRoute: typeof LayoutPrivacyRoute;
-  LayoutRecoverPasswordRoute: typeof LayoutRecoverPasswordRoute;
-  LayoutResetPasswordRoute: typeof LayoutResetPasswordRoute;
-  LayoutSetuptwofaRoute: typeof LayoutSetuptwofaRoute;
-  LayoutSignupRoute: typeof LayoutSignupRoute;
-  LayoutTermsRoute: typeof LayoutTermsRoute;
-  LayoutIndexRoute: typeof LayoutIndexRoute;
+  LayoutLoggedinRoute: typeof LayoutLoggedinRouteWithChildren
+  LayoutChangeLogRoute: typeof LayoutChangeLogRoute
+  LayoutContactMeRoute: typeof LayoutContactMeRoute
+  LayoutDemoRoute: typeof LayoutDemoRoute
+  LayoutFaqRoute: typeof LayoutFaqRoute
+  LayoutHowRoute: typeof LayoutHowRoute
+  LayoutInputtwofaRoute: typeof LayoutInputtwofaRoute
+  LayoutLandingRoute: typeof LayoutLandingRoute
+  LayoutLoginRoute: typeof LayoutLoginRoute
+  LayoutOauthCallbackRoute: typeof LayoutOauthCallbackRoute
+  LayoutOauthCallbackLocalRoute: typeof LayoutOauthCallbackLocalRoute
+  LayoutPrivacyRoute: typeof LayoutPrivacyRoute
+  LayoutRecoverPasswordRoute: typeof LayoutRecoverPasswordRoute
+  LayoutResetPasswordRoute: typeof LayoutResetPasswordRoute
+  LayoutSetuptwofaRoute: typeof LayoutSetuptwofaRoute
+  LayoutSignupRoute: typeof LayoutSignupRoute
+  LayoutTermsRoute: typeof LayoutTermsRoute
+  LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -639,260 +656,266 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSignupRoute: LayoutSignupRoute,
   LayoutTermsRoute: LayoutTermsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
-};
+}
 
 const LayoutRouteWithChildren =
-  LayoutRoute._addFileChildren(LayoutRouteChildren);
+  LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 export interface FileRoutesByFullPath {
-  "": typeof LayoutLoggedinRouteWithChildren;
-  "/change-log": typeof LayoutChangeLogRoute;
-  "/contact-me": typeof LayoutContactMeRoute;
-  "/demo": typeof LayoutDemoRoute;
-  "/faq": typeof LayoutFaqRoute;
-  "/how": typeof LayoutHowRoute;
-  "/input_two_fa": typeof LayoutInputtwofaRoute;
-  "/landing": typeof LayoutLandingRoute;
-  "/login": typeof LayoutLoginRoute;
-  "/oauth-callback": typeof LayoutOauthCallbackRoute;
-  "/oauth-callback-local": typeof LayoutOauthCallbackLocalRoute;
-  "/privacy": typeof LayoutPrivacyRoute;
-  "/recover-password": typeof LayoutRecoverPasswordRoute;
-  "/reset-password": typeof LayoutResetPasswordRoute;
-  "/setup_two_fa": typeof LayoutSetuptwofaRoute;
-  "/signup": typeof LayoutSignupRoute;
-  "/terms": typeof LayoutTermsRoute;
-  "/": typeof LayoutIndexRoute;
-  "/accounts": typeof LayoutLoggedinAccountsRoute;
-  "/admin": typeof LayoutLoggedinAdminRoute;
-  "/budget": typeof LayoutLoggedinBudgetRoute;
-  "/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
-  "/settings": typeof LayoutLoggedinSettingsRoute;
-  "/subscription": typeof LayoutLoggedinSubscriptionRoute;
-  "/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
-  "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/transactions": typeof LayoutLoggedinTransactionsRoute;
-  "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
-  "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
-  "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
-  "/pos/order": typeof LayoutLoggedinPosOrderRoute;
-  "/pos/pos": typeof LayoutLoggedinPosPosRoute;
-  "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
+  '': typeof LayoutLoggedinRouteWithChildren
+  '/change-log': typeof LayoutChangeLogRoute
+  '/contact-me': typeof LayoutContactMeRoute
+  '/demo': typeof LayoutDemoRoute
+  '/faq': typeof LayoutFaqRoute
+  '/how': typeof LayoutHowRoute
+  '/input_two_fa': typeof LayoutInputtwofaRoute
+  '/landing': typeof LayoutLandingRoute
+  '/login': typeof LayoutLoginRoute
+  '/oauth-callback': typeof LayoutOauthCallbackRoute
+  '/oauth-callback-local': typeof LayoutOauthCallbackLocalRoute
+  '/privacy': typeof LayoutPrivacyRoute
+  '/recover-password': typeof LayoutRecoverPasswordRoute
+  '/reset-password': typeof LayoutResetPasswordRoute
+  '/setup_two_fa': typeof LayoutSetuptwofaRoute
+  '/signup': typeof LayoutSignupRoute
+  '/terms': typeof LayoutTermsRoute
+  '/': typeof LayoutIndexRoute
+  '/accounts': typeof LayoutLoggedinAccountsRoute
+  '/admin': typeof LayoutLoggedinAdminRoute
+  '/budget': typeof LayoutLoggedinBudgetRoute
+  '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/notifications': typeof LayoutLoggedinNotificationsRoute
+  '/plaid': typeof LayoutLoggedinPlaidRoute
+  '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
+  '/settings': typeof LayoutLoggedinSettingsRoute
+  '/subscription': typeof LayoutLoggedinSubscriptionRoute
+  '/subscription-cancel': typeof LayoutLoggedinSubscriptionCancelRoute
+  '/subscription-success': typeof LayoutLoggedinSubscriptionSuccessRoute
+  '/transactions': typeof LayoutLoggedinTransactionsRoute
+  '/upload-files': typeof LayoutLoggedinUploadFilesRoute
+  '/pos/manage-menu': typeof LayoutLoggedinPosManageMenuRoute
+  '/pos/manage-variants': typeof LayoutLoggedinPosManageVariantsRoute
+  '/pos/order': typeof LayoutLoggedinPosOrderRoute
+  '/pos/pos': typeof LayoutLoggedinPosPosRoute
+  '/pos/recent-orders': typeof LayoutLoggedinPosRecentOrdersRoute
+  '/pos/sales-reports': typeof LayoutLoggedinPosSalesReportsRoute
 }
 
 export interface FileRoutesByTo {
-  "": typeof LayoutLoggedinRouteWithChildren;
-  "/change-log": typeof LayoutChangeLogRoute;
-  "/contact-me": typeof LayoutContactMeRoute;
-  "/demo": typeof LayoutDemoRoute;
-  "/faq": typeof LayoutFaqRoute;
-  "/how": typeof LayoutHowRoute;
-  "/input_two_fa": typeof LayoutInputtwofaRoute;
-  "/landing": typeof LayoutLandingRoute;
-  "/login": typeof LayoutLoginRoute;
-  "/oauth-callback": typeof LayoutOauthCallbackRoute;
-  "/oauth-callback-local": typeof LayoutOauthCallbackLocalRoute;
-  "/privacy": typeof LayoutPrivacyRoute;
-  "/recover-password": typeof LayoutRecoverPasswordRoute;
-  "/reset-password": typeof LayoutResetPasswordRoute;
-  "/setup_two_fa": typeof LayoutSetuptwofaRoute;
-  "/signup": typeof LayoutSignupRoute;
-  "/terms": typeof LayoutTermsRoute;
-  "/": typeof LayoutIndexRoute;
-  "/accounts": typeof LayoutLoggedinAccountsRoute;
-  "/admin": typeof LayoutLoggedinAdminRoute;
-  "/budget": typeof LayoutLoggedinBudgetRoute;
-  "/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
-  "/settings": typeof LayoutLoggedinSettingsRoute;
-  "/subscription": typeof LayoutLoggedinSubscriptionRoute;
-  "/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
-  "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/transactions": typeof LayoutLoggedinTransactionsRoute;
-  "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
-  "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
-  "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
-  "/pos/order": typeof LayoutLoggedinPosOrderRoute;
-  "/pos/pos": typeof LayoutLoggedinPosPosRoute;
-  "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
+  '': typeof LayoutLoggedinRouteWithChildren
+  '/change-log': typeof LayoutChangeLogRoute
+  '/contact-me': typeof LayoutContactMeRoute
+  '/demo': typeof LayoutDemoRoute
+  '/faq': typeof LayoutFaqRoute
+  '/how': typeof LayoutHowRoute
+  '/input_two_fa': typeof LayoutInputtwofaRoute
+  '/landing': typeof LayoutLandingRoute
+  '/login': typeof LayoutLoginRoute
+  '/oauth-callback': typeof LayoutOauthCallbackRoute
+  '/oauth-callback-local': typeof LayoutOauthCallbackLocalRoute
+  '/privacy': typeof LayoutPrivacyRoute
+  '/recover-password': typeof LayoutRecoverPasswordRoute
+  '/reset-password': typeof LayoutResetPasswordRoute
+  '/setup_two_fa': typeof LayoutSetuptwofaRoute
+  '/signup': typeof LayoutSignupRoute
+  '/terms': typeof LayoutTermsRoute
+  '/': typeof LayoutIndexRoute
+  '/accounts': typeof LayoutLoggedinAccountsRoute
+  '/admin': typeof LayoutLoggedinAdminRoute
+  '/budget': typeof LayoutLoggedinBudgetRoute
+  '/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/notifications': typeof LayoutLoggedinNotificationsRoute
+  '/plaid': typeof LayoutLoggedinPlaidRoute
+  '/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
+  '/settings': typeof LayoutLoggedinSettingsRoute
+  '/subscription': typeof LayoutLoggedinSubscriptionRoute
+  '/subscription-cancel': typeof LayoutLoggedinSubscriptionCancelRoute
+  '/subscription-success': typeof LayoutLoggedinSubscriptionSuccessRoute
+  '/transactions': typeof LayoutLoggedinTransactionsRoute
+  '/upload-files': typeof LayoutLoggedinUploadFilesRoute
+  '/pos/manage-menu': typeof LayoutLoggedinPosManageMenuRoute
+  '/pos/manage-variants': typeof LayoutLoggedinPosManageVariantsRoute
+  '/pos/order': typeof LayoutLoggedinPosOrderRoute
+  '/pos/pos': typeof LayoutLoggedinPosPosRoute
+  '/pos/recent-orders': typeof LayoutLoggedinPosRecentOrdersRoute
+  '/pos/sales-reports': typeof LayoutLoggedinPosSalesReportsRoute
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
-  "/_layout": typeof LayoutRouteWithChildren;
-  "/_layout/_logged_in": typeof LayoutLoggedinRouteWithChildren;
-  "/_layout/change-log": typeof LayoutChangeLogRoute;
-  "/_layout/contact-me": typeof LayoutContactMeRoute;
-  "/_layout/demo": typeof LayoutDemoRoute;
-  "/_layout/faq": typeof LayoutFaqRoute;
-  "/_layout/how": typeof LayoutHowRoute;
-  "/_layout/input_two_fa": typeof LayoutInputtwofaRoute;
-  "/_layout/landing": typeof LayoutLandingRoute;
-  "/_layout/login": typeof LayoutLoginRoute;
-  "/_layout/oauth-callback": typeof LayoutOauthCallbackRoute;
-  "/_layout/oauth-callback-local": typeof LayoutOauthCallbackLocalRoute;
-  "/_layout/privacy": typeof LayoutPrivacyRoute;
-  "/_layout/recover-password": typeof LayoutRecoverPasswordRoute;
-  "/_layout/reset-password": typeof LayoutResetPasswordRoute;
-  "/_layout/setup_two_fa": typeof LayoutSetuptwofaRoute;
-  "/_layout/signup": typeof LayoutSignupRoute;
-  "/_layout/terms": typeof LayoutTermsRoute;
-  "/_layout/": typeof LayoutIndexRoute;
-  "/_layout/_logged_in/accounts": typeof LayoutLoggedinAccountsRoute;
-  "/_layout/_logged_in/admin": typeof LayoutLoggedinAdminRoute;
-  "/_layout/_logged_in/budget": typeof LayoutLoggedinBudgetRoute;
-  "/_layout/_logged_in/manage-accounts": typeof LayoutLoggedinManageAccountsRoute;
-  "/_layout/_logged_in/notifications": typeof LayoutLoggedinNotificationsRoute;
-  "/_layout/_logged_in/plaid": typeof LayoutLoggedinPlaidRoute;
-  "/_layout/_logged_in/sankey-config": typeof LayoutLoggedinSankeyConfigRoute;
-  "/_layout/_logged_in/settings": typeof LayoutLoggedinSettingsRoute;
-  "/_layout/_logged_in/subscription": typeof LayoutLoggedinSubscriptionRoute;
-  "/_layout/_logged_in/subscription-cancel": typeof LayoutLoggedinSubscriptionCancelRoute;
-  "/_layout/_logged_in/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
-  "/_layout/_logged_in/transactions": typeof LayoutLoggedinTransactionsRoute;
-  "/_layout/_logged_in/upload-files": typeof LayoutLoggedinUploadFilesRoute;
-  "/_layout/_logged_in/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
-  "/_layout/_logged_in/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
-  "/_layout/_logged_in/pos/order": typeof LayoutLoggedinPosOrderRoute;
-  "/_layout/_logged_in/pos/pos": typeof LayoutLoggedinPosPosRoute;
-  "/_layout/_logged_in/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
+  __root__: typeof rootRoute
+  '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/_logged_in': typeof LayoutLoggedinRouteWithChildren
+  '/_layout/change-log': typeof LayoutChangeLogRoute
+  '/_layout/contact-me': typeof LayoutContactMeRoute
+  '/_layout/demo': typeof LayoutDemoRoute
+  '/_layout/faq': typeof LayoutFaqRoute
+  '/_layout/how': typeof LayoutHowRoute
+  '/_layout/input_two_fa': typeof LayoutInputtwofaRoute
+  '/_layout/landing': typeof LayoutLandingRoute
+  '/_layout/login': typeof LayoutLoginRoute
+  '/_layout/oauth-callback': typeof LayoutOauthCallbackRoute
+  '/_layout/oauth-callback-local': typeof LayoutOauthCallbackLocalRoute
+  '/_layout/privacy': typeof LayoutPrivacyRoute
+  '/_layout/recover-password': typeof LayoutRecoverPasswordRoute
+  '/_layout/reset-password': typeof LayoutResetPasswordRoute
+  '/_layout/setup_two_fa': typeof LayoutSetuptwofaRoute
+  '/_layout/signup': typeof LayoutSignupRoute
+  '/_layout/terms': typeof LayoutTermsRoute
+  '/_layout/': typeof LayoutIndexRoute
+  '/_layout/_logged_in/accounts': typeof LayoutLoggedinAccountsRoute
+  '/_layout/_logged_in/admin': typeof LayoutLoggedinAdminRoute
+  '/_layout/_logged_in/budget': typeof LayoutLoggedinBudgetRoute
+  '/_layout/_logged_in/manage-accounts': typeof LayoutLoggedinManageAccountsRoute
+  '/_layout/_logged_in/notifications': typeof LayoutLoggedinNotificationsRoute
+  '/_layout/_logged_in/plaid': typeof LayoutLoggedinPlaidRoute
+  '/_layout/_logged_in/sankey-config': typeof LayoutLoggedinSankeyConfigRoute
+  '/_layout/_logged_in/settings': typeof LayoutLoggedinSettingsRoute
+  '/_layout/_logged_in/subscription': typeof LayoutLoggedinSubscriptionRoute
+  '/_layout/_logged_in/subscription-cancel': typeof LayoutLoggedinSubscriptionCancelRoute
+  '/_layout/_logged_in/subscription-success': typeof LayoutLoggedinSubscriptionSuccessRoute
+  '/_layout/_logged_in/transactions': typeof LayoutLoggedinTransactionsRoute
+  '/_layout/_logged_in/upload-files': typeof LayoutLoggedinUploadFilesRoute
+  '/_layout/_logged_in/pos/manage-menu': typeof LayoutLoggedinPosManageMenuRoute
+  '/_layout/_logged_in/pos/manage-variants': typeof LayoutLoggedinPosManageVariantsRoute
+  '/_layout/_logged_in/pos/order': typeof LayoutLoggedinPosOrderRoute
+  '/_layout/_logged_in/pos/pos': typeof LayoutLoggedinPosPosRoute
+  '/_layout/_logged_in/pos/recent-orders': typeof LayoutLoggedinPosRecentOrdersRoute
+  '/_layout/_logged_in/pos/sales-reports': typeof LayoutLoggedinPosSalesReportsRoute
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ""
-    | "/change-log"
-    | "/contact-me"
-    | "/demo"
-    | "/faq"
-    | "/how"
-    | "/input_two_fa"
-    | "/landing"
-    | "/login"
-    | "/oauth-callback"
-    | "/oauth-callback-local"
-    | "/privacy"
-    | "/recover-password"
-    | "/reset-password"
-    | "/setup_two_fa"
-    | "/signup"
-    | "/terms"
-    | "/"
-    | "/accounts"
-    | "/admin"
-    | "/budget"
-    | "/manage-accounts"
-    | "/notifications"
-    | "/plaid"
-    | "/sankey-config"
-    | "/settings"
-    | "/subscription"
-    | "/subscription-cancel"
-    | "/subscription-success"
-    | "/transactions"
-    | "/upload-files"
-    | "/pos/manage-menu"
-    | "/pos/manage-variants"
-    | "/pos/order"
-    | "/pos/pos"
-    | "/pos/sales-reports";
-  fileRoutesByTo: FileRoutesByTo;
+    | ''
+    | '/change-log'
+    | '/contact-me'
+    | '/demo'
+    | '/faq'
+    | '/how'
+    | '/input_two_fa'
+    | '/landing'
+    | '/login'
+    | '/oauth-callback'
+    | '/oauth-callback-local'
+    | '/privacy'
+    | '/recover-password'
+    | '/reset-password'
+    | '/setup_two_fa'
+    | '/signup'
+    | '/terms'
+    | '/'
+    | '/accounts'
+    | '/admin'
+    | '/budget'
+    | '/manage-accounts'
+    | '/notifications'
+    | '/plaid'
+    | '/sankey-config'
+    | '/settings'
+    | '/subscription'
+    | '/subscription-cancel'
+    | '/subscription-success'
+    | '/transactions'
+    | '/upload-files'
+    | '/pos/manage-menu'
+    | '/pos/manage-variants'
+    | '/pos/order'
+    | '/pos/pos'
+    | '/pos/recent-orders'
+    | '/pos/sales-reports'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | ""
-    | "/change-log"
-    | "/contact-me"
-    | "/demo"
-    | "/faq"
-    | "/how"
-    | "/input_two_fa"
-    | "/landing"
-    | "/login"
-    | "/oauth-callback"
-    | "/oauth-callback-local"
-    | "/privacy"
-    | "/recover-password"
-    | "/reset-password"
-    | "/setup_two_fa"
-    | "/signup"
-    | "/terms"
-    | "/"
-    | "/accounts"
-    | "/admin"
-    | "/budget"
-    | "/manage-accounts"
-    | "/notifications"
-    | "/plaid"
-    | "/sankey-config"
-    | "/settings"
-    | "/subscription"
-    | "/subscription-cancel"
-    | "/subscription-success"
-    | "/transactions"
-    | "/upload-files"
-    | "/pos/manage-menu"
-    | "/pos/manage-variants"
-    | "/pos/order"
-    | "/pos/pos"
-    | "/pos/sales-reports";
+    | ''
+    | '/change-log'
+    | '/contact-me'
+    | '/demo'
+    | '/faq'
+    | '/how'
+    | '/input_two_fa'
+    | '/landing'
+    | '/login'
+    | '/oauth-callback'
+    | '/oauth-callback-local'
+    | '/privacy'
+    | '/recover-password'
+    | '/reset-password'
+    | '/setup_two_fa'
+    | '/signup'
+    | '/terms'
+    | '/'
+    | '/accounts'
+    | '/admin'
+    | '/budget'
+    | '/manage-accounts'
+    | '/notifications'
+    | '/plaid'
+    | '/sankey-config'
+    | '/settings'
+    | '/subscription'
+    | '/subscription-cancel'
+    | '/subscription-success'
+    | '/transactions'
+    | '/upload-files'
+    | '/pos/manage-menu'
+    | '/pos/manage-variants'
+    | '/pos/order'
+    | '/pos/pos'
+    | '/pos/recent-orders'
+    | '/pos/sales-reports'
   id:
-    | "__root__"
-    | "/_layout"
-    | "/_layout/_logged_in"
-    | "/_layout/change-log"
-    | "/_layout/contact-me"
-    | "/_layout/demo"
-    | "/_layout/faq"
-    | "/_layout/how"
-    | "/_layout/input_two_fa"
-    | "/_layout/landing"
-    | "/_layout/login"
-    | "/_layout/oauth-callback"
-    | "/_layout/oauth-callback-local"
-    | "/_layout/privacy"
-    | "/_layout/recover-password"
-    | "/_layout/reset-password"
-    | "/_layout/setup_two_fa"
-    | "/_layout/signup"
-    | "/_layout/terms"
-    | "/_layout/"
-    | "/_layout/_logged_in/accounts"
-    | "/_layout/_logged_in/admin"
-    | "/_layout/_logged_in/budget"
-    | "/_layout/_logged_in/manage-accounts"
-    | "/_layout/_logged_in/notifications"
-    | "/_layout/_logged_in/plaid"
-    | "/_layout/_logged_in/sankey-config"
-    | "/_layout/_logged_in/settings"
-    | "/_layout/_logged_in/subscription"
-    | "/_layout/_logged_in/subscription-cancel"
-    | "/_layout/_logged_in/subscription-success"
-    | "/_layout/_logged_in/transactions"
-    | "/_layout/_logged_in/upload-files"
-    | "/_layout/_logged_in/pos/manage-menu"
-    | "/_layout/_logged_in/pos/manage-variants"
-    | "/_layout/_logged_in/pos/order"
-    | "/_layout/_logged_in/pos/pos"
-    | "/_layout/_logged_in/pos/sales-reports";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/_layout'
+    | '/_layout/_logged_in'
+    | '/_layout/change-log'
+    | '/_layout/contact-me'
+    | '/_layout/demo'
+    | '/_layout/faq'
+    | '/_layout/how'
+    | '/_layout/input_two_fa'
+    | '/_layout/landing'
+    | '/_layout/login'
+    | '/_layout/oauth-callback'
+    | '/_layout/oauth-callback-local'
+    | '/_layout/privacy'
+    | '/_layout/recover-password'
+    | '/_layout/reset-password'
+    | '/_layout/setup_two_fa'
+    | '/_layout/signup'
+    | '/_layout/terms'
+    | '/_layout/'
+    | '/_layout/_logged_in/accounts'
+    | '/_layout/_logged_in/admin'
+    | '/_layout/_logged_in/budget'
+    | '/_layout/_logged_in/manage-accounts'
+    | '/_layout/_logged_in/notifications'
+    | '/_layout/_logged_in/plaid'
+    | '/_layout/_logged_in/sankey-config'
+    | '/_layout/_logged_in/settings'
+    | '/_layout/_logged_in/subscription'
+    | '/_layout/_logged_in/subscription-cancel'
+    | '/_layout/_logged_in/subscription-success'
+    | '/_layout/_logged_in/transactions'
+    | '/_layout/_logged_in/upload-files'
+    | '/_layout/_logged_in/pos/manage-menu'
+    | '/_layout/_logged_in/pos/manage-variants'
+    | '/_layout/_logged_in/pos/order'
+    | '/_layout/_logged_in/pos/pos'
+    | '/_layout/_logged_in/pos/recent-orders'
+    | '/_layout/_logged_in/pos/sales-reports'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  LayoutRoute: typeof LayoutRouteWithChildren;
+  LayoutRoute: typeof LayoutRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
-};
+}
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
@@ -947,6 +970,7 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/pos/manage-variants",
         "/_layout/_logged_in/pos/order",
         "/_layout/_logged_in/pos/pos",
+        "/_layout/_logged_in/pos/recent-orders",
         "/_layout/_logged_in/pos/sales-reports"
       ]
     },
@@ -1084,6 +1108,10 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/pos/pos": {
       "filePath": "_layout/_logged_in/pos/pos.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/recent-orders": {
+      "filePath": "_layout/_logged_in/pos/recent-orders.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/pos/sales-reports": {

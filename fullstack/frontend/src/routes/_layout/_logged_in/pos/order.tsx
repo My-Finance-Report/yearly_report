@@ -13,13 +13,12 @@ import { useQuery } from "@tanstack/react-query";
 import {
   OrderBase_Input,
   OrderableOutput_Output,
-  OrderItemBase_Input,
   PosService,
   VariantBase_Output,
 } from "@/client";
+import {OrderCard} from "@/components/Pos/Order"
 import useCustomToast from "@/hooks/useCustomToast";
 
-type OrderItem = OrderItemBase_Input;
 
 export const Route = createFileRoute("/_layout/_logged_in/pos/order")({
   component: Order,
@@ -88,116 +87,6 @@ function OrderableCard({
   );
 }
 
-function InOrderCard({
-  setOrder,
-  orderItem,
-}: {
-  setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>>;
-  orderItem: OrderItem;
-}) {
-  const totalPrice =
-    Number(orderItem.orderable.price) +
-    orderItem.variants.reduce(
-      (sum, variant) => sum + Number(variant.priceDelta),
-      0,
-    );
-
-  const handleRemove = () => {
-    setOrder((prev) => ({
-      ...prev,
-      orderItems: prev.orderItems.filter(
-        (item) =>
-          !(
-            item.orderable.id === orderItem.orderable.id &&
-            JSON.stringify(item.variants) === JSON.stringify(orderItem.variants)
-          ),
-      ),
-    }));
-  };
-
-  const variantsByGroup = orderItem.orderable.variantGroups
-    .map((group) => {
-      const variantsInGroup = orderItem.variants.filter(
-        (selectedVariant) => selectedVariant.groupId === String(group.id),
-      );
-      const groupPriceDelta = variantsInGroup.reduce(
-        (sum, v) => sum + Number(v.priceDelta),
-        0,
-      );
-      return {
-        groupName: group.name,
-        variants: variantsInGroup,
-        priceDelta: groupPriceDelta,
-      };
-    })
-    .filter((group) => group.variants.length > 0);
-
-  const variantCounts = new Map<string, number>();
-  variantsByGroup.forEach((group) => {
-    group.variants.forEach((v) => {
-      const key = `${group.groupName}-${String(v.id)}`;
-      variantCounts.set(key, (variantCounts.get(key) || 0) + 1);
-    });
-  });
-
-  return (
-    <Box
-      flex="row"
-      p={4}
-      minW="90%"
-      border="1px solid #ccc"
-      borderRadius={4}
-      display="flex"
-      justifyContent="space-between"
-      alignItems="flex-start"
-    >
-      <Flex direction="column" flex={1} gap={1}>
-        <Text fontWeight="bold">{orderItem.orderable.name}</Text>
-        {variantsByGroup.map((group) => {
-          const consolidatedVariants = new Map<
-            string,
-            { name: string; count: number }
-          >();
-          group.variants.forEach((v) => {
-            const existing = consolidatedVariants.get(String(v.id));
-            if (existing) {
-              existing.count++;
-            } else {
-              consolidatedVariants.set(String(v.id), {
-                name: v.name,
-                count: 1,
-              });
-            }
-          });
-
-          return (
-            <Text key={group.groupName} color="gray.600" fontSize="sm">
-              {group.groupName}:{" "}
-              {Array.from(consolidatedVariants.values())
-                .map((v) => (v.count > 1 ? `${v.name} ×${v.count}` : v.name))
-                .join(", ")}
-              {group.priceDelta > 0 && (
-                <Text as="span" color="gray.400" ml={2}>
-                  (+${group.priceDelta.toFixed(2)})
-                </Text>
-              )}
-            </Text>
-          );
-        })}
-      </Flex>
-      <Flex align="center" gap={4}>
-        <Flex direction="column" align="flex-end">
-          <Text>
-            ${totalPrice.toFixed(2)} × {orderItem.quantity}
-          </Text>
-        </Flex>
-        <Button size="sm" onClick={handleRemove}>
-          Remove
-        </Button>
-      </Flex>
-    </Box>
-  );
-}
 
 function VariantGroupSelector({
   variantGroup,
@@ -427,15 +316,7 @@ function Order() {
   const [inProgressOrder, setInProgressOrder] =
     useState<OrderableOutput_Output | null>(null);
 
-  const orderTotal = order.orderItems.reduce((sum, item) => {
-    const itemPrice =
-      Number(item.orderable.price) +
-      item.variants.reduce(
-        (variantSum, variant) => variantSum + Number(variant.priceDelta),
-        0,
-      );
-    return sum + itemPrice * item.quantity;
-  }, 0);
+
 
   const handleSubmitOrder = () => {
     PosService.createOrder({
@@ -473,33 +354,16 @@ function Order() {
           <Heading size="md" mb={4}>
             Current Order
           </Heading>
-          <Flex direction="column" gap={3}>
-            {order.orderItems.map((orderItem, index) => (
-              <InOrderCard
-                key={`${orderItem.orderable.id}-${orderItem.variants.map((v) => v.id).join("-")}-${index}`}
-                setOrder={setOrder}
-                orderItem={orderItem}
-              />
-            ))}
-            <Box
-              p={4}
-              borderRadius={4}
-              display="flex"
-              justifyContent="space-between"
-            >
-              <Text fontWeight="bold">Total</Text>
-              <Text fontWeight="bold">${orderTotal.toFixed(2)}</Text>
-            </Box>
-            <Button
-              mt={4}
-              colorScheme="green"
-              width="100%"
-              size="lg"
-              onClick={handleSubmitOrder}
-            >
-              Submit Order (${orderTotal.toFixed(2)})
-            </Button>
-          </Flex>
+          <OrderCard order={order} setOrder={setOrder} allowEdits />
+<Button
+  mt={4}
+  colorScheme="green"
+  width="100%"
+  size="lg"
+  onClick={handleSubmitOrder}
+>
+  Submit Order
+</Button>
         </Box>
       )}
     </Box>
