@@ -13,13 +13,17 @@ import {
   Switch,
 } from "@chakra-ui/react";
 import { HiCheck, HiPlus, HiX } from "react-icons/hi";
-import { OrderableInput, PosService, VariantGroupInput } from "@/client";
+import {
+  OrderableInput,
+  PosService,
+  VariantGroupInput,
+  VariantBase_Input,
+} from "@/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export type Editable = 
+export type Editable =
   | { type: "orderable"; data: OrderableInput }
-  | { type: "variantGroup"; data: VariantGroupInput}
-
+  | { type: "variantGroup"; data: VariantGroupInput };
 
 interface EditVariantGroupFormProps {
   group: VariantGroupInput;
@@ -34,13 +38,14 @@ export function EditVariantGroupForm({
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => PosService.createOrUpdateVariantGroup({
-      requestBody: editedGroup,
-    }),
+    mutationFn: () =>
+      PosService.createOrUpdateVariantGroup({
+        requestBody: editedGroup,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["variantgroups"] });
       setEditing(null);
-    }
+    },
   });
 
   const onSave = () => {
@@ -50,10 +55,13 @@ export function EditVariantGroupForm({
   const addVariant = () => {
     setEditedGroup({
       ...editedGroup,
-      variants: [...editedGroup.variants, { id: null, name: "", priceDelta: "0" }],
+      variants: [
+        ...editedGroup.variants,
+        { id: null, name: "", priceDelta: "0" },
+      ],
     });
   };
-  const updateVariant = (index: number, variant: VariantInput) => {
+  const updateVariant = (index: number, variant: VariantBase_Input) => {
     const newVariants = [...editedGroup.variants];
     newVariants[index] = variant;
     setEditedGroup({ ...editedGroup, variants: newVariants });
@@ -83,7 +91,9 @@ export function EditVariantGroupForm({
           <FieldLabel>Name</FieldLabel>
           <Input
             value={editedGroup.name}
-            onChange={(e) => setEditedGroup({ ...editedGroup, name: e.target.value })}
+            onChange={(e) =>
+              setEditedGroup({ ...editedGroup, name: e.target.value })
+            }
             placeholder="Group Name"
           />
         </FieldRoot>
@@ -131,7 +141,7 @@ export function EditVariantGroupForm({
                     <Text>$</Text>
                     <Input
                       size="sm"
-                      value={parseFloat(variant.priceDelta) || 0}
+                      value={parseFloat(variant.priceDelta as string) || 0}
                       type="number"
                       step={0.01}
                       onChange={(e) =>
@@ -158,7 +168,7 @@ export function EditVariantGroupForm({
           </Table.Body>
         </Table.Root>
         <Stack direction="row" gap={2} mt={4}>
-          <Button onClick={() => onSave(editedGroup)}>
+          <Button onClick={() => onSave()}>
             <HiCheck /> Save
           </Button>
           <Button onClick={addVariant} variant="outline">

@@ -40,6 +40,7 @@ class VariantGroupBase(BaseModel):
 class VariantGroupOutput(VariantGroupBase):
     id: int
 
+
 class VariantGroupInput(VariantGroupBase):
     id: Optional[int] = None
 
@@ -56,8 +57,10 @@ class OrderableBase(BaseModel):
 class OrderableOutput(OrderableBase):
     id: int
 
+
 class OrderableInput(OrderableBase):
     id: Optional[int] = None
+
 
 class SelectedVariantBase(BaseModel):
     groupId: str
@@ -100,7 +103,10 @@ def get_menu(
     for orderable in orderables:
         variant_groups = (
             db.query(VariantGroup)
-            .join(VariantGroupOrderable, VariantGroup.id == VariantGroupOrderable.variant_group_id)
+            .join(
+                VariantGroupOrderable,
+                VariantGroup.id == VariantGroupOrderable.variant_group_id,
+            )
             .filter(
                 VariantGroupOrderable.orderable_id == orderable.id,
                 VariantGroup.user_id == current_user.id,
@@ -148,10 +154,13 @@ def get_menu(
 
     return result
 
-def create_menu_item(db: Session,current_user: User, item: OrderableInput)->OrderableOutput:
+
+def create_menu_item(
+    db: Session, current_user: User, item: OrderableInput
+) -> OrderableOutput:
     orderable = Orderable(name=item.name, price=item.price, user_id=current_user.id)
     db.add(orderable)
-    db.flush()  
+    db.flush()
 
     for index, group in enumerate(item.variantGroups):
         new = VariantGroupOrderable(
@@ -170,7 +179,10 @@ def create_menu_item(db: Session,current_user: User, item: OrderableInput)->Orde
         variantGroups=item.variantGroups,
     )
 
-def update_menu_item(db: Session,current_user: User, item: OrderableInput)->OrderableOutput:
+
+def update_menu_item(
+    db: Session, current_user: User, item: OrderableInput
+) -> OrderableOutput:
     orderable = db.query(Orderable).filter(Orderable.id == item.id).first()
     if not orderable:
         raise HTTPException(status_code=404, detail="Menu item not found")
@@ -186,7 +198,9 @@ def update_menu_item(db: Session,current_user: User, item: OrderableInput)->Orde
         )
         .all()
     )
-    existing_groups_by_id: dict[int, VariantGroupOrderable] = {g.id: g for g in existing_groups}
+    existing_groups_by_id: dict[int, VariantGroupOrderable] = {
+        g.id: g for g in existing_groups
+    }
 
     updated_group_ids = set()
 
@@ -217,8 +231,6 @@ def update_menu_item(db: Session,current_user: User, item: OrderableInput)->Orde
     )
 
 
-
-
 @router.post("/menu", response_model=OrderableOutput)
 def create_or_update_menu_item(
     item: OrderableInput,
@@ -228,8 +240,7 @@ def create_or_update_menu_item(
     """Create a new menu item with its variant groups and variants"""
     callable = create_menu_item if item.id is None else update_menu_item
 
-    return callable(db,current_user,item)
-    
+    return callable(db, current_user, item)
 
 
 @router.delete("/menu/{orderable_id}")
@@ -269,7 +280,9 @@ def delete_menu_item(
     return {"message": "Menu item deleted"}
 
 
-def create_variant_group(db: Session,current_user: User, group: VariantGroupInput)->VariantGroupOutput:
+def create_variant_group(
+    db: Session, current_user: User, group: VariantGroupInput
+) -> VariantGroupOutput:
     variant_group = VariantGroup(
         name=group.name,
         required=group.required,
@@ -297,10 +310,13 @@ def create_variant_group(db: Session,current_user: User, group: VariantGroupInpu
         name=variant_group.name,
         required=variant_group.required,
         order_of_appearance=variant_group.order_of_appearance,
-        variants=group.variants
+        variants=group.variants,
     )
 
-def update_variant_group(db: Session,current_user: User, group: VariantGroupInput)->VariantGroupOutput:
+
+def update_variant_group(
+    db: Session, current_user: User, group: VariantGroupInput
+) -> VariantGroupOutput:
     variant_group = (
         db.query(VariantGroup)
         .filter(
@@ -321,9 +337,6 @@ def update_variant_group(db: Session,current_user: User, group: VariantGroupInpu
         Variant.variant_group_id == group.id,
         Variant.user_id == current_user.id,
     ).update({Variant.active: False})
-
-    
-
 
     for variant in group.variants:
         db.add(
@@ -354,7 +367,6 @@ def update_variant_group(db: Session,current_user: User, group: VariantGroupInpu
     )
 
 
-
 @router.post("/variant-groups", response_model=VariantGroupOutput)
 def create_or_update_variant_group(
     *,
@@ -365,7 +377,7 @@ def create_or_update_variant_group(
     """Create a new variant group."""
     callable = update_variant_group if group.id else create_variant_group
 
-    return callable(db,current_user, group)
+    return callable(db, current_user, group)
 
 
 @router.delete("/variant-groups/{group_id}")
@@ -374,7 +386,7 @@ def delete_variant_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-) -> dict:
+) -> dict[str, bool]:
     """Delete a variant group."""
     # Get variant group
     variant_group = (
@@ -398,6 +410,7 @@ def delete_variant_group(
 
     db.commit()
     return {"success": True}
+
 
 @router.get("/variant-groups", response_model=List[VariantGroupOutput])
 def get_variant_groups(

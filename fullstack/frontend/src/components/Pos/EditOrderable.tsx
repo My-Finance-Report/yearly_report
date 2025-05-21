@@ -10,10 +10,13 @@ import {
   Input,
   FieldRoot,
   FieldLabel,
-
 } from "@chakra-ui/react";
 import { HiCheck, HiX } from "react-icons/hi";
-import { OrderableInput, PosService,  VariantGroupOutput_Output } from "@/client";
+import {
+  OrderableInput,
+  PosService,
+  VariantGroupOutput_Output,
+} from "@/client";
 import { Editable } from "./EditVariantGroupForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -28,17 +31,19 @@ export function EditOrderable({
   variantGroups,
   setEditing,
 }: EditOrderableProps) {
-  const [editedOrderable, setEditedOrderable] = useState<OrderableInput>(orderable);
+  const [editedOrderable, setEditedOrderable] =
+    useState<OrderableInput>(orderable);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => PosService.createOrUpdateMenuItem({
-      requestBody: editedOrderable,
-    }),
+    mutationFn: () =>
+      PosService.createOrUpdateMenuItem({
+        requestBody: editedOrderable,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orderables"] });
       setEditing(null);
-    }
+    },
   });
 
   const onSave = () => {
@@ -48,9 +53,7 @@ export function EditOrderable({
   const handleRemoveVariantGroup = (groupId: number) => {
     setEditedOrderable((prev) => ({
       ...prev,
-      variantGroups: prev.variantGroups.filter(
-        (group) => group.id !== groupId
-      ),
+      variantGroups: prev.variantGroups.filter((group) => group.id !== groupId),
     }));
   };
 
@@ -96,7 +99,9 @@ export function EditOrderable({
           </Flex>
         </FieldRoot>
 
-        <Heading size="sm" mb={2}>Modifiers</Heading>
+        <Heading size="sm" mb={2}>
+          Modifiers
+        </Heading>
         <Table.Root size="sm" variant="outline">
           <Table.Header>
             <Table.Row>
@@ -117,7 +122,9 @@ export function EditOrderable({
                     size="sm"
                     colorPalette="red"
                     variant="surface"
-                    onClick={() => group.id && handleRemoveVariantGroup(group.id)}
+                    onClick={() =>
+                      group.id && handleRemoveVariantGroup(group.id)
+                    }
                   >
                     <HiX />
                   </Button>
@@ -150,21 +157,27 @@ function AddVariantGroupForm({
   editedOrderable: OrderableInput;
   setEditedOrderable: React.Dispatch<React.SetStateAction<OrderableInput>>;
 }) {
-
-  const addableGroups = variantGroups.filter((group) => !editedOrderable.variantGroups.some((g) => g.id === group.id));
+  const addableGroups = variantGroups.filter(
+    (group) => !editedOrderable.variantGroups.some((g) => g.id === group.id),
+  );
   if (addableGroups.length === 0) {
     return null;
   }
   return (
     <Box p={4} borderWidth="1px" borderRadius="md" mb={4}>
       <Stack p={2}>
-            <Heading size="sm">Add Modifier Group</Heading>
-            {addableGroups.map((group) => (
+        <Heading size="sm">Add Modifier Group</Heading>
+        {addableGroups.map((group) => (
           <Button
             key={group.id}
             size="sm"
             variant="surface"
-            onClick={() => setEditedOrderable((prev) => ({ ...prev, variantGroups: [...prev.variantGroups, group] }))}
+            onClick={() =>
+              setEditedOrderable((prev) => ({
+                ...prev,
+                variantGroups: [...prev.variantGroups, group],
+              }))
+            }
           >
             {group.name}
           </Button>
