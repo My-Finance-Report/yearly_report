@@ -123,20 +123,20 @@ function EditVariantGroup({
                   />
                 </Table.Cell>
                 <Table.Cell>
-                  <NumberInput.Root size="sm">
-                    <Flex alignItems="center" gap={2}>
-                      <NumberInput.Label>$</NumberInput.Label>
-                      <NumberInput.Input
-                        value={Number(variant.priceDelta)}
-                        onChange={(e) =>
-                          updateVariant(index, {
-                            ...variant,
-                            priceDelta: String(Number(e.target.value)),
-                          })
-                        }
-                      />
-                    </Flex>
-                  </NumberInput.Root>
+                  <Flex alignItems="center" gap={2}>
+                    <Text>$</Text>
+                    <Input
+                      size="sm"
+                      value={parseFloat(variant.priceDelta) || 0}
+                      type="number"
+                      onChange={(e) =>
+                        updateVariant(index, {
+                          ...variant,
+                          priceDelta: String(parseFloat(e.target.value) || 0),
+                        })
+                      }
+                    />
+                  </Flex>
                 </Table.Cell>
                 <Table.Cell>
                   <Button
