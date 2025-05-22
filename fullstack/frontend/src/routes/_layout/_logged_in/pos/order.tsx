@@ -89,6 +89,7 @@ function OrderableCard({
 function VariantGroupSelector({
   variantGroup,
   onSelect,
+  onDeselect,
   onBack,
   onNext,
   currentSelections,
@@ -96,6 +97,7 @@ function VariantGroupSelector({
 }: {
   variantGroup: OrderableOutput_Output["variant_groups"][0];
   onSelect: (variant: VariantBase_Output) => void;
+  onDeselect: (variant: VariantBase_Output) => void;
   onBack: () => void;
   onNext: () => void;
   currentSelections: VariantBase_Output[];
@@ -145,6 +147,18 @@ function VariantGroupSelector({
                 <Flex gap={2} align="center">
                   <Text fontWeight="bold">{variant.name}</Text>
                   {count > 0 && <Text fontSize="sm">×{count}</Text>}
+                  {count > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeselect(variant);
+                      }}
+                      colorPalette="gray"
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </Flex>
                 <Text>
                   $
@@ -175,7 +189,7 @@ function VariantSelector({
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [variantsByGroup, setVariantsByGroup] = useState<
-    Map<number, VariantBase_Output[]>
+    Map<number, Map<number, number>>
   >(new Map());
 
   if (orderable.variant_groups.length === 0) {
@@ -185,18 +199,31 @@ function VariantSelector({
   const currentGroup = orderable.variant_groups[currentGroupIndex];
 
   const handleVariantSelect = (variant: VariantBase_Output) => {
-    const currentVariants = variantsByGroup.get(currentGroup.id) || [];
-    const variantIndex = currentVariants.findIndex((v) => v.id === variant.id);
+    if (!currentGroup?.id || !variant?.id) return;
+
+    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentCount = currentVariantCounts.get(variant.id) || 0;
+
+    const newVariantCounts = new Map(currentVariantCounts);
+
+    newVariantCounts.set(variant.id, currentCount + 1);
 
     const newMap = new Map(variantsByGroup);
-    if (variantIndex === -1) {
-      newMap.set(currentGroup.id, [...currentVariants, variant]);
-    } else {
-      newMap.set(
-        currentGroup.id,
-        currentVariants.filter((v) => v.id !== variant.id),
-      );
-    }
+    newMap.set(currentGroup.id, newVariantCounts);
+    setVariantsByGroup(newMap);
+  };
+
+  const handleVariantDeselect = (variant: VariantBase_Output) => {
+    if (!currentGroup?.id || !variant?.id) return;
+
+    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentCount = currentVariantCounts.get(variant.id) || 0;
+
+    const newVariantCounts = new Map(currentVariantCounts);
+    newVariantCounts.set(variant.id, currentCount - 1);
+
+    const newMap = new Map(variantsByGroup);
+    newMap.set(currentGroup.id, newVariantCounts);
     setVariantsByGroup(newMap);
   };
 
@@ -208,18 +235,28 @@ function VariantSelector({
     }
   };
 
+  const getVariantsForGroup = (groupId: number): VariantBase_Output[] => {
+    const variantCounts = variantsByGroup.get(groupId) || new Map<number, number>();
+    const group = orderable.variant_groups.find(g => g.id === groupId);
+    if (!group) return [];
+    
+    return Array.from(variantCounts.entries()).flatMap(([variantId, count]) => {
+      const variant = group.variants.find(v => v.id === variantId);
+      return variant ? Array(count).fill(variant) : [];
+    });
+  };
+
   const handleNext = () => {
-    const currentVariants = variantsByGroup.get(currentGroup.id) || [];
-    if (currentGroup.required && currentVariants.length === 0) {
+    const variants_data = getVariantsForGroup(currentGroup.id);
+    if (currentGroup.required && variants_data.length === 0) {
       return;
     }
 
     const isLastGroup =
       currentGroupIndex === orderable.variant_groups.length - 1;
     if (isLastGroup) {
-      const allVariants = Array.from(variantsByGroup.entries()).flatMap(
-        ([groupId, variants]) =>
-          variants.map((variant) => ({
+      const allVariants = Array.from(variantsByGroup.keys()).flatMap(groupId =>
+        getVariantsForGroup(groupId).map((variant: VariantBase_Output) => ({
             id: variant.id!,
             name: variant.name,
             price_delta: variant.price_delta,
@@ -239,13 +276,11 @@ function VariantSelector({
         ],
       }));
 
-      // Reset state
       setInProgressOrder(null);
       setVariantsByGroup(new Map());
       setCurrentGroupIndex(0);
       setQuantity(1);
     } else {
-      // Move to next group
       setCurrentGroupIndex((i) => i + 1);
     }
   };
@@ -261,9 +296,10 @@ function VariantSelector({
       <VariantGroupSelector
         variantGroup={currentGroup}
         onSelect={handleVariantSelect}
+        onDeselect={handleVariantDeselect}
         onBack={handleBack}
         onNext={handleNext}
-        currentSelections={variantsByGroup.get(currentGroup.id) || []}
+        currentSelections={getVariantsForGroup(currentGroup.id)}
         isLastGroup={currentGroupIndex === orderable.variant_groups.length - 1}
       />
       {currentGroupIndex === orderable.variant_groups.length - 1 && (
@@ -327,7 +363,7 @@ function Order() {
       "Your order has been successfully created.",
       "success",
     );
-    navigate({to: "/pos/recent-orders/"});
+    navigate({ to: "/pos/recent-orders/" });
   };
 
   return (

@@ -51,7 +51,7 @@ const navigationItems = [
 const posNavigationItems = [
   { value: "/pos/order", label: "Orders", icon: FiShoppingCart },
   { value: "/pos/manage-menu", label: "Manage Menu", icon: FiMenu },
-  { value: "/pos/sales-reports", label: "Sales Reports", icon: FiBarChart },
+  { value: "/pos/recent-orders", label: "Recent Orders", icon: FiBarChart },
 ];
 
 function UserBadge({ currentUser }: { currentUser: UserOut | null }) {

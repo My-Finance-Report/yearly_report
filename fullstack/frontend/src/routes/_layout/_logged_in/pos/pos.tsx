@@ -20,6 +20,10 @@ const actions: Action[] = [
     link: "/pos/order",
   },
   {
+    name: "Recent Orders",
+    link: "/pos/recent-orders",
+  },
+  {
     name: "Sales Reports",
     link: "/pos/sales-reports",
   },

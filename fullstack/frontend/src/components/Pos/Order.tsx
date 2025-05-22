@@ -129,7 +129,11 @@ function InOrderCard({
           });
 
           return (
-            <Text key={`${index}-${group.groupName}`} color="gray.600" fontSize="sm">
+            <Text
+              key={`${index}-${group.groupName}`}
+              color="gray.600"
+              fontSize="sm"
+            >
               {group.groupName}:{" "}
               {Array.from(consolidatedVariants.values())
                 .map((v) => (v.count > 1 ? `${v.name} ×${v.count}` : v.name))

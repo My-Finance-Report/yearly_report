@@ -1113,13 +1113,17 @@ export type PosDeleteVariantGroupResponse = ({
     [key: string]: (boolean);
 });
 
-export type PosGetOrdersResponse = (Array<OrderBase_Output>);
-
 export type PosCreateOrderData = {
     requestBody: OrderBase_Input;
 };
 
 export type PosCreateOrderResponse = (OrderBase_Output);
+
+export type PosGetOrdersData = {
+    days?: (number | null);
+};
+
+export type PosGetOrdersResponse = (Array<OrderBase_Output>);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

@@ -1,8 +1,8 @@
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -465,7 +465,9 @@ def create_order(
 ) -> OrderBase:
     """Create a new order with order items and selected variants"""
     # Create order
-    db_order = Order(placed_at=datetime.now(timezone.utc), user_id=current_user.id, active=True)
+    db_order = Order(
+        placed_at=datetime.now(timezone.utc), user_id=current_user.id, active=True
+    )
     db.add(db_order)
     db.flush()
 
@@ -493,19 +495,14 @@ def create_order(
     return order
 
 
-
-def get_variant_group_map(db: Session, current_user: User)->dict[VariantGroupId, VariantGroupOutput]:
+def get_variant_group_map(
+    db: Session, current_user: User
+) -> dict[VariantGroupId, VariantGroupOutput]:
     variant_groups = (
-        db.query(VariantGroup)
-        .filter(VariantGroup.user_id == current_user.id)
-        .all()
+        db.query(VariantGroup).filter(VariantGroup.user_id == current_user.id).all()
     )
 
-    variants = (
-        db.query(Variant)
-        .filter(Variant.user_id == current_user.id)
-        .all()
-    )
+    variants = db.query(Variant).filter(Variant.user_id == current_user.id).all()
 
     variants_lookup = defaultdict(list)
     for variant in variants:
@@ -528,18 +525,20 @@ def get_variant_group_map(db: Session, current_user: User)->dict[VariantGroupId,
     return variant_group_map
 
 
-
-
 @router.get("/orders", response_model=List[OrderBase])
 def get_orders(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    days: int | None = Query(None),
 ) -> List[OrderBase]:
     """Get all orders for the current user"""
     orders = (
         db.query(Order)
         .filter(Order.user_id == current_user.id, Order.active == True)
-        .all()
     )
+
+    if days:
+        orders = orders.filter(Order.placed_at >= datetime.now(timezone.utc) - timedelta(days=days))
 
     variant_group_map = get_variant_group_map(db, current_user)
 
@@ -569,7 +568,6 @@ def get_orders(
 
             variants_data = []
             for selected, variant in selected_variants:
-
                 variants_data.append(
                     SelectedVariantBase(
                         group_id=variant.variant_group_id,
@@ -585,7 +583,10 @@ def get_orders(
                         id=orderable.id,
                         name=orderable.name,
                         price=orderable.price,
-                        variant_groups=[variant_group_map[selected_variant.group_id] for selected_variant in variants_data],
+                        variant_groups=[
+                            variant_group_map[VariantGroupId(selected_variant.group_id)]
+                            for selected_variant in variants_data
+                        ],
                     ),
                     variants=variants_data,
                     quantity=item.quantity,
