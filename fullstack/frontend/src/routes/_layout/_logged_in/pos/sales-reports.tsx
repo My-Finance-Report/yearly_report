@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Box, Flex, Table, Text, Button, Breadcrumb } from "@chakra-ui/react";
+import { Box, Flex, Table, Text, Button, Breadcrumb, Collapsible } from "@chakra-ui/react";
 import { useState } from "react";
 import { OrderBase_Output, PosService } from "@/client";
 import { useQuery } from "@tanstack/react-query";
+import { OrderCard } from "@/components/Pos/Order";
 
 export const Route = createFileRoute("/_layout/_logged_in/pos/sales-reports")({
   component: RouteComponent,
@@ -76,37 +77,60 @@ function formatPrice(price: number) {
 }
 
 function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
+  const [isOpen, setIsOpen] = useState(new Map<string, boolean>());
   return (
-    <Table.Root>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeader>Date</Table.ColumnHeader>
-          <Table.ColumnHeader>Total</Table.ColumnHeader>
-          <Table.ColumnHeader>Actions</Table.ColumnHeader>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {orders.map((order) => (
-          <Table.Row key={order.id}>
-            <Table.Cell>
-              {new Date(order.timestamp).toLocaleDateString()}
-            </Table.Cell>
-            <Table.Cell>
-              $
-              {formatPrice(
-                order.orderItems.reduce(
-                  (sum, item) => sum + determinePrice(item),
-                  0,
-                ),
-              )}
-            </Table.Cell>
-            <Table.Cell>
-              <Button size="sm">View</Button>
-            </Table.Cell>
+    <>
+      <Table.Root>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>Date</Table.ColumnHeader>
+            <Table.ColumnHeader>Total</Table.ColumnHeader>
+            <Table.ColumnHeader>Actions</Table.ColumnHeader>
           </Table.Row>
-        ))}
-      </Table.Body>
-    </Table.Root>
+        </Table.Header>
+        <Table.Body>
+          {orders.map((order) => (
+            <>
+              <Table.Row key={order.id}>
+                <Table.Cell>
+                  {new Date(order.timestamp).toLocaleDateString()}
+                </Table.Cell>
+                <Table.Cell>
+                  $
+                  {formatPrice(
+                    order.orderItems.reduce(
+                      (sum, item) => sum + determinePrice(item),
+                      0,
+                    ),
+                  )}
+                </Table.Cell>
+                <Table.Cell>
+                  <Button size="sm" onClick={() => setIsOpen((prev) => {
+                    const newMap = new Map(prev);
+                    newMap.set(order.id, !newMap.get(order.id));
+                    return newMap;
+                  })}>{isOpen.get(order.id) ? "Hide" : "View"}</Button>
+                </Table.Cell>
+              </Table.Row>
+              <Table.Row>
+                <Table.Cell colSpan={3}>
+                  <Collapsible.Root open={isOpen.get(order.id) || false}>
+                    <Collapsible.Content>
+                      <OrderCard
+                        setOrder={() => { }}
+                        order={order}
+                        allowEdits={false}
+                      />
+                    </Collapsible.Content>
+                  </Collapsible.Root>
+                </Table.Cell>
+              </Table.Row>
+            </>
+          ))}
+        </Table.Body>
+      </Table.Root>
+
+    </>
   );
 }
 
