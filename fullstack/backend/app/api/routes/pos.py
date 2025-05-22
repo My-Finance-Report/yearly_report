@@ -532,13 +532,14 @@ def get_orders(
     days: int | None = Query(None),
 ) -> List[OrderBase]:
     """Get all orders for the current user"""
-    orders = (
-        db.query(Order)
-        .filter(Order.user_id == current_user.id, Order.active == True)
+    orders = db.query(Order).filter(
+        Order.user_id == current_user.id, Order.active == True
     )
 
     if days:
-        orders = orders.filter(Order.placed_at >= datetime.now(timezone.utc) - timedelta(days=days))
+        orders = orders.filter(
+            Order.placed_at >= datetime.now(timezone.utc) - timedelta(days=days)
+        )
 
     variant_group_map = get_variant_group_map(db, current_user)
 
@@ -584,8 +585,8 @@ def get_orders(
                         name=orderable.name,
                         price=orderable.price,
                         variant_groups=[
-                            variant_group_map[VariantGroupId(selected_variant.group_id)]
-                            for selected_variant in variants_data
+                            variant_group_map[VariantGroupId(selected_variant_id)]
+                            for selected_variant_id in {s.group_id for s in variants_data}
                         ],
                     ),
                     variants=variants_data,
