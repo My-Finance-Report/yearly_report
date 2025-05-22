@@ -11,15 +11,15 @@ export const Route = createFileRoute("/_layout/_logged_in/pos/sales-reports")({
 
 interface Action {
   name: string;
-  timeframe: "today" | "week" | "month" | "year" | "all";
+  timeframe?: number;
 }
 
 const actions: Action[] = [
-  { name: "Today", timeframe: "today" },
-  { name: "This Week", timeframe: "week" },
-  { name: "This Month", timeframe: "month" },
-  { name: "This Year", timeframe: "year" },
-  { name: "All Time", timeframe: "all" },
+  { name: "Today", timeframe: 1 },
+  { name: "This Week", timeframe: 7 },
+  { name: "This Month", timeframe: 30 },
+  { name: "This Year", timeframe: 365 },
+  { name: "All Time", timeframe: undefined },
 ];
 
 function AllActions({
@@ -78,13 +78,18 @@ function formatPrice(price: number) {
 
 function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
   const [isOpen, setIsOpen] = useState(new Map<string, boolean>());
+
+  const fullTotal = orders.reduce((sum, order) => {
+    return sum + order.orderItems.reduce((orderSum, item) => orderSum + determinePrice(item), 0);
+  }, 0);
+
   return (
     <>
       <Table.Root>
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader>Date</Table.ColumnHeader>
-            <Table.ColumnHeader>Total</Table.ColumnHeader>
+            <Table.ColumnHeader>Order Total</Table.ColumnHeader>
             <Table.ColumnHeader>Actions</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
@@ -112,8 +117,8 @@ function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
                   })}>{isOpen.get(order.id) ? "Hide" : "View"}</Button>
                 </Table.Cell>
               </Table.Row>
-              <Table.Row>
-                <Table.Cell colSpan={3}>
+              <Table.Row >
+                <Table.Cell colSpan={3} padding={isOpen.get(order.id) ? "4" : "0"}>
                   <Collapsible.Root open={isOpen.get(order.id) || false}>
                     <Collapsible.Content>
                       <OrderCard
@@ -127,19 +132,23 @@ function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
               </Table.Row>
             </>
           ))}
+          <Table.Row>
+            <Table.Cell colSpan={3}>
+              <Text>Total: ${fullTotal.toFixed(2)}</Text>
+            </Table.Cell>
+          </Table.Row>
         </Table.Body>
       </Table.Root>
-
     </>
   );
 }
 
 function RouteComponent() {
-  const [timeframe, setTimeframe] = useState<Action["timeframe"]>("today");
+  const [timeframe, setTimeframe] = useState<Action["timeframe"]>(1);
 
   const { data: orders } = useQuery({
     queryKey: ["orders", timeframe],
-    queryFn: () => PosService.getOrders(),
+    queryFn: () => PosService.getOrders({days: timeframe}),
   });
 
   return (
