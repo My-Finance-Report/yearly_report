@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Box,
   Flex,
@@ -13,13 +13,11 @@ import { useQuery } from "@tanstack/react-query";
 import {
   OrderBase_Input,
   OrderableOutput_Output,
-  OrderItemBase_Input,
   PosService,
   VariantBase_Output,
 } from "@/client";
+import { OrderCard } from "@/components/Pos/Order";
 import useCustomToast from "@/hooks/useCustomToast";
-
-type OrderItem = OrderItemBase_Input;
 
 export const Route = createFileRoute("/_layout/_logged_in/pos/order")({
   component: Order,
@@ -38,7 +36,7 @@ function QuantitySelector({
         Quantity
       </Text>
       <NumberInput.Root
-        width="200px"
+        width="90%"
         value={String(quantity)}
         onValueChange={(e) => setQuantity(Number(e.value))}
       >
@@ -68,7 +66,7 @@ function OrderableCard({
       justifyContent="center"
       alignItems="center"
       p={4}
-      minW={200}
+      minW="90%"
       border="1px solid #ccc"
       borderRadius={4}
       _hover={{ backgroundColor: "gray.50" }}
@@ -79,122 +77,11 @@ function OrderableCard({
       <Text color="gray.600" fontSize="sm">
         ${Number(orderable.price).toFixed(2)}
       </Text>
-      {orderable.variantGroups.length > 0 && (
+      {orderable.variant_groups.length > 0 && (
         <Text color="gray.500" fontSize="xs" mt={1}>
-          {orderable.variantGroups.map((g) => g.name).join(", ")}
+          {orderable.variant_groups.map((g) => g.name).join(", ")}
         </Text>
       )}
-    </Box>
-  );
-}
-
-function InOrderCard({
-  setOrder,
-  orderItem,
-}: {
-  setOrder: React.Dispatch<React.SetStateAction<OrderBase_Input>>;
-  orderItem: OrderItem;
-}) {
-  const totalPrice =
-    Number(orderItem.orderable.price) +
-    orderItem.variants.reduce(
-      (sum, variant) => sum + Number(variant.priceDelta),
-      0,
-    );
-
-  const handleRemove = () => {
-    setOrder((prev) => ({
-      ...prev,
-      orderItems: prev.orderItems.filter(
-        (item) =>
-          !(
-            item.orderable.id === orderItem.orderable.id &&
-            JSON.stringify(item.variants) === JSON.stringify(orderItem.variants)
-          ),
-      ),
-    }));
-  };
-
-  const variantsByGroup = orderItem.orderable.variantGroups
-    .map((group) => {
-      const variantsInGroup = orderItem.variants.filter(
-        (selectedVariant) => selectedVariant.groupId === String(group.id),
-      );
-      const groupPriceDelta = variantsInGroup.reduce(
-        (sum, v) => sum + Number(v.priceDelta),
-        0,
-      );
-      return {
-        groupName: group.name,
-        variants: variantsInGroup,
-        priceDelta: groupPriceDelta,
-      };
-    })
-    .filter((group) => group.variants.length > 0);
-
-  const variantCounts = new Map<string, number>();
-  variantsByGroup.forEach((group) => {
-    group.variants.forEach((v) => {
-      const key = `${group.groupName}-${String(v.id)}`;
-      variantCounts.set(key, (variantCounts.get(key) || 0) + 1);
-    });
-  });
-
-  return (
-    <Box
-      flex="row"
-      p={4}
-      minW={200}
-      border="1px solid #ccc"
-      borderRadius={4}
-      display="flex"
-      justifyContent="space-between"
-      alignItems="flex-start"
-    >
-      <Flex direction="column" flex={1} gap={1}>
-        <Text fontWeight="bold">{orderItem.orderable.name}</Text>
-        {variantsByGroup.map((group) => {
-          const consolidatedVariants = new Map<
-            string,
-            { name: string; count: number }
-          >();
-          group.variants.forEach((v) => {
-            const existing = consolidatedVariants.get(String(v.id));
-            if (existing) {
-              existing.count++;
-            } else {
-              consolidatedVariants.set(String(v.id), {
-                name: v.name,
-                count: 1,
-              });
-            }
-          });
-
-          return (
-            <Text key={group.groupName} color="gray.600" fontSize="sm">
-              {group.groupName}:{" "}
-              {Array.from(consolidatedVariants.values())
-                .map((v) => (v.count > 1 ? `${v.name} ×${v.count}` : v.name))
-                .join(", ")}
-              {group.priceDelta > 0 && (
-                <Text as="span" color="gray.400" ml={2}>
-                  (+${group.priceDelta.toFixed(2)})
-                </Text>
-              )}
-            </Text>
-          );
-        })}
-      </Flex>
-      <Flex align="center" gap={4}>
-        <Flex direction="column" align="flex-end">
-          <Text>
-            ${totalPrice.toFixed(2)} × {orderItem.quantity}
-          </Text>
-        </Flex>
-        <Button size="sm" onClick={handleRemove}>
-          Remove
-        </Button>
-      </Flex>
     </Box>
   );
 }
@@ -202,13 +89,15 @@ function InOrderCard({
 function VariantGroupSelector({
   variantGroup,
   onSelect,
+  onDeselect,
   onBack,
   onNext,
   currentSelections,
   isLastGroup,
 }: {
-  variantGroup: OrderableOutput_Output["variantGroups"][0];
+  variantGroup: OrderableOutput_Output["variant_groups"][0];
   onSelect: (variant: VariantBase_Output) => void;
+  onDeselect: (variant: VariantBase_Output) => void;
   onBack: () => void;
   onNext: () => void;
   currentSelections: VariantBase_Output[];
@@ -258,11 +147,23 @@ function VariantGroupSelector({
                 <Flex gap={2} align="center">
                   <Text fontWeight="bold">{variant.name}</Text>
                   {count > 0 && <Text fontSize="sm">×{count}</Text>}
+                  {count > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeselect(variant);
+                      }}
+                      colorPalette="gray"
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </Flex>
                 <Text>
                   $
-                  {Number(variant.priceDelta) > 0
-                    ? `+${Number(variant.priceDelta).toFixed(2)}`
+                  {Number(variant.price_delta) > 0
+                    ? `+${Number(variant.price_delta).toFixed(2)}`
                     : "0.00"}
                 </Text>
               </Flex>
@@ -288,28 +189,41 @@ function VariantSelector({
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [variantsByGroup, setVariantsByGroup] = useState<
-    Map<number, VariantBase_Output[]>
+    Map<number, Map<number, number>>
   >(new Map());
 
-  if (orderable.variantGroups.length === 0) {
+  if (orderable.variant_groups.length === 0) {
     return null;
   }
 
-  const currentGroup = orderable.variantGroups[currentGroupIndex];
+  const currentGroup = orderable.variant_groups[currentGroupIndex];
 
   const handleVariantSelect = (variant: VariantBase_Output) => {
-    const currentVariants = variantsByGroup.get(currentGroup.id) || [];
-    const variantIndex = currentVariants.findIndex((v) => v.id === variant.id);
+    if (!currentGroup?.id || !variant?.id) return;
+
+    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentCount = currentVariantCounts.get(variant.id) || 0;
+
+    const newVariantCounts = new Map(currentVariantCounts);
+
+    newVariantCounts.set(variant.id, currentCount + 1);
 
     const newMap = new Map(variantsByGroup);
-    if (variantIndex === -1) {
-      newMap.set(currentGroup.id, [...currentVariants, variant]);
-    } else {
-      newMap.set(
-        currentGroup.id,
-        currentVariants.filter((v) => v.id !== variant.id),
-      );
-    }
+    newMap.set(currentGroup.id, newVariantCounts);
+    setVariantsByGroup(newMap);
+  };
+
+  const handleVariantDeselect = (variant: VariantBase_Output) => {
+    if (!currentGroup?.id || !variant?.id) return;
+
+    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentCount = currentVariantCounts.get(variant.id) || 0;
+
+    const newVariantCounts = new Map(currentVariantCounts);
+    newVariantCounts.set(variant.id, currentCount - 1);
+
+    const newMap = new Map(variantsByGroup);
+    newMap.set(currentGroup.id, newVariantCounts);
     setVariantsByGroup(newMap);
   };
 
@@ -321,27 +235,35 @@ function VariantSelector({
     }
   };
 
+  const getVariantsForGroup = (groupId: number): VariantBase_Output[] => {
+    const variantCounts = variantsByGroup.get(groupId) || new Map<number, number>();
+    const group = orderable.variant_groups.find(g => g.id === groupId);
+    if (!group) return [];
+    
+    return Array.from(variantCounts.entries()).flatMap(([variantId, count]) => {
+      const variant = group.variants.find(v => v.id === variantId);
+      return variant ? Array(count).fill(variant) : [];
+    });
+  };
+
   const handleNext = () => {
-    const currentVariants = variantsByGroup.get(currentGroup.id) || [];
-    if (currentGroup.required && currentVariants.length === 0) {
-      return; // Can't proceed if required group has no selection
+    const variants_data = getVariantsForGroup(currentGroup.id);
+    if (currentGroup.required && variants_data.length === 0) {
+      return;
     }
 
     const isLastGroup =
-      currentGroupIndex === orderable.variantGroups.length - 1;
+      currentGroupIndex === orderable.variant_groups.length - 1;
     if (isLastGroup) {
-      // Collect all variants from all groups and convert to input format
-      const allVariants = Array.from(variantsByGroup.entries()).flatMap(
-        ([groupId, variants]) =>
-          variants.map((variant) => ({
-            id: String(variant.id),
+      const allVariants = Array.from(variantsByGroup.keys()).flatMap(groupId =>
+        getVariantsForGroup(groupId).map((variant: VariantBase_Output) => ({
+            id: variant.id!,
             name: variant.name,
-            priceDelta: variant.priceDelta,
-            groupId: String(groupId),
+            price_delta: variant.price_delta,
+            group_id: groupId,
           })),
       );
 
-      // Add to order with proper types
       setOrder((prev) => ({
         ...prev,
         orderItems: [
@@ -354,13 +276,11 @@ function VariantSelector({
         ],
       }));
 
-      // Reset state
       setInProgressOrder(null);
       setVariantsByGroup(new Map());
       setCurrentGroupIndex(0);
       setQuantity(1);
     } else {
-      // Move to next group
       setCurrentGroupIndex((i) => i + 1);
     }
   };
@@ -370,18 +290,19 @@ function VariantSelector({
       <Box mb={4}>
         <Heading size="lg">{orderable.name}</Heading>
         <Text color="gray.600">
-          Step {currentGroupIndex + 1} of {orderable.variantGroups.length}
+          Step {currentGroupIndex + 1} of {orderable.variant_groups.length}
         </Text>
       </Box>
       <VariantGroupSelector
         variantGroup={currentGroup}
         onSelect={handleVariantSelect}
+        onDeselect={handleVariantDeselect}
         onBack={handleBack}
         onNext={handleNext}
-        currentSelections={variantsByGroup.get(currentGroup.id) || []}
-        isLastGroup={currentGroupIndex === orderable.variantGroups.length - 1}
+        currentSelections={getVariantsForGroup(currentGroup.id)}
+        isLastGroup={currentGroupIndex === orderable.variant_groups.length - 1}
       />
-      {currentGroupIndex === orderable.variantGroups.length - 1 && (
+      {currentGroupIndex === orderable.variant_groups.length - 1 && (
         <Box mt={4}>
           <Flex gap={4} align="center" justify="center">
             <QuantitySelector setQuantity={setQuantity} quantity={quantity} />
@@ -405,7 +326,7 @@ function AllOrderables({
   });
   if (!orderables) return null;
   return (
-    <Flex direction={"column"} gap={2}>
+    <Flex direction={"column"} gap={10} p={10}>
       {orderables.map((orderable) => (
         <OrderableCard
           setInProgressOrder={setInProgressOrder}
@@ -424,18 +345,9 @@ function Order() {
     orderItems: [],
   });
   const toast = useCustomToast();
+  const navigate = useNavigate();
   const [inProgressOrder, setInProgressOrder] =
     useState<OrderableOutput_Output | null>(null);
-
-  const orderTotal = order.orderItems.reduce((sum, item) => {
-    const itemPrice =
-      Number(item.orderable.price) +
-      item.variants.reduce(
-        (variantSum, variant) => variantSum + Number(variant.priceDelta),
-        0,
-      );
-    return sum + itemPrice * item.quantity;
-  }, 0);
 
   const handleSubmitOrder = () => {
     PosService.createOrder({
@@ -451,6 +363,7 @@ function Order() {
       "Your order has been successfully created.",
       "success",
     );
+    navigate({ to: "/pos/recent-orders/" });
   };
 
   return (
@@ -473,33 +386,16 @@ function Order() {
           <Heading size="md" mb={4}>
             Current Order
           </Heading>
-          <Flex direction="column" gap={3}>
-            {order.orderItems.map((orderItem, index) => (
-              <InOrderCard
-                key={`${orderItem.orderable.id}-${orderItem.variants.map((v) => v.id).join("-")}-${index}`}
-                setOrder={setOrder}
-                orderItem={orderItem}
-              />
-            ))}
-            <Box
-              p={4}
-              borderRadius={4}
-              display="flex"
-              justifyContent="space-between"
-            >
-              <Text fontWeight="bold">Total</Text>
-              <Text fontWeight="bold">${orderTotal.toFixed(2)}</Text>
-            </Box>
-            <Button
-              mt={4}
-              colorScheme="green"
-              width="100%"
-              size="lg"
-              onClick={handleSubmitOrder}
-            >
-              Submit Order (${orderTotal.toFixed(2)})
-            </Button>
-          </Flex>
+          <OrderCard order={order} setOrder={setOrder} allowEdits />
+          <Button
+            mt={4}
+            colorScheme="green"
+            width="100%"
+            size="lg"
+            onClick={handleSubmitOrder}
+          >
+            Submit Order
+          </Button>
         </Box>
       )}
     </Box>

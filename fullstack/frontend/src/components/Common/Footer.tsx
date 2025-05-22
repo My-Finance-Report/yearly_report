@@ -1,6 +1,18 @@
 import { Box, Flex, Link, Text } from "@chakra-ui/react";
+import { getCurrentUser } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 export function Footer() {
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCurrentUser,
+    retry: false,
+  });
+
+  if (currentUser?.settings?.point_of_sales_user) {
+    return null;
+  }
+
   return (
     <Box as="footer" position="sticky" bottom={0} w="100%">
       <Flex

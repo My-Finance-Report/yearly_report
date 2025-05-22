@@ -44,6 +44,7 @@ import { Route as LayoutLoggedinBudgetImport } from "./routes/_layout/_logged_in
 import { Route as LayoutLoggedinAdminImport } from "./routes/_layout/_logged_in/admin";
 import { Route as LayoutLoggedinAccountsImport } from "./routes/_layout/_logged_in/accounts";
 import { Route as LayoutLoggedinPosSalesReportsImport } from "./routes/_layout/_logged_in/pos/sales-reports";
+import { Route as LayoutLoggedinPosRecentOrdersImport } from "./routes/_layout/_logged_in/pos/recent-orders";
 import { Route as LayoutLoggedinPosPosImport } from "./routes/_layout/_logged_in/pos/pos";
 import { Route as LayoutLoggedinPosOrderImport } from "./routes/_layout/_logged_in/pos/order";
 import { Route as LayoutLoggedinPosManageVariantsImport } from "./routes/_layout/_logged_in/pos/manage-variants";
@@ -255,6 +256,13 @@ const LayoutLoggedinPosSalesReportsRoute =
   LayoutLoggedinPosSalesReportsImport.update({
     id: "/pos/sales-reports",
     path: "/pos/sales-reports",
+    getParentRoute: () => LayoutLoggedinRoute,
+  } as any);
+
+const LayoutLoggedinPosRecentOrdersRoute =
+  LayoutLoggedinPosRecentOrdersImport.update({
+    id: "/pos/recent-orders",
+    path: "/pos/recent-orders",
     getParentRoute: () => LayoutLoggedinRoute,
   } as any);
 
@@ -540,6 +548,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinPosPosImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
+    "/_layout/_logged_in/pos/recent-orders": {
+      id: "/_layout/_logged_in/pos/recent-orders";
+      path: "/pos/recent-orders";
+      fullPath: "/pos/recent-orders";
+      preLoaderRoute: typeof LayoutLoggedinPosRecentOrdersImport;
+      parentRoute: typeof LayoutLoggedinImport;
+    };
     "/_layout/_logged_in/pos/sales-reports": {
       id: "/_layout/_logged_in/pos/sales-reports";
       path: "/pos/sales-reports";
@@ -570,6 +585,7 @@ interface LayoutLoggedinRouteChildren {
   LayoutLoggedinPosManageVariantsRoute: typeof LayoutLoggedinPosManageVariantsRoute;
   LayoutLoggedinPosOrderRoute: typeof LayoutLoggedinPosOrderRoute;
   LayoutLoggedinPosPosRoute: typeof LayoutLoggedinPosPosRoute;
+  LayoutLoggedinPosRecentOrdersRoute: typeof LayoutLoggedinPosRecentOrdersRoute;
   LayoutLoggedinPosSalesReportsRoute: typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
@@ -592,6 +608,7 @@ const LayoutLoggedinRouteChildren: LayoutLoggedinRouteChildren = {
   LayoutLoggedinPosManageVariantsRoute: LayoutLoggedinPosManageVariantsRoute,
   LayoutLoggedinPosOrderRoute: LayoutLoggedinPosOrderRoute,
   LayoutLoggedinPosPosRoute: LayoutLoggedinPosPosRoute,
+  LayoutLoggedinPosRecentOrdersRoute: LayoutLoggedinPosRecentOrdersRoute,
   LayoutLoggedinPosSalesReportsRoute: LayoutLoggedinPosSalesReportsRoute,
 };
 
@@ -680,6 +697,7 @@ export interface FileRoutesByFullPath {
   "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/pos/order": typeof LayoutLoggedinPosOrderRoute;
   "/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/pos/recent-orders": typeof LayoutLoggedinPosRecentOrdersRoute;
   "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
@@ -719,6 +737,7 @@ export interface FileRoutesByTo {
   "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/pos/order": typeof LayoutLoggedinPosOrderRoute;
   "/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/pos/recent-orders": typeof LayoutLoggedinPosRecentOrdersRoute;
   "/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
@@ -760,6 +779,7 @@ export interface FileRoutesById {
   "/_layout/_logged_in/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/_layout/_logged_in/pos/order": typeof LayoutLoggedinPosOrderRoute;
   "/_layout/_logged_in/pos/pos": typeof LayoutLoggedinPosPosRoute;
+  "/_layout/_logged_in/pos/recent-orders": typeof LayoutLoggedinPosRecentOrdersRoute;
   "/_layout/_logged_in/pos/sales-reports": typeof LayoutLoggedinPosSalesReportsRoute;
 }
 
@@ -801,6 +821,7 @@ export interface FileRouteTypes {
     | "/pos/manage-variants"
     | "/pos/order"
     | "/pos/pos"
+    | "/pos/recent-orders"
     | "/pos/sales-reports";
   fileRoutesByTo: FileRoutesByTo;
   to:
@@ -839,6 +860,7 @@ export interface FileRouteTypes {
     | "/pos/manage-variants"
     | "/pos/order"
     | "/pos/pos"
+    | "/pos/recent-orders"
     | "/pos/sales-reports";
   id:
     | "__root__"
@@ -878,6 +900,7 @@ export interface FileRouteTypes {
     | "/_layout/_logged_in/pos/manage-variants"
     | "/_layout/_logged_in/pos/order"
     | "/_layout/_logged_in/pos/pos"
+    | "/_layout/_logged_in/pos/recent-orders"
     | "/_layout/_logged_in/pos/sales-reports";
   fileRoutesById: FileRoutesById;
 }
@@ -947,6 +970,7 @@ export const routeTree = rootRoute
         "/_layout/_logged_in/pos/manage-variants",
         "/_layout/_logged_in/pos/order",
         "/_layout/_logged_in/pos/pos",
+        "/_layout/_logged_in/pos/recent-orders",
         "/_layout/_logged_in/pos/sales-reports"
       ]
     },
@@ -1084,6 +1108,10 @@ export const routeTree = rootRoute
     },
     "/_layout/_logged_in/pos/pos": {
       "filePath": "_layout/_logged_in/pos/pos.tsx",
+      "parent": "/_layout/_logged_in"
+    },
+    "/_layout/_logged_in/pos/recent-orders": {
+      "filePath": "_layout/_logged_in/pos/recent-orders.tsx",
       "parent": "/_layout/_logged_in"
     },
     "/_layout/_logged_in/pos/sales-reports": {

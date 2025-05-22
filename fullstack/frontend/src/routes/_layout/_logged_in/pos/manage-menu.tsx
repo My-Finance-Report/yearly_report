@@ -90,7 +90,7 @@ export function ManageMenu() {
           onClick={() =>
             setEditing({
               type: "orderable",
-              data: { id: null, name: "", price: "0", variantGroups: [] },
+              data: { id: null, name: "", price: "0", variant_groups: [] },
             })
           }
         >
@@ -268,7 +268,7 @@ function Orderables({
               <Table.Cell>${Number(item.price).toFixed(2)}</Table.Cell>
               <Table.Cell>
                 <Text fontSize="sm">
-                  {item.variantGroups.map((g) => g.name).join(", ")}
+                  {item.variant_groups.map((g) => g.name).join(", ")}
                 </Text>
               </Table.Cell>
               <Table.Cell>

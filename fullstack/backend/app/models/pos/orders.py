@@ -24,7 +24,7 @@ class Order(Base):
     __tablename__ = "order"
 
     id: Mapped[OrderId] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    placed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    placed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False)
 

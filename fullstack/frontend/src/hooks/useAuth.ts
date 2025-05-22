@@ -22,6 +22,14 @@ const isSessionValid = async (): Promise<boolean> => {
   }
 };
 
+const getCurrentUser = async (): Promise<UserOut | null> => {
+  try {
+    return await UsersService.readUserMeOptional();
+  } catch {
+    return null;
+  }
+};
+
 const isSessionActive_NOT_AUTH = (): boolean => {
   return sessionStorage.getItem("session_active") === "true";
 };
@@ -227,6 +235,7 @@ const useAuth = () => {
 export {
   isSessionActive_NOT_AUTH as isSessionActive,
   isSessionValid,
+  getCurrentUser,
   activateSession,
 };
 export default useAuth;

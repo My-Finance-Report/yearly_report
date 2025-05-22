@@ -20,6 +20,10 @@ const actions: Action[] = [
     link: "/pos/order",
   },
   {
+    name: "Recent Orders",
+    link: "/pos/recent-orders",
+  },
+  {
     name: "Sales Reports",
     link: "/pos/sales-reports",
   },
@@ -31,7 +35,7 @@ const actions: Action[] = [
 
 function AllActions() {
   return (
-    <Flex direction={"column"} gap={2}>
+    <Flex direction={"column"} gap={10} p={10}>
       {actions.map((action, index) => (
         <ActionCard key={index} action={action} />
       ))}
@@ -50,7 +54,7 @@ function ActionCard({ action }: { action: Action }) {
         justifyContent="center"
         alignItems="center"
         p={2}
-        minW={200}
+        minW="90%"
         border="1px solid #ccc"
         borderRadius={4}
       >

@@ -57,7 +57,7 @@ export function EditVariantGroupForm({
       ...editedGroup,
       variants: [
         ...editedGroup.variants,
-        { id: null, name: "", priceDelta: "0" },
+        { id: null, name: "", price_delta: "0" },
       ],
     });
   };
@@ -141,13 +141,13 @@ export function EditVariantGroupForm({
                     <Text>$</Text>
                     <Input
                       size="sm"
-                      value={parseFloat(variant.priceDelta as string) || 0}
+                      value={parseFloat(variant.price_delta as string) || 0}
                       type="number"
                       step={0.01}
                       onChange={(e) =>
                         updateVariant(index, {
                           ...variant,
-                          priceDelta: String(parseFloat(e.target.value) || 0),
+                          price_delta: String(parseFloat(e.target.value) || 0),
                         })
                       }
                     />

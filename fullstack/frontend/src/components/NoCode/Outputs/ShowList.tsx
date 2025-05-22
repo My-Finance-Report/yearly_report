@@ -28,7 +28,8 @@ interface NoCodeTransactionOut {
   category_name: string;
 }
 
-function formatAmount(amount: number) {
+function formatAmount(amount: number | undefined) {
+  if (!amount) return "";
   return amount.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",

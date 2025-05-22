@@ -19,6 +19,7 @@ UserId = NewType("UserId", int)
 class UserSettings(BaseModel):
     has_budget: bool = False
     power_user_filters: bool = False
+    point_of_sales_user: bool = False
 
 
 class User(Base):
