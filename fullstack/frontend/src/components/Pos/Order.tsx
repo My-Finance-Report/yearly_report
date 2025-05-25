@@ -98,7 +98,7 @@ function InOrderCard({
     });
   });
 
-  console.log(variantsByGroup)
+  console.log(variantsByGroup);
 
   return (
     <Box

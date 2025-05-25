@@ -586,7 +586,9 @@ def get_orders(
                         price=orderable.price,
                         variant_groups=[
                             variant_group_map[VariantGroupId(selected_variant_id)]
-                            for selected_variant_id in {s.group_id for s in variants_data}
+                            for selected_variant_id in {
+                                s.group_id for s in variants_data
+                            }
                         ],
                     ),
                     variants=variants_data,

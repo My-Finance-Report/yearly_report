@@ -64,7 +64,9 @@ function ActionCard({
       cursor="pointer"
       minH={100}
       onClick={() => setTimeframe(action.timeframe)}
-      backgroundColor={action.timeframe === timeframe ? "blue.100" : "transparent"}
+      backgroundColor={
+        action.timeframe === timeframe ? "blue.100" : "transparent"
+      }
       color={action.timeframe === timeframe ? "blue.500" : undefined}
       display="flex"
       flexDirection="column"
@@ -74,7 +76,6 @@ function ActionCard({
       minW={200}
       border="1px solid #ccc"
       borderRadius={4}
-
     >
       <Text fontSize="lg" fontWeight="medium">
         {action.name}

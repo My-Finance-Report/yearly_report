@@ -42,7 +42,8 @@ export const Route = createFileRoute("/_layout/_logged_in/notifications")({
 
 function NotificationsPage() {
   return (
-    <Box p={4}>
+    <Box p={8}>
+      <Heading size="lg" mb={6}>Notifications</Heading>
       <UnifiedNotificationInterface />
     </Box>
   );
@@ -105,14 +106,20 @@ function UnifiedNotificationInterface() {
   }, [formValues]);
 
   return (
-    <>
-      <EffectSelector setSelectedEffect={setSelectedEffect} />
-      <HStack>
-        <CreateForm form={form} selectedEffect={selectedEffect} />
-        <NotificationPreview
-          subject={previewData?.subject}
-          html={previewData?.html}
-        />
+    <VStack gap={6} alignItems="stretch">
+      <Box maxW="400px">
+        <EffectSelector setSelectedEffect={setSelectedEffect} />
+      </Box>
+      <HStack gap={8} alignItems="start">
+        <Box flex={2} maxW="500px">
+          <CreateForm form={form} selectedEffect={selectedEffect} />
+        </Box>
+        <Box flex={3} maxW="800px">
+          <NotificationPreview
+            subject={previewData?.subject}
+            html={previewData?.html}
+          />
+        </Box>
 
         {selectedEffect?.id && selectedEffect.id !== undefined && (
           <Delete
@@ -123,7 +130,7 @@ function UnifiedNotificationInterface() {
           />
         )}
       </HStack>
-    </>
+    </VStack>
   );
 }
 
@@ -274,7 +281,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
   });
 
   return (
-    <Card.Root minW="400px">
+    <Card.Root w="full">
       <Card.Header>
         <HStack justifyContent="space-between">
           <Heading size="md">Create Notification</Heading>
@@ -539,7 +546,7 @@ function NotificationPreview({ html, subject }: NotificationPreviewProps) {
   }
 
   return (
-    <Card.Root className="border">
+    <Card.Root className="border" w="full">
       <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
         {subject}
       </Card.Header>
