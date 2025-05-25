@@ -8,25 +8,28 @@ interface DumbSelectProps<T> {
   labelExtractor: (value: T) => string;
   keyExtractor: (value: T) => string;
   placeholder?: string;
-  label?:string;
+  label?: string;
 }
 
-
-interface CollectionItem<T>{
-    label: string;
-    value: string;
-    option: T;
+interface CollectionItem<T> {
+  label: string;
+  value: string;
+  option: T;
 }
 
-function makeCollection<T>(options: T[], labelExtractor: (value: T) => string, keyExtractor: (value: T) => string) {
-    const items: CollectionItem<T>[] =  options.map((option) => ({
-      label: labelExtractor(option),
-      value: keyExtractor(option),
-      option: option,
-    }))
-    return createListCollection({
-      items,
-    })
+function makeCollection<T>(
+  options: T[],
+  labelExtractor: (value: T) => string,
+  keyExtractor: (value: T) => string,
+) {
+  const items: CollectionItem<T>[] = options.map((option) => ({
+    label: labelExtractor(option),
+    value: keyExtractor(option),
+    option: option,
+  }));
+  return createListCollection({
+    items,
+  });
 }
 
 export function DumbSelect<T>({
@@ -38,18 +41,19 @@ export function DumbSelect<T>({
   placeholder = "Select an option",
   label = "Select an option",
 }: DumbSelectProps<T>) {
-
-  const [value, setValue] = useState<string[]>([keyExtractor(selectedOption ?? options[0])])
-  const collection = makeCollection(options, labelExtractor, keyExtractor)
+  const [value, setValue] = useState<string[]>([
+    keyExtractor(selectedOption ?? options[0]),
+  ]);
+  const collection = makeCollection(options, labelExtractor, keyExtractor);
 
   useEffect(() => {
     if (value.length > 0) {
-      const option = collection.find(value[0])?.option
+      const option = collection.find(value[0])?.option;
       if (option) {
-        setSelectedOption(option)
+        setSelectedOption(option);
       }
     }
-  }, [value])
+  }, [value]);
 
   return (
     <Select.Root
@@ -81,5 +85,5 @@ export function DumbSelect<T>({
         </Select.Positioner>
       </Portal>
     </Select.Root>
-  ) 
+  );
 }

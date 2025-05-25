@@ -9,6 +9,7 @@ template = """
     {{ alter_settings }}
 """
 
+
 def new_transaction_effect(session: Session, user: User) -> Effect:
     # TODO pull from database
     return Effect(

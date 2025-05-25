@@ -22,7 +22,7 @@ import {
   useDisclosure,
   FieldErrorText,
 } from "@chakra-ui/react";
-import {DumbSelect} from "@/components/ui/dumb-select";
+import { DumbSelect } from "@/components/ui/dumb-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -35,7 +35,7 @@ import {
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import Delete, { DeleteableEntity } from "@/components/Common/DeleteAlert";
-import { Controller, useForm, UseFormReturn } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: NotificationsPage,
@@ -65,66 +65,34 @@ interface NotificationFormValues {
 }
 
 function UnifiedNotificationInterface() {
-  const [previewData, setPreviewData] = useState<Email | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(null);
-
-  console.log(selectedEffect)
+  const [formValues, setFormValues] = useState<NotificationFormValues | null>(null)
 
   const deleteModal = useDisclosure();
 
-  const form = useForm<NotificationFormValues>({
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      name: selectedEffect?.name || "",
-      template: selectedEffect?.config.template || "",
-      subject: selectedEffect?.config.subject || "",
-      effect_type: selectedEffect?.effect_type || "email",
-      event_type: selectedEffect?.event_type || "new_transaction",
-      frequency_days: selectedEffect?.config.frequency_days || 1,
-      condition: selectedEffect?.condition || "count_of_transactions",
-      conditional_parameters: selectedEffect?.conditional_parameters,
-    },
-  });
 
-  const formValues = form.watch();
-
-  // Fetch all notification effects
-  // Preview query
-  const { data, refetch } = useQuery({
-    queryKey: ["previewNotification", formValues.template, formValues.subject],
-    queryFn: async () => {
-      return NoCodeService.previewNotification({
-        template: formValues.template,
-        subject: formValues.subject,
-        numTransactions: 3,
-        accountName: "Test Account",
-      });
-    },
-    enabled: !!formValues.template && !!formValues.subject,
-  });
-
-  useEffect(() => {
-    refetch();
-    if (!data) return;
-    setPreviewData(data);
-  }, [formValues]);
 
   return (
     <VStack gap={6} alignItems="stretch">
       <Box maxW="400px">
-        <EffectSelector setSelectedEffect={setSelectedEffect} selectedEffect={selectedEffect} />
+        <EffectSelector
+          setSelectedEffect={setSelectedEffect}
+          selectedEffect={selectedEffect}
+        />
       </Box>
       <HStack gap={8} alignItems="start">
-        <Box flex={2} maxW="500px">
-          <CreateForm form={form} selectedEffect={selectedEffect} />
-        </Box>
-        <Box flex={3} maxW="800px">
-          <NotificationPreview
-            subject={previewData?.subject}
-            html={previewData?.html}
-          />
-        </Box>
+        {selectedEffect &&
+          <Box flex={2} maxW="500px">
+            <CreateForm selectedEffect={selectedEffect} setFormValues={setFormValues} />
+          </Box>
+        }
+{formValues && 
+          <Box flex={3} maxW="800px">
+            <NotificationPreview
+            formValues={formValues}
+            />
+          </Box>
+}
 
         {selectedEffect?.id && selectedEffect.id !== undefined && (
           <Delete
@@ -144,13 +112,16 @@ interface EffectSelectorProps {
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
 
-function EffectSelector({ selectedEffect,setSelectedEffect }: EffectSelectorProps) {
+function EffectSelector({
+  selectedEffect,
+  setSelectedEffect,
+}: EffectSelectorProps) {
   const { data: effects, isLoading } = useQuery({
     queryKey: ["effects"],
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  console.log(effects)
+  console.log(selectedEffect);
 
   if (isLoading) {
     return <Spinner />;
@@ -158,7 +129,9 @@ function EffectSelector({ selectedEffect,setSelectedEffect }: EffectSelectorProp
 
   return (
     <Box>
-      <Heading size="sm" mb={2}>Select Notification</Heading>
+      <Heading size="sm" mb={2}>
+        Select Notification
+      </Heading>
       <DumbSelect
         selectedOption={selectedEffect}
         setSelectedOption={setSelectedEffect}
@@ -172,11 +145,50 @@ function EffectSelector({ selectedEffect,setSelectedEffect }: EffectSelectorProp
 }
 
 interface CreateFormProps {
-  form: UseFormReturn<NotificationFormValues, null, NotificationFormValues>;
-  selectedEffect: EffectOut | null;
+  selectedEffect: EffectOut;
+  setFormValues: (values: NotificationFormValues) => void;
 }
 
-function CreateForm({ form, selectedEffect }: CreateFormProps) {
+function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
+
+  const form = useForm<NotificationFormValues>({
+    mode: "onBlur",
+    criteriaMode: "all",
+    defaultValues: {
+      name: selectedEffect.name,
+      template: selectedEffect.config.template,
+      subject: selectedEffect.config.subject,
+      effect_type: selectedEffect.effect_type,
+      event_type: selectedEffect.event_type,
+      frequency_days: selectedEffect.config.frequency_days,
+      condition: selectedEffect.condition,
+      conditional_parameters: selectedEffect.conditional_parameters,
+    }
+  });
+
+  useEffect(() => {
+    if (selectedEffect) {
+      form.reset({
+        name: selectedEffect.name,
+        template: selectedEffect.config.template,
+        subject: selectedEffect.config.subject,
+        effect_type: selectedEffect.effect_type,
+        event_type: selectedEffect.event_type,
+        frequency_days: selectedEffect.config.frequency_days,
+        condition: selectedEffect.condition,
+        conditional_parameters: selectedEffect.conditional_parameters,
+      });
+    }
+  }, [selectedEffect, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      setFormValues(data);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, setFormValues]);
+
   const {
     register,
     handleSubmit,
@@ -529,22 +541,45 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
 }
 
 interface NotificationPreviewProps {
-  html?: string;
-  subject?: string;
+  formValues: NotificationFormValues
 }
 
-function NotificationPreview({ html, subject }: NotificationPreviewProps) {
-  if (!html || !subject) {
+function NotificationPreview({ formValues }: NotificationPreviewProps) {
+
+  const [previewData, setPreviewData] = useState<Email | null>(null);
+  const { data, refetch } = useQuery({
+    queryKey: ["previewNotification", formValues.template, formValues.subject],
+    queryFn: async () => {
+      return NoCodeService.previewNotification({
+        template: formValues.template,
+        subject: formValues.subject,
+        numTransactions: 3,
+        accountName: "Test Account",
+      });
+    },
+    enabled: !!formValues.template && !!formValues.subject,
+  });
+
+  useEffect(() => {
+    refetch();
+    if (!data) return;
+    setPreviewData(data);
+  }, [formValues]);
+
+
+
+
+  if (!previewData) {
     return null;
   }
 
   return (
     <Card.Root className="border" w="full">
       <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-        {subject}
+        {previewData.subject}
       </Card.Header>
       <Card.Body className="p-0 overflow-hidden">
-        <div dangerouslySetInnerHTML={{ __html: html }} />
+        <div dangerouslySetInnerHTML={{ __html: previewData.html }} />
       </Card.Body>
     </Card.Root>
   );
