@@ -22,6 +22,7 @@ import {
   useDisclosure,
   FieldErrorText,
 } from "@chakra-ui/react";
+import {DumbSelect} from "@/components/ui/dumb-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -43,7 +44,9 @@ export const Route = createFileRoute("/_layout/_logged_in/notifications")({
 function NotificationsPage() {
   return (
     <Box p={8}>
-      <Heading size="lg" mb={6}>Notifications</Heading>
+      <Heading size="lg" mb={6}>
+        Notifications
+      </Heading>
       <UnifiedNotificationInterface />
     </Box>
   );
@@ -64,6 +67,8 @@ interface NotificationFormValues {
 function UnifiedNotificationInterface() {
   const [previewData, setPreviewData] = useState<Email | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(null);
+
+  console.log(selectedEffect)
 
   const deleteModal = useDisclosure();
 
@@ -108,7 +113,7 @@ function UnifiedNotificationInterface() {
   return (
     <VStack gap={6} alignItems="stretch">
       <Box maxW="400px">
-        <EffectSelector setSelectedEffect={setSelectedEffect} />
+        <EffectSelector setSelectedEffect={setSelectedEffect} selectedEffect={selectedEffect} />
       </Box>
       <HStack gap={8} alignItems="start">
         <Box flex={2} maxW="500px">
@@ -135,46 +140,34 @@ function UnifiedNotificationInterface() {
 }
 
 interface EffectSelectorProps {
+  selectedEffect: EffectOut | null;
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
 
-function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
+function EffectSelector({ selectedEffect,setSelectedEffect }: EffectSelectorProps) {
   const { data: effects, isLoading } = useQuery({
     queryKey: ["effects"],
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  const onChange = (effectName: string) => {
-    const effect = effects?.find((effect) => effect.name === effectName);
-    setSelectedEffect(effect || null);
-  };
+  console.log(effects)
 
   if (isLoading) {
     return <Spinner />;
   }
 
   return (
-    <SelectRoot
-      id="effect"
-      collection={createListCollection({
-        items: effects?.map((effect) => effect.name) || [],
-      })}
-      value={[effects?.[0]?.name || ""]}
-      onValueChange={(val) => {
-        onChange(val.value[0]);
-      }}
-    >
-      <SelectTrigger>
-        <SelectValueText placeholder="Select an event type" />
-      </SelectTrigger>
-      <SelectContent>
-        {effects?.map((effect) => (
-          <SelectItem key={effect.name} item={effect.name}>
-            {effect.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </SelectRoot>
+    <Box>
+      <Heading size="sm" mb={2}>Select Notification</Heading>
+      <DumbSelect
+        selectedOption={selectedEffect}
+        setSelectedOption={setSelectedEffect}
+        labelExtractor={(effect) => effect.name}
+        keyExtractor={(effect) => String(effect.id)}
+        options={effects || []}
+        placeholder="Select a notification template"
+      />
+    </Box>
   );
 }
 
@@ -487,7 +480,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
             </FieldRoot>
 
             <FieldRoot invalid={!!errors.subject} required>
-              <FieldLabel htmlFor="subject">Suject</FieldLabel>
+              <FieldLabel htmlFor="subject">Subject</FieldLabel>
               <Input
                 id="subject"
                 {...register("subject", {
