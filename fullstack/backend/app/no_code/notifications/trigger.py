@@ -196,5 +196,4 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
 
     arg: list[Effect] = []
     for callable in pipeline:
-        print(f"Applying {callable.__name__} to {arg}")
         arg = callable(arg)
