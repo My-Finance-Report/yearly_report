@@ -14,17 +14,17 @@ def generate_row(transaction: NoCodeTransaction) -> str:
         amount_class = "positive"
         amount_str = f"+{amount_str}"
 
-    date_str = transaction.date_of_transaction.strftime("%b %d, %Y")
+    date_str = transaction.date_of_transaction.strftime("%b %d")
 
     formatted_desc = transaction.description
-    if len(formatted_desc) > 20:
-        formatted_desc = formatted_desc[:20] + "..."
+    if len(formatted_desc) > 10:
+        formatted_desc = formatted_desc[:10] + "..."
 
     return f"""<tr>
         <td>{date_str}</td>
         <td>{formatted_desc}</td>
         <td>{transaction.category_name or "Uncategorized"}</td>
-        <td class='{amount_class}'>{amount_str}</td>
+        <td style="text-align: left;" class='{amount_class}'>{amount_str}</td>
     </tr>"""
 
 
@@ -59,9 +59,9 @@ class Event(ABC, BaseModel):
     <thead>
         <tr>
             <th style="padding: 8px; text-align: left;">Date</th>
-            <th style="padding: 8px; text-align: left;">Description</th>
+            <th style="padding: 8px; text-align: left;">Desc.</th>
             <th style="padding: 8px; text-align: left;">Category</th>
-            <th style="padding: 8px; text-align: right;">Amount</th>
+            <th style="padding: 8px; text-align: left;">Amount</th>
         </tr>
     </thead>
     <tbody>

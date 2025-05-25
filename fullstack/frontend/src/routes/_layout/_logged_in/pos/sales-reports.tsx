@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Box, Flex, Table, Text, Button, Breadcrumb, Collapsible } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Table,
+  Text,
+  Button,
+  Breadcrumb,
+  Collapsible,
+} from "@chakra-ui/react";
 import { useState } from "react";
 import { OrderBase_Output, PosService } from "@/client";
 import { useQuery } from "@tanstack/react-query";
@@ -23,14 +31,21 @@ const actions: Action[] = [
 ];
 
 function AllActions({
+  timeframe,
   setTimeframe,
 }: {
+  timeframe?: Action["timeframe"];
   setTimeframe: (timeframe: Action["timeframe"]) => void;
 }) {
   return (
     <Flex direction={"column"} gap={2}>
       {actions.map((action, index) => (
-        <ActionCard key={index} action={action} setTimeframe={setTimeframe} />
+        <ActionCard
+          key={index}
+          action={action}
+          setTimeframe={setTimeframe}
+          timeframe={timeframe}
+        />
       ))}
     </Flex>
   );
@@ -38,15 +53,21 @@ function AllActions({
 function ActionCard({
   action,
   setTimeframe,
+  timeframe,
 }: {
   action: Action;
   setTimeframe: (timeframe: Action["timeframe"]) => void;
+  timeframe?: Action["timeframe"];
 }) {
   return (
     <Box
       cursor="pointer"
       minH={100}
       onClick={() => setTimeframe(action.timeframe)}
+      backgroundColor={
+        action.timeframe === timeframe ? "blue.100" : "transparent"
+      }
+      color={action.timeframe === timeframe ? "blue.500" : undefined}
       display="flex"
       flexDirection="column"
       justifyContent="center"
@@ -55,7 +76,6 @@ function ActionCard({
       minW={200}
       border="1px solid #ccc"
       borderRadius={4}
-      _hover={{ backgroundColor: "gray.50" }}
     >
       <Text fontSize="lg" fontWeight="medium">
         {action.name}
@@ -80,7 +100,13 @@ function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
   const [isOpen, setIsOpen] = useState(new Map<string, boolean>());
 
   const fullTotal = orders.reduce((sum, order) => {
-    return sum + order.orderItems.reduce((orderSum, item) => orderSum + determinePrice(item), 0);
+    return (
+      sum +
+      order.orderItems.reduce(
+        (orderSum, item) => orderSum + determinePrice(item),
+        0,
+      )
+    );
   }, 0);
 
   return (
@@ -110,19 +136,29 @@ function DataDisplay({ orders }: { orders: OrderBase_Output[] }) {
                   )}
                 </Table.Cell>
                 <Table.Cell>
-                  <Button size="sm" onClick={() => setIsOpen((prev) => {
-                    const newMap = new Map(prev);
-                    newMap.set(order.id, !newMap.get(order.id));
-                    return newMap;
-                  })}>{isOpen.get(order.id) ? "Hide" : "View"}</Button>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setIsOpen((prev) => {
+                        const newMap = new Map(prev);
+                        newMap.set(order.id, !newMap.get(order.id));
+                        return newMap;
+                      })
+                    }
+                  >
+                    {isOpen.get(order.id) ? "Hide" : "View"}
+                  </Button>
                 </Table.Cell>
               </Table.Row>
-              <Table.Row >
-                <Table.Cell colSpan={3} padding={isOpen.get(order.id) ? "4" : "0"}>
+              <Table.Row>
+                <Table.Cell
+                  colSpan={3}
+                  padding={isOpen.get(order.id) ? "4" : "0"}
+                >
                   <Collapsible.Root open={isOpen.get(order.id) || false}>
                     <Collapsible.Content>
                       <OrderCard
-                        setOrder={() => { }}
+                        setOrder={() => {}}
                         order={order}
                         allowEdits={false}
                       />
@@ -148,14 +184,14 @@ function RouteComponent() {
 
   const { data: orders } = useQuery({
     queryKey: ["orders", timeframe],
-    queryFn: () => PosService.getOrders({days: timeframe}),
+    queryFn: () => PosService.getOrders({ days: timeframe }),
   });
 
   return (
     <>
       <BreadcrumbComponent />
       <Flex direction="column" gap={4}>
-        <AllActions setTimeframe={setTimeframe} />
+        <AllActions timeframe={timeframe} setTimeframe={setTimeframe} />
         {orders && <DataDisplay orders={orders} />}
       </Flex>
     </>

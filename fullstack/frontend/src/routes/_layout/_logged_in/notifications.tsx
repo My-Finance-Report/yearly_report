@@ -22,6 +22,7 @@ import {
   useDisclosure,
   FieldErrorText,
 } from "@chakra-ui/react";
+import { DumbSelect } from "@/components/ui/dumb-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -34,18 +35,14 @@ import {
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import Delete, { DeleteableEntity } from "@/components/Common/DeleteAlert";
-import { Controller, useForm, UseFormReturn } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: NotificationsPage,
 });
 
 function NotificationsPage() {
-  return (
-    <Box p={4}>
-      <UnifiedNotificationInterface />
-    </Box>
-  );
+  return <UnifiedNotificationInterface />;
 }
 
 interface NotificationFormValues {
@@ -61,58 +58,32 @@ interface NotificationFormValues {
 }
 
 function UnifiedNotificationInterface() {
-  const [previewData, setPreviewData] = useState<Email | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(null);
+  const [formValues, setFormValues] = useState<NotificationFormValues | null>(null)
 
   const deleteModal = useDisclosure();
 
-  const form = useForm<NotificationFormValues>({
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      name: selectedEffect?.name || "",
-      template: selectedEffect?.config.template || "",
-      subject: selectedEffect?.config.subject || "",
-      effect_type: selectedEffect?.effect_type || "email",
-      event_type: selectedEffect?.event_type || "new_transaction",
-      frequency_days: selectedEffect?.config.frequency_days || 1,
-      condition: selectedEffect?.condition || "count_of_transactions",
-      conditional_parameters: selectedEffect?.conditional_parameters,
-    },
-  });
-
-  const formValues = form.watch();
-
-  // Fetch all notification effects
-  // Preview query
-  const { data, refetch } = useQuery({
-    queryKey: ["previewNotification", formValues.template, formValues.subject],
-    queryFn: async () => {
-      return NoCodeService.previewNotification({
-        template: formValues.template,
-        subject: formValues.subject,
-        numTransactions: 3,
-        accountName: "Test Account",
-      });
-    },
-    enabled: !!formValues.template && !!formValues.subject,
-  });
-
-  useEffect(() => {
-    refetch();
-    if (!data) return;
-    setPreviewData(data);
-  }, [formValues]);
-
   return (
-    <>
-      <EffectSelector setSelectedEffect={setSelectedEffect} />
-      <HStack>
-        <CreateForm form={form} selectedEffect={selectedEffect} />
-        <NotificationPreview
-          subject={previewData?.subject}
-          html={previewData?.html}
+    <VStack gap={6} alignItems="stretch">
+      <Box maxW="400px">
+        <EffectSelector
+          setSelectedEffect={setSelectedEffect}
+          selectedEffect={selectedEffect}
         />
+      </Box>
+      <HStack gap={8} alignItems="start">
+        {selectedEffect &&
+          <Box flex={2} maxW="500px">
+            <CreateForm selectedEffect={selectedEffect} setFormValues={setFormValues} />
+          </Box>
+        }
+{formValues && 
+          <Box flex={3} maxW="800px">
+            <NotificationPreview
+            formValues={formValues}
+            />
+          </Box>
+}
 
         {selectedEffect?.id && selectedEffect.id !== undefined && (
           <Delete
@@ -123,60 +94,89 @@ function UnifiedNotificationInterface() {
           />
         )}
       </HStack>
-    </>
+    </VStack>
   );
 }
 
 interface EffectSelectorProps {
+  selectedEffect: EffectOut | null;
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
 
-function EffectSelector({ setSelectedEffect }: EffectSelectorProps) {
+function EffectSelector({
+  selectedEffect,
+  setSelectedEffect,
+}: EffectSelectorProps) {
   const { data: effects, isLoading } = useQuery({
     queryKey: ["effects"],
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  const onChange = (effectName: string) => {
-    const effect = effects?.find((effect) => effect.name === effectName);
-    setSelectedEffect(effect || null);
-  };
 
   if (isLoading) {
     return <Spinner />;
   }
 
   return (
-    <SelectRoot
-      id="effect"
-      collection={createListCollection({
-        items: effects?.map((effect) => effect.name) || [],
-      })}
-      value={[effects?.[0]?.name || ""]}
-      onValueChange={(val) => {
-        onChange(val.value[0]);
-      }}
-    >
-      <SelectTrigger>
-        <SelectValueText placeholder="Select an event type" />
-      </SelectTrigger>
-      <SelectContent>
-        {effects?.map((effect) => (
-          <SelectItem key={effect.name} item={effect.name}>
-            {effect.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </SelectRoot>
+    <Box>
+      <DumbSelect
+        selectedOption={selectedEffect}
+        setSelectedOption={setSelectedEffect}
+        labelExtractor={(effect) => effect.name}
+        keyExtractor={(effect) => String(effect.id)}
+        options={effects || []}
+        placeholder="Select a notification template"
+        label="Select Notification"
+      />
+    </Box>
   );
 }
 
 interface CreateFormProps {
-  form: UseFormReturn<NotificationFormValues, null, NotificationFormValues>;
-  selectedEffect: EffectOut | null;
+  selectedEffect: EffectOut;
+  setFormValues: (values: NotificationFormValues) => void;
 }
 
-function CreateForm({ form, selectedEffect }: CreateFormProps) {
+function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
+
+  const form = useForm<NotificationFormValues>({
+    mode: "onBlur",
+    criteriaMode: "all",
+    defaultValues: {
+      name: selectedEffect.name,
+      template: selectedEffect.config.template,
+      subject: selectedEffect.config.subject,
+      effect_type: selectedEffect.effect_type,
+      event_type: selectedEffect.event_type,
+      frequency_days: selectedEffect.config.frequency_days,
+      condition: selectedEffect.condition,
+      conditional_parameters: selectedEffect.conditional_parameters,
+    }
+  });
+
+  useEffect(() => {
+    if (selectedEffect) {
+      form.reset({
+        name: selectedEffect.name,
+        template: selectedEffect.config.template,
+        subject: selectedEffect.config.subject,
+        effect_type: selectedEffect.effect_type,
+        event_type: selectedEffect.event_type,
+        frequency_days: selectedEffect.config.frequency_days,
+        condition: selectedEffect.condition,
+        conditional_parameters: selectedEffect.conditional_parameters,
+      });
+    }
+  }, [selectedEffect, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      setFormValues(data as NotificationFormValues);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, setFormValues]);
+
   const {
     register,
     handleSubmit,
@@ -274,7 +274,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
   });
 
   return (
-    <Card.Root minW="400px">
+    <Card.Root w="full">
       <Card.Header>
         <HStack justifyContent="space-between">
           <Heading size="md">Create Notification</Heading>
@@ -399,42 +399,60 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
 
             <FieldRoot invalid={!!errors.conditional_parameters} required>
               <FieldLabel htmlFor="conditional_parameters">
-                Conditional Parameters
+                {form.getValues("condition") === "amount_over" ? "Amount Over" : "Number of Transactions"}
               </FieldLabel>
               <Controller
                 control={control}
                 name="conditional_parameters"
                 render={({ field }) => {
-                  const { onChange } = field;
+                  const { onChange, value } = field;
+                  const condition = form.getValues("condition");
+                  
                   return (
-                    <Textarea
+                    <Input
                       id="conditional_parameters"
+                      type="number"
+                      min={0}
+                      step={condition === "amount_over" ? 0.01 : 1}
+                      value={
+                        condition === "amount_over"
+                          ? value?.amount_over || 0
+                          : value?.count || 0
+                      }
                       onChange={(e) => {
-                        try {
-                          const parsedValue = JSON.parse(e.target.value);
-                          onChange(parsedValue);
-                        } catch {
-                          e.target.dataset.jsonError = "true";
-                        }
+                        const numValue = parseFloat(e.target.value);
+                        onChange(
+                          condition === "amount_over"
+                            ? { amount_over: numValue }
+                            : { count: numValue }
+                        );
                       }}
-                      placeholder='{"count": 1}'
-                      rows={4}
+                      placeholder={
+                        condition === "amount_over"
+                          ? "Enter amount threshold"
+                          : "Enter number of transactions"
+                      }
                     />
                   );
                 }}
                 rules={{
-                  required: "Conditional parameters are required",
+                  required: "This field is required",
                   validate: (value) => {
-                    return (
-                      (typeof value === "object" && value !== null) ||
-                      "Must be a valid JSON object"
-                    );
+                    const condition = form.getValues("condition");
+                    const numValue = condition === "amount_over" ? value?.amount_over : value?.count;
+                    if (typeof numValue !== "number" || numValue < 0) {
+                      return "Must be a positive number";
+                    }
+                    if (condition === "count_of_transactions" && !Number.isInteger(numValue)) {
+                      return "Must be a whole number";
+                    }
+                    return true;
                   },
                 }}
               />
-              {errors.conditional_parameters?.message && (
+              {errors.conditional_parameters && (
                 <FieldErrorText>
-                  {errors.conditional_parameters?.message.message}
+                  {errors.conditional_parameters?.message as unknown as string}
                 </FieldErrorText>
               )}
             </FieldRoot>
@@ -480,7 +498,7 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
             </FieldRoot>
 
             <FieldRoot invalid={!!errors.subject} required>
-              <FieldLabel htmlFor="subject">Suject</FieldLabel>
+              <FieldLabel htmlFor="subject">Subject</FieldLabel>
               <Input
                 id="subject"
                 {...register("subject", {
@@ -529,22 +547,45 @@ function CreateForm({ form, selectedEffect }: CreateFormProps) {
 }
 
 interface NotificationPreviewProps {
-  html?: string;
-  subject?: string;
+  formValues: NotificationFormValues
 }
 
-function NotificationPreview({ html, subject }: NotificationPreviewProps) {
-  if (!html || !subject) {
+function NotificationPreview({ formValues }: NotificationPreviewProps) {
+
+  const [previewData, setPreviewData] = useState<Email | null>(null);
+  const { data, refetch } = useQuery({
+    queryKey: ["previewNotification", formValues.template, formValues.subject],
+    queryFn: async () => {
+      return NoCodeService.previewNotification({
+        template: formValues.template,
+        subject: formValues.subject,
+        numTransactions: 3,
+        accountName: "Test Account",
+      });
+    },
+    enabled: !!formValues.template && !!formValues.subject,
+  });
+
+  useEffect(() => {
+    refetch();
+    if (!data) return;
+    setPreviewData(data);
+  }, [formValues]);
+
+
+
+
+  if (!previewData) {
     return null;
   }
 
   return (
-    <Card.Root className="border">
+    <Card.Root className="border" w="full">
       <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-        {subject}
+        {previewData.subject}
       </Card.Header>
       <Card.Body className="p-0 overflow-hidden">
-        <div dangerouslySetInnerHTML={{ __html: html }} />
+        <div dangerouslySetInnerHTML={{ __html: previewData.html }} />
       </Card.Body>
     </Card.Root>
   );

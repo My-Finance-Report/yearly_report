@@ -152,9 +152,8 @@ def preview_notification(
     # Use provided template and subject or defaults
     config = EffectConfig(
         frequency_days=1,
-        template=template
-        or "Hey there! You have {{ count }} new transaction(s) in My Financé!\n{{ transactions_table }}\n{{ alter_settings }}",
-        subject=subject or "New Transactions in My Financé from {{ account_name }}",
+        template=template or "",
+        subject=subject or "",
     )
 
     # Create the effect

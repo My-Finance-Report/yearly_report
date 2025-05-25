@@ -201,7 +201,8 @@ function VariantSelector({
   const handleVariantSelect = (variant: VariantBase_Output) => {
     if (!currentGroup?.id || !variant?.id) return;
 
-    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentVariantCounts =
+      variantsByGroup.get(currentGroup.id) || new Map<number, number>();
     const currentCount = currentVariantCounts.get(variant.id) || 0;
 
     const newVariantCounts = new Map(currentVariantCounts);
@@ -216,7 +217,8 @@ function VariantSelector({
   const handleVariantDeselect = (variant: VariantBase_Output) => {
     if (!currentGroup?.id || !variant?.id) return;
 
-    const currentVariantCounts = variantsByGroup.get(currentGroup.id) || new Map<number, number>();
+    const currentVariantCounts =
+      variantsByGroup.get(currentGroup.id) || new Map<number, number>();
     const currentCount = currentVariantCounts.get(variant.id) || 0;
 
     const newVariantCounts = new Map(currentVariantCounts);
@@ -236,12 +238,13 @@ function VariantSelector({
   };
 
   const getVariantsForGroup = (groupId: number): VariantBase_Output[] => {
-    const variantCounts = variantsByGroup.get(groupId) || new Map<number, number>();
-    const group = orderable.variant_groups.find(g => g.id === groupId);
+    const variantCounts =
+      variantsByGroup.get(groupId) || new Map<number, number>();
+    const group = orderable.variant_groups.find((g) => g.id === groupId);
     if (!group) return [];
-    
+
     return Array.from(variantCounts.entries()).flatMap(([variantId, count]) => {
-      const variant = group.variants.find(v => v.id === variantId);
+      const variant = group.variants.find((v) => v.id === variantId);
       return variant ? Array(count).fill(variant) : [];
     });
   };
@@ -255,8 +258,9 @@ function VariantSelector({
     const isLastGroup =
       currentGroupIndex === orderable.variant_groups.length - 1;
     if (isLastGroup) {
-      const allVariants = Array.from(variantsByGroup.keys()).flatMap(groupId =>
-        getVariantsForGroup(groupId).map((variant: VariantBase_Output) => ({
+      const allVariants = Array.from(variantsByGroup.keys()).flatMap(
+        (groupId) =>
+          getVariantsForGroup(groupId).map((variant: VariantBase_Output) => ({
             id: variant.id!,
             name: variant.name,
             price_delta: variant.price_delta,

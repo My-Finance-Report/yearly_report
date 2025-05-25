@@ -98,6 +98,8 @@ function InOrderCard({
     });
   });
 
+  console.log(variantsByGroup);
+
   return (
     <Box
       flex="row"

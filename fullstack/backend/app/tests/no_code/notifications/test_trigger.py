@@ -63,6 +63,8 @@ def user():
 def transactions():
     return [
         NoCodeTransaction(
+            id=1,
+            category_id=1,
             amount=100,
             date_of_transaction=datetime(year=2024, month=1, day=1),
             description="Test transaction 1",
@@ -71,6 +73,8 @@ def transactions():
             account_name="Test Account",
         ),
         NoCodeTransaction(
+            id=2,
+            category_id=1,
             amount=200,
             date_of_transaction=datetime(year=2024, month=1, day=2),
             description="Test transaction 2",
@@ -300,7 +304,7 @@ def test_functional_pipeline(user, event):
     mock_manager = MagicMock()
 
     # Create mock functions with side effects to track the pipeline flow
-    def collect_side_effect(session, user):
+    def collect_side_effect(session, user, event_type):
         mock_manager.collect_called()
         return [effect]
 

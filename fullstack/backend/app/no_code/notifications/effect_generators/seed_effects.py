@@ -4,7 +4,7 @@ from app.no_code.notifications.effects import Effect, EffectConfig
 from app.models.user import User
 
 template = """
-    Hey there! You have {{ count }} new transaction(s) in My Financé!
+    Hey there! You have {{ count }} <a href="https://myfinancereport.com/transactions">new transaction(s)</a> in My Financé!
     {{ transactions_table }}
     {{ alter_settings }}
 """
