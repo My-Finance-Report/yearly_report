@@ -7,21 +7,46 @@ from app.no_code.notifications.effect_generators.seed_effects import (
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
+    EffectConfig,
 )
 
 from app.no_code.notifications.events import Event
 from sqlalchemy.orm import Session
-from app.models.effect import EffectLog, EffectType
+from app.models.effect import EffectLog, EffectType, Effect as EffectModel, EventType
 from app.models.user import User, UserId
 from app.email.send import Email, send_email
 
 
-def collect_user_effects(session: Session, user: User) -> List[Effect]:
+def collect_user_effects(
+    session: Session, user: User, event_type: EventType
+) -> List[Effect]:
     """
     Retrieve all notification effects configured by the user.
     """
+    effects = (
+        session.query(EffectModel)
+        .filter(
+            EffectModel.user_id == user.id,
+            EffectModel.event_type == event_type,
+        )
+    )
+
+    db_effects = [
+        Effect(
+            type=effect.effect_type,
+            condition=effect.condition,
+            conditional_parameters=effect.conditional_parameters,
+            config=EffectConfig(
+                template=effect.template,
+                subject=effect.subject,
+                frequency_days=effect.frequency_days,
+            ),
+        )
+        for effect in effects
+    ]
 
     return [
+        *db_effects,
         new_transaction_effect(session, user),
     ]
 
@@ -145,7 +170,7 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
     """
 
     def collect(_: list[Effect]) -> list[Effect]:
-        return collect_user_effects(session, user)
+        return collect_user_effects(session, user, event.type)
 
     def filter_effects(effects: list[Effect]) -> list[Effect]:
         return check_all_effects(event, effects)

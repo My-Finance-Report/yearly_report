@@ -42,14 +42,7 @@ export const Route = createFileRoute("/_layout/_logged_in/notifications")({
 });
 
 function NotificationsPage() {
-  return (
-    <Box p={8}>
-      <Heading size="lg" mb={6}>
-        Notifications
-      </Heading>
-      <UnifiedNotificationInterface />
-    </Box>
-  );
+  return <UnifiedNotificationInterface />;
 }
 
 interface NotificationFormValues {
@@ -69,8 +62,6 @@ function UnifiedNotificationInterface() {
   const [formValues, setFormValues] = useState<NotificationFormValues | null>(null)
 
   const deleteModal = useDisclosure();
-
-
 
   return (
     <VStack gap={6} alignItems="stretch">
@@ -121,7 +112,6 @@ function EffectSelector({
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  console.log(selectedEffect);
 
   if (isLoading) {
     return <Spinner />;
@@ -129,9 +119,6 @@ function EffectSelector({
 
   return (
     <Box>
-      <Heading size="sm" mb={2}>
-        Select Notification
-      </Heading>
       <DumbSelect
         selectedOption={selectedEffect}
         setSelectedOption={setSelectedEffect}
@@ -139,6 +126,7 @@ function EffectSelector({
         keyExtractor={(effect) => String(effect.id)}
         options={effects || []}
         placeholder="Select a notification template"
+        label="Select Notification"
       />
     </Box>
   );
@@ -183,7 +171,7 @@ function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
 
   useEffect(() => {
     const subscription = form.watch((data) => {
-      setFormValues(data);
+      setFormValues(data as NotificationFormValues);
     });
     
     return () => subscription.unsubscribe();
@@ -411,42 +399,60 @@ function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
 
             <FieldRoot invalid={!!errors.conditional_parameters} required>
               <FieldLabel htmlFor="conditional_parameters">
-                Conditional Parameters
+                {form.getValues("condition") === "amount_over" ? "Amount Over" : "Number of Transactions"}
               </FieldLabel>
               <Controller
                 control={control}
                 name="conditional_parameters"
                 render={({ field }) => {
-                  const { onChange } = field;
+                  const { onChange, value } = field;
+                  const condition = form.getValues("condition");
+                  
                   return (
-                    <Textarea
+                    <Input
                       id="conditional_parameters"
+                      type="number"
+                      min={0}
+                      step={condition === "amount_over" ? 0.01 : 1}
+                      value={
+                        condition === "amount_over"
+                          ? value?.amount_over || 0
+                          : value?.count || 0
+                      }
                       onChange={(e) => {
-                        try {
-                          const parsedValue = JSON.parse(e.target.value);
-                          onChange(parsedValue);
-                        } catch {
-                          e.target.dataset.jsonError = "true";
-                        }
+                        const numValue = parseFloat(e.target.value);
+                        onChange(
+                          condition === "amount_over"
+                            ? { amount_over: numValue }
+                            : { count: numValue }
+                        );
                       }}
-                      placeholder='{"count": 1}'
-                      rows={4}
+                      placeholder={
+                        condition === "amount_over"
+                          ? "Enter amount threshold"
+                          : "Enter number of transactions"
+                      }
                     />
                   );
                 }}
                 rules={{
-                  required: "Conditional parameters are required",
+                  required: "This field is required",
                   validate: (value) => {
-                    return (
-                      (typeof value === "object" && value !== null) ||
-                      "Must be a valid JSON object"
-                    );
+                    const condition = form.getValues("condition");
+                    const numValue = condition === "amount_over" ? value?.amount_over : value?.count;
+                    if (typeof numValue !== "number" || numValue < 0) {
+                      return "Must be a positive number";
+                    }
+                    if (condition === "count_of_transactions" && !Number.isInteger(numValue)) {
+                      return "Must be a whole number";
+                    }
+                    return true;
                   },
                 }}
               />
-              {errors.conditional_parameters?.message && (
+              {errors.conditional_parameters && (
                 <FieldErrorText>
-                  {errors.conditional_parameters?.message.message}
+                  {errors.conditional_parameters?.message as unknown as string}
                 </FieldErrorText>
               )}
             </FieldRoot>
