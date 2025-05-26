@@ -23,12 +23,9 @@ def collect_user_effects(
     """
     Retrieve all notification effects configured by the user.
     """
-    effects = (
-        session.query(EffectModel)
-        .filter(
-            EffectModel.user_id == user.id,
-            EffectModel.event_type == event_type,
-        )
+    effects = session.query(EffectModel).filter(
+        EffectModel.user_id == user.id,
+        EffectModel.event_type == event_type,
     )
 
     db_effects = [
