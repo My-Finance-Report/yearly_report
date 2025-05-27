@@ -1,9 +1,9 @@
-import { Box, Button, Heading, Link, Text, VStack } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { Box, Button, Heading, Link, Text, VStack } from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/how")({
   component: HowPage,
-})
+});
 
 export function HowPage() {
   return (
@@ -100,5 +100,5 @@ export function HowPage() {
         </Box>
       </VStack>
     </Box>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import { AccountsService } from "@/client"
-import { AccountDetails } from "@/components/Common/AccountDetails"
-import { OnboardDialogs } from "@/components/Common/OnboardModal/Onboarding"
+import { AccountsService } from "@/client";
+import { AccountDetails } from "@/components/Common/AccountDetails";
+import { OnboardDialogs } from "@/components/Common/OnboardModal/Onboarding";
 import {
   Badge,
   Box,
@@ -17,15 +17,15 @@ import {
   Text,
   createListCollection,
   useDisclosure,
-} from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
-import { FaPlus } from "react-icons/fa"
+} from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { FaPlus } from "react-icons/fa";
 
 export const Route = createFileRoute("/_layout/_logged_in/manage-accounts")({
   component: ManageAccounts,
-})
+});
 
 function ManageAccounts() {
   const {
@@ -35,33 +35,33 @@ function ManageAccounts() {
   } = useQuery({
     queryKey: ["accounts"],
     queryFn: AccountsService.getTransactionSources,
-  })
+  });
 
   const {
     open: isAddAccountOpen,
     onOpen: onAddAccountOpen,
     onClose: onAddAccountClose,
-  } = useDisclosure()
+  } = useDisclosure();
 
-  const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>(0)
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>(0);
 
   const handleAccountChange = (details: { value: string[] }) => {
     if (details.value.length > 0) {
-      setSelectedAccountIndex(Number.parseInt(details.value[0], 10))
+      setSelectedAccountIndex(Number.parseInt(details.value[0], 10));
     }
-  }
+  };
 
   const isPlaidLinked = (accountId: number) => {
-    const account = accounts?.find((a) => a.id === accountId)
-    return account?.is_plaid_connected || false
-  }
+    const account = accounts?.find((a) => a.id === accountId);
+    return account?.is_plaid_connected || false;
+  };
 
   if (isError) {
     return (
       <Container maxW="full">
         <Text>Failed to load accounts. Please try again.</Text>
       </Container>
-    )
+    );
   }
 
   return (
@@ -84,7 +84,6 @@ function ManageAccounts() {
           <Box mb={6}>
             <SelectRoot
               id="account_selector"
-              placeholder="Select an account"
               size="lg"
               collection={createListCollection({
                 items: accounts.map((account, index) => ({
@@ -156,5 +155,5 @@ function ManageAccounts() {
         isDialog={true}
       />
     </Container>
-  )
+  );
 }

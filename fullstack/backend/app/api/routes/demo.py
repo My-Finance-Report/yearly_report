@@ -5,16 +5,11 @@ from app.api.routes.transactions import BudgetLookup, recursive_grouping
 from app.local_types import (
     AggregatedTransactions,
 )
-from app.models import (
-    Category,
-    CategoryId,
-    FilterData,
-    FilterEntries,
-    GroupByOption,
-    Transaction,
-    TransactionSource,
-    TransactionSourceId,
-)
+from app.models.category import Category, CategoryId
+from app.models.filter import FilterData, FilterEntries, GroupByOption
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource, TransactionSourceId
+
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
@@ -58,8 +53,6 @@ def apply_month_filter(
         else []
     )
 
-    print(month_numbers)
-    print([t.date_of_transaction.month for t in transactions])
     return [t for t in transactions if t.date_of_transaction.month in month_numbers]
 
 

@@ -1,6 +1,5 @@
-import { AccountsService } from "@/client"
+import { AccountsService } from "@/client";
 
-import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
@@ -14,43 +13,47 @@ import {
   TableRoot,
   TableRow,
   VStack,
-} from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
-import { FaPlus } from "react-icons/fa"
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { FaEdit, FaPlus, FaSave, FaWindowClose } from "react-icons/fa";
 
 interface CategoriesManagerProps {
-  accountId: number
+  accountId: number;
 }
 
 export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
-  const queryClient = useQueryClient()
-  const [newCategory, setNewCategory] = useState("")
+  const queryClient = useQueryClient();
+  const [newCategory, setNewCategory] = useState("");
   const [editingCategory, setEditingCategory] = useState<{
-    id: number
-    name: string
-  } | null>(null)
+    id: number;
+    name: string;
+  } | null>(null);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories", accountId],
     queryFn: () => AccountsService.getCategories({ sourceId: accountId }),
-  })
+  });
 
   const updateCategoryMutation = useMutation({
     mutationFn: ({
       categoryId,
       name,
       sourceId,
-    }: { categoryId: number; name: string; sourceId: number }) =>
+    }: {
+      categoryId: number;
+      name: string;
+      sourceId: number;
+    }) =>
       AccountsService.updateCategory({
         categoryId,
         requestBody: { name, source_id: sourceId },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
-      setEditingCategory(null)
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
+      setEditingCategory(null);
     },
-  })
+  });
 
   const addCategoryMutation = useMutation({
     mutationFn: () =>
@@ -59,10 +62,10 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
         requestBody: { source_id: accountId, name: newCategory },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories", accountId] })
-      setNewCategory("")
+      queryClient.invalidateQueries({ queryKey: ["categories", accountId] });
+      setNewCategory("");
     },
-  })
+  });
 
   return (
     <Box>
@@ -110,7 +113,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           }
                         >
                           {" "}
-                          <CheckIcon />
+                          <FaSave />
                           Save
                         </Button>
                         <Button
@@ -118,7 +121,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                           aria-label="Cancel"
                           onClick={() => setEditingCategory(null)}
                         >
-                          <CloseIcon />
+                          <FaWindowClose />
                         </Button>
                       </HStack>
                     ) : (
@@ -133,7 +136,7 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
                             })
                           }
                         >
-                          <EditIcon /> Edit
+                          <FaEdit /> Edit
                         </Button>
                       </HStack>
                     )}
@@ -161,5 +164,5 @@ export const CategoriesManager = ({ accountId }: CategoriesManagerProps) => {
         </VStack>
       )}
     </Box>
-  )
-}
+  );
+};

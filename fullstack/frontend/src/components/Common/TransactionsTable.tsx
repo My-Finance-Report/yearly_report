@@ -1,8 +1,8 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons"
 import {
   Box,
   Button,
   Collapsible,
+  Flex,
   HStack,
   Table,
   TableBody,
@@ -12,17 +12,19 @@ import {
   TableRow,
   Text,
   useDisclosure,
-} from "@chakra-ui/react"
-import React, { useState } from "react"
+} from "@chakra-ui/react";
+import React, { useState } from "react";
 
-import { useColorPalette } from "@/hooks/useColor"
-import { FiEdit } from "react-icons/fi"
+import { useColorPalette } from "@/hooks/useColor";
+import { FiEdit, FiTrash } from "react-icons/fi";
 import type {
   AggregatedGroup,
   TransactionOut,
   TransactionsGetAggregatedTransactionsResponse,
-} from "../../client"
-import EditTransaction from "./EditTransaction"
+} from "../../client";
+import EditTransaction from "./EditTransaction";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import Delete from "./DeleteAlert";
 
 export function TransactionsTable({
   data,
@@ -30,30 +32,30 @@ export function TransactionsTable({
   showWithdrawals,
   isMobile,
 }: {
-  data: TransactionsGetAggregatedTransactionsResponse
-  toShowNames?: (string | undefined)[] | undefined
-  showWithdrawals: boolean
-  isMobile: boolean
+  data: TransactionsGetAggregatedTransactionsResponse;
+  toShowNames?: (string | undefined)[] | undefined;
+  showWithdrawals: boolean;
+  isMobile: boolean;
 }) {
   const [expandedGroups, setExpandedGroups] = useState<{
-    [key: string]: boolean
-  }>({})
+    [key: string]: boolean;
+  }>({});
 
   const toggleGroup = (sourceId: number | string, groupKey: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [`${sourceId}-${groupKey}`]: !prev[`${sourceId}-${groupKey}`],
-    }))
-  }
+    }));
+  };
 
   if (!data.groups.length) {
-    return null
+    return null;
   }
 
-  const isBudget = data.groups[0].groupby_kind === "budget"
+  const isBudget = data.groups[0].groupby_kind === "budget";
 
   return (
-    <Table.Root variant="outline" borderRadius="md">
+    <Table.Root variant="outline" borderRadius="md" size="md">
       <TableHeader>
         <TableRow>
           <TableColumnHeader />
@@ -64,17 +66,12 @@ export function TransactionsTable({
             {isMobile ? null : isBudget ? "BUDGET" : ""}
           </TableColumnHeader>
           {isMobile ? (
-            <TableColumnHeader textAlign="end" colSpan={1}>
-              EXPENSE / DEPOSIT
-            </TableColumnHeader>
+            <TableColumnHeader colSpan={1}>EXPENSE / DEPOSIT</TableColumnHeader>
           ) : (
             <>
-              <TableColumnHeader textAlign="end">EXPENSE</TableColumnHeader>
-              <TableColumnHeader textAlign="end">DEPOSIT</TableColumnHeader>
+              <TableColumnHeader>EXPENSE</TableColumnHeader>
+              <TableColumnHeader>DEPOSIT</TableColumnHeader>
             </>
-          )}
-          {!isMobile && (
-            <TableColumnHeader textAlign="end">TOTAL</TableColumnHeader>
           )}
         </TableRow>
       </TableHeader>
@@ -94,27 +91,20 @@ export function TransactionsTable({
           <TableCell colSpan={2}>Totals</TableCell>
           <TableCell />
           {isMobile ? (
-            <TableCell textAlign="end">
+            <TableCell>
               {formatAmount(data.overall_withdrawals)} /{" "}
               {formatAmount(data.overall_deposits)}
             </TableCell>
           ) : (
             <>
-              <TableCell textAlign="end">
-                {formatAmount(data.overall_withdrawals)}
-              </TableCell>
-              <TableCell textAlign="end">
-                {formatAmount(data.overall_deposits)}
-              </TableCell>
-              <TableCell textAlign="end">
-                {formatAmount(data.overall_balance)}
-              </TableCell>
+              <TableCell>{formatAmount(data.overall_withdrawals)}</TableCell>
+              <TableCell>{formatAmount(data.overall_deposits)}</TableCell>
             </>
           )}
         </TableRow>
       </TableBody>
     </Table.Root>
-  )
+  );
 }
 
 function RenderGroups({
@@ -128,35 +118,35 @@ function RenderGroups({
   totalDeposits,
   showWithdrawals,
 }: {
-  groups: AggregatedGroup[]
-  pathPrefix: string
-  toggleGroup: (groupId: number | string, groupKey: string) => void
-  expandedGroups: { [key: string]: boolean }
-  toShowNames?: (string | undefined)[] | undefined
-  totalWidthdrawals?: number
-  showWithdrawals: boolean
-  isMobile: boolean
-  totalDeposits?: number
+  groups: AggregatedGroup[];
+  pathPrefix: string;
+  toggleGroup: (groupId: number | string, groupKey: string) => void;
+  expandedGroups: { [key: string]: boolean };
+  toShowNames?: (string | undefined)[] | undefined;
+  totalWidthdrawals?: number;
+  showWithdrawals: boolean;
+  isMobile: boolean;
+  totalDeposits?: number;
 }) {
   return (
     <>
       {groups.map((group) => {
         const groupKey = pathPrefix
           ? `${pathPrefix}-${group.group_id}`
-          : `${group.group_id}`
+          : `${group.group_id}`;
 
         const isExpanded =
-          expandedGroups[`${group.group_id}-${groupKey}`] || false
+          expandedGroups[`${group.group_id}-${groupKey}`] || false;
 
-        const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits
-        const budgetedTotal = group.budgeted_total
+        const totalAmount = showWithdrawals ? totalWidthdrawals : totalDeposits;
+        const budgetedTotal = group.budgeted_total;
         const specificAmount = showWithdrawals
           ? group.total_withdrawals
-          : group.total_deposits
+          : group.total_deposits;
 
-        const { getColorForName } = useColorPalette()
+        const { getColorForName } = useColorPalette();
 
-        const isUnbudgeted = group.group_name === "Unbudgeted"
+        const isUnbudgeted = group.group_name === "Unbudgeted";
 
         return (
           <React.Fragment key={groupKey}>
@@ -165,7 +155,7 @@ function RenderGroups({
               onClick={() => toggleGroup(group.group_id, groupKey)}
             >
               <TableCell>
-                {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
               </TableCell>
               <TableCell>
                 <HStack>
@@ -184,7 +174,7 @@ function RenderGroups({
               </TableCell>
               {totalAmount || budgetedTotal ? (
                 <TableCell>
-                  <PercentageBar
+                  <BudgetBar
                     amount={specificAmount}
                     total={totalAmount}
                     budgetedTotal={budgetedTotal}
@@ -196,33 +186,25 @@ function RenderGroups({
                 <TableCell />
               )}
               {isMobile ? (
-                <TableCell textAlign="end">
+                <TableCell>
                   {formatAmount(group.total_withdrawals)} /{" "}
                   {formatAmount(group.total_deposits)}
                 </TableCell>
               ) : (
                 <>
-                  <TableCell textAlign="end">
-                    {formatAmount(group.total_withdrawals)}
-                  </TableCell>
-                  <TableCell textAlign="end">
-                    {formatAmount(group.total_deposits)}
-                  </TableCell>
-                  <TableCell textAlign="end">
-                    {formatAmount(group.total_balance)}
-                  </TableCell>
+                  <TableCell>{formatAmount(group.total_withdrawals)}</TableCell>
+                  <TableCell>{formatAmount(group.total_deposits)}</TableCell>
                 </>
               )}
             </TableRow>
-
             <Collapsible.Root open={isExpanded} lazyMount asChild>
               <TableRow>
-                <TableCell colSpan={6} p={0}>
+                <TableCell colSpan={5} p={0}>
                   <Collapsible.Content>
                     <Box pl={isMobile ? 2 : 4}>
                       {group.subgroups && group.subgroups.length > 0 ? (
                         <Table.Root variant="outline" size="sm">
-                          <TableHeader>
+                          <TableHeader justifyContent={"space-between"}>
                             <TableRow>
                               <TableColumnHeader />
                               <TableColumnHeader>
@@ -234,20 +216,13 @@ function RenderGroups({
                                 <TableColumnHeader />
                               )}
                               {isMobile ? (
-                                <TableColumnHeader textAlign="end" colSpan={1}>
+                                <TableColumnHeader colSpan={1}>
                                   EXPENSE / DEPOSIT
                                 </TableColumnHeader>
                               ) : (
                                 <>
-                                  <TableColumnHeader textAlign="end">
-                                    EXPENSE
-                                  </TableColumnHeader>
-                                  <TableColumnHeader textAlign="end">
-                                    DEPOSIT
-                                  </TableColumnHeader>
-                                  <TableColumnHeader textAlign="end">
-                                    TOTAL
-                                  </TableColumnHeader>
+                                  <TableColumnHeader>EXPENSE</TableColumnHeader>
+                                  <TableColumnHeader>DEPOSIT</TableColumnHeader>
                                 </>
                               )}
                             </TableRow>
@@ -294,20 +269,21 @@ function RenderGroups({
               </TableRow>
             </Collapsible.Root>
           </React.Fragment>
-        )
+        );
       })}
     </>
-  )
+  );
 }
 
 function TransactionRow({
   transaction,
   isMobile,
 }: {
-  transaction: TransactionOut
-  isMobile: boolean
+  transaction: TransactionOut;
+  isMobile: boolean;
 }) {
-  const editTransactionModal = useDisclosure()
+  const editTransactionModal = useDisclosure();
+  const deleteTransactionModal = useDisclosure();
 
   return (
     <TableRow>
@@ -322,57 +298,72 @@ function TransactionRow({
         {"withdrawal" === transaction.kind ? "Expense" : "Deposit"}
       </TableCell>
       <TableCell>
-        <Button
-          onClick={editTransactionModal.onOpen}
-          size="sm"
-          variant="outline"
-        >
-          <FiEdit size="8px" />
-        </Button>
+        <Flex direction="row" gap={2}>
+          <Button
+            onClick={editTransactionModal.onOpen}
+            size="sm"
+            variant="outline"
+          >
+            <FiEdit size="8px" />
+          </Button>
+          <Button
+            onClick={deleteTransactionModal.onOpen}
+            size="sm"
+            variant="outline"
+          >
+            <FiTrash size="8px" />
+          </Button>
+        </Flex>
       </TableCell>
       <EditTransaction
         transaction={transaction}
         isOpen={editTransactionModal.open}
         onClose={editTransactionModal.onClose}
       />
+      <Delete
+        type="transaction"
+        isOpen={deleteTransactionModal.open}
+        onClose={deleteTransactionModal.onClose}
+        entity={transaction}
+      />
     </TableRow>
-  )
+  );
 }
 
 function formatAmount(amount: number) {
   return amount.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
-  })
+  });
 }
 
-function PercentageBar({
+function BudgetBar({
   amount,
   total,
   budgetedTotal,
   isUnbudgeted,
   isMobile,
 }: {
-  amount: number
-  total: number | undefined
-  budgetedTotal?: number | undefined
-  isUnbudgeted: boolean
-  isMobile: boolean
+  amount: number;
+  total: number | undefined;
+  budgetedTotal?: number | undefined;
+  isUnbudgeted: boolean;
+  isMobile: boolean;
 }) {
   if (isMobile) {
-    return null
+    return null;
   }
 
-  const totalToUse = budgetedTotal ? budgetedTotal : total
+  const totalToUse = budgetedTotal ? budgetedTotal : total;
 
   if (!totalToUse) {
-    return null
+    return null;
   }
 
-  const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100
+  const value = (Math.abs(amount) / Math.abs(totalToUse)) * 100;
 
   if (isUnbudgeted) {
-    return <Text>n/a</Text>
+    return <Text>n/a</Text>;
   }
 
   if (budgetedTotal) {
@@ -380,18 +371,7 @@ function PercentageBar({
       <Text color={value > 100 ? "red" : "green"}>
         {value.toFixed()}% (${totalToUse} was budgeted)
       </Text>
-    )
+    );
   }
-  return null
-
-  /*   return (
-    <Progress.Root value={value} maxW="sm">
-      <HStack gap="5" minW={200}>
-        <Progress.Track maxW={150} minW={150} flex="1">
-          <Progress.Range />
-        </Progress.Track>
-      </HStack>
-    </Progress.Root>
-  );
- */
+  return null;
 }

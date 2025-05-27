@@ -1,3 +1,2 @@
  
-cd fullstack 
 ./scripts/generate-client.sh      

@@ -1,5 +1,5 @@
-import { AccountsService, UploadsService } from "@/client"
-import useCustomToast from "@/hooks/useCustomToast"
+import { AccountsService, UploadsService } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Badge,
   Box,
@@ -12,25 +12,30 @@ import {
   Table,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import React, { useState, useEffect } from "react"
-import { FaCreditCard, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
-import { ArchiveButton } from "./ArchiveButton"
-import { CategoriesManager } from "./CategoriesManager"
-import { RecategorizeButton } from "./RecategorizeButton"
-import { DeleteButton, ReprocessButton } from "./ReprocessButton"
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import {
+  FaCreditCard,
+  FaEdit,
+  FaMoneyBillWave,
+  FaUniversity,
+} from "react-icons/fa";
+import { ArchiveButton } from "./ArchiveButton";
+import { UploadButton } from "./UploadButton";
+import { CategoriesManager } from "./CategoriesManager";
+import { RecategorizeButton } from "./RecategorizeButton";
+import { DeleteButton, ReprocessButton } from "./ReprocessButton";
 
-import { useIsMobile } from "@/hooks/useIsMobile"
-import { EditIcon } from "@chakra-ui/icons"
-import PlaidSyncStatus from "./PlaidSyncStatus"
+import { useIsMobile } from "@/hooks/useIsMobile";
+import PlaidSyncStatus from "./PlaidSyncStatus";
 
 interface AccountDetailsProps {
-  accountId: number
-  accountName: string
-  accountType: string
-  isPlaidLinked: boolean
-  isArchived?: boolean
+  accountId: number;
+  accountName: string;
+  accountType: string;
+  isPlaidLinked: boolean;
+  isArchived?: boolean;
 }
 
 export function AccountDetails({
@@ -40,26 +45,26 @@ export function AccountDetails({
   isPlaidLinked,
   isArchived = false,
 }: AccountDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [newName, setNewName] = useState(accountName)
-  const queryClient = useQueryClient()
-  const toast = useCustomToast()
-  const [activeTab, setActiveTab] = useState(0)
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(accountName);
+  const queryClient = useQueryClient();
+  const toast = useCustomToast();
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     if (!isEditing) {
-      setNewName(accountName)
+      setNewName(accountName);
     }
-  }, [accountName, isEditing])
+  }, [accountName, isEditing]);
 
   const { data: uploadedFiles, isLoading: isLoadingFiles } = useQuery({
     queryKey: ["uploadedFiles", accountId],
     queryFn: () => UploadsService.getUploads(),
     select: (data) =>
       data.filter((file) => {
-        return file.transaction_source_id === accountId
+        return file.transaction_source_id === accountId;
       }),
-  })
+  });
 
   const updateAccountMutation = useMutation({
     mutationFn: () =>
@@ -68,70 +73,70 @@ export function AccountDetails({
         requestBody: { name: newName },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts"] })
-      setIsEditing(false)
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      setIsEditing(false);
       toast(
         "Account updated",
         "The account name was updated successfully.",
         "success",
-      )
+      );
     },
     onError: () => {
       toast(
         "Update failed",
         "There was an error updating the account name.",
         "error",
-      )
+      );
     },
-  })
+  });
 
   const handleUpdateName = () => {
     if (newName.trim() && newName !== accountName) {
-      updateAccountMutation.mutate()
+      updateAccountMutation.mutate();
     } else {
-      setIsEditing(false)
-      setNewName(accountName)
+      setIsEditing(false);
+      setNewName(accountName);
     }
-  }
+  };
 
   const handleFileUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ["uploadedFiles", accountId] })
-  }
+    queryClient.invalidateQueries({ queryKey: ["uploadedFiles", accountId] });
+  };
 
   const getAccountIcon = () => {
     switch (accountType) {
       case "credit":
-        return FaCreditCard
+        return FaCreditCard;
       case "investment":
-        return FaMoneyBillWave
+        return FaMoneyBillWave;
       default:
-        return FaUniversity
+        return FaUniversity;
     }
-  }
+  };
 
   const getAccountTypeColor = () => {
     switch (accountType) {
       case "credit":
-        return "red"
+        return "red";
       case "investment":
-        return "blue"
+        return "blue";
       default:
-        return "green"
+        return "green";
     }
-  }
+  };
 
   const getAccountTypeLabel = () => {
     switch (accountType) {
       case "credit":
-        return "Credit"
+        return "Credit";
       case "investment":
-        return "Investment"
+        return "Investment";
       default:
-        return "Bank"
+        return "Bank";
     }
-  }
+  };
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   return (
     <Box
@@ -183,8 +188,8 @@ export function AccountDetails({
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  setIsEditing(false)
-                  setNewName(accountName)
+                  setIsEditing(false);
+                  setNewName(accountName);
                 }}
                 disabled={isArchived}
               >
@@ -208,7 +213,7 @@ export function AccountDetails({
                 onClick={() => setIsEditing(true)}
                 disabled={isArchived}
               >
-                <EditIcon mr={1} />
+                <FaEdit />
               </Button>
             </Flex>
           )}
@@ -230,6 +235,7 @@ export function AccountDetails({
           </Badge>
         </Flex>
         <Flex gap={2}>
+          {!isPlaidLinked && <UploadButton />}
           <RecategorizeButton sourceId={accountId} disabled={isArchived} />
           <ArchiveButton sourceId={accountId} isArchived={isArchived} />
         </Flex>
@@ -320,5 +326,5 @@ export function AccountDetails({
         )}
       </Box>
     </Box>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import { OauthService } from "@/client"
-import TwoFactorSetup from "@/components/TwoFactorSetup"
-import TwoFactorVerification from "@/components/TwoFactorVerification"
-import { PasswordInput } from "@/components/ui/password-input"
-import useAuth, { isSessionActive } from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
+import { OauthService } from "@/client";
+import TwoFactorSetup from "@/components/TwoFactorSetup";
+import TwoFactorVerification from "@/components/TwoFactorVerification";
+import { PasswordInput } from "@/components/ui/password-input";
+import useAuth, { isSessionActive } from "@/hooks/useAuth";
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Box,
   Button,
@@ -13,32 +13,32 @@ import {
   Input,
   Link,
   Text,
-} from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
+} from "@chakra-ui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Link as RouterLink,
   createFileRoute,
   redirect,
   useNavigate,
-} from "@tanstack/react-router"
-import { useState } from "react"
-import { type SubmitHandler, useForm } from "react-hook-form"
-import { FcGoogle } from "react-icons/fc"
-import { emailPattern } from "../../utils"
+} from "@tanstack/react-router";
+import { useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
+import { emailPattern } from "../../utils";
 
 interface LoginFormData {
-  username: string
-  password: string
+  username: string;
+  password: string;
 }
 
 export const Route = createFileRoute("/_layout/login")({
   component: Login,
   beforeLoad: async () => {
     if (await isSessionActive()) {
-      throw redirect({ to: "/transactions" })
+      throw redirect({ to: "/transactions" });
     }
   },
-})
+});
 
 function Login() {
   const {
@@ -49,12 +49,12 @@ function Login() {
     requires2FASetup,
     tempToken,
     reset2FAStates,
-  } = useAuth()
+  } = useAuth();
 
-  const [blahError, setError] = useState(false)
-  const showToast = useCustomToast()
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const [blahError, setError] = useState(false);
+  const showToast = useCustomToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -66,52 +66,56 @@ function Login() {
       username: "",
       password: "",
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    if (isSubmitting) return
-    resetError()
+    if (isSubmitting) return;
+    resetError();
     try {
-      await loginMutation.mutateAsync(data)
+      await loginMutation.mutateAsync(data);
     } catch {
-      setError(true)
+      setError(true);
     }
-  }
+  };
 
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const handleGoogleLogin = async () => {
     try {
-      setIsGoogleLoading(true)
-      const { url } = await OauthService.loginGoogle()
+      setIsGoogleLoading(true);
+      const { url } = await OauthService.loginGoogle();
 
       if (url) {
-        window.location.href = url
+        window.location.href = url;
       } else {
-        showToast("Error", "Failed to initiate Google login", "error")
+        showToast("Error", "Failed to initiate Google login", "error");
       }
     } catch (error) {
-      console.error("Google login error:", error)
-      showToast("Error", "Failed to connect to authentication service", "error")
+      console.error("Google login error:", error);
+      showToast(
+        "Error",
+        "Failed to connect to authentication service",
+        "error",
+      );
     } finally {
-      setIsGoogleLoading(false)
+      setIsGoogleLoading(false);
     }
-  }
+  };
 
   const handleBack = () => {
-    reset2FAStates()
-  }
+    reset2FAStates();
+  };
 
   const handleSuccessfulVerification = () => {
     // Set the session as active to enable user queries
-    sessionStorage.setItem("session_active", "true")
+    sessionStorage.setItem("session_active", "true");
 
     // Force a refresh of the current user data
-    queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+    queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-    reset2FAStates()
+    reset2FAStates();
 
-    navigate({ to: "/" })
-  }
+    navigate({ to: "/" });
+  };
 
   if (requires2FA) {
     if (!tempToken) {
@@ -119,9 +123,9 @@ function Login() {
         "Error",
         "Authentication token is missing. Please try logging in again.",
         "error",
-      )
-      reset2FAStates()
-      return null
+      );
+      reset2FAStates();
+      return null;
     }
     return (
       <Container maxW="sm" py={8}>
@@ -131,18 +135,18 @@ function Login() {
           temp_token={tempToken}
         />
       </Container>
-    )
+    );
   }
 
   if (requires2FASetup) {
     if (!tempToken) {
-      throw new Error("No temp token found")
+      throw new Error("No temp token found");
     }
     return (
       <Container maxW="sm" py={8}>
         <TwoFactorSetup onComplete={handleBack} tempToken={tempToken} />
       </Container>
-    )
+    );
   }
 
   return (
@@ -224,7 +228,7 @@ function Login() {
         </RouterLink>
       </Text>
     </Container>
-  )
+  );
 }
 
-export default Login
+export default Login;

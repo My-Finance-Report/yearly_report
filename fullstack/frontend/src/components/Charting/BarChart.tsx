@@ -1,31 +1,30 @@
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-} from "@/components/ui/chart"
-import { useColorPalette } from "@/hooks/useColor"
-import { useIsMobile } from "@/hooks/useIsMobile"
-import { Box } from "@chakra-ui/react"
-import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import type { TooltipProps } from "recharts"
-import type { GenericChartDataItem } from "./PieChart"
-import { Desc } from "./SankeyChart"
+} from "@/components/ui/chart";
+import { useColorPalette } from "@/hooks/useColor";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { Box } from "@chakra-ui/react";
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { TooltipProps } from "recharts";
+import type { GenericChartDataItem } from "./PieChart";
+import { Desc } from "./SankeyChart";
 
 export interface GenericBarChartProps {
-  data: GenericChartDataItem[]
-  dataKey: keyof GenericChartDataItem
-  nameKey: keyof GenericChartDataItem
-  config?: ChartConfig | null
-  description?: string
+  data: GenericChartDataItem[];
+  nameKey: keyof GenericChartDataItem;
+  config?: ChartConfig | null;
+  description?: string;
 }
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(value)
+  }).format(value);
 }
 
 function SingleSliceTooltip({
@@ -34,15 +33,15 @@ function SingleSliceTooltip({
   payload,
   hoveredKey,
 }: TooltipProps<number, string> & {
-  hoveredKey: string | null
+  hoveredKey: string | null;
 }) {
   if (!active || !payload || !payload.length || !hoveredKey) {
-    return null
+    return null;
   }
 
-  const hoveredItem = payload.find((item) => item.dataKey === hoveredKey)
+  const hoveredItem = payload.find((item) => item.dataKey === hoveredKey);
   if (!hoveredItem) {
-    return null
+    return null;
   }
 
   return (
@@ -65,7 +64,7 @@ function SingleSliceTooltip({
         </span>
       </div>
     </Box>
-  )
+  );
 }
 
 export function GenericBarChart({
@@ -74,29 +73,30 @@ export function GenericBarChart({
   config,
   description,
 }: GenericBarChartProps) {
-  const isMobile = useIsMobile()
-  const { getColorForName } = useColorPalette()
+  const isMobile = useIsMobile();
+  const { getColorForName } = useColorPalette();
 
-  const uniqueKeys = Object.keys(data[0] || {}).filter(
-    (key) => key !== nameKey && key !== "date",
-  )
-  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null)
+  const uniqueKeys = Array.from(
+    new Set(data.flatMap((obj) => Object.keys(obj))),
+  ).filter((key) => key !== nameKey && key !== "date");
+
+  const [hoveredKey, setHoveredKey] = React.useState<string | null>(null);
 
   const computedConfig: ChartConfig = React.useMemo(() => {
-    if (config) return config
+    if (config) return config;
 
     return uniqueKeys.reduce((acc, key) => {
       acc[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
         color: getColorForName(key),
-      }
-      return acc
-    }, {} as ChartConfig)
-  }, [config, getColorForName, uniqueKeys])
+      };
+      return acc;
+    }, {} as ChartConfig);
+  }, [config, getColorForName, uniqueKeys]);
 
-  let interval = isMobile ? undefined : 0
+  let interval = isMobile ? undefined : 0;
   if (data.length > 20) {
-    interval = undefined
+    interval = undefined;
   }
 
   return (
@@ -115,18 +115,18 @@ export function GenericBarChart({
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="date"
+              dataKey={nameKey}
               tickLine={false}
               axisLine={false}
               interval={interval}
               //@ts-expect-error tick is not defined in the type but exists
               tick={{ angle: -20, textAnchor: "end", textSize: 12 }}
               tickFormatter={(value: string) => {
-                const maxLength = 20
+                const maxLength = 20;
                 if (value.length > maxLength) {
-                  return `${value.slice(0, maxLength)}...`
+                  return `${value.slice(0, maxLength)}...`;
                 }
-                return value
+                return value;
               }}
             />
             <YAxis
@@ -158,5 +158,5 @@ export function GenericBarChart({
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Card>
-  )
+  );
 }

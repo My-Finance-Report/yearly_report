@@ -1,6 +1,6 @@
-import { PlaidService, UploadsService } from "@/client"
-import FileDropzone from "@/components/Common/Dropzone"
-import useCustomToast from "@/hooks/useCustomToast"
+import { PlaidService, UploadsService } from "@/client";
+import FileDropzone from "@/components/Common/Dropzone";
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Box,
   Button,
@@ -18,27 +18,32 @@ import {
   Icon,
   Text,
   useDisclosure,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useState } from "react"
-import { FaFileUpload, FaUniversity } from "react-icons/fa"
-import { usePlaidLink } from "react-plaid-link"
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { FaFileUpload, FaUniversity } from "react-icons/fa";
+import { usePlaidLink } from "react-plaid-link";
 
 export function OnboardDialogs({
   isOnboardOpen,
   onOnboardClose,
   isDialog,
-}: { isDialog: boolean; isOnboardOpen: boolean; onOnboardClose: () => void }) {
+}: {
+  isDialog: boolean;
+  isOnboardOpen: boolean;
+  onOnboardClose: () => void;
+}) {
   const {
     open: isUploadOpen,
     onOpen: onUploadOpen,
     onClose: onUploadClose,
-  } = useDisclosure()
+  } = useDisclosure();
   const {
     open: isPlaidOpen,
     onOpen: onPlaidOpen,
     onClose: onPlaidClose,
-  } = useDisclosure()
+  } = useDisclosure();
 
   return (
     <>
@@ -52,30 +57,33 @@ export function OnboardDialogs({
       <PlaidDialog isPlaidOpen={isPlaidOpen} onPlaidClose={onPlaidClose} />
       <UploadDialog isUploadOpen={isUploadOpen} onUploadClose={onUploadClose} />
     </>
-  )
+  );
 }
 
 function PlaidDialog({
   isPlaidOpen,
   onPlaidClose,
-}: { isPlaidOpen: boolean; onPlaidClose: () => void }) {
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
-  const [linkToken, setLinkToken] = useState<string | null>(null)
+}: {
+  isPlaidOpen: boolean;
+  onPlaidClose: () => void;
+}) {
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
+  const [linkToken, setLinkToken] = useState<string | null>(null);
 
   // Create link token mutation
   const createLinkTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await PlaidService.getLinkToken()
-      return response
+      const response = await PlaidService.getLinkToken();
+      return response;
     },
     onSuccess: (data) => {
-      setLinkToken(data.link_token)
+      setLinkToken(data.link_token);
     },
     onError: () => {
-      toast("Error", "Could not create link token", "error")
+      toast("Error", "Could not create link token", "error");
     },
-  })
+  });
 
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
@@ -84,25 +92,25 @@ function PlaidDialog({
         requestBody: {
           public_token,
         },
-      })
-      return response
+      });
+      return response;
     },
     onSuccess: () => {
-      toast("Success", "Account connected successfully", "success")
-      queryClient.invalidateQueries({ queryKey: ["accounts"] })
-      onPlaidClose()
+      toast("Success", "Account connected successfully", "success");
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      onPlaidClose();
     },
     onError: () => {
-      toast("Error", "Failed to connect account", "error")
+      toast("Error", "Failed to connect account", "error");
     },
-  })
+  });
 
   // Initialize Plaid Link
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: (public_token) => {
-      exchangeTokenMutation.mutate(public_token)
-      setLinkToken(null)
+      exchangeTokenMutation.mutate(public_token);
+      setLinkToken(null);
     },
     onExit: (err) => {
       if (err) {
@@ -110,28 +118,28 @@ function PlaidDialog({
           "Connection Error",
           err.display_message || "Error connecting to your bank",
           "error",
-        )
+        );
       }
-      onPlaidClose()
+      onPlaidClose();
     },
-  })
+  });
 
   useEffect(() => {
     if (isPlaidOpen && !linkToken) {
-      createLinkTokenMutation.mutate()
+      createLinkTokenMutation.mutate();
     }
-  }, [isPlaidOpen, linkToken])
+  }, [isPlaidOpen, linkToken]);
 
   const isPlaidLoading =
-    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
+    createLinkTokenMutation.isPending || exchangeTokenMutation.isPending;
 
   const handleConnectPlaid = useCallback(() => {
     if (ready && linkToken) {
-      open()
+      open();
     } else {
-      createLinkTokenMutation.mutate()
+      createLinkTokenMutation.mutate();
     }
-  }, [ready, linkToken, open])
+  }, [ready, linkToken, open]);
 
   return (
     <DialogRoot
@@ -179,41 +187,45 @@ function PlaidDialog({
         </DialogContent>
       </DialogPositioner>
     </DialogRoot>
-  )
+  );
 }
 
-function UploadDialog({
+export function UploadDialog({
   isUploadOpen,
   onUploadClose,
-}: { isUploadOpen: boolean; onUploadClose: () => void }) {
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
+}: {
+  isUploadOpen: boolean;
+  onUploadClose: () => void;
+}) {
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const uploadMutation = useMutation({
     mutationFn: (files: File[]) => {
-      // The Body_uploads_upload_files type only expects files
-      const data = { formData: { files } }
-      return UploadsService.uploadFiles(data)
+      const data = { formData: { files } };
+      return UploadsService.uploadFiles(data);
     },
     onSuccess: () => {
-      toast(
-        "Files uploaded",
-        "The files were processed successfully.",
-        "success",
-      )
-      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] })
-      onUploadClose()
+      toast("Files uploaded", "The files are being processed", "success");
+      queryClient.invalidateQueries({ queryKey: ["uploadedFiles"] });
+      onUploadClose();
+      navigate({ to: "/transactions" });
     },
     onError: () => {
-      toast("Upload failed", "There was an error uploading the files.", "error")
+      toast(
+        "Upload failed",
+        "There was an error uploading the files.",
+        "error",
+      );
     },
-  })
+  });
 
   const handleUpload = (files: File[]) => {
     if (files.length > 0) {
-      uploadMutation.mutate(files)
+      uploadMutation.mutate(files);
     }
-  }
+  };
 
   return (
     <DialogRoot
@@ -240,7 +252,7 @@ function UploadDialog({
         </DialogContent>
       </DialogPositioner>
     </DialogRoot>
-  )
+  );
 }
 
 function PlaidOrUploadSelector({
@@ -250,11 +262,11 @@ function PlaidOrUploadSelector({
   onPlaidOpen,
   onOnboardClose,
 }: {
-  isDialog: boolean
-  onUploadOpen: () => void
-  isOnboardOpen: boolean
-  onPlaidOpen: () => void
-  onOnboardClose: () => void
+  isDialog: boolean;
+  onUploadOpen: () => void;
+  isOnboardOpen: boolean;
+  onPlaidOpen: () => void;
+  onOnboardClose: () => void;
 }) {
   if (isDialog) {
     return (
@@ -283,7 +295,7 @@ function PlaidOrUploadSelector({
           </DialogContent>
         </DialogPositioner>
       </DialogRoot>
-    )
+    );
   }
 
   return (
@@ -292,7 +304,7 @@ function PlaidOrUploadSelector({
       onOnboardClose={onOnboardClose}
       onUploadOpen={onUploadOpen}
     />
-  )
+  );
 }
 
 function AccountSelectionOptions({
@@ -300,9 +312,9 @@ function AccountSelectionOptions({
   onOnboardClose,
   onUploadOpen,
 }: {
-  onPlaidOpen: () => void
-  onOnboardClose: () => void
-  onUploadOpen: () => void
+  onPlaidOpen: () => void;
+  onOnboardClose: () => void;
+  onUploadOpen: () => void;
 }) {
   return (
     <Flex direction="column" gap={4} align="stretch">
@@ -312,8 +324,8 @@ function AccountSelectionOptions({
         borderRadius="md"
         cursor="pointer"
         onClick={() => {
-          onOnboardClose()
-          onPlaidOpen()
+          onOnboardClose();
+          onPlaidOpen();
         }}
       >
         <Flex align="center">
@@ -336,8 +348,8 @@ function AccountSelectionOptions({
         borderRadius="md"
         cursor="pointer"
         onClick={() => {
-          onOnboardClose()
-          onUploadOpen()
+          onOnboardClose();
+          onUploadOpen();
         }}
       >
         <Flex align="center">
@@ -353,5 +365,5 @@ function AccountSelectionOptions({
         </Flex>
       </Box>
     </Flex>
-  )
+  );
 }

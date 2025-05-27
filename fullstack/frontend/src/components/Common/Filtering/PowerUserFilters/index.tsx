@@ -1,7 +1,12 @@
-import { Route } from "@/routes/_layout/_logged_in/transactions"
-import type {  FilterEntries } from "@/client";
+import { Route } from "@/routes/_layout/_logged_in/transactions";
+import type { FilterEntries } from "@/client";
 import { Button, Flex } from "@chakra-ui/react";
-import { handleDragEnd, moveItemDown,breakoutToCustomFilter, moveItemUp } from "./DragHelpers";
+import {
+  handleDragEnd,
+  moveItemDown,
+  breakoutToCustomFilter,
+  moveItemUp,
+} from "./DragHelpers";
 
 import WithdrawDepositSelectorSegmented from "@/components/Common/WithdrawDepositSelector";
 import { Box, CloseButton, Menu, Portal, Tag, Text } from "@chakra-ui/react";
@@ -37,7 +42,6 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "@tanstack/react-router";
 
-
 export function PowerUserButtons({
   groupingOptionsChoices,
   setShowDeposits,
@@ -53,30 +57,32 @@ export function PowerUserButtons({
   );
 
   const isMobile = useIsMobile();
-  const {  currentFilter, setCurrentFilter } = useFilters();
+  const { currentFilter, setCurrentFilter } = useFilters();
 
   const handleToggleOption = (option: GroupByOption) => {
+    const newLookup = { ...currentFilter.filter_data.lookup };
 
-      const newLookup = { ...currentFilter.filter_data.lookup };
+    if (newLookup[option]) {
+      const rest = { ...newLookup };
+      delete rest[option];
+      return breakoutToCustomFilter(
+        { ...currentFilter.filter_data, lookup: rest },
+        setCurrentFilter,
+      );
+    }
 
-      if (newLookup[option]) {
-        const rest = { ...newLookup };
-        delete rest[option];
-        return breakoutToCustomFilter({ ...currentFilter.filter_data, lookup: rest }, setCurrentFilter);
-      }
+    const maxIndex = Object.values(newLookup).reduce(
+      (max, entry) => Math.max(max, (entry as FilterEntries).index),
+      -1,
+    ) as number;
 
-      const maxIndex = Object.values(newLookup).reduce(
-        (max, entry) => Math.max(max, (entry as FilterEntries).index),
-        -1
-      ) as number;
-
-
-    return breakoutToCustomFilter({
-      lookup: {
-        ...newLookup,
-        [option]: {
-          visible: true,
-          specifics: [],
+    return breakoutToCustomFilter(
+      {
+        lookup: {
+          ...newLookup,
+          [option]: {
+            visible: true,
+            specifics: [],
             index: maxIndex + 1,
           },
         },
@@ -87,14 +93,14 @@ export function PowerUserButtons({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
-  const { showAdvanced } = Route.useSearch()
-  const navigation = useNavigate();
+  const { showAdvanced } = Route.useSearch();
+  const navigation = useNavigate({ from: Route.fullPath });
   const handleShowAdvanced = () => {
     navigation({
-      search: (prev: Record<string, unknown>) => ({
+      search: (prev: typeof Route.useSearch) => ({
         ...prev,
         showAdvanced: true,
       }),
@@ -125,7 +131,9 @@ export function PowerUserButtons({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={(event) => handleDragEnd(event, setCurrentFilter, currentFilter)}
+          onDragEnd={(event) =>
+            handleDragEnd(event, setCurrentFilter, currentFilter)
+          }
         >
           <Flex
             direction="column"
@@ -140,7 +148,7 @@ export function PowerUserButtons({
               />
               <SortableContext
                 items={Object.keys(
-                  currentFilter?.filter_data?.lookup || {}
+                  currentFilter?.filter_data?.lookup || {},
                 ).sort(
                   (a, b) =>
                     (
@@ -152,7 +160,7 @@ export function PowerUserButtons({
                       currentFilter?.filter_data?.lookup?.[
                         b as GroupByOption
                       ] as FilterEntries
-                    ).index
+                    ).index,
                 )}
                 strategy={verticalListSortingStrategy}
               >
@@ -160,7 +168,7 @@ export function PowerUserButtons({
                   .sort(
                     (a, b) =>
                       (a[1] as FilterEntries).index -
-                      (b[1] as FilterEntries).index
+                      (b[1] as FilterEntries).index,
                   )
                   .map(([option, value]) => {
                     const typedOption = option as GroupByOption;
@@ -175,13 +183,21 @@ export function PowerUserButtons({
                       >
                         <SortableItem
                           key={option}
-                          moveItemUp={(option) => moveItemUp(option, setCurrentFilter, currentFilter)}
-                          moveItemDown={(option) => moveItemDown(option, setCurrentFilter, currentFilter)}
+                          moveItemUp={(option) =>
+                            moveItemUp(option, setCurrentFilter, currentFilter)
+                          }
+                          moveItemDown={(option) =>
+                            moveItemDown(
+                              option,
+                              setCurrentFilter,
+                              currentFilter,
+                            )
+                          }
                           isFirst={typedValue.index === 0}
                           isLast={
                             typedValue.index ===
                             Object.keys(
-                              currentFilter?.filter_data?.lookup || {}
+                              currentFilter?.filter_data?.lookup || {},
                             ).length -
                               1
                           }
@@ -189,7 +205,7 @@ export function PowerUserButtons({
                           option={typedOption}
                           noX={
                             Object.keys(
-                              currentFilter?.filter_data?.lookup || {}
+                              currentFilter?.filter_data?.lookup || {},
                             ).length === 1
                           }
                           onRemove={handleToggleOption}
@@ -208,7 +224,7 @@ export function PowerUserButtons({
                 <GroupingConfig
                   showBudgets={includeBudget}
                   groupingOptions={Object.keys(
-                    currentFilter?.filter_data?.lookup || {}
+                    currentFilter?.filter_data?.lookup || {},
                   ).map((key) => key as GroupByOption)}
                 />
               </Box>
@@ -257,16 +273,19 @@ const SortableItem = ({
   const toggleVisibility = () => {
     if (!currentFilter?.filter_data?.lookup) return;
 
-    breakoutToCustomFilter({
-      ...currentFilter.filter_data,
-      lookup: {
-        ...currentFilter.filter_data.lookup,
-        [option]: {
-          ...currentFilter.filter_data.lookup[option],
-          visible: !isVisible,
+    breakoutToCustomFilter(
+      {
+        ...currentFilter.filter_data,
+        lookup: {
+          ...currentFilter.filter_data.lookup,
+          [option]: {
+            ...currentFilter.filter_data.lookup[option],
+            visible: !isVisible,
+          },
         },
       },
-    }, setCurrentFilter);
+      setCurrentFilter,
+    );
   };
 
   return (
@@ -339,12 +358,8 @@ export function FilterButton({ name, options }: FilterButtonProps) {
 
     const updatedFilter = { ...currentFilter };
 
-    console.log(option, name)
-
     const currentValues =
       updatedFilter.filter_data.lookup?.[name]?.specifics || [];
-
-    console.log(currentValues)
 
     if (checked) {
       updatedFilter.filter_data.lookup = {
@@ -365,8 +380,6 @@ export function FilterButton({ name, options }: FilterButtonProps) {
         },
       };
     }
-
-    console.log(updatedFilter.filter_data)
 
     breakoutToCustomFilter(updatedFilter.filter_data, setCurrentFilter);
   };

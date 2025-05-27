@@ -14,7 +14,7 @@ from app.core import security
 from app.core.config import settings
 from app.get_db_string import get_app_user_database_url
 from app.local_types import TokenPayload
-from app.models import User
+from app.models.user import User
 
 load_dotenv()
 

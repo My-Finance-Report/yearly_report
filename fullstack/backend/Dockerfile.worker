@@ -12,7 +12,7 @@ RUN pip install --upgrade pip
 
 # Copy requirements file and install dependencies
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Set Python path
 ENV PYTHONPATH=/app

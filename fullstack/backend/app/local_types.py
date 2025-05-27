@@ -1,24 +1,21 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel
+from app.models.budget import BudgetCategoryLinkId, BudgetEntryId, BudgetId
+from app.models.category import CategoryId
+from app.models.effect import EffectConditionals, EffectType, EventType
+from app.models.filter import GroupByOption
+from app.models.plaid import PlaidSyncLogId
+from app.models.report import CategoryBase, TransactionBase, TransactionSourceBase
+from app.models.transaction_source import TransactionSourceId
+from app.models.transaction import TransactionKind
+from app.models.user import UserId, UserSettings
+from app.models.worker_job import JobStatus
+from app.models.worker_status import ProcessingState
 
-from app.models import (
-    BudgetCategoryLinkId,
-    BudgetEntryId,
-    BudgetId,
-    CategoryBase,
-    CategoryId,
-    GroupByOption,
-    JobStatus,
-    PlaidSyncLogId,
-    ProcessingState,
-    TransactionBase,
-    TransactionSourceBase,
-    TransactionSourceId,
-    UserId,
-    UserSettings,
-)
+from app.no_code.notifications.effects import EffectConfig
 
 
 class Token(BaseModel):
@@ -108,6 +105,11 @@ class TransactionOut(TransactionBase):
 
 class TransactionEdit(TransactionBase):
     id: CategoryId
+    description: str
+    category_id: int
+    date_of_transaction: datetime
+    amount: float
+    kind: TransactionKind
 
 
 class UploadedPdfBase(BaseModel):
@@ -399,3 +401,18 @@ class WorkerStatusOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     additional_info: str
+
+
+class EffectOut(BaseModel):
+    id: int | None = None  # Make it optional to support both existing and new effects
+    name: str
+    effect_type: EffectType
+    event_type: EventType
+    config: EffectConfig
+    condition: EffectConditionals
+    conditional_parameters: dict[str, int]
+
+
+class BalanceUpdate(BaseModel):
+    balance: float
+    timestamp: datetime

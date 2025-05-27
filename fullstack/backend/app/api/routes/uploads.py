@@ -16,19 +16,14 @@ from app.db import (
     get_db,
 )
 from app.local_types import ProcessFileJobOut, UploadedPdfOut
-from app.models import (
-    JobKind,
-    JobStatus,
-    ProcessingState,
-    Transaction,
-    TransactionSourceId,
-    UploadConfiguration,
-    UploadConfigurationId,
-    UploadedPdf,
-    UploadedPdfId,
-    User,
-    WorkerJob,
-)
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSourceId
+from app.models.upload_configuration import UploadConfiguration, UploadConfigurationId
+from app.models.uploaded_pdf import UploadedPdf, UploadedPdfId
+from app.models.user import User
+from app.models.worker_job import JobKind, JobStatus, WorkerJob
+from app.models.worker_status import ProcessingState
+
 from app.worker.enqueue_job import enqueue_or_reset_job
 from app.worker.status import update_worker_status
 

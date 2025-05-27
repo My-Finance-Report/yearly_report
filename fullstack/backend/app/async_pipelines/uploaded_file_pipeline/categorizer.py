@@ -13,9 +13,12 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     create_categorized_transactions_wrapper,
 )
 from app.func_utils import make_batches
-from app.models import ProcessingState, Transaction
+from app.models.transaction import Transaction
+from app.models.worker_status import ProcessingState
 from app.open_ai_utils import ChatMessage, Prompt, make_chat_request
 from app.worker.status import update_worker_status
+
+from app.func_utils import not_none
 
 logging.basicConfig(level=logging.INFO)
 
@@ -95,9 +98,21 @@ def categorize_extracted_transactions(process: InProcessJob) -> InProcessJob:
         f"Categorizing {len(process.transactions.transactions)} transactions..."
     )
     account_categories = [cat.name for cat in process.categories]
+    plaid_transaction_ids = [
+        t.partialPlaidTransactionId
+        for t in process.transactions.transactions
+        if t.partialPlaidTransactionId
+    ]
+    transaction_ids = [
+        t.partialTransactionId
+        for t in process.transactions.transactions
+        if t.partialTransactionId
+    ]
 
     CategorizedTransactionsWrapper = create_categorized_transactions_wrapper(
-        account_categories
+        account_categories,
+        plaid_transaction_ids,
+        transaction_ids,
     )
 
     out: list[CategorizedTransaction] = []

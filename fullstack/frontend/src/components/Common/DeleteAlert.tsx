@@ -1,41 +1,73 @@
-import {
-  Button,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogPositioner,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import React from "react"
-import { useForm } from "react-hook-form"
+import { Box, Button, Dialog, Portal, Checkbox } from "@chakra-ui/react";
 
-import { UsersService } from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 
-interface DeleteProps {
-  type: string
-  isOpen: boolean
-  onClose: () => void
+import { NoCodeService, TransactionsService, UsersService } from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+
+export interface DeleteableEntity {
+  id: number;
 }
 
-const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
-  const cancelRef = React.useRef<HTMLButtonElement | null>(null)
+interface DeleteProps {
+  type: "user" | "transaction" | "notification";
+  isOpen: boolean;
+  onClose: () => void;
+  entity?: DeleteableEntity;
+}
+
+const STORAGE_KEY_PREFIX = "skip_confirmation_";
+
+function skipConfirmation(type: string) {
+  const storageKey = `${STORAGE_KEY_PREFIX}${type}`;
+  const skipConfirmation = localStorage.getItem(storageKey) === "true";
+  return skipConfirmation;
+}
+
+const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+  const cancelRef = React.useRef<HTMLButtonElement | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const {
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm()
+  } = useForm();
+
+  React.useEffect(() => {
+    if (skipConfirmation(type) && isOpen) {
+      onClose();
+      handleDelete();
+    }
+  }, [isOpen, type]);
 
   const deleteEntity = async () => {
-    if (type === "User") {
-      await UsersService.deleteUserMe()
-    } else {
-      throw new Error(`Unexpected type: ${type}`)
+    switch (type) {
+      case "user":
+        await UsersService.deleteUserMe();
+        break;
+      case "transaction":
+        if (!entity || !entity.id) {
+          throw new Error("Entity is required for transaction deletion");
+        }
+        await TransactionsService.deleteTransaction({
+          transactionId: entity.id,
+        });
+        break;
+      case "notification":
+        if (!entity || !entity.id) {
+          throw new Error("Entity is required for notification deletion");
+        }
+        await NoCodeService.deleteEffect({
+          effectId: entity.id,
+        });
+        break;
+      default:
+        throw new Error(`Unexpected type: ${type}`);
     }
-  }
+  };
 
   const mutation = useMutation({
     mutationFn: deleteEntity,
@@ -44,59 +76,89 @@ const Delete = ({ type, isOpen, onClose }: DeleteProps) => {
         "Success",
         `The ${type.toLowerCase()} was deleted successfully.`,
         "success",
-      )
-      onClose()
+      );
+      onClose();
     },
     onError: () => {
       showToast(
         "An error occurred.",
         `An error occurred while deleting the ${type.toLowerCase()}.`,
         "error",
-      )
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [type === "Item" ? "items" : "users"],
-      })
+        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
+      });
     },
-  })
+    onMutate: () => {
+      queryClient.cancelQueries({
+        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
+      });
+    },
+  });
+
+  const handleDelete = () => {
+    mutation.mutate();
+  };
 
   const onSubmit = async () => {
-    mutation.mutate()
+    // If user checked "Don't show me again", save to localStorage
+    if (dontShowAgain) {
+      const storageKey = `${STORAGE_KEY_PREFIX}${type}`;
+      localStorage.setItem(storageKey, "true");
+    }
+
+    handleDelete();
+  };
+
+  // If we should skip confirmation, don't render the dialog at all
+  if (skipConfirmation(type) && isOpen) {
+    return null;
   }
 
   return (
-    <Dialog.Root
-      open={isOpen}
-      onExitComplete={onClose}
-      role="alertdialog"
-      size={{ base: "sm", md: "md" }}
-    >
-      <DialogPositioner>
-        <DialogContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>Delete {type}</DialogHeader>
-          <DialogBody>
-            {type === "User" && (
-              <span>
-                All items associated with this user will also be{" "}
-                <strong>permanently deleted. </strong>
-              </span>
-            )}
-            Are you sure? You will not be able to undo this action.
-          </DialogBody>
+    <Dialog.Root role="alertdialog" open={isOpen} onExitComplete={onClose}>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content as="form" onSubmit={handleSubmit(onSubmit)}>
+            <Dialog.Header>Delete {type}</Dialog.Header>
+            <Dialog.Body>
+              {type === "user" && (
+                <span>
+                  All items associated with this user will also be{" "}
+                  <strong>permanently deleted. </strong>
+                </span>
+              )}
+              Are you sure? You will not be able to undo this action.
+              <Box mt={4} display="flex" alignItems="center">
+                <Checkbox.Root
+                  checked={dontShowAgain}
+                  onCheckedChange={() => setDontShowAgain((prev) => !prev)}
+                >
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control />
+                  <Checkbox.Label>
+                    Don't show this confirmation again
+                  </Checkbox.Label>
+                </Checkbox.Root>
+              </Box>
+            </Dialog.Body>
 
-          <DialogFooter gap={3}>
-            <Button colorScheme="red" type="submit" loading={isSubmitting}>
-              Delete
-            </Button>
-            <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogPositioner>
+            <Dialog.Footer gap={3}>
+              <Button ref={cancelRef} onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button colorPalette="red" type="submit" loading={isSubmitting}>
+                Delete
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
-  )
-}
+  );
+};
 
-export default Delete
+export default Delete;

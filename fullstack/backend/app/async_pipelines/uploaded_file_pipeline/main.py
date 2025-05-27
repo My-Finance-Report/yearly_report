@@ -15,7 +15,9 @@ from app.async_pipelines.uploaded_file_pipeline.transaction_parser import (
     request_llm_parse_of_transactions,
 )
 from app.func_utils import pipe
-from app.models import ProcessingState
+from app.models.worker_status import ProcessingState
+
+
 from app.worker.status import log_completed, status_update_monad
 
 

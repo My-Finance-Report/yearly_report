@@ -1,9 +1,9 @@
-import { Box, Button, Link, Text, VStack } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { Box, Button, Link, Text, VStack } from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/contact-me")({
   component: ContactMe,
-})
+});
 
 function ContactMe() {
   return (
@@ -25,5 +25,5 @@ function ContactMe() {
         </VStack>
       </VStack>
     </Box>
-  )
+  );
 }

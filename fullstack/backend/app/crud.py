@@ -13,7 +13,7 @@ from app.core.security import (
 )
 from app.db import Session
 from app.local_types import UserRegister, UserUpdate
-from app.models import User, UserSettings
+from app.models.user import User, UserSettings
 from app.telegram_utils import send_telegram_message
 
 

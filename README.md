@@ -1,7 +1,7 @@
 # Big picture
 
 this started as a project to generate my yearly financial report using haskell
-and has evolved a bit to be a [simple webapp](https://myfinancereport.com/).
+and has evolved a bit to be a [webapp](https://myfinancereport.com/).
 I actually rewrote it in react + fastapi, so that is currently what you see on the site.
 
 # Features
@@ -34,46 +34,54 @@ big milestones before launch:
 -> Stripe
   --> sort of exists but needs more work
 -> Plaid
-  -> bug where i got logged off after plaid
+  -> prune the logs table of sync events
+  -> webhooks setup
+  -> when accounts fail n times we should offboard them
+  -> consider a way to remove duplicates
 -> Email
+  -> allow user to update preferences
+  -> welcome email only configured to send to me
 
--> worker should be a lambda
+-> remove dups
 
--> need to update the how does this work page 
+-> parameters are getting confusing, how can i clean up the loop for each one?
+  -> widgets could be fully self contained and fetch itself (done)
+  --> page loads all of the widgets, and each has a fetch within it (done)
+  -> each parameter has a set of dependent widgets. when we change a parameter we need to know.
 
--> would be nice to have some tests around user creation
+  1. do i trigger a refetch?
+  2. who do i trigger a refetch for?
 
--> add a last active at time on the user model
+  then when i am changed. if i dont trigger a refetch, i do nothing
+  if i do trigger a refetch, i have to call the refetch of all my dependencies
 
--> uploads page on mobile is rough
+  parameters:
+  +/- global, (knows its dependent widgets)
+  +/- triggers refetches
+
+  widgets:
 
 
--> shareable report
 
--> running grant to sequence after a new table: 
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_item_id_seq TO app_user;
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_account_id_seq TO app_user;
-  GRANT USAGE, UPDATE ON SEQUENCE plaid_sync_log_id_seq TO app_user;
+-> why are there no decimals at all on transactios..?
+-> acccount balance over time would be cool
+
+-> delete saved filter doesnt work
+
+-> get user delete to work on app
+--> make sure we remove plaid items so we dont get charged
 
 -> redirect everything to the main url
-
--> welcome email
 
 -> merge account function
 --> built backend but needs frontend
 
--> repro filter bug by getting a query that has no results
-
 -> nice to have: search
-
--> try to prevent color overlaps
-
--> dashboard config and ability to save them (query params)
---> parse the query params from the url
 
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
 
--> Expense should line up in the table
 
 
+-> would be nice to set a default on the dropdown
+-> edit button the tables

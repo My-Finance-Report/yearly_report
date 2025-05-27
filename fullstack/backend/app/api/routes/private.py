@@ -8,7 +8,7 @@ from app.core.config import get_env
 from app.core.security import get_password_hash
 from app.db import Session, get_auth_db, get_db
 from app.local_types import UserOut
-from app.models import (
+from app.models.user import (
     User,
 )
 

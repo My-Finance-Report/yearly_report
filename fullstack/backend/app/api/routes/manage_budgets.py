@@ -17,18 +17,12 @@ from app.local_types import (
     BudgetStatus,
     TransactionOut,
 )
-from app.models import (
-    Budget,
-    BudgetCategoryLink,
-    BudgetEntry,
-    BudgetEntryId,
-    Category,
-    CategoryId,
-    Transaction,
-    TransactionKind,
-    TransactionSource,
-    User,
-)
+from app.models.budget import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId
+from app.models.category import Category, CategoryId
+from app.models.transaction_source import TransactionSource
+from app.models.transaction import Transaction, TransactionKind
+from app.models.user import User
+
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 

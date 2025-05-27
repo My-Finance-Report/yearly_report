@@ -1,4 +1,4 @@
-import { type UserOut, UsersService } from "@/client"
+import { type UserOut, UsersService } from "@/client";
 import {
   DrawerActionTrigger,
   DrawerBackdrop,
@@ -10,10 +10,10 @@ import {
   DrawerRoot,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import { SegmentedControl } from "@/components/ui/segmented-control"
-import useAuth, { isSessionActive } from "@/hooks/useAuth"
-import { useIsMobile } from "@/hooks/useIsMobile"
+} from "@/components/ui/drawer";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import useAuth, { isSessionActive } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Avatar,
   Box,
@@ -24,34 +24,42 @@ import {
   Portal,
   Separator,
   Text,
-} from "@chakra-ui/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useNavigate, useRouterState } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+} from "@chakra-ui/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   FiDollarSign,
-  FiHome,
   FiList,
   FiMenu,
   FiSettings,
   FiUsers,
-} from "react-icons/fi"
-import { LuEllipsis } from "react-icons/lu"
-import { CollapsibleWorkerStatus } from "./WorkerStatus"
+  FiBriefcase,
+  FiShoppingCart,
+  FiBarChart,
+} from "react-icons/fi";
+import { LuEllipsis } from "react-icons/lu";
+import { CollapsibleWorkerStatus } from "./WorkerStatus";
 
 const navigationItems = [
-  { value: "/transactions", label: "Dashboard", icon: FiHome },
-  { value: "/manage-accounts", label: "Manage Accounts", icon: FiList },
+  { value: "/transactions", label: "Transaction Explorer", icon: FiList },
+  { value: "/accounts", label: "Account Explorer", icon: FiBriefcase },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
-]
+];
+
+const posNavigationItems = [
+  { value: "/pos/order", label: "Orders", icon: FiShoppingCart },
+  { value: "/pos/manage-menu", label: "Manage Menu", icon: FiMenu },
+  { value: "/pos/recent-orders", label: "Recent Orders", icon: FiBarChart },
+];
 
 function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
-  const { isLoading, logout } = useAuth()
-  const navigate = useNavigate()
+  const { isLoading, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoading) {
-    return null
+    return null;
   }
 
   return currentUser ? (
@@ -66,14 +74,14 @@ function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
         <Portal>
           <Menu.Positioner>
             <Menu.Content>
-              <Menu.Item onClick={() => logout()} value="logout">
-                Log out
-              </Menu.Item>
               <Menu.Item
                 onClick={() => navigate({ to: "/settings" })}
                 value="settings"
               >
                 User Settings
+              </Menu.Item>
+              <Menu.Item onClick={() => logout()} value="logout">
+                Log out
               </Menu.Item>
             </Menu.Content>
           </Menu.Positioner>
@@ -89,59 +97,66 @@ function UserBadge({ currentUser }: { currentUser: UserOut | null }) {
         Sign Up
       </Button>
     </Flex>
-  )
+  );
 }
 
 export function SegmentedNavigation() {
-  const navigate = useNavigate()
-  const location = useRouterState().location
-  const queryClient = useQueryClient()
-  const { user: authUser } = useAuth()
+  const navigate = useNavigate();
+  const location = useRouterState().location;
+  const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
 
   // Use the user from useAuth hook as a fallback
   const { data: currentUser } = useQuery<UserOut | null, Error>({
     queryKey: ["currentUser"],
     queryFn: async () => {
       try {
-        return await UsersService.readUserMeOptional()
+        return await UsersService.readUserMeOptional();
       } catch {
-        return null
+        return null;
       }
     },
     initialData: authUser || null,
-  })
+  });
 
   // Effect to refetch user data when session status changes
   useEffect(() => {
     const handleStorageChange = () => {
       if (isSessionActive()) {
-        queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       }
-    }
+    };
 
-    window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("storage", handleStorageChange);
 
-    // Initial check
     if (isSessionActive() && !currentUser) {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     }
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [queryClient, currentUser])
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [queryClient, currentUser]);
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   // Example: final nav items + "Admin" if user is superuser
-  const finalItems = currentUser?.is_superuser
+  let finalItems = currentUser?.is_superuser
     ? [...navigationItems, { value: "/admin", label: "Admin", icon: FiUsers }]
     : currentUser
       ? navigationItems
-      : []
+      : [];
 
   // Check if we're running on localhost (development environment)
-  const isDevelopment = window.location.hostname === "localhost"
+  const isDevelopment = window.location.hostname === "localhost";
+
+  if (currentUser && currentUser.settings.point_of_sales_user) {
+    finalItems = [...posNavigationItems];
+  }
+
+  const routeTo = currentUser?.settings.point_of_sales_user
+    ? "/pos/pos"
+    : "/transactions";
 
   return (
     <Flex
@@ -181,7 +196,7 @@ export function SegmentedNavigation() {
       >
         <Text
           cursor="click"
-          onClick={() => navigate({ to: "/transactions" })}
+          onClick={() => navigate({ to: routeTo })}
           fontSize="20px"
           fontWeight="bold"
           color="colors.ui.main"
@@ -214,7 +229,9 @@ export function SegmentedNavigation() {
                 ),
               }))}
               onValueChange={(newValue) => {
-                navigate({ to: newValue.value })
+                navigate({
+                  to: newValue.value ? newValue.value : "/transactions",
+                });
               }}
             />
             <Flex direction={"row"} justifyContent={"center"} gap={3}>
@@ -226,7 +243,7 @@ export function SegmentedNavigation() {
         )}
       </Flex>
     </Flex>
-  )
+  );
 }
 
 function MobileMenu({
@@ -234,22 +251,11 @@ function MobileMenu({
   navigate,
   finalItems,
 }: {
-  user: UserOut | undefined
-  navigate: (to: { to: string }) => void
-  finalItems: typeof navigationItems
+  user: UserOut | undefined;
+  navigate: (to: { to: string }) => void;
+  finalItems: typeof navigationItems;
 }) {
-  const [open, setOpen] = useState(false)
-
-  // Group navigation items by category
-  const mainNavItems = finalItems.filter((item) =>
-    ["/transactions", "/manage-accounts", "/budget"].includes(item.value),
-  )
-  const settingsItems = finalItems.filter((item) =>
-    ["/settings"].includes(item.value),
-  )
-  const adminItems = finalItems.filter((item) =>
-    ["/admin"].includes(item.value),
-  )
+  const [open, setOpen] = useState(false);
 
   return (
     <DrawerRoot
@@ -293,20 +299,16 @@ function MobileMenu({
           )}
         </DrawerHeader>
         <DrawerBody>
-          {/* Main Navigation */}
           <Box mb={4}>
-            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-              Main Navigation
-            </Text>
             <Flex direction="column" gap={2}>
-              {mainNavItems.map(({ value, label, icon }) => (
+              {finalItems.map(({ value, label, icon }) => (
                 <Button
                   key={value}
                   variant="ghost"
                   justifyContent="flex-start"
                   onClick={() => {
-                    navigate({ to: value })
-                    setOpen(false)
+                    navigate({ to: value });
+                    setOpen(false);
                   }}
                 >
                   <Flex align="center" gap={2}>
@@ -317,57 +319,6 @@ function MobileMenu({
               ))}
             </Flex>
           </Box>
-
-          <Box mb={4}>
-            <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-              Settings
-            </Text>
-            <Flex direction="column" gap={2}>
-              {settingsItems.map(({ value, label, icon }) => (
-                <Button
-                  key={value}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate({ to: value })
-                    setOpen(false)
-                  }}
-                >
-                  <Flex align="center" gap={2}>
-                    <Box as={icon} />
-                    <Text>{label}</Text>
-                  </Flex>
-                </Button>
-              ))}
-            </Flex>
-          </Box>
-
-          {/* Admin (if applicable) */}
-          {adminItems.length > 0 && (
-            <Box mb={4}>
-              <Text fontWeight="medium" mb={2} color="gray.500" fontSize="sm">
-                Administration
-              </Text>
-              <Flex direction="column" gap={2}>
-                {adminItems.map(({ value, label, icon }) => (
-                  <Button
-                    key={value}
-                    variant="ghost"
-                    justifyContent="flex-start"
-                    onClick={() => {
-                      navigate({ to: value })
-                      setOpen(false)
-                    }}
-                  >
-                    <Flex align="center" gap={2}>
-                      <Box as={icon} />
-                      <Text>{label}</Text>
-                    </Flex>
-                  </Button>
-                ))}
-              </Flex>
-            </Box>
-          )}
         </DrawerBody>
         <DrawerFooter>
           <DrawerActionTrigger asChild>
@@ -377,5 +328,5 @@ function MobileMenu({
         <DrawerCloseTrigger />
       </DrawerContent>
     </DrawerRoot>
-  )
+  );
 }

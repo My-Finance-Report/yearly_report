@@ -11,9 +11,9 @@ import {
   SelectTrigger,
   SelectValueText,
   createListCollection,
-} from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Controller, type SubmitHandler, useForm } from "react-hook-form"
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 
 import {
   DialogBackdrop,
@@ -24,33 +24,42 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+
 import {
   type ApiError,
   type CategoryOut,
   type TransactionEdit,
   type TransactionKind,
-  type TransactionOut,
   TransactionsService,
-} from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
-import { handleError } from "../../utils"
-import type { Blah } from "./SankeyConfig" //TODO stop importing this
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { handleError } from "../../utils";
+import type { Blah } from "./SankeyConfig"; //TODO stop importing this
+
+interface EditableTransaction {
+  id: number;
+  amount: number;
+  description: string;
+  category_id: number;
+  date_of_transaction: string;
+  kind: TransactionKind;
+}
 
 interface EditTransactionProps {
-  transaction: TransactionOut
-  isOpen: boolean
-  onClose: () => void
+  transaction: EditableTransaction;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 function rawCategoiesToSelectItems(categories: CategoryOut[]): {
-  items: Blah[]
+  items: Blah[];
 } {
   const blahs = categories.map((category) => ({
     label: category.name,
     value: category.id,
-  }))
-  return { items: blahs }
+  }));
+  return { items: blahs };
 }
 
 const kinds: { items: { label: string; value: TransactionKind }[] } = {
@@ -64,15 +73,15 @@ const kinds: { items: { label: string; value: TransactionKind }[] } = {
       value: "deposit",
     },
   ],
-}
+};
 
 const EditTransaction = ({
   transaction,
   isOpen,
   onClose,
 }: EditTransactionProps) => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
 
   const {
     register,
@@ -87,42 +96,44 @@ const EditTransaction = ({
       ...transaction,
       date_of_transaction: transaction.date_of_transaction.split("T")[0],
     },
-  })
+  });
 
-  const { data } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
       TransactionsService.listCategories({ transactionId: transaction.id }),
-  })
+  });
 
-  const categories = rawCategoiesToSelectItems(data ?? [])
+  const categories = rawCategoiesToSelectItems(categoriesData ?? []);
+
+  console.log(categories);
 
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {
       return TransactionsService.updateTransaction({
         requestBody: data,
-      })
+      });
     },
     onSuccess: () => {
-      showToast("Success!", "Transaction updated successfully.", "success")
-      onClose()
+      showToast("Success!", "Transaction updated successfully.", "success");
+      onClose();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["aggregatedTransactions"] })
+      queryClient.invalidateQueries({ queryKey: ["aggregatedTransactions"] });
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<TransactionEdit> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   const onCancel = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   return (
     <DialogRoot open={isOpen} onOpenChange={onClose} modal>
@@ -178,11 +189,10 @@ const EditTransaction = ({
               control={control}
               name="kind"
               render={({ field }) => {
-                const { onChange } = field
+                const { onChange } = field;
                 return (
                   <SelectRoot
                     id="kind"
-                    placeholder="Withdrawal / Deposit"
                     defaultValue={[
                       kinds.items.find(
                         (kind) => kind.value === transaction.kind,
@@ -190,7 +200,7 @@ const EditTransaction = ({
                     ]}
                     collection={createListCollection(kinds)}
                     onValueChange={(val) => {
-                      onChange(val.value[0])
+                      onChange(val.value[0]);
                     }}
                   >
                     <SelectTrigger>
@@ -204,7 +214,7 @@ const EditTransaction = ({
                       ))}
                     </SelectContent>
                   </SelectRoot>
-                )
+                );
               }}
             />
             {errors.kind && (
@@ -234,18 +244,17 @@ const EditTransaction = ({
               control={control}
               name="category_id"
               render={({ field }) => {
-                const { onChange, value } = field
+                const { onChange, value } = field;
                 return (
                   <SelectRoot
                     id="category_id"
-                    placeholder="Select a category"
                     value={[
                       categories.items.find((cat) => cat.value === value)
                         ?.value as unknown as string,
                     ]}
                     collection={createListCollection(categories)}
                     onValueChange={(val) => {
-                      onChange(val.value[0])
+                      onChange(val.value[0]);
                     }}
                   >
                     <SelectTrigger>
@@ -259,7 +268,7 @@ const EditTransaction = ({
                       ))}
                     </SelectContent>
                   </SelectRoot>
-                )
+                );
               }}
             />
             {errors.category_id && (
@@ -280,6 +289,6 @@ const EditTransaction = ({
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  )
-}
-export default EditTransaction
+  );
+};
+export default EditTransaction;

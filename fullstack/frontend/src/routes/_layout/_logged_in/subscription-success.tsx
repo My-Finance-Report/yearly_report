@@ -1,4 +1,4 @@
-import useCustomToast from "@/hooks/useCustomToast"
+import useCustomToast from "@/hooks/useCustomToast";
 import {
   Box,
   Button,
@@ -9,37 +9,37 @@ import {
   Spinner,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import React, { useEffect, useState } from "react"
-import { FaCheckCircle } from "react-icons/fa"
-import { z } from "zod"
+} from "@chakra-ui/react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import React, { useEffect, useState } from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { z } from "zod";
 
 const subscriptionSearchSchema = z.object({
   session_id: z.string().optional(),
-})
+});
 
 export const Route = createFileRoute(
   "/_layout/_logged_in/subscription-success",
 )({
   component: SubscriptionSuccess,
   validateSearch: (search) => subscriptionSearchSchema.parse(search),
-})
+});
 
 export default function SubscriptionSuccess() {
-  const [loading, setLoading] = useState(true)
-  const { session_id } = Route.useSearch()
-  const toast = useCustomToast()
-  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true);
+  const { session_id } = Route.useSearch();
+  const toast = useCustomToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const verifySubscription = async () => {
       try {
-        const sessionId = session_id
+        const sessionId = session_id;
         if (!sessionId) {
-          toast("Error", "No session ID found", "error")
-          navigate({ to: "/subscription" })
-          return
+          toast("Error", "No session ID found", "error");
+          navigate({ to: "/subscription" });
+          return;
         }
 
         //TODO idk what this is
@@ -49,23 +49,23 @@ export default function SubscriptionSuccess() {
 
         // Wait a moment to ensure webhook processing
         setTimeout(() => {
-          setLoading(false)
-        }, 2000)
+          setLoading(false);
+        }, 2000);
       } catch {
-        toast("Error", "Failed to verify subscription", "error")
-        navigate({ to: "/subscription" })
+        toast("Error", "Failed to verify subscription", "error");
+        navigate({ to: "/subscription" });
       }
-    }
+    };
 
-    verifySubscription()
-  }, [session_id, toast, navigate])
+    verifySubscription();
+  }, [session_id, toast, navigate]);
 
   if (loading) {
     return (
       <Center h="100vh">
         <Spinner size="xl" />
       </Center>
-    )
+    );
   }
 
   return (
@@ -93,5 +93,5 @@ export default function SubscriptionSuccess() {
         </Box>
       </VStack>
     </Container>
-  )
+  );
 }

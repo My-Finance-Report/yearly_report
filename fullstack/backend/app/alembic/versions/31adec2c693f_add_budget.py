@@ -7,8 +7,6 @@ Create Date: 2025-03-04 06:58:27.636486
 """
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
-from app.models import Base
 
 # revision identifiers, used by Alembic.
 revision = '31adec2c693f'
@@ -50,7 +48,6 @@ def upgrade():
     )
 
     connection = op.get_bind()
-    
     # make sure to add rls
     for table_name in ["budget", "budget_entry", "budget_category_link"]:
             connection.execute(sa.text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;"))
@@ -59,7 +56,6 @@ def upgrade():
                 USING (user_id = current_setting('app.current_user_id')::int);
             """))
             print(f"✔ RLS applied to {table_name}")
-    
     # ### end Alembic commands ###
 
 

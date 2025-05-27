@@ -8,17 +8,14 @@ from app.local_types import (
     PlaidSyncLogOut,
     TransactionSourceOut,
 )
-from app.models import (
-    Category,
-    CategoryBase,
-    PlaidSyncLog,
-    PlaidSyncLogId,
-    Transaction,
-    TransactionSource,
-    TransactionSourceBase,
-    TransactionSourceId,
-    User,
-)
+from app.models.category import Category
+from app.models.plaid import PlaidSyncLog, PlaidSyncLogId
+from app.models.report import CategoryBase, TransactionSourceBase
+from app.models.transaction import Transaction
+from app.models.transaction_source import TransactionSource, TransactionSourceId
+from app.models.user import User
+
+
 from app.worker.enqueue_job import enqueue_recategorization
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])

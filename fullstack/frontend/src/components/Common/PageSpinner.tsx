@@ -1,4 +1,4 @@
-import { Flex, Spinner } from "@chakra-ui/react"
+import { Flex, Spinner } from "@chakra-ui/react";
 export function PageSpinner() {
   return (
     <Flex
@@ -9,5 +9,5 @@ export function PageSpinner() {
     >
       <Spinner size="lg" />
     </Flex>
-  )
+  );
 }

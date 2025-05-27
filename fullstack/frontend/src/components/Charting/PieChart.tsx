@@ -1,27 +1,27 @@
-import { Cell, Pie, PieChart, Sector } from "recharts"
-import type { PieSectorDataItem } from "recharts/types/polar/Pie"
+import { Cell, Pie, PieChart, Sector } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 
-import { CardContent, CardFooter } from "@/components/ui/card"
+import { CardContent, CardFooter } from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-} from "@/components/ui/chart"
-import { useColorPalette } from "@/hooks/useColor"
-import { Box } from "@chakra-ui/react"
-import { useState } from "react"
-import type { TooltipProps } from "recharts"
-import { Desc } from "./SankeyChart"
+} from "@/components/ui/chart";
+import { useColorPalette } from "@/hooks/useColor";
+import { Box } from "@chakra-ui/react";
+import { JSX, useState } from "react";
+import type { TooltipProps } from "recharts";
+import { Desc } from "./SankeyChart";
 
 export interface GenericChartDataItem {
-  [key: string]: string | number
+  [key: string]: string | number;
 }
 
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(value)
+  }).format(value);
 }
 
 function SingleSliceTooltip({
@@ -29,13 +29,13 @@ function SingleSliceTooltip({
   payload,
   hoveredKey,
 }: TooltipProps<number, string> & {
-  hoveredKey: string | null
+  hoveredKey: string | null;
 }) {
   if (!active || !payload || payload.length === 0 || !hoveredKey) {
-    return null
+    return null;
   }
 
-  const hoveredItem = payload[0]
+  const hoveredItem = payload[0];
 
   return (
     <Box p={2} className="rounded-md bg-black shadow-md ring-1 ring-black/5">
@@ -53,18 +53,18 @@ function SingleSliceTooltip({
         </span>
       </div>
     </Box>
-  )
+  );
 }
 
 export interface GenericPieChartProps {
-  data: GenericChartDataItem[]
-  dataKey: keyof GenericChartDataItem
-  nameKey: keyof GenericChartDataItem
-  config?: ChartConfig | null
-  innerRadius?: number
-  activeIndex?: number
-  activeShape?: (props: PieSectorDataItem) => JSX.Element
-  description?: string
+  data: GenericChartDataItem[];
+  dataKey: keyof GenericChartDataItem;
+  nameKey: keyof GenericChartDataItem;
+  config?: ChartConfig | null;
+  innerRadius?: number;
+  activeIndex?: number;
+  activeShape?: (props: PieSectorDataItem) => JSX.Element;
+  description?: string;
 }
 
 export function GenericPieChart({
@@ -79,23 +79,29 @@ export function GenericPieChart({
     <Sector {...props} outerRadius={outerRadius + 10} />
   ),
 }: GenericPieChartProps) {
-  const { getColorForName } = useColorPalette()
+  const { getColorForName } = useColorPalette();
 
-  let finalConfig: ChartConfig
+  let finalConfig: ChartConfig;
   if (!config) {
-    const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])))
+    const uniqueNames = Array.from(new Set(data.map((item) => item[nameKey])));
     finalConfig = uniqueNames.reduce((acc, name) => {
       acc[String(name)] = {
         label: String(name),
         color: getColorForName(String(name)),
-      }
-      return acc
-    }, {} as ChartConfig)
+      };
+      return acc;
+    }, {} as ChartConfig);
   } else {
-    finalConfig = config
+    finalConfig = config;
   }
 
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+
+  const optimisticallyParsedData = data.map((item) => ({
+    ...item,
+    [dataKey]: Number(item[dataKey]),
+    [nameKey]: item[nameKey],
+  }));
 
   return (
     <Box minH="307px" className="flex flex-col">
@@ -109,7 +115,7 @@ export function GenericPieChart({
               content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
             />
             <Pie
-              data={data}
+              data={optimisticallyParsedData}
               dataKey={dataKey}
               nameKey={nameKey}
               innerRadius={innerRadius}
@@ -133,5 +139,5 @@ export function GenericPieChart({
 
       <CardFooter className="flex-col gap-2 text-sm" />
     </Box>
-  )
+  );
 }

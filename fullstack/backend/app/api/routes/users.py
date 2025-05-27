@@ -1,11 +1,11 @@
 import uuid
 from typing import Any
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 
 from app import crud
-from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.db import (
     Session,
@@ -14,6 +14,7 @@ from app.db import (
     get_current_user,
     get_current_user_optional,
     get_db,
+    get_db_for_user,
 )
 from app.local_types import (
     Message,
@@ -23,11 +24,13 @@ from app.local_types import (
     UsersPublic,
     UserUpdateMe,
 )
-from app.models import (
+from app.models.user import (
     User,
+    UserSettings,
 )
 from app.telegram_utils import send_telegram_message
-from app.utils import generate_new_account_email, send_email
+from app.email.send import send_email
+from app.email_generators.welcome_email import generate_welcome_email
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -40,13 +43,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 def read_users(
     session: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> UsersPublic:
-    """
-    Retrieve users. NOTE: this doesnt work due to RLS policy
-    """
-
     count = session.query(func.count()).select_from(User).scalar()
 
-    users = session.query(User).offset(skip).limit(limit).all()
+    users = session.query(User).order_by(User.id).offset(skip).limit(limit).all()
 
     return UsersPublic(
         data=[
@@ -55,7 +54,12 @@ def read_users(
                 email=user.email,
                 id=user.id,
                 is_superuser=user.is_superuser,
-                settings=user.settings,
+                settings=UserSettings()
+                if user.settings is None
+                else UserSettings(
+                    has_budget=user.settings.has_budget,
+                    power_user_filters=user.settings.power_user_filters,
+                ),
             )
             for user in users
         ],
@@ -78,15 +82,7 @@ def create_user(*, session: Session = Depends(get_db), user_in: UserRegister) ->
         )
 
     user = crud.create_user(session=session, user=user_in)
-    if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-        send_email(
-            email_to=user_in.email,
-            subject=email_data.subject,
-            html_content=email_data.html_content,
-        )
+
     return user
 
 
@@ -147,11 +143,22 @@ def update_password_me(
     return Message(message="Password updated successfully")
 
 
+def update_visited_time(current_user: User) -> None:
+    session = next(get_db_for_user(current_user.id))
+    user = session.query(User).filter(User.id == current_user.id).one()
+    user.last_visited_at = datetime.now(timezone.utc)
+    session.commit()
+
+
 @router.get("/me", response_model=UserOut)
-def read_user_me(current_user: User = Depends(get_current_user)) -> User:
+def read_user_me(
+    current_user: User = Depends(get_current_user),
+) -> User:
     """
     Get current user.
     """
+
+    update_visited_time(current_user)
 
     return current_user
 
@@ -163,6 +170,10 @@ def read_user_me_optional(
     """
     Get current user.
     """
+
+    if current_user:
+        update_visited_time(current_user)
+
     return current_user
 
 
@@ -181,7 +192,9 @@ def delete_user_me(
     # attach the user to their own session:
     to_delete_user = session.query(User).filter(User.id == current_user.id).one()
 
-    session.delete(to_delete_user)
+    session.delete(
+        to_delete_user,
+    )
     session.commit()
     return Message(message="User deleted successfully")
 
@@ -208,6 +221,7 @@ def register_user(
     )
     user = crud.create_user(session=session, user=user_create)
 
+    send_email(user, generate_welcome_email)
     send_telegram_message(
         message=f"User registered successfully {user_in.email} {user.id}",
     )

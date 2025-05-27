@@ -1,10 +1,17 @@
 #!/bin/bash
 
 # Load environment variables
-export $(grep -v '^#' .env | xargs)
+set -o allexport
+source .env
+set +o allexport
+
+
+export IS_LOCAL=true
 
 # Navigate to backend directory
 cd backend
+
+source env/bin/activate
 
 # Start the FastAPI backend
 uvicorn app.main:app --reload --port 8003 --log-level debug

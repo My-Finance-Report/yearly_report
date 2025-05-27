@@ -1,5 +1,5 @@
-import { isSessionValid } from "@/hooks/useAuth"
-import { useIsMobile } from "@/hooks/useIsMobile"
+import { getCurrentUser } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Box,
   Button,
@@ -8,41 +8,43 @@ import {
   Highlight,
   Image,
   Text,
-} from "@chakra-ui/react"
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import { useRef } from "react"
-import { Transactions } from "./_logged_in/transactions"
-import { z } from "zod"
+} from "@chakra-ui/react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useRef } from "react";
+import { Transactions } from "./_logged_in/transactions";
+import { z } from "zod";
 
 const demoSearchSchema = z.object({
   filter: z.string().optional(),
   showAdvanced: z.boolean().optional(),
-})
-
-
+});
 
 export const Route = createFileRoute("/_layout/")({
   component: Landing,
   validateSearch: (search) => demoSearchSchema.parse(search),
   beforeLoad: async () => {
-    if (await isSessionValid()) {
+    const currentUser = await getCurrentUser();
+
+    if (currentUser) {
       throw redirect({
-        to: "/transactions",
-      })
+        to: currentUser.settings.point_of_sales_user
+          ? "/pos/pos"
+          : "/transactions",
+      });
     }
   },
-})
+});
 
 function Landing() {
-  const isMobile = useIsMobile()
-  const navigate = useNavigate()
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
-  const demoSectionRef = useRef<HTMLDivElement>(null)
-  const pricingSectionRef = useRef<HTMLDivElement>(null)
+  const demoSectionRef = useRef<HTMLDivElement>(null);
+  const pricingSectionRef = useRef<HTMLDivElement>(null);
 
   const scrollToDemo = () => {
-    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <Flex
@@ -152,12 +154,11 @@ function Landing() {
         </Heading>
         <Text fontSize="lg" maxW="600px" lineHeight="tall" mt={4}>
           We are still in open beta, and are charging literally nothing. We
-          intend to charge $25 per year, and will be transparent about the costs
-          we incur.
+          intend to charge ~$20 per month.
         </Text>
       </Box>
     </Flex>
-  )
+  );
 }
 
-export default Landing
+export default Landing;

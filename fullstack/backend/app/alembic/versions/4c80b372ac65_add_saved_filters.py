@@ -7,9 +7,7 @@ Create Date: 2025-04-02 17:14:31.828265
 """
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 
-from app.models import JSONType
 
 # revision identifiers, used by Alembic.
 revision = '4c80b372ac65'

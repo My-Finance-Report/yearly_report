@@ -1,9 +1,9 @@
-import { Box, Heading, Text, VStack } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { Box, Heading, Text, VStack } from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/terms")({
   component: Terms,
-})
+});
 
 function Terms() {
   return (
@@ -81,5 +81,5 @@ function Terms() {
         </Box>
       </VStack>
     </Box>
-  )
+  );
 }

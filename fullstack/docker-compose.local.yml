@@ -49,9 +49,6 @@ services:
   frontend:
     build:
       context: ./frontend
-    args:
-        - VITE_API_URL=https://api.${DOMAIN?Variable not set}
-        - NODE_ENV=production
     image: finance-frontend:latest
     restart: always
     depends_on:

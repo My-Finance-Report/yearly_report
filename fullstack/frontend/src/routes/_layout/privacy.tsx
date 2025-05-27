@@ -1,9 +1,9 @@
-import { Box, Heading, Text, VStack } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { Box, Heading, Text, VStack } from "@chakra-ui/react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/privacy")({
   component: Privacy,
-})
+});
 
 function Privacy() {
   return (
@@ -64,8 +64,8 @@ function Privacy() {
             5. Security Measures
           </Heading>
           <Text>
-            Data is encrypted in transit and at rest. We have RLS enabled on all
-            user data tables within the database.
+            We have Row Level Security (RLS) enabled on all user data tables
+            within the database.
           </Text>
         </Box>
 
@@ -86,5 +86,5 @@ function Privacy() {
         </Box>
       </VStack>
     </Box>
-  )
+  );
 }

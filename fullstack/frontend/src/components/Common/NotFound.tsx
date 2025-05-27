@@ -1,5 +1,5 @@
-import { Button, Container, Text } from "@chakra-ui/react"
-import { Link } from "@tanstack/react-router"
+import { Button, Container, Text } from "@chakra-ui/react";
+import { Link } from "@tanstack/react-router";
 
 const NotFound = () => {
   return (
@@ -23,7 +23,7 @@ const NotFound = () => {
         </Text>
         <Text fontSize="md">Oops!</Text>
         <Text fontSize="md">Page not found.</Text>
-        <Link href="/">
+        <Link to="/">
           <Button
             color="ui.main"
             borderColor="ui.main"
@@ -35,7 +35,7 @@ const NotFound = () => {
         </Link>
       </Container>
     </>
-  )
-}
+  );
+};
 
-export default NotFound
+export default NotFound;

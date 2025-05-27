@@ -10,7 +10,7 @@ import sqlalchemy as sa
 import sqlmodel.sql.sqltypes
 
 from app.alembic.helpers import apply_and_grant_rls
-from app.models import Base
+from app.models.models import Base
 
 
 # revision identifiers, used by Alembic.

@@ -3,4 +3,5 @@
 set -e
 
 bin/blint
+#bin/btest
 bin/flint

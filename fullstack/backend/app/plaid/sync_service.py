@@ -1,8 +1,8 @@
 import logging
 import uuid
-from dataclasses import replace
-from datetime import datetime, timedelta
-from typing import Any
+from dataclasses import dataclass, replace
+from datetime import datetime, timedelta, timezone
+from typing import Any, Callable
 
 from plaid.api.plaid_api import TransactionsSyncRequest, TransactionsSyncResponse
 from plaid.model.transactions_sync_request_options import TransactionsSyncRequestOptions
@@ -20,20 +20,21 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     Recategorization,
     TransactionsWrapper,
 )
-from app.func_utils import pipe
-from app.models import (
-    AuditLog,
-    Category,
-    PlaidAccount,
-    PlaidItem,
-    PlaidSyncLog,
-    ProcessingState,
-    Transaction,
-    TransactionKind,
-    TransactionSource,
-    User,
+from app.func_utils import not_none, pipe
+from app.models.audit_log import AuditLog
+from app.models.category import Category
+from app.models.plaid import PlaidAccount, PlaidAccountBalance, PlaidItem, PlaidSyncLog
+from app.models.transaction import Transaction, TransactionKind
+from app.models.transaction_source import TransactionSource
+from app.models.user import User
+from app.models.worker_status import ProcessingState
+
+from app.no_code.notifications.events import NewTransactionsEvent
+from app.no_code.notifications.trigger import (
+    trigger_effects,
 )
 from app.plaid.client import get_plaid_client
+from app.schemas.no_code import NoCodeTransaction
 from app.telegram_utils import send_telegram_message
 from app.worker.status import status_update_monad, update_worker_status
 
@@ -47,11 +48,20 @@ def get_transaction_kind(amount: float) -> TransactionKind:
     return TransactionKind.withdrawal if amount >= 0 else TransactionKind.deposit
 
 
+@dataclass
+class PlaidFetchResponse:
+    added: list[dict[str, Any]]
+    removed: list[dict[str, Any]]
+    modified: list[dict[str, Any]]
+    accounts: list[dict[str, Any]]
+    set_next_cursor: Callable[[], None]
+
+
 def fetch_plaid_transactions(
     *,
     access_token: str,
     plaid_account: PlaidAccount,
-) -> Any:
+) -> PlaidFetchResponse:
     """Fetch transactions from Plaid API."""
     client = get_plaid_client()
 
@@ -67,9 +77,18 @@ def fetch_plaid_transactions(
     try:
         response: TransactionsSyncResponse = client.transactions_sync(request)
         next_cursor = response["next_cursor"]
-        plaid_account.cursor = next_cursor
 
-        return response["added"]
+        def set_next_cursor() -> None:
+            plaid_account.cursor = next_cursor
+
+        return PlaidFetchResponse(
+            added=response["added"],
+            removed=response["removed"],
+            modified=response["modified"],
+            accounts=response["accounts"],
+            set_next_cursor=set_next_cursor,
+        )
+
     except Exception as e:
         logger.error(f"Error fetching transactions from Plaid: {str(e)}")
         raise
@@ -97,6 +116,42 @@ def has_transaction_changed(
     return False
 
 
+def write_account_balances(
+    session: Session,
+    user: User,
+    plaid_accounts: list[Any],
+) -> None:
+    by_account_lookup = {account["account_id"]: account for account in plaid_accounts}
+    users_plaid_accounts = (
+        session.query(TransactionSource, PlaidAccount)
+        .join(PlaidAccount, PlaidAccount.id == TransactionSource.plaid_account_id)
+        .filter(
+            PlaidAccount.user_id == user.id,
+            PlaidAccount.plaid_account_id.in_(by_account_lookup.keys()),
+        )
+        .all()
+    )
+    users_plaid_account_lookup = {
+        a.plaid_account_id: (ts, a) for (ts, a) in users_plaid_accounts
+    }
+
+    for plaid_account_id, account in by_account_lookup.items():
+        user_transaction_source, user_plaid_account = users_plaid_account_lookup[
+            plaid_account_id
+        ]
+
+        record = PlaidAccountBalance(
+            plaid_account_id=user_plaid_account.id,
+            transaction_source_id=user_transaction_source.id,
+            balance=account["balances"]["current"],
+            available=account["balances"].get("available"),
+            iso_currency_code=account["balances"].get("iso_currency_code", "USD"),
+            timestamp=datetime.now(timezone.utc),
+        )
+        session.add(record)
+        session.commit()
+
+
 def sync_plaid_account_transactions(
     session: Session,
     user: User,
@@ -104,24 +159,30 @@ def sync_plaid_account_transactions(
     days_back: int,
     batch_id: str,
 ) -> None:
+    def _update_worker_status(x: ProcessingState, y: str) -> None:
+        update_worker_status(
+            session,
+            user,
+            status=x,
+            additional_info=y,
+            batch_id=batch_id,
+        )
+
     plaid_item = (
         session.query(PlaidItem)
         .filter(PlaidItem.id == plaid_account.plaid_item_id)
         .one()
     )
 
-    # Get the transaction source for this account
     transaction_source = (
         session.query(TransactionSource)
         .filter(TransactionSource.plaid_account_id == plaid_account.id)
         .one()
     )
 
-    # Set date range for transaction fetch (not directly used by transactions_sync but kept for logging)
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days_back)
 
-    # Create a sync log entry
     sync_log = PlaidSyncLog(
         user_id=user.id,
         plaid_item_id=plaid_item.id,
@@ -132,80 +193,70 @@ def sync_plaid_account_transactions(
     )
     session.add(sync_log)
 
-    try:
-        # Fetch transactions from Plaid
+    has_plaid_transactions = False
 
-        plaid_transactions = fetch_plaid_transactions(
+    try:
+        _update_worker_status(
+            ProcessingState.fetching_transactions,
+            "Fetching Plaid transactions",
+        )
+
+        plaid_response = fetch_plaid_transactions(
             access_token=plaid_item.access_token,
             plaid_account=plaid_account,
         )
+        has_plaid_transactions = any(
+            [
+                plaid_response.added,
+                plaid_response.accounts,
+                plaid_response.modified,
+                plaid_response.removed,
+            ]
+        )
+        print(plaid_response.accounts)
+        print(plaid_response.added)
+        print(plaid_response.removed)
+        print(plaid_response.modified)
 
-        # If no transactions were returned, we're done
-        if not plaid_transactions:
+        if not has_plaid_transactions:
+            _update_worker_status(
+                ProcessingState.completed,
+                "No new transactions found",
+            )
             sync_log.added_count = 0
             sync_log.modified_count = 0
             sync_log.removed_count = 0
             session.commit()
             return
 
-        # All transactions from transactions_sync are new
+        write_account_balances(session, user, plaid_response.accounts)
 
         added_count = add_new_transactions(
-            session,
-            user,
-            transaction_source,
-            plaid_transactions,
+            session, user, transaction_source, plaid_response
         )
-
-        # Update sync log with results
         sync_log.added_count = added_count
-        sync_log.modified_count = 0  # For transactions_sync, we don't track modified
-        sync_log.removed_count = 0  # For transactions_sync, we don't track removed
+        sync_log.modified_count = 0
+        sync_log.removed_count = 0
 
+        plaid_response.set_next_cursor()
         session.commit()
-        update_worker_status(
-            session,
-            user,
-            status=ProcessingState.completed,
-            additional_info="Completed Plaid sync",
-            batch_id=batch_id,
+        _update_worker_status(
+            ProcessingState.completed,
+            "Completed Plaid sync",
         )
 
     except Exception as e:
-        logger.error(f"Error syncing Plaid account {plaid_account.id}: {str(e)}")
         sync_log.error_message = str(e)
+        if has_plaid_transactions:
+            send_telegram_message(f"failing and had plaid transactions, {e}")
         session.commit()
         raise
 
 
-def plaid_categorize_pipe(in_process: InProcessJob) -> None:
-    return pipe(
-        in_process,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Applying previous recategorizations",
-        ),
-        apply_previous_plaid_recategorizations,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Categorizing batches",
-        ),
-        categorize_extracted_transactions,
-        lambda x: status_update_monad(
-            x,
-            status=ProcessingState.categorizing_transactions,
-            additional_info="Writing batching to database",
-        ),
-        final=insert_categorized_plaid_transactions,
-    )
-
-
 def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProcessJob:
-    assert in_process.transaction_source, "must have"
-    assert in_process.transactions, "must have"
-    assert in_process.categories, "must have"
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.transactions)
+    assert not_none(in_process.categories)
     query = (
         in_process.session.query(AuditLog, Transaction)
         .join(Transaction, Transaction.id == AuditLog.transaction_id)
@@ -250,39 +301,95 @@ def apply_previous_plaid_recategorizations(in_process: InProcessJob) -> InProces
     )
 
 
-def insert_categorized_plaid_transactions(in_process: InProcessJob) -> None:
-    assert in_process.transaction_source, "must have"
-    assert in_process.categorized_transactions, "must have"
-    assert in_process.categories, "must have"
+def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.categorized_transactions)
+    assert not_none(in_process.categories)
     category_lookup = {cat.name: cat.id for cat in in_process.categories}
+    existing_transaction_lookup = {
+        t.external_id: t for t in in_process.existing_transactions or []
+    }
 
-    transactions_to_insert = [
-        Transaction(
-            description=t.partialTransactionDescription,
-            category_id=category_lookup[t.category],
-            date_of_transaction=datetime.strptime(
-                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
-            ),
-            amount=t.partialTransactionAmount,
-            transaction_source_id=in_process.transaction_source.id,
-            kind=t.partialTransactionKind,
-            external_id=t.partialTransactionId,
-            uploaded_pdf_id=in_process.file.id if in_process.file else None,
-            user_id=in_process.user.id,
-            archived=False,
+    transactions_to_insert = []
+
+    for transaction in in_process.categorized_transactions:
+        existing_transaction = existing_transaction_lookup.get(
+            transaction.partialPlaidTransactionId
         )
-        for t in in_process.categorized_transactions
-    ]
+        if existing_transaction:
+            existing_transaction.category_id = category_lookup[transaction.category]
+            existing_transaction.last_updated = datetime.now()
+            existing_transaction.amount = transaction.partialTransactionAmount
+            existing_transaction.date_of_transaction = datetime.strptime(
+                transaction.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            )
+            existing_transaction.description = transaction.partialTransactionDescription
+
+        else:
+            transactions_to_insert.append(
+                Transaction(
+                    description=transaction.partialTransactionDescription,
+                    category_id=category_lookup[transaction.category],
+                    date_of_transaction=datetime.strptime(
+                        transaction.partialTransactionDateOfTransaction, "%m/%d/%Y"
+                    ),
+                    amount=transaction.partialTransactionAmount,
+                    transaction_source_id=in_process.transaction_source.id,
+                    kind=transaction.partialTransactionKind,
+                    external_id=transaction.partialPlaidTransactionId,
+                    uploaded_pdf_id=in_process.file.id if in_process.file else None,
+                    user_id=in_process.user.id,
+                    archived=False,
+                )
+            )
+
+    print(transactions_to_insert)
 
     in_process.session.bulk_save_objects(transactions_to_insert)
     in_process.session.commit()
+
+    return replace(
+        in_process,
+        inserted_transactions=transactions_to_insert,
+    )
+
+
+def trigger_the_effects(in_process: InProcessJob) -> None:
+    assert not_none(in_process.categorized_transactions)
+    assert not_none(in_process.transaction_source)
+    no_code_transactions = [
+        NoCodeTransaction(
+            id=-1,
+            category_id=-1,
+            account_name=in_process.transaction_source.name,
+            amount=t.partialTransactionAmount,
+            description=t.partialTransactionDescription,
+            date_of_transaction=datetime.strptime(
+                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            ),
+            kind=TransactionKind.deposit
+            if t.partialTransactionKind == "deposit"
+            else TransactionKind.withdrawal,
+            category_name=t.category,
+        )
+        for t in in_process.categorized_transactions
+    ]
+    trigger_effects(
+        in_process.session,
+        in_process.user,
+        NewTransactionsEvent(
+            transactions=no_code_transactions,
+            account_name=in_process.transaction_source.name,
+            count=len(no_code_transactions),
+        ),
+    )
 
 
 def add_new_transactions(
     session: Session,
     user: User,
     transaction_source: TransactionSource,
-    plaid_transactions: list[Any],
+    plaid_response: PlaidFetchResponse,
 ) -> int:
     categories = (
         session.query(Category)
@@ -312,6 +419,7 @@ def add_new_transactions(
         batch_id=uuid.uuid4().hex,
         transaction_source=transaction_source,
         categories=categories,
+        transactions_to_delete=[pt["transaction_id"] for pt in plaid_response.removed],
         transactions=TransactionsWrapper(
             transactions=[
                 PartialTransaction(
@@ -324,13 +432,12 @@ def add_new_transactions(
                         float(pt["amount"])
                     ).value,
                 )
-                for pt in plaid_transactions
+                for pt in plaid_response.added + plaid_response.modified
             ]
         ),
     )
-
-    plaid_categorize_pipe(in_process)
-    assert in_process.transactions, "must have"
+    plaid_sync_pipe(in_process)
+    assert not_none(in_process.transactions)
     return len(in_process.transactions.transactions)
 
 
@@ -372,6 +479,78 @@ def archive_removed_transactions(
     return len(transactions)
 
 
+def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
+    assert not_none(in_process.transaction_source)
+    assert not_none(in_process.transactions)
+    assert not_none(in_process.transactions.transactions)
+
+    transactions = (
+        in_process.session.query(Transaction)
+        .filter(
+            Transaction.transaction_source_id == in_process.transaction_source.id,
+            Transaction.user_id == in_process.user.id,
+            Transaction.external_id.in_(
+                [
+                    t.partialPlaidTransactionId
+                    for t in in_process.transactions.transactions
+                ]
+            ),
+            ~Transaction.archived,
+        )
+        .all()
+    )
+    return replace(in_process, existing_transactions=transactions)
+
+
+def remove_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
+    if not in_process.transactions_to_delete:
+        return in_process
+
+    in_process.session.query(Transaction).filter(
+        Transaction.external_id.in_(in_process.transactions_to_delete),
+        Transaction.user_id == in_process.user.id,
+    ).delete()
+
+    return in_process
+
+
+def plaid_sync_pipe(in_process: InProcessJob) -> None:
+    return pipe(
+        in_process,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.parsing_transactions,
+            additional_info="Checking for transaction removals",
+        ),
+        remove_plaid_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.parsing_transactions,
+            additional_info="Checking for transaction updates",
+        ),
+        fetch_existing_plaid_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Applying previous recategorizations",
+        ),
+        apply_previous_plaid_recategorizations,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Categorizing batches",
+        ),
+        categorize_extracted_transactions,
+        lambda x: status_update_monad(
+            x,
+            status=ProcessingState.categorizing_transactions,
+            additional_info="Writing batching to database",
+        ),
+        insert_categorized_plaid_transactions,
+        final=trigger_the_effects,
+    )
+
+
 async def sync_all_plaid_accounts(
     user_session: Session, user: User, days_back: int
 ) -> None:
@@ -379,27 +558,22 @@ async def sync_all_plaid_accounts(
     Sync all Plaid accounts for a specific user.
     """
 
-    try:
-        plaid_accounts = (
-            user_session.query(PlaidAccount)
-            .filter(PlaidAccount.user_id == user.id)
-            .all()
-        )
+    plaid_accounts = (
+        user_session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id).all()
+    )
 
-        for account in plaid_accounts:
-            batch_id = uuid.uuid4().hex
+    print(f"Syncing {len(plaid_accounts)} Plaid accounts for user {user.id}")
+
+    for account in plaid_accounts:
+        batch_id = uuid.uuid4().hex
+
+        try:
             sync_plaid_account_transactions(
                 user_session, user, account, days_back, batch_id
             )
-
-        if plaid_accounts:
-            print(f"Synced all Plaid accounts for user {user.id}")
-        else:
-            print(f"No Plaid accounts found for user {user.id}")
-
-    except Exception as e:
-        send_telegram_message(
-            f"Error syncing Plaid accounts for user {user.id}: {str(e)}"
-        )
-        logger.error(f"Error syncing Plaid accounts for user {user.id}: {str(e)}")
-        raise
+        except Exception as e:
+            logger.error(f"Error syncing Plaid account for user {user.id}: {str(e)}")
+            if user.id != 4:
+                send_telegram_message(
+                    f"Error syncing Plaid account for user {user.id}: {str(e)}"
+                )

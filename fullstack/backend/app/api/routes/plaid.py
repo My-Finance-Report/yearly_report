@@ -8,14 +8,11 @@ from app.async_pipelines.uploaded_file_pipeline.configuration_creator import (
     add_default_categories,
 )
 from app.db import get_current_user, get_db
-from app.models import (
-    PlaidAccount,
-    PlaidItem,
-    ProcessingState,
-    SourceKind,
-    TransactionSource,
-    User,
-)
+from app.models.plaid import PlaidAccount, PlaidItem
+from app.models.transaction_source import SourceKind, TransactionSource
+from app.models.user import User
+from app.models.worker_status import ProcessingState
+
 from app.plaid.client import create_link_token, exchange_public_token, get_plaid_client
 from app.plaid.models import (
     PlaidAccountResponse,
