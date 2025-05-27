@@ -58,7 +58,8 @@ jobs:
       run: |
         echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
         mkdir -p ~/.ssh
-        ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        echo "${PRIVATE_KEY}" > ~/.ssh/id_rsa
+        ssh-keyscan -p 22 ${HOST} >> ~/.ssh/known_hosts
         ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
