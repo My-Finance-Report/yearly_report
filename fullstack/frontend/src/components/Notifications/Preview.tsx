@@ -1,21 +1,13 @@
 import { NoCodeService } from "@/client";
 import { useState, useEffect } from "react";
-import {
-  Card,
-} from "@chakra-ui/react";
+import { Card } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Email,
-} from "@/client/types.gen";
+import { Email } from "@/client/types.gen";
 import { NotificationFormValues } from "./Builder";
-
-
 
 interface NotificationPreviewProps {
   formValues: NotificationFormValues | null;
 }
-
-
 
 export function NotificationPreview({ formValues }: NotificationPreviewProps) {
   if (!formValues) {
@@ -26,17 +18,23 @@ export function NotificationPreview({ formValues }: NotificationPreviewProps) {
 }
 
 function Placeholder() {
-  return <Card.Root className="border" w="full">
-    <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-      Preview
-    </Card.Header>
-    <Card.Body p={3}>
-      <p>Preview not available</p>
-    </Card.Body>
-  </Card.Root>;
+  return (
+    <Card.Root className="border" w="full">
+      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
+        Preview
+      </Card.Header>
+      <Card.Body p={3}>
+        <p>Preview not available</p>
+      </Card.Body>
+    </Card.Root>
+  );
 }
 
-export function NotificationPreviewInner({ formValues }: { formValues: NotificationFormValues }) {
+export function NotificationPreviewInner({
+  formValues,
+}: {
+  formValues: NotificationFormValues;
+}) {
   const [previewData, setPreviewData] = useState<Email | null>(null);
   const { data, refetch } = useQuery({
     queryKey: ["previewNotification", formValues.template, formValues.subject],
