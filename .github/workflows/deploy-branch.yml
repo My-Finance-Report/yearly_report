@@ -46,7 +46,7 @@ jobs:
     - name: download env file
       uses: actions/download-artifact@v4
       with:
-        name: templates/env_filled_in
+        name: .env.production
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
@@ -55,7 +55,7 @@ jobs:
         REMOTE_DIR: "/home/ec2-user/code/finance_app"
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        ls -a templates && cat templates/env_filled_in
+        ls -a . && cat .env.production
         # echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
         # ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
         # ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
