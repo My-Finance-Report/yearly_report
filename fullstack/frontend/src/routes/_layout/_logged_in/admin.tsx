@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Box,
   Container,
   Flex,
@@ -7,16 +8,17 @@ import {
   Skeleton,
   Table,
 } from "@chakra-ui/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { z } from "zod";
 
-import { type UserOut, UsersService } from "@/client";
+import { AdminService, type UserOut, UsersService } from "@/client";
 import AddUser from "@/components/Admin/AddUser";
 import ActionsMenu from "@/components/Common/ActionsMenu";
 import Navbar from "@/components/Common/Navbar";
 import { PaginationFooter } from "@/components/Common/PaginationFooter.tsx";
+import useCustomToast from "@/hooks/useCustomToast";
 
 const usersSearchSchema = z.object({
   page: z.number().catch(1),
@@ -42,6 +44,7 @@ function UsersTable() {
   const currentUser = queryClient.getQueryData<UserOut>(["currentUser"]);
   const { page } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const toast = useCustomToast();
   const setPage = (page: number) =>
     navigate({
       search: (prev: { [key: string]: string }) => ({ ...prev, page }),
@@ -65,9 +68,26 @@ function UsersTable() {
     }
   }, [page, queryClient, hasNextPage]);
 
+  const reseed = useMutation({
+    mutationFn: () => AdminService.reseedAllAccountPages(),
+    onSuccess: () => {
+      toast("Success", "All account pages reseeded successfully", "success");
+    },
+    onError: (error) => {
+      toast("Error", error.message, "error");
+    },
+  });
+
   return (
     <>
       <Box overflowX="auto">
+        <Button
+          onClick={() => {
+            reseed.mutate();
+          }}
+        >
+          Re-seed all account pages
+        </Button>
         <Table.Root variant="outline">
           <Table.Header>
             <Table.Row>
