@@ -1,20 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NoCodeService } from "@/client";
 import React, { useState } from "react";
-import {
-  Box,
-  Spinner,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Box, Spinner, useDisclosure } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
-import {
-  EffectOut,
-} from "@/client/types.gen";
+import { EffectOut } from "@/client/types.gen";
 import Delete, { DeleteableEntity } from "@/components/Common/DeleteAlert";
-import {NotificationPreview} from "@/components/Notifications/Preview"
-import {NotificationFormValues, CreateForm} from "@/components/Notifications/Builder"
-
+import { NotificationPreview } from "@/components/Notifications/Preview";
+import {
+  NotificationFormValues,
+  CreateForm,
+} from "@/components/Notifications/Builder";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: UnifiedNotificationInterface,

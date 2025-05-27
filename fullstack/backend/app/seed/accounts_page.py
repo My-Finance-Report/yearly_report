@@ -20,7 +20,6 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
     user = session.query(User).filter(User.id == user_id).one()
     canvas_data = generate_account_page(session, user)
 
-    # Create Canvas
     canvas = NoCodeCanvas(
         name=canvas_data.name,
         slug=canvas_data.name.lower().replace(" ", "-"),
@@ -82,6 +81,7 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
             default_value=param_data.default_value,
             display_info=param_data.display_info,
         )
+        print(repr(param))
         session.add(param)
         param_id_lookup[param_data.id] = param
 

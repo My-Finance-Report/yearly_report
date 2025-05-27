@@ -30,8 +30,6 @@ import {
 import useCustomToast from "@/hooks/useCustomToast";
 import { Controller, useForm } from "react-hook-form";
 
-
-
 export interface NotificationFormValues {
   id?: number;
   name: string;
@@ -43,8 +41,6 @@ export interface NotificationFormValues {
   condition: EffectConditionals;
   conditional_parameters: Record<string, number>;
 }
-
-
 
 interface CreateFormProps {
   selectedEffect: EffectOut;
