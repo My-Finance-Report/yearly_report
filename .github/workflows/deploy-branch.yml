@@ -32,6 +32,8 @@ jobs:
         output-filename: 'templates/.env.production'
         html-escape: false
         dry-run: false
+    - name: debug
+      run: ls -a templates
     - name: upload artifact
       uses: actions/upload-artifact@v4
       with:
