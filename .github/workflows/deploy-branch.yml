@@ -15,6 +15,7 @@ jobs:
         REMOTE_DIR: "/home/ec2-user/code/finance_app"
       run: |
         echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
         ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
         rsync -avz docker-compose.prod.yml ${REMOTE_SERVER}:${REMOTE_DIR}/
         rsync -avz bin/backup_db ${REMOTE_SERVER}:${REMOTE_DIR}/
