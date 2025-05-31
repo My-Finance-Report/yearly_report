@@ -51,7 +51,7 @@ jobs:
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
-        HOST: 52.15.193.109
+        HOST: ec2-52-15-193-109.us-east-2.compute.amazonaws.com
         USER: ${{ secrets.EC2_USER }}
         REMOTE_DIR: "/home/ec2-user/code/finance_app"
         IMAGE_TAG: ${{ github.sha }}
@@ -59,11 +59,10 @@ jobs:
         mkdir -p ~/.ssh
         touch ~/.ssh/id_rsa
         echo "${PRIVATE_KEY}" > ~/.ssh/id_rsa
-        which ssh-keyscan
-        ssh-keyscan -p 22 ${HOST}
-        # ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
+        ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
+        echo "hello"
         # aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         # docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         # docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
         # chmod +x /home/ec2-user/code/finance_app/backup_db
-        # '
+        '
