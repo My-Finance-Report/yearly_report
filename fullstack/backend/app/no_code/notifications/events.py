@@ -77,21 +77,18 @@ class Event(ABC, BaseModel):
         return table
 
 
-@dataclass(kw_only=True)
 class NewTransactionsEvent(Event):
+    type: EventType = EventType.NEW_TRANSACTION
     transactions: list[NoCodeTransaction]
     account_name: str
     count: int
-    type: EventType = EventType.NEW_TRANSACTION
 
 
-@dataclass(kw_only=True)
 class NewAccountLinkedEvent(Event):
-    account_name: str
     type: EventType = EventType.NEW_ACCOUNT_LINKED
-
-
-@dataclass(kw_only=True)
-class AccountDeactivatedEvent(Event):
     account_name: str
+
+
+class AccountDeactivatedEvent(Event):
     type: EventType = EventType.ACCOUNT_DEACTIVATED
+    account_name: str

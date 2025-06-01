@@ -51,6 +51,7 @@ class EffectUpdate(BaseModel):
     condition: Optional[EffectConditionals] = None
     conditional_parameters: Optional[ConditionalParameters] = None
 
+
 def determine_supported_conditional_parameters(event_type: EventType) -> list[str]:
     if event_type == EventType.NEW_TRANSACTION:
         return ["amount", "count"]
@@ -82,7 +83,7 @@ def get_effects(
             conditional_parameters=effect.conditional_parameters,
             supported_conditional_parameters=determine_supported_conditional_parameters(
                 effect.event_type
-            )
+            ),
         )
         for effect in db_effects
     ]
@@ -132,6 +133,7 @@ def preview_notification(
 
     # Create the event
     event = NewTransactionsEvent(
+        type=EventType.NEW_TRANSACTION,
         transactions=sample_transactions,
         account_name=account_name,
         count=len(sample_transactions),

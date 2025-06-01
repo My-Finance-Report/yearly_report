@@ -1,15 +1,13 @@
 import { NoCodeService } from "@/client";
 import { useEffect } from "react";
 import { Conditions } from "./Conditions/Conditions";
-import { DumbNumberField, DumbTextField, DumbTextareaField } from "../ui/dumb/form/value";
-import { DumbFormSelect } from "../ui/dumb/form/select";
 import {
-  Box,
-  Button,
-  HStack,
-  Card,
-  VStack,
-} from "@chakra-ui/react";
+  DumbNumberField,
+  DumbTextField,
+  DumbTextareaField,
+} from "../ui/dumb/form/value";
+import { DumbFormSelect } from "../ui/dumb/form/select";
+import { Box, Button, HStack, Card, VStack } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -40,10 +38,11 @@ interface CreateFormProps {
   setFormValues: (values: NotificationFormValues) => void;
 }
 
-function determineConditionsForEventType(eventType: EventType) {
-  console.log(eventType)
+function determineConditionsForEventType(
+  eventType: EventType,
+): EffectConditionals[] {
   if (eventType === "new_transaction") {
-    return ["amount", "count"];
+    return ["amount_over", "count_of_transactions"];
   }
   return [];
 }
@@ -102,14 +101,15 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
   const queryClient = useQueryClient();
 
   const eventTypes: Record<EventType, string> = {
-    "new_transaction": "New Transaction",
-    "new_account_linked": "New Account Linked",
-    "account_deactivated": "Account Deactivated"
+    new_transaction: "New Transaction",
+    new_account_linked: "New Account Linked",
+    account_deactivated: "Account Deactivated",
   };
 
-
-
-  const effectTypes: EffectType[] = ["email", "in_app"];
+  const effectTypes: Record<EffectType, string> = {
+    email: "Email",
+    in_app: "In App",
+  };
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -155,7 +155,7 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
         template: data.template,
         subject: data.subject,
         condition: data.condition,
-        conditional_parameters: data.conditional_parameters
+        conditional_parameters: data.conditional_parameters,
       };
 
       return NoCodeService.createEffect({ requestBody: body });
@@ -201,9 +201,12 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
               errors={errors}
               name="event_type"
               label="Event"
-              options={Object.keys(eventTypes).map((eventType) => eventType as EventType)}
-              labelExtractor={(eventType) => eventTypes[eventType]}
-              keyExtractor={(eventType) => eventType}
+              options={Object.entries(eventTypes).map(([key, value]) => ({
+                value: key,
+                label: value,
+              }))}
+              labelExtractor={(eventType) => eventType.label}
+              keyExtractor={(eventType) => eventType.value}
             />
             {supportsFrequency(form.getValues("event_type")) && (
               <DumbNumberField
@@ -217,17 +220,22 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
               control={control}
               errors={errors}
               form={form}
-              supported_conditional_parameters={determineConditionsForEventType(form.getValues("event_type"))} />
+              supported_conditional_parameters={determineConditionsForEventType(
+                form.getValues("event_type"),
+              )}
+            />
+
             <DumbFormSelect
               control={control}
               errors={errors}
               name="effect_type"
               label="Notification Type"
-              options={effectTypes}
-              labelExtractor={(effectType) => effectType}
+              options={Object.keys(effectTypes).map(
+                (effectType) => effectType as EffectType,
+              )}
+              labelExtractor={(effectType) => effectTypes[effectType]}
               keyExtractor={(effectType) => effectType}
             />
-
             <DumbTextField
               name="subject"
               label="Subject"

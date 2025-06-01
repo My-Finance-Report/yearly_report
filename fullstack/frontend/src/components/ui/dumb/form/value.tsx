@@ -5,25 +5,29 @@ import {
   FieldErrorText,
   Textarea,
 } from "@chakra-ui/react";
+import {
+  UseFormRegister,
+  FieldErrors,
+  FieldValues,
+  Path,
+} from "react-hook-form";
 
-
-
-export function DumbNumberField({
+export function DumbNumberField<T extends FieldValues>({
   name,
   label,
   register,
   errors,
+  defaultValue,
 }: {
-  name: string;
+  name: Path<T>;
   label: string;
-  register: any;
-  errors: any;
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
+  defaultValue?: number;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
-      <FieldLabel htmlFor={name}>
-        {label}
-      </FieldLabel>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Input
         id={name}
         {...register(name, {
@@ -31,30 +35,31 @@ export function DumbNumberField({
         })}
         placeholder={name}
         type="number"
+        defaultValue={defaultValue}
       />
       {errors[name] && (
-        <FieldErrorText>{errors[name].message}</FieldErrorText>
+        <FieldErrorText>
+          {errors[name]?.message?.toString() || ""}
+        </FieldErrorText>
       )}
     </FieldRoot>
   );
 }
 
-export function DumbTextField({
+export function DumbTextField<T extends FieldValues>({
   name,
   label,
   register,
   errors,
 }: {
-  name: string;
+  name: Path<T>;
   label: string;
-  register: any;
-  errors: any;
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
-      <FieldLabel htmlFor={name}>
-        {label}
-      </FieldLabel>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Input
         id={name}
         {...register(name, {
@@ -64,28 +69,28 @@ export function DumbTextField({
         type="text"
       />
       {errors[name] && (
-        <FieldErrorText>{errors[name].message}</FieldErrorText>
+        <FieldErrorText>
+          {errors[name]?.message?.toString() || ""}
+        </FieldErrorText>
       )}
     </FieldRoot>
   );
 }
 
-export function DumbTextareaField({
+export function DumbTextareaField<T extends FieldValues>({
   name,
   label,
   register,
   errors,
 }: {
-  name: string;
+  name: Path<T>;
   label: string;
-  register: any;
-  errors: any;
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
-      <FieldLabel htmlFor={name}>
-        {label}
-      </FieldLabel>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Textarea
         id={name}
         {...register(name, {
@@ -94,7 +99,9 @@ export function DumbTextareaField({
         placeholder={name}
       />
       {errors[name] && (
-        <FieldErrorText>{errors[name].message}</FieldErrorText>
+        <FieldErrorText>
+          {errors[name]?.message?.toString() || ""}
+        </FieldErrorText>
       )}
     </FieldRoot>
   );
