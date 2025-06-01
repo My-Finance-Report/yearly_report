@@ -52,6 +52,10 @@ function supportsFrequency(eventType: EventType) {
 }
 
 export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
+
+  const showToast = useCustomToast();
+  const queryClient = useQueryClient();
+
   const form = useForm<NotificationFormValues>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -97,8 +101,7 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
     control,
     formState: { errors, isSubmitting },
   } = form;
-  const showToast = useCustomToast();
-  const queryClient = useQueryClient();
+
 
   const eventTypes: Record<EventType, string> = {
     new_transaction: "New Transaction",
@@ -201,12 +204,11 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
               errors={errors}
               name="event_type"
               label="Event"
-              options={Object.entries(eventTypes).map(([key, value]) => ({
-                value: key,
-                label: value,
-              }))}
-              labelExtractor={(eventType) => eventType.label}
-              keyExtractor={(eventType) => eventType.value}
+              options={Object.keys(eventTypes).map(
+                (eventType) => eventType as EventType,
+              )}
+              labelExtractor={(eventType) => eventTypes[eventType]}
+              keyExtractor={(eventType) => eventType}
             />
             {supportsFrequency(form.getValues("event_type")) && (
               <DumbNumberField
