@@ -16,7 +16,7 @@ class EmailArgs(BaseModel):
 @dataclass
 class Email:
     subject: str
-    html: str
+    clean_html: str
 
 
 def enrich_with_unsubscribe(user: User, email: Email) -> Email:
@@ -26,7 +26,7 @@ def enrich_with_unsubscribe(user: User, email: Email) -> Email:
     )
     return replace(
         email,
-        html=f"{email.html}<br/><br/><a href='{unsubscribe_link}'>Unsubscribe from emails</a>",
+        clean_html=f"{email.clean_html}<br/><br/><a href='{unsubscribe_link}'>Unsubscribe from emails</a>",
     )
 
 
@@ -55,13 +55,13 @@ def send_email(user: User, email_generator: Callable[[], Email]) -> None:
         "from": "My Financé <matt@updates.myfinancereport.com>",
         "to": [recipient],
         "subject": email.subject,
-        "html": email.html,
+        "html": email.clean_html,
     }
 
     # TODO remove once we feel good about the state of the notifications
     if TESTING or user.id not in TEST_USER_IDS:
         print(
-            f"Would send email to {recipient} with subject: {email.subject} and html: {email.html}"
+            f"Would send email to {recipient} with subject: {email.subject} and html: {email.clean_html}"
         )
     else:
         resend.Emails.send(params)

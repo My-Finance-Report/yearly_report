@@ -1,10 +1,11 @@
+from sched import Event
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 from datetime import datetime, timedelta
 
 from app.db import Session, get_current_user, get_db
 from app.email.send import Email
-from app.local_types import EffectOut
+from app.local_types import EffectMappings, EffectOut
 from app.models.effect import (
     ConditionalParameters,
     Effect as EffectModel,
@@ -18,7 +19,11 @@ from app.no_code.notifications.effect_generators.seed_effects import (
     new_transaction_effect,
 )
 from app.no_code.notifications.effects import EffectConfig, Effect
-from app.no_code.notifications.events import NewTransactionsEvent
+from app.no_code.notifications.events import (
+    AccountDeactivatedEvent,
+    NewAccountLinkedEvent,
+    NewTransactionsEvent,
+)
 from app.no_code.notifications.trigger import perform_template_replacement
 from app.schemas.no_code import NoCodeTransaction
 from pydantic import BaseModel
@@ -42,20 +47,14 @@ class EffectCreate(BaseModel):
 class EffectUpdate(BaseModel):
     """Schema for updating an existing notification effect"""
 
-    name: Optional[str] = None
-    effect_type: Optional[EffectType] = None
-    event_type: Optional[EventType] = None
-    frequency_days: Optional[int] = None
-    template: Optional[str] = None
-    subject: Optional[str] = None
-    condition: Optional[EffectConditionals] = None
-    conditional_parameters: Optional[ConditionalParameters] = None
-
-
-def determine_supported_conditional_parameters(event_type: EventType) -> list[str]:
-    if event_type == EventType.NEW_TRANSACTION:
-        return ["amount", "count"]
-    return []
+    name: str
+    effect_type: EffectType
+    event_type: EventType
+    frequency_days: int
+    template: str
+    subject: str
+    condition: EffectConditionals
+    conditional_parameters: ConditionalParameters
 
 
 @router.get("/effects", response_model=list[EffectOut])
@@ -81,9 +80,6 @@ def get_effects(
             ),
             condition=effect.condition,
             conditional_parameters=effect.conditional_parameters,
-            supported_conditional_parameters=determine_supported_conditional_parameters(
-                effect.event_type
-            ),
         )
         for effect in db_effects
     ]
@@ -96,65 +92,97 @@ class NotificationPreviewResponse(BaseModel):
     subject: str
 
 
+AnyEvent = NewTransactionsEvent | NewAccountLinkedEvent | AccountDeactivatedEvent
+
+
+def get_sample_event(event_type: EventType) -> AnyEvent:
+    num_transactions = 3
+    account_name = "Demo Account"
+    if event_type == EventType.NEW_TRANSACTION:
+        sample_transactions = []
+        for i in range(num_transactions):
+            # Create varied transaction amounts
+            amount = 100 * (i + 1)
+            # Alternate between withdrawals and deposits
+            kind = TransactionKind.withdrawal if i % 2 == 0 else TransactionKind.deposit
+            # Create transactions on different days
+            date = datetime.now() - timedelta(days=i)
+
+            sample_transactions.append(
+                NoCodeTransaction(
+                    id=i,
+                    category_id=i,
+                    amount=amount,
+                    date_of_transaction=date,
+                    description=f"Sample Transaction {i + 1}",
+                    kind=kind,
+                    category_name=f"Category {(i % 3) + 1}",
+                    account_name=account_name,
+                )
+            )
+
+        return NewTransactionsEvent(
+            type=EventType.NEW_TRANSACTION,
+            transactions=sample_transactions,
+            account_name=account_name,
+            count=len(sample_transactions),
+        )
+    elif event_type == EventType.NEW_ACCOUNT_LINKED:
+        return NewAccountLinkedEvent(
+            type=EventType.NEW_ACCOUNT_LINKED,
+            account_name=account_name,
+        )
+    elif event_type == EventType.ACCOUNT_DEACTIVATED:
+        return AccountDeactivatedEvent(
+            type=EventType.ACCOUNT_DEACTIVATED,
+            account_name=account_name,
+        )
+
+
+def get_sample_conditional_parameters(event_type: EventType) -> ConditionalParameters:
+    if event_type == EventType.NEW_TRANSACTION:
+        return ConditionalParameters(count=0)
+    elif event_type == EventType.NEW_ACCOUNT_LINKED:
+        return ConditionalParameters()
+    elif event_type == EventType.ACCOUNT_DEACTIVATED:
+        return ConditionalParameters()
+
+
+def get_sample_condition(event_type: EventType) -> EffectConditionals:
+    if event_type == EventType.NEW_TRANSACTION:
+        return EffectConditionals.COUNT_OF_TRANSACTIONS
+    elif event_type == EventType.NEW_ACCOUNT_LINKED:
+        return EffectConditionals.UNCONDITIONAL
+    elif event_type == EventType.ACCOUNT_DEACTIVATED:
+        return EffectConditionals.UNCONDITIONAL
+
+
 @router.get("/preview", response_model=Email)
 def preview_notification(
     effect_type: EffectType = EffectType.EMAIL,
     event_type: EventType = EventType.NEW_TRANSACTION,
     template: Optional[str] = None,
     subject: Optional[str] = None,
-    num_transactions: int = 3,
-    account_name: str = "Demo Account",
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Email:
-    """Preview a notification with sample data"""
-    # Create sample transactions
-    sample_transactions = []
-    for i in range(num_transactions):
-        # Create varied transaction amounts
-        amount = 100 * (i + 1)
-        # Alternate between withdrawals and deposits
-        kind = TransactionKind.withdrawal if i % 2 == 0 else TransactionKind.deposit
-        # Create transactions on different days
-        date = datetime.now() - timedelta(days=i)
+    print(template)
 
-        sample_transactions.append(
-            NoCodeTransaction(
-                id=i,
-                category_id=i,
-                amount=amount,
-                date_of_transaction=date,
-                description=f"Sample Transaction {i + 1}",
-                kind=kind,
-                category_name=f"Category {(i % 3) + 1}",
-                account_name=account_name,
-            )
-        )
+    event = get_sample_event(event_type)
 
-    # Create the event
-    event = NewTransactionsEvent(
-        type=EventType.NEW_TRANSACTION,
-        transactions=sample_transactions,
-        account_name=account_name,
-        count=len(sample_transactions),
-    )
-
-    # Use provided template and subject or defaults
     config = EffectConfig(
         frequency_days=1,
         template=template or "",
         subject=subject or "",
     )
 
-    # Create the effect
     effect = Effect(
         type=effect_type,
         config=config,
-        condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
-        conditional_parameters=ConditionalParameters(count=0),
+        condition=get_sample_condition(event_type),
+        conditional_parameters=get_sample_conditional_parameters(event_type),
     )
 
-    # Generate the email preview
     return perform_template_replacement(event, effect)
 
 
@@ -193,9 +221,33 @@ def create_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
-        supported_conditional_parameters=determine_supported_conditional_parameters(
-            db_effect.event_type
-        ),
+    )
+
+
+@router.get("/effect_mappings", response_model=EffectMappings)
+def get_effect_mappings(
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> EffectMappings:
+    return EffectMappings(
+        variables={
+            EventType.NEW_TRANSACTION: [
+                "account_name",
+                "transactions_table",
+                "count",
+                "alter_settings",
+            ],  # TODO pull these by inspecting
+            EventType.NEW_ACCOUNT_LINKED: ["account_name", "alter_settings"],
+            EventType.ACCOUNT_DEACTIVATED: ["account_name", "alter_settings"],
+        },
+        allowed_conditional_parameters={
+            EventType.NEW_TRANSACTION: [
+                EffectConditionals.AMOUNT_OVER,
+                EffectConditionals.COUNT_OF_TRANSACTIONS,
+            ],
+            EventType.NEW_ACCOUNT_LINKED: [],
+            EventType.ACCOUNT_DEACTIVATED: [],
+        },
     )
 
 
@@ -220,10 +272,14 @@ def update_effect(
             detail="Notification effect not found",
         )
 
-    # Update the effect with the provided data
-    update_data = effect_data.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_effect, key, value)
+    db_effect.name = effect_data.name
+    db_effect.effect_type = effect_data.effect_type
+    db_effect.event_type = effect_data.event_type
+    db_effect.frequency_days = effect_data.frequency_days
+    db_effect.template = effect_data.template
+    db_effect.subject = effect_data.subject
+    db_effect.condition = effect_data.condition
+    db_effect.conditional_parameters = effect_data.conditional_parameters
 
     session.commit()
     session.refresh(db_effect)
@@ -241,9 +297,6 @@ def update_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
-        supported_conditional_parameters=determine_supported_conditional_parameters(
-            db_effect.event_type
-        ),
     )
 
 

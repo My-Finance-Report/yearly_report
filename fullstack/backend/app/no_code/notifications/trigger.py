@@ -1,4 +1,6 @@
 import re
+from typing import cast
+from html_sanitizer import Sanitizer
 from datetime import datetime, timedelta, timezone
 from typing import List, Callable
 from app.no_code.notifications.effect_generators.seed_effects import (
@@ -130,7 +132,61 @@ def perform_template_replacement(event: Event, effect: Effect) -> Email:
 
     subject = make_subs(effect.config.subject)
     body = make_subs(effect.config.template)
-    return Email(subject=subject, html=body)
+
+    return Email(subject=subject, clean_html=purify_html(body))
+
+
+def purify_html(html: str) -> str:
+    sanitizer = Sanitizer(
+        settings={
+            "tags": {
+                # Text formatting
+                "p",
+                "strong",
+                "em",
+                "b",
+                "i",
+                "u",
+                # Headers
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                # Lists
+                "ul",
+                "ol",
+                "li",
+                # Tables
+                "table",
+                "thead",
+                "tbody",
+                "tr",
+                "th",
+                "td",
+                # Other
+                "br",
+                "hr",
+                "a",
+                "span",
+                "div",
+            },
+            "attributes": {
+                "a": ("href", "title", "target", "rel"),
+                "table": ("class", "style"),
+                "th": ("colspan", "rowspan", "style"),
+                "td": ("colspan", "rowspan", "style"),
+                "span": ("class", "style"),
+                "div": ("class", "style"),
+            },
+            "empty": {"br", "hr", "td", "th"},
+            "separate": {"table", "thead", "tbody", "tr", "th", "td", "div", "p", "li"},
+            "add_nofollow": True,  # Security: add rel="nofollow" to links
+            "autolink": False,  # Don't auto-convert URLs to links
+        }
+    )
+    return cast(str, sanitizer.sanitize(html))
 
 
 def generate_callable_for_effect(event: Event, effect: Effect) -> Callable[[], Email]:

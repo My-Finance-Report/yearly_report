@@ -22,6 +22,11 @@ function UnifiedNotificationInterface() {
     null,
   );
 
+  const { data: effectMappings } = useQuery({
+    queryKey: ["effect_mappings"],
+    queryFn: () => NoCodeService.getEffectMappings(),
+  });
+
   const deleteModal = useDisclosure();
 
   return (
@@ -37,9 +42,10 @@ function UnifiedNotificationInterface() {
         />
       </Box>
       <Box display="flex" gap={8}>
-        {selectedEffect && (
+        {selectedEffect && effectMappings && (
           <Box flex={2}>
             <CreateForm
+              effectMappings={effectMappings}
               selectedEffect={selectedEffect}
               setFormValues={setFormValues}
             />
@@ -99,23 +105,26 @@ function NewNotificationButton({
   setFormValues,
 }: {
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
-  setFormValues: React.Dispatch<React.SetStateAction<NotificationFormValues | null>>;
+  setFormValues: React.Dispatch<
+    React.SetStateAction<NotificationFormValues | null>
+  >;
 }) {
   return (
     <Button
       onClick={() => {
-        setSelectedEffect(null);
-        setFormValues({
+        setSelectedEffect({
           name: "",
-          template: "",
-          subject: "",
-          effect_type: "email",
-          event_type: "new_transaction",
-          frequency_days: 0,
-          condition: "amount_over",
-          conditional_parameters: {
+          config: {
+            template: "",
+            subject: "",
+            frequency_days: 0,
           },
+          event_type: "new_transaction",
+          effect_type: "email",
+          condition: "amount_over",
+          conditional_parameters: {},
         });
+        setFormValues(null);
       }}
     >
       New Notification

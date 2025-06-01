@@ -64,6 +64,7 @@ import type {
   NoCodeCreateEffectResponse,
   NoCodePreviewNotificationData,
   NoCodePreviewNotificationResponse,
+  NoCodeGetEffectMappingsResponse,
   NoCodeUpdateEffectData,
   NoCodeUpdateEffectResponse,
   NoCodeDeleteEffectData,
@@ -870,7 +871,6 @@ export class NoCodeService {
 
   /**
    * Preview Notification
-   * Preview a notification with sample data
    * @param data The data for the request.
    * @param data.effectType
    * @param data.eventType
@@ -898,6 +898,18 @@ export class NoCodeService {
       errors: {
         422: "Validation Error",
       },
+    });
+  }
+
+  /**
+   * Get Effect Mappings
+   * @returns EffectMappings Successful Response
+   * @throws ApiError
+   */
+  public static getEffectMappings(): CancelablePromise<NoCodeGetEffectMappingsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/notification/effect_mappings",
     });
   }
 

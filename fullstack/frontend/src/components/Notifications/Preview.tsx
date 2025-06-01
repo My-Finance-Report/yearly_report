@@ -1,8 +1,7 @@
-import { NoCodeService } from "@/client";
-import { useState, useEffect } from "react";
+import { Email, NoCodeService } from "@/client";
+import React from "react";
 import { Card } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
-import { Email } from "@/client/types.gen";
 import { NotificationFormValues } from "./Builder";
 
 interface NotificationPreviewProps {
@@ -35,8 +34,8 @@ export function NotificationPreviewInner({
 }: {
   formValues: NotificationFormValues;
 }) {
-  const [previewData, setPreviewData] = useState<Email | null>(null);
-  const { data, refetch } = useQuery({
+  const [data, setData] = React.useState<Email | null>(null);
+  const { data: queryData } = useQuery({
     queryKey: ["previewNotification", formValues.template, formValues.subject],
     queryFn: async () => {
       return NoCodeService.previewNotification({
@@ -49,23 +48,23 @@ export function NotificationPreviewInner({
     enabled: !!formValues.template && !!formValues.subject,
   });
 
-  useEffect(() => {
-    refetch();
-    if (!data) return;
-    setPreviewData(data);
-  }, [formValues]);
+  React.useEffect(() => {
+    if (queryData) {
+      setData(queryData);
+    }
+  }, [queryData]);
 
-  if (!previewData) {
+  if (!data) {
     return <Placeholder />;
   }
 
   return (
-    <Card.Root className="border" w="full" minW={'600px'}>
+    <Card.Root className="border" w="full" minW={"600px"}>
       <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-        {previewData.subject}
+        {data.subject}
       </Card.Header>
       <Card.Body className="p-0 overflow-hidden">
-        <div dangerouslySetInnerHTML={{ __html: previewData.html }} />
+        <div dangerouslySetInnerHTML={{ __html: data.clean_html }} />
       </Card.Body>
     </Card.Root>
   );
