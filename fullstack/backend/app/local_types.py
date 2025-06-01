@@ -416,6 +416,7 @@ class EffectOut(BaseModel):
     config: EffectConfig
     condition: EffectConditionals
     conditional_parameters: ConditionalParameters
+    supported_conditional_parameters: list[str]
 
 
 class BalanceUpdate(BaseModel):

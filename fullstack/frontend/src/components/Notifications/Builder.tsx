@@ -1,22 +1,14 @@
 import { NoCodeService } from "@/client";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import { Conditions } from "./Conditions/Conditions";
+import { DumbNumberField, DumbTextField, DumbTextareaField } from "../ui/dumb/form/value";
+import { DumbFormSelect } from "../ui/dumb/form/select";
 import {
   Box,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValueText,
-  createListCollection,
   Button,
   HStack,
-  Input,
-  FieldRoot,
-  FieldLabel,
-  Textarea,
   Card,
   VStack,
-  FieldErrorText,
 } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -26,9 +18,10 @@ import {
   EffectConditionals,
   EffectCreate,
   EffectUpdate,
+  ConditionalParameters,
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 export interface NotificationFormValues {
   id?: number;
@@ -39,12 +32,24 @@ export interface NotificationFormValues {
   event_type: EventType;
   frequency_days: number;
   condition: EffectConditionals;
-  conditional_parameters: Record<string, number>;
+  conditional_parameters: ConditionalParameters;
 }
 
 interface CreateFormProps {
   selectedEffect: EffectOut;
   setFormValues: (values: NotificationFormValues) => void;
+}
+
+function determineConditionsForEventType(eventType: EventType) {
+  console.log(eventType)
+  if (eventType === "new_transaction") {
+    return ["amount", "count"];
+  }
+  return [];
+}
+
+function supportsFrequency(eventType: EventType) {
+  return eventType === "new_transaction";
 }
 
 export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
@@ -96,12 +101,13 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
 
-  const eventTypes: EventType[] = ["new_transaction", "new_account_linked"];
+  const eventTypes: Record<EventType, string> = {
+    "new_transaction": "New Transaction",
+    "new_account_linked": "New Account Linked",
+    "account_deactivated": "Account Deactivated"
+  };
 
-  const conditionTypes: EffectConditionals[] = [
-    "amount_over",
-    "count_of_transactions",
-  ];
+
 
   const effectTypes: EffectType[] = ["email", "in_app"];
 
@@ -149,10 +155,7 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
         template: data.template,
         subject: data.subject,
         condition: data.condition,
-        conditional_parameters:
-          data.condition === "amount_over"
-            ? { amount_over: data.conditional_parameters.amount_over }
-            : { count: data.conditional_parameters.count },
+        conditional_parameters: data.conditional_parameters
       };
 
       return NoCodeService.createEffect({ requestBody: body });
@@ -187,257 +190,56 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
       <Card.Body>
         <Box onSubmit={onSubmit} as="form">
           <VStack spaceY={4} align="stretch">
-            <FieldRoot invalid={!!errors.name} required>
-              <FieldLabel htmlFor="description">Name</FieldLabel>
-              <Input
-                id="name"
-                {...register("name", {
-                  required: "Name is required",
-                })}
-                placeholder="Alert on new transactions"
-                type="text"
+            <DumbTextField
+              name="name"
+              label="Name of notification"
+              register={register}
+              errors={errors}
+            />
+            <DumbFormSelect
+              control={control}
+              errors={errors}
+              name="event_type"
+              label="Event"
+              options={Object.keys(eventTypes).map((eventType) => eventType as EventType)}
+              labelExtractor={(eventType) => eventTypes[eventType]}
+              keyExtractor={(eventType) => eventType}
+            />
+            {supportsFrequency(form.getValues("event_type")) && (
+              <DumbNumberField
+                name="frequency_days"
+                label="Frequency (days)"
+                register={register}
+                errors={errors}
               />
-              {errors.name && (
-                <FieldErrorText>{errors.name.message}</FieldErrorText>
-              )}
-            </FieldRoot>
+            )}
+            <Conditions
+              control={control}
+              errors={errors}
+              form={form}
+              supported_conditional_parameters={determineConditionsForEventType(form.getValues("event_type"))} />
+            <DumbFormSelect
+              control={control}
+              errors={errors}
+              name="effect_type"
+              label="Notification Type"
+              options={effectTypes}
+              labelExtractor={(effectType) => effectType}
+              keyExtractor={(effectType) => effectType}
+            />
 
-            <FieldRoot invalid={!!errors.frequency_days} required>
-              <FieldLabel htmlFor="frequency_days">
-                Send most once every X days
-              </FieldLabel>
-              <Input
-                id="frequency_days"
-                {...register("frequency_days", {
-                  required: "Frequency is required",
-                })}
-                placeholder="Frequency"
-                type="number"
-              />
-              {errors.frequency_days && (
-                <FieldErrorText>{errors.frequency_days.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.event_type} required mt={4}>
-              <FieldLabel htmlFor="event_type">Event Type</FieldLabel>
-              <Controller
-                control={control}
-                name="event_type"
-                render={({ field }) => {
-                  const { onChange } = field;
-                  return (
-                    <SelectRoot
-                      id="event_type"
-                      defaultValue={[
-                        eventTypes.find(
-                          (eventType) =>
-                            eventType === selectedEffect?.event_type,
-                        )!,
-                      ]}
-                      collection={createListCollection({ items: eventTypes })}
-                      onValueChange={(val) => {
-                        onChange(val.value[0]);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValueText placeholder="Select an event type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventTypes.map((eventType) => (
-                          <SelectItem key={eventType} item={eventType}>
-                            {eventType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </SelectRoot>
-                  );
-                }}
-              />
-              {errors.event_type && (
-                <FieldErrorText>{errors.event_type.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.condition} required mt={4}>
-              <FieldLabel htmlFor="condition">Condition</FieldLabel>
-              <Controller
-                control={control}
-                name="condition"
-                render={({ field }) => {
-                  const { onChange } = field;
-                  return (
-                    <SelectRoot
-                      id="condition"
-                      defaultValue={[
-                        conditionTypes.find(
-                          (condition) =>
-                            condition === selectedEffect?.condition,
-                        )!,
-                      ]}
-                      collection={createListCollection({
-                        items: conditionTypes,
-                      })}
-                      onValueChange={(val) => {
-                        onChange(val.value[0]);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValueText placeholder="Select a condition" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {conditionTypes.map((conditionType) => (
-                          <SelectItem key={conditionType} item={conditionType}>
-                            {conditionType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </SelectRoot>
-                  );
-                }}
-              />
-              {errors.condition && (
-                <FieldErrorText>{errors.condition.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.conditional_parameters} required>
-              <FieldLabel htmlFor="conditional_parameters">
-                {form.getValues("condition") === "amount_over"
-                  ? "Amount Over"
-                  : "Number of Transactions"}
-              </FieldLabel>
-              <Controller
-                control={control}
-                name="conditional_parameters"
-                render={({ field }) => {
-                  const { onChange, value } = field;
-                  const condition = form.getValues("condition");
-
-                  return (
-                    <Input
-                      id="conditional_parameters"
-                      type="number"
-                      min={0}
-                      step={condition === "amount_over" ? 0.01 : 1}
-                      value={
-                        condition === "amount_over"
-                          ? value?.amount_over || 0
-                          : value?.count || 0
-                      }
-                      onChange={(e) => {
-                        const numValue = parseFloat(e.target.value);
-                        onChange(
-                          condition === "amount_over"
-                            ? { amount_over: numValue }
-                            : { count: numValue },
-                        );
-                      }}
-                      placeholder={
-                        condition === "amount_over"
-                          ? "Enter amount threshold"
-                          : "Enter number of transactions"
-                      }
-                    />
-                  );
-                }}
-                rules={{
-                  required: "This field is required",
-                  validate: (value) => {
-                    const condition = form.getValues("condition");
-                    const numValue =
-                      condition === "amount_over"
-                        ? value?.amount_over
-                        : value?.count;
-                    if (typeof numValue !== "number" || numValue < 0) {
-                      return "Must be a positive number";
-                    }
-                    if (
-                      condition === "count_of_transactions" &&
-                      !Number.isInteger(numValue)
-                    ) {
-                      return "Must be a whole number";
-                    }
-                    return true;
-                  },
-                }}
-              />
-              {errors.conditional_parameters && (
-                <FieldErrorText>
-                  {errors.conditional_parameters?.message as unknown as string}
-                </FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.effect_type} required mt={4}>
-              <FieldLabel htmlFor="effect_type">Effect Type</FieldLabel>
-              <Controller
-                control={control}
-                name="effect_type"
-                render={({ field }) => {
-                  const { onChange } = field;
-                  return (
-                    <SelectRoot
-                      id="effect_type"
-                      defaultValue={[
-                        effectTypes.find(
-                          (effectType) =>
-                            effectType === selectedEffect?.effect_type,
-                        )!,
-                      ]}
-                      collection={createListCollection({ items: effectTypes })}
-                      onValueChange={(val) => {
-                        onChange(val.value[0]);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValueText placeholder="Select an effect type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {effectTypes.map((effectType) => (
-                          <SelectItem key={effectType} item={effectType}>
-                            {effectType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </SelectRoot>
-                  );
-                }}
-              />
-              {errors.effect_type && (
-                <FieldErrorText>{errors.effect_type.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.subject} required>
-              <FieldLabel htmlFor="subject">Subject</FieldLabel>
-              <Input
-                id="subject"
-                {...register("subject", {
-                  required: "Subject is required",
-                })}
-                placeholder="Subject"
-                type="text"
-              />
-              {errors.subject && (
-                <FieldErrorText>{errors.subject.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
-            <FieldRoot invalid={!!errors.template} required>
-              <FieldLabel htmlFor="template">Template</FieldLabel>
-              <Textarea
-                id="template"
-                {...register("template", {
-                  required: "Template is required",
-                })}
-                placeholder="Template"
-              />
-              {errors.template && (
-                <FieldErrorText>{errors.template.message}</FieldErrorText>
-              )}
-            </FieldRoot>
-
+            <DumbTextField
+              name="subject"
+              label="Subject"
+              register={register}
+              errors={errors}
+            />
+            <DumbTextareaField
+              name="template"
+              label="Template"
+              register={register}
+              errors={errors}
+            />
             <HStack>
               <Button
                 type="submit"

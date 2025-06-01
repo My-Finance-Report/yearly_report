@@ -38,8 +38,8 @@ export function DumbSelect<T>({
   options,
   labelExtractor,
   keyExtractor,
-  placeholder = "Select an option",
-  label = "Select an option",
+  placeholder,
+  label,
 }: DumbSelectProps<T>) {
   const [value, setValue] = useState<string[]>([
     keyExtractor(selectedOption ?? options[0]),
@@ -63,7 +63,7 @@ export function DumbSelect<T>({
       onValueChange={(e) => setValue(e.value)}
     >
       <Select.HiddenSelect />
-      <Select.Label>{label}</Select.Label>
+      {label && <Select.Label>{label}</Select.Label>}
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText placeholder={placeholder} />

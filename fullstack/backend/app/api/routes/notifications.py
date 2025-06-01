@@ -51,6 +51,11 @@ class EffectUpdate(BaseModel):
     condition: Optional[EffectConditionals] = None
     conditional_parameters: Optional[ConditionalParameters] = None
 
+def determine_supported_conditional_parameters(event_type: EventType) -> list[str]:
+    if event_type == EventType.NEW_TRANSACTION:
+        return ["amount", "count"]
+    return []
+
 
 @router.get("/effects", response_model=list[EffectOut])
 def get_effects(
@@ -60,26 +65,6 @@ def get_effects(
     """Get all notification effects for the current user"""
     # Query the database for user's effects
     db_effects = session.query(EffectModel).filter(EffectModel.user_id == user.id).all()
-
-    # If no effects exist yet, create a default one
-    if not db_effects:
-        transaction_effect = new_transaction_effect(session, user)
-        # Create a new effect in the database
-        db_effect = EffectModel(
-            name="New Transactions",
-            user_id=user.id,
-            effect_type=transaction_effect.type,
-            event_type=EventType.NEW_TRANSACTION,
-            frequency_days=transaction_effect.config.frequency_days,
-            template=transaction_effect.config.template,
-            subject=transaction_effect.config.subject,
-            condition=transaction_effect.condition,
-            conditional_parameters=transaction_effect.conditional_parameters,
-        )
-        session.add(db_effect)
-        session.commit()
-        session.refresh(db_effect)
-        db_effects = [db_effect]
 
     # Convert DB models to EffectOut schema
     return [
@@ -95,6 +80,9 @@ def get_effects(
             ),
             condition=effect.condition,
             conditional_parameters=effect.conditional_parameters,
+            supported_conditional_parameters=determine_supported_conditional_parameters(
+                effect.event_type
+            )
         )
         for effect in db_effects
     ]
@@ -203,6 +191,9 @@ def create_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
+        supported_conditional_parameters=determine_supported_conditional_parameters(
+            db_effect.event_type
+        ),
     )
 
 
@@ -248,6 +239,9 @@ def update_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
+        supported_conditional_parameters=determine_supported_conditional_parameters(
+            db_effect.event_type
+        ),
     )
 
 
