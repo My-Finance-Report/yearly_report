@@ -1,4 +1,5 @@
 from abc import ABC
+from dataclasses import dataclass
 from pydantic import BaseModel
 from app.schemas.no_code import NoCodeTransaction
 from app.models.effect import EventType
@@ -76,13 +77,21 @@ class Event(ABC, BaseModel):
         return table
 
 
+@dataclass(kw_only=True)
 class NewTransactionsEvent(Event):
-    type: EventType = EventType.NEW_TRANSACTION
     transactions: list[NoCodeTransaction]
     account_name: str
     count: int
+    type: EventType = EventType.NEW_TRANSACTION
 
 
+@dataclass(kw_only=True)
 class NewAccountLinkedEvent(Event):
-    type: EventType = EventType.NEW_ACCOUNT_LINKED
     account_name: str
+    type: EventType = EventType.NEW_ACCOUNT_LINKED
+
+
+@dataclass(kw_only=True)
+class AccountDeactivatedEvent(Event):
+    account_name: str
+    type: EventType = EventType.ACCOUNT_DEACTIVATED

@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Any, Optional
+from typing import Optional
 from datetime import datetime, timedelta
 
 from app.db import Session, get_current_user, get_db
 from app.email.send import Email
 from app.local_types import EffectOut
 from app.models.effect import (
+    ConditionalParameters,
     Effect as EffectModel,
     EffectConditionals,
     EffectType,
     EventType,
-    EffectId,
 )
 from app.models.user import User
 from app.models.transaction import TransactionKind
@@ -36,7 +36,7 @@ class EffectCreate(BaseModel):
     template: str
     subject: str
     condition: EffectConditionals
-    conditional_parameters: dict[str, int]
+    conditional_parameters: ConditionalParameters
 
 
 class EffectUpdate(BaseModel):
@@ -49,7 +49,7 @@ class EffectUpdate(BaseModel):
     template: Optional[str] = None
     subject: Optional[str] = None
     condition: Optional[EffectConditionals] = None
-    conditional_parameters: Optional[dict[str, int]] = None
+    conditional_parameters: Optional[ConditionalParameters] = None
 
 
 @router.get("/effects", response_model=list[EffectOut])
@@ -161,7 +161,7 @@ def preview_notification(
         type=effect_type,
         config=config,
         condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
-        conditional_parameters={"count": 0},
+        conditional_parameters=ConditionalParameters(count=0),
     )
 
     # Generate the email preview

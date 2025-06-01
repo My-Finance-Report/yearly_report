@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
+from pydantic import BaseModel
 import enum
 from typing import NewType
-from app.models.models import Base
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Enum, String
+from app.models.models import Base, JSONType
+from sqlalchemy import DateTime, ForeignKey, Integer, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import DateTime
 from datetime import datetime
@@ -21,11 +22,13 @@ class EffectType(str, enum.Enum):
 class EffectConditionals(str, enum.Enum):
     AMOUNT_OVER = "amount_over"
     COUNT_OF_TRANSACTIONS = "count_of_transactions"
+    UNCONDITIONAL = "unconditional"
 
 
 class EventType(str, enum.Enum):
     NEW_TRANSACTION = "new_transaction"
     NEW_ACCOUNT_LINKED = "new_account_linked"
+    ACCOUNT_DEACTIVATED = "account_deactivated"
 
 
 class EffectLog(Base):
@@ -40,6 +43,11 @@ class EffectLog(Base):
     )
 
 
+class ConditionalParameters(BaseModel):
+    amount: float | None = None
+    count: int | None = None
+
+
 class Effect(Base):
     __tablename__ = "effect"
 
@@ -52,8 +60,8 @@ class Effect(Base):
     template: Mapped[str] = mapped_column(String, nullable=False)
     subject: Mapped[str] = mapped_column(String, nullable=False)
     condition: Mapped[EffectConditionals] = mapped_column(
-        Enum(EffectConditionals), nullable=False
+        Enum(EffectConditionals), nullable=True
     )
-    conditional_parameters: Mapped[dict[str, int]] = mapped_column(
-        JSON, nullable=False
-    )  # TODO: type this with a dataclass and use JSONType
+    conditional_parameters: Mapped[ConditionalParameters] = mapped_column(
+        JSONType(ConditionalParameters), nullable=False
+    )

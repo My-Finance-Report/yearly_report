@@ -1,8 +1,11 @@
 from datetime import datetime, timezone
+import enum
 from typing import NewType
 from app.models.models import Base
 from sqlalchemy import (
     String,
+    Boolean,
+    Enum,
     DateTime,
     ForeignKey,
     Float,
@@ -72,9 +75,15 @@ class PlaidAccount(Base):
     type: Mapped[str] = mapped_column(String, nullable=False)
     cursor: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     subtype: Mapped[str | None] = mapped_column(String, nullable=True)
+    active: Mapped[bool | None] = mapped_column(Boolean, default=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+
+
+class SyncStatus(str, enum.Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
 
 
 class PlaidSyncLog(Base):
@@ -95,6 +104,7 @@ class PlaidSyncLog(Base):
     modified_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     removed_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[SyncStatus] = mapped_column(Enum(SyncStatus), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

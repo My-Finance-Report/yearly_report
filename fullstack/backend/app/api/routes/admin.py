@@ -25,6 +25,7 @@ def reseed_account_page(
         print(f"❌ Failed to seed account page: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/admin/reseed-account-page")
 def reseed_all_account_pages(
     current_user: User = Depends(get_current_active_superuser),
@@ -43,6 +44,3 @@ def reseed_all_account_pages(
         except Exception as e:
             print(f"❌ Failed to seed account page for user {user.id}: {e}")
     return {"status": "success"}
-
-
-
