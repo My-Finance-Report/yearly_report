@@ -178,6 +178,15 @@ export type EffectCreate = {
   conditional_parameters: ConditionalParameters;
 };
 
+export type EffectMappings = {
+  variables: {
+    [key: string]: Array<string>;
+  };
+  allowed_conditional_parameters: {
+    [key: string]: Array<EffectConditionals>;
+  };
+};
+
 export type EffectOut = {
   id?: number | null;
   name: string;
@@ -186,7 +195,6 @@ export type EffectOut = {
   config: EffectConfig;
   condition: EffectConditionals;
   conditional_parameters: ConditionalParameters;
-  supported_conditional_parameters: Array<string>;
 };
 
 export type EffectType = "email" | "in_app";
@@ -195,19 +203,19 @@ export type EffectType = "email" | "in_app";
  * Schema for updating an existing notification effect
  */
 export type EffectUpdate = {
-  name?: string | null;
-  effect_type?: EffectType | null;
-  event_type?: EventType | null;
-  frequency_days?: number | null;
-  template?: string | null;
-  subject?: string | null;
-  condition?: EffectConditionals | null;
-  conditional_parameters?: ConditionalParameters | null;
+  name: string;
+  effect_type: EffectType;
+  event_type: EventType;
+  frequency_days: number;
+  template: string;
+  subject: string;
+  condition: EffectConditionals;
+  conditional_parameters: ConditionalParameters;
 };
 
 export type Email = {
   subject: string;
-  html: string;
+  clean_html: string;
 };
 
 /**
@@ -1078,6 +1086,8 @@ export type NoCodePreviewNotificationData = {
 };
 
 export type NoCodePreviewNotificationResponse = Email;
+
+export type NoCodeGetEffectMappingsResponse = EffectMappings;
 
 export type NoCodeUpdateEffectData = {
   effectId: number;

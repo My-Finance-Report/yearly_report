@@ -4,7 +4,7 @@ import { Conditions } from "./Conditions/Conditions";
 import {
   DumbNumberField,
   DumbTextField,
-  DumbTextareaField,
+  TemplateEditor,
 } from "../ui/dumb/form/value";
 import { DumbFormSelect } from "../ui/dumb/form/select";
 import { Box, Button, HStack, Card, VStack } from "@chakra-ui/react";
@@ -17,6 +17,7 @@ import {
   EffectCreate,
   EffectUpdate,
   ConditionalParameters,
+  EffectMappings,
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useForm } from "react-hook-form";
@@ -36,6 +37,7 @@ export interface NotificationFormValues {
 interface CreateFormProps {
   selectedEffect: EffectOut;
   setFormValues: (values: NotificationFormValues) => void;
+  effectMappings: EffectMappings;
 }
 
 function determineConditionsForEventType(
@@ -51,10 +53,15 @@ function supportsFrequency(eventType: EventType) {
   return eventType === "new_transaction";
 }
 
-export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
-
+export function CreateForm({
+  selectedEffect,
+  setFormValues,
+  effectMappings,
+}: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
+
+  console.log(effectMappings);
 
   const form = useForm<NotificationFormValues>({
     mode: "onBlur",
@@ -101,7 +108,6 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
     control,
     formState: { errors, isSubmitting },
   } = form;
-
 
   const eventTypes: Record<EventType, string> = {
     new_transaction: "New Transaction",
@@ -244,11 +250,15 @@ export function CreateForm({ selectedEffect, setFormValues }: CreateFormProps) {
               register={register}
               errors={errors}
             />
-            <DumbTextareaField
+            <TemplateEditor
               name="template"
+              availableVariables={
+                effectMappings.variables[form.getValues("event_type")] || []
+              }
               label="Template"
               register={register}
               errors={errors}
+              setValue={form.setValue}
             />
             <HStack>
               <Button

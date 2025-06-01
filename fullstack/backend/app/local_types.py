@@ -416,9 +416,13 @@ class EffectOut(BaseModel):
     config: EffectConfig
     condition: EffectConditionals
     conditional_parameters: ConditionalParameters
-    supported_conditional_parameters: list[str]
 
 
 class BalanceUpdate(BaseModel):
     balance: float
     timestamp: datetime
+
+
+class EffectMappings(BaseModel):
+    variables: dict[EventType, list[str]]
+    allowed_conditional_parameters: dict[EventType, list[EffectConditionals]]
