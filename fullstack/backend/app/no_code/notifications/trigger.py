@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import List, Callable
 from app.no_code.notifications.effect_generators.seed_effects import (
+    deactivated_account_effect,
     new_transaction_effect,
 )
 from app.no_code.notifications.effects import (
@@ -45,6 +46,7 @@ def collect_user_effects(
     return [
         *db_effects,
         new_transaction_effect(session, user),
+        deactivated_account_effect(session, user),
     ]
 
 
@@ -63,7 +65,7 @@ def check_event_against_possible_effects(event: Event, effect: Effect) -> bool:
     """
     try:
         callable = EFFECT_CONDITIONALS_LOOKUP[effect.condition]
-        return callable(event, **effect.conditional_parameters)  # type: ignore[call-arg]
+        return callable(event, effect.conditional_parameters)
     except Exception as e:
         print(f"Error evaluating condition: {e}")
         return False

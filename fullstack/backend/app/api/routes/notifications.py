@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Any, Optional
+from typing import Optional
 from datetime import datetime, timedelta
 
 from app.db import Session, get_current_user, get_db
 from app.email.send import Email
 from app.local_types import EffectOut
 from app.models.effect import (
+    ConditionalParameters,
     Effect as EffectModel,
     EffectConditionals,
     EffectType,
     EventType,
-    EffectId,
 )
 from app.models.user import User
 from app.models.transaction import TransactionKind
@@ -36,7 +36,7 @@ class EffectCreate(BaseModel):
     template: str
     subject: str
     condition: EffectConditionals
-    conditional_parameters: dict[str, int]
+    conditional_parameters: ConditionalParameters
 
 
 class EffectUpdate(BaseModel):
@@ -49,7 +49,13 @@ class EffectUpdate(BaseModel):
     template: Optional[str] = None
     subject: Optional[str] = None
     condition: Optional[EffectConditionals] = None
-    conditional_parameters: Optional[dict[str, int]] = None
+    conditional_parameters: Optional[ConditionalParameters] = None
+
+
+def determine_supported_conditional_parameters(event_type: EventType) -> list[str]:
+    if event_type == EventType.NEW_TRANSACTION:
+        return ["amount", "count"]
+    return []
 
 
 @router.get("/effects", response_model=list[EffectOut])
@@ -60,26 +66,6 @@ def get_effects(
     """Get all notification effects for the current user"""
     # Query the database for user's effects
     db_effects = session.query(EffectModel).filter(EffectModel.user_id == user.id).all()
-
-    # If no effects exist yet, create a default one
-    if not db_effects:
-        transaction_effect = new_transaction_effect(session, user)
-        # Create a new effect in the database
-        db_effect = EffectModel(
-            name="New Transactions",
-            user_id=user.id,
-            effect_type=transaction_effect.type,
-            event_type=EventType.NEW_TRANSACTION,
-            frequency_days=transaction_effect.config.frequency_days,
-            template=transaction_effect.config.template,
-            subject=transaction_effect.config.subject,
-            condition=transaction_effect.condition,
-            conditional_parameters=transaction_effect.conditional_parameters,
-        )
-        session.add(db_effect)
-        session.commit()
-        session.refresh(db_effect)
-        db_effects = [db_effect]
 
     # Convert DB models to EffectOut schema
     return [
@@ -95,6 +81,9 @@ def get_effects(
             ),
             condition=effect.condition,
             conditional_parameters=effect.conditional_parameters,
+            supported_conditional_parameters=determine_supported_conditional_parameters(
+                effect.event_type
+            ),
         )
         for effect in db_effects
     ]
@@ -144,6 +133,7 @@ def preview_notification(
 
     # Create the event
     event = NewTransactionsEvent(
+        type=EventType.NEW_TRANSACTION,
         transactions=sample_transactions,
         account_name=account_name,
         count=len(sample_transactions),
@@ -161,7 +151,7 @@ def preview_notification(
         type=effect_type,
         config=config,
         condition=EffectConditionals.COUNT_OF_TRANSACTIONS,
-        conditional_parameters={"count": 0},
+        conditional_parameters=ConditionalParameters(count=0),
     )
 
     # Generate the email preview
@@ -203,6 +193,9 @@ def create_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
+        supported_conditional_parameters=determine_supported_conditional_parameters(
+            db_effect.event_type
+        ),
     )
 
 
@@ -248,6 +241,9 @@ def update_effect(
         ),
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
+        supported_conditional_parameters=determine_supported_conditional_parameters(
+            db_effect.event_type
+        ),
     )
 
 

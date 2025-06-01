@@ -5,7 +5,12 @@ from typing import Any
 from pydantic import BaseModel
 from app.models.budget import BudgetCategoryLinkId, BudgetEntryId, BudgetId
 from app.models.category import CategoryId
-from app.models.effect import EffectConditionals, EffectType, EventType
+from app.models.effect import (
+    ConditionalParameters,
+    EffectConditionals,
+    EffectType,
+    EventType,
+)
 from app.models.filter import GroupByOption
 from app.models.plaid import PlaidSyncLogId
 from app.models.report import CategoryBase, TransactionBase, TransactionSourceBase
@@ -410,7 +415,8 @@ class EffectOut(BaseModel):
     event_type: EventType
     config: EffectConfig
     condition: EffectConditionals
-    conditional_parameters: dict[str, int]
+    conditional_parameters: ConditionalParameters
+    supported_conditional_parameters: list[str]
 
 
 class BalanceUpdate(BaseModel):

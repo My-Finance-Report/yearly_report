@@ -23,13 +23,22 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
 from app.func_utils import not_none, pipe
 from app.models.audit_log import AuditLog
 from app.models.category import Category
-from app.models.plaid import PlaidAccount, PlaidAccountBalance, PlaidItem, PlaidSyncLog
+from app.models.plaid import (
+    PlaidAccount,
+    PlaidAccountBalance,
+    PlaidItem,
+    PlaidSyncLog,
+    SyncStatus,
+)
 from app.models.transaction import Transaction, TransactionKind
 from app.models.transaction_source import TransactionSource
 from app.models.user import User
 from app.models.worker_status import ProcessingState
 
-from app.no_code.notifications.events import NewTransactionsEvent
+from app.no_code.notifications.events import (
+    AccountDeactivatedEvent,
+    NewTransactionsEvent,
+)
 from app.no_code.notifications.trigger import (
     trigger_effects,
 )
@@ -249,7 +258,7 @@ def sync_plaid_account_transactions(
         sync_log.error_message = str(e)
         if has_plaid_transactions:
             send_telegram_message(f"failing and had plaid transactions, {e}")
-        session.commit()
+            session.commit()
         raise
 
 
@@ -559,10 +568,10 @@ async def sync_all_plaid_accounts(
     """
 
     plaid_accounts = (
-        user_session.query(PlaidAccount).filter(PlaidAccount.user_id == user.id).all()
+        user_session.query(PlaidAccount)
+        .filter(PlaidAccount.user_id == user.id, PlaidAccount.active == True)
+        .all()
     )
-
-    print(f"Syncing {len(plaid_accounts)} Plaid accounts for user {user.id}")
 
     for account in plaid_accounts:
         batch_id = uuid.uuid4().hex
@@ -572,8 +581,35 @@ async def sync_all_plaid_accounts(
                 user_session, user, account, days_back, batch_id
             )
         except Exception as e:
-            logger.error(f"Error syncing Plaid account for user {user.id}: {str(e)}")
-            if user.id != 4:
-                send_telegram_message(
-                    f"Error syncing Plaid account for user {user.id}: {str(e)}"
-                )
+            deactivate_account_if_persistent_failure(user_session, user, account)
+            send_telegram_message(
+                f"Error syncing Plaid account for user {user.id}: {str(e)}"
+            )
+
+
+def deactivate_account(session: Session, user: User, account: PlaidAccount) -> None:
+    account.active = False
+    session.commit()
+
+    deactivate_event = AccountDeactivatedEvent(account_name=account.name)
+    trigger_effects(session, user, deactivate_event)
+
+
+def deactivate_account_if_persistent_failure(
+    user_session: Session, user: User, plaid_account: PlaidAccount
+) -> None:
+    DEACTIVATION_THRESHOLD = 1000
+
+    failure_count = (
+        user_session.query(PlaidSyncLog)
+        .filter(
+            PlaidSyncLog.user_id == user.id,
+            PlaidSyncLog.plaid_account_id == plaid_account.id,
+            PlaidSyncLog.status == SyncStatus.FAILURE,
+            PlaidSyncLog.created_at > (datetime.now(timezone.utc) - timedelta(weeks=1)),
+        )
+        .count()
+    )
+
+    if failure_count > DEACTIVATION_THRESHOLD:
+        deactivate_account(user_session, user, plaid_account)

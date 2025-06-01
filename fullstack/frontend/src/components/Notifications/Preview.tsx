@@ -60,7 +60,7 @@ export function NotificationPreviewInner({
   }
 
   return (
-    <Card.Root className="border" w="full">
+    <Card.Root className="border" w="full" minW={'600px'}>
       <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
         {previewData.subject}
       </Card.Header>
