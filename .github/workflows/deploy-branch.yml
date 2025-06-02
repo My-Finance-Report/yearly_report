@@ -75,6 +75,7 @@ jobs:
       run: |
         mkdir -p $HOME/.ssh
         echo ${PRIVATE_KEY} > ${HOME}/.ssh/finance_key.pem
+        openssl pkey -check -in ${HOME}/.ssh/finance_key.pem -noout
         chmod 400 ${HOME}/.ssh/finance_key.pem
         ssh -v -o StrictHostKeyChecking=no -i "${HOME}/.ssh/finance_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz .env.production ${EC2_USER}@${HOST}:${REMOTE_DIR}
