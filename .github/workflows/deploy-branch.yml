@@ -70,17 +70,17 @@ jobs:
     - name: Deploy to EC2
       env: 
           PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
-          HOST: ec2-52-15-193-109.us-east-2.compute.amazonaws.com
-          USER: ${{ secrets.EC2_USER }}
+          HOST: ${{ secrets.EC2_TEST_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
           REMOTE_DIR: "/home/ec2-user/code/finance_app"
           IMAGE_TAG: ${{ github.sha }}
       run: |
         mkdir -p ~/.ssh
         echo "${PRIVATE_KEY}" > private_key.pem
         chmod 400 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${USER}@${HOST} 'mkdir -p code/finance_app'
+        ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz .env.production ${HOST}:${REMOTE_DIR}
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} '
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ${EC2_USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
