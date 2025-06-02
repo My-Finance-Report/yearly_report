@@ -39,3 +39,9 @@ def apply_and_grant_rls(connection)->None:
         """))
 
         print(f"✔ Granted permissions on sequence {schema}.{sequence}")
+
+def add_to_enum(connection, enum_name, value):
+    connection.execute(sa.text(f"""
+        ALTER TYPE {enum_name} ADD VALUE '{value}';
+    """))
+    
