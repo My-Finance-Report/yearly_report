@@ -79,7 +79,7 @@ jobs:
         echo "${PRIVATE_KEY}" > private_key.pem
         chmod 400 private_key.pem
         ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
-        rsync -avz .env.production ${HOST}:${REMOTE_DIR}
+        rsync -avz .env.production ${EC2_USER}@${HOST}:${REMOTE_DIR}
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${EC2_USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
