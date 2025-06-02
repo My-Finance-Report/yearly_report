@@ -44,11 +44,14 @@ def collect_user_effects(
         )
         for effect in effects
     ]
+    DEFAULTS = {
+        EventType.NEW_TRANSACTION: [new_transaction_effect(session, user)],
+        EventType.ACCOUNT_DEACTIVATED: [deactivated_account_effect(session, user)],
+    }
 
     return [
         *db_effects,
-        new_transaction_effect(session, user),
-        deactivated_account_effect(session, user),
+        *DEFAULTS.get(event_type, []),
     ]
 
 
