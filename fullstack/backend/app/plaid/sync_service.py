@@ -246,6 +246,7 @@ def sync_plaid_account_transactions(
         sync_log.added_count = added_count
         sync_log.modified_count = 0
         sync_log.removed_count = 0
+        sync_log.status = SyncStatus.SUCCESS
 
         plaid_response.set_next_cursor()
         session.commit()
@@ -256,6 +257,7 @@ def sync_plaid_account_transactions(
 
     except Exception as e:
         sync_log.error_message = str(e)
+        sync_log.status = SyncStatus.FAILURE
         if has_plaid_transactions:
             send_telegram_message(f"failing and had plaid transactions, {e}")
             session.commit()
@@ -598,7 +600,7 @@ def deactivate_account(session: Session, user: User, account: PlaidAccount) -> N
 def deactivate_account_if_persistent_failure(
     user_session: Session, user: User, plaid_account: PlaidAccount
 ) -> None:
-    DEACTIVATION_THRESHOLD = 1000
+    DEACTIVATION_THRESHOLD = 100
 
     failure_count = (
         user_session.query(PlaidSyncLog)
@@ -610,6 +612,7 @@ def deactivate_account_if_persistent_failure(
         )
         .count()
     )
+    print(f"failure_count: {failure_count}")
 
     if failure_count > DEACTIVATION_THRESHOLD:
         deactivate_account(user_session, user, plaid_account)
