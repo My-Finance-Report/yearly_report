@@ -600,7 +600,7 @@ def deactivate_account(session: Session, user: User, account: PlaidAccount) -> N
 def deactivate_account_if_persistent_failure(
     user_session: Session, user: User, plaid_account: PlaidAccount
 ) -> None:
-    DEACTIVATION_THRESHOLD = 10
+    DEACTIVATION_THRESHOLD = 100
 
     failure_count = (
         user_session.query(PlaidSyncLog)
