@@ -73,7 +73,6 @@ jobs:
           REMOTE_DIR: "/home/ec2-user/code/finance_app"
           IMAGE_TAG: ${{ github.sha }}
       run: |
-        mkdir -p ~/.ssh
         echo "${PRIVATE_KEY}" > private_key.pem
         chmod 600 private_key.pem
         ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
