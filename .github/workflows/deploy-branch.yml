@@ -75,10 +75,10 @@ jobs:
       run: |
         echo "${PRIVATE_KEY}" > finance_key.pem
         openssl pkey -check -in finance_key.pem -noout
-        chmod 400 ${HOME}/.ssh/finance_key.pem
-        ssh -v -o StrictHostKeyChecking=no -i "${HOME}/.ssh/finance_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
+        chmod 400 finance_key.pem
+        ssh -v -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz .env.production ${EC2_USER}@${HOST}:${REMOTE_DIR}
-        ssh -o StrictHostKeyChecking=no -i "${HOME}/.ssh/finance_key.pem" ${EC2_USER}@${HOST} '
+        ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
