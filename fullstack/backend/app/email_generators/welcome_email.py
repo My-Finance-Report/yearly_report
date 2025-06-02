@@ -13,4 +13,4 @@ HTML = """
 
 
 def generate_welcome_email() -> Email:
-    return Email(subject="Welcome to My Financé", html=HTML)
+    return Email(subject="Welcome to My Financé", clean_html=HTML)

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NoCodeService } from "@/client";
 import React, { useState } from "react";
-import { Box, Spinner, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Spinner, useDisclosure } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
 import { EffectOut } from "@/client/types.gen";
@@ -22,20 +22,30 @@ function UnifiedNotificationInterface() {
     null,
   );
 
+  const { data: effectMappings } = useQuery({
+    queryKey: ["effect_mappings"],
+    queryFn: () => NoCodeService.getEffectMappings(),
+  });
+
   const deleteModal = useDisclosure();
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={8}>
-      <Box maxW="400px">
+      <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
         <EffectSelector
           setSelectedEffect={setSelectedEffect}
           selectedEffect={selectedEffect}
         />
+        <NewNotificationButton
+          setSelectedEffect={setSelectedEffect}
+          setFormValues={setFormValues}
+        />
       </Box>
       <Box display="flex" gap={8}>
-        {selectedEffect && (
+        {selectedEffect && effectMappings && (
           <Box flex={2}>
             <CreateForm
+              effectMappings={effectMappings}
               selectedEffect={selectedEffect}
               setFormValues={setFormValues}
             />
@@ -87,5 +97,37 @@ function EffectSelector({
         label="Select Notification"
       />
     </Box>
+  );
+}
+
+function NewNotificationButton({
+  setSelectedEffect,
+  setFormValues,
+}: {
+  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+  setFormValues: React.Dispatch<
+    React.SetStateAction<NotificationFormValues | null>
+  >;
+}) {
+  return (
+    <Button
+      onClick={() => {
+        setSelectedEffect({
+          name: "",
+          config: {
+            template: "",
+            subject: "",
+            frequency_days: 0,
+          },
+          event_type: "new_transaction",
+          effect_type: "email",
+          condition: "amount_over",
+          conditional_parameters: {},
+        });
+        setFormValues(null);
+      }}
+    >
+      New Notification
+    </Button>
   );
 }
