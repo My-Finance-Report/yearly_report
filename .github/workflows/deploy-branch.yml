@@ -64,7 +64,7 @@ jobs:
       run: |
         aws ec2 authorize-security-group-ingress \
           --group-id $AWS_INSTANCE_SG_ID \
-          --ip-permissions 'IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='Automatically added from GHA'}]'
+          --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='Automatically added from GHA'}]"
     - name: Deploy to EC2
       env: 
           PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
