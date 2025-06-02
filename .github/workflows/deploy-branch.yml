@@ -55,16 +55,16 @@ jobs:
         aws-region: us-east-2
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-    - name: get runner ip address
-      id: ip
-      uses: haythem/public-ip@v1.2
-    - name: whitelist runner ip address
-      env:
-        AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
-      run: |
-        aws ec2 authorize-security-group-ingress \
-          --group-id $AWS_INSTANCE_SG_ID \
-          --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='Automatically added from GHA'}]"
+    # - name: get runner ip address
+    #   id: ip
+    #   uses: haythem/public-ip@v1.2
+    # - name: whitelist runner ip address
+    #   env:
+    #     AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
+    #   run: |
+    #     aws ec2 authorize-security-group-ingress \
+    #       --group-id $AWS_INSTANCE_SG_ID \
+    #       --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${{ steps.ip.outputs.ipv4 }}/32,Description='Automatically added from GHA'}]"
     - name: Deploy to EC2
       env: 
           PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
@@ -75,19 +75,19 @@ jobs:
       run: |
         echo "${PRIVATE_KEY}" > private_key.pem
         chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
+        ssh -v -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz .env.production ${EC2_USER}@${HOST}:${REMOTE_DIR}
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${EC2_USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
         chmod +x /home/ec2-user/code/finance_app/backup_db'
-    - name: revoke runner ip address
-      env:
-        AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
-      run: |
-        aws ec2 revoke-security-group-ingress \
-          --group-id $AWS_INSTANCE_SG_ID \
-          --protocol tcp \
-          --port 22 \
-          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+    # - name: revoke runner ip address
+    #   env:
+    #     AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
+    #   run: |
+    #     aws ec2 revoke-security-group-ingress \
+    #       --group-id $AWS_INSTANCE_SG_ID \
+    #       --protocol tcp \
+    #       --port 22 \
+    #       --cidr ${{ steps.ip.outputs.ipv4 }}/32
