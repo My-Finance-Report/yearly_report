@@ -77,7 +77,7 @@ jobs:
       run: |
         mkdir -p ~/.ssh
         echo "${PRIVATE_KEY}" > private_key.pem
-        chmod 400 private_key.pem
+        chmod 600 private_key.pem
         ssh -o StrictHostKeyChecking=no -i "private_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz .env.production ${EC2_USER}@${HOST}:${REMOTE_DIR}
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${EC2_USER}@${HOST} '
