@@ -55,13 +55,25 @@ jobs:
         aws-region: us-east-2
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-    - name: Deploy to EC2
+    - name: get runner ip address
+      id: ip
+      uses: haythem/public-ip@v1.2
+    - name: whitelist runner ip address
       env:
-        PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
-        HOST: ec2-52-15-193-109.us-east-2.compute.amazonaws.com
-        USER: ${{ secrets.EC2_USER }}
-        REMOTE_DIR: "/home/ec2-user/code/finance_app"
-        IMAGE_TAG: ${{ github.sha }}
+        AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
+      run: |
+        aws ec2 authorize-security-group-ingress \
+          --group-id $AWS_INSTANCE_SG_ID \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+    - name: Deploy to EC2
+      env: 
+          PRIVATE_KEY: ${{ secrets.FINANCE_KEY }}
+          HOST: ec2-52-15-193-109.us-east-2.compute.amazonaws.com
+          USER: ${{ secrets.EC2_USER }}
+          REMOTE_DIR: "/home/ec2-user/code/finance_app"
+          IMAGE_TAG: ${{ github.sha }}
       run: |
         mkdir -p ~/.ssh
         echo "${PRIVATE_KEY}" > private_key.pem
@@ -72,5 +84,13 @@ jobs:
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production.runtime -f docker-compose.prod.yml up -d
-        chmod +x /home/ec2-user/code/finance_app/backup_db
-        '
+        chmod +x /home/ec2-user/code/finance_app/backup_db'
+    - name: revoke runner ip address
+      env:
+        AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
+      run: |
+        aws ec2 revoke-security-group-ingress \
+          --group-id $AWS_INSTANCE_SG_ID \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
