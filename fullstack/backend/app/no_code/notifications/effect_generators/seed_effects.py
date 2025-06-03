@@ -36,7 +36,7 @@ def deactivated_account_effect(session: Session, user: User) -> Effect:
         type=EffectType.EMAIL,
         config=EffectConfig(
             frequency_days=0,
-            template=new_transaction_template,
+            template=deactivated_account_effect_template,
             subject="[My Financé] {{ account_name }} marked as inactive",
         ),
         condition=EffectConditionals.UNCONDITIONAL,
