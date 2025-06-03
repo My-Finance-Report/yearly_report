@@ -513,6 +513,25 @@ def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
     return replace(in_process, existing_transactions=transactions)
 
 
+def reassociate_audit_logs(in_process: InProcessJob) -> InProcessJob:
+    if not in_process.transactions_to_delete:
+        return in_process
+
+    audit_logs = (
+        in_process.session.query(AuditLog)
+        .filter(
+            AuditLog.transaction_id.in_(in_process.transactions_to_delete),
+            AuditLog.user_id == in_process.user.id,
+        )
+        .all()
+    )
+
+    for audit_log in audit_logs:
+        audit_log.transaction_id = None
+
+    return in_process
+
+
 def remove_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
     if not in_process.transactions_to_delete:
         return in_process
@@ -533,6 +552,7 @@ def plaid_sync_pipe(in_process: InProcessJob) -> None:
             status=ProcessingState.parsing_transactions,
             additional_info="Checking for transaction removals",
         ),
+        reassociate_audit_logs,
         remove_plaid_transactions,
         lambda x: status_update_monad(
             x,
@@ -594,6 +614,7 @@ def deactivate_account(session: Session, user: User, account: PlaidAccount) -> N
     session.commit()
 
     deactivate_event = AccountDeactivatedEvent(account_name=account.name)
+    print("deactivating account")
     trigger_effects(session, user, deactivate_event)
 
 

@@ -52,8 +52,8 @@ class AuditLog(Base):
     action: Mapped[AuditLogAction] = mapped_column(Enum(AuditLogAction), nullable=False)
     change: Mapped[AuditChange] = mapped_column(JSONType(AuditChange), nullable=False)
     apply_to_future: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    transaction_id: Mapped[TransactionId] = mapped_column(
-        ForeignKey("transaction.id"), nullable=False
+    transaction_id: Mapped[TransactionId | None] = mapped_column(
+        ForeignKey("transaction.id"), nullable=True
     )
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
