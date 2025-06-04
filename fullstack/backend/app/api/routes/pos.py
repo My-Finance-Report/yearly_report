@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.db import get_db, get_current_user
-from app.models.pos.orders import Order, OrderItem, Orderable
+from app.db import get_db, get_db_for_user, get_guest_db, get_current_user
+from app.models.pos.orders import GuestOrderer, Order, OrderItem, Orderable
+from app.models.pos.shop import Shop
 from app.models.pos.variants import (
     Variant,
     VariantGroup,
@@ -92,7 +93,170 @@ class OrderBase(BaseModel):
         from_attributes = True
 
 
-# Menu management endpoints
+class GuestOrdererInput(BaseModel):
+    name: str
+    phone: str | None
+    email: str | None
+
+class GuestOrderInput(BaseModel):
+    slug: str
+    pickup_time: datetime
+    order_items: List[OrderItemBase]
+    guest_orderer: GuestOrdererInput
+
+    class Config:
+        from_attributes = True
+
+
+
+class Availability(BaseModel):
+    open_time: datetime
+    close_time: datetime
+
+class ShopOut(BaseModel):
+    slug: str
+    name: str
+    availability: List[Availability]
+
+
+@router.get("/shop/{slug}", response_model=ShopOut)
+def get_shop(
+    slug: str,
+    db: Session = Depends(get_guest_db)
+) -> ShopOut:
+    return ShopOut(
+        slug=slug,
+        name="My Sisters Kitchen",
+        availability=[
+            Availability(open_time=datetime.now(), close_time=datetime.now() + timedelta(hours=1)),
+            Availability(open_time=datetime.now() + timedelta(hours=2), close_time=datetime.now() + timedelta(hours=4)),
+        ],
+    )
+
+@router.post("/guest-order", response_model=OrderBase)
+def create_guest_order(
+    order: GuestOrderInput,
+    guest_db: Session = Depends(get_guest_db),
+) -> OrderBase:
+    try:
+        shop = guest_db.query(Shop).filter(Shop.slug == order.slug).first()
+
+        if not shop:
+            raise HTTPException(status_code=404, detail="Shop not found")
+
+        session = next(get_db_for_user(shop.user_id))
+
+        # Validate pickup time
+        now = datetime.now(timezone.utc)
+        if not order.pickup_time.tzinfo:
+            raise HTTPException(status_code=400, detail="Pickup time must be timezone-aware")
+        if order.pickup_time < now:
+            raise HTTPException(status_code=400, detail="Pickup time must be in the future")
+
+        # Validate all orderables exist
+        orderable_ids = [item.orderable.id for item in order.order_items]
+        existing_orderables = (
+            session.query(Orderable)
+            .filter(Orderable.id.in_(orderable_ids))
+            .all()
+        )
+        if len(existing_orderables) != len(orderable_ids):
+            raise HTTPException(status_code=400, detail="One or more orderables not found")
+
+        # Create guest orderer
+        guest_orderer = GuestOrderer(
+            name=order.guest_orderer.name,
+            phone=order.guest_orderer.phone,
+            email=order.guest_orderer.email
+        )
+        session.add(guest_orderer)
+
+        # Create order
+        db_order = Order(
+            placed_at=now,
+            user_id=shop.user_id,
+            shop_id=shop.id,
+            placed_by=guest_orderer.id,
+            active=True,
+            pickup_time=order.pickup_time
+        )
+        session.add(db_order)
+
+        # Create order items and variants
+        order_items_data = []
+        for item in order.order_items:
+            order_item = OrderItem(
+                order_id=db_order.id,
+                orderable_id=item.orderable.id,
+                quantity=item.quantity,
+                user_id=shop.user_id,
+            )
+            session.add(order_item)
+
+            # Validate variants belong to the orderable
+            if item.variants:
+                variant_ids = [int(v.id) for v in item.variants]
+                valid_variants = (
+                    session.query(Variant)
+                    .join(VariantGroup)
+                    .join(VariantGroupOrderable)
+                    .filter(
+                        Variant.id.in_(variant_ids),
+                        VariantGroupOrderable.orderable_id == item.orderable.id
+                    )
+                    .all()
+                )
+                if len(valid_variants) != len(variant_ids):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid variants for orderable {item.orderable.id}"
+                    )
+
+                for variant in item.variants:
+                    session.add(
+                        SelectedVariant(
+                            variant_id=int(variant.id),
+                            order_item_id=order_item.id,
+                            user_id=shop.user_id,
+                        )
+                    )
+
+            order_items_data.append(
+                OrderItemBase(
+                    orderable=OrderableOutput(
+                        id=item.orderable.id,
+                        name=item.orderable.name,
+                        price=item.orderable.price,
+                        variant_groups=item.orderable.variant_groups,
+                    ),
+                    variants=[
+                        SelectedVariantBase(
+                            group_id=variant.group_id,
+                            id=variant.id,
+                            name=variant.name,
+                            price_delta=variant.price_delta,
+                        )
+                        for variant in item.variants
+                    ],
+                    quantity=item.quantity,
+                )
+            )
+
+        session.commit()
+        return OrderBase(
+            id=str(db_order.id),
+            timestamp=db_order.placed_at,
+            orderItems=order_items_data,
+        )
+
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/menu", response_model=List[OrderableOutput])
 def get_menu(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -598,7 +762,9 @@ def get_orders(
 
         result.append(
             OrderBase(
-                id=str(order.id), timestamp=order.placed_at, orderItems=order_items_data
+                id=str(order.id),
+                timestamp=order.placed_at,
+                orderItems=order_items_data,
             )
         )
 
