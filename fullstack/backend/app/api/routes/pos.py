@@ -98,6 +98,7 @@ class GuestOrdererInput(BaseModel):
     phone: str | None
     email: str | None
 
+
 class GuestOrderInput(BaseModel):
     slug: str
     pickup_time: datetime
@@ -108,10 +109,10 @@ class GuestOrderInput(BaseModel):
         from_attributes = True
 
 
-
 class Availability(BaseModel):
     open_time: datetime
     close_time: datetime
+
 
 class ShopOut(BaseModel):
     slug: str
@@ -120,18 +121,21 @@ class ShopOut(BaseModel):
 
 
 @router.get("/shop/{slug}", response_model=ShopOut)
-def get_shop(
-    slug: str,
-    db: Session = Depends(get_guest_db)
-) -> ShopOut:
+def get_shop(slug: str, db: Session = Depends(get_guest_db)) -> ShopOut:
     return ShopOut(
         slug=slug,
         name="My Sisters Kitchen",
         availability=[
-            Availability(open_time=datetime.now(), close_time=datetime.now() + timedelta(hours=1)),
-            Availability(open_time=datetime.now() + timedelta(hours=2), close_time=datetime.now() + timedelta(hours=4)),
+            Availability(
+                open_time=datetime.now(), close_time=datetime.now() + timedelta(hours=1)
+            ),
+            Availability(
+                open_time=datetime.now() + timedelta(hours=2),
+                close_time=datetime.now() + timedelta(hours=4),
+            ),
         ],
     )
+
 
 @router.post("/guest-order", response_model=OrderBase)
 def create_guest_order(
@@ -149,25 +153,29 @@ def create_guest_order(
         # Validate pickup time
         now = datetime.now(timezone.utc)
         if not order.pickup_time.tzinfo:
-            raise HTTPException(status_code=400, detail="Pickup time must be timezone-aware")
+            raise HTTPException(
+                status_code=400, detail="Pickup time must be timezone-aware"
+            )
         if order.pickup_time < now:
-            raise HTTPException(status_code=400, detail="Pickup time must be in the future")
+            raise HTTPException(
+                status_code=400, detail="Pickup time must be in the future"
+            )
 
         # Validate all orderables exist
         orderable_ids = [item.orderable.id for item in order.order_items]
         existing_orderables = (
-            session.query(Orderable)
-            .filter(Orderable.id.in_(orderable_ids))
-            .all()
+            session.query(Orderable).filter(Orderable.id.in_(orderable_ids)).all()
         )
         if len(existing_orderables) != len(orderable_ids):
-            raise HTTPException(status_code=400, detail="One or more orderables not found")
+            raise HTTPException(
+                status_code=400, detail="One or more orderables not found"
+            )
 
         # Create guest orderer
         guest_orderer = GuestOrderer(
             name=order.guest_orderer.name,
             phone=order.guest_orderer.phone,
-            email=order.guest_orderer.email
+            email=order.guest_orderer.email,
         )
         session.add(guest_orderer)
 
@@ -178,7 +186,7 @@ def create_guest_order(
             shop_id=shop.id,
             placed_by=guest_orderer.id,
             active=True,
-            pickup_time=order.pickup_time
+            pickup_time=order.pickup_time,
         )
         session.add(db_order)
 
@@ -202,14 +210,14 @@ def create_guest_order(
                     .join(VariantGroupOrderable)
                     .filter(
                         Variant.id.in_(variant_ids),
-                        VariantGroupOrderable.orderable_id == item.orderable.id
+                        VariantGroupOrderable.orderable_id == item.orderable.id,
                     )
                     .all()
                 )
                 if len(valid_variants) != len(variant_ids):
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Invalid variants for orderable {item.orderable.id}"
+                        detail=f"Invalid variants for orderable {item.orderable.id}",
                     )
 
                 for variant in item.variants:

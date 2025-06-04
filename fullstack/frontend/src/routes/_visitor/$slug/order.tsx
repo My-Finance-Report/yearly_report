@@ -1,6 +1,6 @@
-import { Availability, PosService, ShopOut } from '@/client';
-import { DumbSelect } from '@/components/ui/dumb-select';
-import { Order } from '@/routes/_layout/_logged_in/pos/order';
+import { Availability, PosService, ShopOut } from "@/client";
+import { DumbSelect } from "@/components/ui/dumb-select";
+import { Order } from "@/routes/_layout/_logged_in/pos/order";
 import {
   Button,
   Container,
@@ -13,26 +13,24 @@ import {
   Stack,
   Input,
   HStack,
-} from '@chakra-ui/react';
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+} from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
-export const Route = createFileRoute('/_visitor/$slug/order')({
+export const Route = createFileRoute("/_visitor/$slug/order")({
   component: RouteComponent,
 });
 
 type PickupTime = {
-    timestamp: string;
-    label: string;
-}
+  timestamp: string;
+  label: string;
+};
 enum Page {
-    GuestInfo,
-    PickupTime,
-    Order,
+  GuestInfo,
+  PickupTime,
+  Order,
 }
-
-
 
 function makeRanges(times: Availability[]): PickupTime[] {
   const ranges: PickupTime[] = [];
@@ -54,12 +52,12 @@ function makeRanges(times: Availability[]): PickupTime[] {
     while (current <= end) {
       const hours = current.getHours();
       const minutes = current.getMinutes();
-      const period = hours >= 12 ? 'PM' : 'AM';
+      const period = hours >= 12 ? "PM" : "AM";
       const displayHours = hours % 12 || 12;
-      
+
       ranges.push({
         timestamp: current.toISOString(),
-        label: `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`,
+        label: `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`,
       });
 
       current = new Date(current.getTime() + FIFTEEN_MINUTES);
@@ -72,9 +70,9 @@ function makeRanges(times: Availability[]): PickupTime[] {
 function RouteComponent() {
   const [selectedTime, setSelectedTime] = useState<PickupTime | null>(null);
   const [guestInfo, setGuestInfo] = useState({
-    name: '',
-    phone: '',
-    email: '',
+    name: "",
+    phone: "",
+    email: "",
   });
   const { slug } = Route.useParams();
 
@@ -82,7 +80,6 @@ function RouteComponent() {
     queryKey: ["shop", slug],
     queryFn: () => PosService.getShop({ slug }),
   });
-
 
   const orderFlow = [Page.GuestInfo, Page.PickupTime, Page.Order];
   const [currentPage, setCurrentPage] = useState<Page>(Page.GuestInfo);
@@ -123,62 +120,84 @@ function RouteComponent() {
   return (
     <Container maxW="container.xl" py={8}>
       <VStack spaceX={8} align="stretch">
-        <AccountHeader shop={shop} guestInfo={guestInfo} pickupTime={selectedTime} />
+        <AccountHeader
+          shop={shop}
+          guestInfo={guestInfo}
+          pickupTime={selectedTime}
+        />
         {renderCurrentPage()}
         <HStack>
-          {currentPage > Page.GuestInfo && <Button onClick={handleBack}>Back</Button>}
-          {currentPage < Page.Order && <Button onClick={handleNext}>Next</Button>}
+          {currentPage > Page.GuestInfo && (
+            <Button onClick={handleBack}>Back</Button>
+          )}
+          {currentPage < Page.Order && (
+            <Button onClick={handleNext}>Next</Button>
+          )}
         </HStack>
       </VStack>
     </Container>
   );
 }
 
-function AccountHeader({ shop,guestInfo,pickupTime }: { shop: ShopOut;guestInfo:{name:string,phone:string,email:string},pickupTime: PickupTime | null }) {
+function AccountHeader({
+  shop,
+  guestInfo,
+  pickupTime,
+}: {
+  shop: ShopOut;
+  guestInfo: { name: string; phone: string; email: string };
+  pickupTime: PickupTime | null;
+}) {
   return (
     <Card.Root>
       <CardHeader>
         <Heading size="lg">{shop.name}</Heading>
       </CardHeader>
       <CardBody>
-
-        {guestInfo.name&&<Text>Order for {guestInfo.name} :)</Text>}
-        {pickupTime&&<Text>Picking up at {pickupTime.label}</Text>}
+        {guestInfo.name && <Text>Order for {guestInfo.name} :)</Text>}
+        {pickupTime && <Text>Picking up at {pickupTime.label}</Text>}
       </CardBody>
     </Card.Root>
   );
 }
 
 function GuestInfo({
-    guestInfo,
-    setGuestInfo,
+  guestInfo,
+  setGuestInfo,
 }: {
-    guestInfo: {
-        name: string;
-        phone: string;
-        email: string;
-    };
-    setGuestInfo: (info: {
-        name: string;
-        phone: string;
-        email: string;
-    }) => void;
+  guestInfo: {
+    name: string;
+    phone: string;
+    email: string;
+  };
+  setGuestInfo: (info: { name: string; phone: string; email: string }) => void;
 }) {
-
-    return (
-        <Card.Root>
-            <CardHeader>
-                <Heading size="md">Guest Information</Heading>
-            </CardHeader>
-            <CardBody>
-                <Stack spaceY={4}>
-                    <Text>Please enter your information:</Text>
-                    <Input placeholder="Name" value={guestInfo.name} onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })} />
-                    <Input placeholder="Phone" value={guestInfo.phone} onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })} />
-                </Stack>
-            </CardBody>
-        </Card.Root>
-    );
+  return (
+    <Card.Root>
+      <CardHeader>
+        <Heading size="md">Guest Information</Heading>
+      </CardHeader>
+      <CardBody>
+        <Stack spaceY={4}>
+          <Text>Please enter your information:</Text>
+          <Input
+            placeholder="Name"
+            value={guestInfo.name}
+            onChange={(e) =>
+              setGuestInfo({ ...guestInfo, name: e.target.value })
+            }
+          />
+          <Input
+            placeholder="Phone"
+            value={guestInfo.phone}
+            onChange={(e) =>
+              setGuestInfo({ ...guestInfo, phone: e.target.value })
+            }
+          />
+        </Stack>
+      </CardBody>
+    </Card.Root>
+  );
 }
 
 interface SelectDateTimeProps {
@@ -187,9 +206,12 @@ interface SelectDateTimeProps {
   times: PickupTime[];
 }
 
-function SelectDateTime({ selectedTime, onTimeSelect,times }: SelectDateTimeProps) {
-    console.log(times);
-
+function SelectDateTime({
+  selectedTime,
+  onTimeSelect,
+  times,
+}: SelectDateTimeProps) {
+  console.log(times);
 
   return (
     <Card.Root>
@@ -203,8 +225,8 @@ function SelectDateTime({ selectedTime, onTimeSelect,times }: SelectDateTimeProp
             placeholder="Choose a time"
             selectedOption={selectedTime}
             setSelectedOption={onTimeSelect}
-            labelExtractor={(time:PickupTime) => time.label}
-            keyExtractor={(time:PickupTime) => time.timestamp}
+            labelExtractor={(time: PickupTime) => time.label}
+            keyExtractor={(time: PickupTime) => time.timestamp}
             options={times}
           />
         </Stack>
@@ -212,4 +234,3 @@ function SelectDateTime({ selectedTime, onTimeSelect,times }: SelectDateTimeProp
     </Card.Root>
   );
 }
-

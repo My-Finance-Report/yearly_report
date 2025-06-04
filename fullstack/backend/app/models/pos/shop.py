@@ -10,6 +10,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Boolean, Integer, String
 
 ShopId = NewType("ShopId", int)
+
+
 class Shop(Base):
     __tablename__ = "shop"
 

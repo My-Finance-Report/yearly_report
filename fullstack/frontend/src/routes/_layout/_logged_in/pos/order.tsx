@@ -342,8 +342,12 @@ function AllOrderables({
   );
 }
 
-export function Order({includeBreadcrumb = true}: {includeBreadcrumb?: boolean}) {
-  console.log("rendering order")
+export function Order({
+  includeBreadcrumb = true,
+}: {
+  includeBreadcrumb?: boolean;
+}) {
+  console.log("rendering order");
   const [order, setOrder] = useState<OrderBase_Input>({
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
