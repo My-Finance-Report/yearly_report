@@ -52,6 +52,7 @@ big milestones before launch:
 
 -> POS
   -> add ability for a guest to order (WIP)
+  --> need to remove RLS on tables for menu items
   -> bigger: add ability to charge for the item
   -> add an effect for the order to send a notification
 

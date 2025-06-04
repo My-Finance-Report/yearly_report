@@ -119,7 +119,7 @@ function RouteComponent() {
 
   return (
     <Container maxW="container.xl" py={8}>
-      <VStack spaceX={8} align="stretch">
+      <VStack align="stretch">
         <AccountHeader
           shop={shop}
           guestInfo={guestInfo}
