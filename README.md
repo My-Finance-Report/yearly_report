@@ -47,7 +47,6 @@ big milestones before launch:
   -> maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
 
 -> Accounts View
-  ->  need a way to update categories on an account / recategorize transactions with the new accounts page (see /manage-accounts)
   -> no code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
 
 -> POS
