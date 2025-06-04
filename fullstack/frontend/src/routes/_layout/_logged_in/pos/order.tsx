@@ -342,7 +342,12 @@ function AllOrderables({
   );
 }
 
-function Order() {
+export function Order({
+  includeBreadcrumb = true,
+}: {
+  includeBreadcrumb?: boolean;
+}) {
+  console.log("rendering order");
   const [order, setOrder] = useState<OrderBase_Input>({
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
@@ -372,7 +377,7 @@ function Order() {
 
   return (
     <Box p={4}>
-      <BreadcrumbComponent />
+      {includeBreadcrumb && <BreadcrumbComponent />}
       {inProgressOrder ? (
         <VariantSelector
           orderable={inProgressOrder}

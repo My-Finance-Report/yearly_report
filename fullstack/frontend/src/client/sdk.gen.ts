@@ -87,6 +87,10 @@ import type {
   PlaidExchangeTokenData,
   PlaidExchangeTokenResponse,
   PlaidGetPlaidAccountsResponse,
+  PosGetShopData,
+  PosGetShopResponse,
+  PosCreateGuestOrderData,
+  PosCreateGuestOrderResponse,
   PosGetMenuResponse,
   PosCreateOrUpdateMenuItemData,
   PosCreateOrUpdateMenuItemResponse,
@@ -101,6 +105,10 @@ import type {
   PosCreateOrderResponse,
   PosGetOrdersData,
   PosGetOrdersResponse,
+  PrivateCreateUserData,
+  PrivateCreateUserResponse,
+  PrivateGoogleCallbackLocalData,
+  PrivateGoogleCallbackLocalResponse,
   SankeyGetSankeyDataResponse,
   SankeyCreateSankeyConfigData,
   SankeyCreateSankeyConfigResponse,
@@ -1178,6 +1186,49 @@ export class PlaidService {
 
 export class PosService {
   /**
+   * Get Shop
+   * @param data The data for the request.
+   * @param data.slug
+   * @returns ShopOut Successful Response
+   * @throws ApiError
+   */
+  public static getShop(
+    data: PosGetShopData,
+  ): CancelablePromise<PosGetShopResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pos/shop/{slug}",
+      path: {
+        slug: data.slug,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Create Guest Order
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns OrderBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static createGuestOrder(
+    data: PosCreateGuestOrderData,
+  ): CancelablePromise<PosCreateGuestOrderResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/pos/guest-order",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
    * Get Menu
    * Get all menu items (orderables) with their variant groups and variants
    * @returns OrderableOutput_Output Successful Response
@@ -1331,6 +1382,56 @@ export class PosService {
       url: "/api/v1/pos/orders",
       query: {
         days: data.days,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+}
+
+export class PrivateService {
+  /**
+   * Create User
+   * Create a new user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns UserOut Successful Response
+   * @throws ApiError
+   */
+  public static createUser(
+    data: PrivateCreateUserData,
+  ): CancelablePromise<PrivateCreateUserResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/private/users/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Google Callback Local
+   * Handle the callback from Google OAuth.
+   * This endpoint is called by the frontend after receiving the code from Google.
+   * @param data The data for the request.
+   * @param data.code
+   * @param data.error
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static googleCallbackLocal(
+    data: PrivateGoogleCallbackLocalData,
+  ): CancelablePromise<PrivateGoogleCallbackLocalResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/private/oauth/google/callback-local",
+      query: {
+        code: data.code,
+        error: data.error,
       },
       errors: {
         422: "Validation Error",

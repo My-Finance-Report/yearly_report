@@ -23,6 +23,11 @@ export type AggregatedTransactions = {
   };
 };
 
+export type Availability = {
+  open_time: string;
+  close_time: string;
+};
+
 export type Body_login_login_access_token = {
   grant_type?: string | null;
   username: string;
@@ -266,6 +271,19 @@ export type GroupByOption =
   | "month"
   | "year"
   | "budget";
+
+export type GuestOrdererInput = {
+  name: string;
+  phone: string | null;
+  email: string | null;
+};
+
+export type GuestOrderInput = {
+  slug: string;
+  pickup_time: string;
+  order_items: Array<OrderItemBase_Input>;
+  guest_orderer: GuestOrdererInput;
+};
 
 export type HTTPValidationError = {
   detail?: Array<ValidationError>;
@@ -552,6 +570,13 @@ export type PriceDetails = {
   max_sources: number;
 };
 
+export type PrivateUserCreate = {
+  email: string;
+  password: string;
+  full_name: string;
+  is_verified?: boolean;
+};
+
 export type ProcessFileJobOut = {
   created_at: string;
   last_tried_at?: string | null;
@@ -661,6 +686,12 @@ export type SelectedVariantBase_Output = {
 export type SelectOption = {
   key: string;
   value: string;
+};
+
+export type ShopOut = {
+  slug: string;
+  name: string;
+  availability: Array<Availability>;
 };
 
 export type SourceKind = "account" | "investment" | "card";
@@ -1151,6 +1182,18 @@ export type PlaidExchangeTokenResponse = Array<PlaidAccountResponse>;
 
 export type PlaidGetPlaidAccountsResponse = Array<PlaidAccountResponse>;
 
+export type PosGetShopData = {
+  slug: string;
+};
+
+export type PosGetShopResponse = ShopOut;
+
+export type PosCreateGuestOrderData = {
+  requestBody: GuestOrderInput;
+};
+
+export type PosCreateGuestOrderResponse = OrderBase_Output;
+
 export type PosGetMenuResponse = Array<OrderableOutput_Output>;
 
 export type PosCreateOrUpdateMenuItemData = {
@@ -1194,6 +1237,19 @@ export type PosGetOrdersData = {
 };
 
 export type PosGetOrdersResponse = Array<OrderBase_Output>;
+
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = UserOut;
+
+export type PrivateGoogleCallbackLocalData = {
+  code: string;
+  error?: string | null;
+};
+
+export type PrivateGoogleCallbackLocalResponse = unknown;
 
 export type SankeyGetSankeyDataResponse = SankeyData;
 
