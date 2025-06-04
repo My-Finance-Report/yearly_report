@@ -16,14 +16,14 @@ function Layout() {
           direction="column"
           justifyContent="space-between"
           backgroundColor="background"
-      >
-        <SegmentedNavigation />
-        <Box minHeight="100vh">
-          <Outlet />
-        </Box>
-        <Footer />
-      </Flex>
-    </Box>
+        >
+          <SegmentedNavigation />
+          <Box minHeight="100vh">
+            <Outlet />
+          </Box>
+          <Footer />
+        </Flex>
+      </Box>
     </UserProvider>
   );
 }
