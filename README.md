@@ -27,7 +27,7 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 
-# User feedback / TODO
+# TODO
 
 big milestones before launch:
 
@@ -66,4 +66,59 @@ big milestones before launch:
 
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
+
+
+# Codestyle
+
+-> Prefer strong types and functional programming
+--> in general make bad states unrepresentable and add types to enforce this (of course easier said than done)
+--> strong types > tests
+
+-> for business logic lean toward composable "pipelines"
+--> pipelines can be easily traced and debugged 
+--> try to avoid conditional function calls within the pipeline, so that regardless of the inputs, the code path is the same
+
+-> RLS is a level of protection, but we don't treat it as unbreakable isolation
+--> with RLS `select * from transactions` should be the same as `select * from transactions where user_id = current_user_id`
+--> that said, we should prefer the redudency of not relying on RLS 
+
+-> Prefer explicit joins to ORM magic. 
+--> I generally don't add `relationship` to the models, and instead explicitly join when required. 
+--> I dont feel very strongly about this
+
+
+
+# Practical info
+-> bin/ has some useful commands
+
+-> bin/worker runs the worker
+-> bin/backend runs the server
+-> bin/frontend runs the frontend
+-> bin/db runs the db
+-> bin/check_for_deploy is linting / formatting
+-> bin/regen regenerates the frontend client from the API 
+
+-> to make a database migration you can often just update the model files and run:
+
+
+```bash
+cd fullstack/backend
+PYTHONPATH=$(pwd) alembic revision --autogenerate -m "$@"
+```
+
+-> you should check the generated migration and make sure it is correct, some things dont get auto updated like adding an enum value
+
+-> then run with:
+```bash
+cd fullstack/backend
+PYTHONPATH=$(pwd) alembic upgrade heads
+```
+
+-> if you add a new table, you have to grant RLS access. see alembic/helpers.py
+-> when you add a new api route you have to register it in app/api/main.py
+-> using the query client from tanstack is really nice. prefer to raw fetch calls
+
+
+
+
 
