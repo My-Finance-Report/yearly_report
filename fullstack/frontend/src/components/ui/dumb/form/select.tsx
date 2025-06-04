@@ -17,6 +17,7 @@ export function DumbFormSelect<T extends FieldValues, J>({
   labelExtractor,
   keyExtractor,
   placeholder,
+  disabled,
 }: {
   control: Control<T>;
   errors: FieldErrors<T>;
@@ -26,6 +27,7 @@ export function DumbFormSelect<T extends FieldValues, J>({
   labelExtractor: (value: J) => string;
   keyExtractor: (value: J) => string;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required mt={4}>
@@ -43,6 +45,7 @@ export function DumbFormSelect<T extends FieldValues, J>({
               labelExtractor={labelExtractor}
               keyExtractor={keyExtractor}
               placeholder={placeholder}
+              disabled={disabled}
             />
           );
         }}

@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 export interface NotificationFormValues {
   id?: number;
   name: string;
+  active: boolean;
   template: string;
   subject: string;
   effect_type: EffectType;
@@ -61,14 +62,13 @@ export function CreateForm({
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
 
-  console.log(effectMappings);
-
   const form = useForm<NotificationFormValues>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       name: selectedEffect.name,
       template: selectedEffect.config.template,
+      active: selectedEffect.active,
       subject: selectedEffect.config.subject,
       effect_type: selectedEffect.effect_type,
       event_type: selectedEffect.event_type,
@@ -128,9 +128,13 @@ export function CreateForm({
       data: NotificationFormValues;
       id: number;
     }) => {
+      if (!selectedEffect.editable) {
+        throw new Error("Effect is not editable");
+      }
       const body: EffectUpdate = {
         name: data.name,
         effect_type: data.effect_type,
+        active: data.active,
         event_type: data.event_type,
         frequency_days: data.frequency_days,
         template: data.template,
@@ -160,6 +164,7 @@ export function CreateForm({
         name: data.name,
         effect_type: data.effect_type,
         event_type: data.event_type,
+        active: data.active,
         frequency_days: data.frequency_days,
         template: data.template,
         subject: data.subject,
@@ -204,6 +209,7 @@ export function CreateForm({
               label="Name of notification"
               register={register}
               errors={errors}
+              disabled={!selectedEffect?.editable}
             />
             <DumbFormSelect
               control={control}
@@ -215,6 +221,7 @@ export function CreateForm({
               )}
               labelExtractor={(eventType) => eventTypes[eventType]}
               keyExtractor={(eventType) => eventType}
+              disabled={!selectedEffect?.editable}
             />
             {supportsFrequency(form.getValues("event_type")) && (
               <DumbNumberField
@@ -222,12 +229,14 @@ export function CreateForm({
                 label="Frequency (days)"
                 register={register}
                 errors={errors}
+                disabled={!selectedEffect?.editable}
               />
             )}
             <Conditions
               control={control}
               errors={errors}
               form={form}
+              disabled={!selectedEffect?.editable}
               supported_conditional_parameters={determineConditionsForEventType(
                 form.getValues("event_type"),
               )}
@@ -238,6 +247,7 @@ export function CreateForm({
               errors={errors}
               name="effect_type"
               label="Notification Type"
+              disabled={!selectedEffect?.editable}
               options={Object.keys(effectTypes).map(
                 (effectType) => effectType as EffectType,
               )}
@@ -248,6 +258,7 @@ export function CreateForm({
               name="subject"
               label="Subject"
               register={register}
+              disabled={!selectedEffect?.editable}
               errors={errors}
             />
             <TemplateEditor
@@ -259,6 +270,7 @@ export function CreateForm({
               register={register}
               errors={errors}
               setValue={form.setValue}
+              disabled={!selectedEffect?.editable}
             />
             <HStack>
               <Button

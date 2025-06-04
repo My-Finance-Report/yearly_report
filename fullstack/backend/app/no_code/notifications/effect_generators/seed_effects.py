@@ -6,13 +6,15 @@ from app.models.user import User
 new_transaction_template = """
     Hey there! You have {{ count }} <a href="https://myfinancereport.com/transactions">new transaction(s)</a> in My Financé!
     {{ transactions_table }}
+
     {{ alter_settings }}
     """
 
 
 def new_transaction_effect(session: Session, user: User) -> Effect:
-    # TODO pull from database
     return Effect(
+        active=True,
+        editable=True,
         type=EffectType.EMAIL,
         config=EffectConfig(
             frequency_days=0,
@@ -33,6 +35,8 @@ deactivated_account_effect_template = """
 
 def deactivated_account_effect(session: Session, user: User) -> Effect:
     return Effect(
+        active=True,
+        editable=False,
         type=EffectType.EMAIL,
         config=EffectConfig(
             frequency_days=0,

@@ -9,15 +9,17 @@ function ConditionChoice({
   name,
   onClick,
   selected,
+  disabled,
 }: {
   name: EffectConditionals;
   onClick: () => void;
   selected: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Badge
-      onClick={onClick}
-      cursor="pointer"
+      onClick={disabled ? undefined : onClick}
+      cursor={disabled ? "not-allowed" : "pointer"}
       variant={selected ? "solid" : "outline"}
     >
       {selected && <HiMinus />}
@@ -34,6 +36,7 @@ export function Conditions({
   errors,
   form,
   supported_conditional_parameters,
+  disabled,
 }: {
   control: Control<NotificationFormValues, FormContext, NotificationFormValues>;
   errors: FieldErrors<NotificationFormValues>;
@@ -43,6 +46,7 @@ export function Conditions({
     NotificationFormValues
   >;
   supported_conditional_parameters: Array<EffectConditionals>;
+  disabled?: boolean;
 }) {
   const conditionToConditionParameter: Record<
     EffectConditionals,
@@ -56,6 +60,7 @@ export function Conditions({
         register={control.register}
         errors={errors}
         defaultValue={10}
+        disabled={disabled}
       />
     ),
     count_of_transactions: (
@@ -66,6 +71,7 @@ export function Conditions({
         register={control.register}
         errors={errors}
         defaultValue={1}
+        disabled={disabled}
       />
     ),
     unconditional: null,
@@ -91,6 +97,7 @@ export function Conditions({
                 toggleCondition(param);
               }}
               selected={form.getValues("condition") === param}
+              disabled={disabled}
             />
           ))}
         </HStack>

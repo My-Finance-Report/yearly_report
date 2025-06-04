@@ -170,6 +170,7 @@ export type EffectConfig = {
 export type EffectCreate = {
   name: string;
   effect_type: EffectType;
+  active: boolean;
   event_type: EventType;
   frequency_days: number;
   template: string;
@@ -192,6 +193,8 @@ export type EffectOut = {
   name: string;
   effect_type: EffectType;
   event_type: EventType;
+  active: boolean;
+  editable: boolean;
   config: EffectConfig;
   condition: EffectConditionals;
   conditional_parameters: ConditionalParameters;
@@ -206,6 +209,7 @@ export type EffectUpdate = {
   name: string;
   effect_type: EffectType;
   event_type: EventType;
+  active: boolean;
   frequency_days: number;
   template: string;
   subject: string;
@@ -550,6 +554,13 @@ export type PriceDetails = {
   interval: string;
   tier: SubscriptionTier;
   max_sources: number;
+};
+
+export type PrivateUserCreate = {
+  email: string;
+  password: string;
+  full_name: string;
+  is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -1194,6 +1205,19 @@ export type PosGetOrdersData = {
 };
 
 export type PosGetOrdersResponse = Array<OrderBase_Output>;
+
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = UserOut;
+
+export type PrivateGoogleCallbackLocalData = {
+  code: string;
+  error?: string | null;
+};
+
+export type PrivateGoogleCallbackLocalResponse = unknown;
 
 export type SankeyGetSankeyDataResponse = SankeyData;
 

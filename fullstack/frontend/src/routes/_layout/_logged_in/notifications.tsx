@@ -114,6 +114,8 @@ function NewNotificationButton({
       onClick={() => {
         setSelectedEffect({
           name: "",
+          active: true,
+          editable: true,
           config: {
             template: "",
             subject: "",
