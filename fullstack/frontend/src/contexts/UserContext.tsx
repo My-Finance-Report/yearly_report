@@ -1,4 +1,3 @@
-// UserContext.tsx
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser } from "../hooks/useAuth";
 import { UserOut } from "../client";
