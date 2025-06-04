@@ -80,7 +80,12 @@ jobs:
 
         ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} '
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
+        echo pwd
+        ls -a
+        echo "---"
         cd ${REMOTE_DIR}
+        echo pwd
+        ls -a
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
         chmod +x /home/ec2-user/code/finance_app/backup_db'
