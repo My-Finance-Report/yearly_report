@@ -519,8 +519,9 @@ def reassociate_audit_logs(in_process: InProcessJob) -> InProcessJob:
 
     audit_logs = (
         in_process.session.query(AuditLog)
+        .join(Transaction, AuditLog.transaction_id == Transaction.id)
         .filter(
-            AuditLog.transaction_id.in_(in_process.transactions_to_delete),
+            Transaction.external_id.in_(in_process.transactions_to_delete),
             AuditLog.user_id == in_process.user.id,
         )
         .all()
