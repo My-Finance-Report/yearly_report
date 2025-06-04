@@ -30,6 +30,8 @@ import { Route as LayoutDemoImport } from "./routes/_layout/demo";
 import { Route as LayoutContactMeImport } from "./routes/_layout/contact-me";
 import { Route as LayoutChangeLogImport } from "./routes/_layout/change-log";
 import { Route as LayoutLoggedinImport } from "./routes/_layout/_logged_in";
+import { Route as VisitorSlugIndexImport } from "./routes/_visitor/$slug/index";
+import { Route as VisitorSlugOrderImport } from "./routes/_visitor/$slug/order";
 import { Route as LayoutLoggedinUploadFilesImport } from "./routes/_layout/_logged_in/upload-files";
 import { Route as LayoutLoggedinTransactionsImport } from "./routes/_layout/_logged_in/transactions";
 import { Route as LayoutLoggedinSubscriptionSuccessImport } from "./routes/_layout/_logged_in/subscription-success";
@@ -162,6 +164,18 @@ const LayoutChangeLogRoute = LayoutChangeLogImport.update({
 const LayoutLoggedinRoute = LayoutLoggedinImport.update({
   id: "/_logged_in",
   getParentRoute: () => LayoutRoute,
+} as any);
+
+const VisitorSlugIndexRoute = VisitorSlugIndexImport.update({
+  id: "/_visitor/$slug/",
+  path: "/$slug/",
+  getParentRoute: () => rootRoute,
+} as any);
+
+const VisitorSlugOrderRoute = VisitorSlugOrderImport.update({
+  id: "/_visitor/$slug/order",
+  path: "/$slug/order",
+  getParentRoute: () => rootRoute,
 } as any);
 
 const LayoutLoggedinUploadFilesRoute = LayoutLoggedinUploadFilesImport.update({
@@ -520,6 +534,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LayoutLoggedinUploadFilesImport;
       parentRoute: typeof LayoutLoggedinImport;
     };
+    "/_visitor/$slug/order": {
+      id: "/_visitor/$slug/order";
+      path: "/$slug/order";
+      fullPath: "/$slug/order";
+      preLoaderRoute: typeof VisitorSlugOrderImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/_visitor/$slug/": {
+      id: "/_visitor/$slug/";
+      path: "/$slug";
+      fullPath: "/$slug";
+      preLoaderRoute: typeof VisitorSlugIndexImport;
+      parentRoute: typeof rootRoute;
+    };
     "/_layout/_logged_in/pos/manage-menu": {
       id: "/_layout/_logged_in/pos/manage-menu";
       path: "/pos/manage-menu";
@@ -693,6 +721,8 @@ export interface FileRoutesByFullPath {
   "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
   "/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/$slug/order": typeof VisitorSlugOrderRoute;
+  "/$slug": typeof VisitorSlugIndexRoute;
   "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
   "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/pos/order": typeof LayoutLoggedinPosOrderRoute;
@@ -733,6 +763,8 @@ export interface FileRoutesByTo {
   "/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
   "/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/$slug/order": typeof VisitorSlugOrderRoute;
+  "/$slug": typeof VisitorSlugIndexRoute;
   "/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
   "/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/pos/order": typeof LayoutLoggedinPosOrderRoute;
@@ -775,6 +807,8 @@ export interface FileRoutesById {
   "/_layout/_logged_in/subscription-success": typeof LayoutLoggedinSubscriptionSuccessRoute;
   "/_layout/_logged_in/transactions": typeof LayoutLoggedinTransactionsRoute;
   "/_layout/_logged_in/upload-files": typeof LayoutLoggedinUploadFilesRoute;
+  "/_visitor/$slug/order": typeof VisitorSlugOrderRoute;
+  "/_visitor/$slug/": typeof VisitorSlugIndexRoute;
   "/_layout/_logged_in/pos/manage-menu": typeof LayoutLoggedinPosManageMenuRoute;
   "/_layout/_logged_in/pos/manage-variants": typeof LayoutLoggedinPosManageVariantsRoute;
   "/_layout/_logged_in/pos/order": typeof LayoutLoggedinPosOrderRoute;
@@ -817,6 +851,8 @@ export interface FileRouteTypes {
     | "/subscription-success"
     | "/transactions"
     | "/upload-files"
+    | "/$slug/order"
+    | "/$slug"
     | "/pos/manage-menu"
     | "/pos/manage-variants"
     | "/pos/order"
@@ -856,6 +892,8 @@ export interface FileRouteTypes {
     | "/subscription-success"
     | "/transactions"
     | "/upload-files"
+    | "/$slug/order"
+    | "/$slug"
     | "/pos/manage-menu"
     | "/pos/manage-variants"
     | "/pos/order"
@@ -896,6 +934,8 @@ export interface FileRouteTypes {
     | "/_layout/_logged_in/subscription-success"
     | "/_layout/_logged_in/transactions"
     | "/_layout/_logged_in/upload-files"
+    | "/_visitor/$slug/order"
+    | "/_visitor/$slug/"
     | "/_layout/_logged_in/pos/manage-menu"
     | "/_layout/_logged_in/pos/manage-variants"
     | "/_layout/_logged_in/pos/order"
@@ -907,10 +947,14 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren;
+  VisitorSlugOrderRoute: typeof VisitorSlugOrderRoute;
+  VisitorSlugIndexRoute: typeof VisitorSlugIndexRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  VisitorSlugOrderRoute: VisitorSlugOrderRoute,
+  VisitorSlugIndexRoute: VisitorSlugIndexRoute,
 };
 
 export const routeTree = rootRoute
@@ -923,7 +967,9 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_layout"
+        "/_layout",
+        "/_visitor/$slug/order",
+        "/_visitor/$slug/"
       ]
     },
     "/_layout": {
@@ -1093,6 +1139,12 @@ export const routeTree = rootRoute
     "/_layout/_logged_in/upload-files": {
       "filePath": "_layout/_logged_in/upload-files.tsx",
       "parent": "/_layout/_logged_in"
+    },
+    "/_visitor/$slug/order": {
+      "filePath": "_visitor/$slug/order.tsx"
+    },
+    "/_visitor/$slug/": {
+      "filePath": "_visitor/$slug/index.tsx"
     },
     "/_layout/_logged_in/pos/manage-menu": {
       "filePath": "_layout/_logged_in/pos/manage-menu.tsx",

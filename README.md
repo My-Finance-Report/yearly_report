@@ -50,7 +50,13 @@ big milestones before launch:
   ->  need a way to update categories on an account / recategorize transactions with the new accounts page (see /manage-accounts)
   -> no code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
 
- -> why are there no decimals at all on transactions..?
+-> POS
+  -> add ability for a guest to order (WIP)
+  --> need to remove RLS on tables for menu items
+  -> bigger: add ability to charge for the item
+  -> add an effect for the order to send a notification
+
+-> why are there no decimals at all on transactions..?
 
 -> delete saved filter doesnt work on /transactions
 
