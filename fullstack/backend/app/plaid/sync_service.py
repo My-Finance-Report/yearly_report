@@ -246,6 +246,7 @@ def sync_plaid_account_transactions(
         sync_log.added_count = added_count
         sync_log.modified_count = 0
         sync_log.removed_count = 0
+        sync_log.status = SyncStatus.SUCCESS
 
         plaid_response.set_next_cursor()
         session.commit()
@@ -256,6 +257,7 @@ def sync_plaid_account_transactions(
 
     except Exception as e:
         sync_log.error_message = str(e)
+        sync_log.status = SyncStatus.FAILURE
         if has_plaid_transactions:
             send_telegram_message(f"failing and had plaid transactions, {e}")
             session.commit()
@@ -511,6 +513,25 @@ def fetch_existing_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
     return replace(in_process, existing_transactions=transactions)
 
 
+def reassociate_audit_logs(in_process: InProcessJob) -> InProcessJob:
+    if not in_process.transactions_to_delete:
+        return in_process
+
+    audit_logs = (
+        in_process.session.query(AuditLog)
+        .filter(
+            AuditLog.transaction_id.in_(in_process.transactions_to_delete),
+            AuditLog.user_id == in_process.user.id,
+        )
+        .all()
+    )
+
+    for audit_log in audit_logs:
+        audit_log.transaction_id = None
+
+    return in_process
+
+
 def remove_plaid_transactions(in_process: InProcessJob) -> InProcessJob:
     if not in_process.transactions_to_delete:
         return in_process
@@ -531,6 +552,7 @@ def plaid_sync_pipe(in_process: InProcessJob) -> None:
             status=ProcessingState.parsing_transactions,
             additional_info="Checking for transaction removals",
         ),
+        reassociate_audit_logs,
         remove_plaid_transactions,
         lambda x: status_update_monad(
             x,
@@ -592,13 +614,14 @@ def deactivate_account(session: Session, user: User, account: PlaidAccount) -> N
     session.commit()
 
     deactivate_event = AccountDeactivatedEvent(account_name=account.name)
+    print("deactivating account")
     trigger_effects(session, user, deactivate_event)
 
 
 def deactivate_account_if_persistent_failure(
     user_session: Session, user: User, plaid_account: PlaidAccount
 ) -> None:
-    DEACTIVATION_THRESHOLD = 1000
+    DEACTIVATION_THRESHOLD = 3
 
     failure_count = (
         user_session.query(PlaidSyncLog)
@@ -610,6 +633,7 @@ def deactivate_account_if_persistent_failure(
         )
         .count()
     )
+    print(f"failure_count: {failure_count}")
 
     if failure_count > DEACTIVATION_THRESHOLD:
         deactivate_account(user_session, user, plaid_account)

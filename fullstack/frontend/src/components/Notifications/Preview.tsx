@@ -41,8 +41,6 @@ export function NotificationPreviewInner({
       return NoCodeService.previewNotification({
         template: formValues.template,
         subject: formValues.subject,
-        numTransactions: 3,
-        accountName: "Test Account",
       });
     },
     enabled: !!formValues.template && !!formValues.subject,

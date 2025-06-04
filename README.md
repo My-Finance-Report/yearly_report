@@ -27,48 +27,34 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 
-# User feedback / TODO
+# TODO
 
 big milestones before launch:
 
 -> Stripe
-  --> sort of exists but needs more work
+  --> sort of exists but we need a way to actually charge people
+
 -> Plaid
-  -> prune the logs table of sync events
-  -> webhooks setup
-  -> when accounts fail n times we should offboard them
-  -> consider a way to remove duplicates
--> Email
-  -> allow user to update preferences
-  -> welcome email only configured to send to me
+  -> prune the logs table of sync events (over 2mm events already, some sort of lifecycle)
+  -> have a way to activate / deactivate accounts from the accounts page
 
--> remove dups
+-> Notifications
+  -> link to this in the navbar
+  -> allow user to 'restore default notifications' and delete the defaults
+    --> run a seed script for every account (seed_effects.py)
+    --> the user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
+  -> emails only configured to send to me -- update to send to everyone
+  -> maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
 
--> parameters are getting confusing, how can i clean up the loop for each one?
-  -> widgets could be fully self contained and fetch itself (done)
-  --> page loads all of the widgets, and each has a fetch within it (done)
-  -> each parameter has a set of dependent widgets. when we change a parameter we need to know.
+-> Accounts View
+  ->  need a way to update categories on an account / recategorize transactions with the new accounts page (see /manage-accounts)
+  -> no code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
 
-  1. do i trigger a refetch?
-  2. who do i trigger a refetch for?
+ -> why are there no decimals at all on transactions..?
 
-  then when i am changed. if i dont trigger a refetch, i do nothing
-  if i do trigger a refetch, i have to call the refetch of all my dependencies
+-> delete saved filter doesnt work on /transactions
 
-  parameters:
-  +/- global, (knows its dependent widgets)
-  +/- triggers refetches
-
-  widgets:
-
-
-
--> why are there no decimals at all on transactios..?
--> acccount balance over time would be cool
-
--> delete saved filter doesnt work
-
--> get user delete to work on app
+-> get user delete to work on app (right now i just removed from the user page)
 --> make sure we remove plaid items so we dont get charged
 
 -> redirect everything to the main url
@@ -76,12 +62,63 @@ big milestones before launch:
 -> merge account function
 --> built backend but needs frontend
 
--> nice to have: search
+-> nice to have: search of transactions
 
 -> you cant remove a category once it is used
 --> doesnt rerun on category delete
 
 
+# Codestyle
 
--> would be nice to set a default on the dropdown
--> edit button the tables
+-> Prefer strong types and functional programming
+--> in general make bad states unrepresentable and add types to enforce this (of course easier said than done)
+--> strong types > tests
+
+-> for business logic lean toward composable "pipelines"
+--> pipelines can be easily traced and debugged 
+--> try to avoid conditional function calls within the pipeline, so that regardless of the inputs, the code path is the same
+
+-> RLS is a level of protection, but we don't treat it as unbreakable isolation
+--> with RLS `select * from transactions` should be the same as `select * from transactions where user_id = current_user_id`
+--> that said, we should prefer the redudency of not relying on RLS 
+
+-> Prefer explicit joins to ORM magic. 
+--> I generally don't add `relationship` to the models, and instead explicitly join when required. 
+--> I dont feel very strongly about this
+
+
+
+# Practical info
+-> bin/ has some useful commands
+
+-> bin/worker runs the worker
+-> bin/backend runs the server
+-> bin/frontend runs the frontend
+-> bin/db runs the db
+-> bin/check_for_deploy is linting / formatting
+-> bin/regen regenerates the frontend client from the API 
+
+-> to make a database migration you can often just update the model files and run:
+
+
+```bash
+cd fullstack/backend
+PYTHONPATH=$(pwd) alembic revision --autogenerate -m "$@"
+```
+
+-> you should check the generated migration and make sure it is correct, some things dont get auto updated like adding an enum value
+
+-> then run with:
+```bash
+cd fullstack/backend
+PYTHONPATH=$(pwd) alembic upgrade heads
+```
+
+-> if you add a new table, you have to grant RLS access. see alembic/helpers.py
+-> when you add a new api route you have to register it in app/api/main.py
+-> using the query client from tanstack is really nice. prefer to raw fetch calls
+
+
+
+
+
