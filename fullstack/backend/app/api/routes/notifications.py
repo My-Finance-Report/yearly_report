@@ -259,7 +259,8 @@ def get_effect_mappings(
         },
     )
 
-@router.put("/toggle-effect/{effect_id}", response_model=EffectOut )
+
+@router.put("/toggle-effect/{effect_id}", response_model=EffectOut)
 def togge_effect_activity(
     effect_id: int,
     is_active: bool,
@@ -300,7 +301,6 @@ def togge_effect_activity(
         condition=db_effect.condition,
         conditional_parameters=db_effect.conditional_parameters,
     )
-
 
 
 @router.put("/effects/{effect_id}", response_model=EffectOut)

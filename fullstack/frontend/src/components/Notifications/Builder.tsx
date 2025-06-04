@@ -7,7 +7,15 @@ import {
   TemplateEditor,
 } from "../ui/dumb/form/value";
 import { DumbFormSelect } from "../ui/dumb/form/select";
-import { Box, Button, HStack, Card, VStack, Badge, Switch } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Card,
+  VStack,
+  Badge,
+  Switch,
+} from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -203,7 +211,10 @@ export function CreateForm({
     <Card.Root minW="700px">
       <Card.Header>
         <Card.Title>{selectedEffect?.name}</Card.Title>
-        <ToggleActive selectedEffect={selectedEffect} setSelectedEffect={setSelectedEffect}/>
+        <ToggleActive
+          selectedEffect={selectedEffect}
+          setSelectedEffect={setSelectedEffect}
+        />
         {!selectedEffect?.editable && (
           <Badge colorPalette="yellow" size="md">
             This notification is not editable. You can turn it on or off.
@@ -301,18 +312,16 @@ export function CreateForm({
   );
 }
 
- 
-
 function ToggleActive({
   selectedEffect,
   setSelectedEffect,
 }: {
-    selectedEffect: EffectOut;
-    setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+  selectedEffect: EffectOut;
+  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }) {
-    const queryClient = useQueryClient();
-    const showToast = useCustomToast();
-    
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+
   const mutation = useMutation({
     mutationFn: () => {
       if (!selectedEffect.id) {
@@ -338,27 +347,33 @@ function ToggleActive({
     onError: (error) => {
       showToast("Error updating notification", error.message, "error");
     },
-  })
-
+  });
 
   return (
-    <Badge flex={'row'} justifyContent={'space-between'} size="md" p={5} colorPalette={selectedEffect.active ? "green" : "red"}>{selectedEffect.active ? "Active" : "Inactive"}
-    <Switch.Root
-    variant="solid"
-    size="lg"
-    checked={selectedEffect.active}
-    onCheckedChange={() => mutation.mutate()}
-  >
-    <Switch.HiddenInput />
-    <Switch.Control>
-      <Switch.Thumb>
-        <Switch.ThumbIndicator fallback={<HiX color="black" />}>
-          <HiCheck />
-        </Switch.ThumbIndicator>
-      </Switch.Thumb>
-    </Switch.Control>
-    <Switch.Label />
-  </Switch.Root>
-</Badge>
-  )
+    <Badge
+      flex={"row"}
+      justifyContent={"space-between"}
+      size="md"
+      p={5}
+      colorPalette={selectedEffect.active ? "green" : "red"}
+    >
+      {selectedEffect.active ? "Active" : "Inactive"}
+      <Switch.Root
+        variant="solid"
+        size="lg"
+        checked={selectedEffect.active}
+        onCheckedChange={() => mutation.mutate()}
+      >
+        <Switch.HiddenInput />
+        <Switch.Control>
+          <Switch.Thumb>
+            <Switch.ThumbIndicator fallback={<HiX color="black" />}>
+              <HiCheck />
+            </Switch.ThumbIndicator>
+          </Switch.Thumb>
+        </Switch.Control>
+        <Switch.Label />
+      </Switch.Root>
+    </Badge>
+  );
 }
