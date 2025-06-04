@@ -1,18 +1,25 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import { getCurrentUser } from "../../hooks/useAuth";
+import { Outlet, createFileRoute, useRouter } from "@tanstack/react-router";
+import { useUser } from "@/contexts/UserContext";
+import { useEffect } from "react";
+import { Spinner } from "@chakra-ui/react";
+
+
 
 export const Route = createFileRoute("/_layout/_logged_in")({
   component: Layout,
-  beforeLoad: async () => {
-    const user = await getCurrentUser();
-    if (!user) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-  },
 });
 
 function Layout() {
+  const user = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user === null) {
+      router.navigate({ to: "/login" });
+    }
+  }, [user]);
+
+  if (user === null) return <Spinner />;
   return <Outlet />;
+
 }
