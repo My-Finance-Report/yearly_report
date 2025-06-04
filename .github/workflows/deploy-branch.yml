@@ -83,7 +83,7 @@ jobs:
         echo $(pwd)
         ls -a
         echo "---"
-        cd ${REMOTE_DIR}
+        cd code/finance_app
         echo $(pwd)
         ls -a
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
