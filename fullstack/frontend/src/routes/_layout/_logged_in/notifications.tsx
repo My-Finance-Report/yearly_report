@@ -48,6 +48,7 @@ function UnifiedNotificationInterface() {
               effectMappings={effectMappings}
               selectedEffect={selectedEffect}
               setFormValues={setFormValues}
+              setSelectedEffect={setSelectedEffect}
             />
           </Box>
         )}

@@ -7,7 +7,7 @@ import {
   TemplateEditor,
 } from "../ui/dumb/form/value";
 import { DumbFormSelect } from "../ui/dumb/form/select";
-import { Box, Button, HStack, Card, VStack } from "@chakra-ui/react";
+import { Box, Button, HStack, Card, VStack, Badge, Switch } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -21,6 +21,7 @@ import {
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useForm } from "react-hook-form";
+import { HiCheck, HiX } from "react-icons/hi";
 
 export interface NotificationFormValues {
   id?: number;
@@ -39,6 +40,7 @@ interface CreateFormProps {
   selectedEffect: EffectOut;
   setFormValues: (values: NotificationFormValues) => void;
   effectMappings: EffectMappings;
+  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
 
 function determineConditionsForEventType(
@@ -58,6 +60,7 @@ export function CreateForm({
   selectedEffect,
   setFormValues,
   effectMappings,
+  setSelectedEffect,
 }: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
@@ -82,6 +85,7 @@ export function CreateForm({
     if (selectedEffect) {
       form.reset({
         name: selectedEffect.name,
+        active: selectedEffect.active,
         template: selectedEffect.config.template,
         subject: selectedEffect.config.subject,
         effect_type: selectedEffect.effect_type,
@@ -128,13 +132,9 @@ export function CreateForm({
       data: NotificationFormValues;
       id: number;
     }) => {
-      if (!selectedEffect.editable) {
-        throw new Error("Effect is not editable");
-      }
       const body: EffectUpdate = {
         name: data.name,
         effect_type: data.effect_type,
-        active: data.active,
         event_type: data.event_type,
         frequency_days: data.frequency_days,
         template: data.template,
@@ -201,6 +201,15 @@ export function CreateForm({
 
   return (
     <Card.Root minW="700px">
+      <Card.Header>
+        <Card.Title>{selectedEffect?.name}</Card.Title>
+        <ToggleActive selectedEffect={selectedEffect} setSelectedEffect={setSelectedEffect}/>
+        {!selectedEffect?.editable && (
+          <Badge colorPalette="yellow" size="md">
+            This notification is not editable. You can turn it on or off.
+          </Badge>
+        )}
+      </Card.Header>
       <Card.Body>
         <Box onSubmit={onSubmit} as="form">
           <VStack spaceY={4} align="stretch">
@@ -290,4 +299,66 @@ export function CreateForm({
       </Card.Body>
     </Card.Root>
   );
+}
+
+ 
+
+function ToggleActive({
+  selectedEffect,
+  setSelectedEffect,
+}: {
+    selectedEffect: EffectOut;
+    setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+}) {
+    const queryClient = useQueryClient();
+    const showToast = useCustomToast();
+    
+  const mutation = useMutation({
+    mutationFn: () => {
+      if (!selectedEffect.id) {
+        throw new Error("Effect ID is required");
+      }
+      return NoCodeService.toggeEffectActivity({
+        effectId: selectedEffect.id,
+        isActive: !selectedEffect.active,
+      });
+    },
+    onSuccess: () => {
+      showToast(
+        "Notification updated",
+        "Notification updated successfully.",
+        "success",
+      );
+      setSelectedEffect({
+        ...selectedEffect,
+        active: !selectedEffect.active,
+      });
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast("Error updating notification", error.message, "error");
+    },
+  })
+
+
+  return (
+    <Badge flex={'row'} justifyContent={'space-between'} size="md" p={5} colorPalette={selectedEffect.active ? "green" : "red"}>{selectedEffect.active ? "Active" : "Inactive"}
+    <Switch.Root
+    variant="solid"
+    size="lg"
+    checked={selectedEffect.active}
+    onCheckedChange={() => mutation.mutate()}
+  >
+    <Switch.HiddenInput />
+    <Switch.Control>
+      <Switch.Thumb>
+        <Switch.ThumbIndicator fallback={<HiX color="black" />}>
+          <HiCheck />
+        </Switch.ThumbIndicator>
+      </Switch.Thumb>
+    </Switch.Control>
+    <Switch.Label />
+  </Switch.Root>
+</Badge>
+  )
 }

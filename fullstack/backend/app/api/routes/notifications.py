@@ -51,7 +51,6 @@ class EffectUpdate(BaseModel):
     name: str
     effect_type: EffectType
     event_type: EventType
-    active: bool
     frequency_days: int
     template: str
     subject: str
@@ -260,6 +259,49 @@ def get_effect_mappings(
         },
     )
 
+@router.put("/toggle-effect/{effect_id}", response_model=EffectOut )
+def togge_effect_activity(
+    effect_id: int,
+    is_active: bool,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> EffectOut:
+    """Update an existing notification effect"""
+    # Find the effect
+    db_effect = (
+        session.query(EffectModel)
+        .filter(EffectModel.id == effect_id, EffectModel.user_id == user.id)
+        .first()
+    )
+
+    if not db_effect:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notification effect not found",
+        )
+
+    db_effect.active = is_active
+    session.commit()
+    session.refresh(db_effect)
+
+    # Return the updated effect
+    return EffectOut(
+        id=db_effect.id,
+        name=db_effect.name,
+        effect_type=db_effect.effect_type,
+        active=db_effect.active,
+        editable=db_effect.editable,
+        event_type=db_effect.event_type,
+        config=EffectConfig(
+            frequency_days=db_effect.frequency_days,
+            template=db_effect.template,
+            subject=db_effect.subject,
+        ),
+        condition=db_effect.condition,
+        conditional_parameters=db_effect.conditional_parameters,
+    )
+
+
 
 @router.put("/effects/{effect_id}", response_model=EffectOut)
 def update_effect(
@@ -276,15 +318,20 @@ def update_effect(
         .first()
     )
 
-    if not db_effect or not db_effect.editable:
+    if not db_effect:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification effect not found",
         )
 
+    if not db_effect.editable:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Notification effect is not editable",
+        )
+
     db_effect.name = effect_data.name
     db_effect.effect_type = effect_data.effect_type
-    db_effect.active = effect_data.active
     db_effect.event_type = effect_data.event_type
     db_effect.frequency_days = effect_data.frequency_days
     db_effect.template = effect_data.template
