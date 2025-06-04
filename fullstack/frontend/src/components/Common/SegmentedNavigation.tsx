@@ -40,10 +40,12 @@ import {
 } from "react-icons/fi";
 import { LuEllipsis } from "react-icons/lu";
 import { CollapsibleWorkerStatus } from "./WorkerStatus";
+import { FaPiggyBank } from "react-icons/fa";
 
 const navigationItems = [
   { value: "/transactions", label: "Transaction Explorer", icon: FiList },
   { value: "/accounts", label: "Account Explorer", icon: FiBriefcase },
+  { value: "/manage-accounts", label: "Manage Accounts", icon: FaPiggyBank },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
   { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
