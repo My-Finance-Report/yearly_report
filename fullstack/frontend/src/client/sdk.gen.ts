@@ -87,6 +87,10 @@ import type {
   PlaidExchangeTokenData,
   PlaidExchangeTokenResponse,
   PlaidGetPlaidAccountsResponse,
+  PosGetShopData,
+  PosGetShopResponse,
+  PosCreateGuestOrderData,
+  PosCreateGuestOrderResponse,
   PosGetMenuResponse,
   PosCreateOrUpdateMenuItemData,
   PosCreateOrUpdateMenuItemResponse,
@@ -1181,6 +1185,49 @@ export class PlaidService {
 }
 
 export class PosService {
+  /**
+   * Get Shop
+   * @param data The data for the request.
+   * @param data.slug
+   * @returns ShopOut Successful Response
+   * @throws ApiError
+   */
+  public static getShop(
+    data: PosGetShopData,
+  ): CancelablePromise<PosGetShopResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/pos/shop/{slug}",
+      path: {
+        slug: data.slug,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Create Guest Order
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns OrderBase_Output Successful Response
+   * @throws ApiError
+   */
+  public static createGuestOrder(
+    data: PosCreateGuestOrderData,
+  ): CancelablePromise<PosCreateGuestOrderResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/pos/guest-order",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
   /**
    * Get Menu
    * Get all menu items (orderables) with their variant groups and variants

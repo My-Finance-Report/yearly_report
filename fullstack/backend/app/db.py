@@ -154,6 +154,14 @@ def get_current_active_superuser(
     return current_user
 
 
+def get_guest_db() -> Generator[Session, Any, None]:
+    db = session_maker()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def get_db(user: User = Depends(get_current_user)) -> Generator[Session, Any, None]:
     """Returns a database session and sets the user ID for RLS policies."""
     db = session_maker()
