@@ -2,6 +2,7 @@
 
 set -e
 
+bin/regen
 bin/blint
 #bin/btest
 bin/flint
