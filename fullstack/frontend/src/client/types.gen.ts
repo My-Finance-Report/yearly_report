@@ -100,6 +100,7 @@ export type BudgetEntryStatus = {
     [key: string]: BudgetCategoryLinkStatus;
   };
   total: string;
+  target: string;
 };
 
 export type BudgetStatus = {
