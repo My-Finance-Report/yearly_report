@@ -6,14 +6,7 @@ import {
   TemplateEditor,
 } from "../ui/dumb/form/value";
 import { DumbFormSelect } from "../ui/dumb/form/select";
-import {
-  Box,
-  Button,
-  Stack,
-  Badge,
-  Switch,
-  Card,
-} from "@chakra-ui/react";
+import { Box, Button, Stack, Badge, Switch, Card } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -165,7 +158,7 @@ export function CreateForm({
   });
 
   return (
-    <Card.Root w="full" minW={{ base: "full", md: "600px" }} maxW="900px">
+    <Card.Root w="full" minW={{ base: "full"}} maxW="900px">
       <Card.Header>
         <Stack
           direction={{ base: "column", sm: "row" }}
