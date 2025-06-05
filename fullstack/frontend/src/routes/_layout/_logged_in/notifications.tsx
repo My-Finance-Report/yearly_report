@@ -59,7 +59,6 @@ function UnifiedNotificationInterface() {
     }
   }, [selectedEffect, form]);
 
-
   const { data: effectMappings } = useQuery({
     queryKey: ["effect_mappings"],
     queryFn: () => NoCodeService.getEffectMappings(),
@@ -73,16 +72,16 @@ function UnifiedNotificationInterface() {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={8}>
       <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
-    <Box>
-      <DumbSelect
-        selectedOption={selectedEffect}
-        setSelectedOption={setSelectedEffect}
-        labelExtractor={(effect) => effect.name}
-        keyExtractor={(effect) => effect.id.toString()}
-        options={effects || []}
-        label="Select Notification"
-      />
-    </Box>
+        <Box>
+          <DumbSelect
+            selectedOption={selectedEffect}
+            setSelectedOption={setSelectedEffect}
+            labelExtractor={(effect) => effect.name}
+            keyExtractor={(effect) => effect.id.toString()}
+            options={effects || []}
+            label="Select Notification"
+          />
+        </Box>
         <NewNotificationButton
           setSelectedEffect={setSelectedEffect}
           resetForm={() => form.reset()}

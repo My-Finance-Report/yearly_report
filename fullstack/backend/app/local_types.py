@@ -409,7 +409,7 @@ class WorkerStatusOut(BaseModel):
 
 
 class EffectOut(BaseModel):
-    id: int 
+    id: int
     name: str
     effect_type: EffectType
     event_type: EventType

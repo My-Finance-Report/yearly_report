@@ -82,11 +82,10 @@ export function CreateForm({
 }: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
-  
+
   const {
     register,
     handleSubmit,
-    reset,
     control,
     formState: { errors, isSubmitting, isDirty },
   } = form;
