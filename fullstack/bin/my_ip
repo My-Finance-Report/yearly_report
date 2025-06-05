@@ -5,7 +5,7 @@ PORT=22
 AWS_PROFILE="personal"
 AWS_REGION="us-east-2"
 
-IP=$(curl -s https://icanhazip.com)
+IP=$(curl -4 https://icanhazip.com)
 
 CIDR="$IP/32"
 
