@@ -30,32 +30,14 @@ function UnifiedNotificationInterface() {
   const form = useForm<NotificationFormValues>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
-      name: selectedEffect?.name,
-      template: selectedEffect?.config.template,
-      active: selectedEffect?.active,
-      subject: selectedEffect?.config.subject,
-      effect_type: selectedEffect?.effect_type,
-      event_type: selectedEffect?.event_type,
-      frequency_days: selectedEffect?.config.frequency_days,
-      condition: selectedEffect?.condition,
-      conditional_parameters: selectedEffect?.conditional_parameters,
-    },
+    defaultValues: selectedEffect
+      ? selectedEffectToFormValues(selectedEffect)
+      : undefined,
   });
 
   useEffect(() => {
     if (selectedEffect) {
-      form.reset({
-        name: selectedEffect.name,
-        active: selectedEffect.active,
-        template: selectedEffect.config.template,
-        subject: selectedEffect.config.subject,
-        effect_type: selectedEffect.effect_type,
-        event_type: selectedEffect.event_type,
-        frequency_days: selectedEffect.config.frequency_days,
-        condition: selectedEffect.condition,
-        conditional_parameters: selectedEffect.conditional_parameters,
-      });
+      form.reset(selectedEffectToFormValues(selectedEffect));
     }
   }, [selectedEffect, form]);
 
@@ -71,7 +53,7 @@ function UnifiedNotificationInterface() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={8}>
+    <Box display="flex" flexDirection="column" alignItems="flex-start" gap={8}>
       <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
         <Box>
           <DumbSelect
@@ -147,4 +129,18 @@ function NewNotificationButton({
       New Notification
     </Button>
   );
+}
+
+function selectedEffectToFormValues(selectedEffect: EffectOut) {
+  return {
+    name: selectedEffect.name,
+    active: selectedEffect.active,
+    template: selectedEffect.config.template,
+    subject: selectedEffect.config.subject,
+    effect_type: selectedEffect.effect_type,
+    event_type: selectedEffect.event_type,
+    frequency_days: selectedEffect.config.frequency_days,
+    condition: selectedEffect.condition,
+    conditional_parameters: selectedEffect.conditional_parameters,
+  };
 }

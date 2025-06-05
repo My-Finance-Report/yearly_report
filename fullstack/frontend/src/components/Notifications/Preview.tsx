@@ -11,7 +11,7 @@ interface NotificationPreviewProps {
 
 export function NotificationPreview({ form }: NotificationPreviewProps) {
   const [formValues, setFormValues] = useState<NotificationFormValues>(
-    form.getValues()
+    form.getValues(),
   );
 
   form.watch((values) => {
