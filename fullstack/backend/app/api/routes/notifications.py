@@ -91,8 +91,14 @@ class NotificationPreviewResponse(BaseModel):
     html: str
     subject: str
 
+
 # TODO express the types without this union somehow
-AnyEvent = NewTransactionsEvent | NewAccountLinkedEvent | AccountDeactivatedEvent | BudgetThresholdExceededEvent
+AnyEvent = (
+    NewTransactionsEvent
+    | NewAccountLinkedEvent
+    | AccountDeactivatedEvent
+    | BudgetThresholdExceededEvent
+)
 
 
 def get_sample_event(event_type: EventType) -> AnyEvent:
@@ -256,13 +262,27 @@ def get_effect_mappings(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> EffectMappings:
-    
     return EffectMappings(
         variables={
-            EventType.NEW_TRANSACTION: ['transactions_table','count', 'account_name', 'alter_settings',],
-            EventType.NEW_ACCOUNT_LINKED: ['account_name', 'alter_settings',],
-            EventType.ACCOUNT_DEACTIVATED: ['account_name', 'alter_settings',],
-            EventType.BUDGET_THRESHOLD_EXCEEDED: ['transactions_table', 'budget_table', 'alter_settings',],
+            EventType.NEW_TRANSACTION: [
+                "transactions_table",
+                "count",
+                "account_name",
+                "alter_settings",
+            ],
+            EventType.NEW_ACCOUNT_LINKED: [
+                "account_name",
+                "alter_settings",
+            ],
+            EventType.ACCOUNT_DEACTIVATED: [
+                "account_name",
+                "alter_settings",
+            ],
+            EventType.BUDGET_THRESHOLD_EXCEEDED: [
+                "transactions_table",
+                "budget_table",
+                "alter_settings",
+            ],
         },
         allowed_conditional_parameters={
             EventType.NEW_TRANSACTION: [

@@ -24,7 +24,6 @@ from app.models.user import User
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 
 
-
 @router.get("/{budget_id}/entries", response_model=list[BudgetEntryOut])
 def get_budget_entries(
     budget_id: int,
@@ -112,7 +111,6 @@ def create_budget_entry(
         id=new_entry.id,
         category_links=links_out,
     )
-
 
 
 @router.put("/entry/{entry_id}", response_model=BudgetEntryOut)
@@ -286,11 +284,9 @@ def delete_budget_category(
     return None
 
 
-
 @router.get("/budget_status", response_model=BudgetStatus)
 def get_budget_status(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> BudgetStatus:
     return build_budget_status(session=session, user=user)
-

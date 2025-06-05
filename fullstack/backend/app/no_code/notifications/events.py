@@ -8,14 +8,16 @@ from app.models.effect import EventType
 Row = NewType("Row", str)
 Table = NewType("Table", str)
 
-def generate_budget_row(budget_entry: NoCodeBudgetEntry) -> Row:
-    return generate_row([
-        budget_entry.category_name,
-        f"${budget_entry.target:.2f}",
-        f"${budget_entry.current:.2f}",
-        f"{budget_entry.current / budget_entry.target * 100:.0f}%",
-    ])
 
+def generate_budget_row(budget_entry: NoCodeBudgetEntry) -> Row:
+    return generate_row(
+        [
+            budget_entry.category_name,
+            f"${budget_entry.target:.2f}",
+            f"${budget_entry.current:.2f}",
+            f"{budget_entry.current / budget_entry.target * 100:.0f}%",
+        ]
+    )
 
 
 def generate_transaction_row(transaction: NoCodeTransaction) -> Row:
@@ -31,15 +33,17 @@ def generate_transaction_row(transaction: NoCodeTransaction) -> Row:
     if len(formatted_desc) > 10:
         formatted_desc = formatted_desc[:10] + "..."
 
-    return generate_row([
-        date_str,
-        formatted_desc,
-        transaction.category_name or "Uncategorized",
-        amount_str,
-    ])
+    return generate_row(
+        [
+            date_str,
+            formatted_desc,
+            transaction.category_name or "Uncategorized",
+            amount_str,
+        ]
+    )
 
 
-def generate_table(headers: list[str], rows: list[Row], suffix: str)->Table:
+def generate_table(headers: list[str], rows: list[Row], suffix: str) -> Table:
     return Table(f"""<table>
         <thead>
             <tr>
@@ -53,7 +57,7 @@ def generate_table(headers: list[str], rows: list[Row], suffix: str)->Table:
     </table>""")
 
 
-def generate_row(entries:list[str])->Row:
+def generate_row(entries: list[str]) -> Row:
     return Row(f"""<tr>
         {"".join(f"<td>{entry}</td>" for entry in entries)}
     </tr>""")
@@ -114,9 +118,8 @@ class BudgetThresholdExceededEvent(Event):
     transactions: list[NoCodeTransaction]
     budget_entries: list[NoCodeBudgetEntry]
 
-
     @property
-    def budget_table(self)->Table:
+    def budget_table(self) -> Table:
         budget_entries = self.budget_entries
         budget_entries_to_show = budget_entries[:5]
         has_more = len(budget_entries) > 5
@@ -133,5 +136,3 @@ class BudgetThresholdExceededEvent(Event):
             rows=rows,
             suffix=more_text,
         )
-        
-    

@@ -19,6 +19,7 @@ from app.models.user import User
 from app.models.category import Category, CategoryId
 from app.models.transaction_source import TransactionSource
 
+
 def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
     categories = (
         session.query(Category, TransactionSource)
@@ -30,7 +31,6 @@ def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, s
         category.id: f"{category.name} ({source.name})"
         for category, source in categories
     }
-
 
 
 def group_transactions_by_month(
@@ -45,14 +45,11 @@ def group_transactions_by_month(
     return dict(grouped_transactions)
 
 
-
-
 def create_budget(session: Session, user: User) -> Budget:
     new_budget = Budget(name="Budget", user_id=user.id, active=True)
     session.add(new_budget)
     session.commit()
     return new_budget
-
 
 
 def build_budget_out(session: Session, user: User) -> BudgetOut:
@@ -111,8 +108,6 @@ def build_budget_out(session: Session, user: User) -> BudgetOut:
         name=budget.name,
         entries=entries_out,
     )
-
-
 
 
 def build_budget_status(
@@ -174,5 +169,3 @@ def build_budget_status(
         entry_status=entry_statuses,
         months_with_entries=list(months_with_entries),
     )
-
-

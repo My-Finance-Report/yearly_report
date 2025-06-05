@@ -63,7 +63,7 @@ function determineConditionsForEventType(
   if (eventType === "budget_threshold_exceeded") {
     return ["amount_over"];
   }
- return [];
+  return [];
 }
 
 function supportsFrequency(eventType: EventType) {
@@ -86,7 +86,7 @@ export function CreateForm({
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
-  console.log(effectMappings)
+  console.log(effectMappings);
 
   const updateMutation = useMutation({
     mutationFn: ({

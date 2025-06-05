@@ -14,14 +14,16 @@ from app.schemas.no_code import NoCodeBudgetEntry
 
 def amount_over(event: Event, conditions: ConditionalParameters) -> bool:
     amount = not_none(conditions.amount)
-    
+
     match event:
         case NewTransactionsEvent():
             return event.transactions[-1].amount > amount
         case BudgetThresholdExceededEvent():
+
             def amount_over(entry: NoCodeBudgetEntry) -> bool:
                 current_percent = entry.current / entry.target
                 return current_percent > amount
+
             return any(amount_over(entry) for entry in event.budget_entries)
         case _:
             return False

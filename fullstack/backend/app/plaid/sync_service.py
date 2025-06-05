@@ -421,19 +421,18 @@ def trigger_budget_effect(in_process: InProcessJob) -> None:
         for t in in_process.categorized_transactions
     ]
 
-
     budget_status = build_budget_status(in_process.session, in_process.user)
 
     budget_entries = []
     for budget_entry_status in budget_status.entry_status:
-            budget_entries.append(
-                NoCodeBudgetEntry(
-                    id=-1,
-                    category_name=budget_entry_status.name,
-                    target=float(budget_entry_status.amount),
-                    current=float(budget_entry_status.total),
-                )
+        budget_entries.append(
+            NoCodeBudgetEntry(
+                id=-1,
+                category_name=budget_entry_status.name,
+                target=float(budget_entry_status.amount),
+                current=float(budget_entry_status.total),
             )
+        )
 
     trigger_effects(
         in_process.session,

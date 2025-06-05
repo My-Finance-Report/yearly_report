@@ -228,7 +228,9 @@ class BudgetOut(BudgetBase):
     id: BudgetId
     entries: list[BudgetEntryOut]
 
+
 Month = NewType("Month", str)
+
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
