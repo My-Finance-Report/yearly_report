@@ -46,6 +46,10 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 * **Accounts View**
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
+  * Weird initial loading state
+  * Some mobile treatment
+  * Some of the queries are quite slow
+    * Maybe be able to batch the initial load
 
 * **POS**
   * Add ability for a guest to order (WIP)
@@ -61,6 +65,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Make sure we remove plaid items so we don't get charged
 
 * Redirect everything to the main url
+* Fix 2fa
 
 * Merge account function
   * Built backend but needs frontend

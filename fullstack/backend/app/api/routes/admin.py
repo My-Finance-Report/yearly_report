@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import session
-from app.db import Session, get_current_active_superuser, get_db
+from app.db import Session, get_current_active_superuser, get_db, get_db_for_user
 from app.models.user import User
 from app.seed.accounts_page import delete_account_page, seed_account_page
 from app.seed.effects import (
@@ -67,8 +66,14 @@ def reseed_all_notifications(
     )
 
     for user in session.query(User).all():
+        user_specific_session = next(get_db_for_user(user.id))
         try:
-            seed_func(session, user)
+            seed_func(user_specific_session, user)
+            user_specific_session.commit()
         except Exception as e:
             print(f"❌ Failed to seed effects for user {user.id}: {e}")
+            user_specific_session.rollback()
+        finally:
+            user_specific_session.close()
+
     return {"status": "success"}

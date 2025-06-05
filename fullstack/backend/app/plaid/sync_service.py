@@ -20,6 +20,7 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
     Recategorization,
     TransactionsWrapper,
 )
+from app.budgets.check_budget import build_budget_status
 from app.func_utils import not_none, pipe
 from app.models.audit_log import AuditLog
 from app.models.category import Category
@@ -37,13 +38,14 @@ from app.models.worker_status import ProcessingState
 
 from app.no_code.notifications.events import (
     AccountDeactivatedEvent,
+    BudgetThresholdExceededEvent,
     NewTransactionsEvent,
 )
 from app.no_code.notifications.trigger import (
     trigger_effects,
 )
 from app.plaid.client import get_plaid_client
-from app.schemas.no_code import NoCodeTransaction
+from app.schemas.no_code import NoCodeTransaction, NoCodeBudgetEntry
 from app.telegram_utils import send_telegram_message
 from app.worker.status import status_update_monad, update_worker_status
 
@@ -365,7 +367,7 @@ def insert_categorized_plaid_transactions(in_process: InProcessJob) -> InProcess
     )
 
 
-def trigger_the_effects(in_process: InProcessJob) -> None:
+def trigger_new_transaction_effect(in_process: InProcessJob) -> InProcessJob:
     assert not_none(in_process.categorized_transactions)
     assert not_none(in_process.transaction_source)
     no_code_transactions = [
@@ -392,6 +394,52 @@ def trigger_the_effects(in_process: InProcessJob) -> None:
             transactions=no_code_transactions,
             account_name=in_process.transaction_source.name,
             count=len(no_code_transactions),
+        ),
+    )
+
+    return in_process
+
+
+def trigger_budget_effect(in_process: InProcessJob) -> None:
+    assert not_none(in_process.categorized_transactions)
+    assert not_none(in_process.transaction_source)
+    no_code_transactions = [
+        NoCodeTransaction(
+            id=-1,
+            category_id=-1,
+            account_name=in_process.transaction_source.name,
+            amount=t.partialTransactionAmount,
+            description=t.partialTransactionDescription,
+            date_of_transaction=datetime.strptime(
+                t.partialTransactionDateOfTransaction, "%m/%d/%Y"
+            ),
+            kind=TransactionKind.deposit
+            if t.partialTransactionKind == "deposit"
+            else TransactionKind.withdrawal,
+            category_name=t.category,
+        )
+        for t in in_process.categorized_transactions
+    ]
+
+    budget_status = build_budget_status(in_process.session, in_process.user)
+
+    budget_entries = []
+    for budget_entry_status in budget_status.entry_status:
+        budget_entries.append(
+            NoCodeBudgetEntry(
+                id=-1,
+                category_name=budget_entry_status.name,
+                target=float(budget_entry_status.amount),
+                current=float(budget_entry_status.total),
+            )
+        )
+
+    trigger_effects(
+        in_process.session,
+        in_process.user,
+        BudgetThresholdExceededEvent(
+            transactions=no_code_transactions,
+            budget_entries=budget_entries,
         ),
     )
 
@@ -579,7 +627,8 @@ def plaid_sync_pipe(in_process: InProcessJob) -> None:
             additional_info="Writing batching to database",
         ),
         insert_categorized_plaid_transactions,
-        final=trigger_the_effects,
+        trigger_new_transaction_effect,
+        final=trigger_budget_effect,
     )
 
 

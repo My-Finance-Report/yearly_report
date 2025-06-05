@@ -100,6 +100,7 @@ export type BudgetEntryStatus = {
     [key: string]: BudgetCategoryLinkStatus;
   };
   total: string;
+  target: string;
 };
 
 export type BudgetStatus = {
@@ -244,7 +245,8 @@ export type Enable2FAResponse = {
 export type EventType =
   | "new_transaction"
   | "new_account_linked"
-  | "account_deactivated";
+  | "account_deactivated"
+  | "budget_threshold_exceeded";
 
 export type FilterData_Input = {
   lookup?: {
@@ -571,6 +573,13 @@ export type PriceDetails = {
   interval: string;
   tier: SubscriptionTier;
   max_sources: number;
+};
+
+export type PrivateUserCreate = {
+  email: string;
+  password: string;
+  full_name: string;
+  is_verified?: boolean;
 };
 
 export type ProcessFileJobOut = {
@@ -1248,6 +1257,19 @@ export type PosGetOrdersData = {
 };
 
 export type PosGetOrdersResponse = Array<OrderBase_Output>;
+
+export type PrivateCreateUserData = {
+  requestBody: PrivateUserCreate;
+};
+
+export type PrivateCreateUserResponse = UserOut;
+
+export type PrivateGoogleCallbackLocalData = {
+  code: string;
+  error?: string | null;
+};
+
+export type PrivateGoogleCallbackLocalResponse = unknown;
 
 export type SankeyGetSankeyDataResponse = SankeyData;
 

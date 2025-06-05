@@ -17,11 +17,12 @@ from app.models.transaction import TransactionKind
 from app.no_code.notifications.effects import EffectConfig, Effect
 from app.no_code.notifications.events import (
     AccountDeactivatedEvent,
+    BudgetThresholdExceededEvent,
     NewAccountLinkedEvent,
     NewTransactionsEvent,
 )
 from app.no_code.notifications.trigger import perform_template_replacement
-from app.schemas.no_code import NoCodeTransaction
+from app.schemas.no_code import NoCodeBudgetEntry, NoCodeTransaction
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/notification", tags=["no_code"])
@@ -91,35 +92,40 @@ class NotificationPreviewResponse(BaseModel):
     subject: str
 
 
-AnyEvent = NewTransactionsEvent | NewAccountLinkedEvent | AccountDeactivatedEvent
+# TODO express the types without this union somehow
+AnyEvent = (
+    NewTransactionsEvent
+    | NewAccountLinkedEvent
+    | AccountDeactivatedEvent
+    | BudgetThresholdExceededEvent
+)
 
 
 def get_sample_event(event_type: EventType) -> AnyEvent:
     num_transactions = 3
     account_name = "Demo Account"
-    if event_type == EventType.NEW_TRANSACTION:
-        sample_transactions = []
-        for i in range(num_transactions):
-            # Create varied transaction amounts
-            amount = 100 * (i + 1)
-            # Alternate between withdrawals and deposits
-            kind = TransactionKind.withdrawal if i % 2 == 0 else TransactionKind.deposit
-            # Create transactions on different days
-            date = datetime.now() - timedelta(days=i)
+    sample_transactions = []
+    for i in range(num_transactions):
+        # Create varied transaction amounts
+        amount = 100 * (i + 1)
+        # Alternate between withdrawals and deposits
+        kind = TransactionKind.withdrawal if i % 2 == 0 else TransactionKind.deposit
+        # Create transactions on different days
+        date = datetime.now() - timedelta(days=i)
 
-            sample_transactions.append(
-                NoCodeTransaction(
-                    id=i,
-                    category_id=i,
-                    amount=amount,
-                    date_of_transaction=date,
-                    description=f"Sample Transaction {i + 1}",
-                    kind=kind,
-                    category_name=f"Category {(i % 3) + 1}",
-                    account_name=account_name,
-                )
+        sample_transactions.append(
+            NoCodeTransaction(
+                id=i,
+                category_id=i,
+                amount=amount,
+                date_of_transaction=date,
+                description=f"Sample Transaction {i + 1}",
+                kind=kind,
+                category_name=f"Category {(i % 3) + 1}",
+                account_name=account_name,
             )
-
+        )
+    if event_type == EventType.NEW_TRANSACTION:
         return NewTransactionsEvent(
             type=EventType.NEW_TRANSACTION,
             transactions=sample_transactions,
@@ -130,6 +136,19 @@ def get_sample_event(event_type: EventType) -> AnyEvent:
         return NewAccountLinkedEvent(
             type=EventType.NEW_ACCOUNT_LINKED,
             account_name=account_name,
+        )
+    elif event_type == EventType.BUDGET_THRESHOLD_EXCEEDED:
+        return BudgetThresholdExceededEvent(
+            type=EventType.BUDGET_THRESHOLD_EXCEEDED,
+            transactions=sample_transactions,
+            budget_entries=[
+                NoCodeBudgetEntry(
+                    id=-1,
+                    category_name="Category 1",
+                    target=100,
+                    current=200,
+                )
+            ],
         )
     elif event_type == EventType.ACCOUNT_DEACTIVATED:
         return AccountDeactivatedEvent(
@@ -145,6 +164,8 @@ def get_sample_conditional_parameters(event_type: EventType) -> ConditionalParam
         return ConditionalParameters()
     elif event_type == EventType.ACCOUNT_DEACTIVATED:
         return ConditionalParameters()
+    elif event_type == EventType.BUDGET_THRESHOLD_EXCEEDED:
+        return ConditionalParameters(amount=100)
 
 
 def get_sample_condition(event_type: EventType) -> EffectConditionals:
@@ -154,6 +175,8 @@ def get_sample_condition(event_type: EventType) -> EffectConditionals:
         return EffectConditionals.UNCONDITIONAL
     elif event_type == EventType.ACCOUNT_DEACTIVATED:
         return EffectConditionals.UNCONDITIONAL
+    elif event_type == EventType.BUDGET_THRESHOLD_EXCEEDED:
+        return EffectConditionals.AMOUNT_OVER
 
 
 @router.get("/preview", response_model=Email)
@@ -242,13 +265,24 @@ def get_effect_mappings(
     return EffectMappings(
         variables={
             EventType.NEW_TRANSACTION: [
-                "account_name",
                 "transactions_table",
                 "count",
+                "account_name",
                 "alter_settings",
             ],
-            EventType.NEW_ACCOUNT_LINKED: ["account_name", "alter_settings"],
-            EventType.ACCOUNT_DEACTIVATED: ["account_name", "alter_settings"],
+            EventType.NEW_ACCOUNT_LINKED: [
+                "account_name",
+                "alter_settings",
+            ],
+            EventType.ACCOUNT_DEACTIVATED: [
+                "account_name",
+                "alter_settings",
+            ],
+            EventType.BUDGET_THRESHOLD_EXCEEDED: [
+                "transactions_table",
+                "budget_table",
+                "alter_settings",
+            ],
         },
         allowed_conditional_parameters={
             EventType.NEW_TRANSACTION: [
@@ -257,6 +291,9 @@ def get_effect_mappings(
             ],
             EventType.NEW_ACCOUNT_LINKED: [],
             EventType.ACCOUNT_DEACTIVATED: [],
+            EventType.BUDGET_THRESHOLD_EXCEEDED: [
+                EffectConditionals.AMOUNT_OVER,
+            ],
         },
     )
 

@@ -56,6 +56,7 @@ export function NotificationPreviewInner({
     queryKey: ["previewNotification", formValues.template, formValues.subject],
     queryFn: async () => {
       return NoCodeService.previewNotification({
+        eventType: formValues.event_type,
         template: formValues.template,
         subject: formValues.subject,
       });

@@ -31,6 +31,13 @@ class NoCodeTransaction(BaseModel):
     category_name: str
 
 
+class NoCodeBudgetEntry(BaseModel):
+    id: int
+    target: float
+    current: float
+    category_name: str
+
+
 T = TypeVar("T")
 V = TypeVar("V")
 

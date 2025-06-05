@@ -5,18 +5,28 @@ from pydantic import BaseModel
 from app.models.effect import ConditionalParameters, EffectConditionals, EffectType
 
 from app.no_code.notifications.events import (
-    AccountDeactivatedEvent,
+    BudgetThresholdExceededEvent,
     Event,
-    NewAccountLinkedEvent,
     NewTransactionsEvent,
 )
+from app.schemas.no_code import NoCodeBudgetEntry
 
 
 def amount_over(event: Event, conditions: ConditionalParameters) -> bool:
-    assert not_none(conditions.amount)
-    assert isinstance(event, NewTransactionsEvent)
+    amount = not_none(conditions.amount)
 
-    return event.transactions[-1].amount > conditions.amount
+    match event:
+        case NewTransactionsEvent():
+            return event.transactions[-1].amount > amount
+        case BudgetThresholdExceededEvent():
+
+            def amount_over(entry: NoCodeBudgetEntry) -> bool:
+                current_percent = entry.current / entry.target
+                return current_percent > amount
+
+            return any(amount_over(entry) for entry in event.budget_entries)
+        case _:
+            return False
 
 
 def count_of_transactions(event: Event, conditions: ConditionalParameters) -> bool:
