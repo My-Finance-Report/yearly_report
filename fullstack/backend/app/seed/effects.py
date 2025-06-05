@@ -34,6 +34,32 @@ def new_transaction_effect(session: Session, user: User) -> EffectModel:
         conditional_parameters=ConditionalParameters(count=0),
     )
 
+budget_threshold_exceeded_template = """
+    Hey there! You have gone over budget! :scream:
+
+    {{ budget_table }}
+
+    {{ alter_settings }}
+    """
+
+BUDGET_THRESHOLD_EXCEEDED_REF_NAME = "budget_threshold_exceeded"
+
+def budget_threshold_exceeded_effect(session: Session, user: User) -> EffectModel:
+    return EffectModel(
+        user_id=user.id,
+        ref_name=BUDGET_THRESHOLD_EXCEEDED_REF_NAME,
+        name="Budget Threshold Exceeded Notification",
+        active=True,
+        editable=True,
+        event_type=EventType.BUDGET_THRESHOLD_EXCEEDED,
+        effect_type=EffectType.EMAIL,
+        frequency_days=0,
+        template=budget_threshold_exceeded_template,
+        subject="[My Financé] You are over budget!",
+        condition=EffectConditionals.AMOUNT_OVER,
+        conditional_parameters=ConditionalParameters(amount=100),
+    )
+
 
 deactivated_account_effect_template = """
     Hey there! We failed to sync {{ account_name }} over the past week, so we are marking it as deactivated.
@@ -65,6 +91,7 @@ def make_all_effects(session: Session, user: User) -> list[EffectModel]:
     return [
         new_transaction_effect(session, user),
         deactivated_account_effect(session, user),
+        budget_threshold_exceeded_effect(session, user),
     ]
 
 
@@ -74,23 +101,23 @@ def seed_effects(session: Session, user: User) -> None:
 
 
 def delete_effects(session: Session, user: User) -> None:
+    all_ref_names = [e.ref_name for e in make_all_effects(session, user)]
+
     session.query(EffectModel).filter(
         EffectModel.user_id == user.id,
-        EffectModel.ref_name.in_(
-            [NEW_TRANSACTION_REF_NAME, ACCOUNT_DEACTIVATED_REF_NAME]
-        ),
+        EffectModel.ref_name.in_(all_ref_names),
     ).delete()
     session.commit()
 
 
 def seed_effects_and_dont_update_existing(session: Session, user: User) -> None:
+    all_ref_names = [e.ref_name for e in make_all_effects(session, user)]
+
     existing_effects = (
         session.query(EffectModel)
         .filter(
             EffectModel.user_id == user.id,
-            EffectModel.ref_name.in_(
-                [NEW_TRANSACTION_REF_NAME, ACCOUNT_DEACTIVATED_REF_NAME]
-            ),
+            EffectModel.ref_name.in_(all_ref_names),
         )
         .all()
     )
