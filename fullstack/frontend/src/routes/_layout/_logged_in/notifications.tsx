@@ -65,6 +65,7 @@ function UnifiedNotificationInterface() {
   });
 
   const deleteModal = useDisclosure();
+
   if (!effectMappings || !effects) {
     return <Spinner />;
   }
@@ -102,7 +103,7 @@ function UnifiedNotificationInterface() {
           </Box>
         )}
         <Box flex={3}>
-          <NotificationPreview formValues={form.getValues()} />
+          <NotificationPreview form={form} />
         </Box>
         <Delete
           type="notification"

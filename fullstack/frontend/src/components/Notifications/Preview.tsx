@@ -1,14 +1,23 @@
 import { Email, NoCodeService } from "@/client";
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationFormValues } from "./Builder";
+import { useForm } from "react-hook-form";
 
 interface NotificationPreviewProps {
-  formValues: NotificationFormValues | null;
+  form: ReturnType<typeof useForm<NotificationFormValues>>;
 }
 
-export function NotificationPreview({ formValues }: NotificationPreviewProps) {
+export function NotificationPreview({ form }: NotificationPreviewProps) {
+  const [formValues, setFormValues] = useState<NotificationFormValues>(
+    form.getValues()
+  );
+
+  form.watch((values) => {
+    setFormValues(values as NotificationFormValues);
+  });
+
   if (!formValues) {
     return <Placeholder />;
   }
