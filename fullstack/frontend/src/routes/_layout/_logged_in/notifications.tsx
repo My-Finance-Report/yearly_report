@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
 import { NoCodeService } from "@/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Spinner, useDisclosure } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
@@ -17,10 +18,47 @@ export const Route = createFileRoute("/_layout/_logged_in/notifications")({
 });
 
 function UnifiedNotificationInterface() {
-  const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(null);
-  const [formValues, setFormValues] = useState<NotificationFormValues | null>(
-    null,
+  const { data: effects } = useQuery({
+    queryKey: ["effects"],
+    queryFn: () => NoCodeService.getEffects(),
+  });
+
+  const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(
+    effects?.[0] || null,
   );
+
+  const form = useForm<NotificationFormValues>({
+    mode: "onBlur",
+    criteriaMode: "all",
+    defaultValues: {
+      name: selectedEffect?.name,
+      template: selectedEffect?.config.template,
+      active: selectedEffect?.active,
+      subject: selectedEffect?.config.subject,
+      effect_type: selectedEffect?.effect_type,
+      event_type: selectedEffect?.event_type,
+      frequency_days: selectedEffect?.config.frequency_days,
+      condition: selectedEffect?.condition,
+      conditional_parameters: selectedEffect?.conditional_parameters,
+    },
+  });
+
+  useEffect(() => {
+    if (selectedEffect) {
+      form.reset({
+        name: selectedEffect.name,
+        active: selectedEffect.active,
+        template: selectedEffect.config.template,
+        subject: selectedEffect.config.subject,
+        effect_type: selectedEffect.effect_type,
+        event_type: selectedEffect.event_type,
+        frequency_days: selectedEffect.config.frequency_days,
+        condition: selectedEffect.condition,
+        conditional_parameters: selectedEffect.conditional_parameters,
+      });
+    }
+  }, [selectedEffect, form]);
+
 
   const { data: effectMappings } = useQuery({
     queryKey: ["effect_mappings"],
@@ -28,92 +66,68 @@ function UnifiedNotificationInterface() {
   });
 
   const deleteModal = useDisclosure();
-
-  return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={8}>
-      <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
-        <EffectSelector
-          setSelectedEffect={setSelectedEffect}
-          selectedEffect={selectedEffect}
-        />
-        <NewNotificationButton
-          setSelectedEffect={setSelectedEffect}
-          setFormValues={setFormValues}
-        />
-      </Box>
-      <Box display="flex" gap={8}>
-        {selectedEffect && effectMappings && (
-          <Box flex={2}>
-            <CreateForm
-              effectMappings={effectMappings}
-              selectedEffect={selectedEffect}
-              setFormValues={setFormValues}
-              setSelectedEffect={setSelectedEffect}
-            />
-          </Box>
-        )}
-        <Box flex={3}>
-          <NotificationPreview formValues={formValues} />
-        </Box>
-
-        {selectedEffect?.id && selectedEffect.id !== undefined && (
-          <Delete
-            type="notification"
-            isOpen={deleteModal.open}
-            onClose={deleteModal.onClose}
-            entity={selectedEffect as DeleteableEntity}
-          />
-        )}
-      </Box>
-    </Box>
-  );
-}
-
-interface EffectSelectorProps {
-  selectedEffect: EffectOut | null;
-  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
-}
-
-function EffectSelector({
-  selectedEffect,
-  setSelectedEffect,
-}: EffectSelectorProps) {
-  const { data: effects, isLoading } = useQuery({
-    queryKey: ["effects"],
-    queryFn: () => NoCodeService.getEffects(),
-  });
-
-  if (isLoading) {
+  if (!effectMappings || !effects) {
     return <Spinner />;
   }
 
   return (
+    <Box display="flex" flexDirection="column" alignItems="center" gap={8}>
+      <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
     <Box>
       <DumbSelect
         selectedOption={selectedEffect}
         setSelectedOption={setSelectedEffect}
         labelExtractor={(effect) => effect.name}
-        keyExtractor={(effect) => String(effect.id)}
+        keyExtractor={(effect) => effect.id.toString()}
         options={effects || []}
         label="Select Notification"
       />
+    </Box>
+        <NewNotificationButton
+          setSelectedEffect={setSelectedEffect}
+          resetForm={() => form.reset()}
+        />
+        <Button onClick={deleteModal.onOpen} variant="ghost" color="red">
+          Delete
+        </Button>
+      </Box>
+      <Box display="flex" gap={8}>
+        {selectedEffect && effectMappings && (
+          <Box flex={2}>
+            <CreateForm
+              form={form}
+              effectMappings={effectMappings}
+              selectedEffect={selectedEffect}
+              setSelectedEffect={setSelectedEffect}
+            />
+          </Box>
+        )}
+        <Box flex={3}>
+          <NotificationPreview formValues={form.getValues()} />
+        </Box>
+        <Delete
+          type="notification"
+          isOpen={deleteModal.open}
+          onClose={deleteModal.onClose}
+          entity={selectedEffect as DeleteableEntity}
+        />
+      </Box>
     </Box>
   );
 }
 
 function NewNotificationButton({
   setSelectedEffect,
-  setFormValues,
+  resetForm,
 }: {
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
-  setFormValues: React.Dispatch<
-    React.SetStateAction<NotificationFormValues | null>
-  >;
+  resetForm: () => void;
 }) {
   return (
     <Button
       onClick={() => {
         setSelectedEffect({
+          id: -1,
           name: "",
           active: true,
           editable: true,
@@ -127,7 +141,7 @@ function NewNotificationButton({
           condition: "amount_over",
           conditional_parameters: {},
         });
-        setFormValues(null);
+        resetForm();
       }}
     >
       New Notification

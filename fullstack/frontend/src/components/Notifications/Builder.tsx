@@ -1,5 +1,4 @@
 import { NoCodeService } from "@/client";
-import { useEffect } from "react";
 import { Conditions } from "./Conditions/Conditions";
 import {
   DumbNumberField,
@@ -28,8 +27,8 @@ import {
   EffectMappings,
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useForm } from "react-hook-form";
 import { HiCheck, HiX } from "react-icons/hi";
+import { useForm } from "react-hook-form";
 
 export interface NotificationFormValues {
   id?: number;
@@ -45,11 +44,22 @@ export interface NotificationFormValues {
 }
 
 interface CreateFormProps {
+  form: ReturnType<typeof useForm<NotificationFormValues>>;
   selectedEffect: EffectOut;
-  setFormValues: (values: NotificationFormValues) => void;
   effectMappings: EffectMappings;
   setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
+
+const EVENT_TYPES: Record<EventType, string> = {
+  new_transaction: "New Transaction",
+  new_account_linked: "New Account Linked",
+  account_deactivated: "Account Deactivated",
+};
+
+const EFFECT_TYPES: Record<EffectType, string> = {
+  email: "Email",
+  in_app: "In App",
+};
 
 function determineConditionsForEventType(
   eventType: EventType,
@@ -65,72 +75,21 @@ function supportsFrequency(eventType: EventType) {
 }
 
 export function CreateForm({
+  form,
   selectedEffect,
-  setFormValues,
   effectMappings,
   setSelectedEffect,
 }: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
-
-  const form = useForm<NotificationFormValues>({
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      name: selectedEffect.name,
-      template: selectedEffect.config.template,
-      active: selectedEffect.active,
-      subject: selectedEffect.config.subject,
-      effect_type: selectedEffect.effect_type,
-      event_type: selectedEffect.event_type,
-      frequency_days: selectedEffect.config.frequency_days,
-      condition: selectedEffect.condition,
-      conditional_parameters: selectedEffect.conditional_parameters,
-    },
-  });
-
-  useEffect(() => {
-    if (selectedEffect) {
-      form.reset({
-        name: selectedEffect.name,
-        active: selectedEffect.active,
-        template: selectedEffect.config.template,
-        subject: selectedEffect.config.subject,
-        effect_type: selectedEffect.effect_type,
-        event_type: selectedEffect.event_type,
-        frequency_days: selectedEffect.config.frequency_days,
-        condition: selectedEffect.condition,
-        conditional_parameters: selectedEffect.conditional_parameters,
-      });
-    }
-  }, [selectedEffect, form]);
-
-  useEffect(() => {
-    const subscription = form.watch((data) => {
-      setFormValues(data as NotificationFormValues);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, setFormValues]);
-
+  
   const {
     register,
     handleSubmit,
     reset,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = form;
-
-  const eventTypes: Record<EventType, string> = {
-    new_transaction: "New Transaction",
-    new_account_linked: "New Account Linked",
-    account_deactivated: "Account Deactivated",
-  };
-
-  const effectTypes: Record<EffectType, string> = {
-    email: "Email",
-    in_app: "In App",
-  };
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -153,13 +112,13 @@ export function CreateForm({
 
       return NoCodeService.updateEffect({ effectId: id, requestBody: body });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
       showToast(
         "Notification updated",
         "Notification updated successfully.",
         "success",
       );
-      reset();
+      setSelectedEffect(response);
       queryClient.invalidateQueries({ queryKey: ["effects"] });
     },
     onError: (error) => {
@@ -182,14 +141,14 @@ export function CreateForm({
 
       return NoCodeService.createEffect({ requestBody: body });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       showToast(
         "Notification created",
         "Notification created successfully.",
         "success",
       );
-      reset();
       queryClient.invalidateQueries({ queryKey: ["effects"] });
+      setSelectedEffect(data);
     },
     onError: (error) => {
       showToast("Error creating notification", error.message, "error");
@@ -220,6 +179,11 @@ export function CreateForm({
             This notification is not editable. You can turn it on or off.
           </Badge>
         )}
+        {isDirty && (
+          <Badge colorPalette="yellow" size="md">
+            Unsaved changes
+          </Badge>
+        )}
       </Card.Header>
       <Card.Body>
         <Box onSubmit={onSubmit} as="form">
@@ -236,10 +200,10 @@ export function CreateForm({
               errors={errors}
               name="event_type"
               label="Event"
-              options={Object.keys(eventTypes).map(
+              options={Object.keys(EVENT_TYPES).map(
                 (eventType) => eventType as EventType,
               )}
-              labelExtractor={(eventType) => eventTypes[eventType]}
+              labelExtractor={(eventType) => EVENT_TYPES[eventType]}
               keyExtractor={(eventType) => eventType}
               disabled={!selectedEffect?.editable}
             />
@@ -268,10 +232,10 @@ export function CreateForm({
               name="effect_type"
               label="Notification Type"
               disabled={!selectedEffect?.editable}
-              options={Object.keys(effectTypes).map(
+              options={Object.keys(EFFECT_TYPES).map(
                 (effectType) => effectType as EffectType,
               )}
-              labelExtractor={(effectType) => effectTypes[effectType]}
+              labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
               keyExtractor={(effectType) => effectType}
             />
             <DumbTextField

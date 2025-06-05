@@ -1,4 +1,3 @@
-from sched import Event
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 from datetime import datetime, timedelta
@@ -188,6 +187,10 @@ def preview_notification(
     return perform_template_replacement(event, effect)
 
 
+def to_snake_case(name: str) -> str:
+    return "_".join(name.split(" ")).lower()
+
+
 @router.post("/effects", response_model=EffectOut, status_code=status.HTTP_201_CREATED)
 def create_effect(
     effect_data: EffectCreate,
@@ -198,6 +201,7 @@ def create_effect(
     # Create a new effect in the database
     db_effect = EffectModel(
         name=effect_data.name,
+        ref_name=to_snake_case(effect_data.name),
         user_id=user.id,
         active=effect_data.active,
         editable=True,
@@ -213,8 +217,8 @@ def create_effect(
     session.commit()
     session.refresh(db_effect)
 
-    # Return the created effect
     return EffectOut(
+        id=db_effect.id,
         name=db_effect.name,
         effect_type=db_effect.effect_type,
         event_type=db_effect.event_type,

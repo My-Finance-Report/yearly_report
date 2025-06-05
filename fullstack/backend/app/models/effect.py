@@ -3,7 +3,15 @@ from pydantic import BaseModel
 import enum
 from typing import NewType
 from app.models.models import Base, JSONType
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Enum, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Enum,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import DateTime
 from datetime import datetime
