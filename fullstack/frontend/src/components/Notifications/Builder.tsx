@@ -9,11 +9,10 @@ import { DumbFormSelect } from "../ui/dumb/form/select";
 import {
   Box,
   Button,
-  HStack,
-  Card,
-  VStack,
+  Stack,
   Badge,
   Switch,
+  Card,
 } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -166,55 +165,75 @@ export function CreateForm({
   });
 
   return (
-    <Card.Root minW="700px">
+    <Card.Root w="full" minW={{ base: "full", md: "600px" }} maxW="900px">
       <Card.Header>
-        <Card.Title>{selectedEffect?.name}</Card.Title>
-        <ToggleActive
-          selectedEffect={selectedEffect}
-          setSelectedEffect={setSelectedEffect}
-        />
-        {!selectedEffect?.editable && (
-          <Badge colorPalette="yellow" size="md">
-            This notification is not editable. You can turn it on or off.
-          </Badge>
-        )}
-        {isDirty && (
-          <Badge colorPalette="yellow" size="md">
-            Unsaved changes
-          </Badge>
-        )}
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          gap={4}
+          w="full"
+          align={{ base: "stretch", sm: "center" }}
+          justify="space-between"
+        >
+          <Stack direction="column" gap={2}>
+            <Card.Title>{selectedEffect?.name}</Card.Title>
+            {!selectedEffect?.editable && (
+              <Badge colorPalette="yellow" size="md">
+                This notification is not editable. You can turn it on or off.
+              </Badge>
+            )}
+            {isDirty && (
+              <Badge colorPalette="yellow" size="md">
+                Unsaved changes
+              </Badge>
+            )}
+          </Stack>
+          <ToggleActive
+            selectedEffect={selectedEffect}
+            setSelectedEffect={setSelectedEffect}
+          />
+        </Stack>
       </Card.Header>
       <Card.Body>
         <Box onSubmit={onSubmit} as="form">
-          <VStack spaceY={4} align="stretch">
-            <DumbTextField
-              name="name"
-              label="Name of notification"
-              register={register}
-              errors={errors}
-              disabled={!selectedEffect?.editable}
-            />
-            <DumbFormSelect
-              control={control}
-              errors={errors}
-              name="event_type"
-              label="Event"
-              options={Object.keys(EVENT_TYPES).map(
-                (eventType) => eventType as EventType,
-              )}
-              labelExtractor={(eventType) => EVENT_TYPES[eventType]}
-              keyExtractor={(eventType) => eventType}
-              disabled={!selectedEffect?.editable}
-            />
+          <Stack gap={6} align="stretch">
+            <Stack direction={{ base: "column", md: "row" }} gap={4}>
+              <Box flex={1}>
+                <DumbTextField
+                  name="name"
+                  label="Name of notification"
+                  register={register}
+                  errors={errors}
+                  disabled={!selectedEffect?.editable}
+                />
+              </Box>
+              <Box flex={1}>
+                <DumbFormSelect
+                  control={control}
+                  errors={errors}
+                  name="event_type"
+                  label="Event"
+                  options={Object.keys(EVENT_TYPES).map(
+                    (eventType) => eventType as EventType,
+                  )}
+                  labelExtractor={(eventType) => EVENT_TYPES[eventType]}
+                  keyExtractor={(eventType) => eventType}
+                  disabled={!selectedEffect?.editable}
+                />
+              </Box>
+            </Stack>
+
             {supportsFrequency(form.getValues("event_type")) && (
-              <DumbNumberField
-                name="frequency_days"
-                label="Frequency (days)"
-                register={register}
-                errors={errors}
-                disabled={!selectedEffect?.editable}
-              />
+              <Box maxW="200px">
+                <DumbNumberField
+                  name="frequency_days"
+                  label="Frequency (days)"
+                  register={register}
+                  errors={errors}
+                  disabled={!selectedEffect?.editable}
+                />
+              </Box>
             )}
+
             <Conditions
               control={control}
               errors={errors}
@@ -225,37 +244,47 @@ export function CreateForm({
               )}
             />
 
-            <DumbFormSelect
-              control={control}
-              errors={errors}
-              name="effect_type"
-              label="Notification Type"
-              disabled={!selectedEffect?.editable}
-              options={Object.keys(EFFECT_TYPES).map(
-                (effectType) => effectType as EffectType,
-              )}
-              labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
-              keyExtractor={(effectType) => effectType}
-            />
-            <DumbTextField
-              name="subject"
-              label="Subject"
-              register={register}
-              disabled={!selectedEffect?.editable}
-              errors={errors}
-            />
-            <TemplateEditor
-              name="template"
-              availableVariables={
-                effectMappings.variables[form.getValues("event_type")] || []
-              }
-              label="Template"
-              register={register}
-              errors={errors}
-              setValue={form.setValue}
-              disabled={!selectedEffect?.editable}
-            />
-            <HStack>
+            <Stack direction={{ base: "column", md: "row" }} gap={4}>
+              <Box flex={1}>
+                <DumbFormSelect
+                  control={control}
+                  errors={errors}
+                  name="effect_type"
+                  label="Notification Type"
+                  disabled={!selectedEffect?.editable}
+                  options={Object.keys(EFFECT_TYPES).map(
+                    (effectType) => effectType as EffectType,
+                  )}
+                  labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
+                  keyExtractor={(effectType) => effectType}
+                />
+              </Box>
+              <Box flex={1}>
+                <DumbTextField
+                  name="subject"
+                  label="Subject"
+                  register={register}
+                  disabled={!selectedEffect?.editable}
+                  errors={errors}
+                />
+              </Box>
+            </Stack>
+
+            <Box>
+              <TemplateEditor
+                name="template"
+                availableVariables={
+                  effectMappings.variables[form.getValues("event_type")] || []
+                }
+                label="Template"
+                register={register}
+                errors={errors}
+                setValue={form.setValue}
+                disabled={!selectedEffect?.editable}
+              />
+            </Box>
+
+            <Box pt={4}>
               <Button
                 type="submit"
                 loading={
@@ -263,12 +292,13 @@ export function CreateForm({
                   createMutation.isPending ||
                   updateMutation.isPending
                 }
-                mr={3}
+                colorScheme="blue"
+                size="md"
               >
                 {selectedEffect ? "Update Notification" : "Save Notification"}
               </Button>
-            </HStack>
-          </VStack>
+            </Box>
+          </Stack>
         </Box>
       </Card.Body>
     </Card.Root>

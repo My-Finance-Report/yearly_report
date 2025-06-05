@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { NoCodeService } from "@/client";
 import React, { useEffect, useState } from "react";
-import { Box, Button, Spinner, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Spinner, useDisclosure, Stack } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
 import { EffectOut } from "@/client/types.gen";
@@ -53,9 +53,15 @@ function UnifiedNotificationInterface() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="flex-start" gap={8}>
-      <Box display="flex" gap={2} alignItems="flex-end" maxW="400px">
-        <Box>
+    <Box display="flex" flexDirection="column" gap={8} w="full" p={4}>
+      <Stack
+        direction={{ base: "column", sm: "row" }}
+        gap={2}
+        align={{ base: "stretch", sm: "flex-end" }}
+        w={{ base: "full", sm: "auto" }}
+        maxW="full"
+      >
+        <Box flex={1} minW={0} maxW={{ base: "full", sm: "400px" }}>
           <DumbSelect
             selectedOption={selectedEffect}
             setSelectedOption={setSelectedEffect}
@@ -65,17 +71,25 @@ function UnifiedNotificationInterface() {
             label="Select Notification"
           />
         </Box>
-        <NewNotificationButton
-          setSelectedEffect={setSelectedEffect}
-          resetForm={() => form.reset()}
-        />
-        <Button onClick={deleteModal.onOpen} variant="ghost" color="red">
-          Delete
-        </Button>
-      </Box>
-      <Box display="flex" gap={8}>
+        <Stack direction="row" gap={2}>
+          <NewNotificationButton
+            setSelectedEffect={setSelectedEffect}
+            resetForm={() => form.reset()}
+          />
+          <Button onClick={deleteModal.onOpen} variant="ghost" color="red">
+            Delete
+          </Button>
+        </Stack>
+      </Stack>
+
+      <Stack
+        direction={{ base: "column", lg: "row" }}
+        gap={{ base: 4, lg: 8 }}
+        w="full"
+        align="flex-start"
+      >
         {selectedEffect && effectMappings && (
-          <Box flex={2}>
+          <Box flex={2} w="full">
             <CreateForm
               form={form}
               effectMappings={effectMappings}
@@ -84,7 +98,7 @@ function UnifiedNotificationInterface() {
             />
           </Box>
         )}
-        <Box flex={3}>
+        <Box flex={3} w="full">
           <NotificationPreview form={form} />
         </Box>
         <Delete
@@ -93,7 +107,7 @@ function UnifiedNotificationInterface() {
           onClose={deleteModal.onClose}
           entity={selectedEffect as DeleteableEntity}
         />
-      </Box>
+      </Stack>
     </Box>
   );
 }
