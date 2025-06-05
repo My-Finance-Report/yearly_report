@@ -158,7 +158,7 @@ export function CreateForm({
   });
 
   return (
-    <Card.Root w="full" minW={{ base: "full"}} maxW="900px">
+    <Card.Root w="full" minW={{ base: "full" }} maxW="900px">
       <Card.Header>
         <Stack
           direction={{ base: "column", sm: "row" }}

@@ -53,15 +53,23 @@ function UnifiedNotificationInterface() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" gap={8} w="full" p={4}>
+    <Box
+      display="flex"
+      flexDirection="column"
+      gap={8}
+      w="full"
+      p={4}
+      maxW="100vw"
+      overflowX="hidden"
+    >
       <Stack
         direction={{ base: "column", sm: "row" }}
-        gap={2}
-        align={{ base: "stretch", sm: "flex-end" }}
-        w={{ base: "full", sm: "auto" }}
-        maxW="full"
+        gap={4}
+        align={{ base: "stretch", sm: "center" }}
+        justify="space-between"
+        w="full"
       >
-        <Box flex={1} minW={0} maxW={{ base: "full", sm: "400px" }}>
+        <Box flex={{ base: "none", sm: 1 }} w="full" maxW={{ sm: "400px" }}>
           <DumbSelect
             selectedOption={selectedEffect}
             setSelectedOption={setSelectedEffect}
@@ -71,12 +79,21 @@ function UnifiedNotificationInterface() {
             label="Select Notification"
           />
         </Box>
-        <Stack direction="row" gap={2}>
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          gap={2}
+          w={{ base: "full", sm: "auto" }}
+        >
           <NewNotificationButton
             setSelectedEffect={setSelectedEffect}
             resetForm={() => form.reset()}
           />
-          <Button onClick={deleteModal.onOpen} variant="ghost" color="red">
+          <Button
+            onClick={deleteModal.onOpen}
+            variant="ghost"
+            colorScheme="red"
+            w={{ base: "full", sm: "auto" }}
+          >
             Delete
           </Button>
         </Stack>
@@ -84,12 +101,12 @@ function UnifiedNotificationInterface() {
 
       <Stack
         direction={{ base: "column", lg: "row" }}
-        gap={{ base: 4, lg: 8 }}
+        gap={{ base: 6, lg: 8 }}
         w="full"
         align="flex-start"
       >
         {selectedEffect && effectMappings && (
-          <Box flex={2} w="full">
+          <Box w="full" minW={0}>
             <CreateForm
               form={form}
               effectMappings={effectMappings}
@@ -98,7 +115,7 @@ function UnifiedNotificationInterface() {
             />
           </Box>
         )}
-        <Box flex={3} w="full">
+        <Box w="full" minW={0}>
           <NotificationPreview form={form} />
         </Box>
         <Delete

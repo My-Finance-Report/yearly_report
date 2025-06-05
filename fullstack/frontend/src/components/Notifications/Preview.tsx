@@ -76,24 +76,25 @@ export function NotificationPreviewInner({
   return (
     <Card.Root
       w="full"
-      minW={{ base: "full"}}
+      minW={{ base: "full" }}
       maxW="900px"
       variant="outline"
       overflow="hidden"
     >
-      <Card.Header p={4} borderBottomWidth="1px" display="flex" alignItems="center" gap={3}>
+      <Card.Header
+        p={4}
+        borderBottomWidth="1px"
+        display="flex"
+        alignItems="center"
+        gap={3}
+      >
         <Box as={FiMail} color="blue.500" boxSize={5} />
         <Text fontWeight="medium" color="gray.700">
           {data.subject}
         </Text>
       </Card.Header>
       <Card.Body p={6}>
-        <Box
-          className="email-preview"
-          p={6}
-          borderRadius="md"
-          boxShadow="sm"
-        >
+        <Box className="email-preview" p={6} borderRadius="md" boxShadow="sm">
           <div dangerouslySetInnerHTML={{ __html: data.clean_html }} />
         </Box>
       </Card.Body>
