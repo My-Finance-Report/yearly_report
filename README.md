@@ -39,9 +39,7 @@ big milestones before launch:
   -> have a way to activate / deactivate accounts from the accounts page
 
 -> Notifications
-  -> link to this in the navbar
   -> allow user to 'restore default notifications' and delete the defaults
-    --> run a seed script for every account (seed_effects.py)
     --> the user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
   -> emails only configured to send to me -- update to send to everyone
   -> maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
