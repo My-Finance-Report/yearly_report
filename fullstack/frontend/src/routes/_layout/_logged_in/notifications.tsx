@@ -48,6 +48,7 @@ function UnifiedNotificationInterface() {
               effectMappings={effectMappings}
               selectedEffect={selectedEffect}
               setFormValues={setFormValues}
+              setSelectedEffect={setSelectedEffect}
             />
           </Box>
         )}
@@ -114,6 +115,8 @@ function NewNotificationButton({
       onClick={() => {
         setSelectedEffect({
           name: "",
+          active: true,
+          editable: true,
           config: {
             template: "",
             subject: "",

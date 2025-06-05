@@ -36,6 +36,7 @@ class EffectCreate(BaseModel):
 
     name: str
     effect_type: EffectType
+    active: bool
     event_type: EventType
     frequency_days: int
     template: str
@@ -71,6 +72,8 @@ def get_effects(
         EffectOut(
             id=effect.id,
             name=effect.name,
+            active=effect.active,
+            editable=effect.editable,
             effect_type=effect.effect_type,
             event_type=effect.event_type,
             config=EffectConfig(
@@ -178,6 +181,8 @@ def preview_notification(
 
     effect = Effect(
         type=effect_type,
+        active=True,
+        editable=True,
         config=config,
         condition=get_sample_condition(event_type),
         conditional_parameters=get_sample_conditional_parameters(event_type),
@@ -197,6 +202,8 @@ def create_effect(
     db_effect = EffectModel(
         name=effect_data.name,
         user_id=user.id,
+        active=effect_data.active,
+        editable=True,
         effect_type=effect_data.effect_type,
         event_type=effect_data.event_type,
         frequency_days=effect_data.frequency_days,
@@ -214,6 +221,8 @@ def create_effect(
         name=db_effect.name,
         effect_type=db_effect.effect_type,
         event_type=db_effect.event_type,
+        active=db_effect.active,
+        editable=db_effect.editable,
         config=EffectConfig(
             frequency_days=db_effect.frequency_days,
             template=db_effect.template,
@@ -236,7 +245,7 @@ def get_effect_mappings(
                 "transactions_table",
                 "count",
                 "alter_settings",
-            ],  # TODO pull these by inspecting
+            ],
             EventType.NEW_ACCOUNT_LINKED: ["account_name", "alter_settings"],
             EventType.ACCOUNT_DEACTIVATED: ["account_name", "alter_settings"],
         },
@@ -248,6 +257,49 @@ def get_effect_mappings(
             EventType.NEW_ACCOUNT_LINKED: [],
             EventType.ACCOUNT_DEACTIVATED: [],
         },
+    )
+
+
+@router.put("/toggle-effect/{effect_id}", response_model=EffectOut)
+def togge_effect_activity(
+    effect_id: int,
+    is_active: bool,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> EffectOut:
+    """Update an existing notification effect"""
+    # Find the effect
+    db_effect = (
+        session.query(EffectModel)
+        .filter(EffectModel.id == effect_id, EffectModel.user_id == user.id)
+        .first()
+    )
+
+    if not db_effect:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notification effect not found",
+        )
+
+    db_effect.active = is_active
+    session.commit()
+    session.refresh(db_effect)
+
+    # Return the updated effect
+    return EffectOut(
+        id=db_effect.id,
+        name=db_effect.name,
+        effect_type=db_effect.effect_type,
+        active=db_effect.active,
+        editable=db_effect.editable,
+        event_type=db_effect.event_type,
+        config=EffectConfig(
+            frequency_days=db_effect.frequency_days,
+            template=db_effect.template,
+            subject=db_effect.subject,
+        ),
+        condition=db_effect.condition,
+        conditional_parameters=db_effect.conditional_parameters,
     )
 
 
@@ -272,6 +324,12 @@ def update_effect(
             detail="Notification effect not found",
         )
 
+    if not db_effect.editable:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Notification effect is not editable",
+        )
+
     db_effect.name = effect_data.name
     db_effect.effect_type = effect_data.effect_type
     db_effect.event_type = effect_data.event_type
@@ -289,6 +347,8 @@ def update_effect(
         id=db_effect.id,
         name=db_effect.name,
         effect_type=db_effect.effect_type,
+        active=db_effect.active,
+        editable=db_effect.editable,
         event_type=db_effect.event_type,
         config=EffectConfig(
             frequency_days=db_effect.frequency_days,

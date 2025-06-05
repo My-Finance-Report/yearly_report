@@ -7,7 +7,15 @@ import {
   TemplateEditor,
 } from "../ui/dumb/form/value";
 import { DumbFormSelect } from "../ui/dumb/form/select";
-import { Box, Button, HStack, Card, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Card,
+  VStack,
+  Badge,
+  Switch,
+} from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EffectOut,
@@ -21,10 +29,12 @@ import {
 } from "@/client/types.gen";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useForm } from "react-hook-form";
+import { HiCheck, HiX } from "react-icons/hi";
 
 export interface NotificationFormValues {
   id?: number;
   name: string;
+  active: boolean;
   template: string;
   subject: string;
   effect_type: EffectType;
@@ -38,6 +48,7 @@ interface CreateFormProps {
   selectedEffect: EffectOut;
   setFormValues: (values: NotificationFormValues) => void;
   effectMappings: EffectMappings;
+  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
 }
 
 function determineConditionsForEventType(
@@ -57,11 +68,10 @@ export function CreateForm({
   selectedEffect,
   setFormValues,
   effectMappings,
+  setSelectedEffect,
 }: CreateFormProps) {
   const showToast = useCustomToast();
   const queryClient = useQueryClient();
-
-  console.log(effectMappings);
 
   const form = useForm<NotificationFormValues>({
     mode: "onBlur",
@@ -69,6 +79,7 @@ export function CreateForm({
     defaultValues: {
       name: selectedEffect.name,
       template: selectedEffect.config.template,
+      active: selectedEffect.active,
       subject: selectedEffect.config.subject,
       effect_type: selectedEffect.effect_type,
       event_type: selectedEffect.event_type,
@@ -82,6 +93,7 @@ export function CreateForm({
     if (selectedEffect) {
       form.reset({
         name: selectedEffect.name,
+        active: selectedEffect.active,
         template: selectedEffect.config.template,
         subject: selectedEffect.config.subject,
         effect_type: selectedEffect.effect_type,
@@ -160,6 +172,7 @@ export function CreateForm({
         name: data.name,
         effect_type: data.effect_type,
         event_type: data.event_type,
+        active: data.active,
         frequency_days: data.frequency_days,
         template: data.template,
         subject: data.subject,
@@ -196,6 +209,18 @@ export function CreateForm({
 
   return (
     <Card.Root minW="700px">
+      <Card.Header>
+        <Card.Title>{selectedEffect?.name}</Card.Title>
+        <ToggleActive
+          selectedEffect={selectedEffect}
+          setSelectedEffect={setSelectedEffect}
+        />
+        {!selectedEffect?.editable && (
+          <Badge colorPalette="yellow" size="md">
+            This notification is not editable. You can turn it on or off.
+          </Badge>
+        )}
+      </Card.Header>
       <Card.Body>
         <Box onSubmit={onSubmit} as="form">
           <VStack spaceY={4} align="stretch">
@@ -204,6 +229,7 @@ export function CreateForm({
               label="Name of notification"
               register={register}
               errors={errors}
+              disabled={!selectedEffect?.editable}
             />
             <DumbFormSelect
               control={control}
@@ -215,6 +241,7 @@ export function CreateForm({
               )}
               labelExtractor={(eventType) => eventTypes[eventType]}
               keyExtractor={(eventType) => eventType}
+              disabled={!selectedEffect?.editable}
             />
             {supportsFrequency(form.getValues("event_type")) && (
               <DumbNumberField
@@ -222,12 +249,14 @@ export function CreateForm({
                 label="Frequency (days)"
                 register={register}
                 errors={errors}
+                disabled={!selectedEffect?.editable}
               />
             )}
             <Conditions
               control={control}
               errors={errors}
               form={form}
+              disabled={!selectedEffect?.editable}
               supported_conditional_parameters={determineConditionsForEventType(
                 form.getValues("event_type"),
               )}
@@ -238,6 +267,7 @@ export function CreateForm({
               errors={errors}
               name="effect_type"
               label="Notification Type"
+              disabled={!selectedEffect?.editable}
               options={Object.keys(effectTypes).map(
                 (effectType) => effectType as EffectType,
               )}
@@ -248,6 +278,7 @@ export function CreateForm({
               name="subject"
               label="Subject"
               register={register}
+              disabled={!selectedEffect?.editable}
               errors={errors}
             />
             <TemplateEditor
@@ -259,6 +290,7 @@ export function CreateForm({
               register={register}
               errors={errors}
               setValue={form.setValue}
+              disabled={!selectedEffect?.editable}
             />
             <HStack>
               <Button
@@ -277,5 +309,71 @@ export function CreateForm({
         </Box>
       </Card.Body>
     </Card.Root>
+  );
+}
+
+function ToggleActive({
+  selectedEffect,
+  setSelectedEffect,
+}: {
+  selectedEffect: EffectOut;
+  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+}) {
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      if (!selectedEffect.id) {
+        throw new Error("Effect ID is required");
+      }
+      return NoCodeService.toggeEffectActivity({
+        effectId: selectedEffect.id,
+        isActive: !selectedEffect.active,
+      });
+    },
+    onSuccess: () => {
+      showToast(
+        "Notification updated",
+        "Notification updated successfully.",
+        "success",
+      );
+      setSelectedEffect({
+        ...selectedEffect,
+        active: !selectedEffect.active,
+      });
+      queryClient.invalidateQueries({ queryKey: ["effects"] });
+    },
+    onError: (error) => {
+      showToast("Error updating notification", error.message, "error");
+    },
+  });
+
+  return (
+    <Badge
+      flex={"row"}
+      justifyContent={"space-between"}
+      size="md"
+      p={5}
+      colorPalette={selectedEffect.active ? "green" : "red"}
+    >
+      {selectedEffect.active ? "Active" : "Inactive"}
+      <Switch.Root
+        variant="solid"
+        size="lg"
+        checked={selectedEffect.active}
+        onCheckedChange={() => mutation.mutate()}
+      >
+        <Switch.HiddenInput />
+        <Switch.Control>
+          <Switch.Thumb>
+            <Switch.ThumbIndicator fallback={<HiX color="black" />}>
+              <HiCheck />
+            </Switch.ThumbIndicator>
+          </Switch.Thumb>
+        </Switch.Control>
+        <Switch.Label />
+      </Switch.Root>
+    </Badge>
   );
 }

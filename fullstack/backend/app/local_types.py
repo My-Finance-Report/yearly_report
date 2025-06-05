@@ -413,6 +413,8 @@ class EffectOut(BaseModel):
     name: str
     effect_type: EffectType
     event_type: EventType
+    active: bool
+    editable: bool
     config: EffectConfig
     condition: EffectConditionals
     conditional_parameters: ConditionalParameters

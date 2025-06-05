@@ -25,12 +25,14 @@ export function DumbNumberField<T extends FieldValues>({
   register,
   errors,
   defaultValue,
+  disabled,
 }: {
   name: Path<T>;
   label: string;
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
   defaultValue?: number;
+  disabled?: boolean;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
@@ -43,6 +45,7 @@ export function DumbNumberField<T extends FieldValues>({
         placeholder={name}
         type="number"
         defaultValue={defaultValue}
+        disabled={disabled}
       />
       {errors[name] && (
         <FieldErrorText>
@@ -58,11 +61,13 @@ export function DumbTextField<T extends FieldValues>({
   label,
   register,
   errors,
+  disabled,
 }: {
   name: Path<T>;
   label: string;
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
+  disabled?: boolean;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
@@ -73,6 +78,7 @@ export function DumbTextField<T extends FieldValues>({
           required: `${name} is required`,
         })}
         placeholder={name}
+        disabled={disabled}
         type="text"
       />
       {errors[name] && (
@@ -89,11 +95,13 @@ export function DumbTextareaField<T extends FieldValues>({
   label,
   register,
   errors,
+  disabled,
 }: {
   name: Path<T>;
   label: string;
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
+  disabled?: boolean;
 }) {
   return (
     <FieldRoot invalid={!!errors[name]} required>
@@ -104,6 +112,7 @@ export function DumbTextareaField<T extends FieldValues>({
           required: `${name} is required`,
         })}
         placeholder={name}
+        disabled={disabled}
       />
       {errors[name] && (
         <FieldErrorText>
@@ -121,6 +130,7 @@ export function TemplateEditor<T extends FieldValues>({
   register,
   errors,
   setValue,
+  disabled,
 }: {
   name: Path<T>;
   availableVariables: string[];
@@ -128,6 +138,7 @@ export function TemplateEditor<T extends FieldValues>({
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
   setValue: (name: Path<T>, value: string) => void;
+  disabled?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -177,6 +188,7 @@ export function TemplateEditor<T extends FieldValues>({
           }}
           placeholder={name}
           rows={6}
+          disabled={disabled}
         />
         <Box>
           <Text fontSize="sm" mb={2}>

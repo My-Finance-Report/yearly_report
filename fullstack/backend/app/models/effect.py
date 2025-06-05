@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import enum
 from typing import NewType
 from app.models.models import Base, JSONType
-from sqlalchemy import DateTime, ForeignKey, Integer, Enum, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import DateTime
 from datetime import datetime
@@ -50,9 +50,10 @@ class ConditionalParameters(BaseModel):
 
 class Effect(Base):
     __tablename__ = "effect"
-
     id: Mapped[EffectId] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    editable: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     effect_type: Mapped[EffectType] = mapped_column(Enum(EffectType), nullable=False)
     event_type: Mapped[EventType] = mapped_column(Enum(EventType), nullable=False)

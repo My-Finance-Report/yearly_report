@@ -9,6 +9,7 @@ interface DumbSelectProps<T> {
   keyExtractor: (value: T) => string;
   placeholder?: string;
   label?: string;
+  disabled?: boolean;
 }
 
 interface CollectionItem<T> {
@@ -40,6 +41,7 @@ export function DumbSelect<T>({
   keyExtractor,
   placeholder,
   label,
+  disabled,
 }: DumbSelectProps<T>) {
   const [value, setValue] = useState<string[]>([
     keyExtractor(selectedOption ?? options[0]),
@@ -61,6 +63,7 @@ export function DumbSelect<T>({
       width="320px"
       value={value}
       onValueChange={(e) => setValue(e.value)}
+      disabled={disabled}
     >
       <Select.HiddenSelect />
       {label && <Select.Label>{label}</Select.Label>}

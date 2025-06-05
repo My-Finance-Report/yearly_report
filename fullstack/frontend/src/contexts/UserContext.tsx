@@ -2,10 +2,10 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser } from "../hooks/useAuth";
 import { UserOut } from "../client";
 
-const UserContext = createContext<UserOut | null>(null);
+const UserContext = createContext<UserOut | null | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserOut | null>(null);
+  const [user, setUser] = useState<UserOut | null | undefined>(undefined);
 
   useEffect(() => {
     getCurrentUser().then(setUser);
@@ -15,5 +15,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useUser() {
-  return useContext(UserContext);
+  const user = useContext(UserContext);
+
+  return user;
 }

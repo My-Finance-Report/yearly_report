@@ -45,6 +45,8 @@ class EffectConfig(BaseModel):
 
 
 class Effect(BaseModel):
+    active: bool
+    editable: bool
     type: EffectType
     config: EffectConfig
     condition: EffectConditionals

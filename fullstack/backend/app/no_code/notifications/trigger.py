@@ -29,10 +29,13 @@ def collect_user_effects(
     effects = session.query(EffectModel).filter(
         EffectModel.user_id == user.id,
         EffectModel.event_type == event_type,
+        EffectModel.active,
     )
 
     db_effects = [
         Effect(
+            active=effect.active,
+            editable=effect.editable,
             type=effect.effect_type,
             condition=effect.condition,
             conditional_parameters=effect.conditional_parameters,
