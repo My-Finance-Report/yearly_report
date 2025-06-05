@@ -68,10 +68,21 @@ function UsersTable() {
     }
   }, [page, queryClient, hasNextPage]);
 
-  const reseed = useMutation({
+  const reseedAllAccountPages = useMutation({
     mutationFn: () => AdminService.reseedAllAccountPages(),
     onSuccess: () => {
       toast("Success", "All account pages reseeded successfully", "success");
+    },
+    onError: (error) => {
+      toast("Error", error.message, "error");
+    },
+  });
+
+  const reseedAllNotifications = useMutation({
+    mutationFn: (additive: boolean) =>
+      AdminService.reseedAllNotifications({ additive }),
+    onSuccess: () => {
+      toast("Success", "All notifications reseeded successfully", "success");
     },
     onError: (error) => {
       toast("Error", error.message, "error");
@@ -83,10 +94,24 @@ function UsersTable() {
       <Box overflowX="auto">
         <Button
           onClick={() => {
-            reseed.mutate();
+            reseedAllAccountPages.mutate();
           }}
         >
           Re-seed all account pages
+        </Button>
+        <Button
+          onClick={() => {
+            reseedAllNotifications.mutate(false);
+          }}
+        >
+          Re-seed all notifications (destructive)
+        </Button>
+        <Button
+          onClick={() => {
+            reseedAllNotifications.mutate(true);
+          }}
+        >
+          Re-seed all notifications (additive)
         </Button>
         <Table.Root variant="outline">
           <Table.Header>

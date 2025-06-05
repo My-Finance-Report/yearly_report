@@ -15,9 +15,6 @@ from app.models.effect import (
 )
 from app.models.user import User
 from app.models.transaction import TransactionKind
-from app.no_code.notifications.effect_generators.seed_effects import (
-    new_transaction_effect,
-)
 from app.no_code.notifications.effects import EffectConfig, Effect
 from app.no_code.notifications.events import (
     AccountDeactivatedEvent,

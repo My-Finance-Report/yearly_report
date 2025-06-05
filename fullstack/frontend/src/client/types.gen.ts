@@ -1007,6 +1007,14 @@ export type AdminReseedAllAccountPagesResponse = {
   [key: string]: string;
 };
 
+export type AdminReseedAllNotificationsData = {
+  additive?: boolean;
+};
+
+export type AdminReseedAllNotificationsResponse = {
+  [key: string]: string;
+};
+
 export type BudgetsGetBudgetEntriesData = {
   budgetId: number;
 };

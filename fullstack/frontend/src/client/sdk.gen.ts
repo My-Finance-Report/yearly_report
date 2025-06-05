@@ -30,6 +30,8 @@ import type {
   AdminReseedAccountPageData,
   AdminReseedAccountPageResponse,
   AdminReseedAllAccountPagesResponse,
+  AdminReseedAllNotificationsData,
+  AdminReseedAllNotificationsResponse,
   BudgetsGetBudgetEntriesData,
   BudgetsGetBudgetEntriesResponse,
   BudgetsCreateBudgetEntryData,
@@ -492,6 +494,28 @@ export class AdminService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/v1/admin/reseed-account-page",
+    });
+  }
+
+  /**
+   * Reseed All Notifications
+   * @param data The data for the request.
+   * @param data.additive
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static reseedAllNotifications(
+    data: AdminReseedAllNotificationsData = {},
+  ): CancelablePromise<AdminReseedAllNotificationsResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/admin/reseed-notifications",
+      query: {
+        additive: data.additive,
+      },
+      errors: {
+        422: "Validation Error",
+      },
     });
   }
 }
