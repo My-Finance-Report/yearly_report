@@ -34,6 +34,7 @@ def new_transaction_effect(session: Session, user: User) -> EffectModel:
         conditional_parameters=ConditionalParameters(count=0),
     )
 
+
 budget_threshold_exceeded_template = """
     Hey there! You have gone over budget! :scream:
 
@@ -43,6 +44,7 @@ budget_threshold_exceeded_template = """
     """
 
 BUDGET_THRESHOLD_EXCEEDED_REF_NAME = "budget_threshold_exceeded"
+
 
 def budget_threshold_exceeded_effect(session: Session, user: User) -> EffectModel:
     return EffectModel(
