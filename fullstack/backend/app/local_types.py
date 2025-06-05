@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, NewType
 
 from pydantic import BaseModel
 from app.models.budget import BudgetCategoryLinkId, BudgetEntryId, BudgetId
@@ -228,6 +228,7 @@ class BudgetOut(BudgetBase):
     id: BudgetId
     entries: list[BudgetEntryOut]
 
+Month = NewType("Month", str)
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
@@ -235,15 +236,16 @@ class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
 
 
 class BudgetEntryStatus(BudgetEntryBase):
-    category_links_status: dict[str, BudgetCategoryLinkStatus]
+    category_links_status: dict[Month, BudgetCategoryLinkStatus]
     total: Decimal
+    target: Decimal
 
 
 class BudgetStatus(BudgetBase):
     budget_id: BudgetId
     entry_status: list[BudgetEntryStatus]
     entries: list[BudgetEntryOut]
-    months_with_entries: list[str]
+    months_with_entries: list[Month]
 
 
 class ProcessFileJobBase(BaseModel):

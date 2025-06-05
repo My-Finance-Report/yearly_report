@@ -40,12 +40,18 @@ big milestones before launch:
 
 -> Notifications
   -> allow user to 'restore default notifications' and delete the defaults
-    --> the user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
   -> emails only configured to send to me -- update to send to everyone
+  -> not able to create a new notification on the ui right now
   -> maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
+  -> add a budget based event
+
 
 -> Accounts View
-  -> no code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
+  -> no code improvements: add / remove widgets 
+  -> weird initial loading state
+  -> i think some of the queries are quite slow
+    -> maybe be able to batch the inital load
+  -> some mobile treatment
 
 -> POS
   -> add ability for a guest to order (WIP)
@@ -61,6 +67,7 @@ big milestones before launch:
 --> make sure we remove plaid items so we dont get charged
 
 -> redirect everything to the main url
+-> fix 2fa
 
 -> merge account function
 --> built backend but needs frontend

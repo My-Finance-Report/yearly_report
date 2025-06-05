@@ -46,6 +46,7 @@ const EVENT_TYPES: Record<EventType, string> = {
   new_transaction: "New Transaction",
   new_account_linked: "New Account Linked",
   account_deactivated: "Account Deactivated",
+  budget_threshold_exceeded: "Budget Threshold Exceeded",
 };
 
 const EFFECT_TYPES: Record<EffectType, string> = {
@@ -59,7 +60,10 @@ function determineConditionsForEventType(
   if (eventType === "new_transaction") {
     return ["amount_over", "count_of_transactions"];
   }
-  return [];
+  if (eventType === "budget_threshold_exceeded") {
+    return ["amount_over"];
+  }
+ return [];
 }
 
 function supportsFrequency(eventType: EventType) {
@@ -81,6 +85,8 @@ export function CreateForm({
     control,
     formState: { errors, isSubmitting, isDirty },
   } = form;
+
+  console.log(effectMappings)
 
   const updateMutation = useMutation({
     mutationFn: ({

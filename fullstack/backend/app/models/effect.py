@@ -37,6 +37,7 @@ class EventType(str, enum.Enum):
     NEW_TRANSACTION = "new_transaction"
     NEW_ACCOUNT_LINKED = "new_account_linked"
     ACCOUNT_DEACTIVATED = "account_deactivated"
+    BUDGET_THRESHOLD_EXCEEDED = "budget_threshold_exceeded"
 
 
 class EffectLog(Base):

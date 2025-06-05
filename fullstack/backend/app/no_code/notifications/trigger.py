@@ -117,12 +117,16 @@ def aggregate_effects(effects: List[Effect]) -> List[Effect]:
 
 def perform_template_replacement(event: Event, effect: Effect) -> Email:
     # find vars in double brackets {{account_name}}
+    print(event)
 
     def make_subs(temp: str) -> str:
         vars = re.findall(r"{{\s*(\w+)\s*}}", temp)
         for var in vars:
+            print(var)
             if hasattr(event, var):
+                print("has var")
                 value = str(getattr(event, var))
+                print(value)
                 # Replace all occurrences of {{var}} (with or without spaces)
                 temp = re.sub(r"{{\s*" + re.escape(var) + r"\s*}}", value, temp)
         return temp
