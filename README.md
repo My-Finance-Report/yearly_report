@@ -29,86 +29,84 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 # TODO
 
-big milestones before launch:
+# Big Milestones Before Launch
 
--> Stripe
-  --> sort of exists but we need a way to actually charge people
+* **Stripe**
+  * Sort of exists but we need a way to actually charge people
 
--> Plaid
-  -> prune the logs table of sync events (over 2mm events already, some sort of lifecycle)
-  -> have a way to activate / deactivate accounts from the accounts page
+* **Plaid**
+  * Prune the logs table of sync events (over 2mm events already, some sort of lifecycle)
+  * Have a way to activate / deactivate accounts from the accounts page
 
--> Notifications
-  -> allow user to 'restore default notifications' and delete the defaults
-  -> emails only configured to send to me -- update to send to everyone
-  -> not able to create a new notification on the ui right now
-  -> maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
-  -> add a budget based event
+* **Notifications**
+  * Allow user to 'restore default notifications' and delete the defaults
+    * The user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
+  * Emails only configured to send to me -- update to send to everyone
+  * Maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
 
+* **Accounts View**
+  * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
+  * Weird initial loading state
+  * Some mobile treatment
+  * Some of the queries are quite slow
+    * Maybe be able to batch the initial load
 
--> Accounts View
-  -> no code improvements: add / remove widgets 
-  -> weird initial loading state
-  -> i think some of the queries are quite slow
-    -> maybe be able to batch the inital load
-  -> some mobile treatment
+* **POS**
+  * Add ability for a guest to order (WIP)
+    * Need to remove RLS on tables for menu items
+  * Bigger: add ability to charge for the item
+  * Add an effect for the order to send a notification
 
--> POS
-  -> add ability for a guest to order (WIP)
-  --> need to remove RLS on tables for menu items
-  -> bigger: add ability to charge for the item
-  -> add an effect for the order to send a notification
+* Why are there no decimals at all on transactions...?
 
--> why are there no decimals at all on transactions..?
+* Delete saved filter doesn't work on /transactions
 
--> delete saved filter doesnt work on /transactions
+* Get user delete to work on app (right now i just removed from the user page)
+  * Make sure we remove plaid items so we don't get charged
 
--> get user delete to work on app (right now i just removed from the user page)
---> make sure we remove plaid items so we dont get charged
+* Redirect everything to the main url
+* Fix 2fa
 
--> redirect everything to the main url
--> fix 2fa
+* Merge account function
+  * Built backend but needs frontend
 
--> merge account function
---> built backend but needs frontend
+* Nice to have: search of transactions
 
--> nice to have: search of transactions
-
--> you cant remove a category once it is used
---> doesnt rerun on category delete
+* You can't remove a category once it is used
+  * Doesn't rerun on category delete
 
 
 # Codestyle
 
--> Prefer strong types and functional programming
---> in general make bad states unrepresentable and add types to enforce this (of course easier said than done)
---> strong types > tests
+* Prefer strong types and functional programming
+  * In general make bad states unrepresentable and add types to enforce this (of course easier said than done)
+  * Strong types > tests
 
--> for business logic lean toward composable "pipelines"
---> pipelines can be easily traced and debugged 
---> try to avoid conditional function calls within the pipeline, so that regardless of the inputs, the code path is the same
+* For business logic lean toward composable "pipelines"
+  * Pipelines can be easily traced and debugged 
+  * Try to avoid conditional function calls within the pipeline, so that regardless of the inputs, the code path is the same
 
--> RLS is a level of protection, but we don't treat it as unbreakable isolation
---> with RLS `select * from transactions` should be the same as `select * from transactions where user_id = current_user_id`
---> that said, we should prefer the redudency of not relying on RLS 
+* RLS is a level of protection, but we don't treat it as unbreakable isolation
+  * With RLS `select * from transactions` should be the same as `select * from transactions where user_id = current_user_id`
+  * That said, we should prefer the redudency of not relying on RLS 
 
--> Prefer explicit joins to ORM magic. 
---> I generally don't add `relationship` to the models, and instead explicitly join when required. 
---> I dont feel very strongly about this
+* Prefer explicit joins to ORM magic
+  * I generally don't add `relationship` to the models, and instead explicitly join when required
+  * I don't feel very strongly about this
 
 
+# Practical Info
 
-# Practical info
--> bin/ has some useful commands
+* bin/ has useful commands:
 
--> bin/worker runs the worker
--> bin/backend runs the server
--> bin/frontend runs the frontend
--> bin/db runs the db
--> bin/check_for_deploy is linting / formatting
--> bin/regen regenerates the frontend client from the API 
+* bin/worker runs the worker
+* bin/backend runs the server
+* bin/frontend runs the frontend
+* bin/db runs the db
+* bin/check_for_deploy is linting / formatting
+* bin/regen regenerates the frontend client from the API 
 
--> to make a database migration you can often just update the model files and run:
+* To make a database migration you can often just update the model files and run:
 
 
 ```bash
@@ -116,17 +114,17 @@ cd fullstack/backend
 PYTHONPATH=$(pwd) alembic revision --autogenerate -m "$@"
 ```
 
--> you should check the generated migration and make sure it is correct, some things dont get auto updated like adding an enum value
+* You should check the generated migration and make sure it is correct, some things dont get auto updated like adding an enum value
 
--> then run with:
+* Then run with:
 ```bash
 cd fullstack/backend
 PYTHONPATH=$(pwd) alembic upgrade heads
 ```
 
--> if you add a new table, you have to grant RLS access. see alembic/helpers.py
--> when you add a new api route you have to register it in app/api/main.py
--> using the query client from tanstack is really nice. prefer to raw fetch calls
+* If you add a new table, you have to grant RLS access. see alembic/helpers.py
+* When you add a new api route you have to register it in app/api/main.py
+* Using the query client from tanstack is really nice. prefer to raw fetch calls
 
 
 
