@@ -409,7 +409,7 @@ class WorkerStatusOut(BaseModel):
 
 
 class EffectOut(BaseModel):
-    id: int | None = None  # Make it optional to support both existing and new effects
+    id: int
     name: str
     effect_type: EffectType
     event_type: EventType

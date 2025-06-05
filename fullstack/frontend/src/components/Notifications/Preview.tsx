@@ -1,14 +1,24 @@
 import { Email, NoCodeService } from "@/client";
-import React from "react";
-import { Card } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Box, Card, Skeleton, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationFormValues } from "./Builder";
+import { useForm } from "react-hook-form";
+import { FiMail } from "react-icons/fi";
 
 interface NotificationPreviewProps {
-  formValues: NotificationFormValues | null;
+  form: ReturnType<typeof useForm<NotificationFormValues>>;
 }
 
-export function NotificationPreview({ formValues }: NotificationPreviewProps) {
+export function NotificationPreview({ form }: NotificationPreviewProps) {
+  const [formValues, setFormValues] = useState<NotificationFormValues>(
+    form.getValues(),
+  );
+
+  form.watch((values) => {
+    setFormValues(values as NotificationFormValues);
+  });
+
   if (!formValues) {
     return <Placeholder />;
   }
@@ -18,12 +28,19 @@ export function NotificationPreview({ formValues }: NotificationPreviewProps) {
 
 function Placeholder() {
   return (
-    <Card.Root className="border" w="full">
-      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-        Preview
+    <Card.Root w="full" variant="outline">
+      <Card.Header p={4} borderBottomWidth="1px">
+        <Text fontWeight="medium" color="gray.600">
+          Preview
+        </Text>
       </Card.Header>
-      <Card.Body p={3}>
-        <p>Preview not available</p>
+      <Card.Body p={6}>
+        <Box>
+          <Skeleton height="24px" width="60%" mb={4} />
+          <Skeleton height="16px" width="90%" mb={2} />
+          <Skeleton height="16px" width="80%" mb={2} />
+          <Skeleton height="16px" width="85%" />
+        </Box>
       </Card.Body>
     </Card.Root>
   );
@@ -57,12 +74,29 @@ export function NotificationPreviewInner({
   }
 
   return (
-    <Card.Root className="border" w="full" minW={"600px"}>
-      <Card.Header p={3} borderBottomWidth="1px" fontWeight="medium">
-        {data.subject}
+    <Card.Root
+      w="full"
+      minW={{ base: "full" }}
+      maxW="900px"
+      variant="outline"
+      overflow="hidden"
+    >
+      <Card.Header
+        p={4}
+        borderBottomWidth="1px"
+        display="flex"
+        alignItems="center"
+        gap={3}
+      >
+        <Box as={FiMail} color="blue.500" boxSize={5} />
+        <Text fontWeight="medium" color="gray.700">
+          {data.subject}
+        </Text>
       </Card.Header>
-      <Card.Body className="p-0 overflow-hidden">
-        <div dangerouslySetInnerHTML={{ __html: data.clean_html }} />
+      <Card.Body p={6}>
+        <Box className="email-preview" p={6} borderRadius="md" boxShadow="sm">
+          <div dangerouslySetInnerHTML={{ __html: data.clean_html }} />
+        </Box>
       </Card.Body>
     </Card.Root>
   );

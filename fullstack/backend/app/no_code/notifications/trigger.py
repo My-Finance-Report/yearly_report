@@ -1,12 +1,9 @@
 import re
+from collections import defaultdict
 from typing import cast
 from html_sanitizer import Sanitizer
 from datetime import datetime, timedelta, timezone
 from typing import List, Callable
-from app.no_code.notifications.effect_generators.seed_effects import (
-    deactivated_account_effect,
-    new_transaction_effect,
-)
 from app.no_code.notifications.effects import (
     EFFECT_CONDITIONALS_LOOKUP,
     Effect,
@@ -26,36 +23,30 @@ def collect_user_effects(
     """
     Retrieve all notification effects configured by the user.
     """
-    effects = session.query(EffectModel).filter(
+    db_effects = session.query(EffectModel).filter(
         EffectModel.user_id == user.id,
         EffectModel.event_type == event_type,
         EffectModel.active,
     )
 
-    db_effects = [
-        Effect(
-            active=effect.active,
-            editable=effect.editable,
-            type=effect.effect_type,
-            condition=effect.condition,
-            conditional_parameters=effect.conditional_parameters,
-            config=EffectConfig(
-                template=effect.template,
-                subject=effect.subject,
-                frequency_days=effect.frequency_days,
-            ),
+    effects: dict[EventType, list[Effect]] = defaultdict(list)
+    for effect in db_effects:
+        effects[effect.event_type].append(
+            Effect(
+                active=effect.active,
+                editable=effect.editable,
+                type=effect.effect_type,
+                condition=effect.condition,
+                conditional_parameters=effect.conditional_parameters,
+                config=EffectConfig(
+                    template=effect.template,
+                    subject=effect.subject,
+                    frequency_days=effect.frequency_days,
+                ),
+            )
         )
-        for effect in effects
-    ]
-    DEFAULTS = {
-        EventType.NEW_TRANSACTION: [new_transaction_effect(session, user)],
-        EventType.ACCOUNT_DEACTIVATED: [deactivated_account_effect(session, user)],
-    }
 
-    return [
-        *db_effects,
-        *DEFAULTS.get(event_type, []),
-    ]
+    return effects.get(event_type, [])
 
 
 def check_all_effects(event: Event, effects: List[Effect]) -> List[Effect]:

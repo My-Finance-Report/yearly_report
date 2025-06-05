@@ -194,7 +194,7 @@ export type EffectMappings = {
 };
 
 export type EffectOut = {
-  id?: number | null;
+  id: number;
   name: string;
   effect_type: EffectType;
   event_type: EventType;
@@ -1004,6 +1004,14 @@ export type AdminReseedAccountPageResponse = {
 };
 
 export type AdminReseedAllAccountPagesResponse = {
+  [key: string]: string;
+};
+
+export type AdminReseedAllNotificationsData = {
+  additive?: boolean;
+};
+
+export type AdminReseedAllNotificationsResponse = {
   [key: string]: string;
 };
 
