@@ -836,8 +836,9 @@ def list_all_categories(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> list[CategoryOut]:
-    categories_query = session.query(Category).filter(
+    categories_query = session.query(Category).join(TransactionSource, TransactionSource.id == Category.source_id).filter(
         Category.user_id == user.id,
+        ~TransactionSource.archived,
     )
 
     stylized_name_lookup = get_stylized_name_lookup(session, user)

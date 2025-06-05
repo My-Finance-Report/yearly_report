@@ -1,0 +1,30 @@
+#!/bin/bash
+
+SECURITY_GROUP_ID="sg-039d511528c4dadaa" 
+PORT=22
+AWS_PROFILE="personal"
+AWS_REGION="us-east-2"
+
+IP=$(curl -s https://icanhazip.com)
+
+CIDR="$IP/32"
+
+RULE_EXISTS=$(aws ec2 describe-security-groups \
+  --group-ids "$SECURITY_GROUP_ID" \
+  --profile "$AWS_PROFILE" \
+  --region "$AWS_REGION" \
+  --query "SecurityGroups[0].IpPermissions[?FromPort==\`$PORT\` && ToPort==\`$PORT\`].IpRanges[?CidrIp==\`$CIDR\`]" \
+  --output text)
+
+if [[ -z "$RULE_EXISTS" ]]; then
+  aws ec2 authorize-security-group-ingress \
+    --group-id "$SECURITY_GROUP_ID" \
+    --protocol tcp \
+    --port $PORT \
+    --cidr "$CIDR" \
+    --profile "$AWS_PROFILE" \
+    --region "$AWS_REGION"
+  echo "✅ Added SSH rule for $CIDR"
+else
+  echo "ℹ️ Rule for $CIDR on port $PORT already exists"
+fi
