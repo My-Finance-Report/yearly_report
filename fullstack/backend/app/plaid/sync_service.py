@@ -429,8 +429,8 @@ def trigger_budget_effect(in_process: InProcessJob) -> None:
             NoCodeBudgetEntry(
                 id=-1,
                 category_name=budget_entry_status.name,
-                target=float(budget_entry_status.amount),
-                current=float(budget_entry_status.total),
+                monthly_target=budget_entry_status.amount,
+                current_monthly_total=budget_entry_status.monthly_total,
             )
         )
 

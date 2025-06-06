@@ -21,6 +21,7 @@ from app.models.worker_job import JobStatus
 from app.models.worker_status import ProcessingState
 
 from app.no_code.notifications.effects import EffectConfig
+from app.schemas.no_code import MonthlyTarget, MonthlyTotal
 
 
 class Token(BaseModel):
@@ -194,7 +195,7 @@ class BudgetEntryCreate(BaseModel):
 
 
 class BudgetEntryBase(BaseModel):
-    amount: Decimal
+    amount: MonthlyTarget
     id: BudgetEntryId
     name: str
     budget_id: BudgetId
@@ -230,18 +231,17 @@ class BudgetOut(BudgetBase):
 
 
 Month = NewType("Month", str)
-
+Year = NewType("Year", int)
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
-    monthly_total: Decimal
-    monthly_target: Decimal
+    monthly_total: MonthlyTotal
+    monthly_target: MonthlyTarget
 
 
 class BudgetEntryStatus(BudgetEntryBase):
-    category_links_status: dict[Month, BudgetCategoryLinkStatus]
-    yearly_total: Decimal
-    yearly_target: Decimal
+    category_links_status_monthly: dict[Month, BudgetCategoryLinkStatus]
+    category_links_status_yearly: dict[Year, BudgetCategoryLinkStatus]
 
 
 class BudgetStatus(BudgetBase):
