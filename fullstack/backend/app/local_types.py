@@ -234,13 +234,14 @@ Month = NewType("Month", str)
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
-    total: Decimal
+    monthly_total: Decimal
+    monthly_target: Decimal
 
 
 class BudgetEntryStatus(BudgetEntryBase):
     category_links_status: dict[Month, BudgetCategoryLinkStatus]
-    total: Decimal
-    target: Decimal
+    yearly_total: Decimal
+    yearly_target: Decimal
 
 
 class BudgetStatus(BudgetBase):

@@ -35,12 +35,12 @@ def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, s
 
 def group_transactions_by_month(
     transactions: list[Transaction],
-) -> dict[str, list[Transaction]]:
+) -> dict[Month, list[Transaction]]:
     grouped_transactions = defaultdict(list)
 
     for transaction in transactions:
         month = transaction.date_of_transaction.strftime("%Y-%m")
-        grouped_transactions[month].append(transaction)
+        grouped_transactions[Month(month)].append(transaction)
 
     return dict(grouped_transactions)
 

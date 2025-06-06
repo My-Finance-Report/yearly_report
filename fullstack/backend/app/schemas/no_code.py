@@ -33,8 +33,8 @@ class NoCodeTransaction(BaseModel):
 
 class NoCodeBudgetEntry(BaseModel):
     id: int
-    target: float
-    current: float
+    monthly_target: float
+    current_monthly_total: float
     category_name: str
 
 
