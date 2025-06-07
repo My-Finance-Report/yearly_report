@@ -426,19 +426,20 @@ def trigger_budget_effect(in_process: InProcessJob) -> None:
 
     budget_entries = []
     for budget_entry_status in budget_status.entry_status:
-        budget_entries.append(
-            NoCodeBudgetEntry(
-                id=-1,
-                category_name=budget_entry_status.name,
-                monthly_target=budget_entry_status.monthly_target,
-                current_monthly_total=budget_entry_status.category_links_status_monthly[
-                    Month(
+        month =  Month(
                         year=datetime.now(timezone.utc).year,
                         month=datetime.now(timezone.utc).month,
                     )
-                ].monthly_total,
+        month_specific_entry = budget_entry_status.category_links_status_monthly.get(month)
+        if month_specific_entry:
+            budget_entries.append(
+                NoCodeBudgetEntry(
+                    id=-1,
+                    category_name=budget_entry_status.name,
+                    monthly_target=budget_entry_status.monthly_target,
+                    current_monthly_total=month_specific_entry.monthly_total,
+                )
             )
-        )
 
     trigger_effects(
         in_process.session,
