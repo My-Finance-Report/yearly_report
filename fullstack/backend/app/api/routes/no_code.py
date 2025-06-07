@@ -28,6 +28,7 @@ from app.schemas.no_code import (
     NoCodeCanvasOut,
     NoCodeToolIn,
     NoCodeToolOut,
+    NoCodeWidgetCreate,
     NoCodeWidgetIn,
     NoCodeWidgetOut,
     NoCodeWidgetUpdate,
@@ -41,11 +42,11 @@ router = APIRouter(prefix="/no_code", tags=["no_code"])
 
 
 @router.get("/get_no_code_tools", response_model=list[NoCodeToolOut])
-def get_no_code_tool(
+def get_no_code_tools(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[NoCodeToolOut]:
-    return make_tools(session, user)
+    return make_tools()
 
 
 def process_widget(
@@ -125,6 +126,14 @@ def update_parameter(
     session.commit()
 
     return {"message": "updated parameter"}
+
+@router.post('/create_widget', response_model=NoCodeWidgetOut)
+def create_widget(
+    widget: NoCodeWidgetCreate,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> None:
+    pass
 
 
 @router.post("/update_widget", response_model=dict[str, str])

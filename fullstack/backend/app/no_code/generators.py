@@ -7,14 +7,39 @@ from decimal import Decimal
 from pydantic import BaseModel
 from sqlalchemy import func
 from app.models.category import Category
-from app.models.no_code.parameter import SelectOption
+from app.models.no_code.parameter import ParameterType, SelectOption
 from app.models.plaid import PlaidAccountBalance, PlaidSyncLog
 from app.models.transaction import Transaction, TransactionKind
 from app.models.transaction_source import SourceKind, TransactionSource
 
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import NoCodeTransaction, PipelineStart
+from app.schemas.no_code import NoCodeParameterCreate, NoCodeTransaction, PipelineStart
 from app.no_code.transformations import KeyValuePair
+
+
+AccountIdParam = NoCodeParameterCreate(
+    name="account_id",
+    label="Account ID",
+    type=ParameterType.SELECT,
+)
+
+NParam = NoCodeParameterCreate(
+    name="n",
+    label="N",
+    type=ParameterType.INT,
+)
+
+PageParam = NoCodeParameterCreate(
+    name="page",
+    label="Page",
+    type=ParameterType.INT,
+)
+
+TimeUnitParam = NoCodeParameterCreate(
+    name="time_unit",
+    label="Time Unit",
+    type=ParameterType.SELECT,
+)
 
 
 @pipeline_step(
@@ -33,6 +58,7 @@ def total_amount_per_category(data: PipelineStart) -> list[KeyValuePair]:
 @pipeline_step(
     return_type=list[NoCodeTransaction],
     passed_value=None,
+    parameters=[AccountIdParam, NParam, PageParam],
 )
 def first_n_transactions(
     data: PipelineStart,
@@ -85,6 +111,7 @@ def first_n_transactions(
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
+    parameters=[AccountIdParam],
 )
 def account_name(data: PipelineStart, account_id: SelectOption) -> str | None:
     query = (
@@ -99,6 +126,7 @@ def account_name(data: PipelineStart, account_id: SelectOption) -> str | None:
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
+    parameters=[AccountIdParam],
 )
 def plaid_enabled(data: PipelineStart, account_id: SelectOption) -> str | None:
     query = (
@@ -120,6 +148,7 @@ def plaid_enabled(data: PipelineStart, account_id: SelectOption) -> str | None:
 @pipeline_step(
     return_type=str | None,
     passed_value=None,
+    parameters=[AccountIdParam],
 )
 def last_plaid_sync(data: PipelineStart, account_id: SelectOption) -> str | None:
     db_source = (
@@ -179,6 +208,7 @@ class ResultWithTrend(BaseModel):
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
+    parameters=[AccountIdParam],
 )
 def account_balance(
     data: PipelineStart, account_id: SelectOption
@@ -226,6 +256,7 @@ def determine_percent_change(start: Decimal, end: Decimal) -> Decimal:
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
+    parameters=[],
 )
 def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     # select all transaction sources for the user
@@ -301,6 +332,7 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
+    parameters=[AccountIdParam],
 )
 def account_interest(
     data: PipelineStart, account_id: SelectOption
@@ -326,6 +358,7 @@ def account_interest(
 @pipeline_step(
     return_type=ResultWithTrend | None,
     passed_value=None,
+    parameters=[AccountIdParam, TimeUnitParam],
 )
 def account_throughput(
     data: PipelineStart, account_id: SelectOption, time_unit: SelectOption

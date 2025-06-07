@@ -114,7 +114,7 @@ export function renderNoCodeParameter(
   }
 }
 
-export function NoCodeShow({ widget }: { widget: NoCodeWidgetIn_Output }) {
+export function NoCodeWidget({ widget }: { widget: NoCodeWidgetIn_Output }) {
   const TheDisplay = MAP_TO_SHOW[widget.type];
 
   const { parameters: initParams, setWidgetParameters } = useNoCodeContext();

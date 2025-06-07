@@ -152,6 +152,16 @@ class NoCodeWidgetIn(BaseModel):
     col_span: int
     type: WidgetType
 
+class NoCodeWidgetCreate(BaseModel):
+    name: str
+    description: str
+    pipeline: list[NoCodeToolIn]
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+    type: WidgetType
+
 
 class NoCodeWidgetUpdate(BaseModel):
     name: str
@@ -198,10 +208,17 @@ class NoCodeCanvasCreate(BaseModel):
     parameter_groups: list[ParameterGroupOut]
 
 
+class NoCodeParameterCreate(BaseModel):
+    name: str
+    label: str | None = None
+    type: ParameterType
+
+
+
+
 class NoCodeToolOut(BaseModel):
     name: str
     description: str
     tool: str
-    parameters: list[Parameter] | None = None
-    return_type: dict[str, Any]
-    input_type: dict[str, Any]
+    parameters: list[NoCodeParameterCreate] | None = None
+    return_type: Any
