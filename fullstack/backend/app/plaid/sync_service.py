@@ -495,7 +495,7 @@ def add_new_transactions(
                     partialTransactionDateOfTransaction=pt["date"].strftime("%m/%d/%Y"),
                     partialTransactionKind=get_transaction_kind(
                         float(pt["amount"])
-                    ).value, # todo this should be improved
+                    ).value,  # todo this should be improved
                 )
                 for pt in plaid_response.added + plaid_response.modified
             ]
@@ -685,6 +685,7 @@ def deactivate_account_if_persistent_failure(
     if failure_count > DEACTIVATION_THRESHOLD:
         deactivate_account(user_session, user, plaid_account)
 
+
 def deactivate_account(session: Session, user: User, account: PlaidAccount) -> None:
     account.archived = True
     session.commit()
@@ -692,5 +693,3 @@ def deactivate_account(session: Session, user: User, account: PlaidAccount) -> N
     deactivate_event = AccountDeactivatedEvent(account_name=account.name)
 
     trigger_effects(session, user, deactivate_event)
-
-
