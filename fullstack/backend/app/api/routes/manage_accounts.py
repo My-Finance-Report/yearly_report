@@ -9,7 +9,7 @@ from app.local_types import (
     TransactionSourceOut,
 )
 from app.models.category import Category
-from app.models.plaid import PlaidSyncLog, PlaidSyncLogId
+from app.models.plaid import PlaidAccount, PlaidSyncLog, PlaidSyncLogId
 from app.models.report import CategoryBase, TransactionSourceBase
 from app.models.transaction import Transaction
 from app.models.transaction_source import TransactionSource, TransactionSourceId
@@ -360,6 +360,12 @@ def toggle_archive_transaction_source(
 
     if not db_source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
+
+    if db_source.plaid_account_id:
+        plaid_account = session.query(PlaidAccount).filter(
+            PlaidAccount.id == db_source.plaid_account_id
+        ).one()
+        plaid_account.archived = not plaid_account.archived
 
     # Toggle the archived status
     db_source.archived = not db_source.archived
