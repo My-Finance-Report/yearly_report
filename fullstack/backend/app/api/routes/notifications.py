@@ -31,6 +31,8 @@ from app.schemas.no_code import (
 )
 from pydantic import BaseModel
 
+from app.seed.effects import seed_effects_and_dont_update_existing
+
 router = APIRouter(prefix="/notification", tags=["no_code"])
 
 
@@ -61,6 +63,10 @@ class EffectUpdate(BaseModel):
     conditional_parameters: ConditionalParameters
 
 
+def seed_effects_if_required(session: Session, user: User) -> None:
+    seed_effects_and_dont_update_existing(session, user)
+
+
 @router.get("/effects", response_model=list[EffectOut])
 def get_effects(
     session: Session = Depends(get_db),
@@ -69,6 +75,9 @@ def get_effects(
     """Get all notification effects for the current user"""
     # Query the database for user's effects
     db_effects = session.query(EffectModel).filter(EffectModel.user_id == user.id).all()
+
+    if not db_effects:
+        seed_effects_if_required(session, user)
 
     # Convert DB models to EffectOut schema
     return [
