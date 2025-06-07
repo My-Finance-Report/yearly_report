@@ -495,7 +495,7 @@ def add_new_transactions(
                     partialTransactionDateOfTransaction=pt["date"].strftime("%m/%d/%Y"),
                     partialTransactionKind=get_transaction_kind(
                         float(pt["amount"])
-                    ).value,
+                    ).value, # todo this should be improved
                 )
                 for pt in plaid_response.added + plaid_response.modified
             ]
@@ -647,7 +647,7 @@ async def sync_all_plaid_accounts(
 
     plaid_accounts = (
         user_session.query(PlaidAccount)
-        .filter(PlaidAccount.user_id == user.id, PlaidAccount.active == True)
+        .filter(PlaidAccount.user_id == user.id, ~PlaidAccount.archived)
         .all()
     )
 
@@ -665,19 +665,10 @@ async def sync_all_plaid_accounts(
             )
 
 
-def deactivate_account(session: Session, user: User, account: PlaidAccount) -> None:
-    account.active = False
-    session.commit()
-
-    deactivate_event = AccountDeactivatedEvent(account_name=account.name)
-    print("deactivating account")
-    trigger_effects(session, user, deactivate_event)
-
-
 def deactivate_account_if_persistent_failure(
     user_session: Session, user: User, plaid_account: PlaidAccount
 ) -> None:
-    DEACTIVATION_THRESHOLD = 3
+    DEACTIVATION_THRESHOLD = 100
 
     failure_count = (
         user_session.query(PlaidSyncLog)
@@ -693,3 +684,13 @@ def deactivate_account_if_persistent_failure(
 
     if failure_count > DEACTIVATION_THRESHOLD:
         deactivate_account(user_session, user, plaid_account)
+
+def deactivate_account(session: Session, user: User, account: PlaidAccount) -> None:
+    account.archived = True
+    session.commit()
+
+    deactivate_event = AccountDeactivatedEvent(account_name=account.name)
+
+    trigger_effects(session, user, deactivate_event)
+
+
