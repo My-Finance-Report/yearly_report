@@ -78,19 +78,16 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} 'mkdir -p code/finance_app'
         rsync -avz -e "ssh -o StrictHostKeyChecking=no -i finance_key.pem" .env.production fullstack/docker-compose.prod.yml ${EC2_USER}@${HOST}:${REMOTE_DIR}
 
-        ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} '
-        export IMAGE_TAG="$IMAGE_TAG"
+        ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} bash << EOF
+        export TAG="$IMAGE_TAG"
         export AWS_ACCOUNT_ID=067448242226
         export AWS_REGION="us-east-2" 
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "067448242226.dkr.ecr.us-east-2.amazonaws.com"
-        echo $(pwd)
-        ls -a
-        echo "---"
+        echo $TAG
         cd code/finance_app
-        echo $(pwd)
-        ls -a
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
-        docker-compose --env-file .env.production -f docker-compose.prod.yml up -d'
+        docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+        EOF
     # - name: revoke runner ip address
     #   env:
     #     AWS_INSTANCE_SG_ID: ${{ secrets.LAUNCH_WIZARD_6_SG_ID }}
