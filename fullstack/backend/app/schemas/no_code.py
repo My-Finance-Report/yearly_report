@@ -6,6 +6,7 @@ from typing import Any, Generic, NewType, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from app.models.no_code.canvas import CanvasId
 from app.models.no_code.parameter import (
     DefaultValue,
     DisplayInfo,
@@ -152,6 +153,17 @@ class NoCodeWidgetIn(BaseModel):
     type: WidgetType
 
 
+class NoCodeWidgetCreate(BaseModel):
+    name: str
+    description: str
+    pipeline: list[NoCodeToolIn]
+    row: int
+    col: int
+    row_span: int
+    col_span: int
+    type: WidgetType
+
+
 class NoCodeWidgetUpdate(BaseModel):
     name: str
     row: int
@@ -184,15 +196,28 @@ class NoCodeWidgetOut(BaseModel):
 
 class NoCodeCanvasOut(BaseModel):
     name: str
+    canvas_id: CanvasId
     widgets: list[NoCodeWidgetIn]
     parameters: list[Parameter]
     parameter_groups: list[ParameterGroupOut]
+
+
+class NoCodeCanvasCreate(BaseModel):
+    name: str
+    widgets: list[NoCodeWidgetIn]
+    parameters: list[Parameter]
+    parameter_groups: list[ParameterGroupOut]
+
+
+class NoCodeParameterCreate(BaseModel):
+    name: str
+    label: str | None = None
+    type: ParameterType
 
 
 class NoCodeToolOut(BaseModel):
     name: str
     description: str
     tool: str
-    parameters: list[Parameter] | None = None
-    return_type: dict[str, Any]
-    input_type: dict[str, Any]
+    parameters: list[NoCodeParameterCreate] | None = None
+    return_type: Any

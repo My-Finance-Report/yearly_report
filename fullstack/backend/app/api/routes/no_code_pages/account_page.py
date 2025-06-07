@@ -19,7 +19,7 @@ from app.no_code.functions import (
     make_account_choices,
 )
 from app.schemas.no_code import (
-    NoCodeCanvasOut,
+    NoCodeCanvasCreate,
     NoCodeToolIn,
     NoCodeTransaction,
     NoCodeWidgetIn,
@@ -627,7 +627,7 @@ def _generate_bar_chart_widget(
     )
 
 
-def generate_account_page(session: Session, user: User) -> NoCodeCanvasOut:
+def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
     global_parameters: dict[str, Parameter] = {}
 
     widgets = [
@@ -736,7 +736,7 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasOut:
         for param in extract_parameters_from_pipeline(w.pipeline, session, user):
             param_lookup[param.id] = param
 
-    return NoCodeCanvasOut(
+    return NoCodeCanvasCreate(
         name="Account Page",
         widgets=widgets,
         parameters=list(param_lookup.values()),

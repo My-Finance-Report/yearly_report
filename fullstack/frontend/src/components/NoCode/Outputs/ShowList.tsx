@@ -13,9 +13,10 @@ import {
 import { NoCodeWidgetOut } from "@/client";
 
 import EditTransaction from "../../Common/EditTransaction";
-import Delete from "../../Common/DeleteAlert";
+import DeleteAlert from "@/components/Common/DeleteAlert/DeleteAlert";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { TransactionKind } from "@/client";
+import { EntityKind } from "@/components/Common/DeleteAlert/types";
 
 interface NoCodeTransactionOut {
   id: number;
@@ -87,11 +88,10 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
                 isOpen={editTransactionModal.open}
                 onClose={editTransactionModal.onClose}
               />
-              <Delete
-                type="transaction"
+              <DeleteAlert
                 isOpen={deleteTransactionModal.open}
                 onClose={deleteTransactionModal.onClose}
-                entity={data}
+                entity={{ ...data, kind: EntityKind.Transaction }}
               />
             </TableRow>
           ))}

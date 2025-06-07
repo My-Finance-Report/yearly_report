@@ -4,10 +4,11 @@ import { RiSeedlingLine } from "react-icons/ri";
 import React from "react";
 
 import { AdminService } from "@/client";
-import Delete from "./DeleteAlert";
+import Delete from "@/components/Common/DeleteAlert/DeleteAlert";
 import { Menu, useDisclosure } from "@chakra-ui/react";
 import useCustomToast from "@/hooks/useCustomToast";
 import { useMutation } from "@tanstack/react-query";
+import { EntityKind } from "./DeleteAlert/types";
 
 interface ActionsMenuProps {
   type: "user" | "transaction";
@@ -82,8 +83,7 @@ const ActionsMenu = ({ type, entity }: ActionsMenuProps) => {
       <Delete
         isOpen={deleteModal.open}
         onClose={deleteModal.onClose}
-        entity={entity}
-        type={type}
+        entity={{ ...entity, kind: EntityKind.Transaction }}
       />
     </>
   );

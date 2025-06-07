@@ -24,7 +24,8 @@ import type {
 } from "../../client";
 import EditTransaction from "./EditTransaction";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-import Delete from "./DeleteAlert";
+import DeleteAlert from "@/components/Common/DeleteAlert/DeleteAlert";
+import { EntityKind } from "@/components/Common/DeleteAlert/types";
 
 export function TransactionsTable({
   data,
@@ -320,11 +321,11 @@ function TransactionRow({
         isOpen={editTransactionModal.open}
         onClose={editTransactionModal.onClose}
       />
-      <Delete
-        type="transaction"
+      <DeleteAlert
         isOpen={deleteTransactionModal.open}
         onClose={deleteTransactionModal.onClose}
-        entity={transaction}
+        entity={{ ...transaction, kind: EntityKind.Transaction }}
+        keysToInvalidate={["aggregatedTransactions"]}
       />
     </TableRow>
   );

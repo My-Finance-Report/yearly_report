@@ -4,6 +4,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.no_code.canvas import CanvasId
@@ -28,6 +29,8 @@ class NoCodeTool(Base):
     canvas_id: Mapped[CanvasId] = mapped_column(
         ForeignKey("no_code_canvas.id"), nullable=False
     )
+
+    __table_args__ = (UniqueConstraint("widget_id", "user_id", "canvas_id"),)
 
 
 class NoCodeToolParameter(Base):
