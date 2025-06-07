@@ -348,7 +348,7 @@ def toggle_transaction_source_archived(
     source_id: int,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-)-> TransactionSource:
+) -> TransactionSource:
     db_source = (
         session.query(TransactionSource)
         .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
@@ -365,10 +365,11 @@ def toggle_transaction_source_archived(
 
     return db_source
 
+
 def toggle_plaid_account_archived(
     session: Session,
     transaction_source: TransactionSource,
-)->None:
+) -> None:
     if not transaction_source.plaid_account_id:
         return None
 
@@ -377,7 +378,7 @@ def toggle_plaid_account_archived(
         .filter(PlaidAccount.id == transaction_source.plaid_account_id)
         .one()
     )
-    # make sure they synchronize, not 1/x 
+    # make sure they synchronize, not 1/x
     plaid_account.archived = transaction_source.archived
     session.commit()
     session.refresh(plaid_account)
