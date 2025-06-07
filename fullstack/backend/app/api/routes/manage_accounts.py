@@ -341,17 +341,14 @@ def trigger_recategorization(
     enqueue_recategorization(
         session=session, user_id=user.id, transaction_source_id=source_id
     )
-
     return {"status": "success", "message": "Recategorization job has been queued"}
 
 
-@router.post("/{source_id}/toggle-archive", response_model=TransactionSourceOut)
-def toggle_archive_transaction_source(
+def toggle_transaction_source_archived(
     source_id: int,
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-) -> TransactionSourceOut:
-    """Toggle the archive status of a transaction source."""
+)-> TransactionSource:
     db_source = (
         session.query(TransactionSource)
         .filter(TransactionSource.id == source_id, TransactionSource.user_id == user.id)
@@ -361,25 +358,55 @@ def toggle_archive_transaction_source(
     if not db_source:
         raise HTTPException(status_code=404, detail="Transaction source not found.")
 
-    if db_source.plaid_account_id:
-        plaid_account = (
-            session.query(PlaidAccount)
-            .filter(PlaidAccount.id == db_source.plaid_account_id)
-            .one()
-        )
-        plaid_account.archived = not plaid_account.archived
-
-    # Toggle the archived status
     db_source.archived = not db_source.archived
 
     session.commit()
     session.refresh(db_source)
+
+    return db_source
+
+def toggle_plaid_account_archived(
+    session: Session,
+    transaction_source: TransactionSource,
+)->None:
+    if not transaction_source.plaid_account_id:
+        return None
+
+    plaid_account = (
+        session.query(PlaidAccount)
+        .filter(PlaidAccount.id == transaction_source.plaid_account_id)
+        .one()
+    )
+    # make sure they synchronize, not 1/x 
+    plaid_account.archived = transaction_source.archived
+    session.commit()
+    session.refresh(plaid_account)
+
+
+@router.post("/{source_id}/toggle-archive", response_model=TransactionSourceOut)
+def toggle_archive_transaction_source(
+    source_id: int,
+    session: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TransactionSourceOut:
+    """Toggle the archive status of a transaction source."""
+
+    transaction_source = toggle_transaction_source_archived(
+        source_id=source_id,
+        session=session,
+        user=user,
+    )
+    toggle_plaid_account_archived(
+        session=session,
+        transaction_source=transaction_source,
+    )
+
     return TransactionSourceOut(
-        name=db_source.name,
-        archived=db_source.archived,
-        id=db_source.id,
-        source_kind=db_source.source_kind,
-        is_plaid_connected=db_source.plaid_account_id is not None,
+        name=transaction_source.name,
+        archived=transaction_source.archived,
+        id=transaction_source.id,
+        source_kind=transaction_source.source_kind,
+        is_plaid_connected=transaction_source.plaid_account_id is not None,
     )
 
 

@@ -41,7 +41,6 @@ class TransactionSource(Base):
             ForeignKey("plaid_account.id"), nullable=True
         )
     )
-
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
     )
