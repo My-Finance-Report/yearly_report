@@ -35,18 +35,21 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Sort of exists but we need a way to actually charge people
 
 * **Plaid**
-  * Prune the logs table of sync events (over 2mm events already, some sort of lifecycle)
-  * Have a way to activate / deactivate accounts from the accounts page
+* Have a way to activate / deactivate accounts from the accounts page
 
 * **Notifications**
   * Allow user to 'restore default notifications' and delete the defaults
     * The user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
   * Emails only configured to send to me -- update to send to everyone
+  * condition editors are not working
   * Maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
 
 * **Accounts View**
+  * probably only show this if the user has plaid accounts synced
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
   * Weird initial loading state
+  * group by selector default is wrong / out of line with the chart
+  * date of transaction is not clean
   * Some mobile treatment
   * Some of the queries are quite slow
     * Maybe be able to batch the initial load
@@ -81,6 +84,16 @@ this is mainly a project through which I will learn more about haskell, but I ex
 * Prefer strong types and functional programming
   * In general make bad states unrepresentable and add types to enforce this (of course easier said than done)
   * Strong types > tests
+  * wrapped primitives are a good way to catch bugs with the linter
+  ```python
+    MonthlyTarget = NewType("MonthlyTarget", Decimal)
+    MonthlyTotal = NewType("MonthlyTotal", Decimal)
+    MonthlyProgress = NewType("MonthlyProgress", Decimal)
+    BudgetAmount = NewType("BudgetAmount", Decimal)
+    YearlyTotal = NewType("YearlyTotal", Decimal)
+    YearlyTarget = NewType("YearlyTarget", Decimal)
+  ```
+
 
 * For business logic lean toward composable "pipelines"
   * Pipelines can be easily traced and debugged 
