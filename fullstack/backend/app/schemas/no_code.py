@@ -22,6 +22,7 @@ from app.models.user import User
 
 MonthlyTarget = NewType("MonthlyTarget", Decimal)
 MonthlyTotal = NewType("MonthlyTotal", Decimal)
+MonthlyProgress = NewType("MonthlyProgress", Decimal)
 BudgetAmount = NewType("BudgetAmount", Decimal)
 YearlyTotal = NewType("YearlyTotal", Decimal)
 YearlyTarget = NewType("YearlyTarget", Decimal)
@@ -43,6 +44,12 @@ class NoCodeBudgetEntry(BaseModel):
     monthly_target: MonthlyTarget
     current_monthly_total: MonthlyTotal
     category_name: str
+
+    @property
+    def progress(self) -> MonthlyProgress:
+        return MonthlyProgress(
+            Decimal(self.current_monthly_total) / Decimal(self.monthly_target)
+        )
 
 
 T = TypeVar("T")
