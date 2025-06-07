@@ -127,7 +127,8 @@ def update_parameter(
 
     return {"message": "updated parameter"}
 
-@router.post('/create_widget', response_model=NoCodeWidgetOut)
+
+@router.post("/create_widget", response_model=NoCodeWidgetOut)
 def create_widget(
     widget: NoCodeWidgetCreate,
     user: User = Depends(get_current_user),

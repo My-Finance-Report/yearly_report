@@ -152,6 +152,7 @@ class NoCodeWidgetIn(BaseModel):
     col_span: int
     type: WidgetType
 
+
 class NoCodeWidgetCreate(BaseModel):
     name: str
     description: str
@@ -212,8 +213,6 @@ class NoCodeParameterCreate(BaseModel):
     name: str
     label: str | None = None
     type: ParameterType
-
-
 
 
 class NoCodeToolOut(BaseModel):

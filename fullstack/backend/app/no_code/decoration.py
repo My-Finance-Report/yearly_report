@@ -32,7 +32,9 @@ STEP_REGISTRY: dict[str, PipelineStep] = {}
 
 
 def pipeline_step(
-    return_type: Any, passed_value: Any = None, parameters: list[NoCodeParameterCreate] = []
+    return_type: Any,
+    passed_value: Any = None,
+    parameters: list[NoCodeParameterCreate] = [],
 ) -> Callable[[PipelineCallable], PipelineCallable]:
     def decorator(func: PipelineCallable) -> PipelineCallable:
         STEP_REGISTRY[func.__name__] = PipelineStep(
@@ -57,16 +59,17 @@ def convert_type_to_json_schema(type_: Any) -> dict[str, Any]:
     return adapter.json_schema()
 
 
-def make_tools(
-) -> list[NoCodeToolOut]:
-    return [NoCodeToolOut(
-        name=tool.func.__name__,
-        description=tool.func.__doc__ or "",
-        tool=tool.func.__name__,
-        return_type=convert_type_to_json_schema(tool.return_type),
-        parameters=tool.parameters,
-    ) for tool in STEP_REGISTRY.values()]
-
+def make_tools() -> list[NoCodeToolOut]:
+    return [
+        NoCodeToolOut(
+            name=tool.func.__name__,
+            description=tool.func.__doc__ or "",
+            tool=tool.func.__name__,
+            return_type=convert_type_to_json_schema(tool.return_type),
+            parameters=tool.parameters,
+        )
+        for tool in STEP_REGISTRY.values()
+    ]
 
 
 def get_no_code_tool(
