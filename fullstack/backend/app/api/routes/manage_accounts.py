@@ -362,9 +362,11 @@ def toggle_archive_transaction_source(
         raise HTTPException(status_code=404, detail="Transaction source not found.")
 
     if db_source.plaid_account_id:
-        plaid_account = session.query(PlaidAccount).filter(
-            PlaidAccount.id == db_source.plaid_account_id
-        ).one()
+        plaid_account = (
+            session.query(PlaidAccount)
+            .filter(PlaidAccount.id == db_source.plaid_account_id)
+            .one()
+        )
         plaid_account.archived = not plaid_account.archived
 
     # Toggle the archived status
