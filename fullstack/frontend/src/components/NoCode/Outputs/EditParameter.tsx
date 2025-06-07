@@ -26,6 +26,7 @@ export function EditParameterModal({
 }: {
   param: Parameter_Output;
   editMode: boolean;
+  canvasId: number;
   children: React.ReactNode;
 }) {
   const showToast = useCustomToast();

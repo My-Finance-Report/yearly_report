@@ -38,9 +38,11 @@ function DummyGridBacking() {
 function NoCodeDraggableAndEditableParam({
   param,
   editMode,
+  canvasId,
 }: {
   param: Parameter_Output;
   editMode: boolean;
+  canvasId: number;
 }) {
   return (
     <GridItem
@@ -51,7 +53,7 @@ function NoCodeDraggableAndEditableParam({
       rowSpan={param.display_info!.row_span}
       colSpan={param.display_info!.col_span}
     >
-      <EditParameterModal param={param} editMode={editMode}>
+      <EditParameterModal param={param} editMode={editMode} canvasId={canvasId}>
         <DraggableParameter param={param} editMode={editMode}>
           {renderNoCodeParameter(param)}
         </DraggableParameter>
@@ -63,9 +65,11 @@ function NoCodeDraggableAndEditableParam({
 function NoCodeDraggableAndEditableWidget({
   widget,
   editMode,
+  canvasId,
 }: {
   widget: NoCodeWidgetIn_Output;
   editMode: boolean;
+  canvasId: number;
 }) {
   return (
     <GridItem
@@ -76,7 +80,7 @@ function NoCodeDraggableAndEditableWidget({
       rowSpan={widget.row_span}
       colSpan={widget.col_span}
     >
-      <EditModal widget={widget} editMode={editMode}>
+      <EditModal widget={widget} editMode={editMode} canvasId={canvasId}>
         <DraggableWidget widget={widget} editMode={editMode}>
           <NoCodeShow widget={widget} />
         </DraggableWidget>
@@ -87,8 +91,10 @@ function NoCodeDraggableAndEditableWidget({
 
 export function NoCodeDisplayCanvas({
   widgets,
+  canvasId,
 }: {
   widgets: NoCodeWidgetIn_Output[];
+  canvasId: number;
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const { getParamsForView, parameters } = useNoCodeContext();
@@ -136,6 +142,7 @@ export function NoCodeDisplayCanvas({
               key={index}
               widget={widget}
               editMode={isEditMode}
+              canvasId={canvasId}
             />
           ))}
           {paramsToDisplay.map((param, index) => (
@@ -143,6 +150,7 @@ export function NoCodeDisplayCanvas({
               key={index}
               param={param}
               editMode={isEditMode}
+              canvasId={canvasId}
             />
           ))}
         </Grid>

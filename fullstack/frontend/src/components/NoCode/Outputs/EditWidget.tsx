@@ -4,6 +4,7 @@ import {
   NoCodeWidgetIn_Output,
   NoCodeWidgetUpdate,
 } from "@/client";
+import DeleteAlert from "@/components/Common/DeleteAlert/DeleteAlert";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -18,17 +19,21 @@ import {
 import useCustomToast from "@/hooks/useCustomToast";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FaEllipsisH } from "react-icons/fa";
+import { EntityKind } from "@/components/Common/DeleteAlert/types";
 
 export function EditModal({
   widget,
+  canvasId,
   editMode,
   children,
 }: {
   widget: NoCodeWidgetIn_Output;
+  canvasId: number;
   editMode: boolean;
   children: React.ReactNode;
 }) {
   const showToast = useCustomToast();
+  const deleteModal = useDisclosure();
   const editDisclosure = useDisclosure();
   const queryClient = useQueryClient();
 
@@ -194,9 +199,18 @@ export function EditModal({
                 )}
               </Field.Root>
             </Dialog.Body>
-
             <Dialog.Footer gap={3}>
               <HStack>
+                <Button
+                  variant="outline"
+                  colorPalette="red"
+                  onClick={() => {
+                    deleteModal.onOpen();
+                  }}
+                  title="Delete"
+                >
+                  Delete
+                </Button>
                 <Button variant="outline" onClick={onCancel} title="Cancel">
                   Cancel
                 </Button>
@@ -208,6 +222,11 @@ export function EditModal({
           </Dialog.Content>
         </Dialog.Positioner>
       </Dialog.Root>
+      <DeleteAlert
+        isOpen={deleteModal.open}
+        onClose={deleteModal.onClose}
+        entity={{ ...widget, canvasId, kind: EntityKind.Widget }}
+      />
     </>
   );
 }
