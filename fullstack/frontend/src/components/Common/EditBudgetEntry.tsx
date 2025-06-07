@@ -59,7 +59,7 @@ function rawCategoriesToSelectItems(categories: CategoryOut[]): {
 }
 
 type EditFormInput = {
-  amount: number;
+  monthly_target: number;
   name: string;
   budget_id: number;
   id: number;
@@ -67,7 +67,7 @@ type EditFormInput = {
 };
 
 type CreateFormInput = {
-  amount: number;
+  monthly_target: number;
   name: string;
   budget_id: number;
   id: number;
@@ -173,18 +173,18 @@ export function CreateBudgetEntry({
             )}
           </FieldRoot>
 
-          <FieldRoot mt={4} invalid={!!errors.amount}>
-            <FieldLabel htmlFor="amount">Amount / month</FieldLabel>
+          <FieldRoot mt={4} invalid={!!errors.monthly_target}>
+            <FieldLabel htmlFor="monthly_target">Amount / month</FieldLabel>
             <Input
-              id="amount"
-              {...register("amount", {
+              id="monthly_target"
+              {...register("monthly_target", {
                 required: "Amount is required",
               })}
               placeholder="e.g. 500"
               type="number"
             />
-            {errors.amount && (
-              <FieldErrorText>{errors.amount.message}</FieldErrorText>
+            {errors.monthly_target && (
+              <FieldErrorText>{errors.monthly_target.message}</FieldErrorText>
             )}
           </FieldRoot>
 
@@ -273,7 +273,7 @@ export function EditBudgetEntry({
           ...data,
           budget_id: budgetEntry.budget_id,
           id: budgetEntry.id,
-          amount: data.amount,
+          monthly_target: data.monthly_target,
           category_links: data.category_links.map((link) => ({
             category_id: link,
             entry_id: budgetEntry.id,
@@ -332,19 +332,19 @@ export function EditBudgetEntry({
             )}
           </FieldRoot>
 
-          <FieldRoot mt={4} invalid={!!errors.amount}>
-            <FieldLabel htmlFor="amount">Amount / month</FieldLabel>
+          <FieldRoot mt={4} invalid={!!errors.monthly_target}>
+            <FieldLabel htmlFor="monthly_target">Amount / month</FieldLabel>
             <Input
-              id="amount"
-              {...register("amount", {
-                required: "Amount is required",
+              id="monthly_target"
+              {...register("monthly_target", {
+                required: "Monthly target is required",
               })}
               placeholder="e.g. 500"
               type="number"
-              defaultValue={budgetEntry?.amount}
+              defaultValue={budgetEntry?.monthly_target}
             />
-            {errors.amount && (
-              <FieldErrorText>{errors.amount.message}</FieldErrorText>
+            {errors.monthly_target && (
+              <FieldErrorText>{errors.monthly_target.message}</FieldErrorText>
             )}
           </FieldRoot>
 

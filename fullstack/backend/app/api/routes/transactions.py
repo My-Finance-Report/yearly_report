@@ -510,7 +510,7 @@ def enrich_with_budget_info(
 
     _entry_lookup = {entry.id: entry for entry in budget_entries}
     entry_lookup_worse: dict[str, float] = {
-        entry.name: float(entry.amount) for entry in budget_entries
+        entry.name: float(entry.monthly_target) for entry in budget_entries
     }
 
     # first we start at the outer most group

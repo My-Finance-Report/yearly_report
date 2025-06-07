@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, NewType
@@ -21,6 +22,7 @@ from app.models.worker_job import JobStatus
 from app.models.worker_status import ProcessingState
 
 from app.no_code.notifications.effects import EffectConfig
+from app.schemas.no_code import MonthlyTarget, MonthlyTotal
 
 
 class Token(BaseModel):
@@ -187,14 +189,14 @@ class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
 
 
 class BudgetEntryCreate(BaseModel):
-    amount: float
+    monthly_target: float
     name: str
     budget_id: BudgetId
     category_link_ids: list[int]
 
 
 class BudgetEntryBase(BaseModel):
-    amount: Decimal
+    monthly_target: MonthlyTarget
     id: BudgetEntryId
     name: str
     budget_id: BudgetId
@@ -229,24 +231,28 @@ class BudgetOut(BudgetBase):
     entries: list[BudgetEntryOut]
 
 
-Month = NewType("Month", str)
+@dataclass(kw_only=True)
+class Month:
+    year: int
+    month: int
+
+
+Year = NewType("Year", int)
 
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
-    total: Decimal
+    monthly_total: MonthlyTotal
 
 
-class BudgetEntryStatus(BudgetEntryBase):
-    category_links_status: dict[Month, BudgetCategoryLinkStatus]
-    total: Decimal
-    target: Decimal
+class BudgetEntryStatus(BudgetEntryOut):
+    category_links_status_monthly: dict[Month, BudgetCategoryLinkStatus]
+    category_links_status_yearly: dict[Year, BudgetCategoryLinkStatus]
 
 
 class BudgetStatus(BudgetBase):
     budget_id: BudgetId
     entry_status: list[BudgetEntryStatus]
-    entries: list[BudgetEntryOut]
     months_with_entries: list[Month]
 
 

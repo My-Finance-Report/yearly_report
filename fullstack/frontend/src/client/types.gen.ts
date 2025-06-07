@@ -64,18 +64,18 @@ export type BudgetCategoryLinkStatus = {
   id: number;
   stylized_name: string;
   transactions: Array<TransactionOut>;
-  total: string;
+  monthly_total: string;
 };
 
 export type BudgetEntryCreate = {
-  amount: number;
+  monthly_target: number;
   name: string;
   budget_id: number;
   category_link_ids: Array<number>;
 };
 
 export type BudgetEntryEdit = {
-  amount: number | string;
+  monthly_target: number | string;
   id: number;
   name: string;
   budget_id: number;
@@ -83,7 +83,7 @@ export type BudgetEntryEdit = {
 };
 
 export type BudgetEntryOut = {
-  amount: string;
+  monthly_target: string;
   id: number;
   name: string;
   budget_id: number;
@@ -92,15 +92,18 @@ export type BudgetEntryOut = {
 };
 
 export type BudgetEntryStatus = {
-  amount: string;
+  monthly_target: string;
   id: number;
   name: string;
   budget_id: number;
-  category_links_status: {
+  user_id: number;
+  category_links: Array<BudgetCategoryLinkOut>;
+  category_links_status_monthly: {
     [key: string]: BudgetCategoryLinkStatus;
   };
-  total: string;
-  target: string;
+  category_links_status_yearly: {
+    [key: string]: BudgetCategoryLinkStatus;
+  };
 };
 
 export type BudgetStatus = {
@@ -109,8 +112,7 @@ export type BudgetStatus = {
   active?: boolean;
   budget_id: number;
   entry_status: Array<BudgetEntryStatus>;
-  entries: Array<BudgetEntryOut>;
-  months_with_entries: Array<string>;
+  months_with_entries: Array<Month>;
 };
 
 export type CategoryBase = {
@@ -307,6 +309,11 @@ export type LoginGoogleData = {
 
 export type Message = {
   message: string;
+};
+
+export type Month = {
+  year: number;
+  month: number;
 };
 
 export type NewPassword = {

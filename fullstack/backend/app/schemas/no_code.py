@@ -2,7 +2,7 @@ from datetime import datetime
 import enum
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, NewType, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -20,6 +20,13 @@ from app.models.transaction import TransactionKind
 from app.models.user import User
 
 
+MonthlyTarget = NewType("MonthlyTarget", Decimal)
+MonthlyTotal = NewType("MonthlyTotal", Decimal)
+BudgetAmount = NewType("BudgetAmount", Decimal)
+YearlyTotal = NewType("YearlyTotal", Decimal)
+YearlyTarget = NewType("YearlyTarget", Decimal)
+
+
 class NoCodeTransaction(BaseModel):
     id: int
     category_id: int
@@ -33,8 +40,8 @@ class NoCodeTransaction(BaseModel):
 
 class NoCodeBudgetEntry(BaseModel):
     id: int
-    target: float
-    current: float
+    monthly_target: MonthlyTarget
+    current_monthly_total: MonthlyTotal
     category_name: str
 
 

@@ -40,7 +40,7 @@ export const ManageBudget = ({
   const queryClient = useQueryClient();
 
   const budgetEntryLookup: Record<BudgetEntryOut["id"], BudgetEntryOut> =
-    budgetStatus.entries.reduce(
+    budgetStatus.entry_status.reduce(
       (acc, entry) => {
         acc[entry.id] = entry;
         return acc;
@@ -63,7 +63,7 @@ export const ManageBudget = ({
   return (
     <VStack>
       <CreateNew budgetId={budgetStatus.budget_id} />
-      {budgetStatus.entries.length > 0 ? (
+      {budgetStatus.entry_status.length > 0 ? (
         <Table.Root variant="outline" borderRadius="md">
           <TableHeader>
             <TableRow>
@@ -80,7 +80,9 @@ export const ManageBudget = ({
               <>
                 <TableRow key={index}>
                   <TableCell>{entry.name}</TableCell>
-                  <TableCell>{formatCurrency(Number(entry.amount))}</TableCell>
+                  <TableCell>
+                    {formatCurrency(Number(entry.monthly_target))}
+                  </TableCell>
                   {!isMobile && (
                     <TableCell>
                       {budgetEntryLookup[entry.id]?.category_links?.map(
@@ -114,7 +116,7 @@ export const ManageBudget = ({
 
 function ProjectionCards({ budgetStatus }: { budgetStatus: BudgetStatus }) {
   const monthly = budgetStatus.entry_status.reduce(
-    (acc, entry) => acc + Number(entry.amount),
+    (acc, entry) => acc + Number(entry.monthly_target),
     0,
   );
   const yearly = monthly * 12;

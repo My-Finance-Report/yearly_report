@@ -13,9 +13,9 @@ def generate_budget_row(budget_entry: NoCodeBudgetEntry) -> Row:
     return generate_row(
         [
             budget_entry.category_name,
-            f"${budget_entry.target:.2f}",
-            f"${budget_entry.current:.2f}",
-            f"{budget_entry.current / budget_entry.target * 100:.0f}%",
+            f"${budget_entry.monthly_target:.2f}",
+            f"${budget_entry.current_monthly_total:.2f}",
+            f"{budget_entry.current_monthly_total / budget_entry.monthly_target * 100:.0f}%",
         ]
     )
 

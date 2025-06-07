@@ -21,7 +21,7 @@ def amount_over(event: Event, conditions: ConditionalParameters) -> bool:
         case BudgetThresholdExceededEvent():
 
             def amount_over(entry: NoCodeBudgetEntry) -> bool:
-                current_percent = entry.current / entry.target
+                current_percent = entry.current_monthly_total / entry.monthly_target
                 return current_percent > amount
 
             return any(amount_over(entry) for entry in event.budget_entries)

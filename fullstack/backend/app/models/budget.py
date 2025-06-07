@@ -1,5 +1,4 @@
 from typing import NewType
-from decimal import Decimal
 from app.models.category import CategoryId
 from app.models.models import Base
 from sqlalchemy import (
@@ -13,6 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.user import UserId
+from app.schemas.no_code import MonthlyTarget
 
 
 BudgetId = NewType("BudgetId", int)
@@ -39,7 +39,7 @@ class BudgetEntry(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    amount: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
+    monthly_target: Mapped[MonthlyTarget] = mapped_column(Numeric, nullable=False)
     budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
 
 

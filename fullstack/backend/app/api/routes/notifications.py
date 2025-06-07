@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from decimal import Decimal
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -22,7 +23,12 @@ from app.no_code.notifications.events import (
     NewTransactionsEvent,
 )
 from app.no_code.notifications.trigger import perform_template_replacement
-from app.schemas.no_code import NoCodeBudgetEntry, NoCodeTransaction
+from app.schemas.no_code import (
+    MonthlyTotal,
+    MonthlyTarget,
+    NoCodeBudgetEntry,
+    NoCodeTransaction,
+)
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/notification", tags=["no_code"])
@@ -145,8 +151,8 @@ def get_sample_event(event_type: EventType) -> AnyEvent:
                 NoCodeBudgetEntry(
                     id=-1,
                     category_name="Category 1",
-                    target=100,
-                    current=200,
+                    monthly_target=MonthlyTarget(Decimal(100)),
+                    current_monthly_total=MonthlyTotal(Decimal(200)),
                 )
             ],
         )

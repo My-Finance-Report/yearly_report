@@ -12,12 +12,14 @@ from app.local_types import (
     BudgetStatus,
     Month,
     TransactionOut,
+    Year,
 )
 from app.models.budget import Budget, BudgetCategoryLink, BudgetEntry, BudgetEntryId
 from app.models.transaction import Transaction, TransactionKind
 from app.models.user import User
 from app.models.category import Category, CategoryId
 from app.models.transaction_source import TransactionSource
+from app.schemas.no_code import MonthlyTotal
 
 
 def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, str]:
@@ -35,11 +37,14 @@ def get_stylized_name_lookup(session: Session, user: User) -> dict[CategoryId, s
 
 def group_transactions_by_month(
     transactions: list[Transaction],
-) -> dict[str, list[Transaction]]:
+) -> dict[Month, list[Transaction]]:
     grouped_transactions = defaultdict(list)
 
     for transaction in transactions:
-        month = transaction.date_of_transaction.strftime("%Y-%m")
+        month = Month(
+            year=transaction.date_of_transaction.year,
+            month=transaction.date_of_transaction.month,
+        )
         grouped_transactions[month].append(transaction)
 
     return dict(grouped_transactions)
@@ -65,6 +70,7 @@ def build_budget_out(session: Session, user: User) -> BudgetOut:
     )
 
     entry_ids = [entry.id for entry in entries]
+
     categories = (
         session.query(BudgetCategoryLink)
         .filter(
@@ -95,7 +101,7 @@ def build_budget_out(session: Session, user: User) -> BudgetOut:
             id=entry.id,
             name=entry.name,
             budget_id=entry.budget_id,
-            amount=entry.amount,
+            monthly_target=entry.monthly_target,
             user_id=entry.user_id,
             category_links=category_by_entry[entry.id],
         )
@@ -117,9 +123,10 @@ def build_budget_status(
     budget = build_budget_out(session=session, user=user)
 
     entry_statuses = []
-    months_with_entries = set()
+    months_with_entries: set[Month] = set()
     for entry in budget.entries:
-        category_status: dict[Month, BudgetCategoryLinkStatus] = {}
+        monthly_category_status: dict[Month, BudgetCategoryLinkStatus] = {}
+        yearly_category_status: dict[Year, BudgetCategoryLinkStatus] = {}
         running_total: Decimal = Decimal(0)
         for category in entry.category_links:
             transactions = (
@@ -131,21 +138,31 @@ def build_budget_status(
             for month, month_transactions in group_transactions_by_month(
                 transactions
             ).items():
-                transactions_out = [
-                    TransactionOut(**transaction.__dict__)
+                months_transactions_out = [
+                    TransactionOut(
+                        id=transaction.id,
+                        amount=transaction.amount,
+                        category_id=transaction.category_id,
+                        date_of_transaction=transaction.date_of_transaction,
+                        kind=transaction.kind,
+                        description=transaction.description,
+                        transaction_source_id=transaction.transaction_source_id,
+                    )
                     for transaction in month_transactions
                     if transaction.kind == TransactionKind.withdrawal
                 ]
-                total = Decimal(sum([t.amount for t in transactions_out]))
-                running_total += total
-                months_with_entries.add(Month(month))
-                category_status[Month(month)] = BudgetCategoryLinkStatus(
+                monthly_total = MonthlyTotal(
+                    Decimal(sum([t.amount for t in months_transactions_out]))
+                )
+                running_total += monthly_total
+                months_with_entries.add(month)
+                monthly_category_status[month] = BudgetCategoryLinkStatus(
                     budget_entry_id=category.budget_entry_id,
                     id=category.id,
                     stylized_name=category.stylized_name,
+                    monthly_total=monthly_total,
                     category_id=category.category_id,
-                    transactions=transactions_out,
-                    total=total,
+                    transactions=months_transactions_out,
                 )
 
         entry_statuses.append(
@@ -153,10 +170,11 @@ def build_budget_status(
                 id=entry.id,
                 budget_id=budget.id,
                 name=entry.name,
-                amount=entry.amount,
-                category_links_status=category_status,
-                target=entry.amount,
-                total=running_total,
+                monthly_target=entry.monthly_target,
+                user_id=user.id,
+                category_links=entry.category_links,
+                category_links_status_monthly=monthly_category_status,
+                category_links_status_yearly=yearly_category_status,
             )
         )
 
@@ -165,7 +183,6 @@ def build_budget_status(
         user_id=user.id,
         name=budget.name,
         active=True,
-        entries=budget.entries,
         entry_status=entry_statuses,
         months_with_entries=list(months_with_entries),
     )
