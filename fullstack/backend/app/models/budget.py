@@ -39,7 +39,7 @@ class BudgetEntry(Base):
     )
     user_id: Mapped[UserId] = mapped_column(ForeignKey("user.id"), nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    amount: Mapped[MonthlyTarget] = mapped_column(Numeric, nullable=False)
+    monthly_target: Mapped[MonthlyTarget] = mapped_column(Numeric, nullable=False)
     budget_id: Mapped[BudgetId] = mapped_column(ForeignKey("budget.id"), nullable=False)
 
 

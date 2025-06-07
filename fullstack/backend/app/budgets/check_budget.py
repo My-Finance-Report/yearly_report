@@ -41,8 +41,11 @@ def group_transactions_by_month(
     grouped_transactions = defaultdict(list)
 
     for transaction in transactions:
-        month = transaction.date_of_transaction.strftime("%Y-%m")
-        grouped_transactions[Month(month)].append(transaction)
+        month = Month(
+            year=transaction.date_of_transaction.year,
+            month=transaction.date_of_transaction.month,
+        )
+        grouped_transactions[month].append(transaction)
 
     return dict(grouped_transactions)
 
@@ -67,6 +70,7 @@ def build_budget_out(session: Session, user: User) -> BudgetOut:
     )
 
     entry_ids = [entry.id for entry in entries]
+
     categories = (
         session.query(BudgetCategoryLink)
         .filter(
@@ -97,7 +101,7 @@ def build_budget_out(session: Session, user: User) -> BudgetOut:
             id=entry.id,
             name=entry.name,
             budget_id=entry.budget_id,
-            amount=entry.amount,
+            monthly_target=entry.monthly_target,
             user_id=entry.user_id,
             category_links=category_by_entry[entry.id],
         )
@@ -119,7 +123,7 @@ def build_budget_status(
     budget = build_budget_out(session=session, user=user)
 
     entry_statuses = []
-    months_with_entries = set()
+    months_with_entries: set[Month] = set()
     for entry in budget.entries:
         monthly_category_status: dict[Month, BudgetCategoryLinkStatus] = {}
         yearly_category_status: dict[Year, BudgetCategoryLinkStatus] = {}
@@ -135,21 +139,30 @@ def build_budget_status(
                 transactions
             ).items():
                 months_transactions_out = [
-                    TransactionOut(**transaction.__dict__)
+                    TransactionOut(
+                        id=transaction.id,
+                        amount=transaction.amount,
+                        category_id=transaction.category_id,
+                        date_of_transaction=transaction.date_of_transaction,
+                        kind=transaction.kind,
+                        description=transaction.description,
+                        transaction_source_id=transaction.transaction_source_id,
+                    )
                     for transaction in month_transactions
                     if transaction.kind == TransactionKind.withdrawal
                 ]
-                monthly_total = MonthlyTotal(Decimal(sum([t.amount for t in months_transactions_out])))
+                monthly_total = MonthlyTotal(
+                    Decimal(sum([t.amount for t in months_transactions_out]))
+                )
                 running_total += monthly_total
-                months_with_entries.add(Month(month))
-                monthly_category_status[Month(month)] = BudgetCategoryLinkStatus(
+                months_with_entries.add(month)
+                monthly_category_status[month] = BudgetCategoryLinkStatus(
                     budget_entry_id=category.budget_entry_id,
                     id=category.id,
                     stylized_name=category.stylized_name,
+                    monthly_total=monthly_total,
                     category_id=category.category_id,
                     transactions=months_transactions_out,
-                    monthly_total=monthly_total,
-                    monthly_target=entry.amount,
                 )
 
         entry_statuses.append(
@@ -157,7 +170,9 @@ def build_budget_status(
                 id=entry.id,
                 budget_id=budget.id,
                 name=entry.name,
-                amount=entry.amount,
+                monthly_target=entry.monthly_target,
+                user_id=user.id,
+                category_links=entry.category_links,
                 category_links_status_monthly=monthly_category_status,
                 category_links_status_yearly=yearly_category_status,
             )
@@ -168,7 +183,6 @@ def build_budget_status(
         user_id=user.id,
         name=budget.name,
         active=True,
-        entries=budget.entries,
         entry_status=entry_statuses,
         months_with_entries=list(months_with_entries),
     )

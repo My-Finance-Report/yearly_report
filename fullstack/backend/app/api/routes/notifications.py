@@ -23,7 +23,12 @@ from app.no_code.notifications.events import (
     NewTransactionsEvent,
 )
 from app.no_code.notifications.trigger import perform_template_replacement
-from app.schemas.no_code import MonthlyTotal, MonthlyTarget,NoCodeBudgetEntry, NoCodeTransaction
+from app.schemas.no_code import (
+    MonthlyTotal,
+    MonthlyTarget,
+    NoCodeBudgetEntry,
+    NoCodeTransaction,
+)
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/notification", tags=["no_code"])

@@ -14,10 +14,7 @@ from app.local_types import (
     BudgetEntryOut,
     BudgetStatus,
 )
-from app.models.budget import Budget, BudgetCategoryLink, BudgetEntry
-from app.models.category import Category, CategoryId
-from app.models.transaction_source import TransactionSource
-from app.models.transaction import Transaction
+from app.models.budget import BudgetCategoryLink, BudgetEntry
 from app.models.user import User
 
 
@@ -54,9 +51,24 @@ def get_budget_entries(
     if not db_entries:
         raise HTTPException(status_code=404, detail="Budget not found.")
 
+    name_lookup = get_stylized_name_lookup(session, user)
+
     val = [
-        BudgetEntryOut.model_validate(
-            {**entry.__dict__, "category_links": link_by_entry[entry.id]}
+        BudgetEntryOut(
+            id=entry.id,
+            budget_id=entry.budget_id,
+            user_id=entry.user_id,
+            monthly_target=entry.monthly_target,
+            name=entry.name,
+            category_links=[
+                BudgetCategoryLinkOut(
+                    id=link.id,
+                    budget_entry_id=link.budget_entry_id,
+                    category_id=link.category_id,
+                    stylized_name=name_lookup[link.category_id],
+                )
+                for link in link_by_entry[entry.id]
+            ],
         )
         for entry in db_entries
     ]
@@ -71,7 +83,7 @@ def create_budget_entry(
     user: User = Depends(get_current_user),
 ) -> BudgetEntryOut:
     new_entry = BudgetEntry(
-        amount=Decimal(entry.amount),
+        monthly_target=Decimal(entry.monthly_target),
         name=entry.name,
         budget_id=budget_id,
         user_id=user.id,
@@ -106,7 +118,7 @@ def create_budget_entry(
     return BudgetEntryOut(
         budget_id=new_entry.budget_id,
         user_id=new_entry.user_id,
-        amount=new_entry.amount,
+        monthly_target=new_entry.monthly_target,
         name=new_entry.name,
         id=new_entry.id,
         category_links=links_out,
@@ -130,7 +142,7 @@ def update_budget_entry(
         raise HTTPException(status_code=404, detail="Entry not found.")
 
     db_entry.name = entry.name
-    db_entry.amount = Decimal(entry.amount)
+    db_entry.monthly_target = entry.monthly_target
 
     session.query(BudgetCategoryLink).filter(
         BudgetCategoryLink.budget_entry_id == db_entry.id,
@@ -163,7 +175,7 @@ def update_budget_entry(
     return BudgetEntryOut(
         budget_id=db_entry.budget_id,
         user_id=db_entry.user_id,
-        amount=db_entry.amount,
+        monthly_target=db_entry.monthly_target,
         name=db_entry.name,
         id=db_entry.id,
         category_links=links_out,

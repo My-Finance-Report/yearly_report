@@ -25,6 +25,7 @@ from app.budgets.check_budget import (
     build_budget_status,
 )
 
+
 @pytest.fixture
 def test_user(pglite_session: Session):
     user = User(name="Test User", email="test@example.com")
@@ -32,6 +33,7 @@ def test_user(pglite_session: Session):
     pglite_session.commit()
     pglite_session.refresh(user)
     return user
+
 
 @pytest.fixture
 def test_source(pglite_session: Session, test_user: User):
@@ -41,17 +43,19 @@ def test_source(pglite_session: Session, test_user: User):
     pglite_session.refresh(source)
     return source
 
+
 @pytest.fixture
-def test_category(pglite_session: Session, test_user: User, test_source: TransactionSource):
+def test_category(
+    pglite_session: Session, test_user: User, test_source: TransactionSource
+):
     category = Category(
-        name="Test Category",
-        user_id=test_user.id,
-        source_id=test_source.id
+        name="Test Category", user_id=test_user.id, source_id=test_source.id
     )
     pglite_session.add(category)
     pglite_session.commit()
     pglite_session.refresh(category)
     return category
+
 
 @pytest.fixture
 def test_budget(pglite_session: Session, test_user: User):
@@ -61,41 +65,52 @@ def test_budget(pglite_session: Session, test_user: User):
     pglite_session.refresh(budget)
     return budget
 
+
 @pytest.fixture
 def test_budget_entry(pglite_session: Session, test_budget: Budget, test_user: User):
     entry = BudgetEntry(
         name="Test Entry",
         budget_id=test_budget.id,
         amount=Decimal("1000.00"),
-        user_id=test_user.id
+        user_id=test_user.id,
     )
     pglite_session.add(entry)
     pglite_session.commit()
     pglite_session.refresh(entry)
     return entry
 
+
 @pytest.fixture
 def test_budget_category_link(
     pglite_session: Session,
     test_budget_entry: BudgetEntry,
     test_category: Category,
-    test_user: User
+    test_user: User,
 ):
     link = BudgetCategoryLink(
         budget_entry_id=test_budget_entry.id,
         category_id=test_category.id,
-        user_id=test_user.id
+        user_id=test_user.id,
     )
     pglite_session.add(link)
     pglite_session.commit()
     pglite_session.refresh(link)
     return link
 
-def test_get_stylized_name_lookup(pglite_session: Session, test_user: User, test_category: Category, test_source: TransactionSource):
+
+def test_get_stylized_name_lookup(
+    pglite_session: Session,
+    test_user: User,
+    test_category: Category,
+    test_source: TransactionSource,
+):
     lookup = get_stylized_name_lookup(pglite_session, test_user)
     assert lookup[test_category.id] == f"{test_category.name} ({test_source.name})"
 
-def test_group_transactions_by_month(pglite_session: Session, test_user: User, test_category: Category):
+
+def test_group_transactions_by_month(
+    pglite_session: Session, test_user: User, test_category: Category
+):
     # Create test transactions in different months
     transactions = [
         Transaction(
@@ -104,7 +119,7 @@ def test_group_transactions_by_month(pglite_session: Session, test_user: User, t
             amount=Decimal("100.00"),
             date_of_transaction=datetime(2025, 1, 15),
             kind=TransactionKind.withdrawal,
-            name="Jan Transaction"
+            name="Jan Transaction",
         ),
         Transaction(
             user_id=test_user.id,
@@ -112,8 +127,8 @@ def test_group_transactions_by_month(pglite_session: Session, test_user: User, t
             amount=Decimal("200.00"),
             date_of_transaction=datetime(2025, 2, 15),
             kind=TransactionKind.withdrawal,
-            name="Feb Transaction"
-        )
+            name="Feb Transaction",
+        ),
     ]
     pglite_session.add_all(transactions)
     pglite_session.commit()
@@ -128,34 +143,37 @@ def test_group_transactions_by_month(pglite_session: Session, test_user: User, t
     assert grouped[jan][0].amount == Decimal("100.00")
     assert grouped[feb][0].amount == Decimal("200.00")
 
+
 def test_create_budget(pglite_session: Session, test_user: User):
     budget = create_budget(pglite_session, test_user)
     assert budget.name == "Budget"
     assert budget.user_id == test_user.id
     assert budget.active is True
 
+
 def test_build_budget_out(
     pglite_session: Session,
     test_user: User,
     test_budget: Budget,
     test_budget_entry: BudgetEntry,
-    test_budget_category_link: BudgetCategoryLink
+    test_budget_category_link: BudgetCategoryLink,
 ):
     budget_out = build_budget_out(pglite_session, test_user)
     assert budget_out.id == test_budget.id
     assert budget_out.name == test_budget.name
     assert budget_out.active is True
     assert len(budget_out.entries) == 1
-    
+
     entry = budget_out.entries[0]
     assert entry.id == test_budget_entry.id
     assert entry.name == test_budget_entry.name
     assert entry.amount == test_budget_entry.amount
     assert len(entry.category_links) == 1
-    
+
     link = entry.category_links[0]
     assert link.id == test_budget_category_link.id
     assert link.category_id == test_budget_category_link.category_id
+
 
 def test_build_budget_status(
     pglite_session: Session,
@@ -163,7 +181,7 @@ def test_build_budget_status(
     test_budget: Budget,
     test_budget_entry: BudgetEntry,
     test_budget_category_link: BudgetCategoryLink,
-    test_category: Category
+    test_category: Category,
 ):
     # Create some test transactions
     transactions = [
@@ -173,7 +191,7 @@ def test_build_budget_status(
             amount=Decimal("100.00"),
             date_of_transaction=datetime(2025, 1, 15),
             kind=TransactionKind.withdrawal,
-            name="Jan Transaction"
+            name="Jan Transaction",
         ),
         Transaction(
             user_id=test_user.id,
@@ -181,8 +199,8 @@ def test_build_budget_status(
             amount=Decimal("200.00"),
             date_of_transaction=datetime(2025, 2, 15),
             kind=TransactionKind.withdrawal,
-            name="Feb Transaction"
-        )
+            name="Feb Transaction",
+        ),
     ]
     pglite_session.add_all(transactions)
     pglite_session.commit()
@@ -192,23 +210,23 @@ def test_build_budget_status(
     assert budget_status.name == test_budget.name
     assert budget_status.active is True
     assert len(budget_status.entry_status) == 1
-    
+
     entry_status = budget_status.entry_status[0]
     assert entry_status.id == test_budget_entry.id
     assert entry_status.name == test_budget_entry.name
     assert entry_status.amount == test_budget_entry.amount
     assert entry_status.yearly_total == Decimal("300.00")  # Sum of all transactions
-    
+
     jan = Month("2025-01")
     feb = Month("2025-02")
     assert jan in budget_status.months_with_entries
     assert feb in budget_status.months_with_entries
-    
+
     # Check category status for each month
     jan_status = entry_status.category_links_status[jan]
     assert jan_status.monthly_total == Decimal("100.00")
     assert len(jan_status.transactions) == 1
-    
+
     feb_status = entry_status.category_links_status[feb]
     assert feb_status.monthly_total == Decimal("200.00")
     assert len(feb_status.transactions) == 1

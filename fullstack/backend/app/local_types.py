@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, NewType
@@ -188,14 +189,14 @@ class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
 
 
 class BudgetEntryCreate(BaseModel):
-    amount: float
+    monthly_target: float
     name: str
     budget_id: BudgetId
     category_link_ids: list[int]
 
 
 class BudgetEntryBase(BaseModel):
-    amount: MonthlyTarget
+    monthly_target: MonthlyTarget
     id: BudgetEntryId
     name: str
     budget_id: BudgetId
@@ -230,16 +231,21 @@ class BudgetOut(BudgetBase):
     entries: list[BudgetEntryOut]
 
 
-Month = NewType("Month", str)
+@dataclass(kw_only=True)
+class Month:
+    year: int
+    month: int
+
+
 Year = NewType("Year", int)
+
 
 class BudgetCategoryLinkStatus(BudgetCategoryLinkOut):
     transactions: list[TransactionOut]
     monthly_total: MonthlyTotal
-    monthly_target: MonthlyTarget
 
 
-class BudgetEntryStatus(BudgetEntryBase):
+class BudgetEntryStatus(BudgetEntryOut):
     category_links_status_monthly: dict[Month, BudgetCategoryLinkStatus]
     category_links_status_yearly: dict[Year, BudgetCategoryLinkStatus]
 
@@ -247,7 +253,6 @@ class BudgetEntryStatus(BudgetEntryBase):
 class BudgetStatus(BudgetBase):
     budget_id: BudgetId
     entry_status: list[BudgetEntryStatus]
-    entries: list[BudgetEntryOut]
     months_with_entries: list[Month]
 
 

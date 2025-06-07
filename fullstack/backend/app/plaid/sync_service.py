@@ -22,6 +22,7 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import (
 )
 from app.budgets.check_budget import build_budget_status
 from app.func_utils import not_none, pipe
+from app.local_types import Month
 from app.models.audit_log import AuditLog
 from app.models.category import Category
 from app.models.plaid import (
@@ -429,8 +430,13 @@ def trigger_budget_effect(in_process: InProcessJob) -> None:
             NoCodeBudgetEntry(
                 id=-1,
                 category_name=budget_entry_status.name,
-                monthly_target=budget_entry_status.amount,
-                current_monthly_total=budget_entry_status.monthly_total,
+                monthly_target=budget_entry_status.monthly_target,
+                current_monthly_total=budget_entry_status.category_links_status_monthly[
+                    Month(
+                        year=datetime.now(timezone.utc).year,
+                        month=datetime.now(timezone.utc).month,
+                    )
+                ].monthly_total,
             )
         )
 

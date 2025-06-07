@@ -43,7 +43,7 @@ class NoCodeBudgetEntry(BaseModel):
     monthly_target: MonthlyTarget
     current_monthly_total: MonthlyTotal
     category_name: str
-    
+
 
 T = TypeVar("T")
 V = TypeVar("V")
