@@ -68,7 +68,7 @@ export type BudgetCategoryLinkStatus = {
 };
 
 export type BudgetEntryCreate = {
-  monthly_target: number;
+  monthly_target: number | string;
   name: string;
   budget_id: number;
   category_link_ids: Array<number>;

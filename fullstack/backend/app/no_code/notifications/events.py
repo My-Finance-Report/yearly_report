@@ -15,7 +15,7 @@ def generate_budget_row(budget_entry: NoCodeBudgetEntry) -> Row:
             budget_entry.category_name,
             f"${budget_entry.monthly_target:.2f}",
             f"${budget_entry.current_monthly_total:.2f}",
-            f"{budget_entry.current_monthly_total / budget_entry.monthly_target * 100:.0f}%",
+            f"{budget_entry.progress * 100:.0f}%",
         ]
     )
 
@@ -120,7 +120,7 @@ class BudgetThresholdExceededEvent(Event):
 
     @property
     def budget_table(self) -> Table:
-        budget_entries = self.budget_entries
+        budget_entries = sorted(self.budget_entries, key=lambda x: x.progress)
         budget_entries_to_show = budget_entries[:5]
         has_more = len(budget_entries) > 5
 

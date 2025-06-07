@@ -189,7 +189,7 @@ class BudgetCategoryLinkOut(BudgetCategoryLinkBase):
 
 
 class BudgetEntryCreate(BaseModel):
-    monthly_target: float
+    monthly_target: MonthlyTarget
     name: str
     budget_id: BudgetId
     category_link_ids: list[int]
@@ -231,7 +231,7 @@ class BudgetOut(BudgetBase):
     entries: list[BudgetEntryOut]
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class Month:
     year: int
     month: int
