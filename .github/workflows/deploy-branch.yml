@@ -79,11 +79,11 @@ jobs:
         rsync -avz -e "ssh -o StrictHostKeyChecking=no -i finance_key.pem" .env.production fullstack/docker-compose.prod.yml ${EC2_USER}@${HOST}:${REMOTE_DIR}
 
         ssh -o StrictHostKeyChecking=no -i "finance_key.pem" ${EC2_USER}@${HOST} "
-        export TAG=$IMAGE_TAG
+        export IMAGE_TAG=$IMAGE_TAG
+        echo $IMAGE_TAG
         export AWS_ACCOUNT_ID=067448242226
         export AWS_REGION=us-east-2 
         aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin '067448242226.dkr.ecr.us-east-2.amazonaws.com'
-        echo $TAG
         cd code/finance_app
         docker-compose --env-file .env.production -f docker-compose.prod.yml pull
         docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
