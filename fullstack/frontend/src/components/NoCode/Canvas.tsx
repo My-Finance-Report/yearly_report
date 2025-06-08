@@ -25,7 +25,13 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-function DummyGridBacking({ isEditMode }: { isEditMode: boolean }) {
+function DummyGridBacking({
+  isEditMode,
+  isDragging,
+}: {
+  isEditMode: boolean;
+  isDragging: boolean;
+}) {
   if (!isEditMode) {
     return null;
   }
@@ -34,6 +40,8 @@ function DummyGridBacking({ isEditMode }: { isEditMode: boolean }) {
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((col) => (
       <GridItem
         key={`background-${row}-${col}`}
+        opacity={isDragging ? 0.5 : 0}
+        pointerEvents={isDragging ? "none" : "auto"}
         rowStart={row}
         colStart={col}
         rowSpan={1}
@@ -41,12 +49,12 @@ function DummyGridBacking({ isEditMode }: { isEditMode: boolean }) {
         position="relative"
         _hover={{
           "& > div": {
-            opacity: 0.5,
+            opacity: isDragging ? 0.5 : 0,
             borderColor: "red.300",
             borderWidth: 3,
           },
           "& > button": {
-            opacity: 1,
+            opacity: isDragging ? 1 : 0,
           },
         }}
       ></GridItem>
@@ -115,6 +123,7 @@ export function NoCodeDisplayCanvas({
   widgets: NoCodeWidgetIn_Output[];
   canvasId: number;
 }) {
+  const [isDragging, setIsDragging] = useState(false);
   const widgetBuilder = useDisclosure();
   const { getParamsForView, parameters } = useNoCodeContext();
   const [paramsToDisplay, setParamsToDisplay] = useState(
@@ -157,13 +166,13 @@ export function NoCodeDisplayCanvas({
             Add Widget
           </Button>
         </HStack>
-        <NoCodeDragContext>
+        <NoCodeDragContext setIsDragging={setIsDragging}>
           <Grid
             templateRows={`repeat(60, 40px)`}
             templateColumns={`repeat(12, 100px)`}
             gap={4}
           >
-            <DummyGridBacking isEditMode={isEditMode} />
+            <DummyGridBacking isEditMode={isEditMode} isDragging={isDragging} />
 
             {widgets.map((widget, index) => (
               <NoCodeDraggableAndEditableWidget
