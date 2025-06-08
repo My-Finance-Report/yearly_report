@@ -1,12 +1,22 @@
-import { NoCodeParameterCreate, NoCodeService, NoCodeWidgetCreate } from "@/client";
+import {
+  NoCodeParameterCreate,
+  NoCodeService,
+  NoCodeWidgetCreate,
+} from "@/client";
 import { DumbFormSelect } from "@/components/ui/dumb/form/select";
 import { DumbTextField } from "@/components/ui/dumb/form/value";
-import { Button, Dialog, Portal, VStack, HStack, Text, Box } from "@chakra-ui/react";
+import {
+  Button,
+  Dialog,
+  Portal,
+  VStack,
+  HStack,
+  Text,
+  Box,
+} from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
-
-
 
 export function WidgetBuilder({
   isOpen,
@@ -18,12 +28,13 @@ export function WidgetBuilder({
   const form = useForm<NoCodeWidgetCreate>();
 
   const handleSubmit = (data: NoCodeWidgetCreate) => {
-    console.log("Creating widget:", data);
+    NoCodeService.createWidget({
+      requestBody: data,
+    });
     onClose();
   };
 
   const cancelRef = useRef<HTMLButtonElement | null>(null);
-
 
   return (
     <Dialog.Root open={isOpen} onExitComplete={onClose}>
@@ -51,28 +62,37 @@ export function WidgetBuilder({
   );
 }
 
-function WidgetMiscEditor({ form }: { form: ReturnType<typeof useForm<NoCodeWidgetCreate>> }) {
-
-  return <VStack>
-        <DumbTextField
-          name="name"
-          label="Name of notification"
-          register={form.register}
-          errors={form.formState.errors}
-        />
-        <DumbFormSelect
-          name="type"
-          label="Widget Type"
-          control={form.control}
-          errors={form.formState.errors}
-          options={['chart', 'table']}
-          labelExtractor={(type) => type}
-          keyExtractor={(type) => type}
-        />
-    </VStack>;
+function WidgetMiscEditor({
+  form,
+}: {
+  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>;
+}) {
+  return (
+    <VStack>
+      <DumbTextField
+        name="name"
+        label="Name of notification"
+        register={form.register}
+        errors={form.formState.errors}
+      />
+      <DumbFormSelect
+        name="type"
+        label="Widget Type"
+        control={form.control}
+        errors={form.formState.errors}
+        options={["chart", "table"]}
+        labelExtractor={(type) => type}
+        keyExtractor={(type) => type}
+      />
+    </VStack>
+  );
 }
 
-function PipelineEditor({form}: {form: ReturnType<typeof useForm<NoCodeWidgetCreate>>}) {
+function PipelineEditor({
+  form,
+}: {
+  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>;
+}) {
   const tools = useQuery({
     queryKey: ["no_code_tools"],
     queryFn: () => NoCodeService.getNoCodeTools(),
@@ -80,42 +100,50 @@ function PipelineEditor({form}: {form: ReturnType<typeof useForm<NoCodeWidgetCre
 
   const pipelineSteps = form.watch("pipeline") || [];
 
-  return <VStack align="stretch" width="100%">
-    <Text fontWeight="medium">Pipeline Steps</Text>
-    
-    {pipelineSteps.map((_, index) => (
-      <Box key={index} p={4} borderWidth={1} borderRadius="md">
-        <HStack spaceX={4} align="stretch">
-          <DumbFormSelect
-            name={`pipeline.${index}.tool`}
-            label={`Step ${index + 1}`}
-            control={form.control}
-            errors={form.formState.errors}
-            options={tools.data || []}
-            labelExtractor={(tool) => tool.name}
-            keyExtractor={(tool) => tool.tool}
-          />
-          <ParameterList form={form} stepIndex={index} />
-        </HStack>
-      </Box>
-    ))}
+  return (
+    <VStack align="stretch" width="100%">
+      <Text fontWeight="medium">Pipeline Steps</Text>
 
-    <Button
-      onClick={() => {
-        const currentPipeline = form.getValues("pipeline") || [];
-        form.setValue("pipeline", [...currentPipeline, { tool: "", parameters: [] }]);
-      }}
-      size="sm"
-      variant="outline"
-    >
-      Add Step
-    </Button>
-  </VStack>;
+      {pipelineSteps.map((_, index) => (
+        <Box key={index} p={4} borderWidth={1} borderRadius="md">
+          <HStack spaceX={4} align="stretch">
+            <DumbFormSelect
+              name={`pipeline.${index}.tool`}
+              label={`Step ${index + 1}`}
+              control={form.control}
+              errors={form.formState.errors}
+              options={tools.data || []}
+              labelExtractor={(tool) => tool.name}
+              keyExtractor={(tool) => tool.tool}
+            />
+            <ParameterList form={form} stepIndex={index} />
+          </HStack>
+        </Box>
+      ))}
+
+      <Button
+        onClick={() => {
+          const currentPipeline = form.getValues("pipeline") || [];
+          form.setValue("pipeline", [
+            ...currentPipeline,
+            { tool: "", parameters: [] },
+          ]);
+        }}
+        size="sm"
+        variant="outline"
+      >
+        Add Step
+      </Button>
+    </VStack>
+  );
 }
 
-function ParameterList({form, stepIndex}: {
-  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>,
-  stepIndex: number
+function ParameterList({
+  form,
+  stepIndex,
+}: {
+  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>;
+  stepIndex: number;
 }) {
   const tools = useQuery({
     queryKey: ["no_code_tools"],
@@ -123,40 +151,42 @@ function ParameterList({form, stepIndex}: {
   });
 
   const selectedTool = form.watch(`pipeline.${stepIndex}.tool`);
-  const tool = tools.data?.find(t => t.tool === selectedTool);
+  const tool = tools.data?.find((t) => t.tool === selectedTool);
 
   if (!tool?.parameters?.length) return null;
 
   return (
     <VStack spaceX={3} align="stretch">
-      {tool.parameters.map((param) => (
-        <ParameterEditor 
-          key={param.name} 
-          param={param} 
-          form={form} 
+      {tool.parameters.map((param, paramIndex) => (
+        <ParameterEditor
+          key={param.name}
+          param={param}
+          paramIndex={paramIndex}
+          form={form}
           stepIndex={stepIndex}
         />
       ))}
     </VStack>
   );
 }
-  
-function ParameterEditor({ 
-  param, 
-  form, 
-  stepIndex 
-}: { 
-  param: NoCodeParameterCreate,
-  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>,
-  stepIndex: number
+
+function ParameterEditor({
+  param,
+  paramIndex,
+  form,
+  stepIndex,
+}: {
+  param: NoCodeParameterCreate;
+  paramIndex: number;
+  form: ReturnType<typeof useForm<NoCodeWidgetCreate>>;
+  stepIndex: number;
 }) {
   switch (param.type) {
     case "int":
     case "float":
       return (
         <DumbTextField
-          type="number"
-          name={`pipeline.${stepIndex}.parameters.${param.name}`}
+          name={`pipeline.${stepIndex}.parameters.${paramIndex}.value`}
           label={param.label || param.name}
           register={form.register}
           errors={form.formState.errors}
@@ -165,7 +195,7 @@ function ParameterEditor({
     case "string":
       return (
         <DumbTextField
-          name={`pipeline.${stepIndex}.parameters.${param.name}`}
+          name={`pipeline.${stepIndex}.parameters.${paramIndex}.value`}
           label={param.label || param.name}
           register={form.register}
           errors={form.formState.errors}
@@ -174,7 +204,7 @@ function ParameterEditor({
     case "select":
       return (
         <DumbFormSelect
-          name={`pipeline.${stepIndex}.parameters.${param.name}`}
+          name={`pipeline.${stepIndex}.parameters.${paramIndex}.value`}
           label={param.label || param.name}
           control={form.control}
           errors={form.formState.errors}

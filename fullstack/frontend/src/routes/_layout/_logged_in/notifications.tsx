@@ -57,7 +57,6 @@ function UnifiedNotificationInterface() {
     return <PageLoader />;
   }
 
-
   return (
     <Box
       display="flex"

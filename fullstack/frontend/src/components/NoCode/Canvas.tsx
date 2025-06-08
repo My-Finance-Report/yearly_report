@@ -14,12 +14,26 @@ import {
 } from "@/components/NoCode/Editors/Dragables";
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
 import { NoCodeWidgetIn_Output, Parameter_Output } from "@/client";
-import { Grid, GridItem, Container, Box, Button, useDisclosure } from "@chakra-ui/react";
+import {
+  Grid,
+  GridItem,
+  Container,
+  Box,
+  Button,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-function DummyGridBacking({ isEditMode, isDragging, openWidgetBuilder }: { isEditMode: boolean; isDragging: boolean; openWidgetBuilder: () => void }) {
-
+function DummyGridBacking({
+  isEditMode,
+  isDragging,
+  openWidgetBuilder,
+}: {
+  isEditMode: boolean;
+  isDragging: boolean;
+  openWidgetBuilder: () => void;
+}) {
   if (!isEditMode) {
     return null;
   }
@@ -41,7 +55,7 @@ function DummyGridBacking({ isEditMode, isDragging, openWidgetBuilder }: { isEdi
           },
           "& > button": {
             opacity: 1,
-          }
+          },
         }}
       >
         <Box
@@ -129,7 +143,7 @@ export function NoCodeDisplayCanvas({
   canvasId: number;
 }) {
   const [isDragging, setIsDragging] = useState(false);
-  const widgetBuilder = useDisclosure()
+  const widgetBuilder = useDisclosure();
   const { getParamsForView, parameters } = useNoCodeContext();
   const [paramsToDisplay, setParamsToDisplay] = useState(
     getParamsForView("page"),
@@ -161,36 +175,43 @@ export function NoCodeDisplayCanvas({
 
   return (
     <>
-    <Container w="100%">
-      <EditSwitch editMode={isEditMode} setEditMode={handleEditModeChange} />
-      <NoCodeDragContext setIsDragging={setIsDragging}>
-        <Grid
-          templateRows={`repeat(60, 40px)`}
-          templateColumns={`repeat(12, 100px)`}
-          gap={4}
-        >
-          <DummyGridBacking isEditMode={isEditMode} isDragging={isDragging} openWidgetBuilder={widgetBuilder.onOpen} />
-
-          {widgets.map((widget, index) => (
-            <NoCodeDraggableAndEditableWidget
-              key={index}
-              widget={widget}
-            editMode={isEditMode}
-            canvasId={canvasId}
-          />
-          ))}
-          {paramsToDisplay.map((param, index) => (
-            <NoCodeDraggableAndEditableParam
-              key={index}
-              param={param}
-              editMode={isEditMode}
-              canvasId={canvasId}
+      <Container w="100%">
+        <EditSwitch editMode={isEditMode} setEditMode={handleEditModeChange} />
+        <NoCodeDragContext setIsDragging={setIsDragging}>
+          <Grid
+            templateRows={`repeat(60, 40px)`}
+            templateColumns={`repeat(12, 100px)`}
+            gap={4}
+          >
+            <DummyGridBacking
+              isEditMode={isEditMode}
+              isDragging={isDragging}
+              openWidgetBuilder={widgetBuilder.onOpen}
             />
-          ))}
-        </Grid>
-      </NoCodeDragContext>
-    </Container>
-    <WidgetBuilder isOpen={widgetBuilder.open} onClose={widgetBuilder.onClose}/>
+
+            {widgets.map((widget, index) => (
+              <NoCodeDraggableAndEditableWidget
+                key={index}
+                widget={widget}
+                editMode={isEditMode}
+                canvasId={canvasId}
+              />
+            ))}
+            {paramsToDisplay.map((param, index) => (
+              <NoCodeDraggableAndEditableParam
+                key={index}
+                param={param}
+                editMode={isEditMode}
+                canvasId={canvasId}
+              />
+            ))}
+          </Grid>
+        </NoCodeDragContext>
+      </Container>
+      <WidgetBuilder
+        isOpen={widgetBuilder.open}
+        onClose={widgetBuilder.onClose}
+      />
     </>
   );
 }
