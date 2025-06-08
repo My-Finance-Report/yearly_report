@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { NoCodeService } from "@/client";
 import React, { useEffect, useState } from "react";
-import { Box, Button, Spinner, useDisclosure, Stack } from "@chakra-ui/react";
+import { Box, Button, useDisclosure, Stack } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
 import { EffectOut } from "@/client/types.gen";
@@ -12,6 +12,7 @@ import {
   NotificationFormValues,
   CreateForm,
 } from "@/components/Notifications/Builder";
+import PageLoader from "@/components/Common/PageLoader";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: UnifiedNotificationInterface,
@@ -49,7 +50,7 @@ function UnifiedNotificationInterface() {
   const deleteModal = useDisclosure();
 
   if (!effectMappings || !effects) {
-    return <Spinner />;
+    return <PageLoader />
   }
 
   return (
