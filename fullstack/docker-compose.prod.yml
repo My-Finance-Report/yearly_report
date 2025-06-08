@@ -92,5 +92,4 @@ volumes:
   backend_logs:
 
 networks:
-  traefik-public:
-    external: true
+  traefik-public
