@@ -13,6 +13,7 @@ import {
   CreateForm,
 } from "@/components/Notifications/Builder";
 import PageLoader from "@/components/Common/PageLoader";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: UnifiedNotificationInterface,
@@ -47,11 +48,14 @@ function UnifiedNotificationInterface() {
     queryFn: () => NoCodeService.getEffectMappings(),
   });
 
+  const isMobile = useIsMobile();
+
   const deleteModal = useDisclosure();
 
   if (!effectMappings || !effects) {
     return <PageLoader />;
   }
+
 
   return (
     <Box
@@ -59,7 +63,7 @@ function UnifiedNotificationInterface() {
       flexDirection="column"
       gap={8}
       w="full"
-      p={4}
+      px={isMobile ? 4 : 24}
       maxW="100vw"
       overflowX="hidden"
     >
