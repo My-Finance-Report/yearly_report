@@ -1,4 +1,4 @@
-name: Build Main
+name: build-main
 run-name: Post-merge build for commit ${{ github.sha }}
 on:
   push:
