@@ -18,22 +18,14 @@ import {
   Grid,
   GridItem,
   Container,
-  Box,
+  HStack,
   Button,
   useDisclosure,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-function DummyGridBacking({
-  isEditMode,
-  isDragging,
-  openWidgetBuilder,
-}: {
-  isEditMode: boolean;
-  isDragging: boolean;
-  openWidgetBuilder: () => void;
-}) {
+function DummyGridBacking({ isEditMode }: { isEditMode: boolean }) {
   if (!isEditMode) {
     return null;
   }
@@ -57,26 +49,7 @@ function DummyGridBacking({
             opacity: 1,
           },
         }}
-      >
-        <Box
-          w="100%"
-          h="100%"
-          borderWidth={isDragging ? 3 : 0}
-          transition="all 0.2s"
-        />
-        <Button
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          opacity={0}
-          onClick={openWidgetBuilder}
-          transition="opacity 0.2s"
-          size="sm"
-        >
-          Add Widget
-        </Button>
-      </GridItem>
+      ></GridItem>
     )),
   );
 }
@@ -176,18 +149,22 @@ export function NoCodeDisplayCanvas({
   return (
     <>
       <Container w="100%">
-        <EditSwitch editMode={isEditMode} setEditMode={handleEditModeChange} />
+        <HStack p={4} gap={4}>
+          <EditSwitch
+            editMode={isEditMode}
+            setEditMode={handleEditModeChange}
+          />
+          <Button onClick={widgetBuilder.onOpen} size="sm" variant="outline">
+            Add Widget
+          </Button>
+        </HStack>
         <NoCodeDragContext setIsDragging={setIsDragging}>
           <Grid
             templateRows={`repeat(60, 40px)`}
             templateColumns={`repeat(12, 100px)`}
             gap={4}
           >
-            <DummyGridBacking
-              isEditMode={isEditMode}
-              isDragging={isDragging}
-              openWidgetBuilder={widgetBuilder.onOpen}
-            />
+            <DummyGridBacking isEditMode={isEditMode} />
 
             {widgets.map((widget, index) => (
               <NoCodeDraggableAndEditableWidget
