@@ -50,7 +50,7 @@ function UnifiedNotificationInterface() {
   const deleteModal = useDisclosure();
 
   if (!effectMappings || !effects) {
-    return <PageLoader />
+    return <PageLoader />;
   }
 
   return (

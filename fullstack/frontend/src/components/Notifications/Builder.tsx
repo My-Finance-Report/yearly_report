@@ -243,8 +243,7 @@ export function CreateForm({
               )}
             />
 
-            <Stack direction={{ base: "column", md: "row" }} gap={4}>
-              <Box flex={1}>
+            <Stack direction={{ base: "column", md: "row" }} gap={4} align="start">
                 <DumbFormSelect
                   control={control}
                   errors={errors}
@@ -257,8 +256,6 @@ export function CreateForm({
                   labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
                   keyExtractor={(effectType) => effectType}
                 />
-              </Box>
-              <Box flex={1}>
                 <DumbTextField
                   name="subject"
                   label="Subject"
@@ -266,10 +263,9 @@ export function CreateForm({
                   disabled={!selectedEffect?.editable}
                   errors={errors}
                 />
-              </Box>
             </Stack>
 
-            <Box>
+            <Box w="100%" minH={{ base: "200px", md: "300px" }}>
               <TemplateEditor
                 name="template"
                 availableVariables={
