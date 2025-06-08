@@ -32,31 +32,22 @@ function DummyGridBacking({
   isEditMode: boolean;
   isDragging: boolean;
 }) {
-  if (!isEditMode) {
+  if (!isEditMode || !isDragging) {
     return null;
   }
 
   return Array.from({ length: 100 }, (_, i) => i + 1).map((row) =>
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((col) => (
       <GridItem
-        key={`background-${row}-${col}`}
+        borderWidth={3}
+        borderColor="red.300"
         opacity={isDragging ? 0.5 : 0}
         pointerEvents={isDragging ? "none" : "auto"}
+        key={`background-${row}-${col}`}
         rowStart={row}
         colStart={col}
         rowSpan={1}
         colSpan={1}
-        position="relative"
-        _hover={{
-          "& > div": {
-            opacity: isDragging ? 0.5 : 0,
-            borderColor: "red.300",
-            borderWidth: 3,
-          },
-          "& > button": {
-            opacity: isDragging ? 1 : 0,
-          },
-        }}
       ></GridItem>
     )),
   );
