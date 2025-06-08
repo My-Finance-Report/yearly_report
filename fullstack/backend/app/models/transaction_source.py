@@ -36,10 +36,11 @@ class TransactionSource(Base):
     source_kind: Mapped[SourceKind] = mapped_column(
         Enum(SourceKind), default=SourceKind.account
     )
-    plaid_account_id: Mapped[int | None] = mapped_column(
-        ForeignKey("plaid_account.id"), nullable=True
+    plaid_account_id: Mapped[int | None] = (
+        mapped_column(  # circular import if we use the correct type, todo
+            ForeignKey("plaid_account.id"), nullable=True
+        )
     )
-
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_transaction_source"),
     )

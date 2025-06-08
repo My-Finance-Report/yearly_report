@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { NoCodeService } from "@/client";
 import React, { useEffect, useState } from "react";
-import { Box, Button, Spinner, useDisclosure, Stack } from "@chakra-ui/react";
+import { Box, Button, useDisclosure, Stack } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
 import { EffectOut } from "@/client/types.gen";
@@ -13,6 +13,8 @@ import {
   CreateForm,
 } from "@/components/Notifications/Builder";
 import { EntityKind } from "@/components/Common/DeleteAlert/types";
+import PageLoader from "@/components/Common/PageLoader";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export const Route = createFileRoute("/_layout/_logged_in/notifications")({
   component: UnifiedNotificationInterface,
@@ -47,11 +49,14 @@ function UnifiedNotificationInterface() {
     queryFn: () => NoCodeService.getEffectMappings(),
   });
 
+  const isMobile = useIsMobile();
+
   const deleteModal = useDisclosure();
 
   if (!effectMappings || !effects) {
-    return <Spinner />;
+    return <PageLoader />;
   }
+
 
   return (
     <Box
@@ -59,7 +64,7 @@ function UnifiedNotificationInterface() {
       flexDirection="column"
       gap={8}
       w="full"
-      p={4}
+      px={isMobile ? 4 : 24}
       maxW="100vw"
       overflowX="hidden"
     >

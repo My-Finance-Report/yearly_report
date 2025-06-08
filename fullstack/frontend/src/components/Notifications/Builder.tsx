@@ -243,33 +243,33 @@ export function CreateForm({
               )}
             />
 
-            <Stack direction={{ base: "column", md: "row" }} gap={4}>
-              <Box flex={1}>
-                <DumbFormSelect
-                  control={control}
-                  errors={errors}
-                  name="effect_type"
-                  label="Notification Type"
-                  disabled={!selectedEffect?.editable}
-                  options={Object.keys(EFFECT_TYPES).map(
-                    (effectType) => effectType as EffectType,
-                  )}
-                  labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
-                  keyExtractor={(effectType) => effectType}
-                />
-              </Box>
-              <Box flex={1}>
-                <DumbTextField
-                  name="subject"
-                  label="Subject"
-                  register={register}
-                  disabled={!selectedEffect?.editable}
-                  errors={errors}
-                />
-              </Box>
+            <Stack
+              direction={{ base: "column", md: "row" }}
+              gap={4}
+              align="start"
+            >
+              <DumbFormSelect
+                control={control}
+                errors={errors}
+                name="effect_type"
+                label="Notification Type"
+                disabled={!selectedEffect?.editable}
+                options={Object.keys(EFFECT_TYPES).map(
+                  (effectType) => effectType as EffectType,
+                )}
+                labelExtractor={(effectType) => EFFECT_TYPES[effectType]}
+                keyExtractor={(effectType) => effectType}
+              />
+              <DumbTextField
+                name="subject"
+                label="Subject"
+                register={register}
+                disabled={!selectedEffect?.editable}
+                errors={errors}
+              />
             </Stack>
 
-            <Box>
+            <Box w="100%" minH={{ base: "200px", md: "300px" }}>
               <TemplateEditor
                 name="template"
                 availableVariables={

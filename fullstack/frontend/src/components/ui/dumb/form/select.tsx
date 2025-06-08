@@ -30,7 +30,7 @@ export function DumbFormSelect<T extends FieldValues, J>({
   disabled?: boolean;
 }) {
   return (
-    <FieldRoot invalid={!!errors[name]} required mt={4}>
+    <FieldRoot invalid={!!errors[name]} required>
       <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Controller
         control={control}

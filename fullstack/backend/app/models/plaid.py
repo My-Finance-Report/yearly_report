@@ -75,9 +75,14 @@ class PlaidAccount(Base):
     type: Mapped[str] = mapped_column(String, nullable=False)
     cursor: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     subtype: Mapped[str | None] = mapped_column(String, nullable=True)
+<<<<<<< HEAD
     active: Mapped[bool | None] = mapped_column(
         Boolean, default=True, nullable=True
     )  # deprecated, use archived
+||||||| 50226e46
+    active: Mapped[bool | None] = mapped_column(Boolean, default=True, nullable=True)
+=======
+>>>>>>> a3d0e22de1244d2a04dc1d9a8bc043b27f2ed104
     archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

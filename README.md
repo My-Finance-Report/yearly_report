@@ -38,16 +38,15 @@ this is mainly a project through which I will learn more about haskell, but I ex
 * Have a way to activate / deactivate accounts from the accounts page
 
 * **Notifications**
-  * Allow user to 'restore default notifications' and delete the defaults
+  * Allow user to 'restore default notifications' 
     * The user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
-  * Emails only configured to send to me -- update to send to everyone
+  * Emails only configured to a few people
   * condition editors are not working
   * Maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
 
 * **Accounts View**
   * probably only show this if the user has plaid accounts synced
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
-  * Weird initial loading state
   * group by selector default is wrong / out of line with the chart
   * date of transaction is not clean
   * Some mobile treatment
@@ -60,7 +59,15 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Bigger: add ability to charge for the item
   * Add an effect for the order to send a notification
 
+* **Onboarding**
+  * centrailize seeding when account is created (right now the api calls just handle it if not initialized but thats weird)
+  * dont show account explorer until plaid accounts are added
+  * make sure transaction explorer gracefully handles no accounts (perhaps show the demo in place of empty screen?)
+
+
 * Why are there no decimals at all on transactions...?
+
+* add the ability to manually add an account with no uploads / transactions
 
 * Delete saved filter doesn't work on /transactions
 
@@ -68,6 +75,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Make sure we remove plaid items so we don't get charged
 
 * Redirect everything to the main url
+
 * Fix 2fa
 
 * Merge account function

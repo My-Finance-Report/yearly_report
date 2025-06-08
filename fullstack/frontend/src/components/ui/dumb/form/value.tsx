@@ -166,7 +166,7 @@ export function TemplateEditor<T extends FieldValues>({
   return (
     <FieldRoot invalid={!!errors[name]} required>
       <FieldLabel htmlFor={name}>{label}</FieldLabel>
-      <VStack align="stretch" gap={2}>
+      <VStack w="full" align="stretch" gap={2}>
         <Textarea
           id={name}
           {...register(name, {
