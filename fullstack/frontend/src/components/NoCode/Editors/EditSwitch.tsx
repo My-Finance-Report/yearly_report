@@ -1,4 +1,4 @@
-import { HStack, Text, Switch, Heading } from "@chakra-ui/react";
+import { HStack, Text, Switch } from "@chakra-ui/react";
 import { HiCheck, HiX } from "react-icons/hi";
 
 export function EditSwitch({
@@ -29,9 +29,6 @@ export function EditSwitch({
           <Switch.Label />
         </Switch.Root>
       </HStack>
-      {editMode && (
-        <Heading>Click on edit button to edit, and drag to rearrange</Heading>
-      )}
     </>
   );
 }

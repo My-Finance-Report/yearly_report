@@ -115,7 +115,6 @@ export function NoCodeDisplayCanvas({
   widgets: NoCodeWidgetIn_Output[];
   canvasId: number;
 }) {
-  const [isDragging, setIsDragging] = useState(false);
   const widgetBuilder = useDisclosure();
   const { getParamsForView, parameters } = useNoCodeContext();
   const [paramsToDisplay, setParamsToDisplay] = useState(
@@ -158,7 +157,7 @@ export function NoCodeDisplayCanvas({
             Add Widget
           </Button>
         </HStack>
-        <NoCodeDragContext setIsDragging={setIsDragging}>
+        <NoCodeDragContext>
           <Grid
             templateRows={`repeat(60, 40px)`}
             templateColumns={`repeat(12, 100px)`}
