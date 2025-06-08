@@ -75,7 +75,7 @@ class PlaidAccount(Base):
     type: Mapped[str] = mapped_column(String, nullable=False)
     cursor: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     subtype: Mapped[str | None] = mapped_column(String, nullable=True)
-    active: Mapped[bool | None] = mapped_column(Boolean, default=True, nullable=True)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
