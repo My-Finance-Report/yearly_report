@@ -92,4 +92,4 @@ volumes:
   backend_logs:
 
 networks:
-  traefik-public
+  traefik-public:
