@@ -6,12 +6,13 @@ import { Box, Button, useDisclosure, Stack } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
 import { EffectOut } from "@/client/types.gen";
-import Delete, { DeleteableEntity } from "@/components/Common/DeleteAlert";
+import Delete from "@/components/Common/DeleteAlert/DeleteAlert";
 import { NotificationPreview } from "@/components/Notifications/Preview";
 import {
   NotificationFormValues,
   CreateForm,
 } from "@/components/Notifications/Builder";
+import { EntityKind } from "@/components/Common/DeleteAlert/types";
 import PageLoader from "@/components/Common/PageLoader";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -56,7 +57,6 @@ function UnifiedNotificationInterface() {
     return <PageLoader />;
   }
 
-
   return (
     <Box
       display="flex"
@@ -93,14 +93,16 @@ function UnifiedNotificationInterface() {
             setSelectedEffect={setSelectedEffect}
             resetForm={() => form.reset()}
           />
-          <Button
-            onClick={deleteModal.onOpen}
-            variant="ghost"
-            colorScheme="red"
-            w={{ base: "full", sm: "auto" }}
-          >
-            Delete
-          </Button>
+          {selectedEffect && (
+            <Button
+              onClick={deleteModal.onOpen}
+              variant="ghost"
+              colorScheme="red"
+              w={{ base: "full", sm: "auto" }}
+            >
+              Delete
+            </Button>
+          )}
         </Stack>
       </Stack>
 
@@ -123,12 +125,13 @@ function UnifiedNotificationInterface() {
         <Box w="full" minW={0}>
           <NotificationPreview form={form} />
         </Box>
-        <Delete
-          type="notification"
-          isOpen={deleteModal.open}
-          onClose={deleteModal.onClose}
-          entity={selectedEffect as DeleteableEntity}
-        />
+        {selectedEffect && (
+          <Delete
+            isOpen={deleteModal.open}
+            onClose={deleteModal.onClose}
+            entity={{ ...selectedEffect, kind: EntityKind.Notification }}
+          />
+        )}
       </Stack>
     </Box>
   );

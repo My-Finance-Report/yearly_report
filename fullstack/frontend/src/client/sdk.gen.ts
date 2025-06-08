@@ -73,17 +73,21 @@ import type {
   NoCodeUpdateEffectResponse,
   NoCodeDeleteEffectData,
   NoCodeDeleteEffectResponse,
-  NoCodeGetNoCodeToolResponse,
+  NoCodeGetNoCodeToolsResponse,
   NoCodeSaveNoCodeToolData,
   NoCodeSaveNoCodeToolResponse,
   NoCodeRefetchWidgetData,
   NoCodeRefetchWidgetResponse,
   NoCodeUpdateParameterData,
   NoCodeUpdateParameterResponse,
+  NoCodeCreateWidgetData,
+  NoCodeCreateWidgetResponse,
   NoCodeUpdateWidgetData,
   NoCodeUpdateWidgetResponse,
   NoCodeGetNoCodeDashboardData,
   NoCodeGetNoCodeDashboardResponse,
+  NoCodeRemoveWidgetData,
+  NoCodeRemoveWidgetResponse,
   OauthLoginGoogleResponse,
   OauthGoogleCallbackData,
   OauthGoogleCallbackResponse,
@@ -1016,11 +1020,11 @@ export class NoCodeService {
   }
 
   /**
-   * Get No Code Tool
+   * Get No Code Tools
    * @returns NoCodeToolOut Successful Response
    * @throws ApiError
    */
-  public static getNoCodeTool(): CancelablePromise<NoCodeGetNoCodeToolResponse> {
+  public static getNoCodeTools(): CancelablePromise<NoCodeGetNoCodeToolsResponse> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/no_code/get_no_code_tools",
@@ -1099,6 +1103,27 @@ export class NoCodeService {
   }
 
   /**
+   * Create Widget
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns NoCodeWidgetOut Successful Response
+   * @throws ApiError
+   */
+  public static createWidget(
+    data: NoCodeCreateWidgetData,
+  ): CancelablePromise<NoCodeCreateWidgetResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/no_code/create_widget",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
    * Update Widget
    * @param data The data for the request.
    * @param data.widgetId
@@ -1138,6 +1163,30 @@ export class NoCodeService {
       url: "/api/v1/no_code/get_no_code_dashboard",
       query: {
         variant: data.variant,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    });
+  }
+
+  /**
+   * Remove Widget
+   * @param data The data for the request.
+   * @param data.widgetId
+   * @param data.canvasId
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static removeWidget(
+    data: NoCodeRemoveWidgetData,
+  ): CancelablePromise<NoCodeRemoveWidgetResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/no_code/remove_widget",
+      query: {
+        widget_id: data.widgetId,
+        canvas_id: data.canvasId,
       },
       errors: {
         422: "Validation Error",

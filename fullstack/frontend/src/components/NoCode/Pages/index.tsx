@@ -20,7 +20,7 @@ export function NoCodePage({ variant }: { variant: PageVariant }) {
 
   return (
     <NoCodeProvider parameters={data.parameters}>
-      <NoCodeDisplayCanvas widgets={data.widgets} />
+      <NoCodeDisplayCanvas widgets={data.widgets} canvasId={data.canvas_id} />
     </NoCodeProvider>
   );
 }

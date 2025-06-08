@@ -1,22 +1,19 @@
 import { Box, Button, Dialog, Portal, Checkbox } from "@chakra-ui/react";
+import { EntityKind, EntityType } from "./types";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { NoCodeService, TransactionsService, UsersService } from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
+import { NoCodeService, TransactionsService, UsersService } from "@/client";
+import useCustomToast from "@/hooks/useCustomToast";
 
-export interface DeleteableEntity {
-  id: number;
-}
-
-interface DeleteProps {
-  type: "user" | "transaction" | "notification";
+type DeleteProps = {
   isOpen: boolean;
   onClose: () => void;
-  entity?: DeleteableEntity;
-}
+  entity: EntityType;
+  keysToInvalidate?: string[];
+};
 
 const STORAGE_KEY_PREFIX = "skip_confirmation_";
 
@@ -26,7 +23,7 @@ function skipConfirmation(type: string) {
   return skipConfirmation;
 }
 
-const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
+const Delete = ({ isOpen, onClose, entity, keysToInvalidate }: DeleteProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const cancelRef = React.useRef<HTMLButtonElement | null>(null);
@@ -37,35 +34,35 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
   } = useForm();
 
   React.useEffect(() => {
-    if (skipConfirmation(type) && isOpen) {
+    if (skipConfirmation(entity.kind) && isOpen) {
       onClose();
       handleDelete();
     }
-  }, [isOpen, type]);
+  }, [isOpen]);
 
   const deleteEntity = async () => {
-    switch (type) {
-      case "user":
+    switch (entity.kind) {
+      case EntityKind.User:
         await UsersService.deleteUserMe();
         break;
-      case "transaction":
-        if (!entity || !entity.id) {
-          throw new Error("Entity is required for transaction deletion");
-        }
+      case EntityKind.Transaction:
         await TransactionsService.deleteTransaction({
           transactionId: entity.id,
         });
         break;
-      case "notification":
-        if (!entity || !entity.id) {
-          throw new Error("Entity is required for notification deletion");
-        }
+      case EntityKind.Notification:
         await NoCodeService.deleteEffect({
           effectId: entity.id,
         });
         break;
+      case EntityKind.Widget:
+        await NoCodeService.removeWidget({
+          widgetId: entity.id,
+          canvasId: entity.canvasId,
+        });
+        break;
       default:
-        throw new Error(`Unexpected type: ${type}`);
+        throw new Error(`Unexpected`);
     }
   };
 
@@ -74,26 +71,27 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
     onSuccess: () => {
       showToast(
         "Success",
-        `The ${type.toLowerCase()} was deleted successfully.`,
+        `The ${entity.kind.toLowerCase()} was deleted successfully.`,
         "success",
       );
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Failed to delete entity", error);
       showToast(
         "An error occurred.",
-        `An error occurred while deleting the ${type.toLowerCase()}.`,
+        `An error occurred while deleting the ${entity.kind.toLowerCase()}.`,
         "error",
       );
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
+        queryKey: keysToInvalidate,
       });
     },
     onMutate: () => {
       queryClient.cancelQueries({
-        queryKey: [type === "user" ? "users" : "aggregatedTransactions"],
+        queryKey: keysToInvalidate,
       });
     },
   });
@@ -103,17 +101,15 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
   };
 
   const onSubmit = async () => {
-    // If user checked "Don't show me again", save to localStorage
     if (dontShowAgain) {
-      const storageKey = `${STORAGE_KEY_PREFIX}${type}`;
+      const storageKey = `${STORAGE_KEY_PREFIX}${entity.kind}`;
       localStorage.setItem(storageKey, "true");
     }
 
     handleDelete();
   };
 
-  // If we should skip confirmation, don't render the dialog at all
-  if (skipConfirmation(type) && isOpen) {
+  if (skipConfirmation(entity.kind) && isOpen) {
     return null;
   }
 
@@ -123,9 +119,9 @@ const Delete = ({ type, isOpen, onClose, entity }: DeleteProps) => {
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content as="form" onSubmit={handleSubmit(onSubmit)}>
-            <Dialog.Header>Delete {type}</Dialog.Header>
+            <Dialog.Header>Delete {entity.kind}</Dialog.Header>
             <Dialog.Body>
-              {type === "user" && (
+              {entity.kind === EntityKind.User && (
                 <span>
                   All items associated with this user will also be{" "}
                   <strong>permanently deleted. </strong>

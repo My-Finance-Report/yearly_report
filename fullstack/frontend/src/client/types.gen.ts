@@ -323,9 +323,16 @@ export type NewPassword = {
 
 export type NoCodeCanvasOut = {
   name: string;
+  canvas_id: number;
   widgets: Array<NoCodeWidgetIn_Output>;
   parameters: Array<Parameter_Output>;
   parameter_groups: Array<ParameterGroupOut>;
+};
+
+export type NoCodeParameterCreate = {
+  name: string;
+  label?: string | null;
+  type: ParameterType;
 };
 
 export type NoCodeParameterUpdate = {
@@ -350,13 +357,19 @@ export type NoCodeToolOut = {
   name: string;
   description: string;
   tool: string;
-  parameters?: Array<Parameter_Output> | null;
-  return_type: {
-    [key: string]: unknown;
-  };
-  input_type: {
-    [key: string]: unknown;
-  };
+  parameters?: Array<NoCodeParameterCreate> | null;
+  return_type: unknown;
+};
+
+export type NoCodeWidgetCreate = {
+  name: string;
+  description: string;
+  pipeline: Array<NoCodeToolIn_Input>;
+  row: number;
+  col: number;
+  row_span: number;
+  col_span: number;
+  type: WidgetType;
 };
 
 export type NoCodeWidgetIn_Input = {
@@ -1151,7 +1164,7 @@ export type NoCodeDeleteEffectData = {
 
 export type NoCodeDeleteEffectResponse = void;
 
-export type NoCodeGetNoCodeToolResponse = Array<NoCodeToolOut>;
+export type NoCodeGetNoCodeToolsResponse = Array<NoCodeToolOut>;
 
 export type NoCodeSaveNoCodeToolData = {
   requestBody: Array<NoCodeWidgetIn_Input>;
@@ -1175,6 +1188,12 @@ export type NoCodeUpdateParameterResponse = {
   [key: string]: string;
 };
 
+export type NoCodeCreateWidgetData = {
+  requestBody: NoCodeWidgetCreate;
+};
+
+export type NoCodeCreateWidgetResponse = NoCodeWidgetOut;
+
 export type NoCodeUpdateWidgetData = {
   requestBody: NoCodeWidgetUpdate;
   widgetId: number;
@@ -1189,6 +1208,15 @@ export type NoCodeGetNoCodeDashboardData = {
 };
 
 export type NoCodeGetNoCodeDashboardResponse = NoCodeCanvasOut;
+
+export type NoCodeRemoveWidgetData = {
+  canvasId: number;
+  widgetId: number;
+};
+
+export type NoCodeRemoveWidgetResponse = {
+  [key: string]: string;
+};
 
 export type OauthLoginGoogleResponse = LoginGoogleData;
 

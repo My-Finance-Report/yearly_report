@@ -28,6 +28,7 @@ from app.schemas.no_code import (
     NoCodeCanvasOut,
     NoCodeToolIn,
     NoCodeToolOut,
+    NoCodeWidgetCreate,
     NoCodeWidgetIn,
     NoCodeWidgetOut,
     NoCodeWidgetUpdate,
@@ -41,11 +42,11 @@ router = APIRouter(prefix="/no_code", tags=["no_code"])
 
 
 @router.get("/get_no_code_tools", response_model=list[NoCodeToolOut])
-def get_no_code_tool(
+def get_no_code_tools(
     session: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[NoCodeToolOut]:
-    return make_tools(session, user)
+    return make_tools()
 
 
 def process_widget(
@@ -127,6 +128,15 @@ def update_parameter(
     return {"message": "updated parameter"}
 
 
+@router.post("/create_widget", response_model=NoCodeWidgetOut)
+def create_widget(
+    widget: NoCodeWidgetCreate,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> None:
+    pass
+
+
 @router.post("/update_widget", response_model=dict[str, str])
 def update_widget(
     widget_id: int,
@@ -194,6 +204,100 @@ def get_no_code_dashboard(
     session: Session = Depends(get_db),
 ) -> NoCodeCanvasOut:
     return generate_canvas_for_slug(session, user, slug=variant.value)
+
+
+def remove_parameters(
+    widget_id: int,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> dict[str, str]:
+    # Get all tools associated with this widget
+    tools = (
+        session.query(NoCodeTool)
+        .filter(
+            NoCodeTool.widget_id == widget_id,
+            NoCodeTool.user_id == user.id,
+        )
+        .all()
+    )
+
+    tool_ids = [tool.id for tool in tools]
+
+    tool_parameters = (
+        session.query(NoCodeToolParameter)
+        .filter(NoCodeToolParameter.tool_id.in_(tool_ids))
+        .all()
+    )
+
+    parameter_ids = [tp.parameter_id for tp in tool_parameters]
+
+    session.query(NoCodeParameterOption).filter(
+        NoCodeParameterOption.parameter_id.in_(parameter_ids)
+    ).delete(synchronize_session=False)
+
+    session.query(NoCodeParameter).filter(NoCodeParameter.id.in_(parameter_ids)).delete(
+        synchronize_session=False
+    )
+
+    session.commit()
+
+    return {"message": "removed parameters"}
+
+
+@router.post("/remove_widget", response_model=dict[str, str])
+def remove_widget(
+    widget_id: int,
+    canvas_id: int,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_db),
+) -> dict[str, str]:
+    widget = (
+        session.query(NoCodeWidget)
+        .join(NoCodeCanvas, NoCodeCanvas.id == NoCodeWidget.canvas_id)
+        .filter(
+            NoCodeWidget.id == widget_id,
+            NoCodeCanvas.id == canvas_id,
+            NoCodeWidget.user_id == user.id,
+        )
+        .one_or_none()
+    )
+    if not widget:
+        raise HTTPException(status_code=400, detail="widget does not exist")
+
+    # First delete tool parameters
+    tool_ids = (
+        session.query(NoCodeTool.id)
+        .filter(
+            NoCodeTool.widget_id == widget_id,
+            NoCodeTool.user_id == user.id,
+            NoCodeTool.canvas_id == canvas_id,
+        )
+        .all()
+    )
+    tool_ids = [t[0] for t in tool_ids]
+
+    if tool_ids:
+        # Delete tool parameters first
+        session.query(NoCodeToolParameter).filter(
+            NoCodeToolParameter.tool_id.in_(tool_ids)
+        ).delete(synchronize_session=False)
+
+        # Then delete pipeline steps
+        session.query(NoCodePipelineStep).filter(
+            NoCodePipelineStep.tool_id.in_(tool_ids)
+        ).delete(synchronize_session=False)
+
+        # Finally delete the tools
+        session.query(NoCodeTool).filter(NoCodeTool.id.in_(tool_ids)).delete(
+            synchronize_session=False
+        )
+
+    remove_parameters(widget_id, user, session)
+
+    session.delete(widget)
+    session.commit()
+
+    return {"message": "removed widget"}
 
 
 def create_seed_page(session: Session, user: User) -> NoCodeCanvas:
@@ -357,6 +461,7 @@ def generate_canvas_for_slug(
 
     return NoCodeCanvasOut(
         name=db_canvas.name,
+        canvas_id=db_canvas.id,
         widgets=widgets_out,
         parameters=parameters_out,
         parameter_groups=parameter_groups_out,
