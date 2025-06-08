@@ -1,7 +1,7 @@
 import { NoCodeService, PageVariant } from "@/client";
 import { useQuery } from "@tanstack/react-query";
 import { NoCodeDisplayCanvas } from "@/components/NoCode/Canvas";
-import { Spinner } from "@chakra-ui/react";
+import PageLoader from "@/components/Common/PageLoader";
 import { NoCodeProvider } from "@/contexts/NoCodeContext";
 
 export function NoCodePage({ variant }: { variant: PageVariant }) {
@@ -11,11 +11,11 @@ export function NoCodePage({ variant }: { variant: PageVariant }) {
   });
 
   if (isLoading || !data) {
-    return <Spinner />;
+    return <PageLoader />;
   }
 
   if (isError) {
-    return <h1>there has been an error</h1>;
+    throw new Error("Failed to load no code dashboard");
   }
 
   return (
