@@ -71,7 +71,7 @@ jobs:
           HOST: ${{ secrets.EC2_TEST_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           REMOTE_DIR: "/home/ec2-user/code/finance_app"
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: latest
       run: |
         echo "${PRIVATE_KEY}" > finance_key.pem
         chmod 400 finance_key.pem
