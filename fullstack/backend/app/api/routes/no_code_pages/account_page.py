@@ -554,6 +554,53 @@ def _generate_pie_widget(
     )
 
 
+def _generate_search_widget(
+    session: Session,
+    user: User,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 1,
+    col_span: int = 3,
+) -> NoCodeWidgetIn:
+    widget_id = WidgetId(588)
+
+    pipeline = [
+        NoCodeToolIn(
+            tool="transaction_search",
+            parameters=[
+                Parameter(
+                    id=588,
+                    name="search_string",
+                    label="Search",
+                    group_id=ParameterGroupId(0),
+                    type=ParameterType.STRING,
+                    trigger_refetch=True,
+                    dependent_widgets=[widget_id],
+                    display_info=DisplayInfo(
+                        views=["page"],
+                        row=45,
+                        col=1,
+                        row_span=1,
+                        col_span=3,
+                    ),
+                ),
+            ],
+        ),
+    ]
+
+    return NoCodeWidgetIn(
+        id=widget_id,
+        pipeline=pipeline,
+        name="Search Transactions",
+        description="Search Transactions",
+        row=row,
+        col=col,
+        row_span=row_span,
+        col_span=col_span,
+        type=WidgetType.list,
+    )
+
+
 def _generate_bar_chart_widget(
     session: Session,
     user: User,
@@ -643,8 +690,9 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
                 statement="All Accounts",
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
+            partial(_generate_search_widget, row=48, col=4, row_span=1, col_span=9),
             partial(
-                _generate_all_transactions_widget, row=2, col=4, row_span=10, col_span=9
+                _generate_all_transactions_widget, row=3, col=4, row_span=10, col_span=9
             ),
             partial(_generate_pie_widget, row=5, col=1, row_span=7, col_span=3),
             partial(

@@ -23,6 +23,12 @@ AccountIdParam = NoCodeParameterCreate(
     type=ParameterType.SELECT,
 )
 
+SearchStringParam = NoCodeParameterCreate(
+    name="search_string",
+    label="Search Transactions",
+    type=ParameterType.STRING,
+)
+
 NParam = NoCodeParameterCreate(
     name="n",
     label="N",
@@ -353,6 +359,62 @@ def account_interest(
             color="green",
         ),
     )
+
+
+@pipeline_step(
+    return_type=list[NoCodeTransaction],
+    passed_value=None,
+    parameters=[SearchStringParam],
+)
+def transaction_search(
+    data: PipelineStart, search_string: str
+) -> list[NoCodeTransaction]:
+    if not search_string:
+        return []
+
+    txs = (
+        data.session.query(Transaction)
+        .filter(
+            Transaction.user_id == data.user.id,
+            Transaction.description.ilike(f"%{search_string}%"),
+        )
+        .all()
+    )
+
+    accounts = (
+        data.session.query(TransactionSource)
+        .filter(
+            TransactionSource.user_id == data.user.id,
+            TransactionSource.id.in_([tx.transaction_source_id for tx in txs]),
+        )
+        .all()
+    )
+
+    account_name_map = {account.id: account.name for account in accounts}
+    categories = (
+        data.session.query(Category)
+        .filter(
+            Category.user_id == data.user.id,
+            Category.id.in_([tx.category_id for tx in txs]),
+        )
+        .all()
+    )
+    category_name_map = {category.id: category.name for category in categories}
+
+    val = [
+        NoCodeTransaction(
+            id=tx.id,
+            category_id=tx.category_id,
+            category_name=category_name_map[tx.category_id],
+            amount=tx.amount,
+            account_name=account_name_map[tx.transaction_source_id],
+            kind=tx.kind,
+            description=tx.description,
+            date_of_transaction=tx.date_of_transaction,
+        )
+        for tx in txs
+    ]
+    return val
 
 
 @pipeline_step(

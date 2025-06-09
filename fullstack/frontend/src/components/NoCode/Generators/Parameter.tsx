@@ -257,6 +257,7 @@ function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
   const [val, setVal] = useState("");
   const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setVal(e.target.value);
+
   return (
     <Box>
       <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>

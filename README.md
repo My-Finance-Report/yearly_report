@@ -76,8 +76,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 * Redirect everything to the main url
 
-* Fix 2fa
-
 * Merge account function
   * Built backend but needs frontend
 
