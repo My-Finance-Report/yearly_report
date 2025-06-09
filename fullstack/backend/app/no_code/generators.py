@@ -378,6 +378,7 @@ def transaction_search(
             Transaction.user_id == data.user.id,
             Transaction.description.ilike(f"%{search_string}%"),
         )
+        .limit(20)
         .all()
     )
 

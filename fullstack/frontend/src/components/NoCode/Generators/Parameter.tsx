@@ -1,6 +1,5 @@
 import {
   Box,
-  Text,
   Field,
   Input,
   Button,
@@ -254,15 +253,24 @@ function FloatParameter({ parameter, onChange }: ParameterProps<"float">) {
 }
 
 function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
-  const [val, setVal] = useState("");
-  const wrappedChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setVal(e.target.value);
+  const [localValue, setLocalValue] = useState<string>(parameter.value || "");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log("calling onChange", localValue);
+      onChange(localValue);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [localValue]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalValue(e.target.value);
+  };
 
   return (
     <Box>
-      <Text key={`${parameter.name}`}>{parameter.label || parameter.name}</Text>
-      <Input type="text" value={val} onChange={wrappedChange} />
-      <Button onClick={() => onChange(val)}>Submit</Button>
+      <Input type="text" value={localValue} onChange={handleChange} />
     </Box>
   );
 }

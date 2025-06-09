@@ -591,7 +591,7 @@ def _generate_search_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        name="Search Transactions",
+        name="Search Results",
         description="Search Transactions",
         row=row,
         col=col,
@@ -690,7 +690,7 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
                 statement="All Accounts",
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
-            partial(_generate_search_widget, row=48, col=4, row_span=1, col_span=9),
+            partial(_generate_search_widget, row=45, col=4, row_span=1, col_span=9),
             partial(
                 _generate_all_transactions_widget, row=3, col=4, row_span=10, col_span=9
             ),
