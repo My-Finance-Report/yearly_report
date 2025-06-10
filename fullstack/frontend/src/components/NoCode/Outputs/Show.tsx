@@ -1,8 +1,4 @@
-import {
-  NoCodeService,
-  NoCodeWidgetOut,
-  Parameter_Output,
-} from "@/client";
+import { NoCodeService, NoCodeWidgetOut, Parameter_Output } from "@/client";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
 import {
   ShowValue,

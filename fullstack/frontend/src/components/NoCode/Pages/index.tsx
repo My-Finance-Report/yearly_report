@@ -10,7 +10,6 @@ export function NoCodePage({ variant }: { variant: PageVariant }) {
     queryFn: () => NoCodeService.getNoCodeDashboard({ variant }),
   });
 
-
   if (isLoading || !data) {
     return <PageLoader />;
   }

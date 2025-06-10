@@ -13,7 +13,7 @@ import {
   NoCodeDragContext,
 } from "@/components/NoCode/Editors/Dragables";
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
-import { NoCodeWidgetIn_Output, NoCodeWidgetOut, Parameter_Output } from "@/client";
+import { NoCodeWidgetOut, Parameter_Output } from "@/client";
 import {
   Grid,
   GridItem,

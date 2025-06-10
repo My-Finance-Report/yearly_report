@@ -11,7 +11,6 @@ export function EditSwitch({
   return (
     <>
       <HStack>
-        <Text>Enable Edit Mode</Text>
         <Switch.Root
           variant="solid"
           size="lg"
