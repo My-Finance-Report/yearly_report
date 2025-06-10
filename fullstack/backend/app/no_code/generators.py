@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 import random
 import enum
 from decimal import Decimal
+import time
 
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -73,8 +74,7 @@ def first_n_transactions(
     search_string: str | None = None,
     page: SelectOption = SelectOption(key="1", value="1"),
 ) -> list[NoCodeTransaction]:
-    print("account_id", account_id)
-    print("search_string", search_string)
+    start = time.time()
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
     )
@@ -119,6 +119,8 @@ def first_n_transactions(
         )
         for tx, cat in txs.all()
     ]
+    end = time.time()
+    print(f"First n transactions took {end - start} seconds")
     return val
 
 

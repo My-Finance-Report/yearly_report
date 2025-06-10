@@ -13,7 +13,7 @@ import {
   NoCodeDragContext,
 } from "@/components/NoCode/Editors/Dragables";
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
-import { NoCodeWidgetIn_Output, Parameter_Output } from "@/client";
+import { NoCodeWidgetIn_Output, NoCodeWidgetOut, Parameter_Output } from "@/client";
 import {
   Grid,
   GridItem,
@@ -85,7 +85,7 @@ function NoCodeDraggableAndEditableWidget({
   editMode,
   canvasId,
 }: {
-  widget: NoCodeWidgetIn_Output;
+  widget: NoCodeWidgetOut;
   editMode: boolean;
   canvasId: number;
 }) {
@@ -112,7 +112,7 @@ export function NoCodeDisplayCanvas({
   widgets,
   canvasId,
 }: {
-  widgets: NoCodeWidgetIn_Output[];
+  widgets: NoCodeWidgetOut[];
   canvasId: number;
 }) {
   const [isDragging, setIsDragging] = useState(false);

@@ -109,9 +109,12 @@ def aggregate(
             result[key] = {}
             result[key][key_from.key] = key
 
-        for value in values_from:
-            result[key][transaction.description] = parse_value(
-                getattr(transaction, value.key)
+        if isinstance(values_from, list):  # TODO figure out why this type is wrong
+            for value in values_from:
+                result[key][value.key] = parse_value(getattr(transaction, value.key))
+        else:
+            result[key][values_from.key] = parse_value(
+                getattr(transaction, values_from.key)
             )
 
     return list(result.values())

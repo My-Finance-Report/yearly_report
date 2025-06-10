@@ -1,5 +1,6 @@
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
+import time
 from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin
@@ -24,11 +25,14 @@ T = TypeVar("T")
 
 
 def make_account_choices(session: Session, user: User) -> list[SelectOption]:
+    start = time.time()
     accts = (
         session.query(TransactionSource.name, TransactionSource.id)
         .filter(TransactionSource.user_id == user.id, ~TransactionSource.archived)
         .all()
     )
+    end = time.time()
+    print(f"Make account choices took {end - start} seconds")
     return [SelectOption(key=str(acct.id), value=acct.name) for acct in accts]
 
 
