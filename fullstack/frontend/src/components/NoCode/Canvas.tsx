@@ -154,9 +154,11 @@ export function NoCodeDisplayCanvas({
             editMode={isEditMode}
             setEditMode={handleEditModeChange}
           />
-          <Button onClick={widgetBuilder.onOpen} size="sm" variant="outline">
-            Add Widget
-          </Button>
+          {isEditMode && (
+            <Button onClick={widgetBuilder.onOpen} size="sm" variant="outline">
+              Add Widget
+            </Button>
+          )}
         </HStack>
         <NoCodeDragContext setIsDragging={setIsDragging}>
           <Grid

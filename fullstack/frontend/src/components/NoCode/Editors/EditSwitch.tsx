@@ -1,5 +1,5 @@
-import { HStack, Text, Switch } from "@chakra-ui/react";
-import { HiCheck, HiX } from "react-icons/hi";
+import { HStack, Switch } from "@chakra-ui/react";
+import { HiPencil, HiX } from "react-icons/hi";
 
 export function EditSwitch({
   editMode,
@@ -20,8 +20,8 @@ export function EditSwitch({
           <Switch.HiddenInput />
           <Switch.Control>
             <Switch.Thumb>
-              <Switch.ThumbIndicator fallback={<HiX color="black" />}>
-                <HiCheck />
+              <Switch.ThumbIndicator fallback={<HiPencil color="black" />}>
+                <HiX />
               </Switch.ThumbIndicator>
             </Switch.Thumb>
           </Switch.Control>
