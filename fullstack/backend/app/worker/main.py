@@ -231,27 +231,27 @@ def handle_plaid() -> None:
     except Exception as e:
         send_telegram_message(f"Failed to sync Plaid accounts: {e}")
 
-def clean_worker_status():
+def clean_worker_status() -> None:
     with SessionLocal() as session:
         session.query(WorkerStatus).filter(
             WorkerStatus.created_at < datetime.now(timezone.utc) - timedelta(days=2)
         ).delete()
         session.commit()
 
-def clean_plaid_sync_logs():
+def clean_plaid_sync_logs() -> None:
     with SessionLocal() as session:
         session.query(PlaidSyncLog).filter(
             PlaidSyncLog.created_at < datetime.now(timezone.utc) - timedelta(days=2)
         ).delete()
         session.commit()
 
-def upload_file_worker():
+def upload_file_worker() -> None:
     with SessionLocal() as session:
         reset_stuck_jobs(session)
         process_next_jobs(session)
 
 
-def fire_timed_event(event: Event):
+def fire_timed_event(event: Event) -> None:
     with SessionLocal() as session:
         users = session.query(User).all()
         for user in users:
@@ -259,13 +259,13 @@ def fire_timed_event(event: Event):
             trigger_effects(user_session, user, event)
             user_session.close()
 
-def fire_weekly_event():
+def fire_weekly_event() -> None:
     fire_timed_event(WeeklyEvent())
 
-def fire_monthly_event():
+def fire_monthly_event() -> None:
     fire_timed_event(MonthlyEvent())
 
-def fire_daily_event():
+def fire_daily_event() -> None:
     fire_timed_event(DailyEvent())
 
 class Frequency(str, enum.Enum):
