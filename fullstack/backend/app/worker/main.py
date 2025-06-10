@@ -1,4 +1,5 @@
 import asyncio
+import enum
 import logging
 import time
 import uuid
@@ -18,9 +19,13 @@ from app.async_pipelines.uploaded_file_pipeline.local_types import InProcessJob
 from app.async_pipelines.uploaded_file_pipeline.main import uploaded_file_pipeline
 from app.db import get_db_for_user
 from app.get_db_string import get_worker_database_url
+from app.models.plaid import PlaidSyncLog
 from app.models.uploaded_pdf import UploadedPdf
 from app.models.worker_job import JobKind, JobStatus, WorkerJob
 from app.models.user import User
+from app.models.worker_status import WorkerStatus
+from app.no_code.notifications.events import DailyEvent, Event, MonthlyEvent, WeeklyEvent
+from app.no_code.notifications.trigger import trigger_effects
 from app.scheduler import sync_all_plaid_accounts_job
 from app.telegram_utils import send_telegram_message
 
@@ -226,20 +231,144 @@ def handle_plaid() -> None:
     except Exception as e:
         send_telegram_message(f"Failed to sync Plaid accounts: {e}")
 
+def clean_worker_status() -> None:
+    with SessionLocal() as session:
+        session.query(WorkerStatus).filter(
+            WorkerStatus.created_at < datetime.now(timezone.utc) - timedelta(days=2)
+        ).delete()
+        session.commit()
+
+def clean_plaid_sync_logs() -> None:
+    with SessionLocal() as session:
+        session.query(PlaidSyncLog).filter(
+            PlaidSyncLog.created_at < datetime.now(timezone.utc) - timedelta(days=2)
+        ).delete()
+        session.commit()
+
+def upload_file_worker() -> None:
+    with SessionLocal() as session:
+        reset_stuck_jobs(session)
+        process_next_jobs(session)
+
+
+def fire_timed_event(event: Event) -> None:
+    with SessionLocal() as session:
+        users = session.query(User).all()
+        for user in users:
+            user_session = next(get_db_for_user(user.id))
+            trigger_effects(user_session, user, event)
+            user_session.close()
+
+def fire_weekly_event() -> None:
+    fire_timed_event(WeeklyEvent())
+
+def fire_monthly_event() -> None:
+    fire_timed_event(MonthlyEvent())
+
+def fire_daily_event() -> None:
+    fire_timed_event(DailyEvent())
+
+class Frequency(str, enum.Enum):
+    every_20_seconds = "every_20_seconds"
+    every_minute = "every_minute"
+    every_hour = "every_hour"
+    every_day_at_8am = "every_day_at_8am"
+    every_week_monday_at_8am = "every_week_monday_at_8am"
+    every_month_1st_at_8am = "every_month_1st_at_8am"
+
+    @property
+    def seconds(self) -> int:
+        minute = 60
+        hour = 60 * minute
+        day = 24 * hour
+        week = 7 * day
+        month = 30 * day # YOLO
+
+        return {
+            self.every_20_seconds: 20,
+            self.every_minute: minute,
+            self.every_hour: hour,
+            self.every_day_at_8am: day,
+            self.every_week_monday_at_8am: week,
+            self.every_month_1st_at_8am: month,
+        }[self]
+        
+    def should_run_at(self, now: datetime) -> bool:
+        """Check if this frequency should run at the given time"""
+        # Regular interval jobs can always run
+        if self in [self.every_20_seconds, self.every_minute, self.every_hour]:
+            return True
+            
+        # All time-specific jobs run at 8am UTC
+        if now.hour != 8 or now.minute != 0:
+            return False
+            
+        if self == self.every_day_at_8am:
+            return True
+            
+        if self == self.every_week_monday_at_8am:
+            return now.weekday() == 0  # Monday
+            
+        if self == self.every_month_1st_at_8am:
+            return now.day == 1
+            
+        return False
+
+CRONS: dict[Frequency, list[Callable]] = {
+    Frequency.every_20_seconds: [upload_file_worker],
+    Frequency.every_minute: [handle_plaid],
+    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs],
+    Frequency.every_day_at_8am: [fire_daily_event],
+    Frequency.every_week_monday_at_8am: [fire_weekly_event],
+    Frequency.every_month_1st_at_8am: [fire_monthly_event],
+}
+
+def should_run_job(session: Session, job_name: str, frequency: Frequency) -> bool:
+    from app.models.cron_state import CronState
+    
+    now = datetime.now(timezone.utc)
+    state = session.query(CronState).filter(CronState.job_name == job_name).first()
+    
+    if not state:
+        # First time this job has ever run
+        state = CronState(job_name=job_name, last_run=now)
+        session.add(state)
+        session.commit()
+        return frequency.should_run_at(now)
+    
+    # For time-specific jobs, check if we're in the right time window
+    if not frequency.should_run_at(now):
+        return False
+        
+    time_since_last_run = now - state.last_run
+    # For time-specific jobs, ensure we haven't run today yet
+    if frequency in [Frequency.every_day_at_8am, Frequency.every_week_monday_at_8am, Frequency.every_month_1st_at_8am]:
+        return state.last_run.date() < now.date() and time_since_last_run.total_seconds() >= 60
+    
+    # For regular interval jobs, use the seconds property
+    should_run = time_since_last_run.total_seconds() >= frequency.seconds
+    
+    if should_run:
+        session.query(CronState).filter(CronState.job_name == job_name).update({CronState.last_run: now})
+        session.commit()
+        
+    return should_run
 
 def worker() -> None:
-    iterations = 0
-
     while True:
         with SessionLocal() as session:
-            reset_stuck_jobs(session)
-            process_next_jobs(session)
-        time.sleep(POLL_INTERVAL)
-        if iterations % 6 == 0:
-            iterations = 0
-            handle_plaid()
-        iterations += 1
-
+            for freq, jobs in CRONS.items():
+                if not jobs:
+                    continue
+                    
+                for job in jobs:
+                    try:
+                        if should_run_job(session, job.__name__, freq):
+                            job()
+                    except Exception as e:
+                        logging.error(f"Error running {job.__name__}: {e}")
+            
+        time.sleep(5)
 
 if __name__ == "__main__":
     worker()

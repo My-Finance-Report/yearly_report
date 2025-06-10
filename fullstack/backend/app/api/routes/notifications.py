@@ -19,8 +19,11 @@ from app.no_code.notifications.effects import EffectConfig, Effect
 from app.no_code.notifications.events import (
     AccountDeactivatedEvent,
     BudgetThresholdExceededEvent,
+    DailyEvent,
+    MonthlyEvent,
     NewAccountLinkedEvent,
     NewTransactionsEvent,
+    WeeklyEvent,
 )
 from app.no_code.notifications.trigger import perform_template_replacement
 from app.schemas.no_code import (
@@ -113,6 +116,9 @@ AnyEvent = (
     | NewAccountLinkedEvent
     | AccountDeactivatedEvent
     | BudgetThresholdExceededEvent
+    | DailyEvent
+    | WeeklyEvent
+    | MonthlyEvent  
 )
 
 
@@ -170,6 +176,8 @@ def get_sample_event(event_type: EventType) -> AnyEvent:
             type=EventType.ACCOUNT_DEACTIVATED,
             account_name=account_name,
         )
+    else:
+        raise ValueError(f"Unknown event type: {event_type}")
 
 
 def get_sample_conditional_parameters(event_type: EventType) -> ConditionalParameters:
@@ -181,6 +189,12 @@ def get_sample_conditional_parameters(event_type: EventType) -> ConditionalParam
         return ConditionalParameters()
     elif event_type == EventType.BUDGET_THRESHOLD_EXCEEDED:
         return ConditionalParameters(amount=100)
+    elif event_type == EventType.DAILY:
+        return ConditionalParameters()
+    elif event_type == EventType.WEEKLY:
+        return ConditionalParameters()
+    elif event_type == EventType.MONTHLY:
+        return ConditionalParameters()
 
 
 def get_sample_condition(event_type: EventType) -> EffectConditionals:
@@ -192,6 +206,12 @@ def get_sample_condition(event_type: EventType) -> EffectConditionals:
         return EffectConditionals.UNCONDITIONAL
     elif event_type == EventType.BUDGET_THRESHOLD_EXCEEDED:
         return EffectConditionals.AMOUNT_OVER
+    elif event_type == EventType.DAILY:
+        return EffectConditionals.UNCONDITIONAL
+    elif event_type == EventType.WEEKLY:
+        return EffectConditionals.UNCONDITIONAL
+    elif event_type == EventType.MONTHLY:
+        return EffectConditionals.UNCONDITIONAL
 
 
 @router.get("/preview", response_model=Email)
@@ -298,6 +318,9 @@ def get_effect_mappings(
                 "budget_table",
                 "alter_settings",
             ],
+            EventType.DAILY: [],
+            EventType.WEEKLY: [],
+            EventType.MONTHLY: [],
         },
         allowed_conditional_parameters={
             EventType.NEW_TRANSACTION: [
@@ -309,6 +332,9 @@ def get_effect_mappings(
             EventType.BUDGET_THRESHOLD_EXCEEDED: [
                 EffectConditionals.AMOUNT_OVER,
             ],
+            EventType.DAILY: [],
+            EventType.WEEKLY: [],
+            EventType.MONTHLY: [],
         },
     )
 

@@ -30,8 +30,6 @@ class NoCodeTool(Base):
         ForeignKey("no_code_canvas.id"), nullable=False
     )
 
-    __table_args__ = (UniqueConstraint("widget_id", "user_id", "canvas_id"),)
-
 
 class NoCodeToolParameter(Base):
     __tablename__ = "no_code_tool_parameter"
