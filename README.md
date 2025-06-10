@@ -48,13 +48,19 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
 
+* ** Transactions View**
+  * Edit Transaction view has category missing on the modal (sometimes?)
+  * page makes two queries to /aggregated to load, but should only need one with correct params
+
 * **Accounts View**
   * Some mobile treatment
   * probably only show this if the user has plaid accounts synced
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
     * There needs to be a way to actually add a widget -- right now the builder is not useable
+    * just reduce scope here and make it so that the widgets are selectable from a dropdown.
   * group by selector default is wrong / out of line with the chart
   * date of transaction is not clean
+  * broke pagination with current version
   * Initial pageload is still pretty slow on prod
   * add the ability to manually add an account with no uploads / transactions
 
