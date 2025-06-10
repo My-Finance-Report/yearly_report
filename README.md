@@ -79,8 +79,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
 * Merge account function
   * Built backend but needs frontend
 
-* Nice to have: search of transactions
-
 * You can't remove a category once it is used
   * Doesn't rerun on category delete
 

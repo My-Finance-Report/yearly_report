@@ -64,14 +64,17 @@ def total_amount_per_category(data: PipelineStart) -> list[KeyValuePair]:
 @pipeline_step(
     return_type=list[NoCodeTransaction],
     passed_value=None,
-    parameters=[AccountIdParam, NParam, PageParam],
+    parameters=[AccountIdParam, NParam, PageParam, SearchStringParam],
 )
 def first_n_transactions(
     data: PipelineStart,
     n: SelectOption,
+    search_string: str,
     account_id: SelectOption | None,
     page: SelectOption = SelectOption(key="1", value="1"),
 ) -> list[NoCodeTransaction]:
+    print("account_id", account_id)
+    print("search_string", search_string)
     txs = data.session.query(Transaction, Category).join(
         Category, Transaction.category_id == Category.id
     )
@@ -80,6 +83,11 @@ def first_n_transactions(
         txs = txs.join(
             TransactionSource, Transaction.transaction_source_id == TransactionSource.id
         ).filter(TransactionSource.id == account_id.key)
+
+    if search_string:
+        txs = txs.filter(
+            Transaction.description.ilike(f"%{search_string}%"),
+        )
 
     txs = (
         txs.filter(Transaction.user_id == data.user.id)
