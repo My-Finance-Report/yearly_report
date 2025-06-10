@@ -1,5 +1,6 @@
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
+import time
 from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, get_args, get_origin

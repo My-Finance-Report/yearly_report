@@ -325,7 +325,7 @@ export type NewPassword = {
 export type NoCodeCanvasOut = {
   name: string;
   canvas_id: number;
-  widgets: Array<NoCodeWidgetIn_Output>;
+  widgets: Array<NoCodeWidgetOut>;
   parameters: Array<Parameter_Output>;
   parameter_groups: Array<ParameterGroupOut>;
 };
@@ -344,14 +344,9 @@ export type NoCodeParameterUpdate = {
   col_span: number;
 };
 
-export type NoCodeToolIn_Input = {
+export type NoCodeToolIn = {
   tool: string;
   parameters?: Array<Parameter_Input> | null;
-};
-
-export type NoCodeToolIn_Output = {
-  tool: string;
-  parameters?: Array<Parameter_Output> | null;
 };
 
 export type NoCodeToolOut = {
@@ -365,7 +360,7 @@ export type NoCodeToolOut = {
 export type NoCodeWidgetCreate = {
   name: string;
   description: string;
-  pipeline: Array<NoCodeToolIn_Input>;
+  pipeline: Array<NoCodeToolIn>;
   row: number;
   col: number;
   row_span: number;
@@ -373,23 +368,11 @@ export type NoCodeWidgetCreate = {
   type: WidgetType;
 };
 
-export type NoCodeWidgetIn_Input = {
+export type NoCodeWidgetIn = {
   id: number;
   name: string;
   description: string;
-  pipeline: Array<NoCodeToolIn_Input>;
-  row: number;
-  col: number;
-  row_span: number;
-  col_span: number;
-  type: WidgetType;
-};
-
-export type NoCodeWidgetIn_Output = {
-  id: number;
-  name: string;
-  description: string;
-  pipeline: Array<NoCodeToolIn_Output>;
+  pipeline: Array<NoCodeToolIn>;
   row: number;
   col: number;
   row_span: number;
@@ -1168,7 +1151,7 @@ export type NoCodeDeleteEffectResponse = void;
 export type NoCodeGetNoCodeToolsResponse = Array<NoCodeToolOut>;
 
 export type NoCodeSaveNoCodeToolData = {
-  requestBody: Array<NoCodeWidgetIn_Input>;
+  requestBody: Array<NoCodeWidgetIn>;
 };
 
 export type NoCodeSaveNoCodeToolResponse = Array<NoCodeWidgetOut>;

@@ -1,5 +1,4 @@
 import enum
-
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 
@@ -365,7 +364,7 @@ def generate_canvas_for_slug(
     for link in db_tool_parameters:
         tool_id_to_param_ids.setdefault(link.tool_id, []).append(link.parameter_id)
 
-    widgets_out = []
+    widgets_in = []
     for widget in db_widgets:
         widget_steps = [
             step for step in db_pipeline_steps if step.widget_id == widget.id
@@ -411,19 +410,18 @@ def generate_canvas_for_slug(
                 )
             )
 
-        widgets_out.append(
-            NoCodeWidgetIn(
-                id=widget.id,
-                name=widget.name,
-                description=widget.label or "",
-                row=widget.row,
-                col=widget.column,
-                row_span=widget.row_span,
-                col_span=widget.col_span,
-                type=widget.widget_type,
-                pipeline=pipeline,
-            )
+        widget_in = NoCodeWidgetIn(
+            id=widget.id,
+            name=widget.name,
+            description=widget.label or "",
+            row=widget.row,
+            col=widget.column,
+            row_span=widget.row_span,
+            col_span=widget.col_span,
+            type=widget.widget_type,
+            pipeline=pipeline,
         )
+        widgets_in.append(widget_in)
 
     parameter_groups_out = [
         ParameterGroupOut(
@@ -462,7 +460,12 @@ def generate_canvas_for_slug(
     return NoCodeCanvasOut(
         name=db_canvas.name,
         canvas_id=db_canvas.id,
-        widgets=widgets_out,
+        widgets=[
+            process_widget(
+                session=session, user=user, widget=widget, parameters=parameters_out
+            )
+            for widget in widgets_in
+        ],
         parameters=parameters_out,
         parameter_groups=parameter_groups_out,
     )

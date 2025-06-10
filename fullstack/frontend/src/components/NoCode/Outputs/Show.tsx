@@ -1,8 +1,4 @@
-import {
-  NoCodeService,
-  NoCodeWidgetIn_Output,
-  Parameter_Output,
-} from "@/client";
+import { NoCodeService, NoCodeWidgetOut, Parameter_Output } from "@/client";
 import { NoCodeParameter } from "@/components/NoCode/Generators/Parameter";
 import {
   ShowValue,
@@ -14,8 +10,8 @@ import { ShowList } from "./ShowList";
 import { ShowForm } from "./ShowForm";
 import { ShowPieChart } from "./ShowPieChart";
 import { ShowBarChart } from "./ShowBarChart";
-import { useQuery } from "@tanstack/react-query";
-import { Spinner, Text } from "@chakra-ui/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
 
@@ -114,27 +110,24 @@ export function renderNoCodeParameter(
   }
 }
 
-export function NoCodeWidget({ widget }: { widget: NoCodeWidgetIn_Output }) {
+export function NoCodeWidget({ widget }: { widget: NoCodeWidgetOut }) {
   const TheDisplay = MAP_TO_SHOW[widget.type];
+  const queryClient = useQueryClient();
 
-  const { parameters } = useNoCodeContext();
+  React.useEffect(() => {
+    queryClient.setQueryData(["accounts-no-code", widget.id], widget);
+  }, [widget, widget.id, queryClient]);
 
-  const { data, isLoading, isFetching, isError } = useQuery({
+  const { data } = useQuery({
     queryKey: ["accounts-no-code", widget.id],
     queryFn: () =>
       NoCodeService.refetchWidget({
         widgetId: widget.id,
-        requestBody: parameters,
+        requestBody: widget.parameters,
       }),
+    enabled: false,
+    initialData: widget,
   });
-
-  if (isError) {
-    return <Text>unable to fetch</Text>;
-  }
-
-  if (isLoading || isFetching || !data) {
-    return <Spinner />;
-  }
 
   return <TheDisplay widget={data} />;
 }

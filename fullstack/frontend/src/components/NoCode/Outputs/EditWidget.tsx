@@ -1,7 +1,7 @@
 import {
   type ApiError,
   NoCodeService,
-  NoCodeWidgetIn_Output,
+  NoCodeWidgetOut,
   NoCodeWidgetUpdate,
 } from "@/client";
 import DeleteAlert from "@/components/Common/DeleteAlert/DeleteAlert";
@@ -27,7 +27,7 @@ export function EditModal({
   editMode,
   children,
 }: {
-  widget: NoCodeWidgetIn_Output;
+  widget: NoCodeWidgetOut;
   canvasId: number;
   editMode: boolean;
   children: React.ReactNode;

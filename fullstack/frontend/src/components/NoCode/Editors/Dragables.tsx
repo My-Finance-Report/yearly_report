@@ -2,7 +2,7 @@ import {
   NoCodeCanvasOut,
   NoCodeParameterUpdate,
   NoCodeService,
-  NoCodeWidgetIn_Output,
+  NoCodeWidgetOut,
   Parameter_Output,
 } from "@/client";
 import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
@@ -100,14 +100,14 @@ export function DraggableWidget({
   children,
 }: {
   editMode: boolean;
-  widget: NoCodeWidgetIn_Output;
+  widget: NoCodeWidgetOut;
   children: React.ReactNode;
 }) {
   const toast = useCustomToast();
   const queryClient = useQueryClient();
 
   const widgetMutation = useMutation({
-    mutationFn: (widgetUpdate: NoCodeWidgetIn_Output) =>
+    mutationFn: (widgetUpdate: NoCodeWidgetOut) =>
       NoCodeService.updateWidget({
         widgetId: widgetUpdate.id,
         requestBody: widgetUpdate,
@@ -121,7 +121,7 @@ export function DraggableWidget({
   });
 
   function updateWidgetPosition(
-    widget: NoCodeWidgetIn_Output,
+    widget: NoCodeWidgetOut,
     rowDelta: number,
     colDelta: number,
   ) {
@@ -137,7 +137,7 @@ export function DraggableWidget({
 
         return {
           ...oldData,
-          widgets: oldData.widgets.map((w: NoCodeWidgetIn_Output) =>
+          widgets: oldData.widgets.map((w: NoCodeWidgetOut) =>
             w.id === widget.id ? { ...w, row: newRow, col: newCol } : w,
           ),
         };

@@ -197,7 +197,7 @@ class NoCodeWidgetOut(BaseModel):
 class NoCodeCanvasOut(BaseModel):
     name: str
     canvas_id: CanvasId
-    widgets: list[NoCodeWidgetIn]
+    widgets: list[NoCodeWidgetOut]
     parameters: list[Parameter]
     parameter_groups: list[ParameterGroupOut]
 
