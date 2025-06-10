@@ -25,14 +25,11 @@ T = TypeVar("T")
 
 
 def make_account_choices(session: Session, user: User) -> list[SelectOption]:
-    start = time.time()
     accts = (
         session.query(TransactionSource.name, TransactionSource.id)
         .filter(TransactionSource.user_id == user.id, ~TransactionSource.archived)
         .all()
     )
-    end = time.time()
-    print(f"Make account choices took {end - start} seconds")
     return [SelectOption(key=str(acct.id), value=acct.name) for acct in accts]
 
 
