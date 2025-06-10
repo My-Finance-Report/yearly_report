@@ -72,6 +72,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 * **Misc**
   * Why are there no decimals at all on transactions...?
+  * Why are there so many database connections?
   * Delete saved filter doesn't work on /transactions
   * Get user delete to work on app (right now i just removed from the user page)
     * Make sure we remove plaid items so we don't get charged
