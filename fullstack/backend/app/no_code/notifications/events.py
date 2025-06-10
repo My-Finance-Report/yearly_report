@@ -137,12 +137,14 @@ class BudgetThresholdExceededEvent(Event):
             suffix=more_text,
         )
 
+
 class WeeklyEvent(Event):
     type: EventType = EventType.WEEKLY
+
 
 class MonthlyEvent(Event):
     type: EventType = EventType.MONTHLY
 
+
 class DailyEvent(Event):
     type: EventType = EventType.DAILY
-

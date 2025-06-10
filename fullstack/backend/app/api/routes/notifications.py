@@ -118,7 +118,7 @@ AnyEvent = (
     | BudgetThresholdExceededEvent
     | DailyEvent
     | WeeklyEvent
-    | MonthlyEvent  
+    | MonthlyEvent
 )
 
 
