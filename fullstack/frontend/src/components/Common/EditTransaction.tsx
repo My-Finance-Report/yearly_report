@@ -106,8 +106,6 @@ const EditTransaction = ({
 
   const categories = rawCategoiesToSelectItems(categoriesData ?? []);
 
-  console.log(categories);
-
   const mutation = useMutation({
     mutationFn: (data: TransactionEdit) => {
       return TransactionsService.updateTransaction({

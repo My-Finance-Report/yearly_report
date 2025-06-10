@@ -132,8 +132,25 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=DefaultValue(value=SelectOption(key="8", value="8")),
+                default_value=DefaultValue(value=SelectOption(key="20", value="20")),
                 display_info=None,
+            ),
+            Parameter(
+                id=108,
+                name="search_string",
+                group_id=ParameterGroupId(0),
+                label="Search Transactions",
+                type=ParameterType.STRING,
+                trigger_refetch=True,
+                dependent_widgets=[widget_id],
+                display_info=DisplayInfo(
+                    views=["page"],
+                    show_label=False,
+                    row=2,
+                    col=4,
+                    row_span=1,
+                    col_span=3,
+                ),
             ),
             Parameter(
                 id=5,
@@ -554,6 +571,53 @@ def _generate_pie_widget(
     )
 
 
+def _generate_search_widget(
+    session: Session,
+    user: User,
+    row: int = 1,
+    col: int = 1,
+    row_span: int = 1,
+    col_span: int = 3,
+) -> NoCodeWidgetIn:
+    widget_id = WidgetId(588)
+
+    pipeline = [
+        NoCodeToolIn(
+            tool="transaction_search",
+            parameters=[
+                Parameter(
+                    id=588,
+                    name="search_string",
+                    label="Search",
+                    group_id=ParameterGroupId(0),
+                    type=ParameterType.STRING,
+                    trigger_refetch=True,
+                    dependent_widgets=[widget_id],
+                    display_info=DisplayInfo(
+                        views=["page"],
+                        row=45,
+                        col=1,
+                        row_span=1,
+                        col_span=3,
+                    ),
+                ),
+            ],
+        ),
+    ]
+
+    return NoCodeWidgetIn(
+        id=widget_id,
+        pipeline=pipeline,
+        name="Search Results",
+        description="Search Transactions",
+        row=row,
+        col=col,
+        row_span=row_span,
+        col_span=col_span,
+        type=WidgetType.list,
+    )
+
+
 def _generate_bar_chart_widget(
     session: Session,
     user: User,
@@ -644,7 +708,7 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=2, col=4, row_span=10, col_span=9
+                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
             ),
             partial(_generate_pie_widget, row=5, col=1, row_span=7, col_span=3),
             partial(

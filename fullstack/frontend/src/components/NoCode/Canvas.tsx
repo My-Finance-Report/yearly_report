@@ -97,6 +97,7 @@ function NoCodeDraggableAndEditableWidget({
       colStart={widget.col}
       rowSpan={widget.row_span}
       colSpan={widget.col_span}
+      overflow="auto"
     >
       <EditModal widget={widget} editMode={editMode} canvasId={canvasId}>
         <DraggableWidget widget={widget} editMode={editMode}>

@@ -52,6 +52,7 @@ class DisplaySize(str, enum.Enum):
 class DisplayInfo(BaseModel):
     views: list[str]
     size: DisplaySize | None = None
+    show_label: bool = True
     row: int
     col: int
     row_span: int
