@@ -35,7 +35,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Sort of exists but we need a way to actually charge people
 
 * **Plaid**
-* Have a way to activate / deactivate accounts from the accounts page
+  * Have a way to activate / deactivate accounts from the accounts page
+   *(technically this is fixed, when you archive a transaction source it should archive the plaid_account)
 
 * **Notifications**
   * Allow user to 'restore default notifications' 
@@ -43,15 +44,19 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Emails only configured to a few people
   * condition editors are not working
   * Maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
+    * probably low priority
+  * Add some idempotency key to notifications so we dont send the same notification multiple times
+  * Consider a method for batching notifications (lower priority though)
 
 * **Accounts View**
+  * Some mobile treatment
   * probably only show this if the user has plaid accounts synced
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
+    * There needs to be a way to actually add a widget -- right now the builder is not useable
   * group by selector default is wrong / out of line with the chart
   * date of transaction is not clean
-  * Some mobile treatment
-  * Some of the queries are quite slow
-    * Maybe be able to batch the initial load
+  * Initial pageload is still pretty slow on prod
+  * add the ability to manually add an account with no uploads / transactions
 
 * **POS**
   * Add ability for a guest to order (WIP)
@@ -65,22 +70,16 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * make sure transaction explorer gracefully handles no accounts (perhaps show the demo in place of empty screen?)
 
 
-* Why are there no decimals at all on transactions...?
-
-* add the ability to manually add an account with no uploads / transactions
-
-* Delete saved filter doesn't work on /transactions
-
-* Get user delete to work on app (right now i just removed from the user page)
-  * Make sure we remove plaid items so we don't get charged
-
-* Redirect everything to the main url
-
-* Merge account function
-  * Built backend but needs frontend
-
-* You can't remove a category once it is used
-  * Doesn't rerun on category delete
+* **Misc**
+  * Why are there no decimals at all on transactions...?
+  * Delete saved filter doesn't work on /transactions
+  * Get user delete to work on app (right now i just removed from the user page)
+    * Make sure we remove plaid items so we don't get charged
+  * Redirect everything to the main url
+  * Merge account function
+    * Built backend but needs frontend
+  * You can't remove a category once it is used
+    * Doesn't rerun on category delete
 
 
 # Codestyle
