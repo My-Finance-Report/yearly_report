@@ -47,6 +47,9 @@ const EVENT_TYPES: Record<EventType, string> = {
   new_account_linked: "New Account Linked",
   account_deactivated: "Account Deactivated",
   budget_threshold_exceeded: "Budget Threshold Exceeded",
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
 };
 
 const EFFECT_TYPES: Record<EffectType, string> = {
