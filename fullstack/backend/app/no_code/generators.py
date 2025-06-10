@@ -236,6 +236,7 @@ def account_balance(
             PlaidAccountBalance.transaction_source_id == TransactionSource.id,
         )
         .filter(TransactionSource.user_id == data.user.id)
+        .filter(~TransactionSource.archived)
         .filter(TransactionSource.id == int(account_id.key))
         .order_by(PlaidAccountBalance.timestamp.desc())
         .limit(10)
