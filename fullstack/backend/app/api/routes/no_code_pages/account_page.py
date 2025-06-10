@@ -94,22 +94,6 @@ def first_n(
             ),
             get_shared_param(session, user, widget_id, global_parameters),
             Parameter(
-                id=109,
-                name="search_string",
-                group_id=ParameterGroupId(0),
-                label="Search",
-                type=ParameterType.STRING,
-                trigger_refetch=True,
-                dependent_widgets=[widget_id],
-                display_info=DisplayInfo(
-                    views=["page"],
-                    row=2,
-                    col=4,
-                    row_span=1,
-                    col_span=3,
-                ),
-            ),
-            Parameter(
                 id=3,
                 group_id=ParameterGroupId(0),
                 name="page",
@@ -148,19 +132,20 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
                     SelectOption(key=str(50), value=str(50)),
                     SelectOption(key=str(100), value=str(100)),
                 ],
-                default_value=DefaultValue(value=SelectOption(key="8", value="8")),
+                default_value=DefaultValue(value=SelectOption(key="20", value="20")),
                 display_info=None,
             ),
             Parameter(
                 id=108,
                 name="search_string",
                 group_id=ParameterGroupId(0),
-                label="Search",
+                label="Search Transactions",
                 type=ParameterType.STRING,
                 trigger_refetch=True,
                 dependent_widgets=[widget_id],
                 display_info=DisplayInfo(
                     views=["page"],
+                    show_label=False,
                     row=2,
                     col=4,
                     row_span=1,
@@ -722,9 +707,8 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
                 statement="All Accounts",
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
-            partial(_generate_search_widget, row=45, col=4, row_span=1, col_span=9),
             partial(
-                _generate_all_transactions_widget, row=3, col=4, row_span=10, col_span=9
+                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
             ),
             partial(_generate_pie_widget, row=5, col=1, row_span=7, col_span=3),
             partial(

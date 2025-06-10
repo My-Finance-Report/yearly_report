@@ -153,6 +153,7 @@ export type Disable2FARequest = {
 export type DisplayInfo = {
   views: Array<string>;
   size?: DisplaySize | null;
+  show_label?: boolean;
   row: number;
   col: number;
   row_span: number;

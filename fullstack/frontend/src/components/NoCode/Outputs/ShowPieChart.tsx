@@ -5,7 +5,7 @@ import { ShowProps } from "./ShowTypes";
 export function ShowPieChart({ widget }: ShowProps) {
   const result = widget.result as { key: string; value: number }[];
   return (
-    <Card.Root minW="250px" size="lg" overflow="hidden">
+    <Card.Root maxH="350px" minW="250px" size="lg" overflow="hidden">
       <Card.Body>
         <Stat.Root>
           <Stat.Label>{widget.name}</Stat.Label>

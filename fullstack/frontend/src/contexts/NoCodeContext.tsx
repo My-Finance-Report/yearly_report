@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Parameter_Output } from "@/client";
+import { NoCodeService, Parameter_Output } from "@/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface NoCodeContextType {
@@ -50,23 +50,27 @@ export function NoCodeProvider({
     );
 
   const queryClient = useQueryClient();
+
   const updateParameter = (parameter: Parameter_Output) => {
     const newParams = parameters.map((p) =>
       p.id === parameter.id ? parameter : p,
     );
-
     setParameters(newParams);
 
-    if (parameter.trigger_refetch) {
-      parameter.dependent_widgets?.map((widget_id) => {
-        const callable = widgetParameters[widget_id];
-        queryClient.setQueryData(["accounts-no-code", widget_id], () => {
-          return null;
+    if (parameter.trigger_refetch && parameter.dependent_widgets) {
+      parameter.dependent_widgets.forEach((widget_id) => {
+        queryClient.cancelQueries({
+          queryKey: ["accounts-no-code", widget_id],
         });
 
-        callable?.((prev) =>
-          prev.map((p) => (p.id === parameter.id ? parameter : p)),
-        );
+        queryClient.fetchQuery({
+          queryKey: ["accounts-no-code", widget_id],
+          queryFn: () =>
+            NoCodeService.refetchWidget({
+              widgetId: widget_id,
+              requestBody: newParams,
+            }),
+        });
       });
     }
   };

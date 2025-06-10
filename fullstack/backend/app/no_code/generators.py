@@ -69,8 +69,8 @@ def total_amount_per_category(data: PipelineStart) -> list[KeyValuePair]:
 def first_n_transactions(
     data: PipelineStart,
     n: SelectOption,
-    search_string: str,
     account_id: SelectOption | None,
+    search_string: str | None = None,
     page: SelectOption = SelectOption(key="1", value="1"),
 ) -> list[NoCodeTransaction]:
     print("account_id", account_id)

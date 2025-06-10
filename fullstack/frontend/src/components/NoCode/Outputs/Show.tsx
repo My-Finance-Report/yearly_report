@@ -16,7 +16,7 @@ import { ShowPieChart } from "./ShowPieChart";
 import { ShowBarChart } from "./ShowBarChart";
 import { useQuery } from "@tanstack/react-query";
 import { Spinner, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+
 import { useNoCodeContext } from "@/contexts/NoCodeContext";
 
 const MAP_TO_SHOW = {
@@ -117,11 +117,9 @@ export function renderNoCodeParameter(
 export function NoCodeWidget({ widget }: { widget: NoCodeWidgetIn_Output }) {
   const TheDisplay = MAP_TO_SHOW[widget.type];
 
-  const { parameters: initParams, setWidgetParameters } = useNoCodeContext();
+  const { parameters } = useNoCodeContext();
 
-  const [parameters, setParameters] = useState<Parameter_Output[]>(initParams);
-
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ["accounts-no-code", widget.id],
     queryFn: () =>
       NoCodeService.refetchWidget({
@@ -130,21 +128,11 @@ export function NoCodeWidget({ widget }: { widget: NoCodeWidgetIn_Output }) {
       }),
   });
 
-  useEffect(() => {
-    if (data) {
-      setWidgetParameters((prev) => ({ ...prev, [widget.id]: setParameters }));
-    }
-  }, [data]);
-
-  useEffect(() => {
-    refetch();
-  }, [parameters]);
-
   if (isError) {
     return <Text>unable to fetch</Text>;
   }
 
-  if (isLoading || !data) {
+  if (isLoading || isFetching || !data) {
     return <Spinner />;
   }
 

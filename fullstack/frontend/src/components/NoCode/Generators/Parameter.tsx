@@ -8,10 +8,12 @@ import {
   Pagination,
   ButtonGroup,
   IconButton,
+  CloseButton,
+  InputGroup,
 } from "@chakra-ui/react";
 import { DisplayInfo, ParameterType, SelectOption } from "@/client";
 import { Portal, createListCollection } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { JSX } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -254,10 +256,21 @@ function FloatParameter({ parameter, onChange }: ParameterProps<"float">) {
 
 function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
   const [localValue, setLocalValue] = useState<string>(parameter.value || "");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const endElement = localValue ? (
+    <CloseButton
+      size="xs"
+      onClick={() => {
+        setLocalValue("");
+        inputRef.current?.focus();
+      }}
+      me="-2"
+    />
+  ) : undefined;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.log("calling onChange", localValue);
       onChange(localValue);
     }, 300);
 
@@ -270,7 +283,15 @@ function StrParameter({ parameter, onChange }: ParameterProps<"string">) {
 
   return (
     <Box>
-      <Input type="text" value={localValue} onChange={handleChange} />
+      <InputGroup endElement={endElement}>
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder={parameter.label}
+          value={localValue}
+          onChange={handleChange}
+        />
+      </InputGroup>
     </Box>
   );
 }
@@ -399,7 +420,9 @@ export function NoCodeParameter<T extends ParameterType>({
   ] as ParameterComponent<T>;
   return (
     <Field.Root>
-      {parameter.label && <Field.Label>{parameter.label}</Field.Label>}
+      {parameter.display_info?.show_label && (
+        <Field.Label>{parameter.label}</Field.Label>
+      )}
       <TheInput parameter={parameter} onChange={onChange} />
       <Field.HelperText>{parameter.description}</Field.HelperText>
     </Field.Root>
