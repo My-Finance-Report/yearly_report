@@ -236,7 +236,6 @@ def account_balance(
             PlaidAccountBalance.transaction_source_id == TransactionSource.id,
         )
         .filter(TransactionSource.user_id == data.user.id)
-        .filter(~TransactionSource.archived)
         .filter(TransactionSource.id == int(account_id.key))
         .order_by(PlaidAccountBalance.timestamp.desc())
         .limit(10)
@@ -280,6 +279,7 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
     accounts = (
         data.session.query(TransactionSource)
         .filter(TransactionSource.user_id == data.user.id)
+        .filter(~TransactionSource.archived)
         .all()
     )
     if not accounts:
@@ -311,16 +311,12 @@ def all_account_balances(data: PipelineStart) -> ResultWithTrend | None:
             net_worth += Decimal(balance_entries[0].balance)
         all_transactions.extend(balance_entries)
 
-    # sort the transactions by timestamp
     all_transactions.sort(key=lambda x: x.timestamp)
-
-    # some function to track net worth over time across all accounts?
 
     latest_balances = defaultdict(lambda: Decimal(0))
     net_worth_history = []
     for update in all_transactions:
         latest_balances[update.plaid_account_id] = Decimal(update.balance)
-        # Net worth at this timestamp is the sum of all latest balances
         net_worth_history_point = sum(latest_balances.values())
         net_worth_history.append((update.timestamp, net_worth_history_point))
 
