@@ -176,8 +176,18 @@ def get_sample_event(event_type: EventType) -> AnyEvent:
             type=EventType.ACCOUNT_DEACTIVATED,
             account_name=account_name,
         )
-    else:
-        raise ValueError(f"Unknown event type: {event_type}")
+    elif event_type == EventType.DAILY:
+        return DailyEvent(
+            type=EventType.DAILY,
+        )
+    elif event_type == EventType.WEEKLY:
+        return WeeklyEvent(
+            type=EventType.WEEKLY,
+        )
+    elif event_type == EventType.MONTHLY:
+        return MonthlyEvent(
+            type=EventType.MONTHLY,
+        )
 
 
 def get_sample_conditional_parameters(event_type: EventType) -> ConditionalParameters:
