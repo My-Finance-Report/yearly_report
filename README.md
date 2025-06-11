@@ -2,17 +2,21 @@
 
 this started as a project to generate my yearly financial report using haskell
 and has evolved a bit to be a [webapp](https://myfinancereport.com/).
-I actually rewrote it in react + fastapi, so that is currently what you see on the site.
+I rewrote it in react + fastapi, so that is currently what you see on the site.
 
 # Features
 
 - parse PDF bank statements and credit card statements
+- fetch expenses directly from bank accounts
 - categorize expenses
 - generate reports
   - per month drill down
   - summary -> per transaction drill down
   - configurable sankey and column diagrams
-- allow for manually update transactions from a ui
+- send customized notifications when events happen
+- budgeting
+- account overviews 
+- forecasting (coming soon)
 
 # Tech
 
@@ -28,7 +32,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
 
 
 
-# Big Milestones Before Launch
+# Roadmap / TODO
 
 * **Launch**
   * Landing page should be updated to reflect the state of the app currently
