@@ -46,6 +46,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
     * probably low priority
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
+  * Consider a freemium upgrade around the quota of notifications
 
 * ** Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)
