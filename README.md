@@ -27,9 +27,12 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 
-# TODO
 
 # Big Milestones Before Launch
+
+* **Launch**
+  * Landing page should be updated to reflect the state of the app currently
+  * demo env that lets someone explore the data without making an account
 
 * **Stripe**
   * Sort of exists but we need a way to actually charge people
@@ -48,7 +51,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Consider a method for batching notifications (lower priority though)
   * Consider a freemium upgrade around the quota of notifications
 
-* ** Transactions View**
+* **Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)
   * page makes two queries to /aggregated to load, but should only need one with correct params
 
@@ -69,6 +72,20 @@ this is mainly a project through which I will learn more about haskell, but I ex
     * Need to remove RLS on tables for menu items
   * Bigger: add ability to charge for the item
   * Add an effect for the order to send a notification
+
+* **Forcasting**
+  (Post-launch, v2 imo)
+  * greenfield, with no real prior art here. 
+  * determine robust way to display recurring transactions (plaid likely)
+  * try to make primatives that allow the user to access historic data and make predtions 
+    * highly parameterizable (interest rates, time, burn rates etc)
+  
+  * try to figure out where this fits in the app. 
+    *   i think ideally it lives on top of the other tooling, and not as its own thing. 
+    *   ultimately, i would love for the app to be pages that users build for themselves with easy, intuitive builders
+    * "almost notebook style"
+    * ideally this can all be build on / around the nocode system 
+
 
 * **Onboarding**
   * centrailize seeding when account is created (right now the api calls just handle it if not initialized but thats weird)
