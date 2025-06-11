@@ -42,11 +42,11 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Allow user to 'restore default notifications' 
     * The user can delete those, edit etc, and be able to reseed again if they want ( /notifications on app)
   * Emails only configured to a few people
-  * condition editors are not working
   * Maybe build an in-app view of notifications (there is already an effect_type for this (see models/effect.py) along with emails)
     * probably low priority
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
+  * Consider a freemium upgrade around the quota of notifications
 
 * ** Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)

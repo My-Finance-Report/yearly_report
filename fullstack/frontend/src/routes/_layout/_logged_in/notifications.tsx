@@ -5,12 +5,12 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, useDisclosure, Stack } from "@chakra-ui/react";
 import { DumbSelect } from "@/components/ui/dumb-select";
 import { useQuery } from "@tanstack/react-query";
-import { EffectOut } from "@/client/types.gen";
 import Delete from "@/components/Common/DeleteAlert/DeleteAlert";
 import { NotificationPreview } from "@/components/Notifications/Preview";
 import {
   NotificationFormValues,
   CreateForm,
+  EffectOutOrNew,
 } from "@/components/Notifications/Builder";
 import { EntityKind } from "@/components/Common/DeleteAlert/types";
 import PageLoader from "@/components/Common/PageLoader";
@@ -26,7 +26,7 @@ function UnifiedNotificationInterface() {
     queryFn: () => NoCodeService.getEffects(),
   });
 
-  const [selectedEffect, setSelectedEffect] = useState<EffectOut | null>(
+  const [selectedEffect, setSelectedEffect] = useState<EffectOutOrNew | null>(
     effects?.[0] || null,
   );
 
@@ -79,7 +79,7 @@ function UnifiedNotificationInterface() {
             selectedOption={selectedEffect}
             setSelectedOption={setSelectedEffect}
             labelExtractor={(effect) => effect.name}
-            keyExtractor={(effect) => effect.id.toString()}
+            keyExtractor={(effect) => (effect.id || -1).toString()}
             options={effects || []}
             label="Select Notification"
           />
@@ -125,11 +125,15 @@ function UnifiedNotificationInterface() {
         <Box w="full" minW={0}>
           <NotificationPreview form={form} />
         </Box>
-        {selectedEffect && (
+        {selectedEffect && selectedEffect.id && (
           <Delete
             isOpen={deleteModal.open}
             onClose={deleteModal.onClose}
-            entity={{ ...selectedEffect, kind: EntityKind.Notification }}
+            entity={{
+              ...selectedEffect,
+              id: selectedEffect.id,
+              kind: EntityKind.Notification,
+            }}
           />
         )}
       </Stack>
@@ -141,14 +145,16 @@ function NewNotificationButton({
   setSelectedEffect,
   resetForm,
 }: {
-  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+  setSelectedEffect: React.Dispatch<
+    React.SetStateAction<EffectOutOrNew | null>
+  >;
   resetForm: () => void;
 }) {
   return (
     <Button
       onClick={() => {
         setSelectedEffect({
-          id: -1,
+          id: null,
           name: "",
           active: true,
           editable: true,
@@ -159,7 +165,7 @@ function NewNotificationButton({
           },
           event_type: "new_transaction",
           effect_type: "email",
-          condition: "amount_over",
+          condition: "unconditional",
           conditional_parameters: {},
         });
         resetForm();
@@ -170,7 +176,7 @@ function NewNotificationButton({
   );
 }
 
-function selectedEffectToFormValues(selectedEffect: EffectOut) {
+function selectedEffectToFormValues(selectedEffect: EffectOutOrNew) {
   return {
     name: selectedEffect.name,
     active: selectedEffect.active,

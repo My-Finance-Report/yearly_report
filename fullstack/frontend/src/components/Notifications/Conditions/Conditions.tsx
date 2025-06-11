@@ -45,7 +45,7 @@ export function Conditions({
     FormContext,
     NotificationFormValues
   >;
-  supported_conditional_parameters: Array<EffectConditionals>;
+  supported_conditional_parameters: EffectConditionals[] | undefined;
   disabled?: boolean;
 }) {
   const conditionToConditionParameter: Record<
@@ -77,8 +77,10 @@ export function Conditions({
     unconditional: null,
   };
 
+  const currentCondition = form.watch("condition");
+
   const toggleCondition = (condition: EffectConditionals) => {
-    if (form.getValues("condition") === condition) {
+    if (currentCondition === condition) {
       form.setValue("condition", "unconditional");
     } else {
       form.setValue("condition", condition);
@@ -89,14 +91,14 @@ export function Conditions({
     <>
       <FieldRoot invalid={!!errors.condition} required mt={4}>
         <HStack>
-          {supported_conditional_parameters.map((param) => (
+          {supported_conditional_parameters?.map((param) => (
             <ConditionChoice
               key={param}
               name={param}
               onClick={() => {
                 toggleCondition(param);
               }}
-              selected={form.getValues("condition") === param}
+              selected={currentCondition === param}
               disabled={disabled}
             />
           ))}
@@ -105,8 +107,8 @@ export function Conditions({
           <FieldErrorText>{errors.condition.message}</FieldErrorText>
         )}
       </FieldRoot>
-      {form.getValues("condition") !== "unconditional" &&
-        conditionToConditionParameter[form.getValues("condition")]}
+      {currentCondition !== "unconditional" &&
+        conditionToConditionParameter[currentCondition]}
     </>
   );
 }

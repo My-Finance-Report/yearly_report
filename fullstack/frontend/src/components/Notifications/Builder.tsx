@@ -35,11 +35,16 @@ export interface NotificationFormValues {
   conditional_parameters: ConditionalParameters;
 }
 
+type Nullable<T, K extends keyof T> = Omit<T, K> & { [P in K]: T[P] | null };
+export type EffectOutOrNew = Nullable<EffectOut, "id">;
+
 interface CreateFormProps {
   form: ReturnType<typeof useForm<NotificationFormValues>>;
-  selectedEffect: EffectOut;
+  selectedEffect: EffectOutOrNew;
   effectMappings: EffectMappings;
-  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+  setSelectedEffect: React.Dispatch<
+    React.SetStateAction<EffectOutOrNew | null>
+  >;
 }
 
 const EVENT_TYPES: Record<EventType, string> = {
@@ -56,18 +61,6 @@ const EFFECT_TYPES: Record<EffectType, string> = {
   email: "Email",
   in_app: "In App",
 };
-
-function determineConditionsForEventType(
-  eventType: EventType,
-): EffectConditionals[] {
-  if (eventType === "new_transaction") {
-    return ["amount_over", "count_of_transactions"];
-  }
-  if (eventType === "budget_threshold_exceeded") {
-    return ["amount_over"];
-  }
-  return [];
-}
 
 function supportsFrequency(eventType: EventType) {
   return eventType === "new_transaction";
@@ -88,8 +81,6 @@ export function CreateForm({
     control,
     formState: { errors, isSubmitting, isDirty },
   } = form;
-
-  console.log(effectMappings);
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -241,9 +232,11 @@ export function CreateForm({
               errors={errors}
               form={form}
               disabled={!selectedEffect?.editable}
-              supported_conditional_parameters={determineConditionsForEventType(
-                form.getValues("event_type"),
-              )}
+              supported_conditional_parameters={
+                effectMappings.allowed_conditional_parameters[
+                  form.getValues("event_type")
+                ]
+              }
             />
 
             <Stack
@@ -297,7 +290,9 @@ export function CreateForm({
                 colorScheme="blue"
                 size="md"
               >
-                {selectedEffect ? "Update Notification" : "Save Notification"}
+                {selectedEffect.id
+                  ? "Update Notification"
+                  : "Save Notification"}
               </Button>
             </Box>
           </Stack>
@@ -311,8 +306,10 @@ function ToggleActive({
   selectedEffect,
   setSelectedEffect,
 }: {
-  selectedEffect: EffectOut;
-  setSelectedEffect: React.Dispatch<React.SetStateAction<EffectOut | null>>;
+  selectedEffect: EffectOutOrNew;
+  setSelectedEffect: React.Dispatch<
+    React.SetStateAction<EffectOutOrNew | null>
+  >;
 }) {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
