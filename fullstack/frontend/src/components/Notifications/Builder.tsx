@@ -82,8 +82,6 @@ export function CreateForm({
     formState: { errors, isSubmitting, isDirty },
   } = form;
 
-  console.log(effectMappings);
-
   const updateMutation = useMutation({
     mutationFn: ({
       data,

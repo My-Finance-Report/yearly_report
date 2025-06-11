@@ -45,7 +45,7 @@ export function Conditions({
     FormContext,
     NotificationFormValues
   >;
-  supported_conditional_parameters: Array<EffectConditionals>;
+  supported_conditional_parameters: EffectConditionals[] | undefined;
   disabled?: boolean;
 }) {
   const conditionToConditionParameter: Record<
@@ -91,7 +91,7 @@ export function Conditions({
     <>
       <FieldRoot invalid={!!errors.condition} required mt={4}>
         <HStack>
-          {supported_conditional_parameters.map((param) => (
+          {supported_conditional_parameters?.map((param) => (
             <ConditionChoice
               key={param}
               name={param}
