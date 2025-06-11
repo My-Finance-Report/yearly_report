@@ -69,6 +69,77 @@ def get_shared_param(
     return global_parameters[param_name]
 
 
+def all_aggregate(
+    session: Session,
+    user: User,
+    widget_id: WidgetId,
+    global_parameters: dict[str, Parameter],
+) -> NoCodeToolIn:
+    options = [
+        SelectOption(key=field_name, value=" ".join(field_name.split("_")).capitalize())
+        for field_name in ["category_name", "date_of_transaction", "amount"]
+    ]
+
+    return NoCodeToolIn(
+        tool="get_account_aggregate_data",
+        parameters=[
+            Parameter(
+                id=1,
+                name="n",
+                group_id=ParameterGroupId(0),
+                label="Transactions to display",
+                type=ParameterType.SELECT,
+                options=[
+                    SelectOption(key=str(10), value=str(10)),
+                    SelectOption(key=str(20), value=str(20)),
+                    SelectOption(key=str(50), value=str(50)),
+                    SelectOption(key=str(100), value=str(100)),
+                ],
+                default_value=DefaultValue(value=SelectOption(key="12", value="12")),
+            ),
+            Parameter(
+                id=10,
+                group_id=ParameterGroupId(0),
+                name="group_by",
+                label="Group By",
+                type=ParameterType.SELECT,
+                options=options,
+                dependent_widgets=[widget_id],
+                default_value=DefaultValue(
+                    value=SelectOption(key="category_name", value="category_name")
+                ),
+                display_info=DisplayInfo(
+                    views=["page"],
+                    row=20,
+                    col=1,
+                    row_span=2,
+                    col_span=5,
+                ),
+            ),
+            get_shared_param(session, user, widget_id, global_parameters),
+            Parameter(
+                id=3,
+                group_id=ParameterGroupId(0),
+                name="page",
+                label="",
+                trigger_refetch=True,
+                type=ParameterType.PAGINATION,
+                options=[],
+                dependent_widgets=[widget_id],
+                option_generator="get_pages_per_account",
+                default_value=DefaultValue(value=SelectOption(key="1", value="1")),
+                display_info=DisplayInfo(
+                    views=["page"],
+                    row=44,
+                    col=5,
+                    row_span=1,
+                    col_span=4,
+                ),
+            ),
+        ],
+    )
+
+
 def first_n(
     session: Session,
     user: User,
@@ -631,8 +702,12 @@ def _generate_bar_chart_widget(
 
     options = [
         SelectOption(key=field_name, value=" ".join(field_name.split("_")).capitalize())
-        for field_name in NoCodeTransaction.model_fields
-        if field_name != "id"
+        for field_name in [
+            "category_name",
+            "date_of_transaction",
+            "amount",
+            "description",
+        ]
     ]
 
     agg_parameters = [
@@ -645,9 +720,7 @@ def _generate_bar_chart_widget(
             options=options,
             dependent_widgets=[widget_id],
             default_value=DefaultValue(
-                value=SelectOption(
-                    key="date_of_transaction", value="date_of_transaction"
-                )
+                value=SelectOption(key="category_name", value="category_name")
             ),
             display_info=DisplayInfo(
                 views=["page"],
@@ -671,11 +744,7 @@ def _generate_bar_chart_widget(
     ]
 
     pipeline = [
-        first_n(session, user, widget_id, global_parameters),
-        NoCodeToolIn(
-            tool="aggregate",
-            parameters=agg_parameters,
-        ),
+        all_aggregate(session, user, widget_id, global_parameters),
     ]
 
     return NoCodeWidgetIn(

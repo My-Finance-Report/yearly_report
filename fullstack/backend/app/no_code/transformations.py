@@ -3,12 +3,11 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import TypeVar
 
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.models.no_code.parameter import SelectOption
 
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import NoCodeTransaction, Primitive
+from app.schemas.no_code import NoCodeTransaction, Primitive, KeyValuePair
 from app.models.user import User
 
 T = TypeVar("T", bound=Primitive[Decimal | NoCodeTransaction])
@@ -38,11 +37,6 @@ def average_transform(data: list[NoCodeTransaction] | list[Decimal]) -> Decimal:
 )
 def sum_transform(data: list[NoCodeTransaction] | list[Decimal]) -> Decimal:
     return Decimal(sum([get_value(transaction) for transaction in data]))
-
-
-class KeyValuePair(BaseModel):
-    key: str
-    value: str | Decimal | None
 
 
 def parse_key(value: str | Decimal | datetime) -> str:

@@ -13,6 +13,7 @@ import { Chart, useChart } from "@chakra-ui/charts";
 import { Area, AreaChart } from "recharts";
 import { LuDollarSign, LuPercent } from "react-icons/lu";
 import { ShowProps } from "./ShowTypes";
+import { ResultWithTrend } from "@/client";
 
 function mapUnitToSymbol(unit: string): React.ReactNode {
   switch (unit) {
@@ -54,8 +55,8 @@ export function ShowValue({ widget }: ShowProps) {
 }
 
 export function ShowValueWithTrend({ widget }: ShowProps) {
-  const result = widget.result as { result: number; trend: number };
-  const isUp = result.trend >= 0;
+  const result = widget.result as ResultWithTrend;
+  const isUp = Number(result.trend) >= 0;
   return (
     <Box borderWidth={1} borderRadius="md" p={2} minWidth={"300px"}>
       <Stat.Root
@@ -70,7 +71,7 @@ export function ShowValueWithTrend({ widget }: ShowProps) {
           <Stat.ValueText>
             {result.result ? (
               <FormatNumber
-                value={result.result}
+                value={Number(result.result)}
                 style="currency"
                 currency="USD"
               />
@@ -112,11 +113,7 @@ export function ShowBadge({ widget }: ShowProps) {
 }
 
 export function ShowCardWithSparkline({ widget }: ShowProps) {
-  const result = widget.result as {
-    result: number | null;
-    unit: string;
-    trend_data: { values: { value: number }[]; color: string };
-  };
+  const result = widget.result as ResultWithTrend;
   if (!result.result) {
     return (
       <Card.Root minW="250px" minH="200px" size="lg" overflow="hidden">
@@ -144,7 +141,7 @@ export function ShowCardWithSparkline({ widget }: ShowProps) {
           </Stat.Label>
           <Stat.ValueText>
             <FormatNumber
-              value={result.result}
+              value={Number(result.result)}
               style="currency"
               currency="USD"
             />
@@ -159,7 +156,7 @@ export function ShowCardWithSparkline({ widget }: ShowProps) {
 const SparkLine = ({
   data,
 }: {
-  data: { values: { value: number }[]; color: string };
+  data: { values: { value: string }[]; color: string };
 }) => {
   const chart = useChart({
     data: data.values,

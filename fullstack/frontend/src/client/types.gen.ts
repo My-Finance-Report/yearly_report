@@ -302,6 +302,11 @@ export type HTTPValidationError = {
 
 export type JobStatus = "completed" | "pending" | "processing" | "failed";
 
+export type KeyValuePair = {
+  key: string;
+  value: string | null;
+};
+
 export type LandingStatus =
   | "has_transactions"
   | "no_transactions_not_processing"
@@ -323,6 +328,11 @@ export type Month = {
 export type NewPassword = {
   token: Token;
   new_password: string;
+};
+
+export type NoCodeAggregateData = {
+  key: string;
+  value: string;
 };
 
 export type NoCodeCanvasOut = {
@@ -360,6 +370,17 @@ export type NoCodeToolOut = {
   return_type: unknown;
 };
 
+export type NoCodeTransaction = {
+  id: number;
+  category_id: number;
+  amount: number;
+  description: string;
+  account_name: string;
+  date_of_transaction: string;
+  kind: TransactionKind;
+  category_name: string;
+};
+
 export type NoCodeWidgetCreate = {
   name: string;
   description: string;
@@ -387,7 +408,16 @@ export type NoCodeWidgetOut = {
   id: number;
   name: string;
   description: string;
-  result: unknown;
+  result:
+    | Array<NoCodeTransaction>
+    | string
+    | number
+    | Array<string>
+    | Array<number>
+    | Array<KeyValuePair>
+    | ResultWithTrend
+    | Array<NoCodeAggregateData>
+    | null;
   result_type: ResultTypeEnum;
   parameters: Array<Parameter_Output>;
   row: number;
@@ -617,6 +647,13 @@ export type ResultTypeEnum =
   | "list"
   | "deferred";
 
+export type ResultWithTrend = {
+  result: string;
+  unit: Unit;
+  trend_data: TrendData;
+  trend: string;
+};
+
 export type SankeyConfigCreatePayload = {
   inputs: Array<SankeyInputCreate>;
   links: Array<SankeyLinkageCreate>;
@@ -782,6 +819,15 @@ export type TransactionSourceOut = {
   is_plaid_connected?: boolean;
 };
 
+export type TrendData = {
+  values: Array<TrendValue>;
+  color: string;
+};
+
+export type TrendValue = {
+  value: string;
+};
+
 /**
  * Request to complete login with 2FA.
  */
@@ -796,6 +842,8 @@ export type TwoFactorLoginRequest = {
 export type TwoFactorRejectRequest = {
   temp_token: string;
 };
+
+export type Unit = "dollar" | "percent";
 
 export type UploadedPdfOut = {
   filename: string;

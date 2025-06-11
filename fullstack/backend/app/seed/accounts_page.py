@@ -224,7 +224,7 @@ def delete_account_page(user_id: int) -> None:
 
     except Exception as e:
         session.rollback()
-        print(f"❌ Failed to delete account page: {e}")
+        print(f"❌ Failed to delete account page: {e.__str__()}")
         raise
 
     finally:
