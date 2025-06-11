@@ -77,8 +77,10 @@ export function Conditions({
     unconditional: null,
   };
 
+  const currentCondition = form.watch("condition");
+
   const toggleCondition = (condition: EffectConditionals) => {
-    if (form.getValues("condition") === condition) {
+    if (currentCondition === condition) {
       form.setValue("condition", "unconditional");
     } else {
       form.setValue("condition", condition);
@@ -96,7 +98,7 @@ export function Conditions({
               onClick={() => {
                 toggleCondition(param);
               }}
-              selected={form.getValues("condition") === param}
+              selected={currentCondition === param}
               disabled={disabled}
             />
           ))}
@@ -105,8 +107,8 @@ export function Conditions({
           <FieldErrorText>{errors.condition.message}</FieldErrorText>
         )}
       </FieldRoot>
-      {form.getValues("condition") !== "unconditional" &&
-        conditionToConditionParameter[form.getValues("condition")]}
+      {currentCondition !== "unconditional" &&
+        conditionToConditionParameter[currentCondition]}
     </>
   );
 }

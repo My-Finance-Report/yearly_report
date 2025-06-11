@@ -190,28 +190,30 @@ export function TemplateEditor<T extends FieldValues>({
           rows={6}
           disabled={disabled}
         />
-        <Box>
-          <Text fontSize="sm" mb={2}>
-            Available Variables:
-          </Text>
-          <HStack gap={2} flexWrap="wrap">
-            {availableVariables.map((variable) => (
-              <Badge
-                key={variable}
-                cursor="pointer"
-                onClick={() => {
-                  if (textareaRef.current) {
-                    insertVariable(variable, textareaRef.current);
-                  }
-                }}
-                _hover={{ bg: "blue.100" }}
-                title={variable}
-              >
-                {variable}
-              </Badge>
-            ))}
-          </HStack>
-        </Box>
+        {availableVariables.length > 0 && (
+          <Box>
+            <Text fontSize="sm" mb={2}>
+              Available Variables:
+            </Text>
+            <HStack gap={2} flexWrap="wrap">
+              {availableVariables.map((variable) => (
+                <Badge
+                  key={variable}
+                  cursor="pointer"
+                  onClick={() => {
+                    if (textareaRef.current) {
+                      insertVariable(variable, textareaRef.current);
+                    }
+                  }}
+                  _hover={{ bg: "blue.100" }}
+                  title={variable}
+                >
+                  {variable}
+                </Badge>
+              ))}
+            </HStack>
+          </Box>
+        )}
         {errors[name] && (
           <FieldErrorText>
             {errors[name]?.message?.toString() || ""}
