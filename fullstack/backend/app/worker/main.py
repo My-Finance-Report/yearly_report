@@ -327,10 +327,14 @@ class Frequency(str, enum.Enum):
         return False
 
 
+def heartbeat() -> None:
+    send_telegram_message("Worker is up")
+
+
 CRONS: dict[Frequency, list[Callable[[], None]]] = {
     Frequency.every_20_seconds: [upload_file_worker],
     Frequency.every_minute: [handle_plaid],
-    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs],
+    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs, heartbeat],
     Frequency.every_day_at_8am: [fire_daily_event],
     Frequency.every_week_monday_at_8am: [fire_weekly_event],
     Frequency.every_month_1st_at_8am: [fire_monthly_event],
