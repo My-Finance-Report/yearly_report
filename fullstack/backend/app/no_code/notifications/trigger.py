@@ -1,3 +1,4 @@
+import random
 import re
 from collections import defaultdict
 from typing import cast
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.effect import EffectLog, EffectType, Effect as EffectModel, EventType
 from app.models.user import User, UserId
 from app.email.send import Email, send_email
+from app.telegram_utils import send_telegram_message
 
 
 def collect_user_effects(
@@ -68,6 +70,50 @@ def check_event_against_possible_effects(event: Event, effect: Effect) -> bool:
     except Exception as e:
         print(f"Error evaluating condition: {e}")
         return False
+
+
+def check_effects_against_quota(
+    session: Session, user: User, effects: List[Effect]
+) -> List[Effect]:
+    PER_DAY_PER_TYPE_QUOTA = 5
+
+    effects_by_type = defaultdict(list)
+    for effect in effects:
+        effects_by_type[effect.type].append(effect)
+
+    effect_logs = (
+        session.query(EffectLog)
+        .filter(EffectLog.user_id == user.id)
+        .filter(EffectLog.fired_at >= datetime.now(timezone.utc) - timedelta(days=1))
+        .all()
+    )
+
+    sent_count_by_type: dict[EffectType, int] = defaultdict(int)
+    for log in effect_logs:
+        sent_count_by_type[log.effect_type] += 1
+
+    out_effects = []
+
+    for effect_type, type_effects in effects_by_type.items():
+        already_sent = sent_count_by_type[effect_type]
+        remaining_quota = PER_DAY_PER_TYPE_QUOTA - already_sent
+
+        if remaining_quota <= 0:
+            send_telegram_message(
+                f"User {user.id} has reached their daily quota ({PER_DAY_PER_TYPE_QUOTA}) for {effect_type}"
+            )
+            continue
+
+        effects_to_send = type_effects[:remaining_quota]
+        out_effects.extend(effects_to_send)
+
+        if len(type_effects) > remaining_quota:
+            dropped_count = len(type_effects) - remaining_quota
+            send_telegram_message(
+                f"Dropped {dropped_count} {effect_type} effects for user {user.id} due to quota"
+            )
+
+    return out_effects
 
 
 def check_effects_against_frequency(
@@ -234,6 +280,9 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
     def should_fire_check(effects: list[Effect]) -> list[Effect]:
         return check_effects_against_frequency(session, user, effects)
 
+    def check_effect_quota_for_user(effects: list[Effect]) -> list[Effect]:
+        return check_effects_against_quota(session, user, effects)
+
     def log(effects: list[Effect]) -> list[Effect]:
         return record_effects_log(session, user.id, event, effects)
 
@@ -244,6 +293,7 @@ def trigger_effects(session: Session, user: User, event: Event) -> None:
     pipeline: list[Callable[[list[Effect]], list[Effect]]] = [
         collect,
         filter_effects,
+        check_effect_quota_for_user,
         aggregate_effects,
         should_fire_check,
         log,
