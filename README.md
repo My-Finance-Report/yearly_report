@@ -61,7 +61,6 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * group by selector default is wrong / out of line with the chart
   * date of transaction is not clean
   * broke pagination with current version
-  * Initial pageload is still pretty slow on prod
   * add the ability to manually add an account with no uploads / transactions
 
 * **POS**

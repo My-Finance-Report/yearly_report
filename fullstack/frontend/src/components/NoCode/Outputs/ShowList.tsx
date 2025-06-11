@@ -16,30 +16,20 @@ import { NoCodeWidgetOut } from "@/client";
 import EditTransaction from "../../Common/EditTransaction";
 import DeleteAlert from "@/components/Common/DeleteAlert/DeleteAlert";
 import { FiEdit, FiTrash } from "react-icons/fi";
-import { TransactionKind } from "@/client";
 import { EntityKind } from "@/components/Common/DeleteAlert/types";
-
-interface NoCodeTransactionOut {
-  id: number;
-  category_id: number;
-  amount: number;
-  description: string;
-  account_name: string;
-  date_of_transaction: string;
-  kind: TransactionKind;
-  category_name: string;
-}
+import { NoCodeTransaction } from "@/client";
+import { formatDate } from "@/lib/utils";
 
 function formatAmount(amount: number | undefined) {
   if (!amount) return "";
-  return amount.toLocaleString("en-US", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  });
+  }).format(amount);
 }
 
 export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
-  const result = widget.result as Array<NoCodeTransactionOut>;
+  const result = widget.result as Array<NoCodeTransaction>;
 
   const editTransactionModal = useDisclosure();
   const deleteTransactionModal = useDisclosure();
@@ -95,8 +85,10 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
                 <TableCell>{data.category_name}</TableCell>
                 <TableCell>{data.description}</TableCell>
                 <TableCell>{formatAmount(data.amount)}</TableCell>
-                <TableCell>{data.date_of_transaction}</TableCell>
-                <TableCell>{data.kind}</TableCell>
+                <TableCell>{formatDate(data.date_of_transaction)}</TableCell>
+                <TableCell>
+                  {data.kind.charAt(0).toUpperCase() + data.kind.slice(1)}
+                </TableCell>
                 <TableCell>
                   <Flex direction="row" gap={2}>
                     <Button

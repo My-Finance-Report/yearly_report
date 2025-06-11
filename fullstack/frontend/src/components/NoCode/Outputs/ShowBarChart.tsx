@@ -1,9 +1,10 @@
 import { Box, Heading } from "@chakra-ui/react";
 import { GenericBarChart } from "@/components/Charting/BarChart";
 import { ShowProps } from "./ShowTypes";
+import { NoCodeAggregateData } from "@/client";
 
 export function ShowBarChart({ widget }: ShowProps) {
-  const result = widget.result as { key: string; value: number }[];
+  const result = widget.result as NoCodeAggregateData[];
 
   const keysInAll =
     result.length === 0

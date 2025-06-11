@@ -239,17 +239,15 @@ def handle_plaid() -> None:
 
 def clean_worker_status() -> None:
     with SessionLocal() as session:
-        session.query(WorkerStatus).filter(
-            WorkerStatus.created_at < datetime.now(timezone.utc) - timedelta(days=2)
-        ).delete()
+        cutoff = datetime.now(timezone.utc) - timedelta(days=2)
+        session.query(WorkerStatus).filter(WorkerStatus.created_at < cutoff).delete()
         session.commit()
 
 
 def clean_plaid_sync_logs() -> None:
     with SessionLocal() as session:
-        session.query(PlaidSyncLog).filter(
-            PlaidSyncLog.created_at < datetime.now(timezone.utc) - timedelta(days=2)
-        ).delete()
+        cutoff = datetime.now(timezone.utc) - timedelta(days=2)
+        session.query(PlaidSyncLog).filter(PlaidSyncLog.created_at < cutoff).delete()
         session.commit()
 
 
@@ -327,10 +325,14 @@ class Frequency(str, enum.Enum):
         return False
 
 
+def heartbeat() -> None:
+    send_telegram_message("Worker is up")
+
+
 CRONS: dict[Frequency, list[Callable[[], None]]] = {
     Frequency.every_20_seconds: [upload_file_worker],
     Frequency.every_minute: [handle_plaid],
-    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs],
+    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs, heartbeat],
     Frequency.every_day_at_8am: [fire_daily_event],
     Frequency.every_week_monday_at_8am: [fire_weekly_event],
     Frequency.every_month_1st_at_8am: [fire_monthly_event],
@@ -354,7 +356,14 @@ def should_run_job(session: Session, job_name: str, frequency: Frequency) -> boo
     if not frequency.should_run_at(now):
         return False
 
-    time_since_last_run = now - state.last_run
+    # Ensure last_run has timezone info
+    last_run = (
+        state.last_run
+        if state.last_run.tzinfo
+        else state.last_run.replace(tzinfo=timezone.utc)
+    )
+    time_since_last_run = now - last_run
+
     # For time-specific jobs, ensure we haven't run today yet
     if frequency in [
         Frequency.every_day_at_8am,
@@ -362,8 +371,7 @@ def should_run_job(session: Session, job_name: str, frequency: Frequency) -> boo
         Frequency.every_month_1st_at_8am,
     ]:
         return bool(
-            state.last_run.date() < now.date()
-            and time_since_last_run.total_seconds() >= 60
+            last_run.date() < now.date() and time_since_last_run.total_seconds() >= 60
         )
 
     # For regular interval jobs, use the seconds property

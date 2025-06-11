@@ -4,8 +4,9 @@ import random
 import enum
 from decimal import Decimal
 import time
+from tkinter import NO
+from typing import Any, Callable
 
-from pydantic import BaseModel
 from sqlalchemy import func
 from app.models.category import Category
 from app.models.no_code.parameter import ParameterType, SelectOption
@@ -14,13 +15,28 @@ from app.models.transaction import Transaction, TransactionKind
 from app.models.transaction_source import SourceKind, TransactionSource
 
 from app.no_code.decoration import pipeline_step
-from app.schemas.no_code import NoCodeParameterCreate, NoCodeTransaction, PipelineStart
-from app.no_code.transformations import KeyValuePair
+from app.schemas.no_code import (
+    NoCodeAggregateData,
+    NoCodeParameterCreate,
+    NoCodeTransaction,
+    PipelineStart,
+    ResultWithTrend,
+    KeyValuePair,
+    Unit,
+    TrendData,
+    TrendValue,
+)
 
 
 AccountIdParam = NoCodeParameterCreate(
     name="account_id",
     label="Account ID",
+    type=ParameterType.SELECT,
+)
+
+GroupByParam = NoCodeParameterCreate(
+    name="group_by",
+    label="Group By",
     type=ParameterType.SELECT,
 )
 
@@ -198,27 +214,6 @@ def last_plaid_sync(data: PipelineStart, account_id: SelectOption) -> str | None
         if sync_logs
         else "No previous sync"
     )
-
-
-class TrendValue(BaseModel):
-    value: Decimal
-
-
-class TrendData(BaseModel):
-    values: list[TrendValue]
-    color: str
-
-
-class Unit(str, enum.Enum):
-    DOLLAR = "dollar"
-    PERCENT = "percent"
-
-
-class ResultWithTrend(BaseModel):
-    result: Decimal
-    unit: Unit
-    trend_data: TrendData
-    trend: Decimal
 
 
 @pipeline_step(
@@ -423,6 +418,58 @@ def transaction_search(
         for tx in txs
     ]
     return val
+
+
+@pipeline_step(
+    return_type=list[NoCodeAggregateData],
+    passed_value=None,
+    parameters=[AccountIdParam, GroupByParam, NParam, PageParam],
+)
+def get_account_aggregate_data(
+    data: PipelineStart,
+    account_id: SelectOption,
+    group_by: SelectOption,
+    n: SelectOption,
+    page: SelectOption,
+) -> list[NoCodeAggregateData]:
+    if group_by.key == "category_name":
+        results = (
+            data.session.query(
+                Category.name.label("key"), func.sum(Transaction.amount).label("value")
+            )
+            .join(Category, Transaction.category_id == Category.id)
+            .filter(
+                Transaction.transaction_source_id == account_id.key,
+                Transaction.user_id == data.user.id,
+            )
+            .group_by(Category.name)
+            .all()
+        )
+
+    else:
+        group_col = getattr(Transaction, group_by.key)
+        results = (
+            data.session.query(
+                group_col.label("key"), func.sum(Transaction.amount).label("value")
+            )
+            .filter(
+                Transaction.transaction_source_id == account_id.key,
+                Transaction.user_id == data.user.id,
+            )
+            .group_by(group_col)
+            .all()
+        )
+
+    data_formatter: Callable[[Any], str] = lambda x: x
+    if group_by.key == "category_name":
+        data_formatter = lambda x: x
+    elif group_by.key == "date_of_transaction":
+        data_formatter = lambda x: x.strftime("%Y-%m-%d")
+
+    return [
+        NoCodeAggregateData(key=str(data_formatter(result.key)), value=result.value)
+        for result in results
+    ]
 
 
 @pipeline_step(

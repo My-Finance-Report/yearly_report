@@ -21,6 +21,32 @@ from app.models.transaction import TransactionKind
 from app.models.user import User
 
 
+class KeyValuePair(BaseModel):
+    key: str
+    value: str | Decimal | None
+
+
+class TrendValue(BaseModel):
+    value: Decimal
+
+
+class TrendData(BaseModel):
+    values: list[TrendValue]
+    color: str
+
+
+class Unit(str, enum.Enum):
+    DOLLAR = "dollar"
+    PERCENT = "percent"
+
+
+class ResultWithTrend(BaseModel):
+    result: Decimal
+    unit: Unit
+    trend_data: TrendData
+    trend: Decimal
+
+
 MonthlyTarget = NewType("MonthlyTarget", Decimal)
 MonthlyTotal = NewType("MonthlyTotal", Decimal)
 MonthlyProgress = NewType("MonthlyProgress", Decimal)
@@ -38,6 +64,22 @@ class NoCodeTransaction(BaseModel):
     date_of_transaction: datetime
     kind: TransactionKind
     category_name: str
+
+    @property
+    def clean_date(self) -> str:
+        return self.date_of_transaction.strftime("%m/%d/%Y")
+
+    @property
+    def clean_kind(self) -> str:
+        return self.kind.value.title()
+
+    class Config:
+        from_attributes = True
+
+
+class NoCodeAggregateData(BaseModel):
+    key: str
+    value: Decimal
 
 
 class NoCodeBudgetEntry(BaseModel):
@@ -184,7 +226,21 @@ class NoCodeWidgetOut(BaseModel):
     id: WidgetId
     name: str
     description: str
-    result: Any
+    result: (
+        list[NoCodeTransaction]
+        | None
+        | Decimal
+        | str
+        | int
+        | float
+        | list[Decimal]
+        | list[str]
+        | list[int]
+        | list[float]
+        | list[KeyValuePair]
+        | ResultWithTrend
+        | list[NoCodeAggregateData]
+    )
     result_type: ResultTypeEnum
     parameters: list[Parameter]
     row: int
