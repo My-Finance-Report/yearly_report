@@ -187,7 +187,9 @@ def first_n(
     )
 
 
-def most_recent_n(widget_id: WidgetId, search_display_info: DisplayInfo) -> NoCodeToolIn:
+def most_recent_n(
+    widget_id: WidgetId, search_display_info: DisplayInfo
+) -> NoCodeToolIn:
     return NoCodeToolIn(
         tool="first_n_transactions",
         parameters=[
@@ -772,7 +774,12 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9, search_display_info=DisplayInfo(
+                _generate_all_transactions_widget,
+                row=3,
+                col=4,
+                row_span=9,
+                col_span=9,
+                search_display_info=DisplayInfo(
                     views=["page"],
                     show_label=False,
                     row=2,

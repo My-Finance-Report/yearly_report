@@ -132,7 +132,6 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
   );
 }
 
-
 export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
   const result = widget.result as Array<NoCodeTransaction>;
 
@@ -162,8 +161,6 @@ export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
     );
   }
 
-
-
   return (
     <Box
       height="100%"
@@ -174,9 +171,9 @@ export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
       gap={4}
     >
       <Heading flexShrink={0}>{widget.name}</Heading>
-      <Box 
-        overflow="auto" 
-        flex="1" 
+      <Box
+        overflow="auto"
+        flex="1"
         minHeight={0}
         borderRadius="md"
         p={4}
@@ -195,9 +192,9 @@ export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
                       {formatDate(data.date_of_transaction)}
                     </Text>
                   </Flex>
-                  
+
                   <Text>{data.description}</Text>
-                  
+
                   <Flex justify="space-between" align="center">
                     <Badge variant="subtle" colorScheme="blue">
                       {data.category_name}
@@ -219,7 +216,7 @@ export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
                   </Flex>
                 </VStack>
               </CardBody>
-              
+
               <EditTransaction
                 transaction={data}
                 isOpen={editTransactionModal.open}

@@ -1,5 +1,4 @@
 import enum
-from turtle import Screen
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 
@@ -313,10 +312,6 @@ def remove_widget(
     return {"message": "removed widget"}
 
 
-def create_seed_page(session: Session, user: User, slug: str) -> NoCodeCanvas:
-    return 
-
-
 def generate_canvas_for_slug(
     session: Session,
     user: User,
@@ -327,7 +322,7 @@ def generate_canvas_for_slug(
     )
     if not db_canvas:
         print(slug)
-        db_canvas =seed_account_page(user_id=user.id, slug=slug, session=session) 
+        db_canvas = seed_account_page(user_id=user.id, slug=slug, session=session)
 
     db_widgets = session.query(NoCodeWidget).filter_by(canvas_id=db_canvas.id).all()
 

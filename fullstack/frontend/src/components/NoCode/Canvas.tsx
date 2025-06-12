@@ -142,57 +142,60 @@ export function NoCodeDisplayCanvas({
     setIsEditMode((prev: boolean) => !prev);
   };
 
-  const maxRows = widgets.reduce((max, widget) => Math.max(max, widget.row + widget.row_span), 0);
-  const maxCols = widgets.reduce((max, widget) => Math.max(max, widget.col + widget.col_span), 0)-1;
-  
+  const maxRows = widgets.reduce(
+    (max, widget) => Math.max(max, widget.row + widget.row_span),
+    0,
+  );
+  const maxCols =
+    widgets.reduce(
+      (max, widget) => Math.max(max, widget.col + widget.col_span),
+      0,
+    ) - 1;
 
   if (!widgets) {
     return <div>No widgets found</div>;
   }
 
   return (
-      <Container w="100%">
-        <HStack p={4} gap={4}>
-          <EditSwitch
-            editMode={isEditMode}
-            setEditMode={handleEditModeChange}
-          />
-          {isEditMode && (
-            <Button onClick={widgetBuilder.onOpen} size="sm" variant="outline">
-              Add Widget
-            </Button>
-          )}
-        </HStack>
-        <NoCodeDragContext setIsDragging={setIsDragging}>
-          <Grid
-            templateRows={`repeat(${maxRows}, 40px)`}
-            templateColumns={`repeat(${maxCols}, 1fr)`}
-            gap={4}
-          >
-            <DummyGridBacking isEditMode={isEditMode} isDragging={isDragging} />
+    <Container w="100%">
+      <HStack p={4} gap={4}>
+        <EditSwitch editMode={isEditMode} setEditMode={handleEditModeChange} />
+        {isEditMode && (
+          <Button onClick={widgetBuilder.onOpen} size="sm" variant="outline">
+            Add Widget
+          </Button>
+        )}
+      </HStack>
+      <NoCodeDragContext setIsDragging={setIsDragging}>
+        <Grid
+          templateRows={`repeat(${maxRows}, 40px)`}
+          templateColumns={`repeat(${maxCols}, 1fr)`}
+          gap={4}
+        >
+          <DummyGridBacking isEditMode={isEditMode} isDragging={isDragging} />
 
-            {widgets.map((widget, index) => (
-              <NoCodeDraggableAndEditableWidget
-                key={index}
-                widget={widget}
-                editMode={isEditMode}
-                canvasId={canvasId}
-              />
-            ))}
-            {paramsToDisplay.map((param, index) => (
-              <NoCodeDraggableAndEditableParam
-                key={index}
-                param={param}
-                editMode={isEditMode}
-                canvasId={canvasId}
-              />
-            ))}
-          </Grid>
-        </NoCodeDragContext>
+          {widgets.map((widget, index) => (
+            <NoCodeDraggableAndEditableWidget
+              key={index}
+              widget={widget}
+              editMode={isEditMode}
+              canvasId={canvasId}
+            />
+          ))}
+          {paramsToDisplay.map((param, index) => (
+            <NoCodeDraggableAndEditableParam
+              key={index}
+              param={param}
+              editMode={isEditMode}
+              canvasId={canvasId}
+            />
+          ))}
+        </Grid>
+      </NoCodeDragContext>
       <WidgetBuilder
         isOpen={widgetBuilder.open}
         onClose={widgetBuilder.onClose}
       />
-      </Container>
+    </Container>
   );
 }

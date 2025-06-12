@@ -16,8 +16,6 @@ export function NoCodePage({ variant }: { variant: PageVariant }) {
       }),
   });
 
-
-
   if (isLoading || !data) {
     return <PageLoader />;
   }
