@@ -2,17 +2,21 @@
 
 this started as a project to generate my yearly financial report using haskell
 and has evolved a bit to be a [webapp](https://myfinancereport.com/).
-I actually rewrote it in react + fastapi, so that is currently what you see on the site.
+I rewrote it in react + fastapi, so that is currently what you see on the site.
 
 # Features
 
 - parse PDF bank statements and credit card statements
+- fetch expenses directly from bank accounts
 - categorize expenses
 - generate reports
   - per month drill down
   - summary -> per transaction drill down
   - configurable sankey and column diagrams
-- allow for manually update transactions from a ui
+- send customized notifications when events happen
+- budgeting
+- account overviews 
+- forecasting (coming soon)
 
 # Tech
 
@@ -27,9 +31,12 @@ I actually rewrote it in react + fastapi, so that is currently what you see on t
 this is mainly a project through which I will learn more about haskell, but I expect the code to be bad.
 
 
-# TODO
 
-# Big Milestones Before Launch
+# Roadmap / TODO
+
+* **Launch**
+  * Landing page should be updated to reflect the state of the app currently
+  * demo env that lets someone explore the data without making an account
 
 * **Stripe**
   * Sort of exists but we need a way to actually charge people
@@ -47,10 +54,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
   * Consider a freemium upgrade around the quota of notifications
+  * the Daily trigger sent 8 emails
+    * this also implies the quota isnt working 
 
-* ** Transactions View**
+* **Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)
   * page makes two queries to /aggregated to load, but should only need one with correct params
+  * setup charts to use "short numbers" like 80k vs 80,000 on mobile
+  * would be nice for the filter component to never rerender 
 
 * **Accounts View**
   * Some mobile treatment
@@ -61,6 +72,7 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * group by selector default is wrong / out of line with the chart
   * date of transaction is not clean
   * broke pagination with current version
+  * Add time selector to the bar chart view as a parameter
   * add the ability to manually add an account with no uploads / transactions
 
 * **POS**
@@ -68,6 +80,20 @@ this is mainly a project through which I will learn more about haskell, but I ex
     * Need to remove RLS on tables for menu items
   * Bigger: add ability to charge for the item
   * Add an effect for the order to send a notification
+
+* **Forcasting**
+  (Post-launch, v2 imo)
+  * greenfield, with no real prior art here. 
+  * determine robust way to display recurring transactions (plaid likely)
+  * try to make primatives that allow the user to access historic data and make predtions 
+    * highly parameterizable (interest rates, time, burn rates etc)
+  
+  * try to figure out where this fits in the app. 
+    *   i think ideally it lives on top of the other tooling, and not as its own thing. 
+    *   ultimately, i would love for the app to be pages that users build for themselves with easy, intuitive builders
+    * "almost notebook style"
+    * ideally this can all be build on / around the nocode system 
+
 
 * **Onboarding**
   * centrailize seeding when account is created (right now the api calls just handle it if not initialized but thats weird)

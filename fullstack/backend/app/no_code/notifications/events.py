@@ -121,20 +121,13 @@ class BudgetThresholdExceededEvent(Event):
     @property
     def budget_table(self) -> Table:
         budget_entries = sorted(self.budget_entries, key=lambda x: x.progress)
-        budget_entries_to_show = budget_entries[:5]
-        has_more = len(budget_entries) > 5
 
-        rows = [generate_budget_row(tx) for tx in budget_entries_to_show]
+        rows = [generate_budget_row(tx) for tx in budget_entries]
 
-        more_text = (
-            f"<tr><td colspan='4'><em>...and {len(budget_entries) - 5} more budget entry(s)</em></td></tr>"
-            if has_more
-            else ""
-        )
         return generate_table(
             headers=["Category", "Target", "Current", "Progress"],
             rows=rows,
-            suffix=more_text,
+            suffix="",
         )
 
 
