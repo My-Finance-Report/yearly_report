@@ -1,4 +1,7 @@
-from app.api.routes.no_code_pages.account_page import generate_account_page, generate_account_page_mobile
+from app.api.routes.no_code_pages.account_page import (
+    generate_account_page,
+    generate_account_page_mobile,
+)
 from app.db import Session, get_db_for_user
 from app.models.no_code.canvas import NoCodeCanvas
 from app.models.no_code.parameter import (
@@ -13,7 +16,9 @@ from app.models.user import User, UserId
 from app.schemas.no_code import NoCodeCanvasCreate
 
 
-def seed_inner(canvas_data: NoCodeCanvasCreate, user_id: UserId, session:Session)-> NoCodeCanvas:
+def seed_inner(
+    canvas_data: NoCodeCanvasCreate, user_id: UserId, session: Session
+) -> NoCodeCanvas:
     canvas = NoCodeCanvas(
         name=canvas_data.name,
         slug=canvas_data.name.lower().replace(" ", "-"),
@@ -125,27 +130,40 @@ def seed_inner(canvas_data: NoCodeCanvasCreate, user_id: UserId, session:Session
             session.add(step)
     return canvas
 
-def seed_account_page(user_id: UserId, session: Session | None = None) -> None:
+
+def seed_account_page(
+    user_id: UserId, slug: str, session: Session | None = None
+) -> NoCodeCanvas:
+    assert slug in ["account-page", "account-page-mobile"], "invalid seed"
     if not session:
         session = next(get_db_for_user(user_id))
 
     user = session.query(User).filter(User.id == user_id).one()
-    canvas_data = generate_account_page(session, user)
-    canvas_data_mobile = generate_account_page_mobile(session, user)
-    desktop = seed_inner(canvas_data, user.id, session)
-    mobile =seed_inner(canvas_data_mobile, user.id, session)
+    def make_mobile():
+        canvas_data_mobile = generate_account_page_mobile(session, user)
+        return seed_inner(canvas_data_mobile, user.id, session)
+    def make_desktop():
+        canvas_data = generate_account_page(session, user)
+        return seed_inner(canvas_data, user.id, session)
 
-    
+    result = None
+    match slug:
+        case "account-page":
+            result = make_desktop()
+        case "account-page-mobile":
+            result = make_mobile()
 
     session.commit()
     print(f"✅ Successfully seeded account page for user {user_id}")
 
     session.close()
-    if not desktop or not mobile:
+    if not result:
         raise ValueError("failed to generate no code page")
 
+    return result
 
-def delete_inner(session:Session, canvas: NoCodeCanvas, user_id: UserId)->None:
+
+def delete_inner(session: Session, canvas: NoCodeCanvas, user_id: UserId) -> None:
     # Delete dependent objects in the correct order
 
     # 1. Find all widgets for the canvas
@@ -153,9 +171,7 @@ def delete_inner(session:Session, canvas: NoCodeCanvas, user_id: UserId)->None:
     widget_ids = [w.id for w in widgets]
 
     # 2. Find all tools
-    tools = (
-        session.query(NoCodeTool).filter(NoCodeTool.canvas_id == canvas.id).all()
-    )
+    tools = session.query(NoCodeTool).filter(NoCodeTool.canvas_id == canvas.id).all()
     tool_ids = [t.id for t in tools]
 
     # 3. Delete pipeline steps first
@@ -215,6 +231,7 @@ def delete_inner(session:Session, canvas: NoCodeCanvas, user_id: UserId)->None:
     session.commit()
     print(f"🧹 Successfully deleted account page for user {user_id}")
 
+
 def delete_account_page(user_id: UserId) -> None:
     session = next(get_db_for_user(user_id))
 
@@ -237,8 +254,6 @@ def delete_account_page(user_id: UserId) -> None:
         delete_inner(session, desktop, user_id)
         delete_inner(session, mobile, user_id)
 
-
-
     except Exception as e:
         session.rollback()
         print(f"❌ Failed to delete account page: {e.__str__()}")
@@ -250,4 +265,5 @@ def delete_account_page(user_id: UserId) -> None:
 
 if __name__ == "__main__":
     delete_account_page(UserId(1))
-    seed_account_page(UserId(1))
+    seed_account_page(UserId(1), "account-page")
+    seed_account_page(UserId(1), "account-page-mobile")

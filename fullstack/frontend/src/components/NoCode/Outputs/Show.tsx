@@ -6,7 +6,7 @@ import {
   ShowValueWithTrend,
   ShowSeparator,
 } from "./ShowValue";
-import { ShowList } from "./ShowList";
+import { ShowList, ShowCards } from "./ShowList";
 import { ShowForm } from "./ShowForm";
 import { ShowPieChart } from "./ShowPieChart";
 import { ShowBarChart } from "./ShowBarChart";
@@ -19,6 +19,7 @@ const MAP_TO_SHOW = {
   value: ShowValue,
   value_with_trend: ShowValueWithTrend,
   list: ShowList,
+  transaction_cards: ShowCards,
   form: ShowForm,
   pie_chart: ShowPieChart,
   bar_chart: ShowBarChart,

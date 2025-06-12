@@ -187,7 +187,7 @@ def first_n(
     )
 
 
-def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
+def most_recent_n(widget_id: WidgetId, search_display_info: DisplayInfo) -> NoCodeToolIn:
     return NoCodeToolIn(
         tool="first_n_transactions",
         parameters=[
@@ -214,14 +214,7 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
                 type=ParameterType.STRING,
                 trigger_refetch=True,
                 dependent_widgets=[widget_id],
-                display_info=DisplayInfo(
-                    views=["page"],
-                    show_label=False,
-                    row=2,
-                    col=4,
-                    row_span=1,
-                    col_span=3,
-                ),
+                display_info=search_display_info,
             ),
             Parameter(
                 id=5,
@@ -264,28 +257,29 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
 def _generate_all_transactions_widget(
     session: Session,
     user: User,
+    search_display_info: DisplayInfo,
     row: int = 1,
     col: int = 1,
     row_span: int = 3,
     col_span: int = 3,
+    widget_kind: WidgetType = WidgetType.list,
 ) -> NoCodeWidgetIn:
     widget_id = WidgetId(1)
 
     pipeline = [
-        most_recent_n(widget_id),
+        most_recent_n(widget_id, search_display_info),
     ]
 
     return NoCodeWidgetIn(
         pipeline=pipeline,
         id=widget_id,
         name="",
-        show_on_mobile=True,
         description="Most recent transactions across all account",
         row=row,
         col=col,
         row_span=row_span,
         col_span=col_span,
-        type=WidgetType.list,
+        type=widget_kind,
     )
 
 
@@ -309,7 +303,6 @@ def _generate_net_worth_widget(
         id=widget_id,
         pipeline=pipeline,
         name="Total Balance",
-        show_on_mobile=True,
         description="Total balance of all accounts",
         row=row,
         col=col,
@@ -332,7 +325,6 @@ def _generate_seperator_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=[],
-        show_on_mobile=True,
         name=statement,
         description="",
         row=row,
@@ -363,7 +355,6 @@ def _generate_balance_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name="Balance",
         description="Balance of account",
         row=row,
@@ -405,7 +396,6 @@ def _generate_throughput_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name=f"Change this {time_unit.value}",
         description="Balance of account",
         row=row,
@@ -439,7 +429,6 @@ def _generate_plaid_badge_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name="Plaid Enabled",
         description="Plaid badge of account",
         row=row,
@@ -475,7 +464,6 @@ def _generate_sync_status_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name="Last Sync",
         description="Last sync date of account",
         row=row,
@@ -503,7 +491,6 @@ def _generate_list_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name="",
         description="List of transactions",
         row=row,
@@ -610,7 +597,6 @@ def _generate_balance_update_widget(
 
     return NoCodeWidgetIn(
         pipeline=pipeline,
-        show_on_mobile=True,
         id=widget_id,
         name=widget_name,
         description="Manually Update Balance",
@@ -641,7 +627,6 @@ def _generate_pie_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
-        show_on_mobile=True,
         name="Amount / Category",
         description="Pie chart of transactions per category",
         row=row,
@@ -690,7 +675,6 @@ def _generate_search_widget(
         id=widget_id,
         pipeline=pipeline,
         name="Search Results",
-        show_on_mobile=True,
         description="Search Transactions",
         row=row,
         col=col,
@@ -760,7 +744,6 @@ def _generate_bar_chart_widget(
 
     return NoCodeWidgetIn(
         id=widget_id,
-        show_on_mobile=True,
         pipeline=pipeline,
         name="",
         description="Bar chart of transactions per day",
@@ -789,7 +772,14 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
+                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9, search_display_info=DisplayInfo(
+                    views=["page"],
+                    show_label=False,
+                    row=2,
+                    col=4,
+                    row_span=1,
+                    col_span=3,
+                ),
             ),
             partial(_generate_pie_widget, row=5, col=1, row_span=7, col_span=3),
             partial(
@@ -900,13 +890,26 @@ def generate_account_page_mobile(session: Session, user: User) -> NoCodeCanvasCr
                 row=1,
                 col=1,
                 row_span=1,
-                col_span=12,
+                col_span=3,
                 widget_id=WidgetId(14),
                 statement="All Accounts",
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
+                _generate_all_transactions_widget,
+                row=6,
+                col=1,
+                row_span=12,
+                col_span=3,
+                widget_kind=WidgetType.transaction_cards,
+                search_display_info=DisplayInfo(
+                    views=["page"],
+                    show_label=False,
+                    row=5,
+                    col=1,
+                    row_span=1,
+                    col_span=3,
+                ),
             ),
         ]
     ]

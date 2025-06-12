@@ -6,11 +6,17 @@ import { NoCodeProvider } from "@/contexts/NoCodeContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 export function NoCodePage({ variant }: { variant: PageVariant }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["accounts-no-code"],
-    queryFn: () => NoCodeService.getNoCodeDashboard({ variant, screen: isMobile ? "mobile" : "desktop" }),
+    queryKey: ["accounts-no-code", isMobile, variant],
+    queryFn: () =>
+      NoCodeService.getNoCodeDashboard({
+        variant,
+        screen: isMobile ? "mobile" : "desktop",
+      }),
   });
+
+
 
   if (isLoading || !data) {
     return <PageLoader />;

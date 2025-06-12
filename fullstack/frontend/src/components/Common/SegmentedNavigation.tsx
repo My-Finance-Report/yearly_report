@@ -18,6 +18,7 @@ import {
   Avatar,
   Box,
   Button,
+  DrawerPositioner,
   Flex,
   HStack,
   Menu,
@@ -271,6 +272,7 @@ function MobileMenu({
           <FiMenu />
         </Button>
       </DrawerTrigger>
+      <DrawerPositioner>
       <DrawerContent>
         <DrawerHeader>
           {user ? (
@@ -329,6 +331,7 @@ function MobileMenu({
         </DrawerFooter>
         <DrawerCloseTrigger />
       </DrawerContent>
+    </DrawerPositioner>
     </DrawerRoot>
   );
 }

@@ -384,7 +384,6 @@ export type NoCodeWidgetIn = {
     row_span: number;
     col_span: number;
     type: WidgetType;
-    show_on_mobile: boolean;
 };
 
 export type NoCodeWidgetOut = {
@@ -398,7 +397,6 @@ export type NoCodeWidgetOut = {
     col: number;
     row_span: number;
     col_span: number;
-    show_on_mobile: boolean;
     type: WidgetType;
 };
 
@@ -892,7 +890,7 @@ export type Verify2FAResponse = {
     token_type: string;
 };
 
-export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'pie_chart' | 'bar_chart' | 'separator' | 'form';
+export type WidgetType = 'value' | 'value_with_trend' | 'badge' | 'list' | 'transaction_cards' | 'pie_chart' | 'bar_chart' | 'separator' | 'form';
 
 export type WorkerStatusOut = {
     id: number;

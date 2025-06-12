@@ -42,8 +42,8 @@ function RouteComponent() {
             as they become available we will show them.
           </Text>
           <Text>
-            We have email notification by default, so you will be pinged
-            when transactions are ingested.
+            We have email notification by default, so you will be pinged when
+            transactions are ingested.
           </Text>
         </Box>
         <Box>

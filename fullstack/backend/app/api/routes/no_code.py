@@ -57,7 +57,6 @@ def process_widget(
     return NoCodeWidgetOut(
         id=widget.id,
         parameters=response.parameters,
-        show_on_mobile=widget.show_on_mobile,
         name=widget.name,
         description=widget.description,
         result=response.result,
@@ -197,16 +196,17 @@ def normalize_widget_locations(
 class PageVariant(str, enum.Enum):
     accounts = "account-page"
 
+
 class ScreenSize(str, enum.Enum):
     mobile = "mobile"
     desktop = "desktop"
 
 
-def make_slug(variant: PageVariant, screen: ScreenSize)->str:
+def make_slug(variant: PageVariant, screen: ScreenSize) -> str:
     if screen == ScreenSize.desktop:
         return variant.value
     elif screen == ScreenSize.mobile:
-        return f'{variant.value}-{screen.value}'
+        return f"{variant.value}-{screen.value}"
 
 
 @router.post("/get_no_code_dashboard", response_model=NoCodeCanvasOut)
@@ -216,7 +216,6 @@ def get_no_code_dashboard(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> NoCodeCanvasOut:
-
     return generate_canvas_for_slug(session, user, slug=make_slug(variant, screen))
 
 
@@ -314,18 +313,21 @@ def remove_widget(
     return {"message": "removed widget"}
 
 
-def create_seed_page(session: Session, user: User) -> NoCodeCanvas:
-    return seed_account_page(user.id, session)
+def create_seed_page(session: Session, user: User, slug: str) -> NoCodeCanvas:
+    return 
 
 
 def generate_canvas_for_slug(
-    session: Session, user: User, slug: str,
+    session: Session,
+    user: User,
+    slug: str,
 ) -> NoCodeCanvasOut:
     db_canvas = (
         session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
     )
     if not db_canvas:
-        db_canvas = create_seed_page(session, user)
+        print(slug)
+        db_canvas =seed_account_page(user_id=user.id, slug=slug, session=session) 
 
     db_widgets = session.query(NoCodeWidget).filter_by(canvas_id=db_canvas.id).all()
 
@@ -428,7 +430,6 @@ def generate_canvas_for_slug(
         widget_in = NoCodeWidgetIn(
             id=widget.id,
             name=widget.name,
-            show_on_mobile=widget.show_on_mobile,
             description=widget.label or "",
             row=widget.row,
             col=widget.column,
@@ -560,7 +561,6 @@ def get_widget(session: Session, user: User, widget_id: int) -> NoCodeWidgetIn:
     return NoCodeWidgetIn(
         id=db_widget.id,
         name=db_widget.name,
-        show_on_mobile=db_widget.show_on_mobile,
         description=db_widget.label or "",
         row=db_widget.row,
         col=db_widget.column,
