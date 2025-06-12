@@ -5,7 +5,7 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { useColorPalette } from "@/hooks/useColor";
-import {  Box } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { TooltipProps } from "recharts";
@@ -27,17 +27,17 @@ function formatCurrency(value: number) {
 }
 
 function formatNumber(value: number) {
-  if (value === 0) return '0';
-  
+  if (value === 0) return "0";
+
   const absValue = Math.abs(value);
   if (absValue >= 1e9) {
-    return (value / 1e9).toFixed(1) + 'B';
+    return (value / 1e9).toFixed(1) + "B";
   }
   if (absValue >= 1e6) {
-    return (value / 1e6).toFixed(1) + 'M';
+    return (value / 1e6).toFixed(1) + "M";
   }
   if (absValue >= 1e3) {
-    return (value / 1e3).toFixed(1) + 'k';
+    return (value / 1e3).toFixed(1) + "k";
   }
   return value.toString();
 }
@@ -108,67 +108,68 @@ export function GenericBarChart({
     }, {} as ChartConfig);
   }, [config, getColorForName, uniqueKeys]);
 
-
   return (
     <>
-    <Card>
-      <CardContent
-        className="px-2 sm:p-6"
-        style={{ backgroundColor: "background", padding: 10 }}
-      >
-        <ChartContainer
-          config={computedConfig}
-          className="aspect-auto h-[250px] w-full"
+      <Card>
+        <CardContent
+          className="px-2 sm:p-6"
+          style={{ backgroundColor: "background", padding: 10 }}
         >
-          <BarChart
-            data={data}
-            margin={{ top: 10, right:0, bottom: 50, left: 0 }}
+          <ChartContainer
+            config={computedConfig}
+            className="aspect-auto h-[250px] w-full"
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey={nameKey}
-              tickLine={false}
-              axisLine={false}
-              interval={0}
-              //@ts-expect-error tick is not defined in the type but exists
-              tick={{ angle: -90, textAnchor: "end", textSize: 12 }}
-              tickFormatter={(value: string) => {
-                const maxLength = 20;
-                if (value.length > maxLength) {
-                  return `${value.slice(0, maxLength)}...`;
-                }
-                return value;
-              }}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickCount={3}
-              tickFormatter={(value) => formatNumber(value)}
-            />
-            <ChartTooltip
-              content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
-            />
-            {uniqueKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                stackId="a"
-                fill={getColorForName(key) || "gray"}
-                onMouseEnter={() => setHoveredKey(key)}
-                onMouseLeave={() => setHoveredKey(null)}
-                radius={
-                  index === uniqueKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]
-                }
+            <BarChart
+              data={data}
+              margin={{ top: 10, right: 0, bottom: 50, left: 0 }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey={nameKey}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                //@ts-expect-error tick is not defined in the type but exists
+                tick={{ angle: -90, textAnchor: "end", textSize: 12 }}
+                tickFormatter={(value: string) => {
+                  const maxLength = 20;
+                  if (value.length > maxLength) {
+                    return `${value.slice(0, maxLength)}...`;
+                  }
+                  return value;
+                }}
               />
-            ))}
-          </BarChart>
-        </ChartContainer>
-        <Desc description={description} />
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm" />
-    </Card>
-</>
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickCount={3}
+                tickFormatter={(value) => formatNumber(value)}
+              />
+              <ChartTooltip
+                content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
+              />
+              {uniqueKeys.map((key, index) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="a"
+                  fill={getColorForName(key) || "gray"}
+                  onMouseEnter={() => setHoveredKey(key)}
+                  onMouseLeave={() => setHoveredKey(null)}
+                  radius={
+                    index === uniqueKeys.length - 1
+                      ? [4, 4, 0, 0]
+                      : [0, 0, 0, 0]
+                  }
+                />
+              ))}
+            </BarChart>
+          </ChartContainer>
+          <Desc description={description} />
+        </CardContent>
+        <CardFooter className="flex-col gap-2 text-sm" />
+      </Card>
+    </>
   );
 }
