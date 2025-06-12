@@ -139,10 +139,10 @@ def seed_account_page(
         session = next(get_db_for_user(user_id))
 
     user = session.query(User).filter(User.id == user_id).one()
-    def make_mobile():
+    def make_mobile() -> NoCodeCanvas:
         canvas_data_mobile = generate_account_page_mobile(session, user)
         return seed_inner(canvas_data_mobile, user.id, session)
-    def make_desktop():
+    def make_desktop() -> NoCodeCanvas:
         canvas_data = generate_account_page(session, user)
         return seed_inner(canvas_data, user.id, session)
 
