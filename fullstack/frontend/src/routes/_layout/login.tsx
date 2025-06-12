@@ -74,7 +74,6 @@ function Login() {
     try {
       await loginMutation.mutateAsync(data);
     } catch {
-      console.log("error logging in");
       setError(true);
     }
   };

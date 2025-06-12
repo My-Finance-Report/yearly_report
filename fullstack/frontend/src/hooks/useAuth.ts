@@ -114,7 +114,6 @@ const useAuth = () => {
       const response = await LoginService.loginAccessToken({
         formData: data,
       });
-      console.log(response);
 
       if (response.requires_2fa_setup) {
         if (!response.temp_token) {
