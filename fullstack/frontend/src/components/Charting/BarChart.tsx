@@ -5,8 +5,7 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart";
 import { useColorPalette } from "@/hooks/useColor";
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { Box } from "@chakra-ui/react";
+import {  Box } from "@chakra-ui/react";
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { TooltipProps } from "recharts";
@@ -25,6 +24,22 @@ function formatCurrency(value: number) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+function formatNumber(value: number) {
+  if (value === 0) return '0';
+  
+  const absValue = Math.abs(value);
+  if (absValue >= 1e9) {
+    return (value / 1e9).toFixed(1) + 'B';
+  }
+  if (absValue >= 1e6) {
+    return (value / 1e6).toFixed(1) + 'M';
+  }
+  if (absValue >= 1e3) {
+    return (value / 1e3).toFixed(1) + 'k';
+  }
+  return value.toString();
 }
 
 function SingleSliceTooltip({
@@ -73,7 +88,6 @@ export function GenericBarChart({
   config,
   description,
 }: GenericBarChartProps) {
-  const isMobile = useIsMobile();
   const { getColorForName } = useColorPalette();
 
   const uniqueKeys = Array.from(
@@ -94,12 +108,9 @@ export function GenericBarChart({
     }, {} as ChartConfig);
   }, [config, getColorForName, uniqueKeys]);
 
-  let interval = isMobile ? undefined : 0;
-  if (data.length > 20) {
-    interval = undefined;
-  }
 
   return (
+    <>
     <Card>
       <CardContent
         className="px-2 sm:p-6"
@@ -111,16 +122,16 @@ export function GenericBarChart({
         >
           <BarChart
             data={data}
-            margin={{ top: 20, right: 20, bottom: 50, left: 40 }}
+            margin={{ top: 10, right:0, bottom: 50, left: 0 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey={nameKey}
               tickLine={false}
               axisLine={false}
-              interval={interval}
+              interval={0}
               //@ts-expect-error tick is not defined in the type but exists
-              tick={{ angle: -20, textAnchor: "end", textSize: 12 }}
+              tick={{ angle: -90, textAnchor: "end", textSize: 12 }}
               tickFormatter={(value: string) => {
                 const maxLength = 20;
                 if (value.length > maxLength) {
@@ -134,7 +145,7 @@ export function GenericBarChart({
               axisLine={false}
               tickMargin={8}
               tickCount={3}
-              tickFormatter={(value) => formatCurrency(value)}
+              tickFormatter={(value) => formatNumber(value)}
             />
             <ChartTooltip
               content={<SingleSliceTooltip hoveredKey={hoveredKey} />}
@@ -158,5 +169,6 @@ export function GenericBarChart({
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm" />
     </Card>
+</>
   );
 }

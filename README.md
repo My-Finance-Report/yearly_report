@@ -54,10 +54,14 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
   * Consider a freemium upgrade around the quota of notifications
+  * the Daily trigger sent 8 emails
+    * this also implies the quota isnt working 
 
 * **Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)
   * page makes two queries to /aggregated to load, but should only need one with correct params
+  * setup charts to use "short numbers" like 80k vs 80,000 on mobile
+  * would be nice for the filter component to never rerender 
 
 * **Accounts View**
   * Some mobile treatment

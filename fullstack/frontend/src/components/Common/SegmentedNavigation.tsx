@@ -32,7 +32,6 @@ import {
   FiDollarSign,
   FiList,
   FiMenu,
-  FiSettings,
   FiUsers,
   FiBriefcase,
   FiShoppingCart,
@@ -49,7 +48,6 @@ const navigationItems = [
   { value: "/manage-accounts", label: "Manage Accounts", icon: FaPiggyBank },
   { value: "/notifications", label: "Notifications", icon: FiMail },
   { value: "/budget", label: "Budget", icon: FiDollarSign },
-  { value: "/settings", label: "User Settings", icon: FiSettings },
 ];
 
 const posNavigationItems = [

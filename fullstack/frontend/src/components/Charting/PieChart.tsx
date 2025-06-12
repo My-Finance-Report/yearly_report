@@ -14,6 +14,7 @@ import type { TooltipProps } from "recharts";
 import { Desc } from "./SankeyChart";
 
 export interface GenericChartDataItem {
+  date: string;
   [key: string]: string | number;
 }
 
