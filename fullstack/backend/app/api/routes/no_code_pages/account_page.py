@@ -279,6 +279,7 @@ def _generate_all_transactions_widget(
         pipeline=pipeline,
         id=widget_id,
         name="",
+        show_on_mobile=True,
         description="Most recent transactions across all account",
         row=row,
         col=col,
@@ -308,6 +309,7 @@ def _generate_net_worth_widget(
         id=widget_id,
         pipeline=pipeline,
         name="Total Balance",
+        show_on_mobile=True,
         description="Total balance of all accounts",
         row=row,
         col=col,
@@ -330,6 +332,7 @@ def _generate_seperator_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=[],
+        show_on_mobile=True,
         name=statement,
         description="",
         row=row,
@@ -360,6 +363,7 @@ def _generate_balance_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name="Balance",
         description="Balance of account",
         row=row,
@@ -401,6 +405,7 @@ def _generate_throughput_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name=f"Change this {time_unit.value}",
         description="Balance of account",
         row=row,
@@ -434,6 +439,7 @@ def _generate_plaid_badge_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name="Plaid Enabled",
         description="Plaid badge of account",
         row=row,
@@ -469,6 +475,7 @@ def _generate_sync_status_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name="Last Sync",
         description="Last sync date of account",
         row=row,
@@ -496,6 +503,7 @@ def _generate_list_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name="",
         description="List of transactions",
         row=row,
@@ -602,6 +610,7 @@ def _generate_balance_update_widget(
 
     return NoCodeWidgetIn(
         pipeline=pipeline,
+        show_on_mobile=True,
         id=widget_id,
         name=widget_name,
         description="Manually Update Balance",
@@ -632,6 +641,7 @@ def _generate_pie_widget(
     return NoCodeWidgetIn(
         id=widget_id,
         pipeline=pipeline,
+        show_on_mobile=True,
         name="Amount / Category",
         description="Pie chart of transactions per category",
         row=row,
@@ -680,6 +690,7 @@ def _generate_search_widget(
         id=widget_id,
         pipeline=pipeline,
         name="Search Results",
+        show_on_mobile=True,
         description="Search Transactions",
         row=row,
         col=col,
@@ -749,6 +760,7 @@ def _generate_bar_chart_widget(
 
     return NoCodeWidgetIn(
         id=widget_id,
+        show_on_mobile=True,
         pipeline=pipeline,
         name="",
         description="Bar chart of transactions per day",
@@ -871,6 +883,49 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
 
     return NoCodeCanvasCreate(
         name="Account Page",
+        widgets=widgets,
+        parameters=list(param_lookup.values()),
+        parameter_groups=parameter_groups,
+    )
+
+
+def generate_account_page_mobile(session: Session, user: User) -> NoCodeCanvasCreate:
+    global_parameters: dict[str, Parameter] = {}
+
+    widgets = [
+        callable(session, user)
+        for callable in [
+            partial(
+                _generate_seperator_widget,
+                row=1,
+                col=1,
+                row_span=1,
+                col_span=12,
+                widget_id=WidgetId(14),
+                statement="All Accounts",
+            ),
+            partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
+            partial(
+                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
+            ),
+        ]
+    ]
+
+    parameter_groups = [
+        ParameterGroupOut(
+            id=ParameterGroupId(0),
+            type=ParameterGroupType.GLOBAL,
+            name="Global Parameters",
+        ),
+    ]
+
+    param_lookup: dict[int, Parameter] = {}
+    for w in widgets:
+        for param in extract_parameters_from_pipeline(w.pipeline, session, user):
+            param_lookup[param.id] = param
+
+    return NoCodeCanvasCreate(
+        name="Account Page Mobile",
         widgets=widgets,
         parameters=list(param_lookup.values()),
         parameter_groups=parameter_groups,

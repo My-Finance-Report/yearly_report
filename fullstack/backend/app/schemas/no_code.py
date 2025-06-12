@@ -193,6 +193,7 @@ class NoCodeWidgetIn(BaseModel):
     row_span: int
     col_span: int
     type: WidgetType
+    show_on_mobile: bool
 
 
 class NoCodeWidgetCreate(BaseModel):
@@ -247,6 +248,7 @@ class NoCodeWidgetOut(BaseModel):
     col: int
     row_span: int
     col_span: int
+    show_on_mobile: bool
     type: WidgetType
 
 
