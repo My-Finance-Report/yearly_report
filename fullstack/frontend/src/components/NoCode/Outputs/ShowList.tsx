@@ -10,6 +10,12 @@ import {
   TableBody,
   Heading,
   useDisclosure,
+  Card,
+  CardBody,
+  VStack,
+  Badge,
+  ButtonGroup,
+  IconButton,
 } from "@chakra-ui/react";
 import { NoCodeWidgetOut } from "@/client";
 
@@ -124,47 +130,93 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
       </Box>
     </Box>
   );
+}
+
+export function ShowCards({ widget }: { widget: NoCodeWidgetOut }) {
+  const result = widget.result as Array<NoCodeTransaction>;
+
+  const editTransactionModal = useDisclosure();
+  const deleteTransactionModal = useDisclosure();
+
+  if (result.length === 0) {
+    return (
+      <Box>
+        <Heading>{widget.name}</Heading>
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          py={8}
+          px={4}
+          borderWidth={1}
+          borderRadius="md"
+          borderStyle="dashed"
+          textAlign="center"
+        >
+          <Text fontSize="lg" mb={1}>
+            No transactions found
+          </Text>
+        </Flex>
+      </Box>
+    );
+  }
 
   return (
-    <Box overflow="auto" height="100%" width="100%">
-      <Heading>{widget.name}</Heading>
-      <TableRoot variant="outline" borderRadius="md" borderWidth={1}>
-        <TableHeader>
-          <TableRow>
-            <TableCell>Category</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>Amount</TableCell>
-            <TableCell>Date of Transaction</TableCell>
-            <TableCell>Kind</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <Box
+      height="100%"
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      minHeight={0}
+      gap={4}
+    >
+      <Heading flexShrink={0}>{widget.name}</Heading>
+      <Box
+        overflow="auto"
+        flex="1"
+        minHeight={0}
+        borderRadius="md"
+        p={4}
+        borderWidth={1}
+      >
+        <VStack spaceY={4} width="100%">
           {result.map((data, index) => (
-            <TableRow key={index}>
-              <TableCell>{data.category_name}</TableCell>
-              <TableCell>{data.description}</TableCell>
-              <TableCell>{formatAmount(data.amount)}</TableCell>
-              <TableCell>{data.date_of_transaction}</TableCell>
-              <TableCell>{data.kind}</TableCell>
-              <TableCell>
-                <Flex direction="row" gap={2}>
-                  <Button
-                    onClick={editTransactionModal.onOpen}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <FiEdit size="8px" />
-                  </Button>
-                  <Button
-                    onClick={deleteTransactionModal.onOpen}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <FiTrash size="8px" />
-                  </Button>
-                </Flex>
-              </TableCell>
+            <Card.Root key={index} width="100%">
+              <CardBody>
+                <VStack align="stretch" spaceY={2}>
+                  <Flex justify="space-between" align="center">
+                    <Text fontWeight="bold" fontSize="lg">
+                      {formatAmount(data.amount)}
+                    </Text>
+                    <Text color="gray.600" fontSize="sm">
+                      {formatDate(data.date_of_transaction)}
+                    </Text>
+                  </Flex>
+
+                  <Text>{data.description}</Text>
+
+                  <Flex justify="space-between" align="center">
+                    <Badge variant="subtle" colorScheme="blue">
+                      {data.category_name}
+                    </Badge>
+                    <ButtonGroup size="sm" variant="ghost">
+                      <IconButton
+                        aria-label="Edit transaction"
+                        onClick={editTransactionModal.onOpen}
+                      >
+                        <FiEdit />
+                      </IconButton>
+                      <IconButton
+                        aria-label="Delete transaction"
+                        onClick={deleteTransactionModal.onOpen}
+                      >
+                        <FiTrash />
+                      </IconButton>
+                    </ButtonGroup>
+                  </Flex>
+                </VStack>
+              </CardBody>
+
               <EditTransaction
                 transaction={data}
                 isOpen={editTransactionModal.open}
@@ -175,10 +227,10 @@ export function ShowList({ widget }: { widget: NoCodeWidgetOut }) {
                 onClose={deleteTransactionModal.onClose}
                 entity={{ ...data, kind: EntityKind.Transaction }}
               />
-            </TableRow>
+            </Card.Root>
           ))}
-        </TableBody>
-      </TableRoot>
+        </VStack>
+      </Box>
     </Box>
   );
 }

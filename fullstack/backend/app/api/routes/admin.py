@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.db import Session, get_current_active_superuser, get_db, get_db_for_user
-from app.models.user import User
+from app.models.user import User, UserId
 from app.seed.accounts_page import delete_account_page, seed_account_page
 from app.seed.effects import (
     seed_effects_and_dont_update_existing,
@@ -19,11 +19,11 @@ def reseed_account_page(
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
-        delete_account_page(user_id)
+        delete_account_page(UserId(user_id))
     except Exception as e:
         print(f"❌ Failed to delete account page: {e}")
     try:
-        seed_account_page(user_id)
+        seed_account_page(UserId(user_id), "account-page")
         return {"status": "success"}
     except Exception as e:
         print(f"❌ Failed to seed account page: {e}")
@@ -40,11 +40,11 @@ def reseed_all_account_pages(
 
     for user in session.query(User).all():
         try:
-            delete_account_page(user.id)
+            delete_account_page(UserId(user.id))
         except Exception as e:
             print(f"❌ Failed to delete account page for user {user.id}: {e}")
         try:
-            seed_account_page(user.id)
+            seed_account_page(UserId(user.id), "account-page")
         except Exception as e:
             print(f"❌ Failed to seed account page for user {user.id}: {e}")
     return {"status": "success"}

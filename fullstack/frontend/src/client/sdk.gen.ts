@@ -1152,6 +1152,7 @@ export class NoCodeService {
    * Get No Code Dashboard
    * @param data The data for the request.
    * @param data.variant
+   * @param data.screen
    * @returns NoCodeCanvasOut Successful Response
    * @throws ApiError
    */
@@ -1163,6 +1164,7 @@ export class NoCodeService {
       url: "/api/v1/no_code/get_no_code_dashboard",
       query: {
         variant: data.variant,
+        screen: data.screen,
       },
       errors: {
         422: "Validation Error",

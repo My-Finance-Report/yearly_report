@@ -187,7 +187,9 @@ def first_n(
     )
 
 
-def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
+def most_recent_n(
+    widget_id: WidgetId, search_display_info: DisplayInfo
+) -> NoCodeToolIn:
     return NoCodeToolIn(
         tool="first_n_transactions",
         parameters=[
@@ -214,14 +216,7 @@ def most_recent_n(widget_id: WidgetId) -> NoCodeToolIn:
                 type=ParameterType.STRING,
                 trigger_refetch=True,
                 dependent_widgets=[widget_id],
-                display_info=DisplayInfo(
-                    views=["page"],
-                    show_label=False,
-                    row=2,
-                    col=4,
-                    row_span=1,
-                    col_span=3,
-                ),
+                display_info=search_display_info,
             ),
             Parameter(
                 id=5,
@@ -264,15 +259,17 @@ def to_kvp(key: str, value: str) -> NoCodeToolIn:
 def _generate_all_transactions_widget(
     session: Session,
     user: User,
+    search_display_info: DisplayInfo,
     row: int = 1,
     col: int = 1,
     row_span: int = 3,
     col_span: int = 3,
+    widget_kind: WidgetType = WidgetType.list,
 ) -> NoCodeWidgetIn:
     widget_id = WidgetId(1)
 
     pipeline = [
-        most_recent_n(widget_id),
+        most_recent_n(widget_id, search_display_info),
     ]
 
     return NoCodeWidgetIn(
@@ -284,7 +281,7 @@ def _generate_all_transactions_widget(
         col=col,
         row_span=row_span,
         col_span=col_span,
-        type=WidgetType.list,
+        type=widget_kind,
     )
 
 
@@ -777,7 +774,19 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
             ),
             partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
             partial(
-                _generate_all_transactions_widget, row=3, col=4, row_span=9, col_span=9
+                _generate_all_transactions_widget,
+                row=3,
+                col=4,
+                row_span=9,
+                col_span=9,
+                search_display_info=DisplayInfo(
+                    views=["page"],
+                    show_label=False,
+                    row=2,
+                    col=4,
+                    row_span=1,
+                    col_span=3,
+                ),
             ),
             partial(_generate_pie_widget, row=5, col=1, row_span=7, col_span=3),
             partial(
@@ -871,6 +880,62 @@ def generate_account_page(session: Session, user: User) -> NoCodeCanvasCreate:
 
     return NoCodeCanvasCreate(
         name="Account Page",
+        widgets=widgets,
+        parameters=list(param_lookup.values()),
+        parameter_groups=parameter_groups,
+    )
+
+
+def generate_account_page_mobile(session: Session, user: User) -> NoCodeCanvasCreate:
+    global_parameters: dict[str, Parameter] = {}
+
+    widgets = [
+        callable(session, user)
+        for callable in [
+            partial(
+                _generate_seperator_widget,
+                row=1,
+                col=1,
+                row_span=1,
+                col_span=3,
+                widget_id=WidgetId(14),
+                statement="All Accounts",
+            ),
+            partial(_generate_net_worth_widget, row=2, col=1, row_span=3, col_span=3),
+            partial(
+                _generate_all_transactions_widget,
+                row=6,
+                col=1,
+                row_span=12,
+                col_span=3,
+                widget_kind=WidgetType.transaction_cards,
+                search_display_info=DisplayInfo(
+                    views=["page"],
+                    show_label=False,
+                    row=5,
+                    col=1,
+                    row_span=1,
+                    col_span=3,
+                ),
+            ),
+        ]
+    ]
+
+    parameter_groups = [
+        ParameterGroupOut(
+            id=ParameterGroupId(0),
+            type=ParameterGroupType.GLOBAL,
+            name="Global Parameters",
+        ),
+    ]
+
+    param_lookup: dict[int, Parameter] = {}
+    for w in widgets:
+        for param in extract_parameters_from_pipeline(w.pipeline, session, user):
+            param_lookup[param.id] = param
+
+    return NoCodeCanvasCreate(
+        name="Account Page Mobile",
         widgets=widgets,
         parameters=list(param_lookup.values()),
         parameter_groups=parameter_groups,

@@ -18,6 +18,7 @@ import {
   Avatar,
   Box,
   Button,
+  DrawerPositioner,
   Flex,
   HStack,
   Menu,
@@ -271,64 +272,66 @@ function MobileMenu({
           <FiMenu />
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          {user ? (
-            <Flex alignItems="center" gap={2}>
-              <Box
-                width="10px"
-                height="10px"
-                borderRadius="50%"
-                backgroundColor="green.400"
-              />
-              <DrawerTitle>{user.full_name}</DrawerTitle>
-            </Flex>
-          ) : (
-            <Flex gap={2}>
-              <Button
-                variant="outline"
-                onClick={() => navigate({ to: "/login" })}
-              >
-                Log in
-              </Button>
-              <Button
-                variant="solid"
-                onClick={() => navigate({ to: "/signup" })}
-              >
-                Sign Up
-              </Button>
-            </Flex>
-          )}
-        </DrawerHeader>
-        <DrawerBody>
-          <Box mb={4}>
-            <Flex direction="column" gap={2}>
-              {finalItems.map(({ value, label, icon }) => (
+      <DrawerPositioner>
+        <DrawerContent>
+          <DrawerHeader>
+            {user ? (
+              <Flex alignItems="center" gap={2}>
+                <Box
+                  width="10px"
+                  height="10px"
+                  borderRadius="50%"
+                  backgroundColor="green.400"
+                />
+                <DrawerTitle>{user.full_name}</DrawerTitle>
+              </Flex>
+            ) : (
+              <Flex gap={2}>
                 <Button
-                  key={value}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  onClick={() => {
-                    navigate({ to: value });
-                    setOpen(false);
-                  }}
+                  variant="outline"
+                  onClick={() => navigate({ to: "/login" })}
                 >
-                  <Flex align="center" gap={2}>
-                    <Box as={icon} />
-                    <Text>{label}</Text>
-                  </Flex>
+                  Log in
                 </Button>
-              ))}
-            </Flex>
-          </Box>
-        </DrawerBody>
-        <DrawerFooter>
-          <DrawerActionTrigger asChild>
-            <Button variant="outline">Close</Button>
-          </DrawerActionTrigger>
-        </DrawerFooter>
-        <DrawerCloseTrigger />
-      </DrawerContent>
+                <Button
+                  variant="solid"
+                  onClick={() => navigate({ to: "/signup" })}
+                >
+                  Sign Up
+                </Button>
+              </Flex>
+            )}
+          </DrawerHeader>
+          <DrawerBody>
+            <Box mb={4}>
+              <Flex direction="column" gap={2}>
+                {finalItems.map(({ value, label, icon }) => (
+                  <Button
+                    key={value}
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    onClick={() => {
+                      navigate({ to: value });
+                      setOpen(false);
+                    }}
+                  >
+                    <Flex align="center" gap={2}>
+                      <Box as={icon} />
+                      <Text>{label}</Text>
+                    </Flex>
+                  </Button>
+                ))}
+              </Flex>
+            </Box>
+          </DrawerBody>
+          <DrawerFooter>
+            <DrawerActionTrigger asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerActionTrigger>
+          </DrawerFooter>
+          <DrawerCloseTrigger />
+        </DrawerContent>
+      </DrawerPositioner>
     </DrawerRoot>
   );
 }

@@ -1,4 +1,7 @@
-from app.api.routes.no_code_pages.account_page import generate_account_page
+from app.api.routes.no_code_pages.account_page import (
+    generate_account_page,
+    generate_account_page_mobile,
+)
 from app.db import Session, get_db_for_user
 from app.models.no_code.canvas import NoCodeCanvas
 from app.models.no_code.parameter import (
@@ -9,17 +12,13 @@ from app.models.no_code.parameter import (
 from app.models.no_code.pipeline_step import NoCodePipelineStep
 from app.models.no_code.tool import NoCodeTool, NoCodeToolParameter
 from app.models.no_code.widget import NoCodeWidget
-from app.models.user import User
+from app.models.user import User, UserId
+from app.schemas.no_code import NoCodeCanvasCreate
 
 
-def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCanvas:
-    if not session:
-        session = next(get_db_for_user(user_id))
-
-    canvas = None
-    user = session.query(User).filter(User.id == user_id).one()
-    canvas_data = generate_account_page(session, user)
-
+def seed_inner(
+    canvas_data: NoCodeCanvasCreate, user_id: UserId, session: Session
+) -> NoCodeCanvas:
     canvas = NoCodeCanvas(
         name=canvas_data.name,
         slug=canvas_data.name.lower().replace(" ", "-"),
@@ -129,98 +128,133 @@ def seed_account_page(user_id: int, session: Session | None = None) -> NoCodeCan
                 order_index=order_index,
             )
             session.add(step)
+    return canvas
+
+
+def seed_account_page(
+    user_id: UserId, slug: str, session: Session | None = None
+) -> NoCodeCanvas:
+    assert slug in ["account-page", "account-page-mobile"], "invalid seed"
+    if not session:
+        session = next(get_db_for_user(user_id))
+
+    user = session.query(User).filter(User.id == user_id).one()
+
+    def make_mobile() -> NoCodeCanvas:
+        canvas_data_mobile = generate_account_page_mobile(session, user)
+        return seed_inner(canvas_data_mobile, user.id, session)
+
+    def make_desktop() -> NoCodeCanvas:
+        canvas_data = generate_account_page(session, user)
+        return seed_inner(canvas_data, user.id, session)
+
+    result = None
+    match slug:
+        case "account-page":
+            result = make_desktop()
+        case "account-page-mobile":
+            result = make_mobile()
 
     session.commit()
     print(f"✅ Successfully seeded account page for user {user_id}")
 
     session.close()
-    if not canvas:
+    if not result:
         raise ValueError("failed to generate no code page")
-    return canvas
+
+    return result
 
 
-def delete_account_page(user_id: int) -> None:
+def delete_inner(session: Session, canvas: NoCodeCanvas, user_id: UserId) -> None:
+    # Delete dependent objects in the correct order
+
+    # 1. Find all widgets for the canvas
+    widgets = session.query(NoCodeWidget).filter_by(canvas_id=canvas.id).all()
+    widget_ids = [w.id for w in widgets]
+
+    # 2. Find all tools
+    tools = session.query(NoCodeTool).filter(NoCodeTool.canvas_id == canvas.id).all()
+    tool_ids = [t.id for t in tools]
+
+    # 3. Delete pipeline steps first
+    if tool_ids:
+        session.query(NoCodePipelineStep).filter(
+            NoCodePipelineStep.tool_id.in_(tool_ids)
+        ).delete(synchronize_session=False)
+
+    if tool_ids:
+        session.query(NoCodeToolParameter).filter(
+            NoCodeToolParameter.tool_id.in_(tool_ids)
+        ).delete(synchronize_session=False)
+
+    # 4. Delete tools
+    if tools:
+        session.query(NoCodeTool).filter(NoCodeTool.id.in_(tool_ids)).delete(
+            synchronize_session=False
+        )
+
+    # 5. Delete widgets
+    if widgets:
+        session.query(NoCodeWidget).filter(NoCodeWidget.id.in_(widget_ids)).delete(
+            synchronize_session=False
+        )
+
+    # 6. Delete parameters
+    parameters = (
+        session.query(NoCodeParameter)
+        .join(NoCodeParameterGroup)
+        .filter(NoCodeParameterGroup.canvas_id == canvas.id)
+        .all()
+    )
+    parameter_ids = [p.id for p in parameters]
+
+    if parameter_ids:
+        session.query(NoCodeParameterOption).filter(
+            NoCodeParameterOption.parameter_id.in_(parameter_ids)
+        ).delete(synchronize_session=False)
+        session.query(NoCodeToolParameter).filter(
+            NoCodeToolParameter.parameter_id.in_(parameter_ids)
+        ).delete(synchronize_session=False)
+
+    # 7. Delete parameters
+    if parameter_ids:
+        session.query(NoCodeParameter).filter(
+            NoCodeParameter.id.in_(parameter_ids)
+        ).delete(synchronize_session=False)
+
+    # 8. Delete parameter groups
+    session.query(NoCodeParameterGroup).filter(
+        NoCodeParameterGroup.canvas_id == canvas.id
+    ).delete(synchronize_session=False)
+
+    # 9. Finally, delete the canvas
+    session.delete(canvas)
+
+    session.commit()
+    print(f"🧹 Successfully deleted account page for user {user_id}")
+
+
+def delete_account_page(user_id: UserId) -> None:
     session = next(get_db_for_user(user_id))
 
     try:
         # Find the canvas for this user
-        canvas = (
+        desktop = (
             session.query(NoCodeCanvas)
             .filter_by(user_id=user_id, slug="account-page")
             .first()
         )
-        if not canvas:
+        mobile = (
+            session.query(NoCodeCanvas)
+            .filter_by(user_id=user_id, slug="account-page-mobile")
+            .first()
+        )
+        if not desktop or not mobile:
             print(f"⚠️ No account page canvas found for user {user_id}")
             return
 
-        # Delete dependent objects in the correct order
-
-        # 1. Find all widgets for the canvas
-        widgets = session.query(NoCodeWidget).filter_by(canvas_id=canvas.id).all()
-        widget_ids = [w.id for w in widgets]
-
-        # 2. Find all tools
-        tools = (
-            session.query(NoCodeTool).filter(NoCodeTool.canvas_id == canvas.id).all()
-        )
-        tool_ids = [t.id for t in tools]
-
-        # 3. Delete pipeline steps first
-        if tool_ids:
-            session.query(NoCodePipelineStep).filter(
-                NoCodePipelineStep.tool_id.in_(tool_ids)
-            ).delete(synchronize_session=False)
-
-        if tool_ids:
-            session.query(NoCodeToolParameter).filter(
-                NoCodeToolParameter.tool_id.in_(tool_ids)
-            ).delete(synchronize_session=False)
-
-        # 4. Delete tools
-        if tools:
-            session.query(NoCodeTool).filter(NoCodeTool.id.in_(tool_ids)).delete(
-                synchronize_session=False
-            )
-
-        # 5. Delete widgets
-        if widgets:
-            session.query(NoCodeWidget).filter(NoCodeWidget.id.in_(widget_ids)).delete(
-                synchronize_session=False
-            )
-
-        # 6. Delete parameters
-        parameters = (
-            session.query(NoCodeParameter)
-            .join(NoCodeParameterGroup)
-            .filter(NoCodeParameterGroup.canvas_id == canvas.id)
-            .all()
-        )
-        parameter_ids = [p.id for p in parameters]
-
-        if parameter_ids:
-            session.query(NoCodeParameterOption).filter(
-                NoCodeParameterOption.parameter_id.in_(parameter_ids)
-            ).delete(synchronize_session=False)
-            session.query(NoCodeToolParameter).filter(
-                NoCodeToolParameter.parameter_id.in_(parameter_ids)
-            ).delete(synchronize_session=False)
-
-        # 7. Delete parameters
-        if parameter_ids:
-            session.query(NoCodeParameter).filter(
-                NoCodeParameter.id.in_(parameter_ids)
-            ).delete(synchronize_session=False)
-
-        # 8. Delete parameter groups
-        session.query(NoCodeParameterGroup).filter(
-            NoCodeParameterGroup.canvas_id == canvas.id
-        ).delete(synchronize_session=False)
-
-        # 9. Finally, delete the canvas
-        session.delete(canvas)
-
-        session.commit()
-        print(f"🧹 Successfully deleted account page for user {user_id}")
+        delete_inner(session, desktop, user_id)
+        delete_inner(session, mobile, user_id)
 
     except Exception as e:
         session.rollback()
@@ -232,5 +266,6 @@ def delete_account_page(user_id: int) -> None:
 
 
 if __name__ == "__main__":
-    delete_account_page(1)
-    seed_account_page(1)
+    delete_account_page(UserId(1))
+    seed_account_page(UserId(1), "account-page")
+    seed_account_page(UserId(1), "account-page-mobile")

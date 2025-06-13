@@ -21,6 +21,7 @@ class WidgetType(str, enum.Enum):
     value_with_trend = "value_with_trend"
     badge = "badge"
     list = "list"
+    transaction_cards = "transaction_cards"
     pie_chart = "pie_chart"
     bar_chart = "bar_chart"
     separator = "separator"

@@ -718,6 +718,8 @@ export type SavedFilterUpdate = {
   filter_data?: FilterData_Input | null;
 };
 
+export type ScreenSize = "mobile" | "desktop";
+
 export type SelectedVariantBase_Input = {
   group_id: number;
   id: number;
@@ -962,6 +964,7 @@ export type WidgetType =
   | "value_with_trend"
   | "badge"
   | "list"
+  | "transaction_cards"
   | "pie_chart"
   | "bar_chart"
   | "separator"
@@ -1239,6 +1242,7 @@ export type NoCodeUpdateWidgetResponse = {
 };
 
 export type NoCodeGetNoCodeDashboardData = {
+  screen: ScreenSize;
   variant: PageVariant;
 };
 

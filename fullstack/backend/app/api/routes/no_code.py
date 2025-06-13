@@ -196,13 +196,26 @@ class PageVariant(str, enum.Enum):
     accounts = "account-page"
 
 
+class ScreenSize(str, enum.Enum):
+    mobile = "mobile"
+    desktop = "desktop"
+
+
+def make_slug(variant: PageVariant, screen: ScreenSize) -> str:
+    if screen == ScreenSize.desktop:
+        return variant.value
+    elif screen == ScreenSize.mobile:
+        return f"{variant.value}-{screen.value}"
+
+
 @router.post("/get_no_code_dashboard", response_model=NoCodeCanvasOut)
 def get_no_code_dashboard(
     variant: PageVariant,
+    screen: ScreenSize,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ) -> NoCodeCanvasOut:
-    return generate_canvas_for_slug(session, user, slug=variant.value)
+    return generate_canvas_for_slug(session, user, slug=make_slug(variant, screen))
 
 
 def remove_parameters(
@@ -299,18 +312,17 @@ def remove_widget(
     return {"message": "removed widget"}
 
 
-def create_seed_page(session: Session, user: User) -> NoCodeCanvas:
-    return seed_account_page(user.id, session)
-
-
 def generate_canvas_for_slug(
-    session: Session, user: User, slug: str
+    session: Session,
+    user: User,
+    slug: str,
 ) -> NoCodeCanvasOut:
     db_canvas = (
         session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
     )
     if not db_canvas:
-        db_canvas = create_seed_page(session, user)
+        print(slug)
+        db_canvas = seed_account_page(user_id=user.id, slug=slug, session=session)
 
     db_widgets = session.query(NoCodeWidget).filter_by(canvas_id=db_canvas.id).all()
 
