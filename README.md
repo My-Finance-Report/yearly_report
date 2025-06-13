@@ -64,16 +64,15 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * would be nice for the filter component to never rerender 
 
 * **Accounts View**
-  * Some mobile treatment
   * probably only show this if the user has plaid accounts synced
   * No code improvements: add / remove widgets and have the ability to reseed the page to defaults (see /seed/accounts_page.py)
     * There needs to be a way to actually add a widget -- right now the builder is not useable
     * just reduce scope here and make it so that the widgets are selectable from a dropdown.
-  * group by selector default is wrong / out of line with the chart
-  * date of transaction is not clean
   * broke pagination with current version
   * Add time selector to the bar chart view as a parameter
   * add the ability to manually add an account with no uploads / transactions
+  * the edit transaction view seems broken
+  * show account on the transcation card widget
 
 * **POS**
   * Add ability for a guest to order (WIP)

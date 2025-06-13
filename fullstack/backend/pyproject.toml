@@ -5,6 +5,7 @@ description = ""
 requires-python = ">=3.10,<4.0"
 
 
+
 [tool.uv]
 dev-dependencies = [
     "pytest<8.0.0,>=7.4.3",

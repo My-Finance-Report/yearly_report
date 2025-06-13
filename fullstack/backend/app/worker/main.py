@@ -1,12 +1,16 @@
 import asyncio
-import enum
+from dataclasses import dataclass
 import logging
-import time
 import uuid
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.cron import CronTrigger
+from dataclasses import dataclass
+from apscheduler.triggers.interval import IntervalTrigger
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
@@ -278,129 +282,73 @@ def fire_daily_event() -> None:
     fire_timed_event(DailyEvent())
 
 
-class Frequency(str, enum.Enum):
-    every_20_seconds = "every_20_seconds"
-    every_minute = "every_minute"
-    every_hour = "every_hour"
-    every_day_at_8am = "every_day_at_8am"
-    every_week_monday_at_8am = "every_week_monday_at_8am"
-    every_month_1st_at_8am = "every_month_1st_at_8am"
-
-    @property
-    def seconds(self) -> int:
-        minute = 60
-        hour = 60 * minute
-        day = 24 * hour
-        week = 7 * day
-        month = 30 * day  # YOLO
-
-        return {
-            self.every_20_seconds: 20,
-            self.every_minute: minute,
-            self.every_hour: hour,
-            self.every_day_at_8am: day,
-            self.every_week_monday_at_8am: week,
-            self.every_month_1st_at_8am: month,
-        }[self]
-
-    def should_run_at(self, now: datetime) -> bool:
-        """Check if this frequency should run at the given time"""
-        # Regular interval jobs can always run
-        if self in [self.every_20_seconds, self.every_minute, self.every_hour]:
-            return True
-
-        # All time-specific jobs run at 8am UTC
-        if now.hour != 8 or now.minute != 0:
-            return False
-
-        if self == self.every_day_at_8am:
-            return True
-
-        if self == self.every_week_monday_at_8am:
-            return now.weekday() == 0  # Monday
-
-        if self == self.every_month_1st_at_8am:
-            return now.day == 1
-
-        return False
-
-
 def heartbeat() -> None:
     send_telegram_message("Worker is up")
 
 
-CRONS: dict[Frequency, list[Callable[[], None]]] = {
-    Frequency.every_20_seconds: [upload_file_worker],
-    Frequency.every_minute: [handle_plaid],
-    Frequency.every_hour: [clean_worker_status, clean_plaid_sync_logs, heartbeat],
-    Frequency.every_day_at_8am: [fire_daily_event],
-    Frequency.every_week_monday_at_8am: [fire_weekly_event],
-    Frequency.every_month_1st_at_8am: [fire_monthly_event],
+def safe_job_wrapper(func: Callable[[], None], job_name: str) -> None:
+    """Wrapper to handle exceptions and provide session context"""
+    try:
+        with SessionLocal() as session:
+            func()
+    except Exception as e:
+        logging.error(f"Error running {job_name}: {e}")
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Trigger:
+    trigger: IntervalTrigger | CronTrigger
+
+
+EVERY_20_SECONDS = _Trigger(trigger=IntervalTrigger(seconds=20, timezone=timezone.utc))
+EVERY_1_MINUTE = _Trigger(trigger=IntervalTrigger(minutes=1, timezone=timezone.utc))
+EVERY_1_HOUR = _Trigger(trigger=IntervalTrigger(hours=1, timezone=timezone.utc))
+EVERY_1_DAY = _Trigger(trigger=CronTrigger(hour=8, minute=0, timezone=timezone.utc))
+EVERY_1_WEEK = _Trigger(
+    trigger=CronTrigger(day_of_week="mon", hour=8, minute=0, timezone=timezone.utc)
+)
+EVERY_1_MONTH = _Trigger(
+    trigger=CronTrigger(day=1, hour=8, minute=0, timezone=timezone.utc)
+)
+
+
+JOBS: dict[_Trigger, list[Callable[[], None]]] = {
+    EVERY_20_SECONDS: [
+        upload_file_worker,
+    ],
+    EVERY_1_MINUTE: [
+        handle_plaid,
+    ],
+    EVERY_1_HOUR: [
+        clean_worker_status,
+        clean_plaid_sync_logs,
+        heartbeat,
+    ],
+    EVERY_1_DAY: [
+        fire_daily_event,
+    ],
+    EVERY_1_WEEK: [
+        fire_weekly_event,
+    ],
+    EVERY_1_MONTH: [
+        fire_monthly_event,
+    ],
 }
 
 
-def should_run_job(session: Session, job_name: str, frequency: Frequency) -> bool:
-    from app.models.cron_state import CronState
-
-    now = datetime.now(timezone.utc)
-    state = session.query(CronState).filter(CronState.job_name == job_name).first()
-
-    if not state:
-        # First time this job has ever run
-        state = CronState(job_name=job_name, last_run=now)
-        session.add(state)
-        session.commit()
-        return frequency.should_run_at(now)
-
-    # For time-specific jobs, check if we're in the right time window
-    if not frequency.should_run_at(now):
-        return False
-
-    # Ensure last_run has timezone info
-    last_run = (
-        state.last_run
-        if state.last_run.tzinfo
-        else state.last_run.replace(tzinfo=timezone.utc)
-    )
-    time_since_last_run = now - last_run
-
-    # For time-specific jobs, ensure we haven't run today yet
-    if frequency in [
-        Frequency.every_day_at_8am,
-        Frequency.every_week_monday_at_8am,
-        Frequency.every_month_1st_at_8am,
-    ]:
-        return bool(
-            last_run.date() < now.date() and time_since_last_run.total_seconds() >= 60
-        )
-
-    # For regular interval jobs, use the seconds property
-    should_run = time_since_last_run.total_seconds() >= frequency.seconds
-
-    if should_run:
-        session.query(CronState).filter(CronState.job_name == job_name).update(
-            {CronState.last_run: now}
-        )
-        session.commit()
-
-    return bool(should_run)
-
-
 def worker() -> None:
-    while True:
-        with SessionLocal() as session:
-            for freq, jobs in CRONS.items():
-                if not jobs:
-                    continue
+    scheduler = BlockingScheduler(timezone=timezone.utc)
 
-                for job in jobs:
-                    try:
-                        if should_run_job(session, job.__name__, freq):
-                            job()
-                    except Exception as e:
-                        logging.error(f"Error running {job.__name__}: {e}")
+    for trigger, jobs in JOBS.items():
+        for job in jobs:
+            scheduler.add_job(
+                safe_job_wrapper, trigger.trigger, args=[job, job.__name__]
+            )
 
-        time.sleep(5)
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
 
 
 if __name__ == "__main__":

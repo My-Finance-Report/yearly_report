@@ -321,7 +321,6 @@ def generate_canvas_for_slug(
         session.query(NoCodeCanvas).filter_by(user_id=user.id, slug=slug).one_or_none()
     )
     if not db_canvas:
-        print(slug)
         db_canvas = seed_account_page(user_id=user.id, slug=slug, session=session)
 
     db_widgets = session.query(NoCodeWidget).filter_by(canvas_id=db_canvas.id).all()
