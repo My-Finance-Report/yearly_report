@@ -1,6 +1,7 @@
 import { Box, Flex, Link, Text } from "@chakra-ui/react";
 import { getCurrentUser } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export function Footer() {
   const { data: currentUser } = useQuery({
@@ -9,7 +10,13 @@ export function Footer() {
     retry: false,
   });
 
+  const isMobile = useIsMobile();
+
   if (currentUser?.settings?.point_of_sales_user) {
+    return null;
+  }
+
+  if (isMobile) {
     return null;
   }
 

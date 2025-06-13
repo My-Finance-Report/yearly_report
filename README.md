@@ -54,8 +54,8 @@ this is mainly a project through which I will learn more about haskell, but I ex
   * Add some idempotency key to notifications so we dont send the same notification multiple times
   * Consider a method for batching notifications (lower priority though)
   * Consider a freemium upgrade around the quota of notifications
-  * the Daily trigger sent 8 emails
-    * this also implies the quota isnt working 
+  * the notification builder doesnt hide the right fields if the name is present when creating a new notif
+
 
 * **Transactions View**
   * Edit Transaction view has category missing on the modal (sometimes?)
